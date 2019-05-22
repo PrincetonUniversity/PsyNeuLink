@@ -81,9 +81,9 @@ ocm = OptimizationControlMechanism(features={SHADOW_INPUTS: [player_obs, predato
                                                        save_values=True),
 
                                    objective_mechanism=ObjectiveMechanism(function=dist_diff_fct,
-                                                                          monitored_output_states=[player_obs,
-                                                                                                   predator_obs,
-                                                                                                   prey_obs]),
+                                                                          monitor=[player_obs,
+                                                                                   predator_obs,
+                                                                                   prey_obs]),
                                    control_signals=[ControlSignal(projections=(VARIANCE,player_obs),
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
@@ -101,7 +101,7 @@ ocm = OptimizationControlMechanism(features={SHADOW_INPUTS: [player_obs, predato
                                                                   allocation_samples=[0, 10]),
                                                     ],
                                    )
-agent_comp.add_model_based_optimizer(ocm)
+agent_comp.add_controller(ocm)
 agent_comp.enable_model_based_optimizer = True
 
 if SHOW_GRAPH:

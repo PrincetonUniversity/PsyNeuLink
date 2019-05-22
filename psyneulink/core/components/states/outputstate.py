@@ -586,6 +586,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 import warnings
+from collections import OrderedDict
 
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function, function_type, method_type
@@ -596,7 +597,8 @@ from psyneulink.core.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LIN
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, iscompatible, make_readonly_property, recursive_update
+from psyneulink.core.globals.utilities import \
+    is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList
 
 __all__ = [
     'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY', 'SEQUENTIAL',
@@ -611,7 +613,7 @@ state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
-OUTPUT_STATE_TYPE = 'outputStateType'
+OUTPUT_STATE_TYPES = 'outputStateTypes'
 
 # Used to specify how StandardOutputStates are indexed
 PRIMARY = 0
@@ -933,6 +935,8 @@ class OutputState(State_Base):
     connectsWithAttribute = [INPUT_STATES]
     projectionSocket = RECEIVER
     modulators = [GATING_SIGNAL]
+    canReceive = modulators
+
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -1024,23 +1028,11 @@ class OutputState(State_Base):
                 variable = DEFAULT_VARIABLE_SPEC
             else:
                 variable = reference_value
-        # MODIFIED 3/10/18 OLD:
         variable_getter = None
         self._variable_spec = variable
 
         if not is_numeric(variable):
             self._variable = variable
-
-        # # MODIFIED 3/10/18 NEW:
-        # # FIX: SHOULD HANDLE THIS MORE GRACEFULLY IN _instantiate_state and/or instaniate_output_state
-        # # If variable is numeric, assume it is a default spec passed in that had been parsed for initializatoin purposes
-        # if is_numeric(variable):
-        #     # self._variable = self.paramClassDefaults[DEFAULT_VARIABLE_SPEC]
-        #     self._variable = DEFAULT_VARIABLE_SPEC
-        # else:
-        #     self._variable = variable
-        # MODIFIED 3/10/18 END:
-
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
@@ -1464,14 +1456,26 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     else:
         reference_value = owner_value
 
-    if hasattr(owner, OUTPUT_STATE_TYPE):
-        outputStateType = owner.outputStateType
+    if hasattr(owner, OUTPUT_STATE_TYPES):
+        # If owner has only one type in OutputStateTypes, generate state_types list with that for all entries
+        if not isinstance(owner.outputStateTypes, list):
+            state_types = owner.outputStateTypes
+        else:
+            # If no OutputState specified, used first state_type in outputStateTypes as default
+            if output_states is None:
+                state_types = owner.outputStateTypes[0]
+            else:
+                # Construct list with an entry for the state_type of each OutputState in output_states
+                state_types = []
+                for output_state in output_states:
+                    state_types.append(output_state.__class__)
     else:
-        outputStateType = OutputState
+        # Use OutputState as default
+        state_types = OutputState
 
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=output_states,
-                                         state_type=outputStateType,
+                                         state_types=state_types,
                                          state_param_identifier=OUTPUT_STATE,
                                          reference_value=reference_value,
                                          reference_value_name="output",

@@ -84,6 +84,8 @@ CONTENTS
 * `make_readonly_property`
 * `get_class_attributes`
 * `insert_list`
+* `flatten_list`
+* `convert_to_list`
 * `get_global_seed`
 * `set_global_seed`
 
@@ -105,8 +107,8 @@ import numpy as np
 from psyneulink.core.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
 
 __all__ = [
-    'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes',
+    'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
+    'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes', 'flatten_list',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
@@ -1052,7 +1054,7 @@ class ContentAddressableList(UserList):
 
     IMPLEMENTATION NOTE:
         This class allows Components to be maintained in lists, while providing ordered storage
-        and the convenience access and assignment by name (e.g., akin to a dict).
+        and the convenience of access and assignment by name (e.g., akin to a dict).
         Lists are used (instead of a dict or OrderedDict) since:
             - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
                 collections of states to other variables, such as lists of their values);
@@ -1419,6 +1421,15 @@ def insert_list(list1, position, list2):
     """Insert list2 into list1 at position"""
     return list1[:position] + list2 + list1[position:]
 
+def convert_to_list(l):
+    if isinstance(l, list):
+        return l
+    else:
+        return [l]
+
+def flatten_list(l):
+    return [item for sublist in l for item in sublist]
+
 _seed = int(time.monotonic())
 def get_global_seed(offset=1):
     global _seed
@@ -1566,6 +1577,8 @@ class NodeRole(Enum):
     CYCLE
         A Node that belongs to a cycle.
 
+    LEARNING
+        A Node that is only executed when learning is enabled.
     """
     ORIGIN = 0
     INPUT = 1
@@ -1576,6 +1589,7 @@ class NodeRole(Enum):
     FEEDBACK_SENDER = 6
     FEEDBACK_RECEIVER = 7
     CYCLE = 8
+    LEARNING = 9
 
 def unproxy_weakproxy(proxy):
     """

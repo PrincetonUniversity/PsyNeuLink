@@ -920,7 +920,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     className = componentType
     suffix = " " + className
 
-    outputStateType = LearningSignal
+    outputStateTypes = LearningSignal
 
     stateListAttr = Mechanism_Base.stateListAttr.copy()
     stateListAttr.update({LearningSignal:LEARNING_SIGNALS})
@@ -1285,7 +1285,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         List[ndarray, ndarray] : summed learning_signal, summed error_signal
 
         """
-
         # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
         current_error_signal_inputs = self.error_signal_input_states
         curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
