@@ -3567,14 +3567,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         execution_scheduler = scheduler_processing
 
         if bin_execute:
-            execution_phase = self.parameters.context.get(execution_id).execution_phase
-            # Exec mode skips mbo invocation so we can't use it if mbo is
-            # present and active
             is_simulation = (execution_context is not None and
                              execution_context.execution_phase == ContextFlags.SIMULATION)
-            can_exec = not self.enable_controller or is_simulation
             # Try running in Exec mode first
             if (bin_execute is True or str(bin_execute).endswith('Exec')):
+                # There's no mode to execute simulations.
+                # Simulations are run as part of the controller node wrapper.
                 assert not is_simulation
                 try:
                     if bin_execute is True or bin_execute.startswith('LLVM'):
@@ -3597,7 +3595,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             try:
                 # Filter out mechanisms. Nested compositions are not executed in this mode
                 # Filter out controller. Compilation of controllers is not supported yet
-                is_simulation = execution_context is not None and execution_context.execution_phase is ContextFlags.SIMULATION
                 mechanisms = [n for n in self._all_nodes if isinstance(n, Mechanism) and (n is not self.controller or not is_simulation)]
                 # Generate all mechanism wrappers
                 for m in mechanisms:
@@ -4048,12 +4045,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._initialize_from_context(execution_id, base_execution_id, override=False)
             self._assign_context_values(execution_id, composition=self)
 
-        # Run mode skips mbo invocation so we can't use it if mbo is
-        # present and active
         is_simulation = (execution_context is not None and
                          execution_context.execution_phase == ContextFlags.SIMULATION)
-        can_run = not self.enable_controller or is_simulation
         if (bin_execute is True or str(bin_execute).endswith('Run')):
+            # There's no mode to run simulations.
+            # Simulations are run as part of the controller node wrapper.
             assert not is_simulation
             try:
                 if bin_execute is True or bin_execute.startswith('LLVM'):
