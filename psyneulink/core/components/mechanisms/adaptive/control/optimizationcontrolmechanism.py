@@ -1143,24 +1143,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return fun_out, builder
 
-    def _gen_llvm_output_states(self, ctx, builder, params, context, value, so):
-        for i, state in enumerate(self.output_states):
-
-            # LLVM equivalent of parse value; extract array element
-            # corresponsing to the output state number
-            os_input = builder.alloca(pnlvm.ir.ArrayType(ctx.float_ty, 1))
-            val_ptr = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-            dest_ptr = builder.gep(os_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.store(builder.load(val_ptr), dest_ptr)
-
-
-            os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
-            os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
-            os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            os_function = ctx.get_llvm_function(state)
-            builder.call(os_function, [os_params, os_context, os_input, os_output])
-
-        return builder
+    def _gen_llvm_output_state_parse_variable(self, ctx, builder, params, context, value, state):
+        i = self.output_states.index(state)
+        os_input = builder.alloca(pnlvm.ir.ArrayType(ctx.float_ty, 1))
+        val_ptr = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+        dest_ptr = builder.gep(os_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        builder.store(builder.load(val_ptr), dest_ptr)
+        return os_input
 
     def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
