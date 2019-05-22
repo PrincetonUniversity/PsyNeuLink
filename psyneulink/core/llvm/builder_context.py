@@ -15,6 +15,7 @@ import numpy as np
 import os, re
 
 from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.globals.keywords import AFTER, BEFORE
 
 from psyneulink.core import llvm as pnlvm
 from .debug import debug_env
@@ -217,6 +218,13 @@ class LLVMBuilderContext:
         input_cim_f = self.get_llvm_function(input_cim_w)
         builder.call(input_cim_f, [context, params, comp_in, data, data])
 
+        if simulation is False and composition.enable_controller and \
+                                   composition.controller_mode == BEFORE:
+            assert composition.controller is not None
+            controller = composition._get_node_wrapper(composition.controller, simulation)
+            controller_f = self.get_llvm_function(controller)
+            builder.call(controller_f, [context, params, comp_in, data, data])
+
         # Allocate run set structure
         run_set_type = ir.ArrayType(ir.IntType(1), len(composition.nodes))
         run_set_ptr = builder.alloca(run_set_type, name="run_set")
@@ -308,6 +316,14 @@ class LLVMBuilderContext:
         builder.branch(loop_condition)
 
         builder.position_at_end(exit_block)
+
+        if simulation is False and composition.enable_controller and \
+                                   composition.controller_mode == AFTER:
+            assert composition.controller is not None
+            controller = composition._get_node_wrapper(composition.controller, simulation)
+            controller_f = self.get_llvm_function(controller)
+            builder.call(controller_f, [context, params, comp_in, data, data])
+
         # Call output CIM
         output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation);
         output_cim_f = self.get_llvm_function(output_cim_w)

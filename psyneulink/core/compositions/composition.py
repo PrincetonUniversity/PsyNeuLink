@@ -3574,7 +3574,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              execution_context.execution_phase == ContextFlags.SIMULATION)
             can_exec = not self.enable_controller or is_simulation
             # Try running in Exec mode first
-            if (bin_execute is True or str(bin_execute).endswith('Exec')) and can_exec:
+            if (bin_execute is True or str(bin_execute).endswith('Exec')):
+                assert not is_simulation
                 try:
                     if bin_execute is True or bin_execute.startswith('LLVM'):
                         _comp_ex = pnlvm.CompExecution(self, [execution_id])
@@ -4052,7 +4053,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         is_simulation = (execution_context is not None and
                          execution_context.execution_phase == ContextFlags.SIMULATION)
         can_run = not self.enable_controller or is_simulation
-        if (bin_execute is True or str(bin_execute).endswith('Run')) and can_run:
+        if (bin_execute is True or str(bin_execute).endswith('Run')):
+            assert not is_simulation
             try:
                 if bin_execute is True or bin_execute.startswith('LLVM'):
                     _comp_ex = pnlvm.CompExecution(self, [execution_id])
