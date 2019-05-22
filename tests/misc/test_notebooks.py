@@ -15,7 +15,7 @@ def _notebook_run(filepath):
             '--to', 'notebook', '--execute',
             '--ExecutePreprocessor.timeout=300', # 5 min max for executing
             '--stdout', filepath]
-    return subprocess.check_call(args, stdout=subprocess.DEVNULL)
+    return subprocess.call(args, stdout=subprocess.DEVNULL)
 
 def _find_ipynbs():
     """Finds all the jupyter notebooks present in the tutorial directory"""
