@@ -1383,12 +1383,17 @@ class GridSearch(OptimizationFunction):
                 b = ocm._gen_llvm_evaluate(ctx, b, obj_param_ptr, obj_state_ptr, sample_ptr, arg_in, value_ptr)
             else:
                 b.call(obj_func, [obj_param_ptr, obj_state_ptr, sample_ptr, value_ptr])
+
+            # Check if smaller than current best.
+            # This will also set 'replace' if min_value is NaN.
             value = b.load(value_ptr)
             min_value = b.load(min_value_ptr)
             direction = "<" if self.direction is MINIMIZE else ">"
-
             replace = b.fcmp_unordered(direction, value, min_value)
             b.store(replace, replace_ptr)
+
+            # Python does "is_close" check first.
+            # This implements reservoir sampling
             with b.if_then(select_random):
                 close = pnlvm.helpers.is_close(b, value, min_value)
                 with b.if_else(close) as (tb, eb):
@@ -1410,11 +1415,12 @@ class GridSearch(OptimizationFunction):
                             b.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
 
             with b.if_then(b.load(replace_ptr)):
-                b.store(value, min_value_ptr)
+                b.store(b.load(value_ptr), min_value_ptr)
                 b.store(b.load(sample_ptr), min_sample_ptr)
 
             builder = b
 
+        # Produce output
         out_sample_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         out_value_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
         builder.store(builder.load(min_sample_ptr), out_sample_ptr)

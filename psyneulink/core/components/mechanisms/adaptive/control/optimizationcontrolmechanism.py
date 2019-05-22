@@ -962,7 +962,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return pnlvm.ir.LiteralStructType([intensity_cost_struct])
 
     def _get_evaluate_param_initializer(self, execution_id):
-        # FIXME: THe intensity cost function is not setup with the right execution id
+        # FIXME: The intensity cost function is not setup with the right execution id
         intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
         return (intensity_cost,)
 
