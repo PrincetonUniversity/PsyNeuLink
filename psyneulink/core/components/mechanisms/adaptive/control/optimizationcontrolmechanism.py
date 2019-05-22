@@ -989,15 +989,15 @@ class OptimizationControlMechanism(ControlMechanism):
         sim_f = ctx.get_llvm_function(self.agent_rep._llvm_sim_run.name)
 
         comp_params, base_comp_state, base_comp_data = builder.function.args[-3:]
-        # create a simulation copy of state
+        # Create a simulation copy of composition state
         comp_state = builder.alloca(base_comp_state.type.pointee)
         builder.store(builder.load(base_comp_state), comp_state)
 
-        # create a simulation copy of data
+        # Create a simulation copy of composition data
         comp_data = builder.alloca(base_comp_data.type.pointee)
         builder.store(builder.load(base_comp_data), comp_data)
 
-        # apply allocation sample
+        # Apply allocation sample to simulation data
         assert len(self.output_states) == len(allocation_sample.type.pointee)
         idx = self.agent_rep._get_node_index(self)
         ocm_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
@@ -1028,17 +1028,17 @@ class OptimizationControlMechanism(ControlMechanism):
         num_sims = builder.select(param_is_zero, ctx.int32_ty(1),
                                                  num_estimates)
 
-        comp_out_count = builder.alloca(ctx.int32_ty)
-        builder.store(num_sims, comp_out_count)
+        num_runs = builder.alloca(ctx.int32_ty)
+        builder.store(num_sims, num_runs)
 
         # We only provide one input
-        comp_in_count = builder.alloca(ctx.int32_ty)
-        builder.store(comp_in_count.type.pointee(1), comp_in_count)
+        num_inputs = builder.alloca(ctx.int32_ty)
+        builder.store(num_inputs.type.pointee(1), num_inputs)
 
         # Simulations don't store output
         comp_output = sim_f.args[4].type(None)
         builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
-                             comp_output, comp_in_count, comp_out_count])
+                             comp_output, num_runs, num_inputs])
 
         # Extract objective mech value
         idx = self.agent_rep._get_node_index(self.objective_mechanism)
