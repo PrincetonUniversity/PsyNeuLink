@@ -2728,21 +2728,22 @@ class Mechanism_Base(Mechanism):
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
         return f_params, builder
 
-    def _gen_llvm_output_states(self, ctx, builder, params, context, value, so):
-        for i, state in enumerate(self.output_states):
-            #FIXME: can we rely on this?
+    def _gen_llvm_output_state_parse_variable(self, ctx, builder, params, context, value, state):
             os_in_spec = state._variable_spec
             if os_in_spec == OWNER_VALUE:
-                os_input = value
+                return value
             elif isinstance(os_in_spec, tuple) and os_in_spec[0] == OWNER_VALUE:
-                os_input = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[1])])
+                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[1])])
             #FIXME: For some reason this can be wrapped in a list
             elif isinstance(os_in_spec, list) and len(os_in_spec) == 1 and isinstance(os_in_spec[0], tuple) and os_in_spec[0][0] == OWNER_VALUE:
-                os_input = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[0][1])])
+                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[0][1])])
             else:
                 #TODO: support more spec options
                 assert False, "Unsupported output state spec: {} ({})".format(os_in_spec, value.type)
 
+    def _gen_llvm_output_states(self, ctx, builder, params, context, value, so):
+        for i, state in enumerate(self.output_states):
+            os_input = self._gen_llvm_output_state_parse_variable(ctx, builder, params, context, value, state)
             os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
             os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
             os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
