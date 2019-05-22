@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# ********************************************* Composition ***************************************************************
+# ********************************************* Composition ************************************************************
 
 """
 ..
@@ -45,7 +45,8 @@ following Composition methods:
     - `add_projections <Composition.add_projections>`
         Adds connection between multiple pairs of nodes in the Composition
     - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
-        Adds and connects a list of nodes and/or Projections to the Composition; Inserts a default Projection between any adjacent Nodes
+        Adds and connects a list of nodes and/or Projections to the Composition;
+        Inserts a default Projection between any adjacent Nodes
 
 .. note::
   Only Nodes and Projections added to a Composition via the methods above constitute a Composition, even if
@@ -1355,14 +1356,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.controller = controller
         self.controller.composition = self
-        # MODIFIED 5/14/19 NEW: [JDC]
-        if self.controller.objective_mechanism is not None:
+
+        if self.controller.objective_mechanism:
             self.add_node(self.controller.objective_mechanism)
-        # MODIFIED 5/14/19 END
+
         self.enable_controller = True
 
-        for proj in self.controller.objective_mechanism.path_afferents:
-            self.add_projection(proj)
+        if self.controller.objective_mechanism:
+            for proj in self.controller.objective_mechanism.path_afferents:
+                self.add_projection(proj)
 
         controller._activate_projections_for_compositions(self)
         self._analyze_graph()
@@ -2074,7 +2076,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
         objective_mechanism = None
-        if self.controller and self.enable_controller:
+        if self.controller and self.enable_controller and self.controller.objective_mechanism:
             objective_mechanism = self.controller.objective_mechanism
             self._add_node_role(objective_mechanism, NodeRole.OBJECTIVE)
 
@@ -3217,34 +3219,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                       "can't be used in its show_graph() method\n".format(self.name))
                 return
 
-            # get projection from ObjectiveMechanism to ControlMechanism
-            objmech_ctlr_proj = controller.input_state.path_afferents[0]
-            if controller in active_items:
-                if active_color is BOLD:
-                    objmech_ctlr_proj_color = controller_color
-                else:
-                    objmech_ctlr_proj_color = active_color
-                objmech_ctlr_proj_width = str(default_width + active_thicker_by)
-                self.active_item_rendered = True
-            else:
-                objmech_ctlr_proj_color = controller_color
-                objmech_ctlr_proj_width = str(default_width)
-
-            # get ObjectiveMechanism
-            objmech = objmech_ctlr_proj.sender.owner
-            if objmech in active_items:
-                if active_color is BOLD:
-                    objmech_color = controller_color
-                else:
-                    objmech_color = active_color
-                objmech_width = str(default_width + active_thicker_by)
-                self.active_item_rendered = True
-            else:
-                objmech_color = controller_color
-                objmech_width = str(default_width)
-
+            # Assign controller node
             ctlr_label = self._get_graph_node_label(controller, show_dimensions)
-            objmech_label = self._get_graph_node_label(objmech, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
                        controller.show_structure(**node_struct_args, node_border=ctlr_width),
@@ -3253,34 +3229,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        penwidth=ctlr_width,
                        rank=control_rank
                        )
-                g.node(objmech_label,
-                       objmech.show_structure(**node_struct_args, node_border=ctlr_width),
-                       shape=struct_shape,
-                       color=objmech_color,
-                       penwidth=ctlr_width,
-                       rank=control_rank
-                       )
             else:
                 g.node(ctlr_label,
                         color=ctlr_color, penwidth=ctlr_width, shape=node_shape,
                         rank=control_rank)
-                g.node(objmech_label,
-                        color=objmech_color, penwidth=objmech_width, shape=node_shape,
-                        rank=control_rank)
-
-            # objmech to controller edge
-            if show_projection_labels:
-                edge_label = objmech_ctlr_proj.name
-            else:
-                edge_label = ''
-            if show_node_structure:
-                obj_to_ctrl_label = objmech_label + ':' + objmech._get_port_name(objmech_ctlr_proj.sender)
-                ctlr_from_obj_label = ctlr_label + ':' + objmech._get_port_name(objmech_ctlr_proj.receiver)
-            else:
-                obj_to_ctrl_label = objmech_label
-                ctlr_from_obj_label = ctlr_label
-            g.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label,
-                   color=objmech_ctlr_proj_color, penwidth=objmech_ctlr_proj_width)
 
             # outgoing edges (from controller to ProcessingMechanisms)
             for control_signal in controller.control_signals:
@@ -3313,33 +3265,88 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            color=ctl_proj_color,
                            penwidth=ctl_proj_width
                            )
+            # If controller has objective_mechanism, assign its node and projetions
+            if controller.objective_mechanism:
+                # get projection from ObjectiveMechanism to ControlMechanism
+                objmech_ctlr_proj = controller.input_state.path_afferents[0]
+                if controller in active_items:
+                    if active_color is BOLD:
+                        objmech_ctlr_proj_color = controller_color
+                    else:
+                        objmech_ctlr_proj_color = active_color
+                    objmech_ctlr_proj_width = str(default_width + active_thicker_by)
+                    self.active_item_rendered = True
+                else:
+                    objmech_ctlr_proj_color = controller_color
+                    objmech_ctlr_proj_width = str(default_width)
 
-            # incoming edges (from monitored mechs to objective mechanism)
-            for input_state in objmech.input_states:
-                for projection in input_state.path_afferents:
-                    if objmech in active_items:
-                        if active_color is BOLD:
-                            proj_color = controller_color
+                # get ObjectiveMechanism
+                objmech = objmech_ctlr_proj.sender.owner
+                if objmech in active_items:
+                    if active_color is BOLD:
+                        objmech_color = controller_color
+                    else:
+                        objmech_color = active_color
+                    objmech_width = str(default_width + active_thicker_by)
+                    self.active_item_rendered = True
+                else:
+                    objmech_color = controller_color
+                    objmech_width = str(default_width)
+
+                objmech_label = self._get_graph_node_label(objmech, show_dimensions)
+                if show_node_structure:
+                    g.node(objmech_label,
+                           objmech.show_structure(**node_struct_args, node_border=ctlr_width),
+                           shape=struct_shape,
+                           color=objmech_color,
+                           penwidth=ctlr_width,
+                           rank=control_rank
+                           )
+                else:
+                    g.node(objmech_label,
+                            color=objmech_color, penwidth=objmech_width, shape=node_shape,
+                            rank=control_rank)
+
+                # objmech to controller edge
+                if show_projection_labels:
+                    edge_label = objmech_ctlr_proj.name
+                else:
+                    edge_label = ''
+                if show_node_structure:
+                    obj_to_ctrl_label = objmech_label + ':' + objmech._get_port_name(objmech_ctlr_proj.sender)
+                    ctlr_from_obj_label = ctlr_label + ':' + objmech._get_port_name(objmech_ctlr_proj.receiver)
+                else:
+                    obj_to_ctrl_label = objmech_label
+                    ctlr_from_obj_label = ctlr_label
+                g.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label,
+                       color=objmech_ctlr_proj_color, penwidth=objmech_ctlr_proj_width)
+
+                # incoming edges (from monitored mechs to objective mechanism)
+                for input_state in objmech.input_states:
+                    for projection in input_state.path_afferents:
+                        if objmech in active_items:
+                            if active_color is BOLD:
+                                proj_color = controller_color
+                            else:
+                                proj_color = active_color
+                            proj_width = str(default_width + active_thicker_by)
+                            self.active_item_rendered = True
                         else:
-                            proj_color = active_color
-                        proj_width = str(default_width + active_thicker_by)
-                        self.active_item_rendered = True
-                    else:
-                        proj_color = controller_color
-                        proj_width = str(default_width)
-                    if show_node_structure:
-                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
-                                          ':' + objmech._get_port_name(projection.sender)
-                        objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_state)
-                    else:
-                        sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions)
-                        objmech_proj_label = self._get_graph_node_label(objmech, show_dimensions)
-                    if show_projection_labels:
-                        edge_label = projection.name
-                    else:
-                        edge_label = ''
-                    g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
-                           color=proj_color, penwidth=proj_width)
+                            proj_color = controller_color
+                            proj_width = str(default_width)
+                        if show_node_structure:
+                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions) + \
+                                              ':' + objmech._get_port_name(projection.sender)
+                            objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_state)
+                        else:
+                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner, show_dimensions)
+                            objmech_proj_label = self._get_graph_node_label(objmech, show_dimensions)
+                        if show_projection_labels:
+                            edge_label = projection.name
+                        else:
+                            edge_label = ''
+                        g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
+                               color=proj_color, penwidth=proj_width)
 
 
         # SETUP AND CONSTANTS -----------------------------------------------------------------

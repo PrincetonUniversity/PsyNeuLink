@@ -1773,8 +1773,8 @@ class Process(Process_Base):
                 input_state_variable = mechanism.input_states[i].socket_template
                 if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
-                                       "variable for corresponding inputState of {3}".
-                                       format(i, process_input[i], self.name, mechanism.name))
+                                       "variable for corresponding inputState of {3} (format: {4})".
+                                       format(i, process_input[i], self.name, mechanism.name, input_state_variable))
                 # Create MappingProjection from Process input state to corresponding mechanism.input_state
                 proj = MappingProjection(sender=self.process_input_states[i],
                                   receiver=mechanism.input_states[i],

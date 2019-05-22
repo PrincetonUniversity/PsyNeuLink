@@ -37,6 +37,7 @@ class TestModulatoryMechanism:
         assert m.parameter_states['bias'].mod_afferents[0].sender.owner == c
         assert m.input_state.mod_afferents[0].sender.owner == c
 
+
     def test_control_modulation_in_composition(self):
         Tx = TransferMechanism(name='Tx')
         Ty = TransferMechanism(name='Ty')
