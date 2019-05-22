@@ -957,25 +957,25 @@ class OptimizationControlMechanism(ControlMechanism):
         return result
 
     def _get_evaluate_param_struct_type(self, ctx):
+        num_estimates = ctx.int32_ty
         intensity_cost = [ctx.get_param_struct_type(os.intensity_cost_function) for os in self.output_states]
+        intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
+        return pnlvm.ir.LiteralStructType([intensity_cost_struct, num_estimates])
+
+    def _get_evaluate_param_initializer(self, execution_id):
+        num_estimates = self.parameters.num_estimates.get(execution_id) or 0
+        # FIXME: The intensity cost function is not setup with the right execution id
+        intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
+        return (intensity_cost, num_estimates)
+
+    def _get_evaluate_context_struct_type(self, ctx):
+        intensity_cost = [ctx.get_context_struct_type(os.intensity_cost_function) for os in self.output_states]
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
         return pnlvm.ir.LiteralStructType([intensity_cost_struct])
 
-    def _get_evaluate_param_initializer(self, execution_id):
-        # FIXME: The intensity cost function is not setup with the right execution id
-        intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
-        return (intensity_cost,)
-
-    def _get_evaluate_context_struct_type(self, ctx):
-        num_estimates = ctx.int32_ty
-        intensity_cost = [ctx.get_context_struct_type(os.intensity_cost_function) for os in self.output_states]
-        intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
-        return pnlvm.ir.LiteralStructType([num_estimates, intensity_cost_struct])
-
     def _get_evaluate_context_initializer(self, execution_id):
-        num_estimates = self.parameters.num_estimates.get(execution_id) or 0
         intensity_cost = tuple((os.intensity_cost_function._get_context_initializer(execution_id) for os in self.output_states))
-        return (num_estimates, intensity_cost)
+        return (intensity_cost,)
 
     def _get_evaluate_output_struct_type(self, ctx):
         # Returns a scalar that is the predicted net_outcome
@@ -1019,7 +1019,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
 
         # determine simulation counts
-        num_estimates_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        num_estimates_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         num_estimates = builder.load(num_estimates_ptr)
 
         # if num_estimates is 0, run 1 trial
@@ -1055,11 +1055,13 @@ class OptimizationControlMechanism(ControlMechanism):
         for i, os in enumerate(self.output_states):
             # FIXME: Add support for other cost types
             assert os.cost_options == ControlSignalCosts.INTENSITY
+
             func = ctx.get_llvm_function(os.intensity_cost_function)
             func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-            func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(i)])
+            func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
             func_out = builder.alloca(func.args[3].type.pointee)
             func_in = builder.alloca(func.args[2].type.pointee)
+
             # copy allocation_sample the input is 1-element array
             data_in = builder.gep(allocation_sample, [ctx.int32_ty(0), ctx.int32_ty(i)])
             data_out = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
