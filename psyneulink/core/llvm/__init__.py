@@ -141,9 +141,6 @@ def _updateNativeBinaries(module, buffer):
         # one passed to getrefcount function
         if sys.getrefcount(v) == 4:
             to_delete.append(k)
-        else:
-            new_ptr = _cpu_engine._engine.get_function_address(k)
-            v.ptr = new_ptr
 
     for d in to_delete:
         del _binaries[d]
