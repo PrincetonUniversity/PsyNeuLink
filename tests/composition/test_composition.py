@@ -4552,8 +4552,10 @@ class TestInputSpecifications:
 
 class TestProperties:
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python', 'Fallback',
-                                      pytest.param('LLVM', marks=(pytest.mark.xfail, pytest.mark.llvm))])
+    @pytest.mark.parametrize("mode", ['Python', True,
+                                      pytest.param('LLVM', marks=(pytest.mark.xfail, pytest.mark.llvm)),
+                                      pytest.param('LLVMExec', marks=(pytest.mark.xfail, pytest.mark.llvm)),
+                                      pytest.param('LLVMRun', marks=(pytest.mark.xfail, pytest.mark.llvm))])
     def test_llvm_fallback(self, mode):
         comp = Composition()
         def myFunc(variable, params, context):
