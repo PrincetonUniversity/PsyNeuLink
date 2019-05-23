@@ -9,6 +9,7 @@
 # ********************************************* LLVM bindings **************************************************************
 
 import ctypes, os, sys
+import functools
 import numpy as np
 
 from llvmlite import ir
@@ -40,8 +41,6 @@ def _llvm_build():
     # update binary generation
     _binary_generation = LLVMBuilderContext._llvm_generation
 
-
-_binaries = {}
 
 class LLVMBinaryFunction:
     def __init__(self, name):
@@ -114,12 +113,11 @@ class LLVMBinaryFunction:
         self.cuda_call(*wrap_args)
 
     @staticmethod
+    @functools.lru_cache(maxsize=32)
     def get(name):
         if LLVMBuilderContext._llvm_generation > _binary_generation:
             _llvm_build()
-        if name not in _binaries.keys():
-            _binaries[name] = LLVMBinaryFunction(name)
-        return _binaries[name]
+        return LLVMBinaryFunction(name)
 
     def get_multi_run(self):
         try:
@@ -132,20 +130,7 @@ class LLVMBinaryFunction:
         return LLVMBinaryFunction.get(multirun_llvm.name)
 
 
-def _updateNativeBinaries(module, buffer):
-    to_delete = []
-    # update all pointers that might have been modified
-    for k, v in _binaries.items():
-        # One reference is held by the _binaries dict, second is held
-        # by the k, v tuple here, third by this function, and 4th is the
-        # one passed to getrefcount function
-        if sys.getrefcount(v) == 4:
-            to_delete.append(k)
-
-    for d in to_delete:
-        del _binaries[d]
-
-_cpu_engine = cpu_jit_engine(_updateNativeBinaries)
+_cpu_engine = cpu_jit_engine()
 if ptx_enabled:
     _ptx_engine = ptx_jit_engine()
 
@@ -165,6 +150,7 @@ def cleanup():
     _compiled_modules.clear()
     _all_modules.clear()
     _type_cache.clear()
+    LLVMBinaryFunction.get.cache_clear()
     init_builtins()
 
 init_builtins()
