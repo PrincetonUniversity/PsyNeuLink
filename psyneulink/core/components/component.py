@@ -923,7 +923,6 @@ class Component(object, metaclass=ComponentsMeta):
 
     _deepcopy_shared_keys = frozenset([
         'init_args',
-        '_Component__llvm_function',
     ])
 
     class _CompilationData(ParametersBase):
@@ -1172,6 +1171,8 @@ class Component(object, metaclass=ComponentsMeta):
     def _llvm_function(self):
         if self.__llvm_function is None:
             self.__llvm_function = self._gen_llvm_function()
+            self.__llvm_function.__copy__ = lambda x: None
+            self.__llvm_function.__deepcopy__ = lambda x: None
         return self.__llvm_function
 
     @property
@@ -1222,7 +1223,6 @@ class Component(object, metaclass=ComponentsMeta):
     def __deepcopy__(self, memo):
         fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
         newone = fun(self, memo)
-        newone.__dict__['_Component__llvm_function'] = None
 
         if newone.parameters is not newone.class_parameters:
             # may be in DEFERRED INIT, so parameters/defaults belongs to class
