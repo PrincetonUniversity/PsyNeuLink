@@ -1178,17 +1178,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Compiled resources
         self.__generated_node_wrappers = {}
-        self.__compiled_node_wrappers = {}
         self.__generated_execution = None
-        self.__compiled_execution = None
-        self.__compiled_run = None
-
+        self.__generated_run = None
         self.__generated_sim_node_wrappers = {}
-        self.__compiled_sim_node_wrappers = {}
         self.__generated_simulation = None
         self.__generated_sim_run = None
-        self.__compiled_simulation = None
-        self.__compiled_sim_run = None
 
         self._compilation_data = self._CompilationData(owner=self)
 
@@ -4400,13 +4394,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.__generated_node_wrappers[node]
 
     def _get_bin_node(self, node):
-        if node not in self.__compiled_node_wrappers:
-            wrapper = self._get_node_wrapper(node)
-            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper._llvm_function.name)
-            self.__compiled_node_wrappers[node] = bin_f
-            return bin_f
-
-        return self.__compiled_node_wrappers[node]
+        wrapper = self._get_node_wrapper(node)
+        return pnlvm.LLVMBinaryFunction.get(wrapper._llvm_function.name)
 
     def _get_sim_node_wrapper(self, node):
         if node not in self.__generated_sim_node_wrappers:
@@ -4421,13 +4410,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.__generated_sim_node_wrappers[node]
 
     def _get_sim_bin_node(self, node):
-        if node not in self.__compiled_sim_node_wrappers:
-            wrapper = self._get_sim_node_wrapper(node)
-            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper._llvm_function.name)
-            self.__compiled_sim_node_wrappers[node] = bin_f
-            return bin_f
-
-        return self.__compiled_sim_node_wrappers[node]
+        wrapper = self._get_sim_node_wrapper(node)
+        return pnlvm.LLVMBinaryFunction.get(wrapper._llvm_function.name)
 
     @property
     def _llvm_function(self):
@@ -4436,6 +4420,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.__generated_execution = ctx.gen_composition_exec(self)
 
         return self.__generated_execution
+
+    @property
+    def _llvm_run(self):
+        if self.__generated_run is None:
+            with pnlvm.LLVMBuilderContext() as ctx:
+                self.__generated_run = ctx.gen_composition_run(self)
+
+        return self.__generated_run
 
     @property
     def _llvm_simulation(self):
@@ -4453,23 +4445,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return self.__generated_sim_run
 
-
     def _get_bin_execution(self):
-        if self.__compiled_execution is None:
-            wrapper = self._llvm_function
-            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper.name)
-            self.__compiled_execution = bin_f
-
-        return self.__compiled_execution
+        return pnlvm.LLVMBinaryFunction.get(self._llvm_function.name)
 
     def _get_bin_run(self):
-        if self.__compiled_run is None:
-            with pnlvm.LLVMBuilderContext() as ctx:
-                wrapper = ctx.gen_composition_run(self)
-            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper.name)
-            self.__compiled_run = bin_f
-
-        return self.__compiled_run
+        return pnlvm.LLVMBinaryFunction.get(self._llvm_run.name)
 
     def reinitialize(self, execution_context=NotImplemented):
         if execution_context is NotImplemented:
