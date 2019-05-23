@@ -45,20 +45,24 @@ class LLVMBuilderContext:
     def __init__(self):
         self.int32_ty = _int32_ty
         self.float_ty = _float_ty
-        self.module = None
+        self._modules = []
 
     def __enter__(self):
-        assert self.module is None
-        self.module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
+        module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
+        self._modules.append(module)
         LLVMBuilderContext._llvm_generation += 1
         return self
 
     def __exit__(self, e_type, e_value, e_traceback):
-        assert self.module is not None
-        _modules.add(self.module)
-        _all_modules.add(self.module)
-        self.module = None
+        assert len(self._modules) > 0
+        module = self._modules.pop()
+        _modules.add(module)
+        _all_modules.add(module)
 
+    @property
+    def module(self):
+        assert len(self._modules) > 0
+        return self._modules[-1]
 
     def get_unique_name(self, name):
         LLVMBuilderContext.uniq_counter += 1
