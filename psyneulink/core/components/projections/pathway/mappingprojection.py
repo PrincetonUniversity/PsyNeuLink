@@ -659,7 +659,7 @@ class MappingProjection(PathwayProjection_Base):
         self.parameters.context.get(execution_id).string = context
 
 
-        if hasattr(self.context, "composition") and hasattr(self.context.composition, "has_learning") and self.context.composition.has_learning:
+        if hasattr(self.context, "composition") and hasattr(self.context.composition, "learning_enabled") and self.context.composition.learning_enabled:
             self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
             self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
             self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING

@@ -15,6 +15,7 @@ import numpy as np
 import os, re
 
 from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.globals.keywords import AFTER, BEFORE
 
 from psyneulink.core import llvm as pnlvm
 from .debug import debug_env
@@ -38,31 +39,26 @@ _int32_ty = ir.IntType(32)
 _float_ty = ir.DoubleType()
 
 class LLVMBuilderContext:
-    module = None
-    nest_level = 0
     uniq_counter = 0
     _llvm_generation = 0
 
     def __init__(self):
         self.int32_ty = _int32_ty
         self.float_ty = _float_ty
+        self.module = None
 
     def __enter__(self):
-        if LLVMBuilderContext.nest_level == 0:
-            assert LLVMBuilderContext.module is None
-            LLVMBuilderContext.module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
-        LLVMBuilderContext.nest_level += 1
+        assert self.module is None
+        self.module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
+        LLVMBuilderContext._llvm_generation += 1
         return self
 
     def __exit__(self, e_type, e_value, e_traceback):
-        LLVMBuilderContext.nest_level -= 1
-        if LLVMBuilderContext.nest_level == 0:
-            assert LLVMBuilderContext.module is not None
-            _modules.add(LLVMBuilderContext.module)
-            _all_modules.add(LLVMBuilderContext.module)
-            LLVMBuilderContext.module = None
+        assert self.module is not None
+        _modules.add(self.module)
+        _all_modules.add(self.module)
+        LLVMBuilderContext.module = None
 
-        LLVMBuilderContext._llvm_generation += 1
 
     def get_unique_name(self, name):
         LLVMBuilderContext.uniq_counter += 1
@@ -73,15 +69,14 @@ class LLVMBuilderContext:
         if name in ('pow', 'log', 'exp'):
             return self.get_llvm_function("__pnl_builtin_" + name)
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
-
     def get_llvm_function(self, name):
         try:
             f = name._llvm_function
         except AttributeError:
-            f = _find_llvm_function(name, _all_modules | {LLVMBuilderContext.module})
+            f = _find_llvm_function(name, _all_modules | {self.module})
         # Add declaration to the current module
-        if f.name not in LLVMBuilderContext.module.globals:
-            decl_f = ir.Function(LLVMBuilderContext.module, f.type.pointee, f.name)
+        if f.name not in self.module.globals:
+            decl_f = ir.Function(self.module, f.type.pointee, f.name)
             assert decl_f.is_declaration
             return decl_f
         return f
@@ -157,7 +152,7 @@ class LLVMBuilderContext:
             return component._get_context_struct_type(self)
 
         try:
-            stateful = tuple((getattr(component, sa) for sa in component.stateful_attributes))
+            stateful = tuple(getattr(component, sa) for sa in component.stateful_attributes)
             return self.convert_python_struct_to_llvm_ir(stateful)
         except AttributeError:
             return ir.LiteralStructType([])
@@ -182,11 +177,12 @@ class LLVMBuilderContext:
             return builder.gep(element, [self.int32_ty(0), self.int32_ty(0)])
         return element
 
-    def gen_composition_exec(self, composition):
+    def gen_composition_exec(self, composition, simulation=False):
         # Create condition generator
         cond_gen = ConditionGenerator(self, composition)
 
-        func_name = self.get_unique_name('exec_wrap_' + composition.name)
+        name = 'exec_wrap_sim_' if simulation else 'exec_wrap_'
+        func_name = self.get_unique_name(name + composition.name)
         func_ty = ir.FunctionType(ir.VoidType(), (
             self.get_context_struct_type(composition).as_pointer(),
             self.get_param_struct_type(composition).as_pointer(),
@@ -218,9 +214,16 @@ class LLVMBuilderContext:
             data = data_arg
 
         # Call input CIM
-        input_cim_w = composition._get_node_wrapper(composition.input_CIM);
+        input_cim_w = composition._get_node_wrapper(composition.input_CIM, simulation)
         input_cim_f = self.get_llvm_function(input_cim_w)
         builder.call(input_cim_f, [context, params, comp_in, data, data])
+
+        if simulation is False and composition.enable_controller and \
+                                   composition.controller_mode == BEFORE:
+            assert composition.controller is not None
+            controller = composition._get_node_wrapper(composition.controller, simulation)
+            controller_f = self.get_llvm_function(controller)
+            builder.call(controller_f, [context, params, comp_in, data, data])
 
         # Allocate run set structure
         run_set_type = ir.ArrayType(ir.IntType(1), len(composition.nodes))
@@ -271,7 +274,7 @@ class LLVMBuilderContext:
             run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
             mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
             with builder.if_then(mech_cond):
-                mech_w = composition._get_node_wrapper(mech);
+                mech_w = composition._get_node_wrapper(mech, simulation);
                 mech_f = self.get_llvm_function(mech_w)
                 # Wrappers do proper indexing of all strctures
                 if len(mech_f.args) == 5: # Mechanism wrappers have 5 inputs
@@ -313,8 +316,16 @@ class LLVMBuilderContext:
         builder.branch(loop_condition)
 
         builder.position_at_end(exit_block)
+
+        if simulation is False and composition.enable_controller and \
+                                   composition.controller_mode == AFTER:
+            assert composition.controller is not None
+            controller = composition._get_node_wrapper(composition.controller, simulation)
+            controller_f = self.get_llvm_function(controller)
+            builder.call(controller_f, [context, params, comp_in, data, data])
+
         # Call output CIM
-        output_cim_w = composition._get_node_wrapper(composition.output_CIM);
+        output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation);
         output_cim_f = self.get_llvm_function(output_cim_w)
         builder.call(output_cim_f, [context, params, comp_in, data, data])
 
@@ -329,8 +340,9 @@ class LLVMBuilderContext:
 
         return llvm_func
 
-    def gen_composition_run(self, composition):
-        func_name = self.get_unique_name('run_wrap_' + composition.name)
+    def gen_composition_run(self, composition, simulation=False):
+        name = 'run_wrap_sim_' if simulation else 'run_wrap_'
+        func_name = self.get_unique_name(name + composition.name)
         func_ty = ir.FunctionType(ir.VoidType(), (
             self.get_context_struct_type(composition).as_pointer(),
             self.get_param_struct_type(composition).as_pointer(),
@@ -345,6 +357,11 @@ class LLVMBuilderContext:
         for a in llvm_func.args:
             a.attributes.add('nonnull')
             a.attributes.add('noalias')
+
+        # simulation does not care about the output
+        # it extracts results of the controller objective mechanism
+        if simulation:
+            data_out.attributes.remove('nonnull')
 
         # Create entry block
         entry_block = llvm_func.append_basic_block(name="entry")
@@ -385,15 +402,19 @@ class LLVMBuilderContext:
         data_in_ptr = builder.gep(data_in, [input_idx])
 
         # Call execution
-        exec_f = self.get_llvm_function(composition)
+        if simulation:
+            exec_f = self.get_llvm_function(composition._llvm_simulation.name)
+        else:
+            exec_f = self.get_llvm_function(composition)
         builder.call(exec_f, [context, params, data_in_ptr, data, cond])
 
-        # Extract output_CIM result
-        idx = composition._get_node_index(composition.output_CIM)
-        result_ptr = builder.gep(data, [self.int32_ty(0), self.int32_ty(0), self.int32_ty(idx)])
-        output_ptr = builder.gep(data_out, [iters])
-        result = builder.load(result_ptr)
-        builder.store(result, output_ptr)
+        if not simulation:
+            # Extract output_CIM result
+            idx = composition._get_node_index(composition.output_CIM)
+            result_ptr = builder.gep(data, [self.int32_ty(0), self.int32_ty(0), self.int32_ty(idx)])
+            output_ptr = builder.gep(data_out, [iters])
+            result = builder.load(result_ptr)
+            builder.store(result, output_ptr)
 
         # Increment counter
         iters = builder.add(iters, self.int32_ty(1))

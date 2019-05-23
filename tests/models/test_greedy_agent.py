@@ -186,16 +186,17 @@ def test_predator_prey(benchmark, mode):
     ocm.comp_execution_mode = mode
 
     input_dict = {player_obs:[[1.1576537,  0.60782117]],
-                                         predator_obs:[[-0.03479106, -0.47666293]],
-                                         prey_obs:[[-0.60836214,  0.1760381 ]],
-                                         }
+                  predator_obs:[[-0.03479106, -0.47666293]],
+                  prey_obs:[[-0.60836214,  0.1760381 ]],
+                 }
     run_results = agent_comp.run(inputs=input_dict, num_trials=2, bin_execute=mode)
 
     assert np.allclose(run_results[0], [[-19.06547277,   5.47274121]])
     # KAM modified expected output 3/13 because Objective Mechanism is no longer considered an "OUTPUT" node.
     # assert np.allclose(run_results[1], [[-7.95925672]])
-    assert np.allclose(ocm.feature_values, [[ 1.1576537,   0.60782117],
-                                            [-0.03479106, -0.47666293],
-                                            [-0.60836214,  0.1760381 ]])
+    if mode == 'Python':
+        assert np.allclose(ocm.feature_values, [[ 1.1576537,   0.60782117],
+                                                [-0.03479106, -0.47666293],
+                                                [-0.60836214,  0.1760381 ]])
 
     benchmark(agent_comp.run, inputs=input_dict, bin_execute=mode)

@@ -821,7 +821,7 @@ class Function_Base(Function):
 
             return pnlvm._tupleize(lists)
         except AttributeError:
-            return tuple([])
+            return tuple()
 
     def _get_compilation_params(self, execution_id=None):
         # Filter out known unused/invalid params

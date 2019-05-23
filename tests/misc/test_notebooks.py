@@ -7,8 +7,8 @@ def _notebook_run(filepath):
     """Execute a notebook via nbconvert and collect output.
        :returns (parsed nb object, execution errors)
     """
-    _, name = os.path.split(filepath)
-    name = os.path.splitext(name)[0]
+    # _, name = os.path.split(filepath)
+    # name = os.path.splitext(name)[0]
 
     # outfilename = os.path.join(outdir, '{}.ipynb'.format(name))
     args = ['jupyter', 'nbconvert', '--log-level', 'WARN',
