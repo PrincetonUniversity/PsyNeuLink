@@ -263,6 +263,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
+from psyneulink.core.components.functions.interfacefunctions import Identity
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
 from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
@@ -694,6 +695,19 @@ class MappingProjection(PathwayProjection_Base):
 
         if hasattr(self, "_parameter_states"):
             self.parameter_states["matrix"].function.previous_value = matrix
+
+        # The following is for efficient treatment of MappingProjections with identity matrix (just pass through value).
+        # If matrix is identity matrix and ParameterState for matrix has no mod_afferents,
+        #    then store current function assignment in ._function, and reassign function as Identity Function
+        rows, cols = matrix.shape
+        if (rows==cols and
+                (matrix == np.identity(rows)).all() and
+                len(self._parameter_states[MATRIX].mod_afferents)==0):
+            self._function = self.function
+            self.function = Identity(default_variable=matrix)
+        else:
+            if hasattr(self, '_function'):
+                self.function = self._function
 
     @property
     def _matrix_spec(self):
