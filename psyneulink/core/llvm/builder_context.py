@@ -57,7 +57,7 @@ class LLVMBuilderContext:
         assert self.module is not None
         _modules.add(self.module)
         _all_modules.add(self.module)
-        LLVMBuilderContext.module = None
+        self.module = None
 
 
     def get_unique_name(self, name):
