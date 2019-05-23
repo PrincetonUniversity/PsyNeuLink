@@ -1208,49 +1208,129 @@ class GridSearch(OptimizationFunction):
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
 
+    def _gen_llvm_function(self):
+        try:
+            # self.objective_function may be bound method of
+            # an OptimizationControlMechanism
+            ocm = self.objective_function.__self__
+        except AttributeError:
+            ocm = None
+        if ocm is not None:
+            with pnlvm.LLVMBuilderContext() as ctx:
+                extra_args = [ctx.get_param_struct_type(ocm.agent_rep).as_pointer(),
+                              ctx.get_context_struct_type(ocm.agent_rep).as_pointer(),
+                              ctx.get_data_struct_type(ocm.agent_rep).as_pointer()]
+        else:
+            extra_args = []
+
+        f = super()._gen_llvm_function(extra_args)
+        if len(extra_args) > 0:
+            for a in f.args[-len(extra_args):]:
+                a.attributes.add('nonnull')
+
+        return f
+
+    def _get_input_struct_type(self, ctx):
+        if self.owner is not None:
+            variable = [state.defaults.value for state in self.owner.input_states]
+            # Python list does not care about ndarrays of different lengths
+            # we do care, so convert to tuple to create struct
+            if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
+                variable = tuple(variable)
+
+        else:
+            variable = self.defaults.variable
+
+        return ctx.convert_python_struct_to_llvm_ir(variable)
+
     def _get_search_dim(self, ctx, d):
         if isinstance(d.generator, list):
-            return ctx.convert_python_struct_to_llvm_ir(d.generator)
-        assert False, "Unsupported dimension type"
+            # Make sure we only generate float values
+            return ctx.convert_python_struct_to_llvm_ir([float(x) for x in d.generator])
+        if isinstance(d, SampleIterator):
+            return pnlvm.ir.LiteralStructType((ctx.float_ty, ctx.float_ty, ctx.int32_ty))
+        assert False, "Unsupported dimension type: {}".format(d)
+
+    def _get_compilation_params(self, execution_id):
+        return [self.parameters.objective_function,
+                self.parameters.search_space,
+                self.parameters.random_state]
 
     def _get_param_struct_type(self, ctx):
         search_space = [self._get_search_dim(ctx, d) for d in self.search_space]
         space = pnlvm.ir.LiteralStructType(search_space)
         select_randomly = ctx.int32_ty
-        obj_func_param = ctx.get_param_struct_type(self.objective_function)
+        try:
+            # self.objective_function may be bound method of
+            # an OptimizationControlMechanism
+            ocm = self.objective_function.__self__
+            obj_func_param = ocm._get_evaluate_param_struct_type(ctx)
+        except AttributeError:
+            obj_func_param = ctx.get_param_struct_type(self.objective_function)
         return pnlvm.ir.LiteralStructType([obj_func_param, space, select_randomly])
 
     def _get_search_dim_init(self, execution_id, d):
         if isinstance(d.generator, list):
             return tuple(d.generator)
-        assert False, "Unsupported dimension type"
+        if isinstance(d, SampleIterator):
+            return (d.start, d.step, d.num)
+
+        assert False, "Unsupported dimension type: {}".format(d)
 
     def _get_param_initializer(self, execution_id):
-        grid_init = [self._get_search_dim_init(execution_id, d) for d in self.search_space]
+        grid_init = (self._get_search_dim_init(execution_id, d) for d in self.search_space)
         select_randomly = 1 if self.select_randomly_from_optimal_values else 0
-        return tuple([self.objective_function._get_param_initializer(execution_id), tuple(grid_init), select_randomly])
+        try:
+            # self.objective_function may be bound method of
+            # an OptimizationControlMechanism
+            ocm = self.objective_function.__self__
+            obj_func_param_init = ocm._get_evaluate_param_initializer(execution_id)
+        except AttributeError:
+            obj_func_param_init = self.objective_function._get_param_initializer(execution_id)
+        return (obj_func_param_init, tuple(grid_init), select_randomly)
 
     def _get_context_struct_type(self, ctx):
-        obj_state = ctx.get_context_struct_type(self.objective_function)
+        try:
+            # self.objective_function may be bound method of
+            # an OptimizationControlMechanism
+            ocm = self.objective_function.__self__
+            obj_func_state = ocm._get_evaluate_context_struct_type(ctx)
+        except AttributeError:
+            obj_func_state = ctx.get_context_struct_type(self.objective_function)
         # Get random state
         random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state"))
-        return pnlvm.ir.LiteralStructType([obj_state, random_state_struct])
+        return pnlvm.ir.LiteralStructType([obj_func_state, random_state_struct])
 
     def _get_context_initializer(self, execution_id):
-        obj_init = self.objective_function._get_context_initializer(execution_id)
+        try:
+            # self.objective_function may be bound method of
+            # an OptimizationControlMechanism
+            ocm = self.objective_function.__self__
+            obj_func_state_init = ocm._get_evaluate_context_initializer(execution_id)
+        except AttributeError:
+            obj_func_state_init = self.objective_function._get_context_initializer(execution_id)
         random_state = self.get_current_function_param("random_state", execution_id).get_state()[1:]
-        return tuple([obj_init, pnlvm._tupleize(random_state)])
+        return (obj_func_state_init, pnlvm._tupleize(random_state))
 
     def _get_output_struct_type(self, ctx):
         val = self.defaults.value
-        # we should never return 'all values'
-        new_val = tuple([val[0], val[1]])
-        return ctx.convert_python_struct_to_llvm_ir(new_val)
+        # compiled version should never return 'all values'
+        if len(val[0]) != len(self.search_space):
+            val = list(val)
+            val[0] = [0.0] * len(self.search_space)
+        return ctx.convert_python_struct_to_llvm_ir((val[0], val[1]))
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
-        obj_func = ctx.get_llvm_function(self.objective_function)
-        sample_t = obj_func.args[2].type.pointee
-        value_t = obj_func.args[3].type.pointee
+        ocm = getattr(self.objective_function, '__self__', None)
+        if ocm is not None:
+            assert ocm.function is self
+            sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
+            value_t = ocm._get_evaluate_output_struct_type(ctx)
+        else:
+            obj_func = ctx.get_llvm_function(self.objective_function)
+            sample_t = obj_func.args[2].type.pointee
+            value_t = obj_func.args[3].type.pointee
+
         min_sample_ptr = builder.alloca(sample_t)
         min_value_ptr = builder.alloca(value_t)
         sample_ptr = builder.alloca(sample_t)
@@ -1276,47 +1356,71 @@ class GridSearch(OptimizationFunction):
         b = builder
         with contextlib.ExitStack() as stack:
             for i in range(len(search_space_ptr.type.pointee)):
-                array = b.gep(search_space_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                assert isinstance(array.type.pointee,  pnlvm.ir.ArrayType)
+                dimension = b.gep(search_space_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 arg_elem = b.gep(sample_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                b, idx = stack.enter_context(pnlvm.helpers.array_ptr_loop(b, array, "loop_"+str(i)))
-                array_elem = b.gep(array, [ctx.int32_ty(0), idx])
-                b.store(b.load(array_elem), arg_elem)
+                if isinstance(dimension.type.pointee,  pnlvm.ir.ArrayType):
+                    b, idx = stack.enter_context(pnlvm.helpers.array_ptr_loop(b, dimension, "loop_" + str(i)))
+                    alloc_elem = b.gep(dimension, [ctx.int32_ty(0), idx])
+                    b.store(b.load(alloc_elem), arg_elem)
+                elif isinstance(dimension.type.pointee, pnlvm.ir.LiteralStructType):
+                    assert len(dimension.type.pointee) == 3
+                    start_ptr = b.gep(dimension, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                    step_ptr = b.gep(dimension, [ctx.int32_ty(0), ctx.int32_ty(1)])
+                    num_ptr = b.gep(dimension, [ctx.int32_ty(0), ctx.int32_ty(2)])
+                    start = b.load(start_ptr)
+                    step = b.load(step_ptr)
+                    num = b.load(num_ptr)
+                    b, idx = stack.enter_context(pnlvm.helpers.for_loop_zero_inc(b, num, "loop_" + str(i)))
+                    val = b.uitofp(idx, start.type)
+                    val = b.fmul(val, step)
+                    val = b.fadd(val, start)
+                    b.store(val, arg_elem)
+                else:
+                    assert False, "Unknown dimension type: {}".format(dimension.type)
 
             # We are in the inner most loop now with sample_ptr setup for execution
-            b.call(obj_func, [obj_param_ptr, obj_state_ptr, sample_ptr, value_ptr])
+            if ocm is not None:
+                b = ocm._gen_llvm_evaluate(ctx, b, obj_param_ptr, obj_state_ptr, sample_ptr, arg_in, value_ptr)
+            else:
+                b.call(obj_func, [obj_param_ptr, obj_state_ptr, sample_ptr, value_ptr])
+
+            # Check if smaller than current best.
+            # This will also set 'replace' if min_value is NaN.
             value = b.load(value_ptr)
             min_value = b.load(min_value_ptr)
             direction = "<" if self.direction is MINIMIZE else ">"
-
             replace = b.fcmp_unordered(direction, value, min_value)
-            builder.store(replace, replace_ptr)
-            with builder.if_then(select_random):
-                close = pnlvm.helpers.is_close(builder, value, min_value)
-                with builder.if_else(close) as (tb, eb):
+            b.store(replace, replace_ptr)
+
+            # Python does "is_close" check first.
+            # This implements reservoir sampling
+            with b.if_then(select_random):
+                close = pnlvm.helpers.is_close(b, value, min_value)
+                with b.if_else(close) as (tb, eb):
                     with tb:
-                        opt_count = builder.load(opt_count_ptr)
-                        opt_count = builder.fadd(opt_count, opt_count.type(1))
-                        prob = builder.fdiv(opt_count.type(1), opt_count)
+                        opt_count = b.load(opt_count_ptr)
+                        opt_count = b.fadd(opt_count, opt_count.type(1))
+                        prob = b.fdiv(opt_count.type(1), opt_count)
                         # reuse opt_count location. it will be overwritten later anyway
                         res_ptr = opt_count_ptr
                         rand_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
-                        builder.call(rand_f, [random_state, res_ptr])
-                        res = builder.load(res_ptr)
-                        builder.store(opt_count, opt_count_ptr)
-                        replace = builder.fcmp_ordered("<", res, prob)
-                        builder.store(replace, replace_ptr)
+                        b.call(rand_f, [random_state, res_ptr])
+                        res = b.load(res_ptr)
+                        b.store(opt_count, opt_count_ptr)
+                        replace = b.fcmp_ordered("<", res, prob)
+                        b.store(replace, replace_ptr)
                     with eb:
                         # we need to reset the counter if we are replacing with new best value
-                        with builder.if_then(builder.load(replace_ptr)):
-                            builder.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
+                        with b.if_then(b.load(replace_ptr)):
+                            b.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
 
-            with b.if_then(builder.load(replace_ptr)):
-                b.store(value, min_value_ptr)
+            with b.if_then(b.load(replace_ptr)):
+                b.store(b.load(value_ptr), min_value_ptr)
                 b.store(b.load(sample_ptr), min_sample_ptr)
 
             builder = b
 
+        # Produce output
         out_sample_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         out_value_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
         builder.store(builder.load(min_sample_ptr), out_sample_ptr)

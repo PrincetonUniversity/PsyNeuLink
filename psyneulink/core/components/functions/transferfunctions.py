@@ -1623,7 +1623,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         var = builder.load(ptri)
         exp_num = builder.fsub(var, bias)
         exp_num = builder.fmul(exp_num, exp_num)
-        exp_num = builder.fsub(exp_num.type(0), exp_num)
+        exp_num = pnlvm.helpers.fneg(builder, exp_num)
 
         exp_denom = builder.fmul(standard_deviation, standard_deviation)
         exp_denom = builder.fmul(exp_denom.type(2), exp_denom)

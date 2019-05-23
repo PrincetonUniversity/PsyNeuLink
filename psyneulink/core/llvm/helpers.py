@@ -75,14 +75,16 @@ def load_extract_scalar_array_one(builder, ptr):
         val = builder.extract_value(val, [0])
     return val
 
+def fneg(builder, val, name=""):
+    return builder.fsub(val.type(-0.0), val, name)
 
 def is_close(builder, val1, val2, rtol=1e-05, atol=1e-08):
     diff = builder.fsub(val1, val2, "is_close_diff")
-    diff_neg = builder.fsub(diff.type(0.0), diff, "is_close_fneg_diff")
+    diff_neg = fneg(builder, diff, "is_close_fneg_diff")
     ltz = builder.fcmp_ordered("<", diff, diff.type(0.0), "is_close_ltz")
     abs_diff = builder.select(ltz, diff_neg, diff, "is_close_abs")
 
-    rev2 = builder.fsub(val2.type(0.0), val2, "is_close_fneg2")
+    rev2 = fneg(builder, val2, "is_close_fneg2")
     ltz2 = builder.fcmp_ordered("<", val2, val2.type(0.0), "is_close_ltz2")
     abs2 = builder.select(ltz2, rev2, val2, "is_close_abs2")
     rtol = builder.fmul(abs2.type(rtol), abs2, "is_close_rtol")

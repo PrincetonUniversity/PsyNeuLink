@@ -372,7 +372,7 @@ COMMENT
         my_params = super()._get_param_initializer(execution_id)
         metric_params = self._metric_fct._get_param_initializer(execution_id)
         transfer_params = self.transfer_fct._get_param_initializer(execution_id) if self.transfer_fct is not None else tuple()
-        return tuple([my_params, metric_params, transfer_params])
+        return (my_params, metric_params, transfer_params)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Dot product
@@ -633,7 +633,7 @@ class Distance(ObjectiveFunction):
 
         sub = builder.fsub(val1, val2)
         ltz = builder.fcmp_ordered("<", sub, ctx.float_ty(0))
-        abs_val = builder.select(ltz, builder.fsub(ctx.float_ty(0), sub), sub)
+        abs_val = builder.select(ltz, pnlvm.helpers.fneg(builder, sub), sub)
         acc_val = builder.load(acc)
         new_acc = builder.fadd(acc_val, abs_val)
         builder.store(new_acc, acc)
@@ -764,7 +764,7 @@ class Distance(ObjectiveFunction):
         v2 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
 
         acc_ptr = builder.alloca(ctx.float_ty)
-        builder.store(ctx.float_ty(0), acc_ptr)
+        builder.store(ctx.float_ty(-0.0), acc_ptr)
 
         kwargs = {"ctx": ctx, "v1": v1, "v2": v2, "acc": acc_ptr}
         if self.metric == DIFFERENCE or self.metric == NORMED_L0_SIMILARITY:
@@ -781,7 +781,7 @@ class Distance(ObjectiveFunction):
             denom1_acc = builder.alloca(ctx.float_ty)
             denom2_acc = builder.alloca(ctx.float_ty)
             for loc in numer_acc, denom1_acc, denom2_acc:
-                builder.store(ctx.float_ty(0), loc)
+                builder.store(ctx.float_ty(-0.0), loc)
             kwargs['numer_acc'] = numer_acc
             kwargs['denom1_acc'] = denom1_acc
             kwargs['denom2_acc'] = denom2_acc
@@ -799,7 +799,7 @@ class Distance(ObjectiveFunction):
             acc_x2_ptr = builder.alloca(ctx.float_ty)
             acc_y2_ptr = builder.alloca(ctx.float_ty)
             for loc in [acc_x_ptr, acc_y_ptr, acc_xy_ptr, acc_x2_ptr, acc_y2_ptr]:
-                builder.store(ctx.float_ty(0), loc)
+                builder.store(ctx.float_ty(-0.0), loc)
             del kwargs['acc']
             kwargs['acc_x'] = acc_x_ptr
             kwargs['acc_y'] = acc_y_ptr
