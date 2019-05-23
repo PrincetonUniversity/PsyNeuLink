@@ -1114,10 +1114,10 @@ class OptimizationControlMechanism(ControlMechanism):
         from psyneulink.core.compositions.composition import Composition
         is_comp = isinstance(self.agent_rep, Composition)
         if is_comp:
-            with pnlvm.LLVMBuilderContext() as ctx:
-                extra_args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
-                              ctx.get_context_struct_type(self.agent_rep).as_pointer(),
-                              ctx.get_data_struct_type(self.agent_rep).as_pointer()]
+            ctx = pnlvm.LLVMBuilderContext.get_global()
+            extra_args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
+                          ctx.get_context_struct_type(self.agent_rep).as_pointer(),
+                          ctx.get_data_struct_type(self.agent_rep).as_pointer()]
         else:
             extra_args = []
 

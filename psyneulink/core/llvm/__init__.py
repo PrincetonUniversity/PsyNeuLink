@@ -124,7 +124,7 @@ class LLVMBinaryFunction:
             multirun_llvm = _find_llvm_function(self.name + "_multirun")
         except ValueError:
             function = _find_llvm_function(self.name);
-            with LLVMBuilderContext() as ctx:
+            with LLVMBuilderContext.get_global() as ctx:
                 multirun_llvm = ctx.gen_multirun_wrapper(function)
 
         return LLVMBinaryFunction.get(multirun_llvm.name)
@@ -136,7 +136,7 @@ if ptx_enabled:
 
 # Initialize builtins
 def init_builtins():
-    with LLVMBuilderContext() as ctx:
+    with LLVMBuilderContext.get_global() as ctx:
         builtins.setup_pnl_intrinsics(ctx)
         builtins.setup_vxm(ctx)
         builtins.setup_mersenne_twister(ctx)

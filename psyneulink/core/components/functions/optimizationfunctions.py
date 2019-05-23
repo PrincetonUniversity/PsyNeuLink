@@ -1216,10 +1216,10 @@ class GridSearch(OptimizationFunction):
         except AttributeError:
             ocm = None
         if ocm is not None:
-            with pnlvm.LLVMBuilderContext() as ctx:
-                extra_args = [ctx.get_param_struct_type(ocm.agent_rep).as_pointer(),
-                              ctx.get_context_struct_type(ocm.agent_rep).as_pointer(),
-                              ctx.get_data_struct_type(ocm.agent_rep).as_pointer()]
+            ctx = pnlvm.LLVMBuilderContext.get_global()
+            extra_args = [ctx.get_param_struct_type(ocm.agent_rep).as_pointer(),
+                          ctx.get_context_struct_type(ocm.agent_rep).as_pointer(),
+                          ctx.get_data_struct_type(ocm.agent_rep).as_pointer()]
         else:
             extra_args = []
 

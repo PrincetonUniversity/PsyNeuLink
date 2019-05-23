@@ -4416,7 +4416,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def _llvm_function(self):
         if self.__generated_execution is None:
-            with pnlvm.LLVMBuilderContext() as ctx:
+            with pnlvm.LLVMBuilderContext.get_global() as ctx:
                 self.__generated_execution = ctx.gen_composition_exec(self)
 
         return self.__generated_execution
@@ -4424,7 +4424,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def _llvm_run(self):
         if self.__generated_run is None:
-            with pnlvm.LLVMBuilderContext() as ctx:
+            with pnlvm.LLVMBuilderContext.get_global() as ctx:
                 self.__generated_run = ctx.gen_composition_run(self)
 
         return self.__generated_run
@@ -4432,7 +4432,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def _llvm_simulation(self):
         if self.__generated_simulation is None:
-            with pnlvm.LLVMBuilderContext() as ctx:
+            with pnlvm.LLVMBuilderContext.get_global() as ctx:
                 self.__generated_simulation = ctx.gen_composition_exec(self, True)
 
         return self.__generated_simulation
@@ -4440,7 +4440,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def _llvm_sim_run(self):
         if self.__generated_sim_run is None:
-            with pnlvm.LLVMBuilderContext() as ctx:
+            with pnlvm.LLVMBuilderContext.get_global() as ctx:
                 self.__generated_sim_run = ctx.gen_composition_run(self, True)
 
         return self.__generated_sim_run
@@ -4470,7 +4470,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         name = 'comp_sim_wrap_' if simulation else 'comp_wrap_'
         is_mech = isinstance(node, Mechanism)
 
-        with pnlvm.LLVMBuilderContext() as ctx:
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
             func_name = ctx.get_unique_name(name + node.name)
             data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [

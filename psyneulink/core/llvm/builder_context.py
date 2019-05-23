@@ -38,6 +38,8 @@ def module_count():
 _int32_ty = ir.IntType(32)
 _float_ty = ir.DoubleType()
 
+_global_context = None
+
 class LLVMBuilderContext:
     uniq_counter = 0
     _llvm_generation = 0
@@ -63,6 +65,13 @@ class LLVMBuilderContext:
     def module(self):
         assert len(self._modules) > 0
         return self._modules[-1]
+
+    @staticmethod
+    def get_global():
+        global _global_context
+        if _global_context is None:
+            _global_context = LLVMBuilderContext()
+        return _global_context
 
     def get_unique_name(self, name):
         LLVMBuilderContext.uniq_counter += 1
