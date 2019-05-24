@@ -12,31 +12,33 @@ Basics and Sampler
 Basics
 ------
 
-PsyNeuLink models are made of `Components <Component>` and `Compositions <Composition>`:
-Components are objects that perform a specific function, and Compositions are used to combine Components into an
-executable model.  There are two primary kinds of Components:  `Mechanisms <Mechanism>` and `Projections <Projection>`.
-For those familiar with block modeling systems, Mechanisms are the "blocks" in PsyNeuLink, and Projections are the
-"links".  Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
-other Mechanisms. Projections are used to send information from one Mechanism to another.  A `Composition
-<Composition>` uses Projections to link Mechanisms together into pathways that can execute a Process, and Processes
-can be combined into Systems to form networks or circuits that make up a systems-level model.  A `Scheduler`
-coordinates the execution of Mechanisms in a Composition, each of which can be assigned one or more pre-specified or
-customized `Conditions <Condition>`.
+PsyNeuLink models are made up of `Components <Component>` and `Compositions <Composition>`:
+Components are objects that perform a specific function, and Compositions are used to combine Components into a model.
+There are two primary kinds of Components:  `Mechanisms <Mechanism>` and `Projections <Projection>`. For those
+familiar with block modeling systems, Mechanisms are the "blocks" in PsyNeuLink, and Projections are the
+"links".  `Compositions` combine them into a `computational graph
+<https://en.wikipedia.org/wiki/Graph_(abstract_data_type)>`_, in which the Mechanisms are nodes, the Projections are
+edges. Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
+other Mechanisms along Projections.  Compositions can also be nested inside other Compositions, so that complex
+hierarchical models can be created (e.g., of circuits or pathways within a larger system-level model). A `Scheduler`
+coordinates the execution of all of the Mechanisms within a Composition, each of which can be assigned one or more
+pre-specified or customized `Conditions <Condition>`.
 
-Mechanisms and Projections fall into two broad categories:  ones that *directly transmit and transform* information,
-taking the inputs to a model and generating its outputs;  and ones that *modulate* the transmission and transformation
-of information.  PsyNeuLink provides a library of Components of each type.  For example, there is a variety of
-ProcessingMechanisms that can be used to transform, integrate, and evaluate information in various ways (e.g., to
-implement layers of a feedforward or recurrent neural network, or a drift diffusion decision process); and there
-are LearningMechanisms, ControlMechanisms, and GatingMechanisms that can be used to modulate those Mechanisms.
+Mechanisms and Projections fall into two broad categories:  `ProcessingMechanisms <ProcessingMechanism>` that
+*directly transmit* and possibly *transform* information; and *AdaptiveMechanisms <AdpativeMechanism>` that *modify*
+or *modulate* the transmission and transformation of information.  PsyNeuLink provides a library of Components of
+each type.  For example, there is a variety of ProcessingMechanisms that can be used to transform, integrate, and
+evaluate information in various ways (e.g., to implement layers of a feedforward or recurrent neural network, or a
+drift diffusion decision process); and there are `ModulatoryMechanisms <ModulatoryMechanism>` and `LearningMechanisms
+<LearningMechanism>` that can be used to modulate ProcessingMechanism or modify Projections, respectively.
 
 Since Mechanisms can implement any function, Projections ensure that they can "communicate" with each other
 seamlessly.  A Scheduler, together with Conditions, can be used to specify any pattern of execution among the
 Mechanisms in a Composition.  Together, these allow PsyNeuLink to integrate Mechanisms of different types, levels of
-analysis, and/or time scales of operation, composing heterogeneous Components into a single integrated System.  This
+analysis, and/or time scales of operation, composing heterogeneous Components into a coherent Compositions.  This
 affords modelers the flexibility to commit each Component of their model to a form of processing and/or level of
 analysis that is appropriate for that Component, while providing the opportunity to test and explore how they
-interact with one another in a single System.
+interact with one another at the system level.
 
 The figure below provides an example of the kinds of elements available in PsyNeuLink, and some that are planned for
 future inclusion.  The `QuickReference` provides a more detailed overview of PsyNeuLink objects and its other
@@ -61,36 +63,36 @@ Sampler
 Simple Configurations
 ~~~~~~~~~~~~~~~~~~~~~
 
-Mechanisms can be executed on their own (to gain familiarity with their functions), linked in simple configurations
-(for testing isolated interactions), or in Compositions to implement a full model.
-Linking Mechanisms for execution can be as simple as placing them in a list -- PsyNeuLink provides the necessary
-Projections that connects each to the next one in the list.  For example, the following script uses a simple form of
-Composition -- a `Process` -- to create a 3-layered 5-2-5 encoder network, the first layer of which
-uses a Linear
-function (the default for a TransferMechanism), and the other two of which use a LogisticFunction::
+Mechanisms can be executed on their own (to gain familiarity with their functions), or linked together and run
+in a Composition to implement part of, or an entire model. Linking Mechanisms for execution can be as creating them
+and then assiging them to a Composition in a list -- PsyNeuLink provides the necessary Projections that
+connects each to the next one in the list.  For example, the following script creates a 3-layered 5-2-5 encoder
+network, the first layer of which uses a `Linear` function (the default for a `TransferMechanism`), and the
+other two of which use a `LogisticFunction`::
 
     # Construct the Mechanisms:
     input_layer = TransferMechanism(size=5)
     hidden_layer = TransferMechanism(size=2, function=Logistic)
     output_layer = TransferMechanism(size=5, function=Logistic)
 
-    # Construct the Process:
-    my_encoder = Process(pathway=[input_layer, hidden_layer, output_layer])
+    # Construct the Composition:
+    my_encoder = Composition()
+    my_encoder.add_linear_pathway([input_layer, hidden_layer, output_layer])
 
 Each of the Mechanisms can be executed individually, by simply calling its `execute <Mechanism_Base.execute>` method
 with an input array::
 
     output_layer.execute([0, 2.5, 10.9, 2, 7.6])
 
-The full Process can be run simply by calling its `execute <Process.execute>` method::
+The Composition can be run simply by calling its `run <Composition.run>` method with that input::
 
     my_encoder.execute([0, 2.5, 10.9, 2, 7.6])
 
-The order of that the Mechanisms appear in the list determines the order of their Projections, and PsyNeuLink
-picks sensible defaults when necessary Components are not specified.  In the example above, since no Projections were
-specified, PsyNeuLink automatically created ones that were properly sized to connect each pair of Mechanisms,
-using random initial weights.  However, it is easy to specify them explicitly, simply by inserting them in between
-the Mechanisms in the pathway for the Process::
+The order that the Mechanisms appear in the list determines the order of their `Projections <Projection>`, and
+PsyNeuLink picks sensible defaults when necessary Components are not specified.  In the example above, since no
+Projections were specified, PsyNeuLink automatically created ones that were properly sized to connect each pair of
+Mechanisms, using random initial weights.  However, it is easy to specify them explicitly, simply by inserting them
+in between the Mechanisms in the pathway for the Process::
 
     my_projection_1 = MappingProjection(matrix=(.2 * np.random.rand(2, 5)) - .1))
     my_encoder = Process(pathway=[input_layer, my_projection_1, hidden_layer, output_layer])
