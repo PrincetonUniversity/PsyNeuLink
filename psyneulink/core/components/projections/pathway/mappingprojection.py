@@ -293,6 +293,7 @@ def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
 
 
 def _mapping_projection_matrix_setter(value, owning_component=None, execution_id=None):
+    value = np.array(value)
     owning_component.function.parameters.matrix.set(value, execution_id)
     # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
     # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
@@ -673,41 +674,41 @@ class MappingProjection(PathwayProjection_Base):
             context=context
         )
 
-    @property
-    def matrix(self):
-        return self.function.matrix
-
-    @matrix.setter
-    def matrix(self, matrix):
-        if not (isinstance(matrix, np.matrix) or
-                    (isinstance(matrix,np.ndarray) and matrix.ndim == 2) or
-                    (isinstance(matrix,list) and np.array(matrix).ndim == 2)):
-            raise MappingError("Matrix parameter for {} ({}) MappingProjection must be "
-                               "an np.matrix, a 2d np.array, or a correspondingly configured list".
-                               format(self.name, matrix))
-
-        matrix = np.array(matrix)
-
-        # FIX: Hack to prevent recursion in calls to setter and assign_params
-        self.function.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-
-        self.function.matrix = matrix
-
-        if hasattr(self, "_parameter_states"):
-            self.parameter_states["matrix"].function.previous_value = matrix
-
-        # The following is for efficient treatment of MappingProjections with identity matrix (just pass through value).
-        # If matrix is identity matrix and ParameterState for matrix has no mod_afferents,
-        #    then store current function assignment in ._function, and reassign function as Identity Function
-        rows, cols = matrix.shape
-        if (rows==cols and
-                (matrix == np.identity(rows)).all() and
-                len(self._parameter_states[MATRIX].mod_afferents)==0):
-            self._function = self.function
-            self.function = Identity(default_variable=matrix)
-        else:
-            if hasattr(self, '_function'):
-                self.function = self._function
+    # @property
+    # def matrix(self):
+    #     return self.function.matrix
+    #
+    # @matrix.setter
+    # def matrix(self, matrix):
+    #     if not (isinstance(matrix, np.matrix) or
+    #                 (isinstance(matrix,np.ndarray) and matrix.ndim == 2) or
+    #                 (isinstance(matrix,list) and np.array(matrix).ndim == 2)):
+    #         raise MappingError("Matrix parameter for {} ({}) MappingProjection must be "
+    #                            "an np.matrix, a 2d np.array, or a correspondingly configured list".
+    #                            format(self.name, matrix))
+    #
+    #     matrix = np.array(matrix)
+    #
+    #     # FIX: Hack to prevent recursion in calls to setter and assign_params
+    #     self.function.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    #
+    #     self.function.matrix = matrix
+    #
+    #     if hasattr(self, "_parameter_states"):
+    #         self.parameter_states["matrix"].function.previous_value = matrix
+    #
+    #     # The following is for efficient treatment of MappingProjections with identity matrix (just pass through value).
+    #     # If matrix is identity matrix and ParameterState for matrix has no mod_afferents,
+    #     #    then store current function assignment in ._function, and reassign function as Identity Function
+    #     rows, cols = matrix.shape
+    #     if (rows==cols and
+    #             (matrix == np.identity(rows)).all() and
+    #             len(self._parameter_states[MATRIX].mod_afferents)==0):
+    #         self._function = self.function
+    #         self.function = Identity(default_variable=matrix)
+    #     else:
+    #         if hasattr(self, '_function'):
+    #             self.function = self._function
 
     @property
     def _matrix_spec(self):
