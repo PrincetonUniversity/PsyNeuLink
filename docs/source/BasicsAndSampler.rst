@@ -16,13 +16,13 @@ PsyNeuLink models are made up of `Components <Component>` and `Compositions <Com
 Components are objects that perform a specific function, and Compositions are used to combine Components into a model.
 There are two primary kinds of Components:  `Mechanisms <Mechanism>` and `Projections <Projection>`. For those
 familiar with block modeling systems, Mechanisms are the "blocks" in PsyNeuLink, and Projections are the
-"links".  `Compositions` combine them into a `computational graph
-<https://en.wikipedia.org/wiki/Graph_(abstract_data_type)>`_, in which the Mechanisms are nodes, the Projections are
-edges. Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
-other Mechanisms along Projections.  Compositions can also be nested inside other Compositions, so that complex
-hierarchical models can be created (e.g., of circuits or pathways within a larger system-level model). A `Scheduler`
-coordinates the execution of all of the Mechanisms within a Composition, each of which can be assigned one or more
-pre-specified or customized `Conditions <Condition>`.
+"links".  Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
+other Mechanisms along Projections.  `Compositions` combine these into a `computational graph
+<https://en.wikipedia.org/wiki/Graph_(abstract_data_type)>`_, in which the Mechanisms are nodes and Projections are
+edges. Compositions can also be nodes, so that one Composition can be nested inside another to create more
+complex, hierarchical models (e.g., of circuits or pathways within a larger system-level model). A
+`Scheduler` coordinates the execution of all of the Mechanisms within a Composition, each of which can be assigned
+one or more pre-specified or customized `Conditions <Condition>`.
 
 Mechanisms and Projections fall into two broad categories:  `ProcessingMechanisms <ProcessingMechanism>` that
 *directly transmit* and possibly *transform* information; and *AdaptiveMechanisms <AdpativeMechanism>` that *modify*
@@ -30,15 +30,16 @@ or *modulate* the transmission and transformation of information.  PsyNeuLink pr
 each type.  For example, there is a variety of ProcessingMechanisms that can be used to transform, integrate, and
 evaluate information in various ways (e.g., to implement layers of a feedforward or recurrent neural network, or a
 drift diffusion decision process); and there are `ModulatoryMechanisms <ModulatoryMechanism>` and `LearningMechanisms
-<LearningMechanism>` that can be used to modulate ProcessingMechanism or modify Projections, respectively.
+<LearningMechanism>` that can be used to modulate the functioning of ProcessingMechanisms and modify Projections,
+respectively.
 
 Since Mechanisms can implement any function, Projections ensure that they can "communicate" with each other
-seamlessly.  A Scheduler, together with Conditions, can be used to specify any pattern of execution among the
-Mechanisms in a Composition.  Together, these allow PsyNeuLink to integrate Mechanisms of different types, levels of
-analysis, and/or time scales of operation, composing heterogeneous Components into a coherent Compositions.  This
-affords modelers the flexibility to commit each Component of their model to a form of processing and/or level of
-analysis that is appropriate for that Component, while providing the opportunity to test and explore how they
-interact with one another at the system level.
+seamlessly.  Furthermore, the `Scheduler`, together with `Conditions <Condition>`, can be used to specify any sequence
+of execution among the Mechanisms and/or sub-Compositions within a Composition.  Together, these allow PsyNeuLink to
+implement and integrate processes of different types, levels of analysis, and/or time scales of operation, composing
+them into a coherent system.  This affords modelers the flexibility to commit each part of their model to a form
+of processing and/or level of analysis that is appropriate for that part, while providing the opportunity to test and
+explore how they interact with one another at the level of the entire system.
 
 The figure below provides an example of the kinds of elements available in PsyNeuLink, and some that are planned for
 future inclusion.  The `QuickReference` provides a more detailed overview of PsyNeuLink objects and its other
