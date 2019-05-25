@@ -293,13 +293,26 @@ def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
 
 
 def _mapping_projection_matrix_setter(value, owning_component=None, execution_id=None):
-    value = np.array(value)
-    owning_component.function.parameters.matrix.set(value, execution_id)
+    matrix = np.array(value)
+    owning_component.function.parameters.matrix.set(matrix, execution_id)
     # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
     # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
-    owning_component.parameter_states["matrix"].function.parameters.previous_value.set(value, execution_id)
+    owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
 
-    return value
+    #The following is for efficient treatment of MappingProjections with identity matrix (just pass through value).
+    # If matrix is identity matrix and ParameterState for matrix has no mod_afferents,
+    #    then store current function assignment in ._function, and reassign function as Identity Function
+    rows, cols = matrix.shape
+    if (rows==cols and
+            (matrix == np.identity(rows)).all() and
+            len(owning_component._parameter_states[MATRIX].mod_afferents)==0):
+        owning_component._function = owning_component.function
+        owning_component.function = Identity(default_variable=matrix)
+    else:
+        if hasattr(owning_component, '_function'):
+            owning_component.function = owning_component._function
+
+    return matrix
 
 
 class MappingProjection(PathwayProjection_Base):
@@ -660,13 +673,18 @@ class MappingProjection(PathwayProjection_Base):
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.parameters.context.get(execution_id).string = context
 
+        # If function is Identity Function, no need to update ParameterStates, as matrix is not used
+        if not isinstance(self.function, Identity):
 
-        if hasattr(self.context, "composition") and hasattr(self.context.composition, "learning_enabled") and self.context.composition.learning_enabled:
-            self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
+            if (hasattr(self.context, "composition") and
+                    hasattr(self.context.composition, "learning_enabled") and
+                    self.context.composition.learning_enabled):
+                self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
+                self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+                self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+
             self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-            self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
-        self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
         return super()._execute(
             variable=variable,
             execution_id=execution_id,
@@ -674,6 +692,7 @@ class MappingProjection(PathwayProjection_Base):
             context=context
         )
 
+    # MODIFIED 5/24/19 OLD:
     # @property
     # def matrix(self):
     #     return self.function.matrix
@@ -709,6 +728,7 @@ class MappingProjection(PathwayProjection_Base):
     #     else:
     #         if hasattr(self, '_function'):
     #             self.function = self._function
+    # MODIFIED 5/24/19 END
 
     @property
     def _matrix_spec(self):
