@@ -1565,7 +1565,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
             projection.is_processing = False
-            projection.name = '{0} to {1}'.format(sender, receiver)
+            # KDM 5/24/19: removing below rename because it results in several duplicates
+            # projection.name = '{0} to {1}'.format(sender, receiver)
             self.graph.add_component(projection, feedback=feedback)
 
             try:
