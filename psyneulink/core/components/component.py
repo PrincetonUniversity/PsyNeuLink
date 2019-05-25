@@ -1175,10 +1175,6 @@ class Component(object, metaclass=ComponentsMeta):
             self.__llvm_function.__deepcopy__ = lambda x: None
         return self.__llvm_function
 
-    @property
-    def _llvmBinFunction(self):
-        return pnlvm.LLVMBinaryFunction.get(self._llvm_function.name)
-
     def _gen_llvm_function(self, extra_args=[]):
         llvm_func = None
         with pnlvm.LLVMBuilderContext.get_global() as ctx:

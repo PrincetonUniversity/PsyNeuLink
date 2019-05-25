@@ -4409,10 +4409,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return self.__generated_sim_node_wrappers[node]
 
-    def _get_sim_bin_node(self, node):
-        wrapper = self._get_sim_node_wrapper(node)
-        return pnlvm.LLVMBinaryFunction.get(wrapper._llvm_function.name)
-
     @property
     def _llvm_function(self):
         if self.__generated_execution is None:
@@ -4444,12 +4440,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.__generated_sim_run = ctx.gen_composition_run(self, True)
 
         return self.__generated_sim_run
-
-    def _get_bin_execution(self):
-        return pnlvm.LLVMBinaryFunction.get(self._llvm_function.name)
-
-    def _get_bin_run(self):
-        return pnlvm.LLVMBinaryFunction.get(self._llvm_run.name)
 
     def reinitialize(self, execution_context=NotImplemented):
         if execution_context is NotImplemented:

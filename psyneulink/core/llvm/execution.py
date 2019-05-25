@@ -14,6 +14,7 @@ import copy, ctypes
 from collections import defaultdict
 import numpy as np
 
+from psyneulink.core import llvm as pnlvm
 from .builder_context import *
 from . import helpers, jit_engine
 from .debug import debug_env
@@ -120,7 +121,7 @@ class FuncExecution(CUDAExecution):
 
     def __init__(self, component, execution_ids=[None]):
         super().__init__()
-        self._bin_func = component._llvmBinFunction
+        self._bin_func = pnlvm.LLVMBinaryFunction.get(component._llvm_function.name)
         self._execution_ids = execution_ids
         self._component = component
 
@@ -407,7 +408,7 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
-            self.__bin_exec_func = self._composition._get_bin_execution()
+            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.get(self._composition._llvm_function.name)
 
         return self.__bin_exec_func
 
@@ -470,7 +471,7 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_run_func(self):
         if self.__bin_run_func is None:
-            self.__bin_run_func = self._composition._get_bin_run()
+            self.__bin_run_func = pnlvm.LLVMBinaryFunction.get(self._composition._llvm_run.name)
 
         return self.__bin_run_func
 
