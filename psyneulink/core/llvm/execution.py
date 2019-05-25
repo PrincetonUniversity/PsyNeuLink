@@ -443,7 +443,7 @@ class CompExecution(CUDAExecution):
 
     def _get_run_input_struct(self, inputs, num_input_sets):
         origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
-        input_type = self._composition._get_bin_run().byref_arg_types[3]
+        input_type = self._bin_run_func.byref_arg_types[3]
         c_input = input_type * num_input_sets
         if len(self._execution_ids) > 1:
             c_input = c_input * len(self._execution_ids)
