@@ -315,6 +315,12 @@ class CompExecution(CUDAExecution):
             self._composition._compilation_data.data_struct.set(data_struct, execution_context = self._execution_ids[0])
 
     def _extract_node_struct(self, node, data):
+        # context structure consists of a list of node contexts,
+        #   followed by a list of projection contexts; get the first one
+        # parameter structure consists of a list of node parameters,
+        #   followed by a list of projection parameters; get the first one
+        # output structure consists of a list of node outputs,
+        #   followed by a list of nested data structures; get the first one
         field = data._fields_[0][0]
         res_struct = getattr(data, field)
         index = self._composition._get_node_index(node)
