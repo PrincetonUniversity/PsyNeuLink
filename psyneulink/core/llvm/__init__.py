@@ -27,19 +27,23 @@ __all__ = ['LLVMBinaryFunction', 'LLVMBuilderContext']
 _compiled_modules = set()
 _binary_generation = 0
 
-def _llvm_build():
+def _llvm_build(target_generation = _binary_generation + 1):
+    global _binary_generation
+    if target_generation <= _binary_generation:
+        if "compile" in debug_env:
+            print("SKIPPING COMPILATION: {} -> {}".format(_binary_generation, target_generation))
+        return
+
+    if "compile" in debug_env:
+        print("COMPILING GENERATION: {} -> {}".format(_binary_generation, target_generation))
+
     _cpu_engine.compile_modules(_modules, _compiled_modules)
     if ptx_enabled:
         _ptx_engine.compile_modules(_modules, set())
     _modules.clear()
 
-    global _binary_generation
-    if "compile" in debug_env:
-        global _binary_generation
-        print("COMPILING GENERATION: {} -> {}".format(_binary_generation, LLVMBuilderContext._llvm_generation))
-
     # update binary generation
-    _binary_generation = LLVMBuilderContext._llvm_generation
+    _binary_generation = target_generation
 
 
 class LLVMBinaryFunction:
@@ -115,8 +119,7 @@ class LLVMBinaryFunction:
     @staticmethod
     @functools.lru_cache(maxsize=32)
     def get(name):
-        if LLVMBuilderContext._llvm_generation > _binary_generation:
-            _llvm_build()
+        _llvm_build(LLVMBuilderContext._llvm_generation)
         return LLVMBinaryFunction(name)
 
     def get_multi_run(self):
