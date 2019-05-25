@@ -1369,10 +1369,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.enable_controller = True
 
-        if self.controller.objective_mechanism:
-            for proj in self.controller.objective_mechanism.path_afferents:
-                self.add_projection(proj)
-
         controller._activate_projections_for_compositions(self)
         self._analyze_graph()
         self._update_shadows_dict(controller)
@@ -1388,7 +1384,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         shadow_proj._activate_for_compositions(self)
                     else:
                         shadow_proj = MappingProjection(sender=proj.sender, receiver=input_state)
-                        self.projections.append(shadow_proj)
                         shadow_proj._activate_for_compositions(self)
 
     def _parse_projection_spec(self, projection, name):
@@ -1586,8 +1581,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_graph = True
         self.needs_update_graph_processing = True
         self.needs_update_scheduler_processing = True
-        self.projections.append(projection)
-
 
         projection._activate_for_compositions(self)
         for comp in subcompositions:
@@ -2383,7 +2376,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       receiver=input_state,
                                                       name="(" + output_state.name + ") to ("
                                                            + input_state.owner.name + "-" + input_state.name + ")")
-                self.projections.append(shadow_projection)
                 shadow_projection._activate_for_compositions(self)
 
         sends_to_input_states = set(self.input_CIM_states.keys())
