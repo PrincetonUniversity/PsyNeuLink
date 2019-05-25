@@ -953,7 +953,8 @@ class Projection_Base(Projection):
             self.receiver.afferents_info[self] = ConnectionInfo(compositions=composition)
 
         try:
-            composition._add_projection(self)
+            if self not in composition.projections:
+                composition._add_projection(self)
         except AttributeError:
             # composition may be ALL or None, in this case we don't need to add
             pass
