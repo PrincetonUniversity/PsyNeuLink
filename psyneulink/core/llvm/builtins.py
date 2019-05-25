@@ -9,8 +9,8 @@
 # ********************************************* PNL LLVM builtins **************************************************************
 
 from llvmlite import ir
-from psyneulink.core.llvm import helpers
-from psyneulink.core.llvm.builder_context import LLVMBuilderContext
+from . import helpers
+from .builder_context import LLVMBuilderContext
 
 
 def setup_vxm(ctx):

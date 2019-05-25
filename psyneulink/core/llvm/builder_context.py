@@ -10,7 +10,9 @@
 
 import atexit
 import ctypes
+import functools
 import inspect
+from llvmlite import ir
 import numpy as np
 import os, re
 
@@ -20,7 +22,6 @@ from psyneulink.core.globals.keywords import AFTER, BEFORE
 from psyneulink.core import llvm as pnlvm
 from .debug import debug_env
 from .helpers import ConditionGenerator
-from llvmlite import ir
 
 __all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function', '_convert_llvm_ir_to_ctype']
 
@@ -587,8 +588,6 @@ def _gen_cuda_kernel_wrapper_module(function):
     module.add_named_metadata("nvvm.annotations", [kernel_func, "kernel", ir.IntType(32)(1)])
 
     return module
-
-import functools
 
 @functools.lru_cache(maxsize=128)
 def _convert_llvm_ir_to_ctype(t):

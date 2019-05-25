@@ -8,7 +8,7 @@
 
 # ********************************************* LLVM bindings **************************************************************
 
-import ctypes, os, sys
+import ctypes
 import functools
 import numpy as np
 
