@@ -153,10 +153,6 @@ initialization must be completed by calling its `deferred_init` method.  This is
 is specified in the `pathway <Process.pathway>` of `Process`, or anywhere else that its `sender
 <MappingProjection.sender>` and `receiver <MappingProjection.receiver>` can be determined by context.
 
-.. |br| raw:: html
-
-   <br />
-
 .. _Mapping_Structure:
 
 Structure
