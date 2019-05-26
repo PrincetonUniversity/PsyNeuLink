@@ -360,14 +360,12 @@ class CompExecution(CUDAExecution):
         # input_CIM should be ready
         bin_input_node = self._composition._get_bin_node(self._composition.input_CIM)
         c_input = bin_input_node.byref_arg_types[2]
-        if len(self._execution_ids) > 1:
-            c_input = c_input * len(self._execution_ids)
 
         # Read provided input data and separate each input state
         if len(self._execution_ids) > 1:
-            input_data = []
-            for inp in inputs:
-                input_data.append(([x] for m in origins for x in inp[m]))
+            assert len(self._execution_ids) == len(inputs)
+            c_input = c_input * len(self._execution_ids)
+            input_data = (([x] for m in origins for x in inp[m]) for inp in inputs)
         else:
             input_data = ([x] for m in origins for x in inputs[m])
 
