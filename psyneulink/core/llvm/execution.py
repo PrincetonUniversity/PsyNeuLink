@@ -314,11 +314,7 @@ class CompExecution(CUDAExecution):
         else:
             self._composition._compilation_data.data_struct.set(data_struct, execution_context = self._execution_ids[0])
 
-    def extract_frozen_node_output(self, node):
-        return self._extract_node_output(node, self.__frozen_vals)
-
-    def _extract_node_output(self, node, data = None):
-        data = self._data_struct if data == None else data
+    def _extract_node_struct(self, node, data):
         field = data._fields_[0][0]
         res_struct = getattr(data, field)
         index = self._composition._get_node_index(node)
@@ -326,11 +322,23 @@ class CompExecution(CUDAExecution):
         res_struct = getattr(res_struct, field)
         return _convert_ctype_to_python(res_struct)
 
-    def extract_node_output(self, node):
+    def extract_node_struct(self, node, struct):
         if len(self._execution_ids) > 1:
-            return [self._extract_node_output(node, self._data_struct[i]) for i, _ in enumerate(self._execution_ids)]
+            return [self._extract_node_struct(node, struct[i]) for i, _ in enumerate(self._execution_ids)]
         else:
-            return self._extract_node_output(node)
+            return self._extract_node_struct(node, struct)
+
+    def extract_frozen_node_output(self, node):
+        return self.extract_node_struct(node, self.__frozen_vals)
+
+    def extract_node_output(self, node):
+        return self.extract_node_struct(node, self._data_struct)
+
+    def extract_node_state(self, node):
+        return self.extract_node_struct(node, self._context_struct)
+
+    def extract_node_params(self, node):
+        return self.extract_node_struct(node, self._param_struct)
 
     def insert_node_output(self, node, data):
         my_field_name = self._data_struct._fields_[0][0]
@@ -380,10 +388,14 @@ class CompExecution(CUDAExecution):
 
         # Set bin node to make sure self._*struct works as expected
         self._set_bin_node(node)
+        if node is not self._composition.input_CIM and self.__frozen_vals is None:
+            self.freeze_values()
         self._bin_func.wrap_call(self._context_struct, self._param_struct,
                            inputs, self.__frozen_vals, self._data_struct)
 
         if "comp_node_debug" in self.__debug_env:
+            print("RAN: {}. CTX: {}".format(node, self.extract_node_state(node)))
+            print("RAN: {}. Params: {}".format(node, self.extract_node_params(node)))
             print("RAN: {}. Results: {}".format(node, self.extract_node_output(node)))
 
     @property

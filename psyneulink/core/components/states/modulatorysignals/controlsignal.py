@@ -319,11 +319,14 @@ from psyneulink.core.components.states.outputstate import SEQUENTIAL, _output_st
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
+from psyneulink.core.globals.keywords import \
+    ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, \
+    OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.core.globals.parameters import Parameter, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
+from psyneulink.core.globals.utilities import \
+    is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 
 __all__ = [
@@ -702,8 +705,10 @@ class ControlSignal(ModulatorySignal):
         # NOTE: if the specification of this getter is happening in several other classes, should consider
         # refactoring Parameter to allow individual attributes to be inherited, othwerise, leaving this is an
         # isolated case
-        variable = Parameter(np.array(defaultControlAllocation), aliases='allocation', getter=_output_state_variable_getter)
-        value = Parameter(np.array(defaultControlAllocation), read_only=True, aliases=['intensity'])
+        variable = Parameter(np.array(defaultControlAllocation),
+                             aliases='allocation',
+                             getter=_output_state_variable_getter)
+        value = Parameter(np.array(defaultControlAllocation), read_only=True, aliases=['intensity'], history_min_length=1)
         allocation_samples = Parameter(np.arange(0.1, 1.01, 0.3), modulable=True)
         cost_options = ControlSignalCosts.DEFAULTS
 
@@ -784,7 +789,7 @@ class ControlSignal(ModulatorySignal):
             context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
 
-        # This is included in case ControlSignal was created by another Componente (such as ControlProjection)
+        # This is included in case ControlSignal was created by another Component (such as ControlProjection)
         #    that specified ALLOCATION_SAMPLES in params
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples =  params[ALLOCATION_SAMPLES]
@@ -1125,40 +1130,12 @@ class ControlSignal(ModulatorySignal):
         )
 
     # @property
-    # def allocation_samples(self):
-    #     return self._allocation_samples
+    # def intensity(self):
+    #     return self._intensity
     #
-    # @allocation_samples.setter
-    # def allocation_samples(self, samples):
-    #     if isinstance(samples, (list, np.ndarray)):
-    #         self._allocation_samples = list(samples)
-    #         return
-    #     if isinstance(samples, tuple):
-    #         self._allocation_samples = samples
-    #         sample_range = samples
-    #     elif samples == AUTO:
-    #
-    #         # (7/21/17 CW) Note that since the time of writing this "stub", the value of AUTO in Keywords.py has changed
-    #         # from True to "auto" due to the addition of "auto" as a parameter for RecurrentTransferMechanisms! Just FYI
-    #
-    #         # THIS IS A STUB, TO BE REPLACED BY AN ACTUAL COMPUTATION OF THE ALLOCATION RANGE
-    #         raise ControlSignalError("AUTO not yet supported for {} param of ControlProjection; default will be used".
-    #                                  format(ALLOCATION_SAMPLES))
-    #     else:
-    #         sample_range = self.class_defaults.allocation_samples
-    #     self._allocation_samples = []
-    #     i = sample_range[0]
-    #     while i < sample_range[1]:
-    #         self._allocation_samples.append(i)
-    #         i += sample_range[2]
-
-    @property
-    def intensity(self):
-        return self._intensity
-
-    @intensity.setter
-    def intensity(self, new_value):
-        self._intensity = new_value
+    # @intensity.setter
+    # def intensity(self, new_value):
+    #     self._intensity = new_value
 
     @tc.typecheck
     def assign_costs(self, costs: tc.any(ControlSignalCosts, list), execution_context=None):

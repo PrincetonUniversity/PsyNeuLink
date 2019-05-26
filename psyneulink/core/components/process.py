@@ -1248,13 +1248,13 @@ class Process(Process_Base):
                         except AttributeError:
                             # Instantiate _parameter_states Ordered dict with ParameterState and self.learning
                             preceding_item._parameter_states = _instantiate_state_list(
-                                owner=preceding_item,
-                                state_list=[(MATRIX, self.learning)],
-                                state_type=ParameterState,
-                                state_param_identifier=PARAMETER_STATE,
-                                reference_value=self.learning,
-                                reference_value_name=LEARNING_PROJECTION,
-                                context=context
+                                    owner=preceding_item,
+                                    state_list=[(MATRIX, self.learning)],
+                                    state_types=ParameterState,
+                                    state_param_identifier=PARAMETER_STATE,
+                                    reference_value=self.learning,
+                                    reference_value_name=LEARNING_PROJECTION,
+                                    context=context
                             )
 
                         # preceding_item has _parameter_states but not (yet!) one for MATRIX, so instantiate it
@@ -1311,7 +1311,7 @@ class Process(Process_Base):
                                 projection._parameter_states = _instantiate_state_list(
                                     owner=preceding_item,
                                     state_list=[(MATRIX, self.learning)],
-                                    state_type=ParameterState,
+                                    state_types=ParameterState,
                                     state_param_identifier=PARAMETER_STATE,
                                     reference_value=self.learning,
                                     reference_value_name=LEARNING_PROJECTION,
@@ -1773,8 +1773,8 @@ class Process(Process_Base):
                 input_state_variable = mechanism.input_states[i].socket_template
                 if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
-                                       "variable for corresponding inputState of {3}".
-                                       format(i, process_input[i], self.name, mechanism.name))
+                                       "variable for corresponding inputState of {3} (format: {4})".
+                                       format(i, process_input[i], self.name, mechanism.name, input_state_variable))
                 # Create MappingProjection from Process input state to corresponding mechanism.input_state
                 proj = MappingProjection(sender=self.process_input_states[i],
                                   receiver=mechanism.input_states[i],

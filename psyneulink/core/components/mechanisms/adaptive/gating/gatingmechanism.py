@@ -13,22 +13,10 @@
 Overview
 --------
 
-A GatingMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modulates the value of the InputState(s) and/or
-OutputState(s) of one or more `Mechanisms <Mechanism>`.   Its `function <GatingMechanism.function>` takes the
-GatingMechanism's `variable <GatingMechanism.variable>` and uses that generate a `gating_policy`:  a list of values,
-one for each of its `GatingSignals <GatingSignal>`.  Each of those, in turn, generates a `gating_signal
-<GatingSignal.gating_signal>` used by its `GatingProjections <GatingProjection>` to modulate the value of the
-State(s) to which they project.   A GatingMechanism can regulate only the parameters of Mechanisms in the `System`
-to which it belongs.  The InputStates and/or OutputStates gated by a GatingMechanism can be list using its `show
-<GatingMehanism.show>` method.
-
-COMMENT: TBI
-The gating components of a System can be displayed using the System's
-`show_graph` method with its **show_gating** argument assigned as :keyword:``True`.
-COMMENT
-
-The gating components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>`,
-`LearningMechanism <LearningMechanism>`, and  `ControlMechanism <ControlMechanism>` in that System have been executed.
+A GatingMechanism is a subclass of `ModulatoryMechanism` that is restricted to using only `GatingSignals
+<GatingSignal>` and not ControlSignals.  Accordingly, its constructor has a **gating_signals** argument in place of
+a **modulatory_signals** argument.  It also lacks any attributes related to control.  In all other respects it is
+identical to its parent class, ModulatoryMechanism.
 
 .. _GatingMechanism_Creation:
 
@@ -64,9 +52,9 @@ A `GatingSignal` is created for each item listed in the **gating_signals** argum
 GatingSignals for a GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.
 Each GatingSignal is assigned one or more `GatingProjections <GatingProjection>` to the InputState(s) and/or
 OutputState(s) it gates. By default, the `function <GatingMechanism.function>` of GatingMechanism generates a
-a `value <GatingMechanism.value>` -- its `gating_policy <GatingSignal.gating_policy>` -- with a single item, that is
+a `value <GatingMechanism.value>` -- its `gating_allocation <GatingSignal.gating_allocation>` -- with a single item, that is
 used by all of the GatingMechanism's GatingSignals.  However,  if a custom `function <GatingMechanism.function>` is
-specified that generates a `gating_policy <GatingSignal.gating_policy>` with more than one item, different
+specified that generates a `gating_allocation <GatingSignal.gating_allocation>` with more than one item, different
 GatingSignals can be assigned to the different items (see `GatingMechanism_Function` below).
 
 .. _GatingMechanism_Modulation:
@@ -98,13 +86,16 @@ as the input to the GatingMechanism's `function <GatingMechanism.function>`.
 *Function*
 ~~~~~~~~~~
 
-A GatingMechanism's `function <GatingMechanism.function>` uses the `value <InputState.value>` of its `primary
-InputState  <InputState_Primary>` to generate an `gating_policy <GatingMechanism.gating_policy>`.  The default
-`function <GatingMechanism.function>` for a GatingMechanism is a `Linear` identity function, that simply takes
-the `value <InputState.value>` of its `primary InputState <InputState_Primary>` and assigns this as the single item
-of its `gating_policy <GatingMechanism.gating_policy>`.  This can be replaced by a `Function` that generates
-a `gating_policy <GatingMechanism.gating_policy>` with multiple values, which may be useful if the GatingMechanism
-is assigned more than one `GatingSignal`.
+A GatingMechanism's `function <GatingMechanism.function>` uses `outcome <GatingMechanism.outcome>`
+(the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `gating_allocation
+<GatingMechanism.gating_allocation>`.  By default, `function <GatingMechanism.function>` is assigned
+the `DefaultAllocationFunction`, which takes a single value as its input, and assigns this as the value of
+each item of `modulatory_allocation <GatingMechanism.gating_allocation>`.  Each of these items is assigned as
+the allocation for the corresponding  `GatingSignal` in `gating_signals <GatingMechanism.gating_signals>`. Thus, 
+by default, the GatingMechanism distributes its input as the allocation to each of its `gating_signals  
+<GatingMechanism.gating_signals>. However, this behavior can be modified either by specifying a different 
+`function <GatingMechanism.function>`, and/or by specifying that individual GatingSignals  reference different 
+items in `gating_allocation` as their allocation (i.e., the value of their `variable <GatingSignal.variable>`.
 
 .. _GatingMechanism_Output:
 
@@ -113,12 +104,12 @@ is assigned more than one `GatingSignal`.
 
 A GatingMechanism has a `GatingSignal` for each `InputState` and/or `OutputState` specified in its `gating_signals
 <GatingMechanism.gating_signals>` attribute, to which it sends a `GatingProjection`.  If the GatingMechanism's
-`function <GatingMechanism.function>` generates a `gating_policy <GatingMechanism.gating_policy>` with a single value
+`function <GatingMechanism.function>` generates a `gating_allocation <GatingMechanism.gating_allocation>` with a single value
 (the default), then this is used as the `value <GatingSignal.value>` of all of the GatingMechanism's `gating_signals
-<GatingMechanism.gating_signals>`.  If the `gating_policy <GatingMechanism.gating_policy>` has multiple items, and this
+<GatingMechanism.gating_signals>`.  If the `gating_allocation <GatingMechanism.gating_allocation>` has multiple items, and this
 is the same as the number of GatingSignals, then each GatingSignal is assigned the value of the corresponding item in
-the `gating_policy <GatingMechanism.gating_policy>`.  If there is a different number of `gating_signals
-<GatingMechanism.gating_signals>` than the number of items in the `gating_policy <GatingMechanism.gating_policy>`,
+the `gating_allocation <GatingMechanism.gating_allocation>`.  If there is a different number of `gating_signals
+<GatingMechanism.gating_signals>` than the number of items in the `gating_allocation <GatingMechanism.gating_allocation>`,
 then the `index <GatingSignal.index>` attribute of each GatingSignal must be specified (e.g., in a `specification
 dictionary <GatingSignal_Specification>` in the **gating_signal** argument of the GatingMechanism's constructor),
 or an error is generated.  The GatingSignals of a GatingMechanism are listed in its `gating_signals
@@ -138,8 +129,8 @@ applied in the first `TRIAL` (see `initialization <System_Execution_Input_And_In
 how to configure the initialization of feedback loops in a System; also see `Scheduler` for a description of detailed
 ways in which a GatingMechanism and its dependents can be scheduled to execute).
 
-When executed, a GatingMechanism  uses its input to determine the value of its `gating_policy
-<GatingMechanism.gating_policy>`, each item of which is used by a corresponding `GatingSignal` to determine its
+When executed, a GatingMechanism  uses its input to determine the value of its `gating_allocation
+<GatingMechanism.gating_allocation>`, each item of which is used by a corresponding `GatingSignal` to determine its
 `gating_signal <GatingSignal.gating_signal>` and assign to its `GatingProjections <GatingProjection>`. In the
 subsequent `TRIAL`, each GatingProjection's value is used by the State to which it projects to modulate the `value
 <State_Base.value>` of that State (see `modulation <ModulatorySignal_Modulation>` fon an explanation of how the value
@@ -157,22 +148,19 @@ Class Reference
 
 """
 
-# IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
-#                      ADD IN GENERIC CONTROL STUFF FROM DefaultGatingMechanism
-
 import warnings
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
-from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
-from psyneulink.core.components.states.state import State_Base, _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.defaults import defaultGatingPolicy
-from psyneulink.core.globals.keywords import GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT_EXECUTE_METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, OWNER_VALUE, PROJECTION_TYPE
+from psyneulink.core.globals.defaults import defaultGatingAllocation
+from psyneulink.core.globals.keywords import \
+    GATING, GATING_PROJECTION, GATING_PROJECTIONS,GATING_SIGNAL,GATING_SIGNALS,GATING_SIGNAL_SPECS, \
+    INIT_EXECUTE_METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, OWNER_VALUE, PROJECTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -185,46 +173,62 @@ __all__ = [
 GatingMechanismRegistry = {}
 
 
-# MODIFIED 11/28/17 OLD:
-# def _is_gating_spec(spec):
-#     from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
-#     if isinstance(spec, tuple):
-#         return _is_gating_spec(spec[1])
-#     elif isinstance(spec, (GatingMechanism, GatingSignal, GatingProjection)):
-#         return True
-#     elif isinstance(spec, type) and issubclass(spec, (GatingSignal, GatingProjection)):
-#         return True
-#     elif isinstance(spec, str) and spec in {GATING, GATING_PROJECTION, GATING_SIGNAL}:
-#         return True
-#     else:
-#         return False
-# MODIFIED 11/28/17 NEW:
 def _is_gating_spec(spec):
     from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
     if isinstance(spec, tuple):
         return any(_is_gating_spec(item) for item in spec)
     if isinstance(spec, dict) and PROJECTION_TYPE in spec:
         return _is_gating_spec(spec[PROJECTION_TYPE])
-    elif isinstance(spec, (GatingMechanism, GatingSignal, GatingProjection)):
+    elif isinstance(spec, (GatingMechanism,
+                           GatingSignal,
+                           GatingProjection,
+                           ModulatoryMechanism)):
         return True
-    elif isinstance(spec, type) and issubclass(spec, (GatingSignal, GatingProjection, GatingMechanism)):
+    elif isinstance(spec, type) and issubclass(spec, (GatingSignal,
+                                                      GatingProjection,
+                                                      GatingMechanism,
+                                                      ModulatoryMechanism)):
         return True
     elif isinstance(spec, str) and spec in {GATING, GATING_PROJECTION, GATING_SIGNAL}:
         return True
     else:
         return False
-# MODIFIED 11/28/17 END
 
 
 class GatingMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
+# MODIFIED 5/18/19 NEW: [JDC]
+def _gating_allocation_getter(owning_component=None, execution_id=None):
+    return owning_component.modulatory_allocation
 
-class GatingMechanism(AdaptiveMechanism_Base):
+def _gating_allocation_setter(value, owning_component=None, execution_id=None):
+    owning_component.parameters.modulatory_allocation.set(np.array(value), execution_id)
+    return value
+
+def _control_allocation_getter(owning_component=None, execution_id=None):
+    from psyneulink.core.components.mechanisms.adaptive.control import ControlMechanism
+    from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+    raise GatingMechanismError(f"'control_allocation' attribute is not implemented on {owning_component.__name__};  "
+                                f"consider using a {ControlMechanism.__name__} instead, "
+                                f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
+                                f"{GatingSignal.__name__}s are needed.")
+
+def _control_allocation_setter(value, owning_component=None, execution_id=None, **kwargs):
+    from psyneulink.core.components.mechanisms.adaptive.control import ControlMechanism
+    from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+    raise GatingMechanismError(f"'control_allocation' attribute is not implemented on {owning_component.__name__};  "
+                                f"consider using a {ControlMechanism.__name__} instead, "
+                                f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
+                                f"{GatingSignal.__name__}s are needed.")
+# MODIFIED 5/18/19 END
+
+
+class GatingMechanism(ModulatoryMechanism):
     """
     GatingMechanism(                                \
-        default_gating_policy=None,                 \
+        default_gating_allocation=None,             \
         size=None,                                  \
         function=Linear(slope=1, intercept=0),      \
         gating_signals:tc.optional(list) = None,    \
@@ -258,24 +262,24 @@ class GatingMechanism(AdaptiveMechanism_Base):
     Arguments
     ---------
 
-    default_gating_policy : value, list or ndarray : default `defaultGatingPolicy`
+    default_gating_allocation : value, list or ndarray : default `defaultGatingAllocation`
         the default value for each of the GatingMechanism's GatingSignals;
         its length must equal the number of items specified in the **gating_signals** argument.
 
     size : int, list or 1d np.array of ints
-        specifies default_gating_policy as an array of zeros if **default_gating_policy** is not passed as an
-        argument;  if **default_gating_policy** is specified, it takes precedence over the specification of **size**.
+        specifies default_gating_allocation as an array of zeros if **default_gating_allocation** is not passed as an
+        argument;  if **default_gating_allocation** is specified, it takes precedence over the specification of **size**.
         As an example, the following mechanisms are equivalent::
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies the function used to transform the GatingMechanism's `variable <GatingMechanism.variable>`
-        to a `gating_policy`.
+        to a `gating_allocation`.
 
     gating_signals : List[GatingSignal, InputState, OutputState, Mechanism, tuple[str, Mechanism], or dict]
         specifies the `InputStates <InputState>` and/or `OutputStates <OutputStates>`
-        to be gated by the GatingMechanism; the number of items must equal the length of the **default_gating_policy**
+        to be gated by the GatingMechanism; the number of items must equal the length of the **default_gating_allocation**
         argument; if a `Mechanism <Mechanism>` is specified, its `primary InputState <InputState_Primary>` is used
         (see `GatingMechanism_GatingSignals for details).
 
@@ -301,14 +305,14 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     variable : value, list or ndarray
         used as the input to the GatingMechanism's `function <GatingMechanism.function>`.  Its format is determined
-        by the **default_gating_policy** or **size** argument of the GatingMechanism's constructor (see above),
-        and is the same format as its `gating_policy <GatingMechanis.gating_policy>` (unless a custom
+        by the **default_gating_allocation** or **size** argument of the GatingMechanism's constructor (see above),
+        and is the same format as its `gating_allocation <GatingMechanis.gating_allocation>` (unless a custom
         `function <GatingMechanism.function>` has been assigned).
 
     function : TransferFunction
         determines the function used to transform the GatingMechanism's `variable <GatingMechanism.variable>`
-        to a `gating_policy`;  the default is an identity function that simply assigns
-        `variable <GatingMechanism.variable>` as the `gating_policy <GatingMechanism.gating_policy>`.
+        to a `gating_allocation`;  the default is an identity function that simply assigns
+        `variable <GatingMechanism.variable>` as the `gating_allocation <GatingMechanism.gating_allocation>`.
 
     gating_signals : ContentAddressableList[GatingSignal]
         list of `GatingSignals <GatingSignals>` for the GatingMechanism, each of which sends
@@ -324,10 +328,10 @@ class GatingMechanism(AdaptiveMechanism_Base):
         each item is the value assigned to the corresponding GatingSignal listed in `gating_signals`,
         and used by each GatingSignal to generate the `gating_signal <GatingSignal.gating_signal>` assigned to its
         `GatingProjections <GatingProjection>`;
-        same as the GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` attribute.
+        same as the GatingMechanism's `gating_allocation <GatingMechanism.gating_allocation>` attribute.
         Default is a single item used by all of the `gating_signals`.
 
-    gating_policy : scalar or 1d np.array of ints
+    gating_allocation : scalar or 1d np.array of ints
         the result of the GatingMechanism's `function <GatingProjection.function>`;
         each item is the value assigned to the corresponding GatingSignal listed in `gating_signals`,
         and used by each GatingSignal to generate the `gating_signal <GatingSignal.gating_signal>` assigned to its
@@ -353,9 +357,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
-    outputStateType = GatingSignal
-
-    stateListAttr = Mechanism_Base.stateListAttr.copy()
+    outputStateTypes = GatingSignal
+    stateListAttr = ModulatoryMechanism.stateListAttr.copy()
     stateListAttr.update({GatingSignal:GATING_SIGNALS})
 
 
@@ -366,34 +369,36 @@ class GatingMechanism(AdaptiveMechanism_Base):
     #     kwPreferenceSetName: 'GatingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class Parameters(AdaptiveMechanism_Base.Parameters):
+    # # MODIFIED 5/18/19 NEW: [JDC]
+    # Override gating_allocatdion and suppress control_allocation
+    class Parameters(ModulatoryMechanism.Parameters):
         """
             Attributes
             ----------
 
-                variable
-                    see `variable <GatingMechanism.variable>`
+                gating_allocation
+                    see `gating_allocation <ControlMechanism.gating_allocation>
 
-                    :default value: numpy.array([0.5])
-                    :type: numpy.ndarray
-
-                value
-                    see `value <GatingMechanism.value>`
-
-                    :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :default value: defaultGatingAllocation
+                    :type:
+                    :read only: True
 
         """
-        # This must be a list, as there may be more than one (e.g., one per GATING_SIGNAL)
-        variable = np.array(defaultGatingPolicy)
-        value = Parameter(AdaptiveMechanism_Base.Parameters.value.default_value, aliases=['gating_policy'])
-
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({GATING_PROJECTIONS: None})
+        # This must be a list, as there may be more than one (e.g., one per control_signal)
+        value = Parameter(np.array(defaultGatingAllocation), aliases='modulatory_allocation')
+        gating_allocation = Parameter(np.array(defaultGatingAllocation),
+                                      getter=_gating_allocation_getter,
+                                      setter=_gating_allocation_setter,
+                                      read_only=True)
+        control_allocation = Parameter(NotImplemented,
+                                      getter=_control_allocation_getter,
+                                      setter=_control_allocation_setter,
+                                      read_only=True)
+    # MODIFIED 5/18/19 END
 
     @tc.typecheck
     def __init__(self,
-                 default_gating_policy=None,
+                 default_gating_allocation=None,
                  size=None,
                  function=None,
                  gating_signals:tc.optional(list) = None,
@@ -402,136 +407,25 @@ class GatingMechanism(AdaptiveMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        # self.system = None
-
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(gating_signals=gating_signals,
-                                                  function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
 
-        super().__init__(default_variable=default_gating_policy,
+        super().__init__(default_variable=default_gating_allocation,
                          size=size,
-                         modulation=modulation,
                          function=function,
+                         modulatory_signals=gating_signals,
+                         modulation=modulation,
                          params=params,
                          name=name,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate items in the GATING_SIGNALS param (**gating_signals** argument of constructor)
-
-        Check that GATING_SIGNALS is a list, and that every item is valid state_spec
-        """
-
-        super(GatingMechanism, self)._validate_params(request_set=request_set,
-                                                      target_set=target_set,
-                                                      context=context)
-
-        if GATING_SIGNALS in target_set and target_set[GATING_SIGNALS]:
-            if not isinstance(target_set[GATING_SIGNALS], list):
-                target_set[g] = [target_set[GATING_SIGNALS]]
-            for gating_signal in target_set[GATING_SIGNALS]:
-                _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=gating_signal)
-
-    def _instantiate_output_states(self, context=None):
-
-        from psyneulink.core.globals.registry import register_category
-
-        # Create registry for GatingSignals (to manage names)
-
-        register_category(entry=GatingSignal,
-                          base_class=State_Base,
-                          registry=self._stateRegistry,
-                          context=context)
-
-        if self.gating_signals:
-
-            self._output_states = []
-
-            for gating_signal in self.gating_signals:
-                self._instantiate_gating_signal(gating_signal, context=context)
-
-        super()._instantiate_output_states(context=context)
-
-        # Reassign gating_signals to capture any user_defined GatingSignals instantiated in call to super
-        #    and assign to ContentAddressableList
-        self._gating_signals = ContentAddressableList(component_type=GatingSignal,
-                                                      list=[state for state in self.output_states
-                                                            if isinstance(state, GatingSignal)])
-
-        # If the GatingMechanism's policy has more than one item,
-        #    warn if the number of items does not equal the number of its GatingSignals
-        #    (note:  there must be fewer GatingSignals than items in gating_policy,
-        #            as the reverse is an error that is checked for in _instantiate_gating_signal)
-        if len(self.gating_policy)>1 and len(self.gating_signals) != len(self.gating_policy):
-            if self.verbosePref:
-                warnings.warning("The number of {}s for {} ({}) does not equal the number of items in its {} ({})".
-                                 format(GatingSignal.__name__, self.name, len(self.gating_signals),
-                                        GATING_POLICY, len(self.gating_policy)))
-
     def _instantiate_gating_signal(self, gating_signal, context=None):
         """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection
-
-        Notes:
-        * gating_signal arg can be a:
-            - GatingSignal object;
-            - GatingProjection;
-            - InputState or OutputState;
-            - params dict, from _take_over_as_default_gating_mechanism(), containing a GatingProjection;
-            - tuple (state_name, Mechanism), from gating_signals arg of constructor;
-                    [NOTE: this is a convenience format;
-                           it precludes specification of GatingSignal params (e.g., MODULATION_OPERARATION)]
-            - GatingSignal specification dictionary, from gating_signals arg of constructor
-                    [NOTE: this must have at least NAME:str (state name) and MECHANISM:Mechanism entries;
-                           it can also include a PARAMS entry with a params dict containing GatingSignal params]
-        * State._parse_state_spec() is used to parse gating_signal arg
-        * params are expected to be for (i.e., to be passed to) GatingSignal;
-        * wait to instantiate deferred_init() projections until after GatingSignal is instantiated,
-            so that correct OutputState can be assigned as its sender
-        # * index of OutputState is incremented based on number of GatingSignals already instantiated;
-        #     this means that the GatingMechanism's function must return as many items as it has GatingSignals,
-        #     with each item of the function's value used by a corresponding GatingSignal.
-            Note: multiple GatingProjections can be assigned to the same GatingSignal to achieve "divergent gating"
-                  (that is, gating of many states with a single value -- e.g., LC)
-        * index of OutputState is assigned to [0], so that all GatingSignals use the same single value produced
-            returned by a GatingMechanism's function
-
-        Returns GatingSignal (OutputState)
+        Return GatingSignal (OutputState)
         """
-        from psyneulink.core.components.states.state import _instantiate_state
-
-        # Parse gating_signal specifications (in call to State._parse_state_spec)
-        #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
-        # KDM 5/29/18: here, what happens if you make two gating signals with the same owner (self)?
-        # looks like they both will get the variable spec (OWNER_VALUE, 0)
-        gating_signal = _instantiate_state(state_type=GatingSignal,
-                                           variable=(OWNER_VALUE,0),
-                                           owner=self,
-                                           reference_value=defaultGatingPolicy,
-                                           modulation=self.modulation,
-                                           state_spec=gating_signal,
-                                           context=context)
-
-        # Validate index
-        try:
-            self.gating_policy[gating_signal.owner_value_index]
-        except IndexError:
-            raise GatingMechanismError("Index specified for {} of {} ({}) "
-                                       "exceeds the number of items of its {} ({})".
-                                       format(GatingSignal.__name__, self.name, gating_signal.owner_value_index,
-                                              GATING_POLICY, len(self.gating_policy)))
-
-        # Add GatingSignal TO output_states LIST
-        self._output_states.append(gating_signal)
-
-        # Add GatingProjection(s) to GatingMechanism's list of GatingProjections
-        try:
-            self.gating_projections.extend(gating_signal.efferents)
-        except AttributeError:
-            self.gating_projections = gating_signal.efferents.copy()
-
-        return gating_signal
+        return super()._instantiate_modulatory_signal(modulatory_signal=gating_signal, context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         """Take over as default GatingMechanism (if specified) and implement any specified GatingProjections
@@ -577,26 +471,39 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         self._activate_projections_for_compositions(self.system)
 
-    def _activate_projections_for_compositions(self, compositions=None):
-        for gp in self.gating_signals:
-            for eff in gp.efferents:
-                eff._activate_for_compositions(compositions)
+    # Overrided gating_signals
+    @property
+    def gating_signals(self):
+        try:
+            return ContentAddressableList(component_type=GatingSignal,
+                                          list=[state for state in self.output_states
+                                                if isinstance(state, GatingSignal)])
+        except:
+            return None
 
-    def show(self):
-        """Display the InputStates and/or OutputStates gated by the GatingMechanism's `gating_signals
-        <GatingMechanism.gating_signals>`.
-        """
+    @gating_signals.setter
+    def gating_signals(self, value):
+        self._modulatory_signals = value
 
-        print ("\n---------------------------------------------------------")
+    # Suppress control_signals
+    @property
+    def control_signals(self):
+        from psyneulink.core.components.mechanisms.adaptive.control import ControlMechanism
+        from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+        raise GatingMechanismError(f"'control_signals' attribute is not implemented on {self.name} (a "
+                                   f"{self.__class__.__name__}); consider using a {ControlMechanism.__name__} "
+                                   f"instead, or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s "
+                                   f"and {GatingSignal.__name__}s are needed.")
 
-        print ("\n{0}".format(self.name))
-        print ("\n\tGating the following Mechanism InputStates and/or OutputStates:".format(self.name))
-        # Sort for consistency of output:
-        state_names_sorted = sorted(self.output_states)
-        for state_name in state_names_sorted:
-            for projection in self.output_states[state_name].efferents:
-                print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
-        print ("\n---------------------------------------------------------")
+    @control_signals.setter
+    def control_signals(self, value):
+        from psyneulink.core.components.mechanisms.adaptive.control import ControlMechanism
+        from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
+        raise GatingMechanismError(f"'control_signals' attribute is not implemented on {self.name} (a "
+                                   f"{self.__class__.__name__}); consider using a {ControlMechanism.__name__} "
+                                   f"instead, or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s "
+                                   f"and {GatingSignal.__name__}s are needed.")
+
 
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
@@ -613,5 +520,3 @@ def _add_gating_mechanism_to_system(owner:GatingMechanism):
                         # # Add self to system's list of OriginMechanisms if it doesn't have any afferents
                         # if not any(state.path_afferents for state in owner.input_states):
                         #     system.origin_mechanisms.mechs.append(owner)
-
-

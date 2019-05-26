@@ -412,6 +412,8 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
 from psyneulink.core.globals.sampleiterator import SampleIterator
 
+from psyneulink.core import llvm as pnlvm
+
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
     'AGENT_REP', 'FEATURES'
@@ -465,7 +467,7 @@ class OptimizationControlMechanism(ControlMechanism):
     objective_mechanism : ObjectiveMechanism or List[OutputState specification]
         specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
         `OutputState <OutputState>`\\s it should monitor; if a list of `OutputState specifications
-        <ObjectiveMechanism_Monitored_Output_States>` is used, a default ObjectiveMechanism is created and the list
+        <ObjectiveMechanism_Monitor>` is used, a default ObjectiveMechanism is created and the list
         is passed to its **monitored_output_states** argument.
 
     features : Mechanism, OutputState, Projection, dict, or list containing any of these
@@ -480,12 +482,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
     agent_rep : Composition  : default Composition to which the OptimizationControlMechanism belongs
         specifies the `Composition` used by the `evalution_function <OptimizationControlMechanism.evaluation_function>`
-        to predictd the `net_outcome <ControlMechanism.net_outcome>` for a given `state
+        to predict the `net_outcome <ControlMechanism.net_outcome>` for a given `state
         <OptimizationControlMechanism_State>`.  If a Composition other than the default is assigned,
         it must be suitably configured (see `above <OptimizationControlMechanism_Agent_Rep>` for additional details).
         If the default is used, the OptimizationControlMechanism is assigned as the Composition's `controller
         <Composition.controller>` unless one has already been assigned, in which case the
-        OptimizationControlMechanismit is disabled.
+        OptimizationControlMechanism is disabled.
 
     search_function : function or method
         specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
@@ -509,6 +511,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.function>`, unless that is specified in a constructor for `function
         <OptimizationControlMechanism.function>`.  Each item must have the same shape as `control_allocation
         <ControlMechanism.control_allocation>`.
+
     function : OptimizationFunction, function or method
         specifies the function used to optimize the `control_allocation <ControlMechanism.control_allocation>`;
         must take as its sole argument an array with the same shape as `control_allocation
@@ -593,6 +596,13 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.function>` if its `save_values <OptimizationFunction.save_samples>` parameter
         is `True`;  otherwise list is empty.
 
+    search_statefulness : bool : True
+        if set to False, an `OptimizationControlMechanism`\\ 's `evaluation_function` will never run simulations; the
+        evaluations will simply execute in the original `execution context <_Execution_Contexts>`.
+
+        if set to True, `simulations <OptimizationControlMechanism_Execution>` will be created normally for each
+        `control allocation <control_allocation>`.
+
     name : str
         name of the OptimizationControlMechanism; if it is not specified in the **name** argument of the constructor, a
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
@@ -669,6 +679,12 @@ class OptimizationControlMechanism(ControlMechanism):
                     :default value: None
                     :type:
 
+                search_statefulness
+                    see `search_statefulness <OptimizationControlMechanism.search_statefulness>`
+
+                    :default value: True
+                    :type: bool
+
                 search_termination_function
                     see `search_termination_function <OptimizationControlMechanism.search_termination_function>`
 
@@ -681,6 +697,7 @@ class OptimizationControlMechanism(ControlMechanism):
         search_function = Parameter(None, stateful=False, loggable=False)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
         comp_execution_mode = Parameter('Python', stateful=False, loggable=False)
+        search_statefulness = Parameter(True, stateful=False, loggable=False)
 
         agent_rep = Parameter(None, stateful=False, loggable=False)
 
@@ -703,6 +720,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  num_estimates = None,
                  search_function: tc.optional(tc.any(is_function_type)) = None,
                  search_termination_function: tc.optional(tc.any(is_function_type)) = None,
+                 search_statefulness=None,
                  params=None,
                  **kwargs):
         '''Abstract class that implements OptimizationControlMechanism'''
@@ -717,6 +735,7 @@ class OptimizationControlMechanism(ControlMechanism):
         params = self._assign_args_to_param_dicts(input_states=features,
                                                   feature_function=feature_function,
                                                   num_estimates=num_estimates,
+                                                  search_statefulness=search_statefulness,
                                                   params=params)
 
         super().__init__(system=None,
@@ -795,16 +814,16 @@ class OptimizationControlMechanism(ControlMechanism):
         #                                                    request_set[OBJECTIVE_MECHANISM],
         #                                                    repr(MONITORED_OUTPUT_STATES)))
 
-    def _instantiate_control_signal(self, control_signal, context=None):
+    def _instantiate_output_states(self, context=None):
         '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
         OptimizationControlMechanism requires use of at least one of the cost options
         '''
-        control_signal = super()._instantiate_control_signal(control_signal, context)
+        super()._instantiate_output_states(context)
 
-        if control_signal.cost_options is None:
-            control_signal.cost_options = ControlSignalCosts.DEFAULTS
-            control_signal._instantiate_cost_attributes()
-        return control_signal
+        for control_signal in self.control_signals:
+            if control_signal.cost_options is None:
+                control_signal.cost_options = ControlSignalCosts.DEFAULTS
+                control_signal._instantiate_cost_attributes()
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Instantiate OptimizationControlMechanism's OptimizatonFunction attributes'''
@@ -879,7 +898,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # and the simulations must start from the exact spot
         self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id), base_execution_context=execution_id, override=True)
 
-        # Get control_allocation that optmizes net_outcome using OptimizationControlMechanism's function
+        # Get control_allocation that optimizes net_outcome using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         optimal_control_allocation, optimal_net_outcome, saved_samples, saved_values = \
                                                 super(ControlMechanism,self)._execute(variable=control_allocation,
@@ -932,17 +951,25 @@ class OptimizationControlMechanism(ControlMechanism):
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
         '''
+        # agent_rep is a Composition (since runs_simuluations = True)
         if self.agent_rep.runs_simulations:
-            sim_execution_id = self._set_up_simulation(execution_id, control_allocation)
+            # KDM 5/20/19: crudely using default here because it is a stateless parameter
+            # and there is a bug in setting parameter values on init, see TODO note above
+            # call to self._instantiate_defaults around component.py:1115
+            if self.defaults.search_statefulness:
+                new_execution_id = self._set_up_simulation(execution_id, control_allocation)
+            else:
+                new_execution_id = execution_id
 
             result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
                                              control_allocation,
                                              self.parameters.num_estimates.get(execution_id),
                                              base_execution_id=execution_id,
-                                             execution_id=sim_execution_id,
+                                             execution_id=new_execution_id,
                                              context=self.function.parameters.context.get(execution_id),
                                              execution_mode=self.parameters.comp_execution_mode.get(execution_id)
             )
+        # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
             result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
                                              control_allocation,
@@ -952,6 +979,188 @@ class OptimizationControlMechanism(ControlMechanism):
             )
 
         return result
+
+    def _get_evaluate_param_struct_type(self, ctx):
+        num_estimates = ctx.int32_ty
+        intensity_cost = [ctx.get_param_struct_type(os.intensity_cost_function) for os in self.output_states]
+        intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
+        return pnlvm.ir.LiteralStructType([intensity_cost_struct, num_estimates])
+
+    def _get_evaluate_param_initializer(self, execution_id):
+        num_estimates = self.parameters.num_estimates.get(execution_id) or 0
+        # FIXME: The intensity cost function is not setup with the right execution id
+        intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
+        return (intensity_cost, num_estimates)
+
+    def _get_evaluate_context_struct_type(self, ctx):
+        intensity_cost = [ctx.get_context_struct_type(os.intensity_cost_function) for os in self.output_states]
+        intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
+        return pnlvm.ir.LiteralStructType([intensity_cost_struct])
+
+    def _get_evaluate_context_initializer(self, execution_id):
+        intensity_cost = tuple((os.intensity_cost_function._get_context_initializer(execution_id) for os in self.output_states))
+        return (intensity_cost,)
+
+    def _get_evaluate_output_struct_type(self, ctx):
+        # Returns a scalar that is the predicted net_outcome
+        return ctx.float_ty
+
+    def _get_evaluate_alloc_struct_type(self, ctx):
+        return pnlvm.ir.ArrayType(ctx.float_ty,
+                                  len(self.control_allocation_search_space))
+
+    def _gen_llvm_evaluate(self, ctx, builder, params, state, allocation_sample, arg_in, arg_out):
+        sim_f = ctx.get_llvm_function(self.agent_rep._llvm_sim_run.name)
+
+        comp_params, base_comp_state, base_comp_data = builder.function.args[-3:]
+        # Create a simulation copy of composition state
+        comp_state = builder.alloca(base_comp_state.type.pointee)
+        builder.store(builder.load(base_comp_state), comp_state)
+
+        # Create a simulation copy of composition data
+        comp_data = builder.alloca(base_comp_data.type.pointee)
+        builder.store(builder.load(base_comp_data), comp_data)
+
+        # Apply allocation sample to simulation data
+        assert len(self.output_states) == len(allocation_sample.type.pointee)
+        idx = self.agent_rep._get_node_index(self)
+        ocm_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                          ctx.int32_ty(idx)])
+        for i, _ in enumerate(self.output_states):
+            idx = ctx.int32_ty(i)
+            sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), idx])
+            sample_dst = builder.gep(ocm_out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
+            builder.store(builder.load(sample_ptr), sample_dst)
+
+        # construct input
+        num_features = len(arg_in.type.pointee) - 1
+        comp_input = builder.alloca(sim_f.args[3].type.pointee, num_features)
+        for i in range(num_features):
+            src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
+            # destination is a struct of 2d arrays
+            dst = builder.gep(comp_input, [ctx.int32_ty(0), ctx.int32_ty(i), ctx.int32_ty(0)])
+            builder.store(builder.load(src), dst)
+
+
+        # determine simulation counts
+        num_estimates_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        num_estimates = builder.load(num_estimates_ptr)
+
+        # if num_estimates is 0, run 1 trial
+        param_is_zero = builder.icmp_unsigned("==", num_estimates,
+                                                    ctx.int32_ty(0))
+        num_sims = builder.select(param_is_zero, ctx.int32_ty(1),
+                                                 num_estimates)
+
+        num_runs = builder.alloca(ctx.int32_ty)
+        builder.store(num_sims, num_runs)
+
+        # We only provide one input
+        num_inputs = builder.alloca(ctx.int32_ty)
+        builder.store(num_inputs.type.pointee(1), num_inputs)
+
+        # Simulations don't store output
+        comp_output = sim_f.args[4].type(None)
+        builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
+                             comp_output, num_runs, num_inputs])
+
+        # Extract objective mech value
+        idx = self.agent_rep._get_node_index(self.objective_mechanism)
+        objective_os_ptr = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+        objective_val_ptr = builder.gep(objective_os_ptr,
+                                        [ctx.int32_ty(0), ctx.int32_ty(0),
+                                         ctx.int32_ty(0)])
+
+        objective = builder.load(objective_val_ptr)
+
+        # calculate cost function
+        total_cost = builder.alloca(ctx.float_ty)
+        builder.store(ctx.float_ty(-0.0), total_cost)
+        for i, os in enumerate(self.output_states):
+            # FIXME: Add support for other cost types
+            assert os.cost_options == ControlSignalCosts.INTENSITY
+
+            func = ctx.get_llvm_function(os.intensity_cost_function)
+            func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            func_out = builder.alloca(func.args[3].type.pointee)
+            func_in = builder.alloca(func.args[2].type.pointee)
+
+            # copy allocation_sample the input is 1-element array
+            data_in = builder.gep(allocation_sample, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            data_out = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(builder.load(data_in), data_out)
+            builder.call(func, [func_params, func_state, func_in, func_out])
+
+            # extract cost result
+            res_in = builder.gep(func_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            cost = builder.load(res_in)
+            # simplified version of combination fmax(cost, 0)
+            ltz = builder.fcmp_ordered("<", cost, cost.type(0))
+            cost = builder.select(ltz, ctx.float_ty(0), cost)
+
+            # combine is not a PNL functions
+            assert self.combine_costs is np.sum
+            val = builder.load(total_cost)
+            val = builder.fadd(val, cost)
+            builder.store(val, total_cost)
+
+        # compute net outcome
+        net_outcome = builder.fsub(objective, builder.load(total_cost))
+        builder.store(net_outcome, arg_out)
+        return builder
+
+    def _gen_llvm_function(self):
+        from psyneulink.core.compositions.composition import Composition
+        is_comp = isinstance(self.agent_rep, Composition)
+        if is_comp:
+            with pnlvm.LLVMBuilderContext() as ctx:
+                extra_args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
+                              ctx.get_context_struct_type(self.agent_rep).as_pointer(),
+                              ctx.get_data_struct_type(self.agent_rep).as_pointer()]
+        else:
+            extra_args = []
+
+        f = super()._gen_llvm_function(extra_args)
+        if is_comp:
+            for a in f.args[-len(extra_args):]:
+                a.attributes.add('nonnull')
+
+        return f
+
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
+        from psyneulink.core.compositions.composition import Composition
+        is_comp = isinstance(self.agent_rep, Composition)
+
+        fun = ctx.get_llvm_function(function)
+        fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
+        fun_out = builder.alloca(fun.args[3].type.pointee, 1)
+
+        args = [params, context, fun_in, fun_out]
+        if is_comp:
+            args += builder.function.args[-3:]
+        builder.call(fun, args)
+
+        return fun_out, builder
+
+    def _gen_llvm_output_states(self, ctx, builder, params, context, value, so):
+        for i, state in enumerate(self.output_states):
+
+            # LLVM equivalent of parse value; extract array element
+            # corresponsing to the output state number
+            os_input = builder.alloca(pnlvm.ir.ArrayType(ctx.float_ty, 1))
+            val_ptr = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            dest_ptr = builder.gep(os_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(builder.load(val_ptr), dest_ptr)
+
+
+            os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+            os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+            os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            os_function = ctx.get_llvm_function(state)
+            builder.call(os_function, [os_params, os_context, os_input, os_output])
+
+        return builder
 
     def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
@@ -976,7 +1185,7 @@ class OptimizationControlMechanism(ControlMechanism):
     # FIX: THE FOLLOWING SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
     # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values
 
-    tc.typecheck
+    @tc.typecheck
     def add_features(self, features):
         '''Add InputStates and Projections to ModelFreeOptimizationControlMechanism for features used to
         predict `net_outcome <ControlMechanism.net_outcome>`

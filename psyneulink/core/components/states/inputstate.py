@@ -711,6 +711,7 @@ class InputState(State_Base):
     connectsWithAttribute = [OUTPUT_STATES]
     projectionSocket = SENDER
     modulators = [GATING_SIGNAL]
+    canReceive = modulators + [MAPPING_PROJECTION]
 
 
     classPreferenceLevel = PreferenceLevel.TYPE
@@ -940,29 +941,11 @@ class InputState(State_Base):
 
         reference_value is the item of the owner Mechanism's variable to which the InputState is assigned
         """
-        # MODIFIED 3/9/19 OLD:
-        # if reference_value is not None and not iscompatible(reference_value, self.defaults.value):
-        # MODIFIED 3/9/19 NEW: [JDC]
         match_len_option = {kwCompatibilityLength:False}
         if reference_value is not None and not iscompatible(reference_value, self.defaults.value, **match_len_option):
-        # MODIFIED 3/9/19 END
             name = self.name or ""
             raise InputStateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})"
                                   .format(name, self.componentName, self.owner.name, self.defaults.value, reference_value))
-
-    # # MODIFIED 3/9/18 OLD: [JDC]
-    # def _validate_function(self, function):
-    #     # Insure that function is Function.LinearCombination
-    #     if not is_instance_or_subclass(function, (LinearCombination, Linear, Buffer, Reduce)):
-    #         raise StateError(
-    #             "{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".format(
-    #                 FUNCTION,
-    #                 self.name,
-    #                 self.owner.name,
-    #                 function.componentName
-    #             )
-    #         )
-    # # MODIFIED 3/9/18 END
 
     def _instantiate_function(self, function, function_params=None, context=None):
         """If combine option was specified in constructor, assign as operation argument of LinearCombination function"""
@@ -970,14 +953,12 @@ class InputState(State_Base):
             function = LinearCombination(operation=self.combine_function_args[0])
             del self.combine_function_args
         super()._instantiate_function(function=function, context=context)
-        # MODIFIED 3/9/18 NEW: [JDC]
         self._use_1d_variable = False
         if not isinstance(self.function, CombinationFunction):
             self._use_1d_variable = True
             self.function._default_variable_flexibility = DefaultsFlexibility.RIGID
         else:
             self.function._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
-        # MODIFIED 3/9/18 END
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -1127,6 +1108,7 @@ class InputState(State_Base):
                 # Reduce to 2-item tuple Projection specification
                 projection_item = tuple_spec[3] if len(tuple_spec)==4 else None
                 projections_spec = (tuple_spec[0],projection_item)
+
 
             # GET PROJECTIONS IF SPECIFIED *************************************************************************
 
@@ -1414,7 +1396,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
 
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=input_states,
-                                         state_type=InputState,
+                                         state_types=InputState,
                                          state_param_identifier=INPUT_STATE,
                                          reference_value=reference_value if reference_value is not None
                                                                          else owner.defaults.variable,

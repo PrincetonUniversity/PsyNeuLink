@@ -680,11 +680,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                              reference_value=reference_value,
                                                              context=context)
         self._name_input_states(input_states)
-
-        for state in input_states:
-            for proj in state.path_afferents:
-                self.aux_components.append(proj)
-
         return input_states
 
     def _name_input_states(self, input_states):
@@ -706,9 +701,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                           component=state)
             state.name = "Value of {} [{}]".format(proj.sender.owner.name, proj.sender.name)
             register_instance(state, state.name, InputState, self._stateRegistry, INPUT_STATE)
-
-    def add_monitored_output_states(self, monitored_output_states_specs, context=None):
-        return self.add_to_monitor(monitored_output_states_specs, context=None)
 
     def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.
@@ -760,7 +752,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             # There should be only one ProjectionTuple specified,
             #    that designates the OutputState and (possibly) a Projection from it
             if len(input_state[PARAMS][PROJECTIONS])!=1:
-                raise ObjectiveMechanismError("PROGRAM ERROR: Failure to parse item in monitored_output_states_specs "
+                raise ObjectiveMechanismError("PROGRAM ERROR: Failure to parse item in monitor_specs "
                                               "for {} (item: {})".format(self.name, spec))
             projection_tuple = input_state[PARAMS][PROJECTIONS][0]
             # If Projection is specified, use its value

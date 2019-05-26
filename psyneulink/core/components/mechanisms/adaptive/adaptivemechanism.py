@@ -33,7 +33,7 @@ this need not be the case. There are three types of AdaptiveMechanism:
 ..
 * `GatingMechanism`
     takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates a
-    `gating_policy <GatingMechanism.gating_policy>`, each item of which is assigned to one of its
+    `gating_allocation <GatingMechanism.gating_allocation>`, each item of which is assigned to one of its
     `GatingSignals <ControlSignal>`;  each of those generates a `gating_signal <ControlSignal.control_signal>`
     that is used by its `GatingProjection(s) <ControlProjection>` to modulate the value of the `InputState` or
     `OutputState` of a `Mechanism <Mechanism>`.

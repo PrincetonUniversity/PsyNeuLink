@@ -390,7 +390,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Component
-from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
+from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix, Identity
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.state import StateError
@@ -515,7 +515,7 @@ class Projection_Base(Projection):
     ----------
 
     variable : value
-        input to Projection, received from OutputState.value of `sender <Projection_Base.sender>`.
+        input to Projection, received from `value <OutputState.value>` of `sender <Projection_Base.sender>`.
 
     sender : State
         State from which Projection receives its input (see `Projection_Sender` for additional information).
@@ -524,7 +524,7 @@ class Projection_Base(Projection):
         State to which Projection sends its output  (see `Projection_Receiver` for additional information)
 
     value : value
-        Output of Projection, transmitted as variable to InputState of `receiver <Projection_Base.receiver>`.
+        output of Projection, transmitted to `variable <InputState.variable>` of `receiver <Projection_Base.receiver>`.
 
     parameter_states : ContentAddressableList[str, ParameterState]
         a list of the Projection's `ParameterStates <Projection_ParameterStates>`, one for each of its specifiable
@@ -890,7 +890,9 @@ class Projection_Base(Projection):
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
+
         for state in self._parameter_states:
+
             state_name = state.name
             state.update(execution_id=execution_id, params=runtime_params, context=context)
 
@@ -953,7 +955,8 @@ class Projection_Base(Projection):
             self.receiver.afferents_info[self] = ConnectionInfo(compositions=composition)
 
         try:
-            composition._add_projection(self)
+            if self not in composition.projections:
+                composition._add_projection(self)
         except AttributeError:
             # composition may be ALL or None, in this case we don't need to add
             pass
@@ -1198,12 +1201,10 @@ def _parse_projection_spec(projection_spec,
           or (isinstance(projection_spec, type) and issubclass(projection_spec, State))):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
 
-    # MODIFIED 11/29/17 NEW:
     # Mechanism object or class
     elif (isinstance(projection_spec, Mechanism)
           or (isinstance(projection_spec, type) and issubclass(projection_spec, Mechanism))):
-        proj_spec_dict[PROJECTION_TYPE] = projection_spec.outputStateType.paramClassDefaults[PROJECTION_TYPE]
-    # MODIFIED 11/29/17 END
+        proj_spec_dict[PROJECTION_TYPE] = projection_spec.outputStateTypes.paramClassDefaults[PROJECTION_TYPE]
 
     # Dict
     elif isinstance(projection_spec, dict):
@@ -1332,6 +1333,7 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.core.components.states.outputstate import OutputState
     from psyneulink.core.components.states.parameterstate import ParameterState
     from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
     from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
 
     if not inspect.isclass(connectee_state_type):
@@ -1371,21 +1373,30 @@ def _parse_connection_specs(connectee_state_type,
         #     to validate the state spec and append ProjectionTuple to connect_with_states
         if isinstance(connection, (Mechanism, State, type)):
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ProjectionTuple THAT HAS BOTH SENDER AND RECEIVER
-
             # FIX: 11/28/17 - HACKS TO HANDLE PROJECTION FROM GatingSignal TO InputState or OutputState
             # FIX:            AND PROJECTION FROM ControlSignal to ParameterState
             # # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
             # # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
             # if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
-            #     connection = connection.outputStateType
+            #     connection = connection.outputStateTypes
             if ((isinstance(connectee_state_type, (InputState, OutputState, ParameterState))
                  or isinstance(connectee_state_type, type)
                 and issubclass(connectee_state_type, (InputState, OutputState, ParameterState)))
                 and _is_modulatory_spec(connection)):
-
                 # Convert AdaptiveMechanism spec to corresponding ModulatorySignal spec
                 if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
-                    connection = connection.outputStateType
+                    # If the connection supports multiple outputStateTypes,
+                    #    get the one compatible with the current connectee:
+                    output_state_types = connection.outputStateTypes
+                    if not isinstance(output_state_types, list):
+                        output_state_types = [output_state_types]
+                    output_state_type = [o for o in output_state_types if o.__name__ in
+                                          connectee_state_type.connectsWith]
+                    assert len(output_state_type)==1, \
+                        f"PROGRAM ERROR:  More than one {OutputState.__name__} type found for {connection}  " \
+                            f"({output_state_types}) that can be assigned a modulatory {Projection.__name__} " \
+                            f"to {connectee_state_type.__name__} of {owner.name}"
+                    connection = output_state_type[0]
                 elif isinstance(connection, AdaptiveMechanism_Base):
                     connection = connection.output_state
 
@@ -1548,9 +1559,9 @@ def _parse_connection_specs(connectee_state_type,
                      # Call _parse_connection_spec for each State or Mechanism, to generate a conection spec for each
                     for connect_with_spec in first_item:
                         if not isinstance(connect_with_spec, (State, Mechanism)):
-                              raise StateError("Item in the list used to specify a(n) {} for {} ({}) is not a {} or {}".
-                                             format(state_type.__name__, owner.name, connect_with_spec,
-                                                    State.__name__, Mechanism.__name__))
+                              raise StateError(f"Item in the list used to specify a {last_item.__name__} "
+                                               f"for {owner.name} ({connect_with_spec.__name__}) "
+                                               f"is not a {State.__name__} or {Mechanism.__name__}")
                         c = _parse_connection_specs(connectee_state_type=connectee_state_type,
                                                     owner=owner,
                                                     connections=ProjectionTuple(connect_with_spec,
@@ -1597,7 +1608,8 @@ def _parse_connection_specs(connectee_state_type,
             # Validate state specification, and get actual state referenced if it has been instantiated
             try:
                 # FIX: 11/28/17 HACK TO DEAL WITH GatingSignal Projection to OutputState
-                if (_is_gating_spec(first_item)
+                # FIX: 5/11/19: CORRECTED TO HANDLE ControlMechanism SPECIFIED FOR GATING
+                if ((_is_gating_spec(first_item) or _is_control_spec(first_item))
                     and (isinstance(last_item, OutputState) or last_item == OutputState)):
                     projection_socket = SENDER
                     state_types = [OutputState]
@@ -1607,6 +1619,7 @@ def _parse_connection_specs(connectee_state_type,
                     mech_state_attribute=connect_with_attr
 
                 state = _get_state_for_socket(owner=owner,
+                                              connectee_state_type=connectee_state_type,
                                               state_spec=state_spec,
                                               state_types=state_types,
                                               mech=mech,
@@ -1640,13 +1653,12 @@ def _parse_connection_specs(connectee_state_type,
                 if not any(issubclass(connects_with_state, state_type)
                            for connects_with_state in allowed):
                     spec = projection_spec or state_type.__name__
-                    raise ProjectionError("Projection specification (\'{}\') for an incompatible connection: "
-                                          "{} with {} of {} ; should be one of the following: {}".
-                                          format(spec,
-                                                 state_type.__name__,
-                                                 connectee_state_type.__name__,
-                                                 owner.name,
-                                                 ", ".join([c.__name__ for c in connects_with])))
+                    raise ProjectionError(f"Projection specification (\'{spec}\') for an incompatible connection: "
+                                          f"{state_type.__name__} with {connectee_state_type.__name__} of {owner.name};"
+                                          f" spec should be one of the following: "
+                                          f"{' or '.join([r for r in state_type.canReceive])}, "
+                                          f" or connectee should be one of the following: "
+                                          f"{' or '.join([c.__name__ for c in connects_with])},")
 
             # Parse projection specification into Projection specification dictionary
             # Validate projection specification
@@ -1852,7 +1864,7 @@ def _get_projection_value_shape(sender, matrix):
     """Return shape of a Projection's value given its sender and matrix"""
     from psyneulink.core.components.functions.transferfunctions import get_matrix
     matrix = get_matrix(matrix)
-    return np.zeros(matrix.shape[sender.value.ndim :])
+    return np.zeros(matrix.shape[np.atleast_1d(sender.value).ndim :])
 
 # IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignals WHEN THAT IS IMPLEMENTED
 @tc.typecheck

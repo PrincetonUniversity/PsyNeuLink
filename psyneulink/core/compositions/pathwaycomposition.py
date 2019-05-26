@@ -79,9 +79,7 @@ class PathwayComposition(Composition):
         inputs=None,
         autodiff_stimuli=None,
         scheduler_processing=None,
-        scheduler_learning=None,
         termination_processing=None,
-        termination_learning=None,
         call_before_time_step=None,
         call_before_pass=None,
         call_after_time_step=None,
@@ -89,7 +87,6 @@ class PathwayComposition(Composition):
         execution_id=None,
         base_execution_id=None,
         clamp_input=SOFT_CLAMP,
-        targets=None,
         runtime_params=None,
         skip_initialization=False,
         bin_execute=False,
@@ -99,14 +96,12 @@ class PathwayComposition(Composition):
             inputs = {self.get_mechanisms_by_role(NodeRole.ORIGIN).pop(): inputs}
 
         output = super(PathwayComposition, self).execute(inputs, scheduler_processing=scheduler_processing,
-                                                         scheduler_learning=scheduler_learning,
                                                          termination_processing=termination_processing,
-                                                         termination_learning=termination_learning,
                                                          call_before_time_step=call_before_time_step,
                                                          call_before_pass=call_before_pass,
                                                          call_after_time_step=call_after_time_step,
                                                          call_after_pass=call_after_pass, execution_id=execution_id,
-                                                         clamp_input=clamp_input, targets=targets,
+                                                         clamp_input=clamp_input,
                                                          runtime_params=runtime_params,
                                                          skip_initialization=skip_initialization,
                                                          bin_execute=bin_execute

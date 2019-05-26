@@ -417,7 +417,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context, ContextFlags, _get_time
 from psyneulink.core.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParametersBase
+from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.core.globals.registry import register_category
@@ -1106,6 +1106,10 @@ class Component(object, metaclass=ComponentsMeta):
 
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
+        # TODO: the below overrides setting default values to None context,
+        # at least in stateless parameters. Possibly more. Below should be
+        # removed eventually
+
         # Validate the set passed in and assign to paramInstanceDefaults
         # By calling with assign_missing, this also populates any missing params with ones from paramClassDefaults
         self._instantiate_defaults(variable=default_variable,
@@ -1179,23 +1183,25 @@ class Component(object, metaclass=ComponentsMeta):
             self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self._llvm_function.name)
         return self.__llvm_bin_function
 
-    def _gen_llvm_function(self):
+    def _gen_llvm_function(self, extra_args=[]):
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
+            args = [ctx.get_param_struct_type(self).as_pointer(),
+                    ctx.get_context_struct_type(self).as_pointer(),
+                    ctx.get_input_struct_type(self).as_pointer(),
+                    ctx.get_output_struct_type(self).as_pointer()]
             func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(),
-                (ctx.get_param_struct_type(self).as_pointer(),
-                 ctx.get_context_struct_type(self).as_pointer(),
-                 ctx.get_input_struct_type(self).as_pointer(),
-                 ctx.get_output_struct_type(self).as_pointer()))
+                                            args + extra_args)
 
             func_name = ctx.get_unique_name(str(self))
             llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
-            params, context, arg_in, arg_out = llvm_func.args
+            params, context, arg_in, arg_out = llvm_func.args[:len(args)]
             for p in params, context, arg_in, arg_out:
                 p.attributes.add('nonnull')
-                p.attributes.add('noalias')
+                if len(extra_args) == 0:
+                    p.attributes.add('noalias')
 
             metadata = ctx.get_debug_location(llvm_func, self)
             if metadata is not None:
@@ -2335,6 +2341,20 @@ class Component(object, metaclass=ComponentsMeta):
             for comp in self._dependent_components:
                 comp._assign_context_values(execution_id, base_execution_id, **kwargs)
 
+    def _set_all_parameter_properties_recursively(self, **kwargs):
+        # sets a property of all parameters for this component and all its dependent components
+        # used currently for disabling history, but setting logging could use this
+        for param_name in self.parameters.names():
+            parameter = getattr(self.parameters, param_name)
+            for (k, v) in kwargs.items():
+                try:
+                    setattr(parameter, k, v)
+                except ParameterError as e:
+                    logger.warning(str(e) + ' Parameter has not been modified.')
+
+        for comp in self._dependent_components:
+            comp._set_all_parameter_properties_recursively(**kwargs)
+
     def _set_multiple_parameter_values(self, execution_id, override=False, **kwargs):
         """
             Unnecessary, but can simplify multiple parameter assignments at once
@@ -2965,6 +2985,10 @@ class Component(object, metaclass=ComponentsMeta):
             )
 
     def execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+
+        if execution_id is None:
+            execution_id = self.most_recent_execution_context
+
         # initialize context for this execution_id if not done already
         if execution_id is not None:
             self._assign_context_values(execution_id)

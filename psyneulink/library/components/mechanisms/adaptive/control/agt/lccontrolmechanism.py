@@ -348,7 +348,7 @@ class LCControlMechanism(ControlMechanism):
     np.array]] : default ObjectiveMechanism(function=CombineMeans)
         specifies either an `ObjectiveMechanism` to use for the LCControlMechanism or a list of the OutputStates it
         should
-        monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
+        monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitor>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
     modulated_mechanisms : List[`Mechanism`] or *ALL*
@@ -683,7 +683,6 @@ class LCControlMechanism(ControlMechanism):
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION:FitzHughNagumoIntegrator,
-                               CONTROL_SIGNALS: None,
                                CONTROL_PROJECTIONS: None,
                                })
 
@@ -847,7 +846,8 @@ class LCControlMechanism(ControlMechanism):
             ctl_sig_projs = []
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))
-            self._control_signals = [{PROJECTIONS: ctl_sig_projs}]
+            self.control_signals = [{PROJECTIONS: ctl_sig_projs}]
+
         super()._instantiate_output_states(context=context)
 
     def _execute(
