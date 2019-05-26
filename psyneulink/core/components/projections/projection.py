@@ -390,8 +390,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Component
-from psyneulink.core.components.functions.interfacefunctions import Identity
-from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
+from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix, Identity
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.state import StateError

@@ -280,9 +280,8 @@ import typecheck as tc
 import warnings
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.interfacefunctions import Identity
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
-from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
+from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix, Identity
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.core.components.states.outputstate import OutputState
