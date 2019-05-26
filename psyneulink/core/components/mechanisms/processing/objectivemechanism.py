@@ -680,11 +680,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                              reference_value=reference_value,
                                                              context=context)
         self._name_input_states(input_states)
-
-        for state in input_states:
-            for proj in state.path_afferents:
-                self.aux_components.append(proj)
-
         return input_states
 
     def _name_input_states(self, input_states):
