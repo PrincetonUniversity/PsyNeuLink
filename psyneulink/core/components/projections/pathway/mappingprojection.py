@@ -775,16 +775,6 @@ class MappingProjection(PathwayProjection_Base):
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.parameters.context.get(execution_id).string = context
 
-        # # MODIFIED 5/24/19 OLD:
-        # if (hasattr(self.context, "composition") and
-        #         hasattr(self.context.composition, "learning_enabled") and
-        #         self.context.composition.learning_enabled):
-        #     self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
-        #     self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-        #     self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-        #
-        # self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-        # MODIFIED 5/24/19 NEW: [JDC]
         # If function is Identity Function, no need to update ParameterStates, as matrix is not used
         if not isinstance(self.function, Identity):
 
@@ -796,7 +786,6 @@ class MappingProjection(PathwayProjection_Base):
                 self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
             self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-        # MODIFIED 5/24/19 END
 
         value = super()._execute(
                 variable=variable,
@@ -805,44 +794,6 @@ class MappingProjection(PathwayProjection_Base):
                 context=context
         )
         return value
-
-    # MODIFIED 5/24/19 OLD:
-    # @property
-    # def matrix(self):
-    #     return self.function.matrix
-    #
-    # @matrix.setter
-    # def matrix(self, matrix):
-    #     if not (isinstance(matrix, np.matrix) or
-    #                 (isinstance(matrix,np.ndarray) and matrix.ndim == 2) or
-    #                 (isinstance(matrix,list) and np.array(matrix).ndim == 2)):
-    #         raise MappingError("Matrix parameter for {} ({}) MappingProjection must be "
-    #                            "an np.matrix, a 2d np.array, or a correspondingly configured list".
-    #                            format(self.name, matrix))
-    #
-    #     matrix = np.array(matrix)
-    #
-    #     # FIX: Hack to prevent recursion in calls to setter and assign_params
-    #     self.function.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-    #
-    #     self.function.matrix = matrix
-    #
-    #     if hasattr(self, "_parameter_states"):
-    #         self.parameter_states["matrix"].function.previous_value = matrix
-    #
-    #     # The following is for efficient treatment of MappingProjections with identity matrix (just pass through value).
-    #     # If matrix is identity matrix and ParameterState for matrix has no mod_afferents,
-    #     #    then store current function assignment in ._original_function, and reassign function as Identity Function
-    #     rows, cols = matrix.shape
-    #     if (rows==cols and
-    #             (matrix == np.identity(rows)).all() and
-    #             len(self._parameter_states[MATRIX].mod_afferents)==0):
-    #         self._original_function = self.function
-    #         self.function = Identity(default_variable=matrix)
-    #     else:
-    #         if hasattr(self, '_original_function'):
-    #             self.function = self._original_function
-    # MODIFIED 5/24/19 END
 
     @property
     def _matrix_spec(self):
