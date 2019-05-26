@@ -224,10 +224,6 @@ class Identity(TransferFunction):  # -------------------------------------------
     }
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({
-    #     FUNCTION_OUTPUT_TYPE_CONVERSION: False,
-    #     PARAMETER_STATE_PARAMS: None
-    # })
 
     @tc.typecheck
     def __init__(self,
