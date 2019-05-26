@@ -336,20 +336,34 @@ def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
 #     owning_component.parameter_states["matrix"].function.parameters.previous_value.set(value, execution_id)
 #     return value
 # MODIFIED 5/24/19 NEW: [JDC]
-def _mapping_projection_matrix_setter(value, owning_component=None, execution_id=None):
+def _mapping_projection_matrix_setter(matrix, owning_component=None, execution_id=None, **kwargs):
     '''Assign matrix parameter for MappingProjection
     If value is identity matrix and MappingProjection's matrix ParameterState has no modulatory projections then,
-    for efficiency, assign Identity Function which simply pass the variable of the MappingProjection as its value.
+        for efficiency, assign Identity Function which simply passes the variable of the MappingProjection to its value.
+    If suppress_identity_function is passed in kwargs, and is set to True,
+        then use originally assigned function and IDENTITY_MATRIX
     '''
-    matrix = np.array(value)
     current_function = owning_component.parameters.function.get(execution_id)
     current_function_variable = current_function.parameters.variable.get(execution_id)
+    num_mod_afferents = len(owning_component._parameter_states[MATRIX].mod_afferents)
+    if 'suppress_identity_function' in kwargs:
+        suppress_identity_function = kwargs['suppress_identity_function']
+    else:
+        suppress_identity_function =  owning_component.parameters.suppress_identity_function.get(execution_id)
 
-    # Determine whether or not to use Identity Function
+    # First determine whether an identity matrix was specified
+    if not isinstance(matrix, np.ndarray):
+        matrix = get_matrix(matrix,
+                            rows=len(owning_component.sender.parameters.value.get(execution_id)),
+                            cols=len(owning_component.receiver.parameters.variable.get(execution_id)))
     rows, cols = matrix.shape
-    _use_identity_function = (rows==cols and (matrix == np.identity(rows)).all() and
-                              len(owning_component._parameter_states[MATRIX].mod_afferents)==0 and
-                              not owning_component.parameters.suppress_identity_function.get(execution_id))
+    if rows==cols and (matrix == np.identity(rows)).all():
+        is_identity_matrix = True
+    else:
+        is_identity_matrix = False
+
+    # Then Determine whether or not to use Identity Function
+    _use_identity_function = is_identity_matrix and num_mod_afferents==0 and not suppress_identity_function
 
     # If it should be used and it is not already, then store current function in _original_function and assign Identity
     if _use_identity_function:
@@ -360,6 +374,7 @@ def _mapping_projection_matrix_setter(value, owning_component=None, execution_id
             # owning_component.parameters.matrix.set(IDENTITY_MATRIX, execution_id)
             # May be needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models) see below
             # owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
+        return IDENTITY_MATRIX
 
     # Don't use Identity Function
     else:
@@ -372,8 +387,16 @@ def _mapping_projection_matrix_setter(value, owning_component=None, execution_id
         # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
         # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
         owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
-    #
-    return matrix
+        return matrix
+
+def suppress_identity_function_setter(value, owning_component=None, execution_id=None):
+    context = owning_component.context
+    if context is None or context.initialization_status in {ContextFlags.INITIALIZING, ContextFlags.UNSET}:
+        pass
+    else:
+        _mapping_projection_matrix_setter(IDENTITY_MATRIX, owning_component, execution_id,
+                                          **{'suppress_identity_function': value})
+    return value
 # MODIFIED 5/24/19 END
 
 
@@ -583,7 +606,8 @@ class MappingProjection(PathwayProjection_Base):
         function = Parameter(LinearMatrix, stateful=False, loggable=False)
         # MODIFIED 5/24/19 NEW: [JDC]
         # function = Parameter(LinearMatrix, stateful=True, loggable=False)
-        suppress_identity_function = Parameter(False, stateful=True, loggable=False)
+        suppress_identity_function = Parameter(False, stateful=True, loggable=False,
+                                               setter=suppress_identity_function_setter)
         # MODIFIED 5/24/19 END
         matrix = Parameter(DEFAULT_MATRIX,
                            modulable=True,
