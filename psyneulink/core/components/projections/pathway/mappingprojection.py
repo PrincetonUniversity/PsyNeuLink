@@ -303,28 +303,28 @@ class MappingError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
-    '''Get matrix parameter for MappingProjection
-    If MappingProjection is using Identity function (for efficiency), return properly shaped identity function
-    # IMPLEMENTATION NOTE:
-    #  This is for consistency of interpretation of matrix parameter on MappingProjection;
-    #  It is OK to do this, even though the MappingProjection's function doesn't actually have a matrix parameter
-    #    since, if any attempt is made to modify it by assigning a new one, the MappingProjection's original function
-    #    (stored in _original_function) is restored.
-    '''
-    # # MODIFIED 5/24/19 OLD:
-    # return owning_component.function.parameters.matrix.get(execution_id)
-    # MODIFIED 5/24/19 NEW [JDC]:
-    try:
-        return owning_component.function.parameters.matrix.get(execution_id)
-    # If MappingProjection uses Identity function, it doesn't have a matrix parameter, so return Identity matrix
-    except AttributeError:
-        assert isinstance(owning_component.function, Identity),  \
-            f'PROGRAM ERROR: AttributeError getting {MATRIX} parameter for {MappingProjection.__name__} ' \
-                f'({owning_component.name}) that is does not use {Identity.__name__}'
-        # return np.identity(len(owning_component.parameters.variable.get(execution_id)))
-        return IDENTITY_MATRIX
-    # MODIFIED 5/24/19 END
+# def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
+#     '''Get matrix parameter for MappingProjection
+#     If MappingProjection is using Identity function (for efficiency), return properly shaped identity function
+#     # IMPLEMENTATION NOTE:
+#     #  This is for consistency of interpretation of matrix parameter on MappingProjection;
+#     #  It is OK to do this, even though the MappingProjection's function doesn't actually have a matrix parameter
+#     #    since, if any attempt is made to modify it by assigning a new one, the MappingProjection's original function
+#     #    (stored in _original_function) is restored.
+#     '''
+#     # # MODIFIED 5/24/19 OLD:
+#     # return owning_component.function.parameters.matrix.get(execution_id)
+#     # MODIFIED 5/24/19 NEW [JDC]:
+#     try:
+#         return owning_component.function.parameters.matrix.get(execution_id)
+#     # If MappingProjection uses Identity function, it doesn't have a matrix parameter, so return Identity matrix
+#     except AttributeError:
+#         assert isinstance(owning_component.function, Identity),  \
+#             f'PROGRAM ERROR: AttributeError getting {MATRIX} parameter for {MappingProjection.__name__} ' \
+#                 f'({owning_component.name}) that is does not use {Identity.__name__}'
+#         # return np.identity(len(owning_component.parameters.variable.get(execution_id)))
+#         return IDENTITY_MATRIX
+#     # MODIFIED 5/24/19 END
 
 
 # # MODIFIED 5/24/19 OLD:
@@ -365,6 +365,7 @@ def _mapping_projection_matrix_setter(value, owning_component=None, execution_id
             # owning_component.parameters.matrix.set(IDENTITY_MATRIX, execution_id)
             # May be needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models) see below
             # owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
+        return IDENTITY_MATRIX
 
     # Don't use Identity Function
     else:
@@ -377,8 +378,7 @@ def _mapping_projection_matrix_setter(value, owning_component=None, execution_id
         # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
         # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
         owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
-    #
-    return matrix
+        return matrix
 # MODIFIED 5/24/19 END
 
 # MODIFIED 5/24/19 NEW: [JDC]
@@ -597,11 +597,12 @@ class MappingProjection(PathwayProjection_Base):
         # MODIFIED 5/24/19 NEW: [JDC]
         # function = Parameter(LinearMatrix, stateful=True, loggable=False)
         suppress_identity_function = Parameter(False, stateful=True, loggable=False,
-                                               setter=suppress_identity_function_setter)
+                                               # setter=suppress_identity_function_setter
+                                               )
         # MODIFIED 5/24/19 END
         matrix = Parameter(DEFAULT_MATRIX,
                            modulable=True,
-                           getter=_mapping_projection_matrix_getter,
+                           # getter=_mapping_projection_matrix_getter,
                            setter=_mapping_projection_matrix_setter)
 
     classPreferenceLevel = PreferenceLevel.TYPE
