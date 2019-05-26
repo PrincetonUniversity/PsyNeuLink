@@ -1532,7 +1532,6 @@ class State_Base(State):
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.path_afferents or mod_afferents lists
-            # if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
             if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
                 warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
                               format(Projection.__name__, repr(projection.sender.name),

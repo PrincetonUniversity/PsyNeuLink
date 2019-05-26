@@ -36,7 +36,10 @@ Structure
 ---------
 
 A MaskedMappingProjection is identical to a MappingProjection, with the addition of `mask
-<MaskedMappingProjection.mask>` and `mask_operation <MaskedMappingProjection.mask_operation>` attributes.
+<MaskedMappingProjection.mask>` and `mask_operation <MaskedMappingProjection.mask_operation>` attributes, and the
+exception that it automatically sets `suppress_identity_function <MappingProjection.suppress_identity_function>` to
+True (so that even if it is assigned an `IDENTITY_MATRIX` it can still be masked).
+
 
 .. _Masked_MappingProjection_Execution:
 
@@ -245,6 +248,7 @@ class MaskedMappingProjection(MappingProjection):
                          receiver=receiver,
                          matrix=matrix,
                          function=function,
+                         suppress_identity_function=True,
                          params=params,
                          name=name,
                          prefs=prefs)
@@ -273,7 +277,7 @@ class MaskedMappingProjection(MappingProjection):
 
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
 
-        # Update parameters first, to be sure mask that has been updated if it is being modulated
+        # Update parameters first, to be sure that mask has been updated if it is being modulated
         #  and that it is applied to the updated matrix param
         super()._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
