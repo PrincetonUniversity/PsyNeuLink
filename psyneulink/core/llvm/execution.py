@@ -252,7 +252,8 @@ class CompExecution(CUDAExecution):
 
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
-        self.__bin_func = self._composition._get_bin_node(node)
+        wrapper = self._composition._get_node_wrapper(node)
+        self.__bin_func = pnlvm.LLVMBinaryFunction.get(wrapper._llvm_function.name)
 
     @property
     def _conditions(self):
@@ -356,10 +357,9 @@ class CompExecution(CUDAExecution):
 
     def _get_input_struct(self, inputs):
         origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
-        # Either node execute or composition execute, either way the
-        # input_CIM should be ready
-        bin_input_node = self._composition._get_bin_node(self._composition.input_CIM)
-        c_input = bin_input_node.byref_arg_types[2]
+        # Either node or composition execute. All functions expect inputs
+        # to be 3rd param.
+        c_input = self._bin_func.byref_arg_types[2]
 
         # Read provided input data and separate each input state
         if len(self._execution_ids) > 1:
@@ -386,13 +386,13 @@ class CompExecution(CUDAExecution):
             for n, d in zip(origins, input_data):
                 inputs[n].append(d[0])
 
+        # Set bin node to make sure self._*struct works as expected
+        self._set_bin_node(node)
         if inputs is not None:
             inputs = self._get_input_struct(inputs)
 
         assert inputs is not None or node is not self._composition.input_CIM
 
-        # Set bin node to make sure self._*struct works as expected
-        self._set_bin_node(node)
         # Freeze output values if this is the first time we need them
         if node is not self._composition.input_CIM and self.__frozen_vals is None:
             self.freeze_values()
@@ -420,22 +420,29 @@ class CompExecution(CUDAExecution):
         return self.__bin_exec_multi_func
 
     def execute(self, inputs):
-        inputs = self._get_input_struct(inputs)
+        # NOTE: Make sure that input struct generation is inlined.
+        # We need the binary function to be setup for it to work correctly.
         if len(self._execution_ids) > 1:
-            self._bin_exec_multi_func.wrap_call(self._context_struct, self._param_struct,
-                               inputs, self._data_struct, self._conditions, self._ct_len)
+            self._bin_exec_multi_func.wrap_call(self._context_struct,
+                                                self._param_struct,
+                                                self._get_input_struct(inputs),
+                                                self._data_struct,
+                                                self._conditions, self._ct_len)
         else:
-            self._bin_exec_func.wrap_call(self._context_struct, self._param_struct,
-                               inputs, self._data_struct, self._conditions)
+            self._bin_exec_func.wrap_call(self._context_struct,
+                                          self._param_struct,
+                                          self._get_input_struct(inputs),
+                                          self._data_struct, self._conditions)
 
     def cuda_execute(self, inputs):
-        # Create input buffer
-        inputs = self._get_input_struct(inputs)
-        data_in = self.upload_ctype(inputs)
-
-        self._bin_exec_func.cuda_call(self._cuda_context_struct, self._cuda_param_struct,
-                           data_in, self._cuda_data_struct, self._cuda_conditions,
-                           threads=len(self._execution_ids))
+        # NOTE: Make sure that input struct generation is inlined.
+        # We need the binary function to be setup for it to work correctly.
+        self._bin_exec_func.cuda_call(self._cuda_context_struct,
+                                      self._cuda_param_struct,
+                                      self.upload_ctype(self._get_input_struct(inputs)),
+                                      self._cuda_data_struct,
+                                      self._cuda_conditions,
+                                      threads=len(self._execution_ids))
 
         # Copy the data struct from the device
         self._data_struct = self.download_ctype(self._cuda_data_struct, self._vo_ty)

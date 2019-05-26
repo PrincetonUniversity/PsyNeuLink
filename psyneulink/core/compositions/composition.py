@@ -3699,12 +3699,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Generate all mechanism wrappers
                 for m in mechanisms:
                     self._get_node_wrapper(m)
+
+                _comp_ex = pnlvm.CompExecution(self, [execution_id])
                 # Compile all mechanism wrappers
                 for m in mechanisms:
-                    self._get_bin_node(m)
+                    _comp_ex._set_bin_node(m)
 
                 bin_execute = True
-                _comp_ex = pnlvm.CompExecution(self, [execution_id])
             except Exception as e:
                 if bin_execute is not True:
                     raise e
@@ -4392,10 +4393,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return wrapper
 
         return self.__generated_node_wrappers[node]
-
-    def _get_bin_node(self, node):
-        wrapper = self._get_node_wrapper(node)
-        return pnlvm.LLVMBinaryFunction.get(wrapper._llvm_function.name)
 
     def _get_sim_node_wrapper(self, node):
         if node not in self.__generated_sim_node_wrappers:
