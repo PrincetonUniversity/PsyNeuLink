@@ -36,7 +36,10 @@ Structure
 ---------
 
 A MaskedMappingProjection is identical to a MappingProjection, with the addition of `mask
-<MaskedMappingProjection.mask>` and `mask_operation <MaskedMappingProjection.mask_operation>` attributes.
+<MaskedMappingProjection.mask>` and `mask_operation <MaskedMappingProjection.mask_operation>` attributes, and the
+exception that it automatically sets `suppress_identity_function <MappingProjection.suppress_identity_function>` to
+True (so that even if it is assigned an `IDENTITY_MATRIX` it can still be masked).
+
 
 .. _Masked_MappingProjection_Execution:
 

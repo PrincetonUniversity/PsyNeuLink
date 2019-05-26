@@ -188,11 +188,12 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
   .. _Mapping_Replace_Identity_Matrix:
   |
   * **Handling of IDENTITY_MATRIX** -- for efficiency of processing, if `matrix <MappingProjection.matrix>` is
-    assigned the `IDENTITY_MATRIX`, it `function <MappingProjection.function>` is replaced by the `Identity` Function,
-    which simply copies `variable <MappingProjection.variable>` to `value <MappingProjection.value>`.  In this case,
-    if the `matrix <MappingProjection.matrix>` is queried, it returns the string "identity_matrix".  This behavior
-    can be suppressed by setting the `suppress_identity_function <MappingProjection.suppress_identity_function>`
-    to True.
+    assigned the `IDENTITY_MATRIX`, `function <MappingProjection.function>` is replaced by the `Identity` Function,
+    which simply copies `variable <MappingProjection.variable>` to `value <MappingProjection.value>` (avoiding any
+    matrix computations).  In this case, since the `Identity` Function does not have a matrix parameter, the `matrix
+    <MappingProjection.matrix>` attribute of the MappingProjection simply returns the string "IdentityMatrix", and its
+    matrix ParameterState is not operational. This behavior can be suppressed by setting the `suppress_identity_function
+    <MappingProjection.suppress_identity_function>` to True, in which case the IDENTITY_MATRIX is treated as any other.
 
 .. _Mapping_Matrix_ParameterState:
 
@@ -316,6 +317,9 @@ def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
     #    since, if any attempt is made to modify it by assigning a new one, the MappingProjection's original function
     #    (stored in _original_function) is restored.
     '''
+    # # MODIFIED 5/24/19 OLD:
+    # return owning_component.function.parameters.matrix.get(execution_id)
+    # MODIFIED 5/24/19 NEW [JDC]:
     try:
         return owning_component.function.parameters.matrix.get(execution_id)
     # If MappingProjection uses Identity function, it doesn't have a matrix parameter, so return Identity matrix
@@ -325,8 +329,10 @@ def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
                 f'({owning_component.name}) that is does not use {Identity.__name__}'
         # return np.identity(len(owning_component.parameters.variable.get(execution_id)))
         return IDENTITY_MATRIX
+    # MODIFIED 5/24/19 END
 
-# # MODIFIED 5/24/19 OLD:d
+
+# # MODIFIED 5/24/19 OLD:
 # def _mapping_projection_matrix_setter(value, owning_component=None, execution_id=None):
 #     value = np.array(value)
 #     owning_component.function.parameters.matrix.set(value, execution_id)
@@ -355,6 +361,8 @@ def _mapping_projection_matrix_setter(value, owning_component=None, execution_id
         if not isinstance(current_function, Identity):
             owning_component._original_function = current_function
             owning_component.parameters.function.set(Identity(default_variable=current_function_variable), execution_id)
+            # 5/24/19: THIS SHOULD SIMPLY ASSIGN THE IDENTITY_MATRIX STRING TO THE CORRECT EXECUTION_ID CONTEXT:
+            # owning_component.parameters.matrix.set(IDENTITY_MATRIX, execution_id)
             # May be needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models) see below
             # owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
 
