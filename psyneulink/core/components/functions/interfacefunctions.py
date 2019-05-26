@@ -11,10 +11,7 @@
 
 '''
 
-* Identity
 * InterfaceStateMap
-
-
 
 '''
 
@@ -23,11 +20,14 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FUNCTION_OUTPUT_TYPE_CONVERSION, IDENTITY_FUNCTION, PARAMETER_STATE_PARAMS, STATE_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, kwPreferenceSetName
-from psyneulink.core.globals.preferences.componentpreferenceset import PreferenceEntry, PreferenceLevel, is_pref_set, kpReportOutputPref
+from psyneulink.core.globals.keywords import \
+    FUNCTION_OUTPUT_TYPE_CONVERSION, PARAMETER_STATE_PARAMS, STATE_MAP_FUNCTION, TRANSFER_FUNCTION_TYPE, \
+    kwPreferenceSetName
+from psyneulink.core.globals.preferences.componentpreferenceset import \
+    PreferenceEntry, PreferenceLevel, is_pref_set, kpReportOutputPref
 
 
-__all__ = ['InterfaceFunction', 'Identity', 'InterfaceStateMap']
+__all__ = ['InterfaceFunction', 'InterfaceStateMap']
 
 class InterfaceFunction(Function_Base):
     """Simple functions for CompositionInterfaceMechanisms
@@ -45,151 +45,6 @@ class InterfaceFunction(Function_Base):
                          owner=owner,
                          prefs=prefs,
                          context=context)
-
-
-class Identity(InterfaceFunction):  # -------------------------------------------------------------------------------------
-    """
-    Identity(                \
-             default_variable, \
-             params=None,      \
-             owner=None,       \
-             name=None,        \
-             prefs=None        \
-            )
-
-    .. _Identity:
-
-    Returns variable
-
-    Arguments
-    ---------
-
-    variable : number or np.array : default class_defaults.variable
-        specifies a template for the value to be transformed.
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : number or np.array
-        contains value to be transformed.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-    """
-
-    componentName = IDENTITY_FUNCTION
-
-    classPreferences = {
-        kwPreferenceSetName: 'LinearClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    }
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({
-    #     FUNCTION_OUTPUT_TYPE_CONVERSION: False,
-    #     PARAMETER_STATE_PARAMS: None
-    # })
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 params=None,
-                 owner=None,
-                 prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
-
-        # self.functionOutputType = None
-
-    def function(
-        self,
-        variable=None,
-        execution_id=None,
-        params=None,
-        context=None
-    ):
-        """
-        Return: `variable <Identity.variable>`
-
-        Arguments
-        ---------
-
-        variable : number or np.array : default class_defaults.variable
-           a single value or array to be transformed.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-
-        Returns
-        -------
-
-        variable : number or np.array
-
-        """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-        # outputType = self.functionOutputType
-
-        return variable
-
-    def _get_input_struct_type(self,ctx):
-        #FIXME: Workaround for CompositionInterfaceMechanism that
-        #       does not udpate its defaults shape
-        from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-        if isinstance(self.owner, CompositionInterfaceMechanism):
-            variable = [state.defaults.value for state in self.owner.input_states]
-            # Python list does not care about ndarrays of different lengths
-            # we do care, so convert to tuple to create struct
-            if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
-                variable = tuple(variable)
-
-            return ctx.convert_python_struct_to_llvm_ir(variable)
-        default_var = self.defaults.variable
-        return ctx.convert_python_struct_to_llvm_ir(default_var)
-
-    def _get_output_struct_type(self, ctx):
-        #FIXME: Workaround for CompositionInterfaceMechanism that
-        #       does not update its defaults shape
-        #       Standalone function works OK with defaults as well as this
-        #       workaround.
-        return ctx.get_input_struct_type(self)
-
-    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
-        val = builder.load(arg_in)
-        builder.store(val, arg_out)
-        return builder
 
 
 class InterfaceStateMap(InterfaceFunction):

@@ -61,7 +61,7 @@ task_decision = pnl.DDM(
 
 lvoc = pnl.OptimizationControlMechanism(
     name='LVOC ControlMechanism',
-    features={pnl.SHADOW_EXTERNAL_INPUTS: [color_stim, word_stim]},
+    features={pnl.SHADOW_INPUTS: [color_stim, word_stim]},
     objective_mechanism=pnl.ObjectiveMechanism(
         name='LVOC ObjectiveMechanism',
         monitored_output_states=[task_decision, reward],
@@ -71,7 +71,7 @@ lvoc = pnl.OptimizationControlMechanism(
         update_weights=pnl.BayesGLM,
         prediction_terms=[pnl.PV.FC, pnl.PV.COST]
     ),
-    terminal_objective_mechanism=True,
+    # terminal_objective_mechanism=True,
     function=pnl.GradientOptimization(
         convergence_criterion=pnl.VALUE,
         convergence_threshold=0.001,
@@ -115,7 +115,7 @@ input_dict = {
 
 
 def run():
-    c.run(inputs=input_dict, num_trials=1)
+    c.run(inputs=input_dict, num_trials=5)
 
 
 duration = timeit.timeit(run, number=2)

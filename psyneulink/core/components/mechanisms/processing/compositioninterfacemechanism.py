@@ -50,7 +50,7 @@ import typecheck as tc
 
 from collections import Iterable
 
-from psyneulink.core.components.functions.interfacefunctions import Identity
+from psyneulink.core.components.functions.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
