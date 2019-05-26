@@ -344,12 +344,17 @@ def _mapping_projection_matrix_setter(value, owning_component=None, execution_id
     matrix = np.array(value)
     current_function = owning_component.parameters.function.get(execution_id)
     current_function_variable = current_function.parameters.variable.get(execution_id)
+    # if 'suppress_identity_status' in kwargs:
+    #     suppress_identity_function = kwargs['suppress_identity_status']
+    # else:
+    #     suppress_identity_function =  owning_component.parameters.suppress_identity_function.get(execution_id)
+    suppress_identity_function =  owning_component.parameters.suppress_identity_function.get(execution_id)
 
     # Determine whether or not to use Identity Function
     rows, cols = matrix.shape
     _use_identity_function = (rows==cols and (matrix == np.identity(rows)).all() and
                               len(owning_component._parameter_states[MATRIX].mod_afferents)==0 and
-                              not owning_component.parameters.suppress_identity_function.get(execution_id))
+                              not suppress_identity_function)
 
     # If it should be used and it is not already, then store current function in _original_function and assign Identity
     if _use_identity_function:
@@ -374,6 +379,14 @@ def _mapping_projection_matrix_setter(value, owning_component=None, execution_id
         owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
     #
     return matrix
+# MODIFIED 5/24/19 END
+
+# MODIFIED 5/24/19 NEW: [JDC]
+# def suppress_identity_function_setter(value, owning_component=None, execution_id=None):
+#     if not owning_component.suppress_identity_function and value:
+#         owning_component.parameters.matrix.set(IDENTITY_MATRIX, owning_component, execution_id,
+#                                                {'suppress_identity_function': value})
+#     return value
 # MODIFIED 5/24/19 END
 
 
@@ -583,7 +596,8 @@ class MappingProjection(PathwayProjection_Base):
         function = Parameter(LinearMatrix, stateful=False, loggable=False)
         # MODIFIED 5/24/19 NEW: [JDC]
         # function = Parameter(LinearMatrix, stateful=True, loggable=False)
-        suppress_identity_function = Parameter(False, stateful=True, loggable=False)
+        suppress_identity_function = Parameter(False, stateful=True, loggable=False,
+                                               setter=suppress_identity_function_setter)
         # MODIFIED 5/24/19 END
         matrix = Parameter(DEFAULT_MATRIX,
                            modulable=True,
