@@ -516,7 +516,7 @@ class Projection_Base(Projection):
     ----------
 
     variable : value
-        input to Projection, received from OutputState.value of `sender <Projection_Base.sender>`.
+        input to Projection, received from `value <OutputState.value>` of `sender <Projection_Base.sender>`.
 
     sender : State
         State from which Projection receives its input (see `Projection_Sender` for additional information).
@@ -525,7 +525,7 @@ class Projection_Base(Projection):
         State to which Projection sends its output  (see `Projection_Receiver` for additional information)
 
     value : value
-        Output of Projection, transmitted as variable to InputState of `receiver <Projection_Base.receiver>`.
+        output of Projection, transmitted to `variable <InputState.variable>` of `receiver <Projection_Base.receiver>`.
 
     parameter_states : ContentAddressableList[str, ParameterState]
         a list of the Projection's `ParameterStates <Projection_ParameterStates>`, one for each of its specifiable
@@ -956,7 +956,8 @@ class Projection_Base(Projection):
             self.receiver.afferents_info[self] = ConnectionInfo(compositions=composition)
 
         try:
-            composition._add_projection(self)
+            if self not in composition.projections:
+                composition._add_projection(self)
         except AttributeError:
             # composition may be ALL or None, in this case we don't need to add
             pass

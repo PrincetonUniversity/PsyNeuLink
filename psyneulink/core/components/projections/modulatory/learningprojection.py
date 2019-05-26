@@ -167,6 +167,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.interfacefunctions import Identity
 from psyneulink.core.components.functions.learningfunctions import BackPropagation
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
@@ -635,6 +636,11 @@ class LearningProjection(ModulatoryProjection_Base):
         except TypeError:
             learning_signal_shape = 1
 
+        # If MappingProjection to which the receiver belongs has been assigned an Identity function (for efficiency),
+        #    then it does not have an actual matrix;  so re-assign its defaults.value Identity matrix,
+        #    which also forces reassignment of its _original_function (in _mapping_projection_matrix_setter)
+        if isinstance(self.receiver.owner.function, Identity):
+            self.receiver.owner.matrix = self.receiver.defaults.value
 
         # FIX: SHOULD TEST WHETHER IT CAN BE USED, NOT WHETHER IT IS THE SAME SHAPE
         # # MODIFIED 3/8/17 OLD:

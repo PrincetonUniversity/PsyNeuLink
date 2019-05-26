@@ -1559,26 +1559,29 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self._activate_projections_for_compositions(system)
 
     def _activate_projections_for_compositions(self, compositions=None):
+        dependent_projections = set()
 
         if self.objective_mechanism:
-            self._objective_projection._activate_for_compositions(compositions)
+            dependent_projections.add(self._objective_projection)
+
+            for aff in self._objective_mechanism.afferents:
+                dependent_projections.add(aff)
 
         for ms in self.modulatory_signals:
             for eff in ms.efferents:
-                eff._activate_for_compositions(compositions)
+                dependent_projections.add(eff)
 
         # assign any deferred init objective mech monitored output state projections to this system
         if self.objective_mechanism:
             for output_state in self.objective_mechanism.monitored_output_states:
                 for eff in output_state.efferents:
-                    eff._activate_for_compositions(compositions)
+                    dependent_projections.add(eff)
 
         for eff in self.efferents:
-            eff._activate_for_compositions(compositions)
+            dependent_projections.add(eff)
 
-        if self.objective_mechanism:
-            for aff in self._objective_mechanism.afferents:
-                aff._activate_for_compositions(compositions)
+        for proj in dependent_projections:
+            proj._activate_for_compositions(compositions)
 
     def _apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         self._apply_modulatory_allocation(self, control_allocation, runtime_params, context, execution_id=None)

@@ -28,13 +28,13 @@ Creating a MappingProjection
 
 A MappingProjection can be created in any of the ways that can be used to create a `Projection <Projection_Creation>`
 (see `Projection_Sender` and `Projection_Receiver` for specifying its `sender <MappingProjection.sender>` and
-`receiver <MappingProjection.receiver>` attributes, respectively), or by `specifying it by its matrix parameter
-<Mapping_Matrix_Specification>`.
+`receiver <MappingProjection.receiver>` attributes, respectively), or simply by `specifying it by its matrix parameter
+<Mapping_Matrix_Specification>` wherever a `Projection can be specified <Projection_Specification>`.
 
 MappingProjections are also generated automatically in the following circumstances, using a value for its `matrix
 <MappingProjection.matrix>` parameter appropriate to the circumstance:
 
-  * by a `Process`, when two adjacent `Mechanisms <Mechanism>` in its `pathway <Process.pathway>` do not already
+  * by a `Composition`, when two adjacent `Mechanisms <Mechanism>` in its `pathway <Process.pathway>` do not already
     have a Projection assigned between them (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>`
     specification, which determines the appropriate matrix by context);
   ..
@@ -56,6 +56,12 @@ MappingProjections are also generated automatically in the following circumstanc
 
 *Specifying the Matrix Parameter*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a MappingProjection is created automatically, its `matrix <MappingProjection.matrix>` attribute is generally
+assigned using `AUTO_ASSIGN_MATRIX`, which determines its size by context: an `IDENTITY_MATRIX` is used if the
+`sender <MappingProjection.sender>` and `receiver <MappingProjection.receiver>` are of equal length; otherwise a
+`FULL_CONNECTIVITY_MATRIX` (all 1's) is used (see `below <Mapping_Replace_Identity_Matrix>` for special handling of
+`IDENTITY_MATRIX`).
 
 When a MappingProjection is created explicitly, the **matrix** argument of its constructor can be used to specify
 its `matrix <MappingProjection.matrix>` parameter.  This is used by the MappingProjection's `function
@@ -147,25 +153,30 @@ initialization must be completed by calling its `deferred_init` method.  This is
 is specified in the `pathway <Process.pathway>` of `Process`, or anywhere else that its `sender
 <MappingProjection.sender>` and `receiver <MappingProjection.receiver>` can be determined by context.
 
+.. |br| raw:: html
+
+   <br />
+
 .. _Mapping_Structure:
 
 Structure
 ---------
 
 In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjection.receiver>`, and `function
-<MappingProjection.function>`, a MappingProjection has two characteristic attributes:
+<MappingProjection.function>`, a MappingProjection has the following characteristic attributes:
 
 .. _Mapping_Matrix:
 
 * `matrix <MappingProjection.matrix>` parameter - used by the MappingProjection's `function
   <MappingProjection.function>` to carry out a matrix transformation of its input, that is then provided to its
   `receiver <MappingProjection.receiver>`. It can be specified in a variety of ways, as described `above
-  <Mapping_Matrix_Specification>`.
+  <Mapping_Matrix_Specification>` (see `below <Mapping_Replace_Identity_Matrix>` for special handling of
+  `IDENTITY_MATRIX`).
 
   .. _Mapping_Matrix_Dimensionality
 
   * **Matrix Dimensionality** -- this must match the dimensionality of the MappingProjection's `sender
-    <MappingProjection.sender>` and `receiver <MappingProjection.reciever>.`  For a standard 2d "weight" matrix (i.e.,
+    <MappingProjection.sender>` and `receiver <MappingProjection.receiver>`.  For a standard 2d "weight" matrix (i.e.,
     one that maps a 1d array from its `sender <MappingProjection.sender>` to a 1d array of its `receiver
     <MappingProjection.receiver>`), the dimensionality of the sender is the number of rows and of the receiver
     the number of columns.  More generally, the sender dimensionality is the number of outer dimensions (i.e.,
@@ -174,6 +185,14 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
     `receiver <MappingProjection.receiver>`'s `variable <MappingProjection.variable>` (equal to the dimensionality of
     the matrix minus its sender dimensionality).
 
+  .. _Mapping_Replace_Identity_Matrix:
+  |
+  * **Handling of IDENTITY_MATRIX** -- for efficiency of processing, if `matrix <MappingProjection.matrix>` is
+    assigned the `IDENTITY_MATRIX`, it `function <MappingProjection.function>` is replaced by the `Identity` Function,
+    which simply copies `variable <MappingProjection.variable>` to `value <MappingProjection.value>`.  In this case,
+    if the `matrix <MappingProjection.matrix>` is queried, it returns the string "identity_matrix".  This behavior
+    can be suppressed by setting the `suppress_identity_function <MappingProjection.suppress_identity_function>`
+    to True.
 
 .. _Mapping_Matrix_ParameterState:
 
@@ -261,6 +280,7 @@ import inspect
 
 import numpy as np
 import typecheck as tc
+import warnings
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.interfacefunctions import Identity
@@ -287,44 +307,85 @@ class MappingError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-
 def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
-    return owning_component.function.parameters.matrix.get(execution_id)
+    '''Get matrix parameter for MappingProjection
+    If MappingProjection is using Identity function (for efficiency), return properly shaped identity function
+    # IMPLEMENTATION NOTE:
+    #  This is for consistency of interpretation of matrix parameter on MappingProjection;
+    #  It is OK to do this, even though the MappingProjection's function doesn't actually have a matrix parameter
+    #    since, if any attempt is made to modify it by assigning a new one, the MappingProjection's original function
+    #    (stored in _original_function) is restored.
+    '''
+    try:
+        return owning_component.function.parameters.matrix.get(execution_id)
+    # If MappingProjection uses Identity function, it doesn't have a matrix parameter, so return Identity matrix
+    except AttributeError:
+        assert isinstance(owning_component.function, Identity),  \
+            f'PROGRAM ERROR: AttributeError getting {MATRIX} parameter for {MappingProjection.__name__} ' \
+                f'({owning_component.name}) that is does not use {Identity.__name__}'
+        # return np.identity(len(owning_component.parameters.variable.get(execution_id)))
+        return IDENTITY_MATRIX
 
-
+# # MODIFIED 5/24/19 OLD:d
+# def _mapping_projection_matrix_setter(value, owning_component=None, execution_id=None):
+#     value = np.array(value)
+#     owning_component.function.parameters.matrix.set(value, execution_id)
+#     # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
+#     # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
+#     owning_component.parameter_states["matrix"].function.parameters.previous_value.set(value, execution_id)
+#     return value
+# MODIFIED 5/24/19 NEW: [JDC]
 def _mapping_projection_matrix_setter(value, owning_component=None, execution_id=None):
+    '''Assign matrix parameter for MappingProjection
+    If value is identity matrix and MappingProjection's matrix ParameterState has no modulatory projections then,
+    for efficiency, assign Identity Function which simply pass the variable of the MappingProjection as its value.
+    '''
     matrix = np.array(value)
-    owning_component.function.parameters.matrix.set(matrix, execution_id)
-    # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
-    # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
-    owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
+    current_function = owning_component.parameters.function.get(execution_id)
+    current_function_variable = current_function.parameters.variable.get(execution_id)
 
-    #The following is for efficient treatment of MappingProjections with identity matrix (just pass through value).
-    # If matrix is identity matrix and ParameterState for matrix has no mod_afferents,
-    #    then store current function assignment in ._function, and reassign function as Identity Function
+    # Determine whether or not to use Identity Function
     rows, cols = matrix.shape
-    if (rows==cols and
-            (matrix == np.identity(rows)).all() and
-            len(owning_component._parameter_states[MATRIX].mod_afferents)==0):
-        owning_component._function = owning_component.function
-        owning_component.function = Identity(default_variable=matrix)
-    else:
-        if hasattr(owning_component, '_function'):
-            owning_component.function = owning_component._function
+    _use_identity_function = (rows==cols and (matrix == np.identity(rows)).all() and
+                              len(owning_component._parameter_states[MATRIX].mod_afferents)==0 and
+                              not owning_component.parameters.suppress_identity_function.get(execution_id))
 
+    # If it should be used and it is not already, then store current function in _original_function and assign Identity
+    if _use_identity_function:
+        if not isinstance(current_function, Identity):
+            owning_component._original_function = current_function
+            owning_component.parameters.function.set(Identity(default_variable=current_function_variable), execution_id)
+            # May be needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models) see below
+            # owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
+
+    # Don't use Identity Function
+    else:
+        # If Identity function is currently in use, restore function to _original_function
+        if  isinstance(current_function, Identity):
+            owning_component.parameters.function.set(owning_component._original_function, execution_id)
+            owning_component._original_function = None
+        # Assign matrix
+        owning_component.function.parameters.matrix.set(matrix, execution_id)
+        # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
+        # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
+        owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
+    #
     return matrix
+# MODIFIED 5/24/19 END
 
 
 class MappingProjection(PathwayProjection_Base):
     """
-    MappingProjection(             \
-        sender=None,               \
-        receiver=None,             \
-        matrix=DEFAULT_MATRIX,     \
-        weight=None,               \
-        exponent=None,             \
-        params=None,               \
-        name=None,                 \
+    MappingProjection(                    \
+        sender=None,                      \
+        receiver=None,                    \
+        matrix=DEFAULT_MATRIX,            \
+        weight=None,                      \
+        exponent=None,                    \
+        function=LinearMatrix,            \
+        suppress_identity_function=False, \
+        params=None,                      \
+        name=None,                        \
         prefs=None)
 
     Implements a Projection that transmits the output of one Mechanism to the input of another.
@@ -388,6 +449,16 @@ class MappingProjection(PathwayProjection_Base):
        specifies the value by which to exponentiate the MappingProjection's `value <MappingProjection.value>`
        before combining it with others (see `exponent <MappingProjection.exponent>` for additional details).
 
+    function : function : default LinearMatrix
+       specifies function used to transform `variable <MappingProjection.variable>` into `value
+       <MappingProjection.value>`;  must be a `TransferFunction` that takes an input of the same shape as
+       `variable <MappingProjection.variable>`.
+
+    suppress_identity_function : bool : default True
+       specifies whether `function <MappingProjection.function>` is replaced by the `Identity` Function
+       for efficiency if `matrix <MappingProjection.matrix>` is the `IDENTITY_MATRIX` (see `Handling of IDENTITY_MATRIX
+       <Mapping_Replace_Identity_Matrix>` for details).
+
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
         value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputState.variable>`
@@ -410,6 +481,9 @@ class MappingProjection(PathwayProjection_Base):
 
     componentType : MAPPING_PROJECTION
 
+    variable : ndarray
+        input to MappingProjection, received from `value <OutputState.varlue>` of `sender <MappingProjection.sender>`.
+
     sender : OutputState
         the `OutputState` of the `Mechanism <Mechanism>` that is the source of the Projection's input
 
@@ -424,12 +498,21 @@ class MappingProjection(PathwayProjection_Base):
         identifies the `LearningProjection` assigned to the MappingProjection's `MATRIX` `ParameterState
         <ParameterState>`.
 
+    function : function
+       determines function used to transform `variable <MappingProjection.variable>` into `value
+       <MappingProjection.value>`.
+
+    suppress_identity_function : bool : default True
+       determines whether `function <MappingProjection.function>` is replaced by the `Identity` Function
+       for efficiency if `matrix <MappingProjection.matrix>` is the `IDENTITY_MATRIX` (see `Handling of IDENTITY_MATRIX
+       <Mapping_Replace_Identity_Matrix>` for details).
+
     learning_mechanism : LearningMechanism
         source of the `learning signal <LearningSignal>` that determines the changes to the `matrix
         <MappingProjection.matrix>` when `learning <LearningMechanism>` is used.
 
     value : ndarray
-        output of MappingProjection, transmitted to `variable <InputState.variable>` of its `receiver
+        output of MappingProjection, sent to `variable <InputState.variable>` of `receiver
         <MappingProjection.receiver>`.
 
     weight : number
@@ -480,6 +563,12 @@ class MappingProjection(PathwayProjection_Base):
                     :default value: `LinearMatrix`
                     :type: `Function`
 
+                suppress_identity_function
+                    see `function <MappingProjection.suppress_identity_function>`
+
+                    :default value: False
+                    :type: bool
+
                 matrix
                     see `matrix <MappingProjection.matrix>`
 
@@ -487,8 +576,16 @@ class MappingProjection(PathwayProjection_Base):
                     :type: str
 
         """
+        # # MODIFIED 5/24/19 OLD:
         function = Parameter(LinearMatrix, stateful=False, loggable=False)
-        matrix = Parameter(DEFAULT_MATRIX, modulable=True, getter=_mapping_projection_matrix_getter, setter=_mapping_projection_matrix_setter)
+        # MODIFIED 5/24/19 NEW: [JDC]
+        # function = Parameter(LinearMatrix, stateful=True, loggable=False)
+        suppress_identity_function = Parameter(False, stateful=True, loggable=False)
+        # MODIFIED 5/24/19 END
+        matrix = Parameter(DEFAULT_MATRIX,
+                           modulable=True,
+                           getter=_mapping_projection_matrix_getter,
+                           setter=_mapping_projection_matrix_setter)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -519,6 +616,7 @@ class MappingProjection(PathwayProjection_Base):
                  exponent=None,
                  matrix=DEFAULT_MATRIX,
                  function=None,
+                 suppress_identity_function=False,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
@@ -531,6 +629,7 @@ class MappingProjection(PathwayProjection_Base):
             matrix = np.array(matrix)
 
         params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
+                                                  suppress_identity_function=suppress_identity_function,
                                                   params=params)
 
         self.learning_mechanism = None
@@ -673,6 +772,16 @@ class MappingProjection(PathwayProjection_Base):
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         self.parameters.context.get(execution_id).string = context
 
+        # # MODIFIED 5/24/19 OLD:
+        # if (hasattr(self.context, "composition") and
+        #         hasattr(self.context.composition, "learning_enabled") and
+        #         self.context.composition.learning_enabled):
+        #     self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
+        #     self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+        #     self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        #
+        # self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+        # MODIFIED 5/24/19 NEW: [JDC]
         # If function is Identity Function, no need to update ParameterStates, as matrix is not used
         if not isinstance(self.function, Identity):
 
@@ -684,13 +793,15 @@ class MappingProjection(PathwayProjection_Base):
                 self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
             self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+        # MODIFIED 5/24/19 END
 
-        return super()._execute(
-            variable=variable,
-            execution_id=execution_id,
-            runtime_params=runtime_params,
-            context=context
+        value = super()._execute(
+                variable=variable,
+                execution_id=execution_id,
+                runtime_params=runtime_params,
+                context=context
         )
+        return value
 
     # MODIFIED 5/24/19 OLD:
     # @property
@@ -718,16 +829,16 @@ class MappingProjection(PathwayProjection_Base):
     #
     #     # The following is for efficient treatment of MappingProjections with identity matrix (just pass through value).
     #     # If matrix is identity matrix and ParameterState for matrix has no mod_afferents,
-    #     #    then store current function assignment in ._function, and reassign function as Identity Function
+    #     #    then store current function assignment in ._original_function, and reassign function as Identity Function
     #     rows, cols = matrix.shape
     #     if (rows==cols and
     #             (matrix == np.identity(rows)).all() and
     #             len(self._parameter_states[MATRIX].mod_afferents)==0):
-    #         self._function = self.function
+    #         self._original_function = self.function
     #         self.function = Identity(default_variable=matrix)
     #     else:
-    #         if hasattr(self, '_function'):
-    #             self.function = self._function
+    #         if hasattr(self, '_original_function'):
+    #             self.function = self._original_function
     # MODIFIED 5/24/19 END
 
     @property
