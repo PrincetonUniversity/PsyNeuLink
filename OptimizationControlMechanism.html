@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.5.3.1+11.g14cadb1 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.5.3.2+1.g71d8a0b documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.1+11.g14cadb1',
+              VERSION:'0.5.3.2+1.g71d8a0b',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.1+11
+                0.5.3.2+1
               </div>
             
           
@@ -104,6 +104,7 @@
 <li class="toctree-l4"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanisms</a><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="LearningMechanism.html">Learning Mechanisms</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ModulatoryMechanism.html">ModulatoryMechanisms</a></li>
 <li class="toctree-l5 current"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
 <li class="toctree-l5"><a class="reference internal" href="GatingMechanism.html">Gating Mechanisms</a></li>
 </ul>
@@ -431,17 +432,17 @@ performance of the <a class="reference internal" href="Composition.html"><span c
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>objective_mechanism</strong> (<a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism"><em>ObjectiveMechanism</em></a><em> or </em><em>List</em><em>[</em><em>OutputState specification</em><em>]</em>) – specifies either an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to use for the OptimizationControlMechanism, or a list of the
-<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>s it should monitor; if a list of <code class="xref any docutils literal"><span class="pre">OutputState</span> <span class="pre">specifications</span></code> is used, a default ObjectiveMechanism is created and the list
+<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>s it should monitor; if a list of <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">OutputState specifications</span></a> is used, a default ObjectiveMechanism is created and the list
 is passed to its <strong>monitored_output_states</strong> argument.</li>
 <li><strong>features</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em>, </em><em>Projection</em><em>, </em><em>dict</em><em>, or </em><em>list containing any of these</em>) – specifies Components, the values of which are assigned to <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal"><span class="pre">feature_values</span></code></a> and used to predict <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a>.
 Any <a class="reference internal" href="InputState.html#inputstate-specification"><span class="std std-ref">InputState specification</span></a> can be used that resolves to an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> that
 projects to the InputState.</li>
 <li><strong>feature_function</strong> (<em>Function</em><em> or </em><em>function : default None</em>) – specifies the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.function" title="psyneulink.core.components.states.inputstate.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> assigned to each <a class="reference internal" href="#optimizationcontrolmechanism-features"><span class="std std-ref">feature</span></a>.</li>
 <li><strong>agent_rep</strong> (<em>Composition  : default Composition to which the OptimizationControlMechanism belongs</em>) – specifies the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> used by the <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function"><code class="xref any py py-attr docutils literal"><span class="pre">evalution_function</span></code></a>
-to predictd the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> for a given <a class="reference internal" href="#optimizationcontrolmechanism-state"><span class="std std-ref">state</span></a>.  If a Composition other than the default is assigned,
+to predict the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> for a given <a class="reference internal" href="#optimizationcontrolmechanism-state"><span class="std std-ref">state</span></a>.  If a Composition other than the default is assigned,
 it must be suitably configured (see <a class="reference internal" href="#optimizationcontrolmechanism-agent-rep"><span class="std std-ref">above</span></a> for additional details).
 If the default is used, the OptimizationControlMechanism is assigned as the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> unless one has already been assigned, in which case the
-OptimizationControlMechanismit is disabled.</li>
+OptimizationControlMechanism is disabled.</li>
 <li><strong>search_function</strong> (<a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.function"><em>function</em></a><em> or </em><em>method</em>) – specifies the function assigned to <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> as its
 <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_function</span></code></a> parameter, unless that is specified in a
 constructor for <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  It must take as its arguments
@@ -522,6 +523,15 @@ is <code class="xref any docutils literal"><span class="pre">True</span></code>;
 <dd><p><em>list</em> – contains values of <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> associated with all samples of
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> evaluated by by <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> if its <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples"><code class="xref any py py-attr docutils literal"><span class="pre">save_values</span></code></a> parameter
 is <code class="xref any docutils literal"><span class="pre">True</span></code>;  otherwise list is empty.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.search_statefulness">
+<code class="descname">search_statefulness</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.search_statefulness" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool : True</em> – if set to False, an <a class="reference internal" href="#"><span class="doc">OptimizationControlMechanism</span></a>’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function"><code class="xref any py py-attr docutils literal"><span class="pre">evaluation_function</span></code></a> will never run simulations; the
+evaluations will simply execute in the original <code class="xref any docutils literal"><span class="pre">execution</span> <span class="pre">context</span></code>.</p>
+<p>if set to True, <a class="reference internal" href="#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a> will be created normally for each
+<a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control</span> <span class="pre">allocation</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">

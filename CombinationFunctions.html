@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CombinationFunctions &mdash; PsyNeuLink 0.5.3.1+11.g14cadb1 documentation</title>
+  <title>CombinationFunctions &mdash; PsyNeuLink 0.5.3.2+1.g71d8a0b documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.1+11.g14cadb1',
+              VERSION:'0.5.3.2+1.g71d8a0b',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.1+11
+                0.5.3.2+1
               </div>
             
           
@@ -183,7 +183,8 @@
 </ul>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>Functions that combine multiple items, yielding a result with the same shape as a single operand</p>
+<p>Functions that combine multiple items with the same shape, yielding a result with a single item that has the same
+shape as the individual items.</p>
 <p>All CombinationFunctions must have two attributes - <strong>multiplicative_param</strong> and <strong>additive_param</strong> -
 each of which is assigned the name of one of the function’s parameters;
 this is for use by ModulatoryProjections (and, in particular, GatingProjections,
@@ -577,7 +578,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">PredictionErrorDeltaFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gamma: &lt;typecheck.framework.optional object at 0x111b4c3c8&gt; = 1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x111977d90&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">PredictionErrorDeltaFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gamma: &lt;typecheck.framework.optional object at 0x11266c978&gt; = 1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x112721488&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate temporal difference prediction error.</p>
 <p><a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.function" title="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> returns the prediction error using arrays in <code class="xref any docutils literal"><span class="pre">variable</span></code>:</p>
 <div class="math">

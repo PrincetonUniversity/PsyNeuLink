@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlSignal &mdash; PsyNeuLink 0.5.3.1+11.g14cadb1 documentation</title>
+  <title>ControlSignal &mdash; PsyNeuLink 0.5.3.2+1.g71d8a0b documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.1+11.g14cadb1',
+              VERSION:'0.5.3.2+1.g71d8a0b',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.1+11
+                0.5.3.2+1
               </div>
             
           
@@ -210,8 +210,8 @@ adapt the ControlSignal’s <a class="reference internal" href="#psyneulink.core
 </div>
 <div class="section" id="creating-a-controlsignal">
 <span id="controlsignal-creation"></span><h2>Creating a ControlSignal<a class="headerlink" href="#creating-a-controlsignal" title="Permalink to this headline">¶</a></h2>
-<p>A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">specified for
-control</span></a>.  ControlSignals can also be specified in the <strong>control_signals</strong> argument
+<p>A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is <code class="xref any docutils literal"><span class="pre">specified</span> <span class="pre">for</span>
+<span class="pre">control</span></code>.  ControlSignals can also be specified in the <strong>control_signals</strong> argument
 of the constructor for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> or a <a class="reference internal" href="System.html#system-control-specification"><span class="std std-ref">System</span></a>.  Although
 a ControlSignal can be created on its own using its constructor (or any of the other ways for <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">creating an OutputState</span></a>), this is usually not necessary nor is it advisable, as a ControlSignal has dedicated
 components and requirements for configuration that must be met for it to function properly.</p>
@@ -316,7 +316,7 @@ use (e.g., <a class="reference internal" href="OptimizationControlMechanism.html
 of the ControlSignal’s constructor) to determine the allocation values to sample for that ControlSignal.  A
 ControlSignal’s <a class="reference internal" href="#"><span class="doc">allocation</span></a> attribute contains the value assigned to it by the ControlMechanism
 at the end of the previous <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> (i.e., when the ControlMechanism last executed –  see
-<a class="reference internal" href="ControlMechanism.html#controlmechanism-execution"><span class="std std-ref">ControlMechanism Execution</span></a>); its value from the previous <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is assigned to the
+<code class="xref any docutils literal"><span class="pre">ControlMechanism</span> <span class="pre">Execution</span></code>); its value from the previous <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is assigned to the
 <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.last_intensity" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.last_intensity"><code class="xref any py py-attr docutils literal"><span class="pre">last_intensity</span></code></a> attribute.</p>
 <p><em>Function</em>. A ControlSignal’s <code class="xref any docutils literal"><span class="pre">allocation</span></code> serves as its`variable &lt;ControlSignal.variable&gt;`,
 and is used by its <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to generate an <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>. The default <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for a ControlSignal is an identity function (<a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> with <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear.slope" title="psyneulink.core.components.functions.transferfunctions.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a> =1 and

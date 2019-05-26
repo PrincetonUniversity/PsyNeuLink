@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EVCControlMechanism &mdash; PsyNeuLink 0.5.3.1+11.g14cadb1 documentation</title>
+  <title>EVCControlMechanism &mdash; PsyNeuLink 0.5.3.2+1.g71d8a0b documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.1+11.g14cadb1',
+              VERSION:'0.5.3.2+1.g71d8a0b',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.1+11
+                0.5.3.2+1
               </div>
             
           
@@ -198,7 +198,7 @@ structure of the EVCControlMechanism.</p>
 <blockquote>
 <div><ul class="simple">
 <li>it can only be assigned to a System as its <a class="reference internal" href="System.html#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>, and not in any other capacity
-(see <a class="reference internal" href="ControlMechanism.html#controlmechanism-system-controller"><span class="std std-ref">ControlMechanisms and a System</span></a>);</li>
+(see <code class="xref any docutils literal"><span class="pre">ControlMechanism_System_Controller</span></code>);</li>
 </ul>
 <ul class="simple">
 <li>it has several specialized functions that are used to search over the <code class="xref any docutils literal"><span class="pre">allocations</span></code>s
@@ -225,11 +225,11 @@ the EVCControlMechanism, as described <a class="reference internal" href="#evcco
 </div>
 <div class="section" id="creating-an-evccontrolmechanism">
 <span id="evccontrolmechanism-creation"></span><h2>Creating an EVCControlMechanism<a class="headerlink" href="#creating-an-evccontrolmechanism" title="Permalink to this headline">¶</a></h2>
-<p>An EVCControlMechanism can be created in any of the ways used to <a class="reference internal" href="ControlMechanism.html#controlmechanism-creation"><span class="std std-ref">create a ControlMechanism</span></a>; it is also created automatically when a <a class="reference internal" href="System.html"><span class="doc">System</span></a> is created and the EVCControlMechanism
+<p>An EVCControlMechanism can be created in any of the ways used to <code class="xref any docutils literal"><span class="pre">create</span> <span class="pre">a</span> <span class="pre">ControlMechanism</span></code>; it is also created automatically when a <a class="reference internal" href="System.html"><span class="doc">System</span></a> is created and the EVCControlMechanism
 class is specified in the <strong>controller</strong> argument of the System’s constructor (see <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">Creating a System</span></a>).  The
 ObjectiveMechanism, the OutputStates it monitors and evaluates, and the parameters controlled by an
 EVCControlMechanism can be specified in the standard way for a ControlMechanism (see
-<a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism</span></a> and <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">Specifying Parameters to Control</span></a>, respectively).</p>
+<code class="xref any docutils literal"><span class="pre">ControlMechanism_ObjectiveMechanism</span></code> and <code class="xref any docutils literal"><span class="pre">ControlMechanism_Control_Signals</span></code>, respectively).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Although an EVCControlMechanism can be created on its own, it can only be assigned to, and executed within a <a class="reference internal" href="System.html"><span class="doc">System</span></a>
@@ -488,7 +488,7 @@ The last one (RESPONSE_TIME) is assigned a weight of 1 and an exponent of -1. As
 computation will multiply the value of the primary OutputState of the Reward Mechanism by the value of the
 <em>DDM_DECISION_VARIABLE</em> OutputState of the DDM Mechanism, and then divide that by the value of the <em>RESPONSE_TIME</em>
 OutputState of the DDM Mechanism.</p>
-<p>See <code class="xref any docutils literal"><span class="pre">ObjectiveMechanism</span></code> for additional examples of how to specify it’s
+<p>See <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor-examples"><span class="std std-ref">ObjectiveMechanism</span></a> for additional examples of how to specify it’s
 <strong>monitored_output_states</strong> argument, <a class="reference internal" href="ControlMechanism.html#controlmechanism-examples"><span class="std std-ref">ControlMechanism</span></a> for additional examples of how to
 specify ControlMechanisms, and <a class="reference internal" href="System.html#system-examples"><span class="std std-ref">System</span></a> for how to specify the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>
 of a System.</p>
@@ -511,7 +511,7 @@ argument of the <a class="reference internal" href="#psyneulink.library.componen
 specified in its <strong>control_signals</strong> argument.</li>
 <li><strong>objective_mechanism</strong> (<a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism"><em>ObjectiveMechanism</em></a><em>, </em><em>List</em><em>[</em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em> or </em><em>Tuple</em><em>[</em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em>, </em><em>list</em><em> or </em><em>1d np.array</em><em>, </em><em>list</em><em> or </em><em>1d</em>) – </li>
 <li><strong>np.array</strong><strong>]</strong><strong>]</strong> (<em>default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES</em>) – specifies either an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to use for the EVCControlMechanism or a list of the OutputStates it
-should monitor; if a list of <code class="xref any docutils literal"><span class="pre">OutputState</span> <span class="pre">specifications</span></code> is used,
+should monitor; if a list of <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">OutputState specifications</span></a> is used,
 a default ObjectiveMechanism is created and the list is passed to its <strong>monitored_output_states</strong> argument.</li>
 <li><strong>prediction_mechanisms</strong> (<em>Mechanism</em><em>, </em><em>Mechanism subclass</em><em>, </em><em>dict</em><em>, </em><em>(</em><em>Mechanism subclass</em><em>, </em><em>dict</em><em>) or </em><em>list:     default PredictionMechanism</em>) – the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism(s)</span></a> or class(es) of Mechanisms  used for <a class="reference internal" href="#evccontrolmechanism-prediction-mechanisms"><span class="std std-ref">prediction Mechanism(s)</span></a> and, optionally, their parameters (specified in a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter
 specification dictionary</span></a>);  see <a class="reference internal" href="#evccontrolmechanism-prediction-mechanisms"><span class="std std-ref">Prediction Mechanisms</span></a>

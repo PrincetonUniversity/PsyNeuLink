@@ -7,6 +7,7 @@ Adaptive Mechanisms
    :maxdepth: 1
 
    Learning Mechanisms <LearningMechanism>
+   ModulatoryMechanisms <ModulatoryMechanism>
    Control Mechanisms <ControlMechanism>
    Gating Mechanisms <GatingMechanism>
 
