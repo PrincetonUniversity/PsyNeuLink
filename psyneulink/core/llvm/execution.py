@@ -393,10 +393,12 @@ class CompExecution(CUDAExecution):
 
         # Set bin node to make sure self._*struct works as expected
         self._set_bin_node(node)
+        # Freeze output values if this is the first time we need them
         if node is not self._composition.input_CIM and self.__frozen_vals is None:
             self.freeze_values()
+
         self._bin_func.wrap_call(self._context_struct, self._param_struct,
-                           inputs, self.__frozen_vals, self._data_struct)
+                                 inputs, self.__frozen_vals, self._data_struct)
 
         if "comp_node_debug" in self.__debug_env:
             print("RAN: {}. CTX: {}".format(node, self.extract_node_state(node)))
