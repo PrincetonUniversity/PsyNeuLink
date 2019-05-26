@@ -78,7 +78,7 @@ class TestLog:
         }
         assert PJ.loggable_items == {
             'exponent': 'OFF',
-            # 'func_bounds': 'OFF',
+            'func_bounds': 'OFF',
             'func_has_initializers': 'OFF',
             # 'func_matrix': 'OFF', # Uses Identity function, so no func_matrix
             'func_value': 'OFF',
@@ -157,7 +157,7 @@ class TestLog:
         }
         assert PJ.loggable_items == {
             'exponent': 'OFF',
-            # 'func_bounds': 'OFF',
+            'func_bounds': 'OFF',
             'func_has_initializers': 'OFF',
             # 'func_matrix': 'OFF', # Uses Identity function, so no func_matrix
             'func_value': 'OFF',

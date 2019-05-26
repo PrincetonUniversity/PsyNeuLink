@@ -10,8 +10,9 @@
 # *******************************************  TRANSFER FUNCTIONS  *****************************************************
 """
 
+* `Identity`
 * `Linear`
-* `Exponential`f
+* `Exponential`
 * `Logistic`
 * `Tanh`
 * `ReLU`
@@ -217,6 +218,10 @@ class Identity(TransferFunction):  # -------------------------------------------
     """
 
     componentName = IDENTITY_FUNCTION
+
+    bounds = None
+    multiplicative_param = None
+    additive_param = None
 
     classPreferences = {
         kwPreferenceSetName: 'LinearClassPreferences',

@@ -11,10 +11,7 @@
 
 '''
 
-* Identity
 * InterfaceStateMap
-
-
 
 '''
 
