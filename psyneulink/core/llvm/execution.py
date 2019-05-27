@@ -216,7 +216,8 @@ class CompExecution(CUDAExecution):
         # TODO: Consolidate these
         if len(execution_ids) > 1:
             # At least the input_CIM wrapper should be generated
-            input_cim_fn = composition._get_node_wrapper(composition.input_CIM)._llvm_function
+            wrapper = composition._get_node_wrapper(composition.input_CIM)
+            input_cim_fn = pnlvm.LLVMBuilderContext.get_global().gen_llvm_function(wrapper)
 
             # Input structures
             # TODO: Use the compiled version to get these

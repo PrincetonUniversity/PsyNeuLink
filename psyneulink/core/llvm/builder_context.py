@@ -83,9 +83,13 @@ class LLVMBuilderContext:
         if name in ('pow', 'log', 'exp'):
             return self.get_llvm_function("__pnl_builtin_" + name)
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
+
+    def gen_llvm_function(self, obj):
+        return obj._llvm_function
+
     def get_llvm_function(self, name):
         try:
-            f = name._llvm_function
+            f = self.gen_llvm_function(name)
         except AttributeError:
             f = _find_llvm_function(name, _all_modules | {self.module})
         # Add declaration to the current module

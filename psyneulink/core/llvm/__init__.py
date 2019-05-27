@@ -118,7 +118,7 @@ class LLVMBinaryFunction:
 
     @staticmethod
     def from_obj(obj):
-        name = obj._llvm_function.name
+        name = LLVMBuilderContext.get_global().gen_llvm_function(obj).name
         return LLVMBinaryFunction.get(name)
 
     @staticmethod
