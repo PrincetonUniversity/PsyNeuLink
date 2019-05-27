@@ -43,7 +43,7 @@ matrix:
     python: 3.7
     language: minimal
     env:
-        - PYTHON=3.7.2
+        - PYTHON=3.7.3
         - PYTHONWARNINGS="ignore::DeprecationWarning"
     # Cache installed python virtual env and homebrew downloads
     cache:
