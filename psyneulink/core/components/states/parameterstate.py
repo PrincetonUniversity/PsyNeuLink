@@ -1020,7 +1020,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
     #    - they have the same name as another parameter of the component (raise exception for this)
     if param_name is FUNCTION_PARAMS:
         for function_param_name in param_value.keys():
-            if hasattr(function.parameters, function_param_name) and not getattr(function.parameters, function_param_name).modulable:
+            if (hasattr(function.parameters, function_param_name) and
+                    not getattr(function.parameters, function_param_name).modulable):
                 # skip non modulable function parameters
                 continue
 
