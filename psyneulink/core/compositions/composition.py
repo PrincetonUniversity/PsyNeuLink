@@ -1180,7 +1180,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.__generated_node_wrappers = {}
         self.__generated_execution = None
         self.__generated_run = None
-        self.__generated_sim_node_wrappers = {}
         self.__generated_simulation = None
         self.__generated_sim_run = None
 
@@ -4373,9 +4372,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return node_list.index(node)
 
     def _get_node_wrapper(self, node, simulation=False):
-        if simulation:
-            return self._get_sim_node_wrapper(node)
-
         if node not in self.__generated_node_wrappers:
             class node_wrapper():
                 def __init__(self, func):
@@ -4386,18 +4382,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return wrapper
 
         return self.__generated_node_wrappers[node]
-
-    def _get_sim_node_wrapper(self, node):
-        if node not in self.__generated_sim_node_wrappers:
-            class node_wrapper():
-                def __init__(self, func):
-                    self._llvm_function = func
-            wrapper_f = self.__gen_node_wrapper(node, True)
-            wrapper = node_wrapper(wrapper_f)
-            self.__generated_sim_node_wrappers[node] = wrapper
-            return wrapper
-
-        return self.__generated_sim_node_wrappers[node]
 
     @property
     def _llvm_function(self):
