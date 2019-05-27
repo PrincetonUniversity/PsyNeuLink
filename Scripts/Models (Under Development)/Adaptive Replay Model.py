@@ -68,12 +68,10 @@ rl_agent.add_reinforcement_learning_pathway([rl_agent_state, rl_agent_action])
 #                                   FULL COMPOSITION
 # *********************************************************************************************
 model = Composition(name='Adaptive Replay Model')
-# model.add_nodes([stim_in, context_in, reward_in, perceptual_state])
-# model.add_linear_processing_pathway([perceptual_state, rl_agent, action])
-model.add_nodes([stim_in, context_in, reward_in, perceptual_state, rl_agent, action])
-model.add_projection(sender=perceptual_state, receiver=rl_agent)
-model.add_projection(sender=action, receiver=perceptual_state)
-
+# model.add_nodes([stim_in, context_in, reward_in, perceptual_state, rl_agent, action])
+model.add_linear_processing_pathway([perceptual_state, rl_agent, action])
+# model.add_projection(sender=perceptual_state, receiver=rl_agent)
+# model.add_projection(sender=action, receiver=perceptual_state)
 
 # *********************************************************************************************
 #                                  SHOW AND RUN MODEL
@@ -81,11 +79,8 @@ model.add_projection(sender=action, receiver=perceptual_state)
 model.show_graph(show_controller=True)
 # model.show_graph(show_node_structure=ALL)
 
-# stimuli = {stim_in:[[1, 1, 1],[2, 2, 2]],
-#            context_in: [[10, 10, 10],[20, 20, 20]]}
 
-# stimuli = {stim_in:[1, 1, 1],
-#            context_in: [10, 10, 10]}
+num_trials = 2
 
 stimuli = {stim_in:np.array([1]*stim_size),
            context_in: np.array([10]*context_size)}
