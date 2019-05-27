@@ -896,7 +896,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # freeze the values of current execution_id, because they can be changed in between simulations,
         # and the simulations must start from the exact spot
-        self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id), base_execution_context=execution_id, override=True)
+        self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id),
+                                                base_execution_context=execution_id,
+                                                override=True)
 
         # Get control_allocation that optimizes net_outcome using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
