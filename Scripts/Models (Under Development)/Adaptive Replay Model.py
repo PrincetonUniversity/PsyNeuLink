@@ -2,7 +2,7 @@ import numpy as np
 from psyneulink import *
 
 
-num_states = 10
+stim_size = 10
 context_size = 2
 num_actions = 4
 rpe_size = 1
@@ -13,16 +13,22 @@ def Concatenate(variable):
 # def ExepctedValueCalc(variable):
 #     variable[]
 
+# *********************************************************************************************
+#                          PERCEPTUAL AND ACTION MECHANISMS
+# *********************************************************************************************
 stim_in = ProcessingMechanism(name='Stimulus',
-                              size=num_states)
+                              size=stim_size)
 
 context_in = ProcessingMechanism(name='Context',
                                  size=context_size)
 
-state = ProcessingMechanism(name='State',
+reward_in = ProcessingMechanism(name='Reward',
+                                size=1)
+
+perceptual_state = ProcessingMechanism(name='State',
                             function=Concatenate,
                             input_states=[{NAME:'STIM',
-                                           SIZE:num_states,
+                                           SIZE:stim_size,
                                            PROJECTIONS:stim_in},
                                           {NAME:'CONTEXT',
                                            SIZE:context_size,
@@ -31,25 +37,42 @@ state = ProcessingMechanism(name='State',
 action = ProcessingMechanism(name='Actions',
                              size=num_actions,
                              input_states={NAME: 'Q values',
-                                           PROJECTIONS:state})
+                                           PROJECTIONS:perceptual_state})
 
+# *********************************************************************************************
+#                             RL AGENT NESTED COMPOSITION
+# *********************************************************************************************
+agent_state = ProcessingMechanism(size=5)
+agent_action = ProcessingMechanism(size=5)
+agent = Composition(name='Agent')
+agent.add_reinforcement_learning_pathway([agent_state, agent_action])
+
+# *********************************************************************************************
+#                          MEMORY AND CONTROL MECHANISMS
+# *********************************************************************************************
 # q_rep = ProcessingMechanism(name='Q rep',
-#                             size=num_actions*num_states,
+#                             size=num_actions*stim_size,
 #                             function=SoftMax(output=PROB, gain=1.0))
+#
+# em = EpisodicMemoryMechanism(name='Episodic Memory',
+#                              content_size=stim_size+context_size,
+#                              assoc_size=rpe_size,
+#                              # function=ContentAddressableMemory(function=ExepctedValueCalc))
+#                              function=ContentAddressableMemory)
+#
+# sr = ProcessingMechanism(name='Successor Rep')
 
-em = EpisodicMemoryMechanism(name='Episodic Memory',
-                             content_size=num_states+context_size+rpe_size,
-                             assoc_size=1,
-                             # function=ContentAddressableMemory(function=ExepctedValueCalc))
-                             function=ContentAddressableMemory)
-
-sr = ProcessingMechanism(name='Successor Rep')
-
-
+# *********************************************************************************************
+#                                   FULL COMPOSITION
+# *********************************************************************************************
 comp = Composition(name='Adaptive Replay Model')
-comp.add_nodes([stim_in, context_in, state])
-# comp.add_reinforcement_learning_pathway([state, action])
+comp.add_nodes([stim_in, context_in, reward_in, perceptual_state])
+comp.add_linear_processing_pathway([perceptual_state, agent, action])
 
+# *********************************************************************************************
+#                                  SHOW AND RUN MODEL
+# *********************************************************************************************
+comp.show_graph(show_controller=True)
 # comp.show_graph(show_node_structure=ALL)
 
 # stimuli = {stim_in:[[1, 1, 1],[2, 2, 2]],
@@ -58,7 +81,7 @@ comp.add_nodes([stim_in, context_in, state])
 # stimuli = {stim_in:[1, 1, 1],
 #            context_in: [10, 10, 10]}
 
-stimuli = {stim_in:np.array([1]*num_states),
+stimuli = {stim_in:np.array([1]*stim_size),
            context_in: np.array([10]*context_size)}
 
-print(comp.run(inputs=stimuli))
+# print(comp.run(inputs=stimuli))

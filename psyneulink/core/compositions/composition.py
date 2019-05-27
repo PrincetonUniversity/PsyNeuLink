@@ -3215,8 +3215,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctlr_width = str(default_width)
 
             if controller is None:
-                print("\nWARNING: {} has not been assigned a \'controller\', so \'show_controller\' option "
-                      "can't be used in its show_graph() method\n".format(self.name))
+                warnings.warn(f"{self.name} has not been assigned a \'controller\', "
+                              f"so \'show_controller\' option in call to its show_graph() method will be ignored.")
                 return
 
             # Assign controller node
