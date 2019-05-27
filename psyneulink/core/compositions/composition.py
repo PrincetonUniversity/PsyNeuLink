@@ -1689,7 +1689,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_linear_processing_pathway(self, pathway, feedback=False, *args):
         # First, verify that the pathway begins with a node
-        if not isinstance(pathway, list):
+        if not isinstance(pathway, (list, tuple)):
             raise CompositionError(f"First arg for add_linear_processing_pathway method of '{self.name}' "
                                    f"{Composition.__name__} must be a list of nodes")
 
