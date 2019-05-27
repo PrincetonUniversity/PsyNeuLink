@@ -121,7 +121,7 @@ class FuncExecution(CUDAExecution):
 
     def __init__(self, component, execution_ids=[None]):
         super().__init__()
-        self._bin_func = pnlvm.LLVMBinaryFunction.get(component._llvm_function.name)
+        self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component)
         self._execution_ids = execution_ids
         self._component = component
 
@@ -253,7 +253,7 @@ class CompExecution(CUDAExecution):
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
         wrapper = self._composition._get_node_wrapper(node)
-        self.__bin_func = pnlvm.LLVMBinaryFunction.get(wrapper._llvm_function.name)
+        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper)
 
     @property
     def _conditions(self):
@@ -408,7 +408,7 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
-            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.get(self._composition._llvm_function.name)
+            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition)
 
         return self.__bin_exec_func
 

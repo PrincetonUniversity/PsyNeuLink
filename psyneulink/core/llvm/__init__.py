@@ -117,6 +117,11 @@ class LLVMBinaryFunction:
         self.cuda_call(*wrap_args)
 
     @staticmethod
+    def from_obj(obj):
+        name = obj._llvm_function.name
+        return LLVMBinaryFunction.get(name)
+
+    @staticmethod
     @functools.lru_cache(maxsize=32)
     def get(name):
         _llvm_build(LLVMBuilderContext._llvm_generation)
