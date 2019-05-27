@@ -203,12 +203,11 @@ mySystem.controller.reportOutputPref = True
 
 Flanker_Rep.set_log_conditions(('mod_slope', pnl.ContextFlags.CONTROL))
 
-# mySystem.run(
-#         num_trials=nTrials,
-#         inputs=stim_list_dict,
-#         animate={'show_control':pnl.ALL, pnl.UNIT: pnl.EXECUTION_SET}
-# )
+mySystem.run(
+        num_trials=nTrials,
+        inputs=stim_list_dict,
+        animate={'show_control':pnl.ALL, pnl.UNIT: pnl.EXECUTION_SET}
+)
 
-
-Flanker_Rep.log.print_entries(execution_ids=mySystem)
+Flanker_Rep.log.print_entries()
 
