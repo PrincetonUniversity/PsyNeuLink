@@ -74,12 +74,12 @@ class LLVMBuilderContext:
             _global_context = LLVMBuilderContext()
         return _global_context
 
-    def get_unique_name(self, name):
+    def get_unique_name(self, name:str):
         LLVMBuilderContext.uniq_counter += 1
         name = re.sub(r"[- ()\[\]]", "_", name)
         return name + '_' + str(LLVMBuilderContext.uniq_counter)
 
-    def get_builtin(self, name, args, function_type = None):
+    def get_builtin(self, name:str, args, function_type = None):
         if name in ('pow', 'log', 'exp'):
             return self.get_llvm_function("__pnl_builtin_" + name)
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
@@ -96,7 +96,7 @@ class LLVMBuilderContext:
         return f
 
     @staticmethod
-    def get_debug_location(func, component):
+    def get_debug_location(func:ir.Function, component):
         if "debug_info" not in debug_env:
             return
 
@@ -444,7 +444,7 @@ class LLVMBuilderContext:
 
         return llvm_func
 
-    def gen_multirun_wrapper(self, function):
+    def gen_multirun_wrapper(self, function:ir.Function) -> ir.Function:
 
         if function.module is not self.module:
             function = ir.Function(self.module, function.type.pointee, function.name)
@@ -529,7 +529,8 @@ class LLVMBuilderContext:
 
         assert False, "Don't know how to convert {}".format(type(t))
 
-def _find_llvm_function(name, mods = _all_modules):
+
+def _find_llvm_function(name:str, mods = _all_modules) -> ir.Function:
     f = None
     for m in mods:
         if name in m.globals:
@@ -538,6 +539,7 @@ def _find_llvm_function(name, mods = _all_modules):
     if not isinstance(f, ir.Function):
         raise ValueError("No such function: {}".format(name))
     return f
+
 
 def _gen_cuda_kernel_wrapper_module(function):
     module = ir.Module(name="wrapper_"  + function.name)
