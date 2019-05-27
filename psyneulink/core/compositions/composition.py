@@ -1444,6 +1444,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(sender, Composition)
                 and sender_mechanism not in self.nodes):
+            sender_name = sender.name
             # Check if sender is in a nested Composition and, if so, if it is an OUTPUT Mechanism
             #    - if so, then use self.output_CIM_states[output_state] for that OUTPUT Mechanism as sender
             #    - otherwise, raise error
@@ -1451,8 +1452,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                    sender_output_state,
                                                                    NodeRole.OUTPUT)
             if sender is None:
-                raise CompositionError(f"sender arg ({repr(sender)}) in call to add_projection method of {self.name} "
-                                       f"is not in it or any of its nested {Composition.__name__}s .")
+                # raise CompositionError(f"sender ({repr(name_of_specified_sender)}) in call to add_projection method "
+                #                        f"of {self.name} is not in it or any of its nested {Composition.__name__}s .")
+                receiver_name = 'node'
+                if hasattr(projection, 'receiver'):
+                    receiver_name = f'{repr(projection.receiver.owner.name)}'
+                raise CompositionError(f"A {Projection.__name__} specified to {receiver_name} in {self.name} "
+                                       f"has a sender ({repr(sender_name)}) that is not (yet) in it "
+                                       f"or any of its nested {Composition.__name__}s.")
 
         if hasattr(projection, "sender"):
             if projection.sender.owner != sender and \
