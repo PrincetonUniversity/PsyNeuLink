@@ -2865,7 +2865,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         input_length = ctx.int32_ty(arg_in.type.pointee.count)
         output_length = ctx.int32_ty(arg_out.type.pointee.count)
-        builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
+        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
         return builder
 

@@ -30,7 +30,7 @@ x, y = matrix.shape
 @pytest.mark.llvm
 @pytest.mark.benchmark
 def test_matmul_llvm(benchmark):
-    llvm_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_vxm')
+    llvm_fun = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm")
     benchmark(llvm_fun, ct_vec, ct_mat, x, y, ct_res)
     assert np.allclose(llvm_res, result)
 
@@ -38,7 +38,7 @@ def test_matmul_llvm(benchmark):
 @pytest.mark.cuda
 @pytest.mark.benchmark
 def test_matmul_cuda(benchmark):
-    llvm_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_vxm')
+    llvm_fun = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm")
     cuda_vec = pnlvm.jit_engine.pycuda.driver.In(vector)
     cuda_mat = pnlvm.jit_engine.pycuda.driver.In(matrix)
     cuda_res = pnlvm.jit_engine.pycuda.driver.Out(llvm_res)
@@ -58,7 +58,7 @@ def test_matmul_llvm_constant_dim(benchmark, mode):
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
 
         # get builtin IR
-        builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
+        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
 
         # Create square vector matrix multiply
         function = ir.Function(ctx.module, func_ty, name=custom_name)

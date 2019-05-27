@@ -23,7 +23,7 @@ x, y = matrix.shape
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
 def test_fixed_dimensions__pnl_builtin_vxm(mode):
     # The original builtin mxv function
-    binf = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_vxm')
+    binf = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm")
     orig_res = np.empty_like(llvm_res)
     if mode == 'CPU':
         ct_in_ty, ct_mat_ty, _, _, ct_res_ty = binf.byref_arg_types
@@ -44,7 +44,7 @@ def test_fixed_dimensions__pnl_builtin_vxm(mode):
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
 
         # get builtin IR
-        builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
+        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
 
         # Create square vector matrix multiply
         function = ir.Function(ctx.module, func_ty, name=custom_name)
