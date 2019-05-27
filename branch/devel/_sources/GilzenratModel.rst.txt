@@ -32,4 +32,4 @@ The `FitzHughNagumoIntegrator <FitzHughNagumoIntegrator>` function documentation
 the PsyNeuLink FitzHughNagumo implementation to the equations (6, 7, and 8) in Gilzenrat et al. 2002.
 
 
-Script: :download:`Download GilzenratModel.py <../../Scripts/Models/GilzenratModel.py>`
+Script: :download:`Download GilzenratModel.py <../../psyneulink/library/models/GilzenratModel.py>`

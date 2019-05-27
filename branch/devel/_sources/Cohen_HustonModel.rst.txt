@@ -149,6 +149,6 @@ runs). Finally,  different SOA and a different linear regression formula was use
 Regardless of these modifications, we were able to reproduce the core Figures with the same weights of the
 original model.
 
-Script: :download:`Download Cohen_Huston1994.py <../../Scripts/Models/Cohen_Huston1994.py>`
+Script: :download:`Download Cohen_Huston1994.py <../../psyneulink/library/models/Cohen_Huston1994.py>`
 
-Script: :download:`Download Cohen_Huston1994_horse_race.py <../../Scripts/Models/Cohen_Huston1994_horse_race.py>`
+Script: :download:`Download Cohen_Huston1994_horse_race.py <../../psyneulink/library/models/Cohen_Huston1994_horse_race.py>`

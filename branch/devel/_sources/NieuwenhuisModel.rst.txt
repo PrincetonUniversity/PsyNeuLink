@@ -134,5 +134,5 @@ al. (2005) paper, the `log` function is used to record the output values of para
 and `v <Nieuwenhuis_LC_Params>` for every execution of the `LCControlMechanism`. The function `h(v)
 <Nieuwenhuis_LC_Params>` is computed for every time step, and h(v) and *w* are plotted.
 
-Script: :download:`Download Nieuwenhuis2005Model.py <../../Scripts/Models/Nieuwenhuis2005Model.py>`
+Script: :download:`Download Nieuwenhuis2005Model.py <../../psyneulink/library/models/Nieuwenhuis2005Model.py>`
 

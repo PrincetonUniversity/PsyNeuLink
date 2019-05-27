@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.5.3.2+103.g05049b4 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.5.3.2+104.gfb9ea4a documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+103.g05049b4',
+              VERSION:'0.5.3.2+104.gfb9ea4a',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+103
+                0.5.3.2+104
               </div>
             
           
@@ -176,7 +176,7 @@
 <div class="toctree-wrapper compound">
 </div>
 <span class="target" id="module-psyneulink.core.components.functions.transferfunctions"></span><ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">Identity</span></code></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Identity" title="psyneulink.core.components.functions.transferfunctions.Identity"><code class="xref any py py-class docutils literal"><span class="pre">Identity</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential" title="psyneulink.core.components.functions.transferfunctions.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a></li>
@@ -202,6 +202,81 @@ each of these is assigned the name of one of the function’s
 parameters and used by <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> to modulate the output of the
 TransferFunction’s function (see <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a>).</li>
 </ul>
+<dl class="class">
+<dt id="psyneulink.core.components.functions.transferfunctions.Identity">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">Identity</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Identity" title="Permalink to this definition">¶</a></dt>
+<dd><p id="identity">Returns variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>np.array : default class_defaults.variable</em>) – specifies a template for the value to be returned.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.transferfunctions.Identity.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Identity.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number or np.array</em> – contains value to be returned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.transferfunctions.Identity.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Identity.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.transferfunctions.Identity.name">
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Identity.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a
+default is assigned by FunctionRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.transferfunctions.Identity.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Identity.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.Identity.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Identity.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return: <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Identity.variable" title="psyneulink.core.components.functions.transferfunctions.Identity.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>np.array : default class_defaults.variable</em>) – a single value or array to be returned.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>variable</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or np.array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.Linear">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">Linear</code><span class="sig-paren">(</span><em>default_variable</em>, <em>slope=1.0</em>, <em>intercept=0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Linear" title="Permalink to this definition">¶</a></dt>
