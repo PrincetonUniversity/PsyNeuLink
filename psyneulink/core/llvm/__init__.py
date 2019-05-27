@@ -22,7 +22,7 @@ from .execution import *
 from .execution import _tupleize
 from .jit_engine import *
 
-__all__ = ['LLVMBinaryFunction', 'LLVMBuilderContext']
+__all__ = ['LLVMBuilderContext']
 
 _compiled_modules = set()
 _binary_generation = 0
