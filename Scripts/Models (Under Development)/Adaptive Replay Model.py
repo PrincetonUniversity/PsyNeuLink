@@ -25,7 +25,7 @@ context_in = ProcessingMechanism(name='Context',
 reward_in = ProcessingMechanism(name='Reward',
                                 size=1)
 
-perceptual_state = ProcessingMechanism(name='State',
+perceptual_state = ProcessingMechanism(name='Current State',
                             function=Concatenate,
                             input_states=[{NAME:'STIM',
                                            SIZE:stim_size,
@@ -34,17 +34,19 @@ perceptual_state = ProcessingMechanism(name='State',
                                            SIZE:context_size,
                                            PROJECTIONS:context_in}])
 
-action = ProcessingMechanism(name='Actions',
-                             size=num_actions,
-                             input_states={NAME: 'Q values',
-                                           PROJECTIONS:perceptual_state})
+# action = ProcessingMechanism(name='Action',
+#                              size=num_actions,
+#                              input_states={NAME: 'Q values',
+#                                            PROJECTIONS:perceptual_state})
+action = ProcessingMechanism(name='Action',
+                             size=num_actions)
 
 # *********************************************************************************************
 #                             RL AGENT NESTED COMPOSITION
 # *********************************************************************************************
-rl_agent_state = ProcessingMechanism(size=5)
-rl_agent_action = ProcessingMechanism(size=5)
-rl_agent = Composition(name='Agent')
+rl_agent_state = ProcessingMechanism(name='RL Agent State', size=5)
+rl_agent_action = ProcessingMechanism(name='RL Agent Action', size=5)
+rl_agent = Composition(name='RL Agent')
 rl_agent.add_reinforcement_learning_pathway([rl_agent_state, rl_agent_action])
 
 # *********************************************************************************************
