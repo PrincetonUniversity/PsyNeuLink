@@ -7,8 +7,6 @@ context_size = 2
 num_actions = 4
 rpe_size = 1
 
-def Concatenate(variable):
-    return np.append(variable[0],variable[1])
 
 # def ExepctedValueCalc(variable):
 #     variable[]
@@ -79,11 +77,8 @@ model.add_projection(sender=action, receiver=perceptual_state)
 model.show_graph(show_controller=True)
 # model.show_graph(show_node_structure=ALL)
 
-# stimuli = {stim_in:[[1, 1, 1],[2, 2, 2]],
-#            context_in: [[10, 10, 10],[20, 20, 20]]}
 
-# stimuli = {stim_in:[1, 1, 1],
-#            context_in: [10, 10, 10]}
+num_trials = 2
 
 stimuli = {stim_in:np.array([1]*stim_size),
            context_in: np.array([10]*context_size)}

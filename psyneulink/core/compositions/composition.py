@@ -1344,12 +1344,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for proj in input_state.shadow_inputs.path_afferents:
                     sender = proj.sender
                     if sender.owner != self.input_CIM:
+                        # MODIFIED 5/9/19 OLD:
                         self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_state),
                                             sender=proj.sender.owner,
                                             receiver=node)
+                        # # MODIFIED 5/9/19 NEW: [JDC]
+                        # self.add_projection(sender=proj.sender.owner,
+                        #                     receiver=node)
+                        # MODIFIED 5/9/19 END
 
+    # MODIFIED 5/29/19 OLD:
     def add_nodes(self, nodes, required_roles=None):
-
+    # # MODIFIED 5/29/19 NEW: [JDC]
+    # def add_nodes(self, nodes=None, *args):
+    # MODIFIED 5/29/19 END
+        if not isinstance(nodes, list):
+            raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
+                                   f"must be a list of nodes")
         for node in nodes:
             self.add_node(node=node, required_roles=required_roles)
 
@@ -1566,7 +1577,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             projection.is_processing = False
             # KDM 5/24/19: removing below rename because it results in several duplicates
-            # projection.name = '{0} to {1}'.format(sender, receiver)
+            # projection.name = f'{sender} to {receiver}'
             self.graph.add_component(projection, feedback=feedback)
 
             try:
@@ -1676,8 +1687,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._analyze_graph()
 
-    def add_linear_processing_pathway(self, pathway, feedback=False):
+    def add_linear_processing_pathway(self, pathway, feedback=False, *args):
         # First, verify that the pathway begins with a node
+        if not isinstance(pathway, list):
+            raise CompositionError(f"First arg for add_linear_processing_pathway method of '{self.name}' "
+                                   f"{Composition.__name__} must be a list of nodes")
+
         if isinstance(pathway[0], (Mechanism, Composition)):
             self.add_node(pathway[0])
         else:
@@ -1697,12 +1712,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(pathway[c], (Mechanism, Composition)):
                 if isinstance(pathway[c - 1], (Mechanism, Composition)):
                     # if the previous item was also a Composition Node, add a mapping projection between them
-                    self.add_projection(MappingProjection(sender=pathway[c - 1],
-                                                          receiver=pathway[c],
-                                                          ),
-                                        pathway[c - 1],
-                                        pathway[c],
+                    # # MODIFIED 5/29/19 OLD:
+                    # self.add_projection(MappingProjection(sender=pathway[c - 1],
+                    #                                       receiver=pathway[c]),
+                    #                     pathway[c - 1],
+                    #                     pathway[c],
+                    #                     feedback=feedback)
+                    # MODIFIED 5/29/19 NEW: [JDC]
+                    self.add_projection(sender=pathway[c - 1],
+                                        receiver=pathway[c],
                                         feedback=feedback)
+                    # MODIFIED 5/9/19 END
             # if the current item is a Projection
             elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
                 if c == len(pathway) - 1:
@@ -2867,14 +2887,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
-            'jupyter': return the object (ideal for working in jupyter/ipython notebooks).
+            'jupyter': return the object (for working in jupyter/ipython notebooks);
+            'gv': return graphviz object
+            'gif': return gif used for animation
 
         Returns
         -------
 
         display of Composition : `pdf` or Graphviz graph object
-            'pdf' (placed in current directory) if :keyword:`output_fmt` arg is 'pdf';
-            Graphviz graph object if :keyword:`output_fmt` arg is 'jupyter'.
+            PDF: (placed in current directory) if :keyword:`output_fmt` arg is 'pdf';
+            Graphviz graph object if :keyword:`output_fmt` arg is 'gv' or 'jupyter';
+            gif if :keyword:`output_fmt` arg is 'gif'.
 
         """
 
@@ -2885,10 +2908,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def _assign_processing_components(g,
                                           rcvr,
                                           show_nested):
-
             '''Assign nodes to graph'''
             if isinstance(rcvr, Composition) and show_nested:
-                nested_comp_graph = rcvr.show_graph(output_fmt='jupyter')
+                nested_comp_graph = rcvr.show_graph(output_fmt='gv')
                 nested_comp_graph.name = "cluster_"+rcvr.name
                 rcvr_label = rcvr.name
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
@@ -2903,14 +2925,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # If recvr is ObjectiveMechanism for Composition's controller,
             #    break and handle in _assign_control_components()
-            elif (isinstance(rcvr, ObjectiveMechanism)
+            # # MODIFIED 5/9/19 OLD:
+            # elif (isinstance(rcvr, ObjectiveMechanism)
+            # MODIFIED 5/9/19 NEW: [JDC] [ALLOW NESTED TO STAND ON ITS OWN ABOVE]
+            if (isinstance(rcvr, ObjectiveMechanism)
+            # MODIFIED 5/9/19 END
                     and self.controller
                     and rcvr is self.controller.objective_mechanism):
                 return
 
             else:
-                rcvr_rank = 'same'
                 # Set rcvr color and penwidth based on node type
+                rcvr_rank = 'same'
+                node_shape = mechanism_shape
+
+                # Input and Output Node
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     if rcvr in active_items:
@@ -2923,6 +2952,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         rcvr_color = input_and_output_color
                         rcvr_penwidth = str(bold_width)
+
+                # Input Node
                 elif rcvr in self.get_nodes_by_role(NodeRole.INPUT):
                     if rcvr in active_items:
                         if active_color is BOLD:
@@ -2935,6 +2966,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         rcvr_color = input_color
                         rcvr_penwidth = str(bold_width)
                     rcvr_rank = input_rank
+
+                # Output Node
                 elif rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     if rcvr in active_items:
                         if active_color is BOLD:
@@ -2948,7 +2981,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         rcvr_penwidth = str(bold_width)
                     rcvr_rank = output_rank
 
+                # Composition
                 elif isinstance(rcvr, Composition):
+                    node_shape = composition_shape
                     if rcvr in active_items:
                         if active_color is BOLD:
                             rcvr_color = composition_color
@@ -3038,7 +3073,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             continue
 
                         # Only consider Projections to the rcvr
-                        if proj.receiver.owner == rcvr:
+                        if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
+                                or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
 
                             if show_node_structure:
                                 sndr_proj_label = '{}:{}'. \
@@ -3412,8 +3448,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'output_fmt': 'struct'}
 
         default_node_color = 'black'
-        node_shape = 'oval'
+        mechanism_shape = 'oval'
         cim_shape = 'rectangle'
+        composition_shape = 'rectangle'
         struct_shape = 'plaintext' # assumes use of html
 
         bold_width = 3
@@ -3449,7 +3486,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
 
         # get all Nodes
-        self._analyze_graph()
+        # # # MODIFIED 5/9/19 OLD:
+        # self._analyze_graph()
+        # MODIFIED 5/9/19 NEW: [JDC]
+        # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
+        if output_fmt != 'gv':
+            self._analyze_graph()
+        # MODIFIED 5/9/19 END
         processing_graph = self.scheduler_processing.visual_graph
         rcvrs = list(processing_graph.keys())
 
@@ -3543,6 +3586,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
             return G
+
+        elif output_fmt == 'gv':
+            return G
+
 
     def execute(
             self,
