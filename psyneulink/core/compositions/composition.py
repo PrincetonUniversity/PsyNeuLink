@@ -1698,7 +1698,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(pathway[c - 1], (Mechanism, Composition)):
                     # if the previous item was also a Composition Node, add a mapping projection between them
                     self.add_projection(MappingProjection(sender=pathway[c - 1],
-                                                          receiver=pathway[c]),
+                                                          receiver=pathway[c],
+                                                          ),
                                         pathway[c - 1],
                                         pathway[c],
                                         feedback=feedback)

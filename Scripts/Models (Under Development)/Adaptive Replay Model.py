@@ -25,7 +25,7 @@ context_in = ProcessingMechanism(name='Context',
 reward_in = ProcessingMechanism(name='Reward',
                                 size=1)
 
-perceptual_state = ProcessingMechanism(name='State',
+perceptual_state = ProcessingMechanism(name='Current State',
                             function=Concatenate,
                             input_states=[{NAME:'STIM',
                                            SIZE:stim_size,
@@ -34,18 +34,20 @@ perceptual_state = ProcessingMechanism(name='State',
                                            SIZE:context_size,
                                            PROJECTIONS:context_in}])
 
-action = ProcessingMechanism(name='Actions',
-                             size=num_actions,
-                             input_states={NAME: 'Q values',
-                                           PROJECTIONS:perceptual_state})
+# action = ProcessingMechanism(name='Action',
+#                              size=num_actions,
+#                              input_states={NAME: 'Q values',
+#                                            PROJECTIONS:perceptual_state})
+action = ProcessingMechanism(name='Action',
+                             size=num_actions)
 
 # *********************************************************************************************
 #                             RL AGENT NESTED COMPOSITION
 # *********************************************************************************************
-agent_state = ProcessingMechanism(size=5)
-agent_action = ProcessingMechanism(size=5)
-agent = Composition(name='Agent')
-agent.add_reinforcement_learning_pathway([agent_state, agent_action])
+rl_agent_state = ProcessingMechanism(name='RL Agent State', size=5)
+rl_agent_action = ProcessingMechanism(name='RL Agent Action', size=5)
+rl_agent = Composition(name='RL Agent')
+rl_agent.add_reinforcement_learning_pathway([rl_agent_state, rl_agent_action])
 
 # *********************************************************************************************
 #                          MEMORY AND CONTROL MECHANISMS
@@ -67,7 +69,7 @@ agent.add_reinforcement_learning_pathway([agent_state, agent_action])
 # *********************************************************************************************
 comp = Composition(name='Adaptive Replay Model')
 comp.add_nodes([stim_in, context_in, reward_in, perceptual_state])
-comp.add_linear_processing_pathway([perceptual_state, agent, action])
+comp.add_linear_processing_pathway([perceptual_state, rl_agent, action])
 
 # *********************************************************************************************
 #                                  SHOW AND RUN MODEL

@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="new_umemoto" type="PythonConfigurationType" factoryName="Python" singleton="false">
+  <configuration default="false" factoryName="Python" name="new_umemoto" singleton="false" type="PythonConfigurationType">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
