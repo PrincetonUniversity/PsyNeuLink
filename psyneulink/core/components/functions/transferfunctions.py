@@ -10,8 +10,9 @@
 # *******************************************  TRANSFER FUNCTIONS  *****************************************************
 """
 
+* `Identity`
 * `Linear`
-* `Exponential`f
+* `Exponential`
 * `Logistic`
 * `Tanh`
 * `ReLU`
@@ -50,7 +51,7 @@ from psyneulink.core.components.functions.function import \
     Function_Base, FunctionError, function_keywords, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
 from psyneulink.core.components.component import function_type
 from psyneulink.core.globals.keywords import \
-    PER_ITEM, TRANSFER_FUNCTION_TYPE, \
+    PER_ITEM, TRANSFER_FUNCTION_TYPE, IDENTITY_FUNCTION, \
     LINEAR_FUNCTION, SLOPE, INTERCEPT, PARAMETER_STATE_PARAMS, \
     VARIABLE, EXPONENTIAL_FUNCTION, RATE, BIAS, SCALE, OFFSET, \
     LOGISTIC_FUNCTION, GAIN, X_0, RELU_FUNCTION, LEAK, VARIANCE, \
@@ -65,7 +66,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
 
-__all__ = ['TransferFunction', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'Tanh', 'ReLU',
+__all__ = ['TransferFunction', 'Identity', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'Tanh', 'ReLU',
            'Gaussian', 'GaussianDistort', 'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
 
 BOUNDS = 'bounds'
@@ -160,6 +161,151 @@ class TransferFunction(Function_Base):
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as args:
             self._gen_llvm_transfer(*args, **kwargs)
 
+        return builder
+
+
+class Identity(TransferFunction):  # -----------------------------------------------------------------------------------
+    """
+    Identity(                  \
+             default_variable, \
+             params=None,      \
+             owner=None,       \
+             name=None,        \
+             prefs=None        \
+            )
+
+    .. _Identity:
+
+    Returns variable.
+
+    Arguments
+    ---------
+
+    variable : number or np.array : default class_defaults.variable
+        specifies a template for the value to be returned.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        contains value to be returned.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = IDENTITY_FUNCTION
+
+    bounds = None
+    multiplicative_param = None
+    additive_param = None
+
+    classPreferences = {
+        kwPreferenceSetName: 'LinearClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+        # Assign args to params and functionParams dicts
+        params = self._assign_args_to_param_dicts(params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+        # self.functionOutputType = None
+
+    def function(
+        self,
+        variable=None,
+        execution_id=None,
+        params=None,
+        context=None
+    ):
+        """
+        Return: `variable <Identity.variable>`
+
+        Arguments
+        ---------
+
+        variable : number or np.array : default class_defaults.variable
+           a single value or array to be returned.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        variable : number or np.array
+
+        """
+
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        # outputType = self.functionOutputType
+
+        return variable
+
+    def _get_input_struct_type(self,ctx):
+        #FIXME: Workaround for CompositionInterfaceMechanism that
+        #       does not udpate its defaults shape
+        from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+        if isinstance(self.owner, CompositionInterfaceMechanism):
+            variable = [state.defaults.value for state in self.owner.input_states]
+            # Python list does not care about ndarrays of different lengths
+            # we do care, so convert to tuple to create struct
+            if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
+                variable = tuple(variable)
+
+            return ctx.convert_python_struct_to_llvm_ir(variable)
+        default_var = self.defaults.variable
+        return ctx.convert_python_struct_to_llvm_ir(default_var)
+
+    def _get_output_struct_type(self, ctx):
+        #FIXME: Workaround for CompositionInterfaceMechanism that
+        #       does not update its defaults shape
+        #       Standalone function works OK with defaults as well as this
+        #       workaround.
+        return ctx.get_input_struct_type(self)
+
+    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
+        val = builder.load(arg_in)
+        builder.store(val, arg_out)
         return builder
 
 
@@ -1623,7 +1769,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         var = builder.load(ptri)
         exp_num = builder.fsub(var, bias)
         exp_num = builder.fmul(exp_num, exp_num)
-        exp_num = builder.fsub(exp_num.type(0), exp_num)
+        exp_num = pnlvm.helpers.fneg(builder, exp_num)
 
         exp_denom = builder.fmul(standard_deviation, standard_deviation)
         exp_denom = builder.fmul(exp_denom.type(2), exp_denom)
@@ -3012,5 +3158,3 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     # Specification not recognized
     return None
-
-

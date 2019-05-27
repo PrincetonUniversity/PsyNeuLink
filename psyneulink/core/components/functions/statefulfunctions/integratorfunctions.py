@@ -4249,7 +4249,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         v_2 = builder.call(pow_f, [v, ctx.float_ty(2.0)])
         tmp2 = builder.fmul(tmp2, v_2)
 
-        thr_neg = builder.fsub(ctx.float_ty(0.0), param_vals["threshold"])
+        thr_neg = pnlvm.helpers.fneg(builder, param_vals["threshold"])
         tmp3 = builder.fmul(thr_neg, param_vals["c_v"])
         tmp3 = builder.fmul(tmp3, v)
 

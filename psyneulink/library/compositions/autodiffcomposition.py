@@ -670,6 +670,7 @@ class AutodiffComposition(Composition):
                     curr_loss.backward(retain_graph=False)
                 else:
                     curr_loss.backward(retain_graph=True)
+                self.parameters.pytorch_representation.get(execution_id).copy_weights_to_psyneulink(execution_id)
                 optimizer.step()
 
                 # save outputs of model if this is final epoch or if using early stopping
