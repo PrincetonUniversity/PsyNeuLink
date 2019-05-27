@@ -2975,6 +2975,10 @@ class Component(object, metaclass=ComponentsMeta):
             )
 
     def execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+
+        if execution_id is None:
+            execution_id = self.most_recent_execution_context
+
         # initialize context for this execution_id if not done already
         if execution_id is not None:
             self._assign_context_values(execution_id)
