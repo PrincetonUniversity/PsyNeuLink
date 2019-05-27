@@ -42,10 +42,10 @@ action = ProcessingMechanism(name='Actions',
 # *********************************************************************************************
 #                             RL AGENT NESTED COMPOSITION
 # *********************************************************************************************
-agent_state = ProcessingMechanism(size=5)
-agent_action = ProcessingMechanism(size=5)
-agent = Composition(name='Agent')
-agent.add_reinforcement_learning_pathway([agent_state, agent_action])
+rl_agent_state = ProcessingMechanism(size=5)
+rl_agent_action = ProcessingMechanism(size=5)
+rl_agent = Composition(name='Agent')
+rl_agent.add_reinforcement_learning_pathway([rl_agent_state, rl_agent_action])
 
 # *********************************************************************************************
 #                          MEMORY AND CONTROL MECHANISMS
@@ -65,15 +65,15 @@ agent.add_reinforcement_learning_pathway([agent_state, agent_action])
 # *********************************************************************************************
 #                                   FULL COMPOSITION
 # *********************************************************************************************
-comp = Composition(name='Adaptive Replay Model')
-comp.add_nodes([stim_in, context_in, reward_in, perceptual_state])
-comp.add_linear_processing_pathway([perceptual_state, agent, action])
+model = Composition(name='Adaptive Replay Model')
+model.add_nodes([stim_in, context_in, reward_in, perceptual_state])
+model.add_linear_processing_pathway([perceptual_state, rl_agent, action])
 
 # *********************************************************************************************
 #                                  SHOW AND RUN MODEL
 # *********************************************************************************************
-comp.show_graph(show_controller=True)
-# comp.show_graph(show_node_structure=ALL)
+model.show_graph(show_controller=True)
+# model.show_graph(show_node_structure=ALL)
 
 # stimuli = {stim_in:[[1, 1, 1],[2, 2, 2]],
 #            context_in: [[10, 10, 10],[20, 20, 20]]}
@@ -84,4 +84,4 @@ comp.show_graph(show_controller=True)
 stimuli = {stim_in:np.array([1]*stim_size),
            context_in: np.array([10]*context_size)}
 
-# print(comp.run(inputs=stimuli))
+# print(model.run(inputs=stimuli))
