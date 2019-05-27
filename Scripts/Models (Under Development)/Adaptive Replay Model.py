@@ -68,8 +68,10 @@ rl_agent.add_reinforcement_learning_pathway([rl_agent_state, rl_agent_action])
 #                                   FULL COMPOSITION
 # *********************************************************************************************
 model = Composition(name='Adaptive Replay Model')
-model.add_nodes([stim_in, context_in, reward_in, perceptual_state])
-model.add_linear_processing_pathway([perceptual_state, rl_agent, action])
+model.add_nodes([stim_in, context_in, reward_in, perceptual_state, rl_agent, action])
+# model.add_linear_processing_pathway([perceptual_state, rl_agent, action])
+model.add_projection(sender=perceptual_state, receiver=rl_agent)
+model.add_projection(sender=action, receiver=perceptual_state)
 
 # *********************************************************************************************
 #                                  SHOW AND RUN MODEL
