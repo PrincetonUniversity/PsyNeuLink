@@ -15,6 +15,7 @@ import inspect
 from llvmlite import ir
 import numpy as np
 import os, re
+import weakref
 
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.keywords import AFTER, BEFORE
@@ -49,6 +50,7 @@ class LLVMBuilderContext:
         self.int32_ty = _int32_ty
         self.float_ty = _float_ty
         self._modules = []
+        self._cache = weakref.WeakKeyDictionary()
 
     def __enter__(self):
         module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
@@ -85,7 +87,9 @@ class LLVMBuilderContext:
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
 
     def gen_llvm_function(self, obj):
-        return obj._llvm_function
+        if obj not in self._cache:
+            self._cache[obj] = obj._gen_llvm_function()
+        return self._cache[obj]
 
     def get_llvm_function(self, name):
         try:

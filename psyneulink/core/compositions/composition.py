@@ -1178,7 +1178,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Compiled resources
         self.__generated_node_wrappers = {}
-        self.__generated_execution = None
         self.__generated_run = None
         self.__generated_simulation = None
         self.__generated_sim_run = None
@@ -4374,22 +4373,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_node_wrapper(self, node, simulation=False):
         if node not in self.__generated_node_wrappers:
             class node_wrapper():
-                def __init__(self, func):
-                    self._llvm_function = func
-            wrapper_f = self.__gen_node_wrapper(node)
-            wrapper = node_wrapper(wrapper_f)
+                def __init__(self, node, gen_f):
+                    self._node = node
+                    self._gen_f = gen_f
+                def _gen_llvm_function(self):
+                    return self._gen_f(self._node)
+            wrapper = node_wrapper(node, self.__gen_node_wrapper)
             self.__generated_node_wrappers[node] = wrapper
             return wrapper
 
         return self.__generated_node_wrappers[node]
 
-    @property
-    def _llvm_function(self):
-        if self.__generated_execution is None:
-            with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                self.__generated_execution = ctx.gen_composition_exec(self)
-
-        return self.__generated_execution
+    def _gen_llvm_function(self):
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+                return ctx.gen_composition_exec(self)
 
     @property
     def _llvm_run(self):

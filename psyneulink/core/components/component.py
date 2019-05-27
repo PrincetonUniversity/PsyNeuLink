@@ -1164,16 +1164,7 @@ class Component(object, metaclass=ComponentsMeta):
             self.function.context.initialization_status = ContextFlags.INITIALIZED
         # MODIFIED 12/4/18 END
 
-        self.__llvm_function = None
         self._compilation_data = self._CompilationData(owner=self)
-
-    @property
-    def _llvm_function(self):
-        if self.__llvm_function is None:
-            self.__llvm_function = self._gen_llvm_function()
-            self.__llvm_function.__copy__ = lambda x: None
-            self.__llvm_function.__deepcopy__ = lambda x: None
-        return self.__llvm_function
 
     def _gen_llvm_function(self, extra_args=[]):
         llvm_func = None
