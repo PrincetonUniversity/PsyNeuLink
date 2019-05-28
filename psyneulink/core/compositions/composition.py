@@ -3455,19 +3455,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _assign_control_components(G)
 
         # Sort to put ORIGIN nodes first and controller and its objective_mechanism last
-        def get_list_index(node):
+        def get_index_of_node_in_G_body(node):
+            '''Get index of node in G.body'''
             for i, item in enumerate(G.body):
+                # Skip projections
                 if node.name in item and not '->' in item:
                     return i
         for node in self.nodes:
             roles = self.get_roles_by_node(node)
             if NodeRole.INPUT in roles:
-                i = get_list_index(node)
-                G.body.insert(0,G.body.pop(i))
+                i = get_index_of_node_in_G_body(node)
+                if i is not None:
+                    G.body.insert(0,G.body.pop(i))
         if self.controller and show_controller:
-            # i = get_list_index(self.controller.objective_mechanism)
+            # i = get_index_of_node_in_G_body(self.controller.objective_mechanism)
             # G.body.insert(len(G.body),G.body.pop(i))
-            i = get_list_index(self.controller)
+            i = get_index_of_node_in_G_body(self.controller)
             G.body.insert(len(G.body),G.body.pop(i))
 
         # GENERATE OUTPUT ---------------------------------------------------------------------

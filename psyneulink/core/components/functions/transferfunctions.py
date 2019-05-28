@@ -164,9 +164,9 @@ class TransferFunction(Function_Base):
         return builder
 
 
-class Identity(TransferFunction):  # -------------------------------------------------------------------------------------
+class Identity(TransferFunction):  # -----------------------------------------------------------------------------------
     """
-    Identity(                \
+    Identity(                  \
              default_variable, \
              params=None,      \
              owner=None,       \
@@ -176,13 +176,13 @@ class Identity(TransferFunction):  # -------------------------------------------
 
     .. _Identity:
 
-    Returns variable
+    Returns variable.
 
     Arguments
     ---------
 
     variable : number or np.array : default class_defaults.variable
-        specifies a template for the value to be transformed.
+        specifies a template for the value to be returned.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -202,7 +202,7 @@ class Identity(TransferFunction):  # -------------------------------------------
     ----------
 
     variable : number or np.array
-        contains value to be transformed.
+        contains value to be returned.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -261,7 +261,7 @@ class Identity(TransferFunction):  # -------------------------------------------
         ---------
 
         variable : number or np.array : default class_defaults.variable
-           a single value or array to be transformed.
+           a single value or array to be returned.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
