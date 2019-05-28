@@ -10,8 +10,6 @@
 
 from llvmlite import binding
 
-import os, re
-
 from .builder_context import _find_llvm_function, _gen_cuda_kernel_wrapper_module, _float_ty
 from .builtins import _generate_cpu_builtins_module
 from .debug import debug_env
@@ -82,7 +80,6 @@ def _cpu_jit_constructor():
     __cpu_pass_manager = binding.ModulePassManager()
     __cpu_target_machine.add_analysis_passes(__cpu_pass_manager)
     __pass_manager_builder.populate(__cpu_pass_manager)
-
 
     # And an execution engine with a builtins backing module
     builtins_module = _generate_cpu_builtins_module(_float_ty)
