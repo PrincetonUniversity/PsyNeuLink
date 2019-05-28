@@ -1003,6 +1003,10 @@ class OptimizationControlMechanism(ControlMechanism):
         intensity_cost = tuple((os.intensity_cost_function._get_context_initializer(execution_id) for os in self.output_states))
         return (intensity_cost,)
 
+    def _get_evaluate_input_struct_type(self, ctx):
+        # We construct input from optimization function input
+        return ctx.get_input_struct_type(self.function)
+
     def _get_evaluate_output_struct_type(self, ctx):
         # Returns a scalar that is the predicted net_outcome
         return ctx.float_ty
@@ -1010,6 +1014,40 @@ class OptimizationControlMechanism(ControlMechanism):
     def _get_evaluate_alloc_struct_type(self, ctx):
         return pnlvm.ir.ArrayType(ctx.float_ty,
                                   len(self.control_allocation_search_space))
+
+    def _gen_llvm_evaluate_function(self):
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
+                    self._get_evaluate_context_struct_type(ctx).as_pointer(),
+                    self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
+                    self._get_evaluate_output_struct_type(ctx).as_pointer(),
+                    self._get_evaluate_input_struct_type(ctx).as_pointer(),
+                    ctx.get_param_struct_type(self.agent_rep).as_pointer(),
+                    ctx.get_context_struct_type(self.agent_rep).as_pointer(),
+                    ctx.get_data_struct_type(self.agent_rep).as_pointer()]
+
+            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(), args)
+            func_name = ctx.get_unique_name(str(self) + "_evaluate")
+            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            for p in llvm_func.args:
+                p.attributes.add('nonnull')
+
+            metadata = ctx.get_debug_location(llvm_func, self)
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = pnlvm.ir.IRBuilder(block)
+            builder.debug_metadata = metadata
+
+            params, state, allocation_sample, arg_out, arg_in = llvm_func.args[:5]
+
+            builder = self._gen_llvm_evaluate(ctx, builder, params, state, allocation_sample, arg_in, arg_out)
+
+            builder.ret_void()
+
+        return llvm_func
+
 
     def _gen_llvm_evaluate(self, ctx, builder, params, state, allocation_sample, arg_in, arg_out):
         sim_f = ctx.get_llvm_function(self.agent_rep._llvm_sim_run.name)

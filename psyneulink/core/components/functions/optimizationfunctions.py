@@ -1324,12 +1324,15 @@ class GridSearch(OptimizationFunction):
         ocm = getattr(self.objective_function, '__self__', None)
         if ocm is not None:
             assert ocm.function is self
+            obj_func = ctx.get_llvm_function(ocm._gen_llvm_evaluate_function().name)
             sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
             value_t = ocm._get_evaluate_output_struct_type(ctx)
+            extra_args = [arg_in] + list(builder.function.args[-3:])
         else:
             obj_func = ctx.get_llvm_function(self.objective_function)
             sample_t = obj_func.args[2].type.pointee
             value_t = obj_func.args[3].type.pointee
+            extra_args = []
 
         min_sample_ptr = builder.alloca(sample_t)
         min_value_ptr = builder.alloca(value_t)
@@ -1379,10 +1382,8 @@ class GridSearch(OptimizationFunction):
                     assert False, "Unknown dimension type: {}".format(dimension.type)
 
             # We are in the inner most loop now with sample_ptr setup for execution
-            if ocm is not None:
-                b = ocm._gen_llvm_evaluate(ctx, b, obj_param_ptr, obj_state_ptr, sample_ptr, arg_in, value_ptr)
-            else:
-                b.call(obj_func, [obj_param_ptr, obj_state_ptr, sample_ptr, value_ptr])
+            b.call(obj_func, [obj_param_ptr, obj_state_ptr, sample_ptr,
+                              value_ptr] + extra_args)
 
             # Check if smaller than current best.
             # This will also set 'replace' if min_value is NaN.
