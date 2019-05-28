@@ -84,6 +84,8 @@ class LLVMBuilderContext:
     def get_builtin(self, name:str, args, function_type = None):
         if name in ('pow', 'log', 'exp'):
             return self.get_llvm_function("__pnl_builtin_" + name)
+        if name in ('maxnum'):
+            function_type = pnlvm.ir.FunctionType(args[0], [args[0],args[0]])
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
 
     def create_llvm_function(self, args, component, name = None):

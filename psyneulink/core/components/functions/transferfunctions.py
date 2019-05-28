@@ -1550,8 +1550,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         leak = pnlvm.helpers.load_extract_scalar_array_one(builder, leak_ptr)
 
         # Maxnum for some reason needs full function prototype
-        max_f = ctx.get_builtin("maxnum", [ctx.float_ty],
-            pnlvm.ir.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
+        max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
         var = builder.load(ptri)
         val = builder.fsub(var, bias)
         val1 = builder.fmul(val, gain)
