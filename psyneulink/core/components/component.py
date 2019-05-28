@@ -1167,38 +1167,21 @@ class Component(object, metaclass=ComponentsMeta):
         self._compilation_data = self._CompilationData(owner=self)
 
     def _gen_llvm_function(self, extra_args=[]):
-        llvm_func = None
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_param_struct_type(self).as_pointer(),
                     ctx.get_context_struct_type(self).as_pointer(),
                     ctx.get_input_struct_type(self).as_pointer(),
                     ctx.get_output_struct_type(self).as_pointer()]
-            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(),
-                                            args + extra_args)
+            builder = ctx.create_llvm_function(args + extra_args, self)
+            llvm_func = builder.function
 
-            func_name = ctx.get_unique_name(str(self))
-            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
             params, context, arg_in, arg_out = llvm_func.args[:len(args)]
             for p in params, context, arg_in, arg_out:
-                p.attributes.add('nonnull')
                 if len(extra_args) == 0:
                     p.attributes.add('noalias')
 
-            metadata = ctx.get_debug_location(llvm_func, self)
-            if metadata is not None:
-                scope = dict(metadata.operands)["scope"]
-                llvm_func.set_metadata("dbg", scope)
-
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = pnlvm.ir.IRBuilder(block)
-            builder.debug_metadata = metadata
-
-
             builder = self._gen_llvm_function_body(ctx, builder, params, context, arg_in, arg_out)
-
             builder.ret_void()
 
         return llvm_func

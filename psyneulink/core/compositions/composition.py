@@ -4435,7 +4435,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         is_mech = isinstance(node, Mechanism)
 
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            func_name = ctx.get_unique_name(name + node.name)
             data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [
                 ctx.get_context_struct_type(self).as_pointer(),
@@ -4449,21 +4448,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 cond_ty = cond_gen.get_condition_struct_type().as_pointer()
                 args.append(cond_ty)
 
-            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(), tuple(args))
-            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
+            builder = ctx.create_llvm_function(args, node, name + node.name)
+            llvm_func = builder.function
             llvm_func.attributes.add('alwaysinline')
-            context, params, comp_in, data_in, data_out = llvm_func.args[:5]
-            cond_ptr = llvm_func.args[-1]
-
             for a in llvm_func.args:
                 a.attributes.add('nonnull')
-                a.attributes.add('noalias')
 
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = pnlvm.ir.IRBuilder(block)
-            builder.debug_metadata = ctx.get_debug_location(llvm_func, self)
+            context, params, comp_in, data_in, data_out = llvm_func.args[:5]
+            cond_ptr = llvm_func.args[-1]
 
             m_function = ctx.get_llvm_function(node)
 

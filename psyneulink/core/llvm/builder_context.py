@@ -86,6 +86,28 @@ class LLVMBuilderContext:
             return self.get_llvm_function("__pnl_builtin_" + name)
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
 
+    def create_llvm_function(self, args, component, name = None):
+        name = str(component) if name is None else name
+
+        func_name = self.get_unique_name(name)
+        func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(), args)
+        llvm_func = pnlvm.ir.Function(self.module, func_ty, name=func_name)
+        llvm_func.attributes.add('argmemonly')
+        for a in llvm_func.args:
+            a.attributes.add('nonnull')
+
+        metadata = self.get_debug_location(llvm_func, component)
+        if metadata is not None:
+            scope = dict(metadata.operands)["scope"]
+            llvm_func.set_metadata("dbg", scope)
+
+        # Create entry block
+        block = llvm_func.append_basic_block(name="entry")
+        builder = pnlvm.ir.IRBuilder(block)
+        builder.debug_metadata = metadata
+
+        return builder
+
     def gen_llvm_function(self, obj):
         if obj not in self._cache:
             self._cache[obj] = obj._gen_llvm_function()
@@ -204,24 +226,18 @@ class LLVMBuilderContext:
         cond_gen = ConditionGenerator(self, composition)
 
         name = 'exec_wrap_sim_' if simulation else 'exec_wrap_'
-        func_name = self.get_unique_name(name + composition.name)
-        func_ty = ir.FunctionType(ir.VoidType(), (
-            self.get_context_struct_type(composition).as_pointer(),
-            self.get_param_struct_type(composition).as_pointer(),
-            self.get_input_struct_type(composition).as_pointer(),
-            self.get_data_struct_type(composition).as_pointer(),
-            cond_gen.get_condition_struct_type().as_pointer()))
-        llvm_func = ir.Function(self.module, func_ty, name=func_name)
-        llvm_func.attributes.add('argmemonly')
-        context, params, comp_in, data_arg, cond = llvm_func.args
+        name += composition.name
+        args = [self.get_context_struct_type(composition).as_pointer(),
+                self.get_param_struct_type(composition).as_pointer(),
+                self.get_input_struct_type(composition).as_pointer(),
+                self.get_data_struct_type(composition).as_pointer(),
+                cond_gen.get_condition_struct_type().as_pointer()]
+        builder = self.create_llvm_function(args, composition, name)
+        llvm_func = builder.function
         for a in llvm_func.args:
-            a.attributes.add('nonnull')
             a.attributes.add('noalias')
 
-        # Create entry block
-        entry_block = llvm_func.append_basic_block(name="entry")
-        builder = ir.IRBuilder(entry_block)
-        builder.debug_metadata = self.get_debug_location(llvm_func, composition)
+        context, params, comp_in, data_arg, cond = llvm_func.args
 
         if "const_params" in debug_env:
             const_params = params.type.pointee(composition._get_param_initializer(None))
@@ -364,31 +380,24 @@ class LLVMBuilderContext:
 
     def gen_composition_run(self, composition, simulation=False):
         name = 'run_wrap_sim_' if simulation else 'run_wrap_'
-        func_name = self.get_unique_name(name + composition.name)
-        func_ty = ir.FunctionType(ir.VoidType(), (
-            self.get_context_struct_type(composition).as_pointer(),
-            self.get_param_struct_type(composition).as_pointer(),
-            self.get_data_struct_type(composition).as_pointer(),
-            self.get_input_struct_type(composition).as_pointer(),
-            self.get_output_struct_type(composition).as_pointer(),
-            self.int32_ty.as_pointer(),
-            self.int32_ty.as_pointer()))
-        llvm_func = ir.Function(self.module, func_ty, name=func_name)
-        llvm_func.attributes.add('argmemonly')
-        context, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
+        name += composition.name
+        args = [self.get_context_struct_type(composition).as_pointer(),
+                self.get_param_struct_type(composition).as_pointer(),
+                self.get_data_struct_type(composition).as_pointer(),
+                self.get_input_struct_type(composition).as_pointer(),
+                self.get_output_struct_type(composition).as_pointer(),
+                self.int32_ty.as_pointer(),
+                self.int32_ty.as_pointer()]
+        builder = self.create_llvm_function(args, composition, name)
+        llvm_func = builder.function
         for a in llvm_func.args:
-            a.attributes.add('nonnull')
             a.attributes.add('noalias')
 
+        context, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
         # simulation does not care about the output
         # it extracts results of the controller objective mechanism
         if simulation:
             data_out.attributes.remove('nonnull')
-
-        # Create entry block
-        entry_block = llvm_func.append_basic_block(name="entry")
-        builder = ir.IRBuilder(entry_block)
-        builder.debug_metadata = self.get_debug_location(llvm_func, composition)
 
         # Allocate and initialize condition structure
         cond_gen = ConditionGenerator(self, composition)

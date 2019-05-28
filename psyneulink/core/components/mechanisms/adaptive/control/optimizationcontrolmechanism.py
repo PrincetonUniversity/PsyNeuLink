@@ -1026,19 +1026,10 @@ class OptimizationControlMechanism(ControlMechanism):
                     ctx.get_context_struct_type(self.agent_rep).as_pointer(),
                     ctx.get_data_struct_type(self.agent_rep).as_pointer()]
 
-            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(), args)
-            func_name = ctx.get_unique_name(str(self) + "_evaluate")
-            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
+            builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
+            llvm_func = builder.function
             for p in llvm_func.args:
                 p.attributes.add('nonnull')
-
-            metadata = ctx.get_debug_location(llvm_func, self)
-
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = pnlvm.ir.IRBuilder(block)
-            builder.debug_metadata = metadata
 
             params, state, allocation_sample, arg_out, arg_in, comp_params, base_comp_state, base_comp_data = llvm_func.args
 
