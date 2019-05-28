@@ -47,7 +47,8 @@ action = ProcessingMechanism(name='Action',
 rl_agent_state = ProcessingMechanism(name='RL Agent State', size=5)
 rl_agent_action = ProcessingMechanism(name='RL Agent Action', size=5)
 rl_agent = Composition(name='RL Agent')
-rl_agent.add_reinforcement_learning_pathway([rl_agent_state, rl_agent_action])
+rl_learning_components = rl_agent.add_reinforcement_learning_pathway([rl_agent_state, rl_agent_action])
+rl_agent._analyze_graph()
 
 # *********************************************************************************************
 #                          MEMORY AND CONTROL MECHANISMS
@@ -68,10 +69,16 @@ rl_agent.add_reinforcement_learning_pathway([rl_agent_state, rl_agent_action])
 #                                   FULL COMPOSITION
 # *********************************************************************************************
 model = Composition(name='Adaptive Replay Model')
-# model.add_nodes([stim_in, context_in, reward_in, perceptual_state, rl_agent, action])
-model.add_linear_processing_pathway([perceptual_state, rl_agent, action])
-# model.add_projection(sender=perceptual_state, receiver=rl_agent)
-# model.add_projection(sender=action, receiver=perceptual_state)
+
+# Add Components individually -----------------------------------------------------------------
+model.add_nodes([stim_in, context_in, reward_in, perceptual_state, rl_agent, action])
+model.add_projection(sender=perceptual_state, receiver=rl_agent_state)
+model.add_projection(sender=reward_in, receiver=rl_learning_components[TARGET_MECHANISM])
+model.add_projection(sender=rl_agent_action, receiver=action) # <- CURRENTLY FAILS
+
+# # ALTERNATIVE: Use linear_processing_pathway  ------------------------------------------------
+# model.add_nodes([stim_in, context_in, reward_in, perceptual_state])
+# model.add_linear_processing_pathway([perceptual_state, rl_agent, action])
 
 # *********************************************************************************************
 #                                  SHOW AND RUN MODEL

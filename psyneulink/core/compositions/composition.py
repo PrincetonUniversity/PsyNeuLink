@@ -1580,7 +1580,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if sender_mechanism != self.input_CIM and receiver != self.output_CIM \
                 and projection not in [vertex.component for vertex in self.graph.vertices] and not learning_projection:
 
-
             projection.is_processing = False
             # KDM 5/24/19: removing below rename because it results in several duplicates
             # projection.name = f'{sender} to {receiver}'
