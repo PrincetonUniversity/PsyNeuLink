@@ -21,7 +21,9 @@ import psyneulink.core.components.functions.transferfunctions
 
 @pytest.mark.model
 @pytest.mark.benchmark
-@pytest.mark.parametrize("reps", [1, 10, 100])
+@pytest.mark.parametrize("reps", [1,
+                                  pytest.param(10, marks=pytest.mark.stress),
+                                  pytest.param(100, marks=pytest.mark.stress)])
 @pytest.mark.parametrize("mode", ['Python',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.param('LLVMExec', marks=pytest.mark.llvm),
@@ -30,9 +32,6 @@ import psyneulink.core.components.functions.transferfunctions
                                   pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 
 def test_botvinick_model(benchmark, mode, reps):
-    if reps > 1 and not pytest.config.getoption("--stress"):
-        pytest.skip("not stressed")
-
     benchmark.group = "Botvinick (scale " + str(reps/100) + ")";
 
     # SET UP MECHANISMS ----------------------------------------------------------------------------------------------------
