@@ -51,8 +51,8 @@ GatingSignals
 A `GatingSignal` is created for each item listed in the **gating_signals** argument of the constructor, and all of the
 GatingSignals for a GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.
 Each GatingSignal is assigned one or more `GatingProjections <GatingProjection>` to the InputState(s) and/or
-OutputState(s) it gates. By default, the `function <GatingMechanism.function>` of GatingMechanism generates a
-a `value <GatingMechanism.value>` -- its `gating_allocation <GatingSignal.gating_allocation>` -- with a single item, that is
+OutputState(s) it gates. By default, the `function <GatingMechanism.function>` of GatingMechanism generates a `value
+<GatingMechanism.value>` -- its `gating_allocation <GatingSignal.gating_allocation>` -- with a single item, that is
 used by all of the GatingMechanism's GatingSignals.  However,  if a custom `function <GatingMechanism.function>` is
 specified that generates a `gating_allocation <GatingSignal.gating_allocation>` with more than one item, different
 GatingSignals can be assigned to the different items (see `GatingMechanism_Function` below).
@@ -104,18 +104,19 @@ items in `gating_allocation` as their allocation (i.e., the value of their `vari
 
 A GatingMechanism has a `GatingSignal` for each `InputState` and/or `OutputState` specified in its `gating_signals
 <GatingMechanism.gating_signals>` attribute, to which it sends a `GatingProjection`.  If the GatingMechanism's
-`function <GatingMechanism.function>` generates a `gating_allocation <GatingMechanism.gating_allocation>` with a single value
-(the default), then this is used as the `value <GatingSignal.value>` of all of the GatingMechanism's `gating_signals
-<GatingMechanism.gating_signals>`.  If the `gating_allocation <GatingMechanism.gating_allocation>` has multiple items, and this
-is the same as the number of GatingSignals, then each GatingSignal is assigned the value of the corresponding item in
-the `gating_allocation <GatingMechanism.gating_allocation>`.  If there is a different number of `gating_signals
-<GatingMechanism.gating_signals>` than the number of items in the `gating_allocation <GatingMechanism.gating_allocation>`,
-then the `index <GatingSignal.index>` attribute of each GatingSignal must be specified (e.g., in a `specification
-dictionary <GatingSignal_Specification>` in the **gating_signal** argument of the GatingMechanism's constructor),
-or an error is generated.  The GatingSignals of a GatingMechanism are listed in its `gating_signals
-<GatingMechanism.gating_signals>` attribute.  Since GatingSignals are a type of `OutputState`, they are also listed
-in the GatingMechanism's `output_states <Mechanism_Base.output_states>` attribute. The InputStates and/or OutputStates
-modulated by a GatingMechanism's GatingSignals can be displayed using its :func:`show <GatingMechanism.show>` method.
+`function <GatingMechanism.function>` generates a `gating_allocation <GatingMechanism.gating_allocation>` with a
+single value (the default), then this is used as the `value <GatingSignal.value>` of all of the GatingMechanism's
+`gating_signals <GatingMechanism.gating_signals>`.  If the `gating_allocation <GatingMechanism.gating_allocation>`
+has multiple items, and this is the same as the number of GatingSignals, then each GatingSignal is assigned the value
+of the corresponding item in the `gating_allocation <GatingMechanism.gating_allocation>`.  If there is a different
+number of `gating_signals <GatingMechanism.gating_signals>` than the number of items in the `gating_allocation
+<GatingMechanism.gating_allocation>`, then the `index <GatingSignal.index>` attribute of each GatingSignal must be
+specified (e.g., in a `specification dictionary <GatingSignal_Specification>` in the **gating_signal** argument of
+the GatingMechanism's constructor), or an error is generated.  The GatingSignals of a GatingMechanism are listed in
+its `gating_signals <GatingMechanism.gating_signals>` attribute.  Since GatingSignals are a type of `OutputState`,
+they are also listed in the GatingMechanism's `output_states <Mechanism_Base.output_states>` attribute. The
+InputStates and/or OutputStates modulated by a GatingMechanism's GatingSignals can be displayed using its :func:`show
+<GatingMechanism.show>` method.
 
 .. _GatingMechanism_Execution:
 
@@ -278,10 +279,10 @@ class GatingMechanism(ModulatoryMechanism):
         to a `gating_allocation`.
 
     gating_signals : List[GatingSignal, InputState, OutputState, Mechanism, tuple[str, Mechanism], or dict]
-        specifies the `InputStates <InputState>` and/or `OutputStates <OutputStates>`
-        to be gated by the GatingMechanism; the number of items must equal the length of the **default_gating_allocation**
-        argument; if a `Mechanism <Mechanism>` is specified, its `primary InputState <InputState_Primary>` is used
-        (see `GatingMechanism_GatingSignals for details).
+        specifies the `InputStates <InputState>` and/or `OutputStates <OutputStates>` to be gated by the
+        GatingMechanism; the number of items must equal the length of the **default_gating_allocation**
+        argument; if a `Mechanism <Mechanism>` is specified, its `primary InputState <InputState_Primary>`
+        is used (see `GatingMechanism_GatingSignals for details).
 
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
         specifies the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,

@@ -19,7 +19,7 @@ an optimal `control_allocation <ControlMechanism.control_allocation>` for a give
 <OptimizationControlMechanism_State>`. The `OptimizationFunction` uses the OptimizationControlMechanism's
 `evaluation_function` <OptimizationControlMechanism.evalutate_function>` to evaluate `control_allocation
 <ControlMechanism.control_allocation>` samples, and then implements the one that yields the best predicted result.
-The result returned by the `evaluation_function` <OptimizationControlMechanism.evalutate_function>` is ordinally
+The result returned by the `evaluation_function` <OptimizationControlMechanism.evalutate_function>` is ordinarily
 the `net_outcome <ControlMechanism.net_outcome>` computed by the OptimizationControlMechanism for the `Composition`
 (or part of one) that it controls, and its `ObjectiveFunction` seeks to maximize this, which corresponds to
 maximizing the Expected Value of Control, as described below.

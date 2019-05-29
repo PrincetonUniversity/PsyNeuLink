@@ -1261,7 +1261,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node : `Mechanism` or `Composition`
                 the node to be added to the Composition
 
-            required_roles : psyneulink.core.globals.utilities.NodeRole or list of NodeRoles
+            required_roles : `NodeRole` or list of NodeRoles
                 any NodeRoles roles that this node should have in addition to those determined by analyze graph.
         '''
 
@@ -1354,15 +1354,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # MODIFIED 5/9/19 END
 
     # MODIFIED 5/29/19 OLD:
-    def add_nodes(self, nodes, required_roles=None):
-    # # MODIFIED 5/29/19 NEW: [JDC]
-    # def add_nodes(self, nodes=None, *args):
-    # MODIFIED 5/29/19 END
+    # def add_nodes(self, nodes, required_roles=None):
+    # # # MODIFIED 5/29/19 NEW: [JDC]
+    # # def add_nodes(self, nodes=None, *args):
+    #     if not isinstance(nodes, list):
+    #         raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
+    #                                f"must be a list of nodes")
+    #     for node in nodes:
+    #         self.add_node(node=node, required_roles=required_roles)
+    # # MODIFIED 5/29/19 NEWER: [JDC]
+    def add_nodes(self, nodes):
         if not isinstance(nodes, list):
             raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
-                                   f"must be a list of nodes")
+                                   f"must be a list of nodes or (node, [required_roles]) tuples")
         for node in nodes:
-            self.add_node(node=node, required_roles=required_roles)
+            if isinstance(node, (Mechanism, Composition)):
+                self.add_node(node=node)
+            elif isinstance(node, tuple):
+                self.add_node(node=node[0], required_roles=node[1])
+            else:
+                raise CompositionError(f"Node specified in 'add_nodes' method of '{self.name}' {Composition.__name__} "
+                                       f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
+                                       f"or a tuple containing one of those and a list of {NodeRole.__name__}")
+    # MODIFIED 5/29/19 END
 
     def add_controller(self, controller):
         """
@@ -1699,7 +1713,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"{Composition.__name__} must be a list of nodes")
 
         if isinstance(pathway[0], (Mechanism, Composition)):
-            self.add_node(pathway[0])
+            self.add_nodes([pathway[0]])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise CompositionError("The first item in a linear processing pathway must be a Node (Mechanism or "
@@ -1708,7 +1722,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for c in range(1, len(pathway)):
             # if the current item is a mechanism, add it
             if isinstance(pathway[c], Mechanism):
-                self.add_node(pathway[c])
+                self.add_nodes([pathway[c]])
 
         # Then, loop through and validate that the mechanism-projection relationships make sense
         # and add MappingProjections where needed
@@ -1886,6 +1900,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             error_function: function (default = LinearCombination
                 function of the ComparatorMechanism
+
         Returns
         --------
 
