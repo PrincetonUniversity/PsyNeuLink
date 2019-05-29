@@ -1485,12 +1485,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"has a sender ({repr(sender_name)}) that is not (yet) in it "
                                        f"or any of its nested {Composition.__name__}s.")
 
+            # MODIFIED 5/29/19 NEW:
+            # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below
+            if isinstance(sender.owner, CompositionInterfaceMechanism):
+                sender_mechanism = sender.owner
+            # MODIFIED 5/29/19 NEW:
+
         if hasattr(projection, "sender"):
             if projection.sender.owner != sender and \
                     projection.sender.owner != graph_sender and \
                     projection.sender.owner != sender_mechanism:
                 raise CompositionError("The position of {} in {} conflicts with its sender attribute."
                                        .format(projection.name, self.name))
+
         return sender, sender_mechanism, graph_sender, subcompositions
 
     def _parse_receiver_spec(self, projection, receiver, sender, subcompositions, learning_projection):
@@ -1582,10 +1589,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         '''
 
         projection = self._parse_projection_spec(projection, name)
+
+        # Parse sender and receiver specs
         sender, sender_mechanism, graph_sender, subcompositions = self._parse_sender_spec(projection, sender)
         receiver, receiver_mechanism, graph_receiver, receiver_input_state, subcompositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, subcompositions, learning_projection)
 
+        # FIX 5/29/19 [JDC]:  WHY ISN"T THIS IN _parse_receiver_spec (as it is for _parse_sender_spec)
+        # Handle Projection to node in nested Composition
         if (not isinstance(receiver_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(receiver, Composition)
                 and receiver_mechanism not in self.nodes
@@ -1605,7 +1616,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(receiver.owner, CompositionInterfaceMechanism):
                 receiver_mechanism = receiver.owner
             # MODIFIED 5/29/19 END
-
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
@@ -1813,6 +1823,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                error_sources=comparator_mechanism,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
+        # MODIFIED 5/29/19 NEW:
+        learning_mechanism.output_states[ERROR_SIGNAL].output_projection_required_in_composition = False
+        # MODIFIED 5/29/19 END
         self.learning_enabled = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
@@ -1876,6 +1889,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
         # construct learning related mapping projections
+        # FIX 5/29/19 [JDC]:  REPLACE INDICES BELOW WITH RELEVANT KEYWORDS
         target_projection = MappingProjection(sender=target,
                                               receiver=comparator.input_states[1])
         sample_projection = MappingProjection(sender=output_source,
@@ -2356,7 +2370,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   format(node.name, NodeRole.__name__, repr(role),
                                          Composition.__name__, self.name, nested_comp.name))
                     continue
-                CIM_state_for_nested_node = c.input_CIM_states[node_state][0]
+                # # MODIFIED 5/29/19 OLD:
+                # CIM_state_for_nested_node = c.input_CIM_states[node_state][0]
+                # MODIFIED 5/29/19 NEW:
+                if isinstance(node_state, InputState):
+                    CIM_state_for_nested_node = c.input_CIM_states[node_state][0]
+                elif isinstance(node_state, OutputState):
+                    CIM_state_for_nested_node = c.output_CIM_states[node_state][0]
+                else:
+                    # IMPLEMENTATION NOTE:  Place marker for future implementation of ParameterState handling
+                    #                       However, typecheck above should have caught this
+                    assert False
+               # MODIFIED 5/29/19 END
                 nested_comp = c
         return CIM_state_for_nested_node, nested_comp
 
