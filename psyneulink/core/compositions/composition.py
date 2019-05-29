@@ -3344,6 +3344,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return
 
             # Assign controller node
+            # MODIFIED 5/29/19 NEW:
+            node_shape = mechanism_shape
+            # MODIFIED 5/29/19 END
             ctlr_label = self._get_graph_node_label(controller, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
