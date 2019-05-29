@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.3.2+156.gb9de680 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.3.2+157.gb6358f3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+156.gb9de680',
+              VERSION:'0.5.3.2+157.gb6358f3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+156
+                0.5.3.2+157
               </div>
             
           
@@ -205,7 +205,7 @@ following Composition methods:</p>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><code class="xref any docutils literal"><span class="pre">add_nodes</span></code></dt>
+<dt><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_nodes" title="psyneulink.core.compositions.composition.Composition.add_nodes"><code class="xref any py py-meth docutils literal"><span class="pre">add_nodes</span></code></a></dt>
 <dd>Adds mutiple nodes to the Composition</dd>
 </dl>
 </li>
@@ -804,7 +804,7 @@ these can be shown as follows:</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller=None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11c5fb208&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>learning_enabled=False</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller=None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11551f2b0&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>learning_enabled=False</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -929,7 +929,7 @@ executes the controller on every trial.</p>
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_controller">
 <code class="descname">add_controller</code><span class="sig-paren">(</span><em>controller</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> as the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> of the Composition, which gives the OCM access to the
+<dd><p>Add an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> as the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> of the Composition, which gives the OCM access to the
 <a class="reference internal" href="#"><span class="doc">Composition</span></a>’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a> method. This allows the OCM to use simulations to determine
 an optimal Control policy.</p>
 </dd></dl>
@@ -937,14 +937,37 @@ an optimal Control policy.</p>
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_node">
 <code class="descname">add_node</code><span class="sig-paren">(</span><em>node</em>, <em>required_roles=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_node" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds a Composition Node (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or <a class="reference internal" href="#"><span class="doc">Composition</span></a>) to the Composition, if it is not already added</p>
+<dd><p>Add a Composition Node (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or <a class="reference internal" href="#"><span class="doc">Composition</span></a>) to the Composition, if it is not already added</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>node</strong> (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or <a class="reference internal" href="#"><span class="doc">Composition</span></a>) – the node to be added to the Composition</li>
-<li><strong>required_roles</strong> (<a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole" title="psyneulink.core.globals.utilities.NodeRole"><em>psyneulink.core.globals.utilities.NodeRole</em></a><em> or </em><em>list of NodeRoles</em>) – any NodeRoles roles that this node should have in addition to those determined by analyze graph.</li>
+<li><strong>required_roles</strong> (<a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole" title="psyneulink.core.globals.utilities.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> or list of NodeRoles) – any NodeRoles roles that this node should have in addition to those determined by analyze graph.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.compositions.composition.Composition.add_nodes">
+<code class="descname">add_nodes</code><span class="sig-paren">(</span><em>nodes</em>, <em>required_roles=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a list of Composition Nodes (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or <a class="reference internal" href="#"><span class="doc">Composition</span></a>) to the Composition,</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nodes</strong> (<em>list</em>) – the nodes to be added to the Composition.  Each item of the list must be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>,
+a <a class="reference internal" href="#"><span class="doc">Composition</span></a> or a role-specification tuple with a Mechanism or Composition as the first item,
+and a <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole" title="psyneulink.core.globals.utilities.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> or list of those as the second item;  any NodeRoles in a role-specification tuple
+are applied in addition to those specified in the <strong>required_roles</strong> argument.</li>
+<li><strong>required_roles</strong> (<a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole" title="psyneulink.core.globals.utilities.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> or list of NodeRoles) – NodeRoles to assign to the nodes in addition to those determined by analyze graph;
+these apply to any items in the list of nodes that are not in a tuple;  these apply to any specified
+in any role-specification tuples in the <strong>nodes</strong> argument.</li>
 </ul>
 </td>
 </tr>
@@ -969,7 +992,7 @@ an optimal Control policy.</p>
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_projection">
 <code class="descname">add_projection</code><span class="sig-paren">(</span><em>projection=None</em>, <em>sender=None</em>, <em>receiver=None</em>, <em>feedback=False</em>, <em>learning_projection=False</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_projection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds a projection to the Composition, if it is not already added.</p>
+<dd><p>Add a projection to the Composition, if it is not already added.</p>
 <p>If a <em>projection</em> is not specified, then a default MappingProjection is created.</p>
 <p>The sender and receiver of a particular Projection vertex within the Composition (the <em>sender</em> and
 <em>receiver</em> arguments of add_projection) must match the <code class="xref any docutils literal"><span class="pre">sender</span></code> and <code class="xref any docutils literal"><span class="pre">receiver</span></code> specified on the Projection object itself.</p>
@@ -1332,12 +1355,15 @@ by GraphViz, or the keyword <em>BOLD</em>.</li>
 <li><strong>cim_shape</strong> (<em>default 'square'</em>) – specifies the display color input_CIM and output_CIM nodes</li>
 <li><strong>controller_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">blue</span></code>) – specifies the color in which the controller components are displayed</li>
 <li><strong>output_fmt</strong> (<em>keyword : default 'pdf'</em>) – ‘pdf’: generate and open a pdf with the visualization;
-‘jupyter’: return the object (ideal for working in jupyter/ipython notebooks).</li>
+‘jupyter’: return the object (for working in jupyter/ipython notebooks);
+‘gv’: return graphviz object
+‘gif’: return gif used for animation</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>display of Composition</strong> – ‘pdf’ (placed in current directory) if <code class="xref std std-keyword docutils literal"><span class="pre">output_fmt</span></code> arg is ‘pdf’;
-Graphviz graph object if <code class="xref std std-keyword docutils literal"><span class="pre">output_fmt</span></code> arg is ‘jupyter’.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>display of Composition</strong> – PDF: (placed in current directory) if <code class="xref std std-keyword docutils literal"><span class="pre">output_fmt</span></code> arg is ‘pdf’;
+Graphviz graph object if <code class="xref std std-keyword docutils literal"><span class="pre">output_fmt</span></code> arg is ‘gv’ or ‘jupyter’;
+gif if <code class="xref std std-keyword docutils literal"><span class="pre">output_fmt</span></code> arg is ‘gif’.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="xref any docutils literal"><span class="pre">pdf</span></code> or Graphviz graph object</p>

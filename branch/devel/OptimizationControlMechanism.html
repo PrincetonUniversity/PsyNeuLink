@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.5.3.2+156.gb9de680 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.5.3.2+157.gb6358f3 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+156.gb9de680',
+              VERSION:'0.5.3.2+157.gb6358f3',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+156
+                0.5.3.2+157
               </div>
             
           
@@ -203,7 +203,7 @@
 <p>An OptimizationControlMechanism is a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that uses an <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction"><code class="xref any py py-class docutils literal"><span class="pre">OptimizationFunction</span></code></a> to find
 an optimal <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> for a given <a class="reference internal" href="#optimizationcontrolmechanism-state"><span class="std std-ref">state</span></a>. The <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction"><code class="xref any py py-class docutils literal"><span class="pre">OptimizationFunction</span></code></a> uses the OptimizationControlMechanism’s
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function"><code class="xref any py py-attr docutils literal"><span class="pre">evaluation_function</span></code></a> &lt;OptimizationControlMechanism.evalutate_function&gt;` to evaluate <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> samples, and then implements the one that yields the best predicted result.
-The result returned by the <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function"><code class="xref any py py-attr docutils literal"><span class="pre">evaluation_function</span></code></a> &lt;OptimizationControlMechanism.evalutate_function&gt;` is ordinally
+The result returned by the <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function"><code class="xref any py py-attr docutils literal"><span class="pre">evaluation_function</span></code></a> &lt;OptimizationControlMechanism.evalutate_function&gt;` is ordinarily
 the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> computed by the OptimizationControlMechanism for the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>
 (or part of one) that it controls, and its <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><code class="xref any py py-class docutils literal"><span class="pre">ObjectiveFunction</span></code></a> seeks to maximize this, which corresponds to
 maximizing the Expected Value of Control, as described below.</p>
