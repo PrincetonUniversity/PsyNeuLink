@@ -693,7 +693,6 @@ from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
@@ -704,7 +703,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, NodeRole, call_with_pruned_args
+from psyneulink.core.globals.utilities import ContentAddressableList, NodeRole, call_with_pruned_args, convert_to_list
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
@@ -1253,7 +1252,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_node(self, node, required_roles=None):
         '''
-            Adds a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
+            Add a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
 
             Arguments
             ---------
@@ -1363,24 +1362,43 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #     for node in nodes:
     #         self.add_node(node=node, required_roles=required_roles)
     # # MODIFIED 5/29/19 NEWER: [JDC]
-    def add_nodes(self, nodes):
+    def add_nodes(self, nodes, required_roles=None):
+        """
+            Add a list of Composition Nodes (`Mechanism` or `Composition`) to the Composition,
+
+            Arguments
+            ---------
+
+            nodes : list
+                the nodes to be added to the Composition.  Each item of the list must be a `Mechanism`,
+                a `Composition` or a role-specification tuple with a Mechanism or Composition as the first item,
+                and a `NodeRole` or list of those as the second item;  any NodeRoles in a role-specification tuple
+                are applied in addition to those specified in the **required_roles** argument.
+
+            required_roles : `NodeRole` or list of NodeRoles
+                NodeRoles to assign to the nodes in addition to those determined by analyze graph;
+                these apply to any items in the list of nodes that are not in a tuple;  these apply to any specified
+                in any role-specification tuples in the **nodes** argument.
+        """
+
         if not isinstance(nodes, list):
             raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
-                                   f"must be a list of nodes or (node, [required_roles]) tuples")
+                                   f"must be a list of nodes or (node, required_roles) tuples")
         for node in nodes:
             if isinstance(node, (Mechanism, Composition)):
-                self.add_node(node=node)
+                self.add_node(node, required_roles)
             elif isinstance(node, tuple):
-                self.add_node(node=node[0], required_roles=node[1])
+                self.add_node(node=node[0],
+                              required_roles=convert_to_list(node[1]).append(convert_to_list(required_roles)))
             else:
                 raise CompositionError(f"Node specified in 'add_nodes' method of '{self.name}' {Composition.__name__} "
                                        f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
-                                       f"or a tuple containing one of those and a list of {NodeRole.__name__}")
+                                       f"or a tuple containing one of those and a {NodeRole.__name__} or list of them")
     # MODIFIED 5/29/19 END
 
     def add_controller(self, controller):
         """
-        Adds an `OptimizationControlMechanism` as the `controller
+        Add an `OptimizationControlMechanism` as the `controller
         <Composition.controller>` of the Composition, which gives the OCM access to the
         `Composition`'s `evaluate <Composition.evaluate>` method. This allows the OCM to use simulations to determine
         an optimal Control policy.
@@ -1712,24 +1730,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"First arg for add_linear_processing_pathway method of '{self.name}' "
                                    f"{Composition.__name__} must be a list of nodes")
 
-        if isinstance(pathway[0], (Mechanism, Composition)):
-            self.add_nodes([pathway[0]])
+        if isinstance(pathway[0], (Mechanism, Composition, tuple)):
+            self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise CompositionError("The first item in a linear processing pathway must be a Node (Mechanism or "
                                    "Composition).")
         # Then, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
+            # MODIFIED 5/29/19 OLD:
             # if the current item is a mechanism, add it
             if isinstance(pathway[c], Mechanism):
                 self.add_nodes([pathway[c]])
+            # MODIFIED 5/29/19 NEW: [JDC]
+            # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
+            if isinstance(pathway[c], (Mechanism, Composition, tuple)):
+                self.add_nodes([pathway[c]])
+            # MODIFIED 5/29/19 END
 
         # Then, loop through and validate that the mechanism-projection relationships make sense
         # and add MappingProjections where needed
         for c in range(1, len(pathway)):
             # if the current item is a Node
-            if isinstance(pathway[c], (Mechanism, Composition)):
-                if isinstance(pathway[c - 1], (Mechanism, Composition)):
+            if isinstance(pathway[c], (Mechanism, Composition, tuple)):
+                if isinstance(pathway[c - 1], (Mechanism, Composition, tuple)):
                     # if the previous item was also a Composition Node, add a mapping projection between them
                     # # MODIFIED 5/29/19 OLD:
                     # self.add_projection(MappingProjection(sender=pathway[c - 1],
@@ -1920,6 +1944,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Processing Components
         input_source, output_source, learned_projection = self._unpack_processing_components_of_learning_pathway(pathway)
         self.add_linear_processing_pathway([input_source, learned_projection, output_source])
+        self.add_required_node_role(output_source, NodeRole.OUTPUT)
 
         # Learning Components
         target, comparator, learning_mechanism = self._create_learning_related_mechanisms(input_source,
