@@ -1588,6 +1588,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not isinstance(receiver, Composition)
                 and receiver_mechanism not in self.nodes
                 and not learning_projection):
+            # MODIFIED 5/29/19 OLD:
             # Check if receiver is in a nested Composition and, if so, if it is an INPUT Mechanism
             #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
             #    - otherwise, raise error
@@ -1598,6 +1599,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
                                        format(repr(receiver), self.name, Composition.__name__, ))
+            # # MODIFIED 5/29/19 NEW: [JDC]
+            # # Check if receiver is in a nested Composition and, if so, if it is an INPUT Mechanism
+            # #    - if so, then add Projection from receiver (input_CIM) to receiver_input_state (of nested node)
+            # #    - otherwise, raise error
+            # receiver, graph_receiver = self._get_nested_node_CIM_state(receiver_mechanism,
+            #                                                            receiver_input_state,
+            #                                                            NodeRole.INPUT)
+            # if receiver is not None:receiver
+            #     outer_projection.init_args[SENDER] = sender
+            #     outer_projection.init_args[RECEIVER] = receiver
+            #     inner_projection = MappingProjection(sender=receiver.owner.output_states[receiver.name],
+            #                                          receiver=receiver_input_state)
+            # else:
+            #     raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
+            #                            "is not in it or any of its nested {}s ".
+            #                            format(repr(receiver), self.name, Composition.__name__, ))
+            # MODIFIED 5/29/19 END
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
