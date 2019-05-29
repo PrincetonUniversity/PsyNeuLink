@@ -86,7 +86,7 @@ assert True
 # *********************************************************************************************
 #                                  SHOW AND RUN MODEL
 # *********************************************************************************************
-model.show_graph(show_controller=True, show_node_structure=True)
+model.show_graph(show_controller=True, show_nested=True, show_node_structure=True)
 # model.show_graph(show_node_structure=ALL)
 
 
