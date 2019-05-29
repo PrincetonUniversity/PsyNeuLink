@@ -227,7 +227,7 @@ class LLVMBuilderContext:
         # Create condition generator
         cond_gen = ConditionGenerator(self, composition)
 
-        name = 'exec_wrap_sim_' if simulation else 'exec_wrap_'
+        name = 'exec_sim_wrap_' if simulation else 'exec_wrap_'
         name += composition.name
         args = [self.get_context_struct_type(composition).as_pointer(),
                 self.get_param_struct_type(composition).as_pointer(),
@@ -382,7 +382,7 @@ class LLVMBuilderContext:
         return llvm_func
 
     def gen_composition_run(self, composition, simulation=False):
-        name = 'run_wrap_sim_' if simulation else 'run_wrap_'
+        name = 'run_sim_wrap_' if simulation else 'run_wrap_'
         name += composition.name
         args = [self.get_context_struct_type(composition).as_pointer(),
                 self.get_param_struct_type(composition).as_pointer(),
