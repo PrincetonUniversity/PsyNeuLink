@@ -11,8 +11,8 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-RUN = True
-SHOW_GRAPH = False
+RUN = False
+SHOW_GRAPH = True
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
@@ -21,15 +21,25 @@ AGENT_ACTION = 'AGENT_ACTION'
 ACTION = AGENT_ACTION
 
 # Verbosity levels for console printout
-ACTION_REPORTING = 3
-SIMULATION_REPORTING = 2
+ACTION_REPORTING = 2
 STANDARD_REPORTING = 1
 VERBOSE = ACTION_REPORTING
 
+
 # ControlSignal parameters
 COST_RATE = -.05
-COST_BIAS = -5
+COST_BIAS = 1
 ALLOCATION_SAMPLES = [0, 500]
+
+
+# Condition for executing controller
+new_episode_flag = True
+def get_new_episode_flag():
+    return new_episode_flag
+
+CONTROLLER_CONDITION = Condition(func=get_new_episode_flag)
+# FEATURE_FUNCTION = Buffer(history=3)
+FEATURE_FUNCTION = AdaptiveIntegrator(rate=0.5)
 
 
 # Environment coordinates
@@ -55,6 +65,9 @@ prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
 player_len = prey_len = predator_len = obs_coords
 
+# Return True if predator is present (i.e., all its coordinates are >= 0), else return False
+def get_trial_type(observation):
+    return all(coord >= 0 for coord in observation[predator_coord_slice])
 
 # **********************************************************************************************************************
 # **************************************  CREATE COMPOSITION ***********************************************************
@@ -71,7 +84,9 @@ ddqn_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
 def new_episode():
     # Start new episode with veridical state
 
+    global new_episode_flag
     initial_observation = ddqn_agent.env.reset()
+    new_episode_flag = True
 
     # Initialize both states to verdical state based on first observation
     perceptual_state = veridical_state = ddqn_agent.buffer.next(initial_observation, is_new_episode=True)
@@ -93,11 +108,13 @@ player_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort(), 
 predator_percept = ProcessingMechanism(size=predator_len, function=GaussianDistort(), name="PREDATOR PERCEPT")
 prey_percept = ProcessingMechanism(size=prey_len, function=GaussianDistort(), name="PREY PERCEPT")
 
-# Mechanism used to encode optimal action from call to Run
-optimal_action_mech = ProcessingMechanism(size=action_len, name="OPTIMAL ACTION")
+# Mechanism used to encode trialtype from environment
+trial_type_input_mech = ProcessingMechanism(name="TRIAL TYPE INPUT")
 
-actual_agent_frame_buffer = None
+# Mechanism used to encode and reward from environment
+reward_input_mech = ProcessingMechanism(name="REWARD INPUT")
 
+# Function used by action_mech to generate action from trained DQN
 def get_action(variable=[[0,0],[0,0],[0,0]]):
     global actual_agent_frame_buffer
     # Convert variable to observation:
@@ -131,7 +148,7 @@ action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]],
 # ************************************** BASIC COMPOSITION *************************************************************
 
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-agent_comp.add_nodes([player_percept, predator_percept, prey_percept, optimal_action_mech])
+agent_comp.add_nodes([player_percept, predator_percept, prey_percept, trial_type_input_mech, reward_input_mech])
 agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
 
 a = MappingProjection(sender=player_percept, receiver=action_mech.input_states[0])
@@ -140,28 +157,25 @@ c = MappingProjection(sender=prey_percept, receiver=action_mech.input_states[2])
 agent_comp.add_projections([a,b,c])
 
 
-
-# **************************************  CONOTROL APPRATUS ************************************************************
-
-difference = Distance(metric=DIFFERENCE)
-#   function for ObjectiveMechanism
-
-def objective_function(variable):
-    '''Return difference between optimal and actual actions'''
-    actual_action = variable[0]
-    optimal_action = variable[1]
-    similarity = 1-difference([optimal_action, actual_action])/4
-    return similarity
+# **************************************  CONOTROL APPARATUS ***********************************************************
 
 ocm = OptimizationControlMechanism(name='EVC',
-                                   features={SHADOW_INPUTS:[player_percept, predator_percept, prey_percept,
-                                                            optimal_action_mech]},
-                                   agent_rep=agent_comp, # Use Composition itself (i.e., fully "model-based" evaluation)
-                                   function=GridSearch(direction=MAXIMIZE, save_values=True),
+                                   features=trial_type_input_mech,
+                                   feature_function=FEATURE_FUNCTION,
+                                   agent_rep=RegressionCFA(
+                                           update_weights=BayesGLM(mu_0=0.5, sigma_0=0.1),
+                                           prediction_terms=[PV.F, PV.C, PV.COST]
+                                   ),
+                                   function=GradientOptimization(
+                                           convergence_criterion=VALUE,
+                                           convergence_threshold=0.001,
+                                           step_size=1,
+                                           annealing_function=lambda x, y: x / np.sqrt(y)
+                                           # direction=pnl.ASCENT
+                                   ),
+
                                    objective_mechanism=ObjectiveMechanism(name='OBJECTIVE MECHANISM',
-                                                                          function=objective_function,
-                                                                          monitor=[action_mech, optimal_action_mech]),
-                                   # compute_reconfiguration_cost=Distance(metric=EUCLIDEAN, normalize=True),
+                                                                          monitor=[reward_input_mech]),
                                    control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
@@ -178,17 +192,20 @@ ocm = OptimizationControlMechanism(name='EVC',
 agent_comp.add_controller(ocm)
 agent_comp.enable_controller = True
 agent_comp.controller_mode = BEFORE
-# agent_comp.controller_condition=All(AtRun(0), AtTrial(0))
+agent_comp.controller_condition=CONTROLLER_CONDITION
 
 if SHOW_GRAPH:
     # agent_comp.show_graph()
-    agent_comp.show_graph(show_controller=True, show_cim=True)
-    # agent_comp.show_graph(show_controller=True, show_node_structure=True, show_cim=True)
-    # agent_comp.show_graph(show_controller=True,
-    #                       show_cim=True,
-    #                       show_node_structure=ALL,
-    #                       show_headers=True,
-    #                       )
+    # agent_comp.show_graph(show_controller=True, show_cim=True)
+    # agent_comp.show_graph(
+    #         show_controller=True,
+    #         show_node_structure=True,
+    #         show_cim=True)
+    agent_comp.show_graph(show_controller=True,
+                          show_cim=True,
+                          show_node_structure=ALL,
+                          show_headers=True,
+                          )
 
 
 # *********************************************************************************************************************
@@ -199,11 +216,14 @@ num_episodes = 1
 
 def main():
 
+    global new_episode_flag
+
     if RENDER:
         ddqn_agent.env.render()  # If visualization is desired
     else:
         print('\nRunning simulation... ')
 
+    reward = 0
     steps = 0
     start_time = timeit.default_timer()
     for _ in range(num_episodes):
@@ -235,18 +255,15 @@ def main():
             run_results = agent_comp.run(inputs={player_percept:[observation[player_coord_slice]],
                                                  predator_percept:[observation[predator_coord_slice]],
                                                  prey_percept:[observation[prey_coord_slice]],
-                                                 optimal_action_mech:optimal_action},
+                                                 trial_type_input_mech:[get_trial_type(observation)],
+                                                 reward_input_mech:[reward]},
                                          execution_id=execution_id,
                                          bin_execute=BIN_EXECUTE,
                                          )
             agent_action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
             
             def print_controller():
-                if VERBOSE >= SIMULATION_REPORTING:
-                    print('\nSIMULATION RESULTS:')
-                    for sample, value in zip(ocm.saved_samples, ocm.saved_values):
-                        print(f'\t\tSample: {sample} Value: {value}')
-                # print(f'\nOCM Allocation:\n\t{repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))})
+
                 print(f'\nOCM:'
                       f'\n\tControlSignals:'
                       f'\n\t\tPlayer:\t\t{ocm.control_signals[0].parameters.value.get(execution_id)}'
@@ -283,19 +300,20 @@ def main():
             # # The following allows accumulation of agent's errors (assumes simulations are run before actual action)
             # ddqn_agent.buffer.buffer = actual_agent_frame_buffer
 
-            if ACTION is OPTIMAL_ACTION:
-                action = optimal_action
-            elif ACTION is AGENT_ACTION:
-                action = agent_action
-            else:
-                assert False, "Must choose either OPTIMAL_ACTION or AGENT_ACTION"
+            # if ACTION is OPTIMAL_ACTION:
+            #     action = optimal_action
+            # elif ACTION is AGENT_ACTION:
+            #     action = agent_action
+            # else:
+            #     assert False, "Must choose either OPTIMAL_ACTION or AGENT_ACTION"
+            action = agent_action
 
             # Get observation for next iteration based on optimal action taken in this one
             observation, reward, done, _ = ddqn_agent.env.step(action)
 
             print(f'\nAction Taken (using {ACTION}): {action}')
 
-
+            new_episode_flag = False
             steps += 1
             if done:
                 break

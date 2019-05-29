@@ -1485,12 +1485,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"has a sender ({repr(sender_name)}) that is not (yet) in it "
                                        f"or any of its nested {Composition.__name__}s.")
 
+            # MODIFIED 5/29/19 NEW:
+            # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below
+            if isinstance(sender.owner, CompositionInterfaceMechanism):
+                sender_mechanism = sender.owner
+            # MODIFIED 5/29/19 NEW:
+
         if hasattr(projection, "sender"):
             if projection.sender.owner != sender and \
                     projection.sender.owner != graph_sender and \
                     projection.sender.owner != sender_mechanism:
                 raise CompositionError("The position of {} in {} conflicts with its sender attribute."
                                        .format(projection.name, self.name))
+
         return sender, sender_mechanism, graph_sender, subcompositions
 
     def _parse_receiver_spec(self, projection, receiver, sender, subcompositions, learning_projection):
@@ -1514,6 +1521,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif isinstance(receiver, InputState):
             receiver_mechanism = receiver.owner
             receiver_input_state = receiver
+            # FIX: 5/29/19 [JDC] THIS IS STILL A PROBLEM, IN PARTICULAR IN CONTEXT OF REFERENCING A NODE IN NESTED COMP
+            # FIX:               SHOULD BE FIXED BY MOD IN _validate_projection()
             # FIX: THE FOLLOWING FAILS TO KEEP TRACK OF SPECIFIED InputState AS *ACTUAL* RECEIVER
             # FIX: IN CALL TO _validate_projection BELOW;  ASSUMES MECHANISM AND THEREFORE ASSIGNS PRIMARY InputState
             # FIX: BUT CHANGING IT TO receiver (I.E., ALLOWING IT TO REMAIN SPECIFIED InputState
@@ -1580,10 +1589,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         '''
 
         projection = self._parse_projection_spec(projection, name)
+
+        # Parse sender and receiver specs
         sender, sender_mechanism, graph_sender, subcompositions = self._parse_sender_spec(projection, sender)
         receiver, receiver_mechanism, graph_receiver, receiver_input_state, subcompositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, subcompositions, learning_projection)
 
+        # FIX 5/29/19 [JDC]:  WHY ISN"T THIS IN _parse_receiver_spec (as it is for _parse_sender_spec)
+        # Handle Projection to node in nested Composition
         if (not isinstance(receiver_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(receiver, Composition)
                 and receiver_mechanism not in self.nodes
@@ -1598,6 +1611,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
                                        format(repr(receiver), self.name, Composition.__name__, ))
+            # MODIFIED 5/29/19 NEW:
+            # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below
+            if isinstance(receiver.owner, CompositionInterfaceMechanism):
+                receiver_mechanism = receiver.owner
+            # MODIFIED 5/29/19 END
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
@@ -1805,6 +1823,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                error_sources=comparator_mechanism,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
+        # MODIFIED 5/29/19 NEW:
+        # FIX 5/29/19 [JDC]:  MIGHT WANT TO TEST HERE WHETHER IT IS IN A BP CHAIN AND, IF SO, AND NOT LAST, THEN
+        #  REQUIRE IT
+        learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
+                                                                                                        override=True)
+        # MODIFIED 5/29/19 END
         self.learning_enabled = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
@@ -1868,6 +1892,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
         # construct learning related mapping projections
+        # FIX 5/29/19 [JDC]:  REPLACE INDICES BELOW WITH RELEVANT KEYWORDS
         target_projection = MappingProjection(sender=target,
                                               receiver=comparator.input_states[1])
         sample_projection = MappingProjection(sender=output_source,
@@ -2037,9 +2062,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              learning_projection
                              ):
 
+        # FIX 5/29/19 [JDC] WHY ASSIGN BOTH sender *AND* receiver IF *EITHER* IS NOT SPECIFIED?
+        # FIX:              WHY NOT JUST ASSIGN THE ONE THAT IS NOT SPECIFIED?
         if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):
-            projection.init_args['sender'] = graph_sender
-            projection.init_args['receiver'] = graph_receiver
+            # # MODIFIED 5/29/19 OLD:
+            # projection.init_args['sender'] = graph_sender
+            # projection.init_args['receiver'] = graph_receiver
+            # MODIFIED 5/29/19 NEW:
+            # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
+            if isinstance(sender, OutputState):
+                projection.init_args['sender'] = sender
+            else:
+                projection.init_args['sender'] = graph_sender
+            if isinstance(receiver, InputState):
+                projection.init_args['receiver'] = receiver
+            else:
+                projection.init_args['receiver'] = graph_receiver
+            # MODIFIED 5/29/19 END
             projection.context.initialization_status = ContextFlags.DEFERRED_INIT
             projection._deferred_init(context=" INITIALIZING ")
 
@@ -2334,7 +2373,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   format(node.name, NodeRole.__name__, repr(role),
                                          Composition.__name__, self.name, nested_comp.name))
                     continue
-                CIM_state_for_nested_node = c.input_CIM_states[node_state][0]
+                # # MODIFIED 5/29/19 OLD:
+                # CIM_state_for_nested_node = c.input_CIM_states[node_state][0]
+                # MODIFIED 5/29/19 NEW:
+                if isinstance(node_state, InputState):
+                    CIM_state_for_nested_node = c.input_CIM_states[node_state][0]
+                elif isinstance(node_state, OutputState):
+                    CIM_state_for_nested_node = c.output_CIM_states[node_state][0]
+                else:
+                    # IMPLEMENTATION NOTE:  Place marker for future implementation of ParameterState handling
+                    #                       However, typecheck above should have caught this
+                    assert False
+               # MODIFIED 5/29/19 END
                 nested_comp = c
         return CIM_state_for_nested_node, nested_comp
 
@@ -2942,9 +2992,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         tc.typecheck
 
-        def _assign_processing_components(g,
-                                          rcvr,
-                                          show_nested):
+        def _assign_processing_components(g, rcvr, show_nested):
             '''Assign nodes to graph'''
             if isinstance(rcvr, Composition) and show_nested:
                 nested_comp_graph = rcvr.show_graph(output_fmt='gv')
@@ -3047,7 +3095,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Implement rcvr node
                 rcvr_label = self._get_graph_node_label(rcvr, show_dimensions)
 
-                if show_node_structure:
+                # # MODIFIED 5/29/19 OLD:
+                # if show_node_structure:
+                # MODIFIED 5/29/19 NEW: [JDC]
+                if show_node_structure and isinstance(rcvr, Mechanism):
+                # MODIFIED 5/29/19 END
                     g.node(rcvr_label,
                            rcvr.show_structure(**node_struct_args, node_border=rcvr_penwidth),
                            shape=struct_shape,
@@ -3092,61 +3144,66 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # loop through senders to implement edges
             sndrs = processing_graph[rcvr]
+            _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
 
-            for sndr in sndrs:
-
-                # Set sndr info
-
-                sndr_label = self._get_graph_node_label(sndr, show_dimensions)
-
-                # Iterate through all Projections from all OutputStates of sndr
-                for output_state in sndr.output_states:
-                    for proj in output_state.efferents:
-
-                        # Skip any projections to ObjectiveMechanism for controller
-                        #   (those are handled in _assign_control_components)
-                        if (self.controller
-                                and proj.receiver.owner is self.controller.objective_mechanism):
-                            continue
-
-                        # Only consider Projections to the rcvr
-                        if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
-                                or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
-
-                            if show_node_structure:
-                                sndr_proj_label = '{}:{}'. \
-                                    format(sndr_label, sndr._get_port_name(proj.sender))
-                                proc_mech_rcvr_label = '{}:{}'. \
-                                    format(rcvr_label, rcvr._get_port_name(proj.receiver))
-                                # format(rcvr_label, InputState.__name__, proj.receiver.name)
-                            else:
-                                sndr_proj_label = sndr_label
-                                proc_mech_rcvr_label = rcvr_label
-
-                            edge_label = self._get_graph_node_label(proj, show_dimensions)
-
-                            # Check if Projection or its receiver is active
-                            if any(item in active_items for item in {proj, proj.receiver.owner}):
-                                if active_color is BOLD:
-
-                                    proj_color = default_node_color
-                                else:
-                                    proj_color = active_color
-                                proj_width = str(default_width + active_thicker_by)
-                                self.active_item_rendered = True
-
-                            else:
-                                proj_color = default_node_color
-                                proj_width = str(default_width)
-                            proc_mech_label = edge_label
-
-                            # Render Projection as edge
-                            if show_projection_labels:
-                                label = proc_mech_label
-                            else:
-                                label = ''
-                            g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
-                                   color=proj_color, penwidth=proj_width)
+            # for sndr in sndrs:
+            #
+            #     # Set sndr info
+            #
+            #     sndr_label = self._get_graph_node_label(sndr, show_dimensions)
+            #
+            #     # Iterate through all Projections from all OutputStates of sndr
+            #     for output_state in sndr.output_states:
+            #         for proj in output_state.efferents:
+            #
+            #             # Skip any projections to ObjectiveMechanism for controller
+            #             #   (those are handled in _assign_control_components)
+            #             if (self.controller
+            #                     and proj.receiver.owner is self.controller.objective_mechanism):
+            #                 continue
+            #
+            #             # Only consider Projections to the rcvr
+            #             if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
+            #                     or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
+            #
+            #                 # # MODIFIED 5/29/19 OLD:
+            #                 # if show_node_structure:
+            #                 # MODIFIED 5/29/19 NEW: [JDC]
+            #                 if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
+            #                 # MODIFIED 5/29/19 END
+            #                     sndr_proj_label = '{}:{}'. \
+            #                         format(sndr_label, sndr._get_port_name(proj.sender))
+            #                     proc_mech_rcvr_label = '{}:{}'. \
+            #                         format(rcvr_label, rcvr._get_port_name(proj.receiver))
+            #                     # format(rcvr_label, InputState.__name__, proj.receiver.name)
+            #                 else:
+            #                     sndr_proj_label = sndr_label
+            #                     proc_mech_rcvr_label = rcvr_label
+            #
+            #                 edge_label = self._get_graph_node_label(proj, show_dimensions)
+            #
+            #                 # Check if Projection or its receiver is active
+            #                 if any(item in active_items for item in {proj, proj.receiver.owner}):
+            #                     if active_color is BOLD:
+            #
+            #                         proj_color = default_node_color
+            #                     else:
+            #                         proj_color = active_color
+            #                     proj_width = str(default_width + active_thicker_by)
+            #                     self.active_item_rendered = True
+            #
+            #                 else:
+            #                     proj_color = default_node_color
+            #                     proj_width = str(default_width)
+            #                 proc_mech_label = edge_label
+            #
+            #                 # Render Projection as edge
+            #                 if show_projection_labels:
+            #                     label = proc_mech_label
+            #                 else:
+            #                     label = ''
+            #                 g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
+            #                        color=proj_color, penwidth=proj_width)
 
         def _assign_cim_components(g, cims):
 
@@ -3294,6 +3351,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return
 
             # Assign controller node
+            # MODIFIED 5/29/19 NEW:
+            node_shape = mechanism_shape
+            # MODIFIED 5/29/19 END
             ctlr_label = self._get_graph_node_label(controller, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
@@ -3339,6 +3399,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            color=ctl_proj_color,
                            penwidth=ctl_proj_width
                            )
+
             # If controller has objective_mechanism, assign its node and projetions
             if controller.objective_mechanism:
                 # get projection from ObjectiveMechanism to ControlMechanism
@@ -3422,6 +3483,76 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
                                color=proj_color, penwidth=proj_width)
 
+            # MODIFIED 5/29/19 NEW: [JDC]
+            # get any other incoming edges to controller (i.e., other than from ObjectiveMechanism)
+            senders = set()
+            for i in controller.input_states[1:]:
+                for p in i.path_afferents:
+                    senders.add(p.sender.owner)
+            _assign_incoming_edges(g, controller, ctlr_label, senders, proj_color=ctl_proj_color)
+            # MODIFIED 5/29/19 END
+
+        # MODIFIED 5/29/19 NEW: [JDC]
+        @tc.typecheck
+        def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None):
+            proj_color = proj_color or default_node_color
+            for sndr in senders:
+
+                # Set sndr info
+
+                sndr_label = self._get_graph_node_label(sndr, show_dimensions)
+
+                # Iterate through all Projections from all OutputStates of sndr
+                for output_state in sndr.output_states:
+                    for proj in output_state.efferents:
+
+                        # Skip any projections to ObjectiveMechanism for controller
+                        #   (those are handled in _assign_control_components)
+                        if (self.controller
+                                and proj.receiver.owner is self.controller.objective_mechanism):
+                            continue
+
+                        # Only consider Projections to the rcvr
+                        if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
+                                or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
+
+                            # # MODIFIED 5/29/19 OLD:
+                            # if show_node_structure:
+                            # MODIFIED 5/29/19 NEW: [JDC]
+                            if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
+                            # MODIFIED 5/29/19 END
+                                sndr_proj_label = '{}:{}'. \
+                                    format(sndr_label, sndr._get_port_name(proj.sender))
+                                proc_mech_rcvr_label = '{}:{}'. \
+                                    format(rcvr_label, rcvr._get_port_name(proj.receiver))
+                                # format(rcvr_label, InputState.__name__, proj.receiver.name)
+                            else:
+                                sndr_proj_label = sndr_label
+                                proc_mech_rcvr_label = rcvr_label
+
+                            edge_label = self._get_graph_node_label(proj, show_dimensions)
+
+                            # Check if Projection or its receiver is active
+                            if any(item in active_items for item in {proj, proj.receiver.owner}):
+                                if active_color is BOLD:
+                                    pass
+                                else:
+                                    proj_color = active_color
+                                proj_width = str(default_width + active_thicker_by)
+                                self.active_item_rendered = True
+
+                            else:
+                                proj_width = str(default_width)
+                            proc_mech_label = edge_label
+
+                            # Render Projection as edge
+                            if show_projection_labels:
+                                label = proc_mech_label
+                            else:
+                                label = ''
+                            g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
+                                   color=proj_color, penwidth=proj_width)
+        # MODIFIED 5/29/19 END
 
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
