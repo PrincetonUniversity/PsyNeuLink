@@ -656,6 +656,7 @@ class MappingProjection(PathwayProjection_Base):
             matrix = np.array(matrix)
 
         params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
+                                                  # matrix=matrix,
                                                   suppress_identity_function=suppress_identity_function,
                                                   params=params)
 

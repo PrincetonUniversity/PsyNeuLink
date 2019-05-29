@@ -693,7 +693,6 @@ from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
@@ -704,7 +703,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, NodeRole, call_with_pruned_args
+from psyneulink.core.globals.utilities import ContentAddressableList, NodeRole, call_with_pruned_args, convert_to_list
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
@@ -1245,7 +1244,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_node(self, node, required_roles=None):
         '''
-            Adds a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
+            Add a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
 
             Arguments
             ---------
@@ -1253,7 +1252,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node : `Mechanism` or `Composition`
                 the node to be added to the Composition
 
-            required_roles : psyneulink.core.globals.utilities.NodeRole or list of NodeRoles
+            required_roles : `NodeRole` or list of NodeRoles
                 any NodeRoles roles that this node should have in addition to those determined by analyze graph.
         '''
 
@@ -1336,18 +1335,62 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for proj in input_state.shadow_inputs.path_afferents:
                     sender = proj.sender
                     if sender.owner != self.input_CIM:
+                        # MODIFIED 5/9/19 OLD:
                         self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_state),
                                             sender=proj.sender.owner,
                                             receiver=node)
+                        # # MODIFIED 5/9/19 NEW: [JDC]
+                        # self.add_projection(sender=proj.sender.owner,
+                        #                     receiver=node)
+                        # MODIFIED 5/9/19 END
 
+    # MODIFIED 5/29/19 OLD:
+    # def add_nodes(self, nodes, required_roles=None):
+    # # # MODIFIED 5/29/19 NEW: [JDC]
+    # # def add_nodes(self, nodes=None, *args):
+    #     if not isinstance(nodes, list):
+    #         raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
+    #                                f"must be a list of nodes")
+    #     for node in nodes:
+    #         self.add_node(node=node, required_roles=required_roles)
+    # # MODIFIED 5/29/19 NEWER: [JDC]
     def add_nodes(self, nodes, required_roles=None):
+        """
+            Add a list of Composition Nodes (`Mechanism` or `Composition`) to the Composition,
 
+            Arguments
+            ---------
+
+            nodes : list
+                the nodes to be added to the Composition.  Each item of the list must be a `Mechanism`,
+                a `Composition` or a role-specification tuple with a Mechanism or Composition as the first item,
+                and a `NodeRole` or list of those as the second item;  any NodeRoles in a role-specification tuple
+                are applied in addition to those specified in the **required_roles** argument.
+
+            required_roles : `NodeRole` or list of NodeRoles
+                NodeRoles to assign to the nodes in addition to those determined by analyze graph;
+                these apply to any items in the list of nodes that are not in a tuple;  these apply to any specified
+                in any role-specification tuples in the **nodes** argument.
+        """
+
+        if not isinstance(nodes, list):
+            raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
+                                   f"must be a list of nodes or (node, required_roles) tuples")
         for node in nodes:
-            self.add_node(node=node, required_roles=required_roles)
+            if isinstance(node, (Mechanism, Composition)):
+                self.add_node(node, required_roles)
+            elif isinstance(node, tuple):
+                self.add_node(node=node[0],
+                              required_roles=convert_to_list(node[1]).append(convert_to_list(required_roles)))
+            else:
+                raise CompositionError(f"Node specified in 'add_nodes' method of '{self.name}' {Composition.__name__} "
+                                       f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
+                                       f"or a tuple containing one of those and a {NodeRole.__name__} or list of them")
+    # MODIFIED 5/29/19 END
 
     def add_controller(self, controller):
         """
-        Adds an `OptimizationControlMechanism` as the `controller
+        Add an `OptimizationControlMechanism` as the `controller
         <Composition.controller>` of the Composition, which gives the OCM access to the
         `Composition`'s `evaluate <Composition.evaluate>` method. This allows the OCM to use simulations to determine
         an optimal Control policy.
@@ -1425,6 +1468,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(sender, Composition)
                 and sender_mechanism not in self.nodes):
+            sender_name = sender.name
             # Check if sender is in a nested Composition and, if so, if it is an OUTPUT Mechanism
             #    - if so, then use self.output_CIM_states[output_state] for that OUTPUT Mechanism as sender
             #    - otherwise, raise error
@@ -1432,9 +1476,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                    sender_output_state,
                                                                    NodeRole.OUTPUT)
             if sender is None:
-                raise CompositionError("sender arg ({}) in call to add_projection method of {} "
-                                       "is not in it or any of its nested {}s ".
-                                       format(repr(sender), self.name, Composition.__name__, ))
+                # raise CompositionError(f"sender ({repr(name_of_specified_sender)}) in call to add_projection method "
+                #                        f"of {self.name} is not in it or any of its nested {Composition.__name__}s .")
+                receiver_name = 'node'
+                if hasattr(projection, 'receiver'):
+                    receiver_name = f'{repr(projection.receiver.owner.name)}'
+                raise CompositionError(f"A {Projection.__name__} specified to {receiver_name} in {self.name} "
+                                       f"has a sender ({repr(sender_name)}) that is not (yet) in it "
+                                       f"or any of its nested {Composition.__name__}s.")
 
         if hasattr(projection, "sender"):
             if projection.sender.owner != sender and \
@@ -1494,7 +1543,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_projection(self, projection=None, sender=None, receiver=None, feedback=False, learning_projection=False, name=None):
         '''
 
-            Adds a projection to the Composition, if it is not already added.
+            Add a projection to the Composition, if it is not already added.
 
             If a *projection* is not specified, then a default MappingProjection is created.
 
@@ -1555,17 +1604,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if sender_mechanism != self.input_CIM and receiver != self.output_CIM \
                 and projection not in [vertex.component for vertex in self.graph.vertices] and not learning_projection:
 
-
             projection.is_processing = False
             # KDM 5/24/19: removing below rename because it results in several duplicates
-            # projection.name = '{0} to {1}'.format(sender, receiver)
+            # projection.name = f'{sender} to {receiver}'
             self.graph.add_component(projection, feedback=feedback)
 
             try:
                 self.graph.connect_components(graph_sender, projection)
                 self.graph.connect_components(projection, graph_receiver)
             except CompositionError as c:
-                raise CompositionError("{} to {}".format(c.args[0], self.name))
+                raise CompositionError(f"{c.args[0]} to {self.name}.")
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
@@ -1668,32 +1716,48 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._analyze_graph()
 
-    def add_linear_processing_pathway(self, pathway, feedback=False):
+    def add_linear_processing_pathway(self, pathway, feedback=False, *args):
         # First, verify that the pathway begins with a node
-        if isinstance(pathway[0], (Mechanism, Composition)):
-            self.add_node(pathway[0])
+        if not isinstance(pathway, (list, tuple)):
+            raise CompositionError(f"First arg for add_linear_processing_pathway method of '{self.name}' "
+                                   f"{Composition.__name__} must be a list of nodes")
+
+        if isinstance(pathway[0], (Mechanism, Composition, tuple)):
+            self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise CompositionError("The first item in a linear processing pathway must be a Node (Mechanism or "
                                    "Composition).")
         # Then, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
+            # MODIFIED 5/29/19 OLD:
             # if the current item is a mechanism, add it
             if isinstance(pathway[c], Mechanism):
-                self.add_node(pathway[c])
+                self.add_nodes([pathway[c]])
+            # MODIFIED 5/29/19 NEW: [JDC]
+            # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
+            if isinstance(pathway[c], (Mechanism, Composition, tuple)):
+                self.add_nodes([pathway[c]])
+            # MODIFIED 5/29/19 END
 
         # Then, loop through and validate that the mechanism-projection relationships make sense
         # and add MappingProjections where needed
         for c in range(1, len(pathway)):
             # if the current item is a Node
-            if isinstance(pathway[c], (Mechanism, Composition)):
-                if isinstance(pathway[c - 1], (Mechanism, Composition)):
+            if isinstance(pathway[c], (Mechanism, Composition, tuple)):
+                if isinstance(pathway[c - 1], (Mechanism, Composition, tuple)):
                     # if the previous item was also a Composition Node, add a mapping projection between them
-                    self.add_projection(MappingProjection(sender=pathway[c - 1],
-                                                          receiver=pathway[c]),
-                                        pathway[c - 1],
-                                        pathway[c],
+                    # # MODIFIED 5/29/19 OLD:
+                    # self.add_projection(MappingProjection(sender=pathway[c - 1],
+                    #                                       receiver=pathway[c]),
+                    #                     pathway[c - 1],
+                    #                     pathway[c],
+                    #                     feedback=feedback)
+                    # MODIFIED 5/29/19 NEW: [JDC]
+                    self.add_projection(sender=pathway[c - 1],
+                                        receiver=pathway[c],
                                         feedback=feedback)
+                    # MODIFIED 5/9/19 END
             # if the current item is a Projection
             elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
                 if c == len(pathway) - 1:
@@ -1852,6 +1916,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             error_function: function (default = LinearCombination
                 function of the ComparatorMechanism
+
         Returns
         --------
 
@@ -1871,6 +1936,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Processing Components
         input_source, output_source, learned_projection = self._unpack_processing_components_of_learning_pathway(pathway)
         self.add_linear_processing_pathway([input_source, learned_projection, output_source])
+        self.add_required_node_role(output_source, NodeRole.OUTPUT)
 
         # Learning Components
         target, comparator, learning_mechanism = self._create_learning_related_mechanisms(input_source,
@@ -2858,14 +2924,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
-            'jupyter': return the object (ideal for working in jupyter/ipython notebooks).
+            'jupyter': return the object (for working in jupyter/ipython notebooks);
+            'gv': return graphviz object
+            'gif': return gif used for animation
 
         Returns
         -------
 
         display of Composition : `pdf` or Graphviz graph object
-            'pdf' (placed in current directory) if :keyword:`output_fmt` arg is 'pdf';
-            Graphviz graph object if :keyword:`output_fmt` arg is 'jupyter'.
+            PDF: (placed in current directory) if :keyword:`output_fmt` arg is 'pdf';
+            Graphviz graph object if :keyword:`output_fmt` arg is 'gv' or 'jupyter';
+            gif if :keyword:`output_fmt` arg is 'gif'.
 
         """
 
@@ -2876,10 +2945,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def _assign_processing_components(g,
                                           rcvr,
                                           show_nested):
-
             '''Assign nodes to graph'''
             if isinstance(rcvr, Composition) and show_nested:
-                nested_comp_graph = rcvr.show_graph(output_fmt='jupyter')
+                nested_comp_graph = rcvr.show_graph(output_fmt='gv')
                 nested_comp_graph.name = "cluster_"+rcvr.name
                 rcvr_label = rcvr.name
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
@@ -2894,14 +2962,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # If recvr is ObjectiveMechanism for Composition's controller,
             #    break and handle in _assign_control_components()
-            elif (isinstance(rcvr, ObjectiveMechanism)
+            # # MODIFIED 5/9/19 OLD:
+            # elif (isinstance(rcvr, ObjectiveMechanism)
+            # MODIFIED 5/9/19 NEW: [JDC] [ALLOW NESTED TO STAND ON ITS OWN ABOVE]
+            if (isinstance(rcvr, ObjectiveMechanism)
+            # MODIFIED 5/9/19 END
                     and self.controller
                     and rcvr is self.controller.objective_mechanism):
                 return
 
             else:
-                rcvr_rank = 'same'
                 # Set rcvr color and penwidth based on node type
+                rcvr_rank = 'same'
+                node_shape = mechanism_shape
+
+                # Input and Output Node
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     if rcvr in active_items:
@@ -2914,6 +2989,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         rcvr_color = input_and_output_color
                         rcvr_penwidth = str(bold_width)
+
+                # Input Node
                 elif rcvr in self.get_nodes_by_role(NodeRole.INPUT):
                     if rcvr in active_items:
                         if active_color is BOLD:
@@ -2926,6 +3003,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         rcvr_color = input_color
                         rcvr_penwidth = str(bold_width)
                     rcvr_rank = input_rank
+
+                # Output Node
                 elif rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     if rcvr in active_items:
                         if active_color is BOLD:
@@ -2939,7 +3018,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         rcvr_penwidth = str(bold_width)
                     rcvr_rank = output_rank
 
+                # Composition
                 elif isinstance(rcvr, Composition):
+                    node_shape = composition_shape
                     if rcvr in active_items:
                         if active_color is BOLD:
                             rcvr_color = composition_color
@@ -3029,7 +3110,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             continue
 
                         # Only consider Projections to the rcvr
-                        if proj.receiver.owner == rcvr:
+                        if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
+                                or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
 
                             if show_node_structure:
                                 sndr_proj_label = '{}:{}'. \
@@ -3207,8 +3289,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctlr_width = str(default_width)
 
             if controller is None:
-                print("\nWARNING: {} has not been assigned a \'controller\', so \'show_controller\' option "
-                      "can't be used in its show_graph() method\n".format(self.name))
+                warnings.warn(f"{self.name} has not been assigned a \'controller\', "
+                              f"so \'show_controller\' option in call to its show_graph() method will be ignored.")
                 return
 
             # Assign controller node
@@ -3403,8 +3485,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'output_fmt': 'struct'}
 
         default_node_color = 'black'
-        node_shape = 'oval'
+        mechanism_shape = 'oval'
         cim_shape = 'rectangle'
+        composition_shape = 'rectangle'
         struct_shape = 'plaintext' # assumes use of html
 
         bold_width = 3
@@ -3440,7 +3523,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
 
         # get all Nodes
-        self._analyze_graph()
+        # # # MODIFIED 5/9/19 OLD:
+        # self._analyze_graph()
+        # MODIFIED 5/9/19 NEW: [JDC]
+        # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
+        if output_fmt != 'gv':
+            self._analyze_graph()
+        # MODIFIED 5/9/19 END
         processing_graph = self.scheduler_processing.visual_graph
         rcvrs = list(processing_graph.keys())
 
@@ -3534,6 +3623,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
             return G
+
+        elif output_fmt == 'gv':
+            return G
+
 
     def execute(
             self,

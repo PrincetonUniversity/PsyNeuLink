@@ -2,7 +2,7 @@ import numpy as np
 from psyneulink import *
 
 
-num_states = 10
+stim_size = 10
 context_size = 2
 num_actions = 4
 rpe_size = 1
@@ -13,52 +13,85 @@ def Concatenate(variable):
 # def ExepctedValueCalc(variable):
 #     variable[]
 
+# *********************************************************************************************
+#                          PERCEPTUAL AND ACTION MECHANISMS
+# *********************************************************************************************
 stim_in = ProcessingMechanism(name='Stimulus',
-                              size=num_states)
+                              size=stim_size)
 
 context_in = ProcessingMechanism(name='Context',
                                  size=context_size)
 
-state = ProcessingMechanism(name='State',
+reward_in = ProcessingMechanism(name='Reward',
+                                size=1)
+
+perceptual_state = ProcessingMechanism(name='Current State',
                             function=Concatenate,
                             input_states=[{NAME:'STIM',
-                                           SIZE:num_states,
+                                           SIZE:stim_size,
                                            PROJECTIONS:stim_in},
                                           {NAME:'CONTEXT',
                                            SIZE:context_size,
                                            PROJECTIONS:context_in}])
 
-action = ProcessingMechanism(name='Actions',
-                             size=num_actions,
-                             input_states={NAME: 'Q values',
-                                           PROJECTIONS:state})
+# action = ProcessingMechanism(name='Action',
+#                              size=num_actions,
+#                              input_states={NAME: 'Q values',
+#                                            PROJECTIONS:perceptual_state})
+action = ProcessingMechanism(name='Action',
+                             size=num_actions)
 
+# *********************************************************************************************
+#                             RL AGENT NESTED COMPOSITION
+# *********************************************************************************************
+rl_agent_state = ProcessingMechanism(name='RL Agent State', size=5)
+rl_agent_action = ProcessingMechanism(name='RL Agent Action', size=5)
+rl_agent = Composition(name='RL Agent')
+rl_learning_components = rl_agent.add_reinforcement_learning_pathway([rl_agent_state, rl_agent_action])
+# rl_agent.add_required_node_role(rl_agent_action, NodeRole.OUTPUT)
+rl_agent._analyze_graph()
+
+# *********************************************************************************************
+#                          MEMORY AND CONTROL MECHANISMS
+# *********************************************************************************************
 # q_rep = ProcessingMechanism(name='Q rep',
-#                             size=num_actions*num_states,
+#                             size=num_actions*stim_size,
 #                             function=SoftMax(output=PROB, gain=1.0))
+#
+# em = EpisodicMemoryMechanism(name='Episodic Memory',
+#                              content_size=stim_size+context_size,
+#                              assoc_size=rpe_size,
+#                              # function=ContentAddressableMemory(function=ExepctedValueCalc))
+#                              function=ContentAddressableMemory)
+#
+# sr = ProcessingMechanism(name='Successor Rep')
 
-em = EpisodicMemoryMechanism(name='Episodic Memory',
-                             content_size=num_states+context_size+rpe_size,
-                             assoc_size=1,
-                             # function=ContentAddressableMemory(function=ExepctedValueCalc))
-                             function=ContentAddressableMemory)
+# *********************************************************************************************
+#                                   FULL COMPOSITION
+# *********************************************************************************************
+model = Composition(name='Adaptive Replay Model')
 
-sr = ProcessingMechanism(name='Successor Rep')
+# Add Components individually -----------------------------------------------------------------
+model.add_nodes([stim_in, context_in, reward_in, perceptual_state, rl_agent, action])
+model.add_projection(sender=perceptual_state, receiver=rl_agent_state)
+model.add_projection(sender=reward_in, receiver=rl_learning_components[TARGET_MECHANISM])
+model._analyze_graph()
+model.add_projection(sender=rl_agent_action, receiver=action) # <- CURRENTLY FAILS
+
+# # ALTERNATIVE: Use linear_processing_pathway  ------------------------------------------------
+# model.add_nodes([stim_in, context_in, reward_in, perceptual_state])
+# model.add_linear_processing_pathway([perceptual_state, rl_agent, action])
+
+# *********************************************************************************************
+#                                  SHOW AND RUN MODEL
+# *********************************************************************************************
+model.show_graph(show_controller=True)
+# model.show_graph(show_node_structure=ALL)
 
 
-comp = Composition(name='Adaptive Replay Model')
-comp.add_nodes([stim_in, context_in, state])
-# comp.add_reinforcement_learning_pathway([state, action])
+num_trials = 2
 
-# comp.show_graph(show_node_structure=ALL)
-
-# stimuli = {stim_in:[[1, 1, 1],[2, 2, 2]],
-#            context_in: [[10, 10, 10],[20, 20, 20]]}
-
-# stimuli = {stim_in:[1, 1, 1],
-#            context_in: [10, 10, 10]}
-
-stimuli = {stim_in:np.array([1]*num_states),
+stimuli = {stim_in:np.array([1]*stim_size),
            context_in: np.array([10]*context_size)}
 
-print(comp.run(inputs=stimuli))
+# print(model.run(inputs=stimuli))
