@@ -1543,7 +1543,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_projection(self, projection=None, sender=None, receiver=None, feedback=False, learning_projection=False, name=None):
         '''
 
-            Adds a projection to the Composition, if it is not already added.
+            Add a projection to the Composition, if it is not already added.
 
             If a *projection* is not specified, then a default MappingProjection is created.
 
