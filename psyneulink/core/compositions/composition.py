@@ -1824,7 +1824,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
         # MODIFIED 5/29/19 NEW:
-        learning_mechanism.output_states[ERROR_SIGNAL].output_projection_required_in_composition = False
+        # FIX 5/29/19 [JDC]:  MIGHT WANT TO TEST HERE WHETHER IT IS IN A BP CHAIN AND, IF SO, AND NOT LAST, THEN
+        #  REQUIRE IT
+        learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
+                                                                                                        override=True)
         # MODIFIED 5/29/19 END
         self.learning_enabled = True
         return target_mechanism, comparator_mechanism, learning_mechanism
