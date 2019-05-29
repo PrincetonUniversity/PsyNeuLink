@@ -2992,9 +2992,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         tc.typecheck
 
-        def _assign_processing_components(g,
-                                          rcvr,
-                                          show_nested):
+        def _assign_processing_components(g, rcvr, show_nested):
             '''Assign nodes to graph'''
             if isinstance(rcvr, Composition) and show_nested:
                 nested_comp_graph = rcvr.show_graph(output_fmt='gv')
@@ -3146,65 +3144,66 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # loop through senders to implement edges
             sndrs = processing_graph[rcvr]
+            _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
 
-            for sndr in sndrs:
-
-                # Set sndr info
-
-                sndr_label = self._get_graph_node_label(sndr, show_dimensions)
-
-                # Iterate through all Projections from all OutputStates of sndr
-                for output_state in sndr.output_states:
-                    for proj in output_state.efferents:
-
-                        # Skip any projections to ObjectiveMechanism for controller
-                        #   (those are handled in _assign_control_components)
-                        if (self.controller
-                                and proj.receiver.owner is self.controller.objective_mechanism):
-                            continue
-
-                        # Only consider Projections to the rcvr
-                        if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
-                                or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
-
-                            # # MODIFIED 5/29/19 OLD:
-                            # if show_node_structure:
-                            # MODIFIED 5/29/19 NEW: [JDC]
-                            if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
-                            # MODIFIED 5/29/19 END
-                                sndr_proj_label = '{}:{}'. \
-                                    format(sndr_label, sndr._get_port_name(proj.sender))
-                                proc_mech_rcvr_label = '{}:{}'. \
-                                    format(rcvr_label, rcvr._get_port_name(proj.receiver))
-                                # format(rcvr_label, InputState.__name__, proj.receiver.name)
-                            else:
-                                sndr_proj_label = sndr_label
-                                proc_mech_rcvr_label = rcvr_label
-
-                            edge_label = self._get_graph_node_label(proj, show_dimensions)
-
-                            # Check if Projection or its receiver is active
-                            if any(item in active_items for item in {proj, proj.receiver.owner}):
-                                if active_color is BOLD:
-
-                                    proj_color = default_node_color
-                                else:
-                                    proj_color = active_color
-                                proj_width = str(default_width + active_thicker_by)
-                                self.active_item_rendered = True
-
-                            else:
-                                proj_color = default_node_color
-                                proj_width = str(default_width)
-                            proc_mech_label = edge_label
-
-                            # Render Projection as edge
-                            if show_projection_labels:
-                                label = proc_mech_label
-                            else:
-                                label = ''
-                            g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
-                                   color=proj_color, penwidth=proj_width)
+            # for sndr in sndrs:
+            #
+            #     # Set sndr info
+            #
+            #     sndr_label = self._get_graph_node_label(sndr, show_dimensions)
+            #
+            #     # Iterate through all Projections from all OutputStates of sndr
+            #     for output_state in sndr.output_states:
+            #         for proj in output_state.efferents:
+            #
+            #             # Skip any projections to ObjectiveMechanism for controller
+            #             #   (those are handled in _assign_control_components)
+            #             if (self.controller
+            #                     and proj.receiver.owner is self.controller.objective_mechanism):
+            #                 continue
+            #
+            #             # Only consider Projections to the rcvr
+            #             if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
+            #                     or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
+            #
+            #                 # # MODIFIED 5/29/19 OLD:
+            #                 # if show_node_structure:
+            #                 # MODIFIED 5/29/19 NEW: [JDC]
+            #                 if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
+            #                 # MODIFIED 5/29/19 END
+            #                     sndr_proj_label = '{}:{}'. \
+            #                         format(sndr_label, sndr._get_port_name(proj.sender))
+            #                     proc_mech_rcvr_label = '{}:{}'. \
+            #                         format(rcvr_label, rcvr._get_port_name(proj.receiver))
+            #                     # format(rcvr_label, InputState.__name__, proj.receiver.name)
+            #                 else:
+            #                     sndr_proj_label = sndr_label
+            #                     proc_mech_rcvr_label = rcvr_label
+            #
+            #                 edge_label = self._get_graph_node_label(proj, show_dimensions)
+            #
+            #                 # Check if Projection or its receiver is active
+            #                 if any(item in active_items for item in {proj, proj.receiver.owner}):
+            #                     if active_color is BOLD:
+            #
+            #                         proj_color = default_node_color
+            #                     else:
+            #                         proj_color = active_color
+            #                     proj_width = str(default_width + active_thicker_by)
+            #                     self.active_item_rendered = True
+            #
+            #                 else:
+            #                     proj_color = default_node_color
+            #                     proj_width = str(default_width)
+            #                 proc_mech_label = edge_label
+            #
+            #                 # Render Projection as edge
+            #                 if show_projection_labels:
+            #                     label = proc_mech_label
+            #                 else:
+            #                     label = ''
+            #                 g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
+            #                        color=proj_color, penwidth=proj_width)
 
         def _assign_cim_components(g, cims):
 
@@ -3400,6 +3399,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            color=ctl_proj_color,
                            penwidth=ctl_proj_width
                            )
+
             # If controller has objective_mechanism, assign its node and projetions
             if controller.objective_mechanism:
                 # get projection from ObjectiveMechanism to ControlMechanism
@@ -3483,6 +3483,76 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
                                color=proj_color, penwidth=proj_width)
 
+            # MODIFIED 5/29/19 NEW: [JDC]
+            # get any other incoming edges to controller (i.e., other than from ObjectiveMechanism)
+            senders = set()
+            for i in controller.input_states[1:]:
+                for p in i.path_afferents:
+                    senders.add(p.sender.owner)
+            _assign_incoming_edges(g, controller, ctlr_label, senders, proj_color=ctl_proj_color)
+            # MODIFIED 5/29/19 END
+
+        # MODIFIED 5/29/19 NEW: [JDC]
+        @tc.typecheck
+        def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None):
+            proj_color = proj_color or default_node_color
+            for sndr in senders:
+
+                # Set sndr info
+
+                sndr_label = self._get_graph_node_label(sndr, show_dimensions)
+
+                # Iterate through all Projections from all OutputStates of sndr
+                for output_state in sndr.output_states:
+                    for proj in output_state.efferents:
+
+                        # Skip any projections to ObjectiveMechanism for controller
+                        #   (those are handled in _assign_control_components)
+                        if (self.controller
+                                and proj.receiver.owner is self.controller.objective_mechanism):
+                            continue
+
+                        # Only consider Projections to the rcvr
+                        if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
+                                or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
+
+                            # # MODIFIED 5/29/19 OLD:
+                            # if show_node_structure:
+                            # MODIFIED 5/29/19 NEW: [JDC]
+                            if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
+                            # MODIFIED 5/29/19 END
+                                sndr_proj_label = '{}:{}'. \
+                                    format(sndr_label, sndr._get_port_name(proj.sender))
+                                proc_mech_rcvr_label = '{}:{}'. \
+                                    format(rcvr_label, rcvr._get_port_name(proj.receiver))
+                                # format(rcvr_label, InputState.__name__, proj.receiver.name)
+                            else:
+                                sndr_proj_label = sndr_label
+                                proc_mech_rcvr_label = rcvr_label
+
+                            edge_label = self._get_graph_node_label(proj, show_dimensions)
+
+                            # Check if Projection or its receiver is active
+                            if any(item in active_items for item in {proj, proj.receiver.owner}):
+                                if active_color is BOLD:
+                                    pass
+                                else:
+                                    proj_color = active_color
+                                proj_width = str(default_width + active_thicker_by)
+                                self.active_item_rendered = True
+
+                            else:
+                                proj_width = str(default_width)
+                            proc_mech_label = edge_label
+
+                            # Render Projection as edge
+                            if show_projection_labels:
+                                label = proc_mech_label
+                            else:
+                                label = ''
+                            g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
+                                   color=proj_color, penwidth=proj_width)
+        # MODIFIED 5/29/19 END
 
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
