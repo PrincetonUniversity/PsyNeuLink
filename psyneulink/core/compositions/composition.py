@@ -1514,6 +1514,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif isinstance(receiver, InputState):
             receiver_mechanism = receiver.owner
             receiver_input_state = receiver
+            # FIX: 5/29/19 [JDC] THIS IS STILL A PROBLEM, IN PARTICULAR IN CONTEXT OF REFERENCING A NODE IN NESTED COMP
+            # FIX:               SHOULD BE FIXED BY MOD IN _validate_projection()
             # FIX: THE FOLLOWING FAILS TO KEEP TRACK OF SPECIFIED InputState AS *ACTUAL* RECEIVER
             # FIX: IN CALL TO _validate_projection BELOW;  ASSUMES MECHANISM AND THEREFORE ASSIGNS PRIMARY InputState
             # FIX: BUT CHANGING IT TO receiver (I.E., ALLOWING IT TO REMAIN SPECIFIED InputState
@@ -1588,7 +1590,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not isinstance(receiver, Composition)
                 and receiver_mechanism not in self.nodes
                 and not learning_projection):
-            # MODIFIED 5/29/19 OLD:
             # Check if receiver is in a nested Composition and, if so, if it is an INPUT Mechanism
             #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
             #    - otherwise, raise error
@@ -1599,23 +1600,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
                                        format(repr(receiver), self.name, Composition.__name__, ))
-            # # MODIFIED 5/29/19 NEW: [JDC]
-            # # Check if receiver is in a nested Composition and, if so, if it is an INPUT Mechanism
-            # #    - if so, then add Projection from receiver (input_CIM) to receiver_input_state (of nested node)
-            # #    - otherwise, raise error
-            # receiver, graph_receiver = self._get_nested_node_CIM_state(receiver_mechanism,
-            #                                                            receiver_input_state,
-            #                                                            NodeRole.INPUT)
-            # if receiver is not None:receiver
-            #     outer_projection.init_args[SENDER] = sender
-            #     outer_projection.init_args[RECEIVER] = receiver
-            #     inner_projection = MappingProjection(sender=receiver.owner.output_states[receiver.name],
-            #                                          receiver=receiver_input_state)
-            # else:
-            #     raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
-            #                            "is not in it or any of its nested {}s ".
-            #                            format(repr(receiver), self.name, Composition.__name__, ))
+            # MODIFIED 5/29/19 NEW:
+            # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below
+            if isinstance(receiver.owner, CompositionInterfaceMechanism):
+                receiver_mechanism = receiver.owner
             # MODIFIED 5/29/19 END
+
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
@@ -2055,9 +2045,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              learning_projection
                              ):
 
+        # FIX 5/29/19 [JDC] WHY ASSIGN BOTH sender *AND* receiver IF *EITHER* IS NOT SPECIFIED?
+        # FIX:              WHY NOT JUST ASSIGN THE ONE THAT IS NOT SPECIFIED?
         if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):
-            projection.init_args['sender'] = graph_sender
-            projection.init_args['receiver'] = graph_receiver
+            # # MODIFIED 5/29/19 OLD:
+            # projection.init_args['sender'] = graph_sender
+            # projection.init_args['receiver'] = graph_receiver
+            # MODIFIED 5/29/19 NEW:
+            # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
+            if isinstance(sender, OutputState):
+                projection.init_args['sender'] = sender
+            else:
+                projection.init_args['sender'] = graph_sender
+            if isinstance(receiver, InputState):
+                projection.init_args['receiver'] = receiver
+            else:
+                projection.init_args['receiver'] = graph_receiver
+            # MODIFIED 5/29/19 END
             projection.context.initialization_status = ContextFlags.DEFERRED_INIT
             projection._deferred_init(context=" INITIALIZING ")
 
