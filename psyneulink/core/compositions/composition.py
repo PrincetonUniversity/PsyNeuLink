@@ -2995,7 +2995,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def _assign_processing_components(g, rcvr, show_nested):
             '''Assign nodes to graph'''
             if isinstance(rcvr, Composition) and show_nested:
-                nested_comp_graph = rcvr.show_graph(output_fmt='gv')
+                # MODIFIED 5/29/19 OLD:
+                # nested_comp_graph = rcvr.show_graph(output_fmt='gv', )
+                # MODIFIED 5/29/19 NEW:
+                nested_comp_graph = rcvr.show_graph(output_fmt='gv',
+                                                    show_controller=show_controller,
+                                                    show_dimensions=show_dimensions,
+                                                    show_node_structure=show_node_structure,
+                                                    show_cim=show_cim,
+                                                    show_headers=show_headers,
+                                                    show_projection_labels=show_projection_labels,
+                                                    show_nested=show_nested,
+                                                    direction=direction,
+                                                    active_items=active_items,
+                                                    active_color=BOLD,
+                                                    input_color=input_color,
+                                                    output_color=output_color,
+                                                    input_and_output_color=input_and_output_color,
+                                                    controller_color=controller_color,
+                                                    composition_color=composition_color,
+                                                    execution_id=execution_id)
+                # MODIFIED 5/29/19 END
                 nested_comp_graph.name = "cluster_"+rcvr.name
                 rcvr_label = rcvr.name
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \

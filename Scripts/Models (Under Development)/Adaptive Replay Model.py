@@ -75,8 +75,7 @@ model = Composition(name='Adaptive Replay Model')
 model.add_nodes([stim_in, context_in, reward_in, perceptual_state, rl_agent, action])
 model.add_projection(sender=perceptual_state, receiver=rl_agent_state)
 model.add_projection(sender=reward_in, receiver=rl_learning_components[TARGET_MECHANISM])
-# model.add_projection(sender=rl_agent_action, receiver=action) # <- CURRENTLY FAILS
-model.add_projection(sender=rl_agent, receiver=action) # <- CURRENTLY FAILS
+model.add_projection(sender=rl_agent, receiver=action)
 model._analyze_graph()
 assert True
 # # ALTERNATIVE: Use linear_processing_pathway  ------------------------------------------------
@@ -86,7 +85,7 @@ assert True
 # *********************************************************************************************
 #                                  SHOW AND RUN MODEL
 # *********************************************************************************************
-model.show_graph(show_controller=True, show_nested=True, show_node_structure=True)
+model.show_graph(show_controller=True, show_nested=True, show_node_structure=True, show_cim=True)
 # model.show_graph(show_node_structure=ALL)
 
 
