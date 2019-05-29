@@ -24,7 +24,7 @@ ACTION = AGENT_ACTION
 ACTION_REPORTING = 3
 SIMULATION_REPORTING = 2
 STANDARD_REPORTING = 1
-VERBOSE = SIMULATION_REPORTING
+VERBOSE = ACTION_REPORTING
 
 # ControlSignal parameters
 COST_RATE = -.05
@@ -178,13 +178,13 @@ ocm = OptimizationControlMechanism(name='EVC',
 agent_comp.add_controller(ocm)
 agent_comp.enable_controller = True
 agent_comp.controller_mode = BEFORE
-agent_comp.controller_condition=All(AtRun(0), AtTrial(0))
+# agent_comp.controller_condition=All(AtRun(0), AtTrial(0))
 
 if SHOW_GRAPH:
     # agent_comp.show_graph()
-    agent_comp.show_graph(show_model_based_optimizer=True, show_cim=True)
-    # agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
-    # agent_comp.show_graph(show_model_based_optimizer=True,
+    agent_comp.show_graph(show_controller=True, show_cim=True)
+    # agent_comp.show_graph(show_controller=True, show_node_structure=True, show_cim=True)
+    # agent_comp.show_graph(show_controller=True,
     #                       show_cim=True,
     #                       show_node_structure=ALL,
     #                       show_headers=True,
