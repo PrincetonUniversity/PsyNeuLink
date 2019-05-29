@@ -268,6 +268,7 @@ class LLVMBuilderContext:
         # Allocate run set structure
         run_set_type = ir.ArrayType(ir.IntType(1), len(composition.nodes))
         run_set_ptr = builder.alloca(run_set_type, name="run_set")
+        builder.store(run_set_type(None), run_set_ptr)
 
         # Allocate temporary output storage
         output_storage = builder.alloca(data.type.pointee, name="output_storage")
