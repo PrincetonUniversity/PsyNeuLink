@@ -26,7 +26,7 @@ def pytest_runtest_setup(item):
     import doctest
 
     for m in marks_default_skip:
-        if getattr(item.obj, m, None) and not item.config.getvalue(m):
+        if m in item.keywords and not item.config.getvalue(m):
             pytest.skip('{0} tests not requested'.format(m))
 
     if 'cuda' in item.keywords:
