@@ -2873,7 +2873,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_cim:bool=False,
                    show_headers:bool=True,
                    show_projection_labels:bool=False,
-                   show_nested:tc.optional(tc.any(bool,dict))=False,
+                   show_nested:tc.optional(tc.any(bool,dict))=True,
                    direction:tc.enum('BT', 'TB', 'LR', 'RL')='BT',
                    active_items:tc.optional(list)=None,
                    active_color=BOLD,
@@ -2935,8 +2935,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
             **show_node_structure** is specified (see above).
 
-        show_nested : bool : default False
-            specifies whether nested Compositions are shown in details as inset graphs
+        show_nested : bool | dict : default ALL
+            specifies whether any nested Composition(s) are shown in details as inset graphs.  A dict can be used to
+            specify any of the arguments allowed for show_graph to be used for the nested Composition(s);  *ALL*
+            passes all arguments specified for the main Composition to the nested one(s);  True uses the default
+            values of show_graph args for the nested Composition(s).
 
         show_cim : bool : default False
             specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
@@ -3002,10 +3005,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(show_nested, dict):
                     args = show_nested
                     args['output_fmt']='gv'
-                elif show_nested is None:
-                    # Use default args for nested Composition
-                    args = {}
-                else:
+                elif show_nested is ALL:
                     # Pass args from main call to show_graph to call for nested Composition
                     args = dict({k:_locals[k] for k in list(inspect.signature(self.show_graph).parameters)})
                     args['output_fmt'] = 'gv'
@@ -3013,8 +3013,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         args['kwargs'] = kwargs
                     else:
                         del  args['kwargs']
+                else:
+                    # Use default args for nested Composition
+                    args = {'output_fmt':'gv'}
                 nested_comp_graph = rcvr.show_graph(**args)
-                # MODIFIED 5/29/19 END
                 nested_comp_graph.name = "cluster_"+rcvr.name
                 rcvr_label = rcvr.name
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
