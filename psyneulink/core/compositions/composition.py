@@ -2864,23 +2864,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return name
 
+    @tc.typecheck
     def show_graph(self,
-                   show_controller=False,
-                   show_dimensions=False,               # NOT WORKING?
-                   show_node_structure=False,
-                   show_cim=False,
-                   show_headers=True,
-                   show_projection_labels=False,
-                   show_nested=False,
-                   direction='BT',
-                   active_items=None,
+                   show_controller:bool=False,
+                   show_dimensions:bool=False,               # NOT WORKING?
+                   show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
+                                                            STATE_FUNCTION_PARAMS, ROLES, ALL))=False,
+                   show_cim:bool=False,
+                   show_headers:bool=True,
+                   show_projection_labels:bool=False,
+                   show_nested:tc.optional(tc.any(bool,dict))=False,
+                   direction:tc.enum('BT', 'TB', 'LR', 'RL')='BT',
+                   active_items:tc.optional(list)=None,
                    active_color=BOLD,
                    input_color='green',
                    output_color='red',
                    input_and_output_color='brown',
                    controller_color='blue',
                    composition_color='pink',
-                   output_fmt='pdf',
+                   output_fmt:tc.enum('pdf','gv','jupyter','gif')='pdf',
                    execution_id=NotImplemented,
                    **kwargs,
                    ):
@@ -2991,30 +2993,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # HELPER METHODS ----------------------------------------------------------------------
 
         tc.typecheck
+        _locals = locals().copy()
 
         def _assign_processing_components(g, rcvr, show_nested):
             '''Assign nodes to graph'''
             if isinstance(rcvr, Composition) and show_nested:
-                # MODIFIED 5/29/19 OLD:
-                # nested_comp_graph = rcvr.show_graph(output_fmt='gv', )
-                # MODIFIED 5/29/19 NEW:
-                nested_comp_graph = rcvr.show_graph(output_fmt='gv',
-                                                    show_controller=show_controller,
-                                                    show_dimensions=show_dimensions,
-                                                    show_node_structure=show_node_structure,
-                                                    show_cim=show_cim,
-                                                    show_headers=show_headers,
-                                                    show_projection_labels=show_projection_labels,
-                                                    show_nested=show_nested,
-                                                    direction=direction,
-                                                    active_items=active_items,
-                                                    active_color=BOLD,
-                                                    input_color=input_color,
-                                                    output_color=output_color,
-                                                    input_and_output_color=input_and_output_color,
-                                                    controller_color=controller_color,
-                                                    composition_color=composition_color,
-                                                    execution_id=execution_id)
+                # User passed args for nested Composition
+                if isinstance(show_nested, dict):
+                    args = show_nested
+                    args['output_fmt']='gv'
+                elif show_nested is None:
+                    # Use default args for nested Composition
+                    args = {}
+                else:
+                    # Pass args from main call to show_graph to call for nested Composition
+                    args = dict({k:_locals[k] for k in list(inspect.signature(self.show_graph).parameters)})
+                    args['output_fmt'] = 'gv'
+                    if kwargs:
+                        args['kwargs'] = kwargs
+                    else:
+                        del  args['kwargs']
+                nested_comp_graph = rcvr.show_graph(**args)
                 # MODIFIED 5/29/19 END
                 nested_comp_graph.name = "cluster_"+rcvr.name
                 rcvr_label = rcvr.name
@@ -3165,65 +3164,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # loop through senders to implement edges
             sndrs = processing_graph[rcvr]
             _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
-
-            # for sndr in sndrs:
-            #
-            #     # Set sndr info
-            #
-            #     sndr_label = self._get_graph_node_label(sndr, show_dimensions)
-            #
-            #     # Iterate through all Projections from all OutputStates of sndr
-            #     for output_state in sndr.output_states:
-            #         for proj in output_state.efferents:
-            #
-            #             # Skip any projections to ObjectiveMechanism for controller
-            #             #   (those are handled in _assign_control_components)
-            #             if (self.controller
-            #                     and proj.receiver.owner is self.controller.objective_mechanism):
-            #                 continue
-            #
-            #             # Only consider Projections to the rcvr
-            #             if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
-            #                     or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
-            #
-            #                 # # MODIFIED 5/29/19 OLD:
-            #                 # if show_node_structure:
-            #                 # MODIFIED 5/29/19 NEW: [JDC]
-            #                 if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
-            #                 # MODIFIED 5/29/19 END
-            #                     sndr_proj_label = '{}:{}'. \
-            #                         format(sndr_label, sndr._get_port_name(proj.sender))
-            #                     proc_mech_rcvr_label = '{}:{}'. \
-            #                         format(rcvr_label, rcvr._get_port_name(proj.receiver))
-            #                     # format(rcvr_label, InputState.__name__, proj.receiver.name)
-            #                 else:
-            #                     sndr_proj_label = sndr_label
-            #                     proc_mech_rcvr_label = rcvr_label
-            #
-            #                 edge_label = self._get_graph_node_label(proj, show_dimensions)
-            #
-            #                 # Check if Projection or its receiver is active
-            #                 if any(item in active_items for item in {proj, proj.receiver.owner}):
-            #                     if active_color is BOLD:
-            #
-            #                         proj_color = default_node_color
-            #                     else:
-            #                         proj_color = active_color
-            #                     proj_width = str(default_width + active_thicker_by)
-            #                     self.active_item_rendered = True
-            #
-            #                 else:
-            #                     proj_color = default_node_color
-            #                     proj_width = str(default_width)
-            #                 proc_mech_label = edge_label
-            #
-            #                 # Render Projection as edge
-            #                 if show_projection_labels:
-            #                     label = proc_mech_label
-            #                 else:
-            #                     label = ''
-            #                 g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
-            #                        color=proj_color, penwidth=proj_width)
 
         def _assign_cim_components(g, cims):
 
