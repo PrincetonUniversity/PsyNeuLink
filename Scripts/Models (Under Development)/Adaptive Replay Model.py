@@ -85,18 +85,20 @@ assert True
 # *********************************************************************************************
 #                                  SHOW AND RUN MODEL
 # *********************************************************************************************
-model.show_graph(show_controller=True,
-                 # show_nested={'show_node_structure':False,
-                 #              'show_cim':True},
-                 show_nested=True,
-                 show_node_structure=True,
-                 show_cim=False)
+# model.show_graph(show_controller=True,
+#                  show_nested={'show_node_structure':False,
+#                               'show_cim':True},
+#                  # show_nested=ALL,
+#                  show_node_structure=ALL,
+#                  show_cim=False)
 # model.show_graph(show_node_structure=ALL)
+model.show_graph(show_nested=ALL, show_node_structure=ALL, show_cim=True)
 
 
 num_trials = 2
 
 stimuli = {stim_in:np.array([1]*stim_size),
-           context_in: np.array([10]*context_size)}
+           context_in: np.array([10]*context_size),
+           reward_in:np.array([1])}
 
-# print(model.run(inputs=stimuli))
+print(model.run(inputs=stimuli))

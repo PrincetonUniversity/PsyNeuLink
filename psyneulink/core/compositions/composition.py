@@ -1748,10 +1748,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    "Composition).")
         # Then, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
-            # MODIFIED 5/29/19 OLD:
-            # if the current item is a mechanism, add it
-            if isinstance(pathway[c], Mechanism):
-                self.add_nodes([pathway[c]])
+            # # MODIFIED 5/29/19 OLD:
+            # # if the current item is a mechanism, add it
+            # if isinstance(pathway[c], Mechanism):
+            #     self.add_nodes([pathway[c]])
             # MODIFIED 5/29/19 NEW: [JDC]
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
             if isinstance(pathway[c], (Mechanism, Composition, tuple)):
@@ -2868,7 +2868,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def show_graph(self,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             STATE_FUNCTION_PARAMS, ROLES, ALL))=False,
-                   show_nested:tc.optional(tc.any(bool,dict))=True,
+                   show_nested:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
                    show_controller:bool=False,
                    show_cim:bool=False,
                    show_headers:bool=True,
@@ -3023,20 +3023,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             '''Assign nodes to graph'''
             if isinstance(rcvr, Composition) and show_nested:
                 # User passed args for nested Composition
+                output_fmt_arg = {'output_fmt':'gv'}
                 if isinstance(show_nested, dict):
                     args = show_nested
-                    args['output_fmt']='gv'
+                    args.update(output_fmt_arg)
                 elif show_nested is ALL:
                     # Pass args from main call to show_graph to call for nested Composition
                     args = dict({k:_locals[k] for k in list(inspect.signature(self.show_graph).parameters)})
-                    args['output_fmt'] = 'gv'
+                    args.update(output_fmt_arg)
                     if kwargs:
                         args['kwargs'] = kwargs
                     else:
                         del  args['kwargs']
                 else:
                     # Use default args for nested Composition
-                    args = {'output_fmt':'gv'}
+                    args = output_fmt_arg
                 nested_comp_graph = rcvr.show_graph(**args)
                 nested_comp_graph.name = "cluster_"+rcvr.name
                 rcvr_label = rcvr.name
