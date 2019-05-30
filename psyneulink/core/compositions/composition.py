@@ -2866,14 +2866,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @tc.typecheck
     def show_graph(self,
-                   show_controller:bool=False,
-                   show_dimensions:bool=False,               # NOT WORKING?
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             STATE_FUNCTION_PARAMS, ROLES, ALL))=False,
+                   show_nested:tc.optional(tc.any(bool,dict))=True,
+                   show_controller:bool=False,
                    show_cim:bool=False,
                    show_headers:bool=True,
+                   show_dimensions:bool=False,               # NOT WORKING?
                    show_projection_labels:bool=False,
-                   show_nested:tc.optional(tc.any(bool,dict))=True,
                    direction:tc.enum('BT', 'TB', 'LR', 'RL')='BT',
                    active_items:tc.optional(list)=None,
                    active_color=BOLD,
@@ -2887,6 +2887,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    **kwargs,
                    ):
         """
+        show_graph(                           \
+           show_node_structure=False,         \
+           show_nested=True,                  \
+           show_controller=False,             \
+           show_cim=False,                    \
+           show_headers=True,                 \
+           show_dimensions=False,             \
+           show_projection_labels=False,      \
+           direction='BT',                    \
+           active_items=None,                 \
+           active_color=BOLD,                 \
+           input_color='green',               \
+           output_color='red',                \
+           input_and_output_color='brown',    \
+           controller_color='blue',           \
+           composition_color='pink',          \
+           output_fmt='pdf',                  \
+           execution_id=None)
+
+        Show graphical display of Components in a Composition's graph.
+
         .. note::
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
            (standard with PsyNeuLink pip install)
@@ -2928,25 +2949,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               Mechanisms in the `Composition` and their `States <State>` (using labels for
               the values, if specified -- see above), including parameters for all functions.
 
-        show_projection_labels : bool : default False
-            specifies whether or not to show names of projections.
-
-        show_headers : bool : default True
-            specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
-            **show_node_structure** is specified (see above).
-
         show_nested : bool | dict : default ALL
             specifies whether any nested Composition(s) are shown in details as inset graphs.  A dict can be used to
             specify any of the arguments allowed for show_graph to be used for the nested Composition(s);  *ALL*
             passes all arguments specified for the main Composition to the nested one(s);  True uses the default
             values of show_graph args for the nested Composition(s).
 
-        show_cim : bool : default False
-            specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
-
         show_controller :  bool : default False
             specifies whether or not to show the Composition's controller and associated ObjectiveMechanism;
             these are displayed in the color specified for **controller_color**.
+
+        show_cim : bool : default False
+            specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
+
+        show_projection_labels : bool : default False
+            specifies whether or not to show names of projections.
+
+        show_headers : bool : default True
+            specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
+            **show_node_structure** is specified (see above).
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
