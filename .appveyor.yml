@@ -17,7 +17,7 @@ environment:
     PYTORCH: cp37-cp37m
 
 install:
-  - choco upgrade graphviz.portable -y
+  - appveyor-retry choco upgrade graphviz.portable -y
   - pip --version
   - pip install --user -U pip
   - pip --version
@@ -43,8 +43,8 @@ cache:
 build: off
 
 test_script:
-  - pytest --junit-xml=tests_out.xml tests/ %EXTRA_ARGS%
+  - pytest --junit-xml=tests_out.xml -n auto --strict-markers tests/ %EXTRA_ARGS%
 
 on_finish:
   # Upload tests to appveyor overview
-  - curl -X POST -F "file=@tests_out.xml" https://ci.appveyor.com/api/testresults/junit/%APPVEYOR_JOB_ID%
+  - appveyor-retry curl -X POST -F "file=@tests_out.xml" https://ci.appveyor.com/api/testresults/junit/%APPVEYOR_JOB_ID%

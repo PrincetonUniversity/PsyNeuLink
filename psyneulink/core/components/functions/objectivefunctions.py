@@ -387,7 +387,7 @@ COMMENT
 
         input_length = ctx.int32_ty(arg_in.type.pointee.count)
         output_length = ctx.int32_ty(arg_in.type.pointee.count)
-        builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
+        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
 
         # Prepare metric function
@@ -714,8 +714,7 @@ class Distance(ObjectiveFunction):
 
         old_max = builder.load(max_diff_ptr)
         # Maxnum for some reason needs full function prototype
-        fmax = ctx.get_builtin("maxnum", [ctx.float_ty],
-            pnlvm.ir.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
+        fmax = ctx.get_builtin("maxnum", [ctx.float_ty])
 
         max_diff = builder.call(fmax, [diff, old_max])
         builder.store(max_diff, max_diff_ptr)

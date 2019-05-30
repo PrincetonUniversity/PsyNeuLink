@@ -9,18 +9,17 @@
 # ********************************************* PNL LLVM builtins **************************************************************
 
 from llvmlite import ir
-from psyneulink.core.llvm import helpers
-from psyneulink.core.llvm.builder_context import LLVMBuilderContext
+from . import helpers
+from .builder_context import LLVMBuilderContext
 
 
 def setup_vxm(ctx):
-    module = ctx.module
     # Setup types
     double_ptr_ty = ctx.float_ty.as_pointer()
     func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
 
     # Create function
-    function = ir.Function(module, func_ty, name="__pnl_builtin_vxm")
+    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_vxm")
     function.attributes.add('argmemonly')
     function.attributes.add('alwaysinline')
 
@@ -112,15 +111,14 @@ def setup_vxm(ctx):
         builder.ret_void()
 
 def setup_pnl_intrinsics(ctx):
-    module = ctx.module
     # Setup types
     single_intr_ty = ir.FunctionType(ctx.float_ty, [ctx.float_ty])
     double_intr_ty = ir.FunctionType(ctx.float_ty, (ctx.float_ty, ctx.float_ty))
 
     # Create function declarations
-    ir.Function(module, single_intr_ty, name="__pnl_builtin_exp")
-    ir.Function(module, single_intr_ty, name="__pnl_builtin_log")
-    ir.Function(module, double_intr_ty, name="__pnl_builtin_pow")
+    ir.Function(ctx.module, single_intr_ty, name="__pnl_builtin_exp")
+    ir.Function(ctx.module, single_intr_ty, name="__pnl_builtin_log")
+    ir.Function(ctx.module, double_intr_ty, name="__pnl_builtin_pow")
 
 def _generate_intrinsic_wrapper(module, name, ret, args):
     intrinsic = module.declare_intrinsic("llvm." + name, list(set(args)))
