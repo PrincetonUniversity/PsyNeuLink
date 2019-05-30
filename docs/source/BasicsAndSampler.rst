@@ -1,13 +1,13 @@
 Basics and Sampler
 ==================
 
-* `Basics`
-* `Sampler`
-    * `Simple_Configurations`
-    * `Elaborate_Configurations`
-    * `Dynamics_of_Execution`
+* `BasicsAndSampler_Basics`
+* `BasicsAndSampler_Sampler`
+    * `BasicsAndSampler_Simple_Configurations`
+    * `BasicsAndSampler_Elaborate_Configurations`
+    * `BasicsAndSampler_Dynamics_of_Execution`
 
-.. _Basics:
+.. _BasicsAndSampler_Basics:
 
 Basics
 ------
@@ -53,7 +53,7 @@ planned for future inclusion.  The `QuickReference` provides a more detailed ove
 other facilities.  In the sections that follow, the Sampler provides some examples of how these are used to construct
 models in PsyNeuLink.
 
-.. _BasicsSampler_GrandView_Figure:
+.. _BasicsAndSampler_GrandView_Figure:
 
 .. figure:: _static/BasicsAndSampler_GrandView_fig.svg
 
@@ -61,7 +61,7 @@ models in PsyNeuLink.
     items are examples of elements planned for future implementation.
 
 
-.. _Sampler:
+.. _BasicsAndSampler_Sampler:
 
 Sampler
 -------
@@ -97,7 +97,7 @@ with an appropriately-sized input array, for example::
 The Composition connects the Mechanisms into a pathway that form a graph, which can be shown using its `show_graph
 <Composition.show_graph>` method:
 
-.. _Simple_Pathway_Example_Figure:
+.. _BasicsAndSampler_Simple_Pathway_Example_Figure:
 
 .. figure:: _static/BasicsAndSampler_SimplePathway_fig.svg
    :width: 30%
@@ -151,32 +151,15 @@ been accomplished by explicitly creating the recurrent connection::
     my_encoder.add_projection(recurent_projection)
 
 
-.. _Elaborate_Configurations:
+.. _BasicsAndSampler_Elaborate_Configurations:
 
 More Elaborate Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-One of the strenghts of PsyNeuLink is its support for control and modulation.
-XXX REPLACE WITH CONTROL EXAMPLE AND THE AUTODIFF COMPOSITION
-
-Configuring more complex features is just as simple and flexible.  For example, the feedforward network above can be
-trained using backpropagation simply by adding the **learning** argument to the constructor for the Process::
-
-    my_encoder = Process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
-
-and then specifying the target for each trial when it is executed (here, the Process' `run <Process.run>` command
-is used to execute a series of five training trials, one that trains it on each element of the input)::
-
-    my_encoder.run(input=[[0,0,0,0,0], [1,0,0,0,0], [0,0,1,0,0], [0,0,0,1,0], [0,0,0,0,1]],
-                   target=[[0,0,0,0,0], [1,0,0,0,0], [0,0,1,0,0], [0,0,0,1,0], [0,0,0,0,1]])
-
-`Backpropagation <BackPropagation>` is the default learning method, but PsyNeuLink also currently supports
-`Reinforcement Learning <Reinforcement>`, and others are currently being implemented (including Hebbian, Temporal
-Differences, and supervised learning for recurrent networks).
-
-PsyNeuLink can also be used to construct models with different kinds of Mechanisms.  For example, the script below
-uses a `System` -- a more powerful form of Composition -- to create two feedforward networks that converge on a single
-output layer, which combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the response::
+Configuring more complex models is also relatively simple.  For example, the script below implements a model of the
+`Stroop task <https://en.wikipedia.org/wiki/Stroop_effect>`_ by creating two feedforward pathways that converge on a
+single output layer, which combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the
+response::
 
     # Construct the Mechanisms:
     colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
@@ -188,21 +171,20 @@ output layer, which combines the inputs and projects to a drift diffusion mechan
     # from each of the input layers to the output_layer
     differencing_weights = np.array([[1], [-1]])
 
-    # Construct the Processes:
-    colors_process = Process(pathway=[colors_input_layer, differencing_weights, output_layer])
-    words_process = Process(pathway=[words_input_layer, differencing_weights, output_layer])
-    decision_process = Process(pathway=[output_layer, decision_mech])
+    # Construct the model:
+    Stroop_model = Composition()
+    Stroop_model.add_linear_processing_pathway([colors_input_layer, differencing_weights, output_layer])
+    Stroop_model.add_linear_processing_pathway([words_input_layer, differencing_weights, output_layer])
+    Stroop_model.add_linear_processing_pathway([output_layer, decision_mech])
 
-    # Construct the System:
-    my_simple_Stroop = System(processes=[colors_process, words_process, decision_process])
 
-In this example, ``differencing_weights`` is used to specify a `MappingProjection` between the input layer of the
-`pathway <Process.pathway>` for each Process and the Mechanism (``output_layer``) on which they converge.
+In this example, ``differencing_weights`` is used to specify a `MappingProjection` between the input layer of each
+pathway and the Mechanism (``output_layer``) on which they converge.
 
 As a Composition gets more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
-For example, calling ``my_simple_Stroop.show_graph()`` produces the following display:
+For example, calling ``Stroop_model.show_graph()`` produces the following display:
 
-.. _Simple_Stroop_Example_Figure:
+.. _BasicsAndSampler_Simple_Stroop_Example_Figure:
 
 **Composition Graph**
 
@@ -215,7 +197,8 @@ standard dependency dictionary format, so that they can also be submitted to oth
 display and/or analysis (such as `NetworkX <https://networkx.github.io>`_ and `igraph <http://igraph.org/redirect
 .html>`_).
 
-.. _Dynamics_of_Execution:
+
+.. _BasicsAndSampler_Dynamics_of_Execution:
 
 Dynamics of Execution
 ~~~~~~~~~~~~~~~~~~~~~
@@ -291,6 +274,58 @@ Here, the criterion for stopping execution is defined as a function (``converge`
 Condition.  Any arbitrary Conditions can be created and flexibly combined to construct virtually any schedule of
 execution that is logically sensible.
 
+.. _BasicsAndSampler_Control:
+
+Control
+~~~~~~~
+
+One of the distinctive features of PsyNeuLink is the ability to easily create models that include control;  that is,
+Mechanism that can evaluate the output of other Mechanisms (or nested Compositions), and use this to regulate
+the processing of those Mechanisms.  For example, the following extension of the Stroop model monitors conflict in
+the output_layer of the Stroop model above on each trial, and uses that to determine how much to control to allocate
+to the ColorNaming vs. WordReading pathways.
+
+<CONFLICT MONITORING EXAMPLE HERE>
+
+A more elaborate example of this model can be found at `BotvinickConflictMonitoringModel`. More complicated forms of
+control are also possible, for example, ones run internal simulations to determine the amount of control to optimize
+some criterion
+
+<EVC EXAMPLE HERE>
+
+
+.. _BasicsAndSampler_Control:
+
+Learning
+~~~~~~~~
+
+For example, the feedforward network above can be
+trained using backpropagation simply by adding the **learning** argument to the constructor for the Process::
+
+    my_encoder = Process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
+
+and then specifying the target for each trial when it is executed (here, the Process' `run <Process.run>` command
+is used to execute a series of five training trials, one that trains it on each element of the input)::
+
+    my_encoder.run(input=[[0,0,0,0,0], [1,0,0,0,0], [0,0,1,0,0], [0,0,0,1,0], [0,0,0,0,1]],
+                   target=[[0,0,0,0,0], [1,0,0,0,0], [0,0,1,0,0], [0,0,0,1,0], [0,0,0,0,1]])
+
+`Backpropagation <BackPropagation>` is the default learning method, but PsyNeuLink also currently supports
+`Reinforcement Learning <Reinforcement>`, and others are currently being implemented (including Hebbian, Temporal
+Differences, and supervised learning for recurrent networks).
+
+
+-----------------
+
+STUFF TO ADD:
+
+One of the most useful applications for PsyNeuLink is the design of models that include control processes.
+XXX USER DEFINED FUNCTIONS
+XXX CONTROL (STROOP)
+XXX HETEROGENOUS TYPES: ADD DECISION MAKING USING DDM
+XXX LEARNING:  USING RL AND BP
+XXX NESTED COMPOSITIONS: AUTODIFF
+XXX COMPILATION
 
 The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,
 and the `Tutorial` provides an interactive introduction to its use.
