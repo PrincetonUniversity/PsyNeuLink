@@ -317,13 +317,15 @@ class LLVMBuilderContext:
             with builder.if_then(mech_cond):
                 mech_w = composition._get_node_wrapper(mech, simulation);
                 mech_f = self.get_llvm_function(mech_w)
-                # Wrappers do proper indexing of all strctures
+                builder.block.name = "invoke_" + mech_f.name
+                # Wrappers do proper indexing of all structures
                 if len(mech_f.args) == 5: # Mechanism wrappers have 5 inputs
                     builder.call(mech_f, [context, params, comp_in, data, output_storage])
                 else:
                     builder.call(mech_f, [context, params, comp_in, data, output_storage, cond])
 
                 cond_gen.generate_update_after_run(builder, cond, mech)
+            builder.block.name = "post_invoke_" + mech_f.name
 
         # Writeback results
         for idx, mech in enumerate(composition.nodes):
@@ -337,8 +339,10 @@ class LLVMBuilderContext:
 
         # Update step counter
         with builder.if_then(any_cond):
+            builder.block.name = "inc_step"
             cond_gen.bump_ts(builder, cond)
 
+        builder.block.name = "update_iter_count"
         # Increment number of iterations
         iters = builder.load(iter_ptr, name="iterw")
         iters = builder.add(iters, self.int32_ty(1), name="iterw_inc")
@@ -350,6 +354,7 @@ class LLVMBuilderContext:
                                                name="completed_pass")
         # Increment pass and reset time step
         with builder.if_then(completed_pass):
+            builder.block.name = "inc_pass"
             builder.store(zero, iter_ptr)
             # Bumping automatically zeros lower elements
             cond_gen.bump_ts(builder, cond, (0, 1, 0))
@@ -368,6 +373,7 @@ class LLVMBuilderContext:
         # Call output CIM
         output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation);
         output_cim_f = self.get_llvm_function(output_cim_w)
+        builder.block.name = "invoke_" + output_cim_f.name
         builder.call(output_cim_f, [context, params, comp_in, data, data])
 
         if "alloca_data" in debug_env:
