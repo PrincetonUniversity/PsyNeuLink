@@ -939,21 +939,18 @@ class GradientOptimization(OptimizationFunction):
             step = call_with_pruned_args(self.annealing_function, step, sample_num, execution_id=execution_id)
             self.parameters.step.set(step, execution_id)
 
-        # # MODIFIED 5/30/19 OLD:
-        # # Compute gradients with respect to current variable
-        # _gradients = call_with_pruned_args(self.gradient_function, variable, execution_id=execution_id)
-        #
         # # Update variable based on new gradients
         # return variable + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
-        # MODIFIED 5/30/19 NEW [JDC]:
-        # FIX: 5/30/19 [JDC] HACK TO IMPLEMENT LVOC
         # Compute gradients with respect to current variable
         _gradients = call_with_pruned_args(self.gradient_function, variable, execution_id=execution_id)
+        # MODIFIED 5/30/19 NEW [JDC]:
+        # FIX: 5/30/19 [JDC] HACK TO IMPLEMENT LVOC:  CONSTRAIN SAMPLE (variable) TO INTERVAL from 0 to 1.
         new_variable = variable + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
         new_variable[0] = max(0, min(1, new_variable[0]))
+        # MODIFIED 5/30/19 END
+
         # Update variable based on new gradients
         return new_variable
-        # MODIFIED 5/30/19 END
 
     def _convergence_condition(self, variable, value, iteration, execution_id=None):
         previous_variable = self.parameters.previous_variable.get(execution_id)

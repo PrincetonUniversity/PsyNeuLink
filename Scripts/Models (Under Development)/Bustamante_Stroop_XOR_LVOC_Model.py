@@ -28,7 +28,7 @@ import psyneulink.core.components.functions.optimizationfunctions
 import psyneulink.core.components.functions.transferfunctions
 
 # from build_input import xor_dict
-from build_stimuli import xor_dict
+from build_stimuli_VZ import xor_dict
 import csv
 
 np.random.seed(0)
