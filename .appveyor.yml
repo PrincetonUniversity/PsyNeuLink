@@ -1,6 +1,15 @@
 version: '{build}'
 clone_depth: 25
 
+branches:
+  only:
+    - master
+    - devel
+    - appveyor
+    - /devel.*/
+    - /.*-avy/
+    - /.*-ci/
+
 environment:
   PYTHONWARNINGS: ignore::DeprecationWarning
   PATH: '%APPDATA%\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;%PATH%'
