@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.3.2+158.ge626165 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.3.2+159.g722948e documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+158.ge626165',
+              VERSION:'0.5.3.2+159.g722948e',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+158
+                0.5.3.2+159
               </div>
             
           
@@ -804,7 +804,7 @@ these can be shown as follows:</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller=None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x118f74320&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>learning_enabled=False</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller=None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11fdb5320&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>learning_enabled=False</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1305,8 +1305,9 @@ if False, simulation values will be deleted unless otherwise specified by indivi
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.show_graph">
-<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_controller=False</em>, <em>show_dimensions=False</em>, <em>show_node_structure=False</em>, <em>show_cim=False</em>, <em>show_headers=True</em>, <em>show_projection_labels=False</em>, <em>show_nested=False</em>, <em>direction='BT'</em>, <em>active_items=None</em>, <em>active_color='bold'</em>, <em>input_color='green'</em>, <em>output_color='red'</em>, <em>input_and_output_color='brown'</em>, <em>controller_color='blue'</em>, <em>composition_color='pink'</em>, <em>output_fmt='pdf'</em>, <em>execution_id=NotImplemented</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="Permalink to this definition">¶</a></dt>
-<dd><div class="admonition note">
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_node_structure=False</em>, <em>show_nested=True</em>, <em>show_controller=False</em>, <em>show_cim=False</em>, <em>show_headers=True</em>, <em>show_dimensions=False</em>, <em>show_projection_labels=False</em>, <em>direction='BT'</em>, <em>active_items=None</em>, <em>active_color=BOLD</em>, <em>input_color='green'</em>, <em>output_color='red'</em>, <em>input_and_output_color='brown'</em>, <em>controller_color='blue'</em>, <em>composition_color='pink'</em>, <em>output_fmt='pdf'</em>, <em>execution_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show graphical display of Components in a Composition’s graph.</p>
+<div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This method relies on <a class="reference external" href="http://www.graphviz.org">graphviz</a>, which must be installed and imported
 (standard with PsyNeuLink pip install)</p>
@@ -1337,13 +1338,17 @@ Mechanisms in the <a class="reference internal" href="#"><span class="doc">Compo
 the values, if specified – see above), including parameters for all functions.</li>
 </ul>
 </li>
+<li><strong>show_nested</strong> (<em>bool | dict : default ALL</em>) – specifies whether any nested Composition(s) are shown in details as inset graphs.  A dict can be used to
+specify any of the arguments allowed for show_graph to be used for the nested Composition(s);  <em>ALL</em>
+passes all arguments specified for the main Composition to the nested one(s);  True uses the default
+values of show_graph args for the nested Composition(s).</li>
+<li><strong>show_controller</strong> (<em>bool : default False</em>) – specifies whether or not to show the Composition’s controller and associated ObjectiveMechanism;
+these are displayed in the color specified for <strong>controller_color</strong>.</li>
+<li><strong>show_cim</strong> (<em>bool : default False</em>) – specifies whether or not to show the Composition’s input and out CompositionInterfaceMechanisms (CIMs)</li>
 <li><strong>show_projection_labels</strong> (<em>bool : default False</em>) – specifies whether or not to show names of projections.</li>
 <li><strong>show_headers</strong> (<em>bool : default True</em>) – specifies whether or not to show headers in the subfields of a Mechanism’s node;  only takes effect if
 <strong>show_node_structure</strong> is specified (see above).</li>
-<li><strong>show_nested</strong> (<em>bool : default False</em>) – specifies whether nested Compositions are shown in details as inset graphs</li>
-<li><strong>show_cim</strong> (<em>bool : default False</em>) – specifies whether or not to show the Composition’s input and out CompositionInterfaceMechanisms (CIMs)</li>
-<li><strong>show_controller</strong> (<em>bool : default False</em>) – specifies whether or not to show the Composition’s controller and associated ObjectiveMechanism;
-these are displayed in the color specified for <strong>controller_color</strong>.</li>
+<li><strong>show_dimensions</strong> (<em>bool : default False</em>) – specifies whether or not to show dimensions for the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each Component in the graph.</li>
 <li><strong>direction</strong> (<em>keyword : default 'BT'</em>) – ‘BT’: bottom to top; ‘TB’: top to bottom; ‘LR’: left to right; and ‘RL`: right to left.</li>
 <li><strong>active_items</strong> (<em>List</em><em>[</em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>] </em><em>: default None</em>) – specifies one or more items in the graph to display in the color specified by <em>active_color*</em>.</li>
 <li><strong>active_color</strong> (<em>keyword : default 'yellow'</em>) – specifies how to highlight the item(s) specified in <em>active_items*</em>:  either a color recognized
