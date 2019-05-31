@@ -162,32 +162,32 @@ been accomplished by explicitly creating the recurrent connection::
 More Elaborate Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Configuring more complex models is also relatively simple.  For example, the script below implements a model of the
+Configuring more complex models is also straightforward.  For example, the script below implements a model of the
 `Stroop task <https://en.wikipedia.org/wiki/Stroop_effect>`_ by creating two feedforward neural network pathways that
 converge on a single output layer, which combines the inputs and projects to a drift diffusion mechanism (DDM) that
 decides the response::
 
     # Construct the color naming pathway:
-    color_input = ProcessingMechanism(size=2, function=Linear, name='COLOR INPUT')
+    color_input = ProcessingMechanism(name='COLOR INPUT', size=2, function=Linear)
     color_input_to_hidden_wts = np.array([[1, -1], [-1, 1]])
-    color_hidden = ProcessingMechanism(size=2, function=Logistic, name='COLOR HIDDEN')
+    color_hidden = ProcessingMechanism(name='COLOR HIDDEN', size=2, function=Logistic)
     color_hidden_to_output_wts = np.array([[1, -1], [-1, 1]])
-    output = ProcessingMechanism(size=2, name='OUTPUT')
+    output = ProcessingMechanism(name='OUTPUT', size=2)
     color_pathway = [color_input, color_input_to_hidden_wts, color_hidden, color_hidden_to_output_wts, output]
 
     # Construct the word reading pathway (using the same output_layer)
-    word_input = ProcessingMechanism(size=2, function=Linear, name='WORD INPUT')
+    word_input = ProcessingMechanism(name='WORD INPUT', size=2, function=Linear)
     word_input_to_hidden_wts = np.array([[2, -2], [-2, 2]])
-    word_hidden = ProcessingMechanism(size=2, function=Logistic, name='WORD HIDDEN')
+    word_hidden = ProcessingMechanism(name='WORD HIDDEN', size=2, function=Logistic)
     word_hidden_to_output_wts = np.array([[2, -2], [-2, 2]])
     word_pathway = [word_input, word_input_to_hidden_wts, word_hidden, word_hidden_to_output_wts, output]
 
-    # Construct the decision pathway:
+    # Construct the color naming pathway:
     decision = DDM(name='DECISION', input_format=ARRAY)
     decision_pathway = [output, decision]
 
     # Construct the Composition:
-    Stroop_model = Composition()
+    Stroop_model = Composition(name='Stroop Model')
     Stroop_model.add_linear_processing_pathway(color_pathway)
     Stroop_model.add_linear_processing_pathway(word_pathway)
     Stroop_model.add_linear_processing_pathway(decision_pathway)
@@ -199,9 +199,30 @@ simplified verison of a model of the Stroop task described in `Cohen et al., 199
 a more complete implementation of that model in PsyNeuLink can be found at `Cohen et al. 1990 <XXX>`).  The figure
 belows shows the output of Stroop_model.show_graph().
 
-.. _BasicsAndSampler_Simple_Stroop_Example_Figure:
+.. A model can be run with a sequence of inputs, by specifying them in a dictionary containing a list for each input
+.. Mechanism, as follows::
+..
+..  red = [1,0]
+..  green = [0,1]
+..  Stroop_model.run(inputs={color_input:[red,red], word_input:[red,green]})
+..
+.. The run method returns the results of the just the last trial run (in this case, ``red`` to ``color_input`` and
+.. ``green`` to ``word_input``.  However, the results of all the trials are stored in its ``results`` attribute::
+..
+..    print(Stroop_model.results)
+..    >>[[array([1.]), array([0.45185041])], [array([-1.]), array([0.67122189])]]
+..
+.. Each item in the 2d array returned by results contains a list of the model's outputs for a single trial's worth of
+.. stimuli.  The DDM Mechanism, which provides the output of the model, returns two values each time it is executed:
+.. the result of the decision (here, 1 for ``red`` and -1 for ``green``), and the response time.  So, ``results``
+.. contains two such pairs, one for each trial's worth of inputs.  Note that the input for the first trial is
+.. "congruent" -- that is the stimuus is the same (``red``) for both the color and word inputs, and so the model
+.. responds ``red``.  For the second trial, the inputs are incongruent (they disagree);  in this case, the model
+.. responds with ``green``, since the weights in that pathway are stronger.   Notice also that the DDM Mechanism also
+.. reports a longer response time.  We'll return to this in examples of models that monitor performance and adjust
+.. control below.
 
-**Composition Graph**
+.. _BasicsAndSampler_Simple_Stroop_Example_Figure:
 
 .. figure:: _static/BasicsAndSampler_Stroop_Model.svg
    :width: 50%
@@ -213,17 +234,30 @@ belows shows the output of Stroop_model.show_graph().
 Dynamics of Execution
 ~~~~~~~~~~~~~~~~~~~~~
 
-Finally, perhaps the most powerful feature of PsyNeuLink is its ability to simulate models with Components
-that execute at arbitrary and disparate "time scales". For example, a Composition can include some Mechanisms
-that require fine-grained updates (e.g., Euler integration of a drift diffusion process) with ones that carry out
-"single shot" computations (e.g., a single pass through a feedforward neural network). By default, when a Composition
-is run, each Component in it is executed at least once.  However, PsyNeuLink has a `Scheduler` that can be used to
-design more complex dynamics of execution by assigning one or more `Conditions <Condition>` to any Mechanism. Conditions
-can specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each `TRIAL`), or its
-behavior relative to that of one or more other Components (e.g., how many times it should execute or when it should
-stop executing relative to other Mechanisms).
+One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
+different time scales.  A Composition can include some Mechanisms that carry out "single-shot" computations with ones
+that carry out more fine-grained updates, or that depend another Mechanism to complete its execution before proceding.
+For example, in the model above, all of the Mechanisms were configured to execute in a single pass.  However, one or
+more layers of the feedforward network can be changed to time-average it input by replacing the ProcessingMechanism
+with a `TransferMechanism` -- a more powerful type that can be assigned an `integrator_mode <TransferMechanism
+.integrator_mode>`.  Simiarly, by default, the DDM Mechanism uses `DriftDiffusionAnalytical` Function, but that can be
+replaced by the `DriftDiffusionIntegrator` to carry out path (Euler) integraton.  One issue that arises when mixing
+single-shot and integration computations in the same model is the coordination of their time scales:  integration is
+generally assumed to occur on a finer time scale than single-shot compuations (which are often used for efficiency to
+implement asymptotic outcomes).  A similar issue arises when mixing recurrent networks that involve a settling
+process (for which there is often not a clear analytical solution) with single-shot, feedforward computations.  The
+following example illustrates how these situations can be managed with the `Scheduler` in PsyNeuLink.
 
-For example, the following script implements a Composition that integrates a 3-layered feedforward network for
+.. By default, when a Composition is run, each Component in it is
+.. executed at least once.  However, PsyNeuLink has a `Scheduler` that can be used to design more complex dynamics of
+.. execution by assigning one or more `Conditions <Condition>` to any Mechanism. Conditions can specify the isolated
+.. behavior of a Mechanism (e.g., how many times it should be executed in each `TRIAL`), or its behavior relative to
+.. that of one or more other Components (e.g., how many times it should execute or when it should stop executing
+.. relative to other Mechanisms).
+
+XXX REWORK TO FLOW FROM ABOVE:
+As another example, that illustrates how execution of one Mechanism can be made contingent on the completion of
+another, the following script implements a Composition that integrates a 3-layered feedforward network for
 performing a simple stimulus-response mapping task, with a recurrent network that receives input from and feeds back
 to the feed-forward network, to provide a simple form of maintained context.  To allow the recurrent layer to settle
 following the presentation of each stimulus (which is not required for the feedforward network), the Scheduler can
@@ -231,10 +265,10 @@ be used to execute the recurrent layer multiple times but the feedforward networ
 follows::
 
     # Construct the Mechanisms:
-    input_layer = TransferMechanism(size = 10)
-    hidden_layer = TransferMechanism(size = 100)
-    output_layer = TransferMechanism(size = 10)
-    recurrent_layer = RecurrentTransferMechanism(size = 10)
+    input_layer = ProcessingMechanism(size=10)
+    hidden_layer = ProcessingMechanism(size=100)
+    output_layer = ProcessingMechanism(size=10)
+    recurrent_layer = RecurrentTransferMechanism(size=10)
 
     # Construct the Processes:
     feed_forward_network = Process(pathway=[input_layer, hidden_layer, output_layer])
@@ -332,7 +366,7 @@ STUFF TO ADD:
 One of the most useful applications for PsyNeuLink is the design of models that include control processes.
 XXX USER DEFINED FUNCTIONS
 XXX CONTROL (STROOP)
-XXX HETEROGENOUS TYPES: ADD DECISION MAKING USING DDM
+XXX HETEROGENOUS TYPES: ADD DECISION MAKING USING DDM;  FitzHugh-Nagumo Mechanism
 XXX LEARNING:  USING RL AND BP
 XXX NESTED COMPOSITIONS: AUTODIFF
 XXX COMPILATION
