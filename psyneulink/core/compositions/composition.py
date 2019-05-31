@@ -2872,7 +2872,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_controller:bool=False,
                    show_cim:bool=False,
                    show_headers:bool=True,
-                   show_dimensions:bool=False,               # NOT WORKING?
+                   show_dimensions:bool=False,
                    show_projection_labels:bool=False,
                    direction:tc.enum('BT', 'TB', 'LR', 'RL')='BT',
                    active_items:tc.optional(list)=None,
@@ -2968,6 +2968,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show_headers : bool : default True
             specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
             **show_node_structure** is specified (see above).
+
+        show_dimensions : bool : default False
+            specifies whether or not to show dimensions for the `variable <Component.variable>` and `value
+            <Component.value>` of each Component in the graph.
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
