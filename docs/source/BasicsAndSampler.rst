@@ -106,6 +106,12 @@ The Composition connects the Mechanisms into a pathway that form a graph, which 
    Input Mechanism for the Composition is colored green (to designate it is an `INPUT` node), and its output
    Mechanism is colored Red (to designate it at a `OUTPUT` node).
 
+As the name of the ``show_graph()`` method suggests, Compositions are represented in PsyNeuLink as graphs, using a
+standard dependency dictionary format, so that they can also be submitted to other graph theoretic packages for
+display and/or analysis (such as `NetworkX <https://networkx.github.io>`_ and `igraph <http://igraph.org/redirect
+.html>`_).  They can also be exported as a JSON file, in a format that is currently being developed for the exchange
+of computational models in neuroscience and psychology (see `BIDS <XXX>`)
+
 The Composition can be run by calling its `run <Composition.run>` method, with an input array appropriately sized for
 the first Mechanism in the pathway (in this case, the input_layer)::
 
@@ -157,46 +163,50 @@ More Elaborate Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Configuring more complex models is also relatively simple.  For example, the script below implements a model of the
-`Stroop task <https://en.wikipedia.org/wiki/Stroop_effect>`_ by creating two feedforward pathways that converge on a
-single output layer, which combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the
-response::
+`Stroop task <https://en.wikipedia.org/wiki/Stroop_effect>`_ by creating two feedforward neural network pathways that
+converge on a single output layer, which combines the inputs and projects to a drift diffusion mechanism (DDM) that
+decides the response::
 
-    # Construct the Mechanisms:
-    colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
-    words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
-    output_layer = TransferMechanism(size=1, name='OUTPUT')
-    decision_mech = DDM(name='DECISION')
+    # Construct the color naming pathway:
+    color_input = ProcessingMechanism(size=2, function=Linear, name='COLOR INPUT')
+    color_input_to_hidden_wts = np.array([[1, -1], [-1, 1]])
+    color_hidden = ProcessingMechanism(size=2, function=Logistic, name='COLOR HIDDEN')
+    color_hidden_to_output_wts = np.array([[1, -1], [-1, 1]])
+    output = ProcessingMechanism(size=2, name='OUTPUT')
+    color_pathway = [color_input, color_input_to_hidden_wts, color_hidden, color_hidden_to_output_wts, output]
 
-    # Define a weight matrix used to specify the MappingProjection
-    # from each of the input layers to the output_layer
-    differencing_weights = np.array([[1], [-1]])
+    # Construct the word reading pathway (using the same output_layer)
+    word_input = ProcessingMechanism(size=2, function=Linear, name='WORD INPUT')
+    word_input_to_hidden_wts = np.array([[2, -2], [-2, 2]])
+    word_hidden = ProcessingMechanism(size=2, function=Logistic, name='WORD HIDDEN')
+    word_hidden_to_output_wts = np.array([[2, -2], [-2, 2]])
+    word_pathway = [word_input, word_input_to_hidden_wts, word_hidden, word_hidden_to_output_wts, output]
 
-    # Construct the model:
+    # Construct the decision pathway:
+    decision = DDM(name='DECISION', input_format=ARRAY)
+    decision_pathway = [output, decision]
+
+    # Construct the Composition:
     Stroop_model = Composition()
-    Stroop_model.add_linear_processing_pathway([colors_input_layer, differencing_weights, output_layer])
-    Stroop_model.add_linear_processing_pathway([words_input_layer, differencing_weights, output_layer])
-    Stroop_model.add_linear_processing_pathway([output_layer, decision_mech])
+    Stroop_model.add_linear_processing_pathway(color_pathway)
+    Stroop_model.add_linear_processing_pathway(word_pathway)
+    Stroop_model.add_linear_processing_pathway(decision_pathway)
 
-
-In this example, ``differencing_weights`` is used to specify a `MappingProjection` between the input layer of each
-pathway and the Mechanism (``output_layer``) on which they converge.
-
-As a Composition gets more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
-For example, calling ``Stroop_model.show_graph()`` produces the following display:
+In this model two neural network style pathways -- ``color_naming_pathway`` and ``word_reading_pathway`` -- converge
+on a common output Mechanism in the ``output`` layer, that then projects to a DDM decision-making Mechanism (this is a
+simplified verison of a model of the Stroop task described in `Cohen et al., 1990
+<https://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=6E547C8E91BD81E3F62E17868DC14471?doi=10.1.1.321.3453&rep=rep1&type=pdf>`_;
+a more complete implementation of that model in PsyNeuLink can be found at `Cohen et al. 1990 <XXX>`).  The figure
+belows shows the output of Stroop_model.show_graph().
 
 .. _BasicsAndSampler_Simple_Stroop_Example_Figure:
 
 **Composition Graph**
 
-.. figure:: _static/Simple_Stroop_Example_fig.svg
+.. figure:: _static/BasicsAndSampler_Stroop_Model.svg
+   :width: 50%
 
-   Representation of the Composition in the example above.
-
-As the name of the ``show_graph()`` method suggests, Compositions are represented in PsyNeuLink as graphs, using a
-standard dependency dictionary format, so that they can also be submitted to other graph theoretic packages for
-display and/or analysis (such as `NetworkX <https://networkx.github.io>`_ and `igraph <http://igraph.org/redirect
-.html>`_).
-
+   **Stroop Model** Representation of the Composition in the example above.
 
 .. _BasicsAndSampler_Dynamics_of_Execution:
 

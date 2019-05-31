@@ -2884,8 +2884,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    composition_color='pink',
                    output_fmt:tc.enum('pdf','gv','jupyter','gif')='pdf',
                    execution_id=NotImplemented,
-                   **kwargs,
-                   ):
+                   **kwargs):
         """
         show_graph(                           \
            show_node_structure=False,         \
