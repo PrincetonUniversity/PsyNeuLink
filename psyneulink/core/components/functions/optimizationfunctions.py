@@ -916,6 +916,10 @@ class GradientOptimization(OptimizationFunction):
                                                                                   execution_id=execution_id,
                                                                                   params=params,
                                                                                   context=context)
+        # TEST PRINT 5/30/19:
+        print(f'optimal_sample: {optimal_sample}')
+        print(f'optimal_value: {optimal_value}')
+
         return_all_samples = return_all_values = []
         if self.parameters.save_samples.get(execution_id):
             return_all_samples = all_samples
@@ -935,11 +939,21 @@ class GradientOptimization(OptimizationFunction):
             step = call_with_pruned_args(self.annealing_function, step, sample_num, execution_id=execution_id)
             self.parameters.step.set(step, execution_id)
 
+        # # MODIFIED 5/30/19 OLD:
+        # # Compute gradients with respect to current variable
+        # _gradients = call_with_pruned_args(self.gradient_function, variable, execution_id=execution_id)
+        #
+        # # Update variable based on new gradients
+        # return variable + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
+        # MODIFIED 5/30/19 NEW [JDC]:
+        # FIX: 5/30/19 [JDC] HACK TO IMPLEMENT LVOC
         # Compute gradients with respect to current variable
         _gradients = call_with_pruned_args(self.gradient_function, variable, execution_id=execution_id)
-
+        new_variable = variable + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
+        new_variable[0] = max(0, min(1, new_variable[0]))
         # Update variable based on new gradients
-        return variable + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
+        return new_variable
+        # MODIFIED 5/30/19 END
 
     def _convergence_condition(self, variable, value, iteration, execution_id=None):
         previous_variable = self.parameters.previous_variable.get(execution_id)
@@ -950,6 +964,15 @@ class GradientOptimization(OptimizationFunction):
             self.parameters.previous_variable.set(variable, execution_id, override=True)
             self.parameters.previous_value.set(value, execution_id, override=True)
             return False
+
+        # # FIX: 5/30/19 [JDC] HACK TO IMPLEMENT LVOC
+        # if variable[0] <= 0 or variable[0] >= 1:
+        #     variable = self.parameters.previous_variable.get(execution_id)
+        #     value = self.parameters.previous_value.get(execution_id)
+        #     self.parameters.variable.set(variable, execution_id, override=True)
+        #     self.parameters.value.set(value, execution_id, override=True)
+        #     return True
+        # # FIX: end HACK
 
         # Evaluate for convergence
         if self.convergence_criterion == VALUE:

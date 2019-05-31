@@ -110,7 +110,7 @@ lvoc = pnl.OptimizationControlMechanism(
     ),
     # posterior weight distribution
     agent_rep=pnl.RegressionCFA(
-        update_weights=pnl.BayesGLM(mu_0=0.17, sigma_0=0.0000001), #sigma_0=math.sqrt(0.11))
+        update_weights=pnl.BayesGLM(mu_0=0.17, sigma_0=0.11), #sigma_0=math.sqrt(0.11))
         prediction_terms=[pnl.PV.FC, pnl.PV.COST]
     ),
     # sample control allocs, and return best
@@ -120,6 +120,7 @@ lvoc = pnl.OptimizationControlMechanism(
         convergence_threshold=0.001, 
         step_size=1, #1
         annealing_function=lambda x, y: x / np.sqrt(y),
+        max_iterations=1000
         # save_samples=True,
         # save_values=True,
         # direction=pnl.ASCENT
@@ -130,8 +131,10 @@ lvoc = pnl.OptimizationControlMechanism(
         # function=pnl.ReLU,
         # function=pnl.Logistic,
         cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
-        intensity_cost_function=pnl.Exponential(rate=0, bias=0), # 0.25, -3
-        adjustment_cost_function=pnl.Exponential(rate=0, bias=0) # 0.25, -3
+        # intensity_cost_function=pnl.Exponential(rate=0, bias=0), # 0.25, -3
+        # adjustment_cost_function=pnl.Exponential(rate=0, bias=0) # 0.25, -3
+        intensity_cost_function=pnl.Linear(slope=0, intercept=0), # 0.25, -3
+        adjustment_cost_function=pnl.Linear(slope=0, intercept=0) # 0.25, -3
         # allocation_samples=[i / 2 for i in list(range(0, 50, 1))]
     )
     )

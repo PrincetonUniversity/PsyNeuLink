@@ -325,7 +325,6 @@ class RegressionCFA(CompositionFunctionApproximator):
         '''
         # TEST PRINT 5/30/19:
         print(f'control allocation: {control_allocation}')
-        print(f'control_signal value: {1}')
 
         predicted_outcome=0
 
@@ -348,11 +347,15 @@ class RegressionCFA(CompositionFunctionApproximator):
                     net_outcome += np.sum(term_value.reshape(-1) * weights[item_idx])
                     # TEST PRINT 5/30/19:
                     print (f"CFA term label: {term_label}")
-                    print (f"CFA term_value: {term_value}")
+                    # print (f"CFA term_value: {term_value}")
                     print (f"CFA weight: {weights}")
                     print (f"CFA add to outcome: {np.sum(term_value.reshape(-1) * weights[item_idx])}")
             predicted_outcome+=net_outcome
         predicted_outcome/=count
+
+        # TEST PRINT 5/30/19:
+        print (f"predicted_outcome: {predicted_outcome}")
+
         return predicted_outcome
 
     @property
