@@ -1748,10 +1748,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    "Composition).")
         # Then, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
-            # MODIFIED 5/29/19 OLD:
-            # if the current item is a mechanism, add it
-            if isinstance(pathway[c], Mechanism):
-                self.add_nodes([pathway[c]])
+            # # MODIFIED 5/29/19 OLD:
+            # # if the current item is a mechanism, add it
+            # if isinstance(pathway[c], Mechanism):
+            #     self.add_nodes([pathway[c]])
             # MODIFIED 5/29/19 NEW: [JDC]
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
             if isinstance(pathway[c], (Mechanism, Composition, tuple)):
@@ -2864,27 +2864,50 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return name
 
+    @tc.typecheck
     def show_graph(self,
-                   show_controller=False,
-                   show_dimensions=False,               # NOT WORKING?
-                   show_node_structure=False,
-                   show_cim=False,
-                   show_headers=True,
-                   show_projection_labels=False,
-                   show_nested=False,
-                   direction='BT',
-                   active_items=None,
+                   show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
+                                                            STATE_FUNCTION_PARAMS, ROLES, ALL))=False,
+                   show_nested:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
+                   show_controller:bool=False,
+                   show_cim:bool=False,
+                   show_headers:bool=True,
+                   show_dimensions:bool=False,
+                   show_projection_labels:bool=False,
+                   direction:tc.enum('BT', 'TB', 'LR', 'RL')='BT',
+                   active_items:tc.optional(list)=None,
                    active_color=BOLD,
                    input_color='green',
                    output_color='red',
                    input_and_output_color='brown',
                    controller_color='blue',
                    composition_color='pink',
-                   output_fmt='pdf',
+                   output_fmt:tc.enum('pdf','gv','jupyter','gif')='pdf',
                    execution_id=NotImplemented,
                    **kwargs,
                    ):
         """
+        show_graph(                           \
+           show_node_structure=False,         \
+           show_nested=True,                  \
+           show_controller=False,             \
+           show_cim=False,                    \
+           show_headers=True,                 \
+           show_dimensions=False,             \
+           show_projection_labels=False,      \
+           direction='BT',                    \
+           active_items=None,                 \
+           active_color=BOLD,                 \
+           input_color='green',               \
+           output_color='red',                \
+           input_and_output_color='brown',    \
+           controller_color='blue',           \
+           composition_color='pink',          \
+           output_fmt='pdf',                  \
+           execution_id=None)
+
+        Show graphical display of Components in a Composition's graph.
+
         .. note::
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
            (standard with PsyNeuLink pip install)
@@ -2926,6 +2949,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               Mechanisms in the `Composition` and their `States <State>` (using labels for
               the values, if specified -- see above), including parameters for all functions.
 
+        show_nested : bool | dict : default ALL
+            specifies whether any nested Composition(s) are shown in details as inset graphs.  A dict can be used to
+            specify any of the arguments allowed for show_graph to be used for the nested Composition(s);  *ALL*
+            passes all arguments specified for the main Composition to the nested one(s);  True uses the default
+            values of show_graph args for the nested Composition(s).
+
+        show_controller :  bool : default False
+            specifies whether or not to show the Composition's controller and associated ObjectiveMechanism;
+            these are displayed in the color specified for **controller_color**.
+
+        show_cim : bool : default False
+            specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
+
         show_projection_labels : bool : default False
             specifies whether or not to show names of projections.
 
@@ -2933,15 +2969,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
             **show_node_structure** is specified (see above).
 
-        show_nested : bool : default False
-            specifies whether nested Compositions are shown in details as inset graphs
-
-        show_cim : bool : default False
-            specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
-
-        show_controller :  bool : default False
-            specifies whether or not to show the Composition's controller and associated ObjectiveMechanism;
-            these are displayed in the color specified for **controller_color**.
+        show_dimensions : bool : default False
+            specifies whether or not to show dimensions for the `variable <Component.variable>` and `value
+            <Component.value>` of each Component in the graph.
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
@@ -2991,11 +3021,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # HELPER METHODS ----------------------------------------------------------------------
 
         tc.typecheck
+        _locals = locals().copy()
 
         def _assign_processing_components(g, rcvr, show_nested):
             '''Assign nodes to graph'''
             if isinstance(rcvr, Composition) and show_nested:
-                nested_comp_graph = rcvr.show_graph(output_fmt='gv')
+                # User passed args for nested Composition
+                output_fmt_arg = {'output_fmt':'gv'}
+                if isinstance(show_nested, dict):
+                    args = show_nested
+                    args.update(output_fmt_arg)
+                elif show_nested is ALL:
+                    # Pass args from main call to show_graph to call for nested Composition
+                    args = dict({k:_locals[k] for k in list(inspect.signature(self.show_graph).parameters)})
+                    args.update(output_fmt_arg)
+                    if kwargs:
+                        args['kwargs'] = kwargs
+                    else:
+                        del  args['kwargs']
+                else:
+                    # Use default args for nested Composition
+                    args = output_fmt_arg
+                nested_comp_graph = rcvr.show_graph(**args)
                 nested_comp_graph.name = "cluster_"+rcvr.name
                 rcvr_label = rcvr.name
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
@@ -3145,65 +3192,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # loop through senders to implement edges
             sndrs = processing_graph[rcvr]
             _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
-
-            # for sndr in sndrs:
-            #
-            #     # Set sndr info
-            #
-            #     sndr_label = self._get_graph_node_label(sndr, show_dimensions)
-            #
-            #     # Iterate through all Projections from all OutputStates of sndr
-            #     for output_state in sndr.output_states:
-            #         for proj in output_state.efferents:
-            #
-            #             # Skip any projections to ObjectiveMechanism for controller
-            #             #   (those are handled in _assign_control_components)
-            #             if (self.controller
-            #                     and proj.receiver.owner is self.controller.objective_mechanism):
-            #                 continue
-            #
-            #             # Only consider Projections to the rcvr
-            #             if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
-            #                     or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
-            #
-            #                 # # MODIFIED 5/29/19 OLD:
-            #                 # if show_node_structure:
-            #                 # MODIFIED 5/29/19 NEW: [JDC]
-            #                 if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
-            #                 # MODIFIED 5/29/19 END
-            #                     sndr_proj_label = '{}:{}'. \
-            #                         format(sndr_label, sndr._get_port_name(proj.sender))
-            #                     proc_mech_rcvr_label = '{}:{}'. \
-            #                         format(rcvr_label, rcvr._get_port_name(proj.receiver))
-            #                     # format(rcvr_label, InputState.__name__, proj.receiver.name)
-            #                 else:
-            #                     sndr_proj_label = sndr_label
-            #                     proc_mech_rcvr_label = rcvr_label
-            #
-            #                 edge_label = self._get_graph_node_label(proj, show_dimensions)
-            #
-            #                 # Check if Projection or its receiver is active
-            #                 if any(item in active_items for item in {proj, proj.receiver.owner}):
-            #                     if active_color is BOLD:
-            #
-            #                         proj_color = default_node_color
-            #                     else:
-            #                         proj_color = active_color
-            #                     proj_width = str(default_width + active_thicker_by)
-            #                     self.active_item_rendered = True
-            #
-            #                 else:
-            #                     proj_color = default_node_color
-            #                     proj_width = str(default_width)
-            #                 proc_mech_label = edge_label
-            #
-            #                 # Render Projection as edge
-            #                 if show_projection_labels:
-            #                     label = proc_mech_label
-            #                 else:
-            #                     label = ''
-            #                 g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
-            #                        color=proj_color, penwidth=proj_width)
 
         def _assign_cim_components(g, cims):
 
