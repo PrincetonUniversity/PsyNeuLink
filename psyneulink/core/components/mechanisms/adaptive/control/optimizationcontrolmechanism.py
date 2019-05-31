@@ -1190,9 +1190,13 @@ class OptimizationControlMechanism(ControlMechanism):
         '''
 
         value = [np.atleast_1d(a) for a in control_allocation]
+
+
+
         self.parameters.value.set(value, execution_id)
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
                                    context=ContextFlags.COMPOSITION)
+
 
     # @property
     # def feature_values(self):

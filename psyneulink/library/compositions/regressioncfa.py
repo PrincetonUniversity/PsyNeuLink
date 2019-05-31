@@ -323,6 +323,10 @@ class RegressionCFA(CompositionFunctionApproximator):
             If this method is assigned as the `objective_funtion of a `GradientOptimization` `Function`,
             it is differentiated using `autograd <https://github.com/HIPS/autograd>`_\\.grad().
         '''
+        # TEST PRINT 5/30/19:
+        print(f'control allocation: {control_allocation}')
+        print(f'control_signal value: {1}')
+
         predicted_outcome=0
 
         prediction_vector = self.parameters.prediction_vector.get(execution_id)
@@ -342,6 +346,11 @@ class RegressionCFA(CompositionFunctionApproximator):
                     pv_enum_val = term_label.value
                     item_idx = prediction_vector.idx[pv_enum_val]
                     net_outcome += np.sum(term_value.reshape(-1) * weights[item_idx])
+                    # TEST PRINT 5/30/19:
+                    print (f"CFA term label: {term_label}")
+                    print (f"CFA term_value: {term_value}")
+                    print (f"CFA weight: {weights}")
+                    print (f"CFA add to outcome: {np.sum(term_value.reshape(-1) * weights[item_idx])}")
             predicted_outcome+=net_outcome
         predicted_outcome/=count
         return predicted_outcome
