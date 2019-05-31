@@ -425,12 +425,12 @@ def _gating_allocation_setter(value, owning_component=None, execution_id=None, *
 class ControlMechanism(ModulatoryMechanism):
     """
     ControlMechanism(                                            \
-        system=None                                              \
+        system=None,                                             \
         monitor_for_control=None,                                \
         objective_mechanism=None,                                \
         function=Linear,                                         \
         control_signals=None,                                    \
-        modulation=ModulationParam.MULTIPLICATIVE                \
+        modulation=ModulationParam.MULTIPLICATIVE,               \
         combine_costs=np.sum,                                    \
         compute_reconfiguration_cost=None,                       \
         compute_net_outcome=lambda x,y:x-y,                      \
