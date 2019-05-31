@@ -66,6 +66,11 @@ models in PsyNeuLink.
 Sampler
 -------
 
+The examples below are intended to provide a quick illustrations of some of PsyNeuLink's basic and more advanced
+capabilities.  They assume some experience with computational modeling and/or relevant background knowledge.  The
+`tutorial <>` provides additional introductory material for those who are newer to computational modeling, as well as a
+more detailed and comprehensive introduction to the use of PsyNeuLink.
+
 .. _Simple_Configurations:
 
 Simple Configurations
@@ -265,27 +270,27 @@ be used to execute the recurrent layer multiple times but the feedforward networ
 follows::
 
     # Construct the Mechanisms:
-    input_layer = ProcessingMechanism(size=10)
-    hidden_layer = ProcessingMechanism(size=100)
-    output_layer = ProcessingMechanism(size=10)
-    recurrent_layer = RecurrentTransferMechanism(size=10)
+    input_layer = ProcessingMechanism(name='INPUT', size=10)
+    hidden_layer = ProcessingMechanism(name='HIDDEN', size=100)
+    output_layer = ProcessingMechanism(name='OUTPUT', size=10)
+    recurrent_layer = RecurrentTransferMechanism(name='RECURRENT', size=10)
 
-    # Construct the Processes:
-    feed_forward_network = Process(pathway=[input_layer, hidden_layer, output_layer])
-    recurrent_network = Process(pathway=[hidden_layer, recurrent_layer, hidden_layer])
-
-    # Construct the System:
-    full_model = System(processes=[feed_forward_network, recurrent_network])
+    # Construct the model:
+    full_model = Composition()
+    feed_forward_network = [input_layer, hidden_layer, output_layer]
+    recurrent_network = [hidden_layer, recurrent_layer, hidden_layer]
+    full_model.add_linear_processing_pathway(feed_forward_network)
+    full_model.add_linear_processing_pathway(recurrent_network)
 
     # Construct the Scheduler:
-    my_scheduler = Scheduler(system=full_model)
+    model_scheduler = Scheduler(composition=full_model)
 
     # Add Conditions to the Scheduler:
-    my_scheduler.add_condition(my_hidden_layer,
-                               Any(EveryNCalls(my_input_layer, 1),
-                               EveryNCalls(my_recurrent_layer, 10)))
-    my_scheduler.add_condition(my_output_layer,
-                               EveryNCalls(my_hidden_layer, 2))
+    model_scheduler.add_condition(hidden_layer,
+                                  Any(EveryNCalls(input_layer, 1),
+                                      EveryNCalls(recurrent_layer, 10)))
+    model_scheduler.add_condition(output_layer,
+                                  EveryNCalls(hidden_layer, 2))
 
 The two Conditions added to the Scheduler specify that:
 
@@ -307,12 +312,12 @@ execute until the change in its value falls below a specified threshold as follo
 
     # Add a Condition to the Scheduler that uses the ``converge`` function to continue
     # executing the ``recurrent_layer`` while it has not (i.e., until it has) converged
-    my_scheduler.add_condition(my_hidden_layer,
-                               Any(EveryNCalls(my_input_layer, 1),
-                               EveryNCalls(my_recurrent_layer, 1)))
+    my_scheduler.add_condition(hidden_layer,
+                               Any(EveryNCalls(input_layer, 1),
+                               EveryNCalls(recurrent_layer, 1)))
     my_scheduler.add_condition(my_recurrent_layer,
-                               All(EveryNCalls(my_hidden_layer, 1),
-                                   WhileNot(converge, my_recurrent_mech, epsilon)))
+                               All(EveryNCalls(hidden_layer, 1),
+                                   WhileNot(converge, recurrent_mech, epsilon)))
 
 Here, the criterion for stopping execution is defined as a function (``converge``), that is used in a `WhileNot`
 Condition.  Any arbitrary Conditions can be created and flexibly combined to construct virtually any schedule of
