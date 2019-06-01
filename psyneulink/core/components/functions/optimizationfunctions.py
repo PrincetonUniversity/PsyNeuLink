@@ -910,6 +910,8 @@ class GradientOptimization(OptimizationFunction):
             if bounds[0]>=bounds[1]:
                 raise OptimizationFunctionError(f"Illegal {repr(BOUNDS)} arg for {self.name}: {bounds}; "
                                                 f"1st item must be less than the 2nd item.")
+            if bounds:
+                bounds = (float(bounds[0]),float(bounds[1]))
             target_set[BOUNDS]=bounds
 
     def reinitialize(self, *args):
@@ -983,12 +985,11 @@ class GradientOptimization(OptimizationFunction):
         # Update variable based on new gradients
         new_variable = variable + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
 
-        # MODIFIED 5/30/19 NEW [JDC]:
         # Constrain new_variable to be within bounds
         bounds = self.parameters.bounds.get(execution_id)
         if bounds:
-            new_variable[0] = max(bounds[0], min(bounds[1], new_variable[0]))
-        # MODIFIED 5/30/19 END
+            # new_variable[0] = max(bounds[0], min(bounds[1], new_variable[0]))
+            new_variable = np.array(max(bounds[0], min(bounds[1], new_variable))).reshape(variable.shape)
 
         return new_variable
 
