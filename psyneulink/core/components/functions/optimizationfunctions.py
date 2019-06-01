@@ -979,13 +979,13 @@ class GradientOptimization(OptimizationFunction):
             step = call_with_pruned_args(self.annealing_function, step, sample_num, execution_id=execution_id)
             self.parameters.step.set(step, execution_id)
 
-        # Compute gradients with respect to current variable
+        # Compute gradients with respect to current sample
         _gradients = call_with_pruned_args(self.gradient_function, sample, execution_id=execution_id)
 
-        # Update variable based on new gradients
+        # Get new sample based on new gradients
         new_sample = sample + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
 
-        # Constrain new_variable to be within bounds
+        # Constrain new sample to be within bounds
         bounds = self.parameters.bounds.get(execution_id)
         if bounds:
             # new_variable[0] = max(bounds[0], min(bounds[1], new_variable[0]))
