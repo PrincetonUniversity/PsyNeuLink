@@ -116,14 +116,15 @@ lvoc = pnl.OptimizationControlMechanism(
     # sample control allocs, and return best
     # evaluate() computes outcome (obj mech) - costs given state (features) and sample ctrl alloc
     function=pnl.GradientOptimization(
-        convergence_criterion=pnl.VALUE,
-        convergence_threshold=0.001, 
-        step_size=1, #1
-        annealing_function=lambda x, y: x / np.sqrt(y),
-        max_iterations=1000
-        # save_samples=True,
-        # save_values=True,
-        # direction=pnl.ASCENT
+            convergence_criterion=pnl.VALUE,
+            convergence_threshold=0.001,
+            step_size=1, #1
+            bounds=(0,1),
+            annealing_function=lambda x, y: x / np.sqrt(y),
+            max_iterations=1000
+            # save_samples=True,
+            # save_values=True,
+            # direction=pnl.ASCENT
     ),
     # opt control alloc used to compute ctrl sigs
     control_signals=pnl.ControlSignal(

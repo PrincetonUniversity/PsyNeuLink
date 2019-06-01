@@ -34,7 +34,7 @@ from psyneulink.core.components.functions.function import Function_Base, is_func
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
+    BOUNDS, DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
@@ -560,6 +560,7 @@ class GradientOptimization(OptimizationFunction):
         gradient_function=None,      \
         direction=ASCENT,            \
         step=1.0,                    \
+        bounds=None,                 \
         annealing_function=None,     \
         convergence_criterion=VALUE, \
         convergence_threshold=.001,  \
@@ -648,6 +649,11 @@ class GradientOptimization(OptimizationFunction):
         <GradientOptimization.annealing_function>` is specified, **step** specifies the intial value of
         `step <GradientOptimization.step>`.
 
+    bounds : tuple : default None
+        specifies the upper and/or lower bounds for the sample; must be a two item tuple that specifies an interval.
+        If the either item is None, that bound is ignored;  if both items are specified, the 1st must be less than
+        the second (see `bounds <GradientOptimization.bounds>` for additional information).
+
     annealing_function : function or method : default None
         specifies function used to adapt `step <GradientOptimization.step>` in each
         iteration of the `optimization process <GradientOptimization_Procedure>`;  must take accept two parameters —
@@ -704,6 +710,11 @@ class GradientOptimization(OptimizationFunction):
         iteration of the `optimization process <GradientOptimization_Procedure>`;  if `annealing_function
         <GradientOptimization.annealing_function>` is specified, `step <GradientOptimization.step>`
         determines the initial value.
+
+    bounds : tuple or None
+        determines the lower and/or upper bound for the sample;  if it is a tuple and either item is None, that
+        bound is ignored. `Optimization process <GradientOptimization_Procedure>` terminates if either bound is
+        reached or exceeded.
 
     annealing_function : function or method
         function used to adapt `step <GradientOptimization.step>` in each iteration of the `optimization
@@ -782,6 +793,12 @@ class GradientOptimization(OptimizationFunction):
                     :default value: `ASCENT`
                     :type: str
 
+                bounds
+                    see `bounds <GradientOptimization.bounds>`
+
+                    :default value: None
+                    :type: tuple
+
                 max_iterations
                     see `max_iterations <GradientOptimization.max_iterations>`
 
@@ -816,9 +833,9 @@ class GradientOptimization(OptimizationFunction):
         previous_value = Parameter([[0], [0]], read_only=True)
 
         gradient_function = Parameter(None, stateful=False, loggable=False)
-        annealing_function = Parameter(None, stateful=False, loggable=False)
-
         step = Parameter(1.0, modulable=True)
+        bounds = Parameter(None)
+        annealing_function = Parameter(None, stateful=False, loggable=False)
         convergence_threshold = Parameter(.001, modulable=True)
         max_iterations = Parameter(1000, modulable=True)
 
@@ -834,6 +851,7 @@ class GradientOptimization(OptimizationFunction):
                  gradient_function:tc.optional(is_function_type)=None,
                  direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
                  step:tc.optional(tc.any(int, float))=1.0,
+                 bounds:tc.optional(tuple)=None,
                  annealing_function:tc.optional(is_function_type)=None,
                  convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=VALUE,
                  convergence_threshold:tc.optional(tc.any(int, float))=.001,
@@ -857,6 +875,7 @@ class GradientOptimization(OptimizationFunction):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(step=step,
+                                                  bounds=bounds,
                                                   convergence_criterion=convergence_criterion,
                                                   convergence_threshold=convergence_threshold,
                                                   params=params)
@@ -873,6 +892,25 @@ class GradientOptimization(OptimizationFunction):
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        if BOUNDS in request_set and request_set[BOUNDS] is not None:
+            bounds = request_set[BOUNDS]
+            if len(bounds) != 2:
+                raise OptimizationFunctionError(f"{repr(BOUNDS)} arg for {self.name} of {self.owner.name} ({bounds})"
+                                                f"must be a 2-item tuple.")
+            elif bounds[0] is None and bounds[1] is None:
+                bounds = None
+            elif bounds[0] is None:
+                bounds = (-float('inf'),bounds[1])
+            elif bounds[1] is None:
+                bounds = (bounds[0],float('inf'))
+            if bounds[0]>=bounds[1]:
+                raise OptimizationFunctionError(f"Illegal {repr(BOUNDS)} arg for {self.name}: {bounds}; "
+                                                f"1st item must be less than the 2nd item.")
+            target_set[BOUNDS]=bounds
 
     def reinitialize(self, *args):
         super().reinitialize(*args)
@@ -939,17 +977,19 @@ class GradientOptimization(OptimizationFunction):
             step = call_with_pruned_args(self.annealing_function, step, sample_num, execution_id=execution_id)
             self.parameters.step.set(step, execution_id)
 
-        # # Update variable based on new gradients
-        # return variable + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
         # Compute gradients with respect to current variable
         _gradients = call_with_pruned_args(self.gradient_function, variable, execution_id=execution_id)
-        # MODIFIED 5/30/19 NEW [JDC]:
-        # FIX: 5/30/19 [JDC] HACK TO IMPLEMENT LVOC:  CONSTRAIN SAMPLE (variable) TO INTERVAL from 0 to 1.
-        new_variable = variable + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
-        new_variable[0] = max(0, min(1, new_variable[0]))
-        # MODIFIED 5/30/19 END
 
         # Update variable based on new gradients
+        new_variable = variable + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
+
+        # MODIFIED 5/30/19 NEW [JDC]:
+        # Constrain new_variable to be within bounds
+        bounds = self.parameters.bounds.get(execution_id)
+        if bounds:
+            new_variable[0] = max(bounds[0], min(bounds[1], new_variable[0]))
+        # MODIFIED 5/30/19 END
+
         return new_variable
 
     def _convergence_condition(self, variable, value, iteration, execution_id=None):
@@ -961,15 +1001,6 @@ class GradientOptimization(OptimizationFunction):
             self.parameters.previous_variable.set(variable, execution_id, override=True)
             self.parameters.previous_value.set(value, execution_id, override=True)
             return False
-
-        # # FIX: 5/30/19 [JDC] HACK TO IMPLEMENT LVOC
-        # if variable[0] <= 0 or variable[0] >= 1:
-        #     variable = self.parameters.previous_variable.get(execution_id)
-        #     value = self.parameters.previous_value.get(execution_id)
-        #     self.parameters.variable.set(variable, execution_id, override=True)
-        #     self.parameters.value.set(value, execution_id, override=True)
-        #     return True
-        # # FIX: end HACK
 
         # Evaluate for convergence
         if self.convergence_criterion == VALUE:
