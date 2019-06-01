@@ -921,9 +921,9 @@ class GradientOptimization(OptimizationFunction):
                 from autograd import grad
                 self.gradient_function = grad(self.objective_function)
             except:
-                warnings.warn("Unable to use autograd with {} specified for {} Function: {}.".
-                              format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
-                                     args[0][OBJECTIVE_FUNCTION].__name__))
+                raise OptimizationFunctionError("Unable to use autograd with {} specified for {} Function: {}.".
+                                                format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
+                                                       args[0][OBJECTIVE_FUNCTION].__name__))
 
     def function(self,
                  variable=None,
