@@ -968,10 +968,10 @@ class GradientOptimization(OptimizationFunction):
         # return last_variable
         return optimal_sample, optimal_value, return_all_samples, return_all_values
 
-    def _follow_gradient(self, variable, sample_num, execution_id=None):
+    def _follow_gradient(self, sample, sample_num, execution_id=None):
 
         if self.gradient_function is None:
-            return variable
+            return sample
 
         # Update step
         step = self.parameters.step.get(execution_id)
@@ -980,18 +980,18 @@ class GradientOptimization(OptimizationFunction):
             self.parameters.step.set(step, execution_id)
 
         # Compute gradients with respect to current variable
-        _gradients = call_with_pruned_args(self.gradient_function, variable, execution_id=execution_id)
+        _gradients = call_with_pruned_args(self.gradient_function, sample, execution_id=execution_id)
 
         # Update variable based on new gradients
-        new_variable = variable + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
+        new_sample = sample + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
 
         # Constrain new_variable to be within bounds
         bounds = self.parameters.bounds.get(execution_id)
         if bounds:
             # new_variable[0] = max(bounds[0], min(bounds[1], new_variable[0]))
-            new_variable = np.array(max(bounds[0], min(bounds[1], new_variable))).reshape(variable.shape)
+            new_sample = np.array(max(bounds[0], min(bounds[1], new_sample))).reshape(sample.shape)
 
-        return new_variable
+        return new_sample
 
     def _convergence_condition(self, variable, value, iteration, execution_id=None):
         previous_variable = self.parameters.previous_variable.get(execution_id)
