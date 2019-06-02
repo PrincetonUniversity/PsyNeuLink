@@ -16,7 +16,7 @@ install:
   - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then pip install coveralls; fi
   - pip install git+https://github.com/benureau/leabra.git@master
   # Upgrade pytest explicitly, Travis bundles an old version
-  - pip install -U pytest
+  - pip install -U 'pytest<4.6'
   - pip install -e .[dev]
 
 os: linux
