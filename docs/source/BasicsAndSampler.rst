@@ -57,7 +57,7 @@ models in PsyNeuLink.
 
 .. figure:: _static/BasicsAndSampler_GrandView_fig.svg
 
-    **PsyNeuLink Environment**.  Full-colored items are examples of currently implemented elements; dimmed
+    **PsyNeuLink Environment.**  Full-colored items are examples of currently implemented elements; dimmed
     items are examples of elements planned for future implementation.
 
 
@@ -107,7 +107,7 @@ The Composition connects the Mechanisms into a pathway that form a graph, which 
 .. figure:: _static/BasicsAndSampler_SimplePathway_fig.svg
    :width: 30%
 
-   **Composition Graph**  Representation of the graph of the simple Composition in the example above.  Note that the
+   **Composition Graph.**  Representation of the graph of the simple Composition in the example above.  Note that the
    Input Mechanism for the Composition is colored green (to designate it is an `INPUT` node), and its output
    Mechanism is colored Red (to designate it at a `OUTPUT` node).
 
@@ -207,10 +207,11 @@ drift diffusion (DDM) decision mechanism responsible for determining the respons
     Stroop_model.add_linear_processing_pathway(task_word_pathway)
     Stroop_model.add_linear_processing_pathway(decision_pathway)
 
-This is a simplified version the model described in `Cohen et al., 1990
-<https://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=6E547C8E91BD81E3F62E17868DC14471?doi=10.1.1.321.3453&rep=rep1&type=pdf>`_,
-a more complete version of which can be found at `Cohen et al. 1990 <XXX>`).  The figure belows shows the model
-using Stroop_model.show_graph().
+This is a simplified version the model described in `Cohen et al. (1990) <https://www.researchgate
+.net/publication/20956134_Cohen_JD_McClelland_JL_Dunbar_K_On_the_control_of_automatic_processes_a_parallel_distributed_processing_account_of_the_Stroop_effect_Psychol_Rev_97_332-361>`_,
+a more complete version of which can be found in the `PsyNeuLink Library <https://princetonuniversity.github
+.io/PsyNeuLink/Library.html>`_ at `Stroop Model <XXXX>`.  The figure belows shows the model using the show_graph()
+method.
 
 .. A model can be run with a sequence of inputs, by specifying them in a dictionary containing a list for each input
 .. Mechanism, as follows::
@@ -240,13 +241,14 @@ using Stroop_model.show_graph().
 .. figure:: _static/BasicsAndSampler_Stroop_Model.svg
    :width: 50%
 
-   **Stroop Model** Representation of the Composition in the example above.
+   **Stroop Model.** Representation of the Composition in the example above.
 
-Running the model is as simple as generating some inputs and then providing them to the its `run <Composition.run>`
-method.  Inputs are provided to the model as in a dictionary, with one entry for each of the Composition's `INPUT`
-Mechanisms.  Each entry contains a list of the inputs for the specified Mechanism, one for each trial to be run.
+Running the model is as simple as generating some inputs and then providing them to the `run <Composition.run>`
+method.  Inputs are specified in a dictionary, with one entry for each of the Composition's `INPUT`
+Mechanisms;  each entry contains a list of the inputs for the specified Mechanism, one for each trial to be run.
 The following defines two stimui to use as the color and word inputs (``red`` and ``green``, and two for use as the
-task input (``color`` and ``word``), and uses them to run the model for two trials::
+task input (``color`` and ``word``), and then uses them to run the model for a color naming congruent trial, followed
+by a color naming incongruent trial::
 
     red = [1,0]
     green = [0,1]
@@ -257,14 +259,17 @@ task input (``color`` and ``word``), and uses them to run the model for two tria
                              word_input: [red,     green ],
                              task_input: [color,   color ]})
     print(Stroop_model.results)
-    >> [[array([1.]), array([2.80488344])], [array([-1.]), array([3.94471513])]]
+    >> [[array([1.]), array([2.80488344])], [array([1.]), array([3.94471513])]]
 
-When a Composition is run, its `results <Composition.results>` attribute stores the values of its `OUTPUT` Mechanisms.
-In this case, it is the `DDM` Mechanism, which has two output values by default:  the decions (1 or -1, in this case
-corresponding to ``red`` or ``green``), and the estimated mean decision time for doing so.  So, the value returned by
-the ``results`` attribute has a 3d array containing two 2d arrays, each of which has the two outputs of the DDM for a
-each of the two trials.
-
+When a Composition is run, its `results <Composition.results>` attribute stores the values of its `OUTPUT` Mechanisms
+at the end of each `trial <TRIAL>`. In this case, the `DDM` Mechanism is the only `OUTPUT` Mechanism, and it has two
+output values by default: the outcome of the decision (1 or -1, in this case corresponding to ``red`` or ``green``),
+and the estimated mean decision time for the decision (in seconds).  So, the value returned by the ``results``
+attribute is a 3d array containing two 2d arrays, each of which has the two outputs of the DDM for each trial (notice
+that the estimated response time for the second, incongruent trial was significantly longer than for the first,
+congruent trial;  note also that, on some executions it might return -1 as the response in the second trials since,
+by default, the `function <DDM.function>` used for the decision process has a non-zero `noise
+<DriftDiffusionAnalytical.noise> term).
 
 .. _BasicsAndSampler_Dynamics_of_Execution:
 
@@ -278,8 +283,33 @@ Dynamics of Execution
     the value specified in its threhosld parameter, as follows::
 
 One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
-different time scales.  For example, the Mechanisms above all executed in single pass:  THe ProcessingMechanism:
-aymptotic, The DDM anaytic
+different time scales.  For example, in the Stroop model above, the Mechanisms above all executed in single pass.
+For example, the `DDM` Mechanism uses `DriftDiffusionAnalytical` as its default `function <DDM.function>` that
+computes, each time it is executed, an analytic solution to the distribution of responses expected for a DDM
+integration process for a specified `threshold <DriftDiffusionAnalytical.threshold>, and returns the probability of
+crossing one of the thresholds and the mean crossing time.  However, it is also possible to simulate the dynamics of
+processing at a finer time scale, simply by assigning the DDM `DriftDiffusionIntegrator` as its function, and
+specifying in the call to the model's `run <Composition.run>` method that it terminate a trial only when the
+``decision`` Mechanism has completed its execution::
+
+    decision = DDM(name='DECISION',
+                   input_format=ARRAY,
+                   function=DriftDiffusionIntegrator(noise=0.5, threshold=20)
+                   )
+    Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color},
+                     termination_processing={TimeScale.TRIAL: WhenFinished(decision)}
+                     )
+    print (Stroop_model.results)
+    >> [[array([[20.]]), array([[126.]])]]
+
+In this case, the default output of the DDM is the value of its decision variable when it completed execution (which
+should be equal to either the postive or negative value of its threshold) and the number of executions it took to do so,
+so that is what is recorded in the `results <Composition.results>` attribute of the Stroop model, as shown above.
+
+The feedforward pathways all used a `ProcessingMechanism`, that computes its output in a single computation that
+can be thought of as the asymptotic value of a finer-grained process that time-averages (integrates) its input over
+time.  However, these can be replaced with TransferMechanisms, which provides an `intergraton_mode <TransferMechanism
+.integration_mode>` that time-averages its input over executions.
 
 
 - Condtions can be usede to mix and match in more complex ways, for example:  recurrent network
