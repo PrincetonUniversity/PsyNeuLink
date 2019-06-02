@@ -1058,9 +1058,9 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     @property
     def shenhav_et_al_compat_mode(self):
         """
-        Get the whether the function is set to Shenhav et al. compatibility mode. This mode allows
+        Get whether the function is set to Shenhav et al. compatibility mode. This mode allows
         the analytic computations of mean error rate and reaction time to match exactly the
-        computations made in the MATLAB DDM code (Matlab/ddmSimFRG.m). These compatibility chages
+        computations made in the MATLAB DDM code (Matlab/ddmSimFRG.m). These compatibility changes
         should only effect edges cases that involve the following cases:
 
             - Floating point overflows and underflows are ignored when computing mean RT and mean ER
@@ -1078,7 +1078,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     @shenhav_et_al_compat_mode.setter
     def shenhav_et_al_compat_mode(self, value):
         """
-        Set the whether the function is set to Shenhav et al. compatibility mode. This mode allows
+        Set whether the function is set to Shenhav et al. compatibility mode. This mode allows
         the analytic computations of mean error rate and reaction time to match exactly the
         computations made in the MATLAB DDM code (Matlab/ddmSimFRG.m). These compatibility chages
         should only effect edges cases that involve the following cases:

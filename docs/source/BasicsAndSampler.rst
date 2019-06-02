@@ -168,26 +168,34 @@ More Elaborate Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Configuring more complex models is also straightforward.  For example, the script below implements a model of the
-`Stroop task <https://en.wikipedia.org/wiki/Stroop_effect>`_ by creating two feedforward neural network pathways that
-converge on a single output layer, which combines the inputs and projects to a drift diffusion mechanism (DDM) that
-decides the response::
+`Stroop task <https://en.wikipedia.org/wiki/Stroop_effect>` by creating two feedforward neural network pathways
+-- one for color naming and another for word reading -- as well as a corresponding pair of pathways that deterine which
+of those to perform based on a task instruction. These all converge on a common output mechanism that projects to a
+drift diffusion (DDM) decision mechanism responsible for determining the response::
 
     # Construct the color naming pathway:
-    color_input = ProcessingMechanism(name='COLOR INPUT', size=2, function=Linear)
+    color_input = ProcessingMechanism(name='COLOR INPUT', size=2) # note: default function is Linear
     color_input_to_hidden_wts = np.array([[1, -1], [-1, 1]])
-    color_hidden = ProcessingMechanism(name='COLOR HIDDEN', size=2, function=Logistic)
+    color_hidden = ProcessingMechanism(name='COLOR HIDDEN', size=2, function=Logistic(bias=-4))
     color_hidden_to_output_wts = np.array([[1, -1], [-1, 1]])
-    output = ProcessingMechanism(name='OUTPUT', size=2)
+    output = ProcessingMechanism(name='OUTPUT', size=2 , function=Logistic)
     color_pathway = [color_input, color_input_to_hidden_wts, color_hidden, color_hidden_to_output_wts, output]
 
     # Construct the word reading pathway (using the same output_layer)
-    word_input = ProcessingMechanism(name='WORD INPUT', size=2, function=Linear)
+    word_input = ProcessingMechanism(name='WORD INPUT', size=2)
     word_input_to_hidden_wts = np.array([[2, -2], [-2, 2]])
-    word_hidden = ProcessingMechanism(name='WORD HIDDEN', size=2, function=Logistic)
+    word_hidden = ProcessingMechanism(name='WORD HIDDEN', size=2, function=Logistic(bias=-4))
     word_hidden_to_output_wts = np.array([[2, -2], [-2, 2]])
     word_pathway = [word_input, word_input_to_hidden_wts, word_hidden, word_hidden_to_output_wts, output]
 
-    # Construct the color naming pathway:
+    # Construct the task specification pathways
+    task_input = ProcessingMechanism(name='TASK INPUT', size=2)
+    task_color_wts = np.array([[4,4],[0,0]])
+    task_word_wts = np.array([[0,0],[4,4]])
+    task_color_pathway = [task_input, task_color_wts, color_hidden]
+    task_word_pathway = [task_input, task_word_wts, word_hidden]
+
+    # Construct the decision pathway:
     decision = DDM(name='DECISION', input_format=ARRAY)
     decision_pathway = [output, decision]
 
@@ -195,14 +203,14 @@ decides the response::
     Stroop_model = Composition(name='Stroop Model')
     Stroop_model.add_linear_processing_pathway(color_pathway)
     Stroop_model.add_linear_processing_pathway(word_pathway)
+    Stroop_model.add_linear_processing_pathway(task_color_pathway)
+    Stroop_model.add_linear_processing_pathway(task_word_pathway)
     Stroop_model.add_linear_processing_pathway(decision_pathway)
 
-In this model two neural network style pathways -- ``color_naming_pathway`` and ``word_reading_pathway`` -- converge
-on a common output Mechanism in the ``output`` layer, that then projects to a DDM decision-making Mechanism (this is a
-simplified verison of a model of the Stroop task described in `Cohen et al., 1990
-<https://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=6E547C8E91BD81E3F62E17868DC14471?doi=10.1.1.321.3453&rep=rep1&type=pdf>`_;
-a more complete implementation of that model in PsyNeuLink can be found at `Cohen et al. 1990 <XXX>`).  The figure
-belows shows the output of Stroop_model.show_graph().
+This is a simplified version the model described in `Cohen et al., 1990
+<https://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=6E547C8E91BD81E3F62E17868DC14471?doi=10.1.1.321.3453&rep=rep1&type=pdf>`_,
+a more complete version of which can be found at `Cohen et al. 1990 <XXX>`).  The figure belows shows the model
+using Stroop_model.show_graph().
 
 .. A model can be run with a sequence of inputs, by specifying them in a dictionary containing a list for each input
 .. Mechanism, as follows::
@@ -234,10 +242,65 @@ belows shows the output of Stroop_model.show_graph().
 
    **Stroop Model** Representation of the Composition in the example above.
 
+Running the model is as simple as generating some inputs and then providing them to the its `run <Composition.run>`
+method.  Inputs are provided to the model as in a dictionary, with one entry for each of the Composition's `INPUT`
+Mechanisms.  Each entry contains a list of the inputs for the specified Mechanism, one for each trial to be run.
+The following defines two stimui to use as the color and word inputs (``red`` and ``green``, and two for use as the
+task input (``color`` and ``word``), and uses them to run the model for two trials::
+
+    red = [1,0]
+    green = [0,1]
+    word = [0,1]
+    color = [1,0]
+                                       # Trial 1  Trial 2
+    Stroop_model.run(inputs={color_input:[red,     red   ],
+                             word_input: [red,     green ],
+                             task_input: [color,   color ]})
+    print(Stroop_model.results)
+    >> [[array([1.]), array([2.80488344])], [array([-1.]), array([3.94471513])]]
+
+When a Composition is run, its `results <Composition.results>` attribute stores the values of its `OUTPUT` Mechanisms.
+In this case, it is the `DDM` Mechanism, which has two output values by default:  the decions (1 or -1, in this case
+corresponding to ``red`` or ``green``), and the estimated mean decision time for doing so.  So, the value returned by
+the ``results`` attribute has a 3d array containing two 2d arrays, each of which has the two outputs of the DDM for a
+each of the two trials.
+
+
 .. _BasicsAndSampler_Dynamics_of_Execution:
 
 Dynamics of Execution
 ~~~~~~~~~~~~~~~~~~~~~
+
+- Execute at multiple times scales:
+  • run DDM in integrator mode
+  • but notice that it only executes one step of integration
+  • so, can apply condition that causes it to execute until it "completes" which, for a DDM is when the process
+    the value specified in its threhosld parameter, as follows::
+
+One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
+different time scales.  For example, the Mechanisms above all executed in single pass:  THe ProcessingMechanism:
+aymptotic, The DDM anaytic
+
+
+- Condtions can be usede to mix and match in more complex ways, for example:  recurrent network
+
+ORIGINAL VERSION:
+One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
+different time scales.  A Composition can include some Mechanisms that carry out "single-shot" computations with ones
+that carry out more fine-grained updates, or that depend another Mechanism to complete its execution before proceding.
+For example, in the model above, all of the Mechanisms were configured to execute in a single pass.  However, one or
+more layers of the feedforward network can be changed to time-average it input by replacing the ProcessingMechanism
+with a `TransferMechanism` -- a more powerful type that can be assigned an `integrator_mode <TransferMechanism
+.integrator_mode>`.  Simiarly, by default, the DDM Mechanism uses `DriftDiffusionAnalytical` Function, but that can be
+replaced by the `DriftDiffusionIntegrator` to carry out path (Euler) integraton.  One issue that arises when mixing
+single-shot and integration computations in the same model is the coordination of their time scales:  integration is
+generally assumed to occur on a finer time scale than single-shot compuations (which are often used for efficiency to
+implement asymptotic outcomes).  A similar issue arises when mixing recurrent networks that involve a settling
+process (for which there is often not a clear analytical solution) with single-shot, feedforward computations.  The
+following example illustrates how these situations can be managed with the `Scheduler` in PsyNeuLink.
+
+
+
 
 One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
 different time scales.  A Composition can include some Mechanisms that carry out "single-shot" computations with ones
@@ -283,7 +346,7 @@ follows::
     full_model.add_linear_processing_pathway(recurrent_network)
 
     # Construct the Scheduler:
-    model_scheduler = Scheduler(composition=full_model)
+    model_scheduler = Scheduler(composition=model_scheduler)
 
     # Add Conditions to the Scheduler:
     model_scheduler.add_condition(hidden_layer,
@@ -311,13 +374,13 @@ execute until the change in its value falls below a specified threshold as follo
     epsilon = 0.01
 
     # Add a Condition to the Scheduler that uses the ``converge`` function to continue
-    # executing the ``recurrent_layer`` while it has not (i.e., until it has) converged
-    my_scheduler.add_condition(hidden_layer,
-                               Any(EveryNCalls(input_layer, 1),
-                               EveryNCalls(recurrent_layer, 1)))
-    my_scheduler.add_condition(my_recurrent_layer,
-                               All(EveryNCalls(hidden_layer, 1),
-                                   WhileNot(converge, recurrent_mech, epsilon)))
+    # executing the ``recurrent_layer`` while until it has converged
+    model_scheduler.add_condition(hidden_layer,
+                                  Any(EveryNCalls(input_layer, 1),
+                                  EveryNCalls(recurrent_layer, 1)))
+    model_scheduler.add_condition(my_recurrent_layer,
+                                  All(EveryNCalls(hidden_layer, 1),
+                                  WhileNot(converge, recurrent_mech, epsilon)))
 
 Here, the criterion for stopping execution is defined as a function (``converge``), that is used in a `WhileNot`
 Condition.  Any arbitrary Conditions can be created and flexibly combined to construct virtually any schedule of
