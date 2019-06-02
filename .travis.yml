@@ -28,6 +28,12 @@ env: PYTHONWARNINGS="ignore::DeprecationWarning"
 # Cache installed python packages
 cache:
   pip
+  apt
+
+addons:
+  apt:
+    packages:
+      - graphviz
 
 matrix:
   include:
@@ -51,11 +57,6 @@ matrix:
     cache:
         directories:
           - $HOME/Library/Caches
-
-addons:
-  apt:
-    packages:
-      - graphviz
 
 before_install: |
   if [ "$TRAVIS_OS_NAME" == "osx" ]; then
