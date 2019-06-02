@@ -250,9 +250,9 @@ The following defines two stimui to use as the color and word inputs (``red`` an
 task input (``color`` and ``word``), and then uses them to run the model for a color naming congruent trial, followed
 by a color naming incongruent trial::
 
-    red = [1,0]
+    red =   [1,0]
     green = [0,1]
-    word = [0,1]
+    word =  [0,1]
     color = [1,0]
                                        # Trial 1  Trial 2
     Stroop_model.run(inputs={color_input:[red,     red   ],
@@ -262,35 +262,35 @@ by a color naming incongruent trial::
     >> [[array([1.]), array([2.80488344])], [array([1.]), array([3.94471513])]]
 
 When a Composition is run, its `results <Composition.results>` attribute stores the values of its `OUTPUT` Mechanisms
-at the end of each `trial <TRIAL>`. In this case, the `DDM` Mechanism is the only `OUTPUT` Mechanism, and it has two
-output values by default: the outcome of the decision (1 or -1, in this case corresponding to ``red`` or ``green``),
-and the estimated mean decision time for the decision (in seconds).  So, the value returned by the ``results``
-attribute is a 3d array containing two 2d arrays, each of which has the two outputs of the DDM for each trial (notice
-that the estimated response time for the second, incongruent trial was significantly longer than for the first,
-congruent trial;  note also that, on some executions it might return -1 as the response in the second trials since,
-by default, the `function <DDM.function>` used for the decision process has a non-zero `noise
-<DriftDiffusionAnalytical.noise> term).
+at the end of each `TRIAL <TimeScale.TRIAL>`. In this case, the `DDM` Mechanism is the only `OUTPUT` Mechanism, and it
+has two output values by default: the outcome of the decision (1 or -1, in this case corresponding to ``red`` or
+``green``), and the estimated mean decision time for the decision (in seconds).  So, the value returned by the `results
+<Composition.results>` attribute is a 3d array containing two 2d arrays, each of which has the two outputs of the DDM
+for each `TRIAL <TimeScale.TRIAL>` (notice that the estimated response time for the second, incongruent trial was
+significantly longer than for the first, congruent trial;  note also that, on some executions it might return -1 as
+the response in the second trials since, by default, the `function <DDM.function>` used for the decision process has
+a non-zero `noise <DriftDiffusionAnalytical.noise> term).
 
 .. _BasicsAndSampler_Dynamics_of_Execution:
 
 Dynamics of Execution
 ~~~~~~~~~~~~~~~~~~~~~
 
-- Execute at multiple times scales:
-  • run DDM in integrator mode
-  • but notice that it only executes one step of integration
-  • so, can apply condition that causes it to execute until it "completes" which, for a DDM is when the process
-    the value specified in its threhosld parameter, as follows::
+.. - Execute at multiple times scales:
+..   • run DDM in integrator mode
+..   • but notice that it only executes one step of integration
+..   • so, can apply condition that causes it to execute until it "completes" which, for a DDM is when the process
+..     the value specified in its threhosld parameter, as follows::
 
 One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
-different time scales.  For example, in the Stroop model above, the Mechanisms above all executed in single pass.
-For example, the `DDM` Mechanism uses `DriftDiffusionAnalytical` as its default `function <DDM.function>` that
-computes, each time it is executed, an analytic solution to the distribution of responses expected for a DDM
-integration process for a specified `threshold <DriftDiffusionAnalytical.threshold>, and returns the probability of
-crossing one of the thresholds and the mean crossing time.  However, it is also possible to simulate the dynamics of
-processing at a finer time scale, simply by assigning the DDM `DriftDiffusionIntegrator` as its function, and
-specifying in the call to the model's `run <Composition.run>` method that it terminate a trial only when the
-``decision`` Mechanism has completed its execution::
+different time scales.  In the Stroop model above, all of the Mechanisms complete their computations in
+a single execution. For example, the `DDM` Mechanism uses `DriftDiffusionAnalytical` as its default `function <DDM
+.function>` that computes, each time it is executed, an analytic solution to the distribution of responses expected
+for a DDM integration process for a specified `threshold <DriftDiffusionAnalytical.threshold>`, and returns the
+probability of crossing one of the thresholds and the mean crossing time.  However, it is also possible to simulate
+the dynamics of processing at a finer time scale, simply by assigning the DDM `DriftDiffusionIntegrator` as its
+function, and specifying in the call to the model's `run <Composition.run>` method that it terminate a `TRIAL
+<TimeScale.TRIAL>` only when the ``decision`` Mechanism has completed its execution::
 
     decision = DDM(name='DECISION',
                    input_format=ARRAY,
@@ -302,49 +302,50 @@ specifying in the call to the model's `run <Composition.run>` method that it ter
     print (Stroop_model.results)
     >> [[array([[20.]]), array([[126.]])]]
 
-In this case, the default output of the DDM is the value of its decision variable when it completed execution (which
-should be equal to either the postive or negative value of its threshold) and the number of executions it took to do so,
-so that is what is recorded in the `results <Composition.results>` attribute of the Stroop model, as shown above.
+When the `DriftDiffusionIntegrator` is used as the DDM's `function <DDM.function>`, its default output is the value
+of its decision variable when it completed execution (which should be equal to either the postive or negative value
+of its threshold) and the number of executions it took to do so. So, that is what is recorded in the `results
+<Composition.results>` attribute of the Stroop model, as shown above.
 
-The feedforward pathways all used a `ProcessingMechanism`, that computes its output in a single computation that
-can be thought of as the asymptotic value of a finer-grained process that time-averages (integrates) its input over
-time.  However, these can be replaced with TransferMechanisms, which provides an `intergraton_mode <TransferMechanism
-.integration_mode>` that time-averages its input over executions.
+This version of the model included Mechanisms that executed over different time-scales:  the ProcessingMechanisms
+completed their computations in a single execution, whereas the DDM took many executions to complete its computation.
+In this case, the coordination of time scales was straight forward, since the DDM was the last Mechanism in the
+Composition:  the ProcessingMechanisms in each pathway executed in sequence, ending in the DDM wich executed until
+it was complete.  PsyNeuLink's `Scheduler` can be used to handle more complicated dependencies among Mechanisms that
+execute over different time scales, by assigning one or more `Conditions <Condition>` to those Mechanisms.
+Conditions can specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each
+`TRIAL <TimeScale.TRIAL>`), or its behavior relative to that of one or more other Components (e.g., how many times it
+should execute or when it should stop executing relative to other Mechanisms).  For example, the following
+implements a Composition that integrates a 3-layered feedforward network for performing a simple stimulus-response
+mapping task, with a recurrent network that receives input from and feeds back to the feed-forward network, to
+provide a simple form of maintained context.  To allow the recurrent layer to settle following the presentation of
+each stimulus (which is not required for the feedforward network), the Scheduler can be used to execute the recurrent
+layer multiple times but the feedforward network only once in each `TRIAL <TimeScale.TRIAL>`, as follows::
 
+XXX REPLACE EXAMPLE WITH RECURRENT TASK LAYER THAT TAKES IN INSTRUCTION INPUTS AND SETTLES BEFORE EXECUTING STIMULI
 
-- Condtions can be usede to mix and match in more complex ways, for example:  recurrent network
+.. The following example shows how PsyNeuLink's `Scheduler` can be used to
+.. construct models involving more complicated dependencies among Mechanisms that execute over different time scales.
 
-ORIGINAL VERSION:
-One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
-different time scales.  A Composition can include some Mechanisms that carry out "single-shot" computations with ones
-that carry out more fine-grained updates, or that depend another Mechanism to complete its execution before proceding.
-For example, in the model above, all of the Mechanisms were configured to execute in a single pass.  However, one or
-more layers of the feedforward network can be changed to time-average it input by replacing the ProcessingMechanism
-with a `TransferMechanism` -- a more powerful type that can be assigned an `integrator_mode <TransferMechanism
-.integrator_mode>`.  Simiarly, by default, the DDM Mechanism uses `DriftDiffusionAnalytical` Function, but that can be
-replaced by the `DriftDiffusionIntegrator` to carry out path (Euler) integraton.  One issue that arises when mixing
-single-shot and integration computations in the same model is the coordination of their time scales:  integration is
-generally assumed to occur on a finer time scale than single-shot compuations (which are often used for efficiency to
-implement asymptotic outcomes).  A similar issue arises when mixing recurrent networks that involve a settling
-process (for which there is often not a clear analytical solution) with single-shot, feedforward computations.  The
-following example illustrates how these situations can be managed with the `Scheduler` in PsyNeuLink.
+.. This is done by assigning one or more `Conditions <Condition>` to any Mechanism. Conditions can specify the isolated
+.. behavior of a Mechanism (e.g., how many times it should be executed in each `TRIAL`), or its behavior relative to
+.. that of one or more other Components (e.g., how many times it should execute or when it should stop executing
+.. relative to other Mechanisms).
 
-
-
-
-One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
-different time scales.  A Composition can include some Mechanisms that carry out "single-shot" computations with ones
-that carry out more fine-grained updates, or that depend another Mechanism to complete its execution before proceding.
-For example, in the model above, all of the Mechanisms were configured to execute in a single pass.  However, one or
-more layers of the feedforward network can be changed to time-average it input by replacing the ProcessingMechanism
-with a `TransferMechanism` -- a more powerful type that can be assigned an `integrator_mode <TransferMechanism
-.integrator_mode>`.  Simiarly, by default, the DDM Mechanism uses `DriftDiffusionAnalytical` Function, but that can be
-replaced by the `DriftDiffusionIntegrator` to carry out path (Euler) integraton.  One issue that arises when mixing
-single-shot and integration computations in the same model is the coordination of their time scales:  integration is
-generally assumed to occur on a finer time scale than single-shot compuations (which are often used for efficiency to
-implement asymptotic outcomes).  A similar issue arises when mixing recurrent networks that involve a settling
-process (for which there is often not a clear analytical solution) with single-shot, feedforward computations.  The
-following example illustrates how these situations can be managed with the `Scheduler` in PsyNeuLink.
+.. ORIGINAL VERSION:
+.. One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
+.. different time scales.  A Composition can include some Mechanisms that carry out "single-shot" computations with ones
+.. that carry out more fine-grained updates, or that depend another Mechanism to complete its execution before proceding.
+.. For example, in the model above, all of the Mechanisms were configured to execute in a single pass.  However, one or
+.. more layers of the feedforward network can be changed to time-average it input by replacing the ProcessingMechanism
+.. with a `TransferMechanism` -- a more powerful type that can be assigned an `integrator_mode <TransferMechanism
+.. .integrator_mode>`.  Simiarly, by default, the DDM Mechanism uses `DriftDiffusionAnalytical` Function, but that can be
+.. replaced by the `DriftDiffusionIntegrator` to carry out path (Euler) integraton.  One issue that arises when mixing
+.. single-shot and integration computations in the same model is the coordination of their time scales:  integration is
+.. generally assumed to occur on a finer time scale than single-shot compuations (which are often used for efficiency to
+.. implement asymptotic outcomes).  A similar issue arises when mixing recurrent networks that involve a settling
+.. process (for which there is often not a clear analytical solution) with single-shot, feedforward computations.  The
+.. following example illustrates how these situations can be managed with the `Scheduler` in PsyNeuLink.
 
 .. By default, when a Composition is run, each Component in it is
 .. executed at least once.  However, PsyNeuLink has a `Scheduler` that can be used to design more complex dynamics of
@@ -353,14 +354,14 @@ following example illustrates how these situations can be managed with the `Sche
 .. that of one or more other Components (e.g., how many times it should execute or when it should stop executing
 .. relative to other Mechanisms).
 
-XXX REWORK TO FLOW FROM ABOVE:
-As another example, that illustrates how execution of one Mechanism can be made contingent on the completion of
-another, the following script implements a Composition that integrates a 3-layered feedforward network for
-performing a simple stimulus-response mapping task, with a recurrent network that receives input from and feeds back
-to the feed-forward network, to provide a simple form of maintained context.  To allow the recurrent layer to settle
-following the presentation of each stimulus (which is not required for the feedforward network), the Scheduler can
-be used to execute the recurrent layer multiple times but the feedforward network only once in each `TRIAL`, as
-follows::
+.. XXX REWORK TO FLOW FROM ABOVE:
+.. As another example, that illustrates how execution of one Mechanism can be made contingent on the completion of
+.. another, the following script implements a Composition that integrates a 3-layered feedforward network for
+.. performing a simple stimulus-response mapping task, with a recurrent network that receives input from and feeds back
+.. to the feed-forward network, to provide a simple form of maintained context.  To allow the recurrent layer to settle
+.. following the presentation of each stimulus (which is not required for the feedforward network), the Scheduler can
+.. be used to execute the recurrent layer multiple times but the feedforward network only once in each `TRIAL`, as
+.. follows::
 
     # Construct the Mechanisms:
     input_layer = ProcessingMechanism(name='INPUT', size=10)
@@ -424,8 +425,8 @@ Control
 One of the distinctive features of PsyNeuLink is the ability to easily create models that include control;  that is,
 Mechanism that can evaluate the output of other Mechanisms (or nested Compositions), and use this to regulate
 the processing of those Mechanisms.  For example, the following extension of the Stroop model monitors conflict in
-the output_layer of the Stroop model above on each trial, and uses that to determine how much to control to allocate
-to the ColorNaming vs. WordReading pathways.
+the output_layer of the Stroop model above on each `TRIAL <TimeScale.TRIAL>`, and uses that to determine how much to
+control to allocate to the ColorNaming vs. WordReading pathways.
 
 <CONFLICT MONITORING EXAMPLE HERE>
 

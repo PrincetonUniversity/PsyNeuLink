@@ -1065,7 +1065,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         execution_ids : set
             Stores all execution_ids used by this Composition.
 
+        results : 3d array
+            Stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` Mechanisms in the Composition for
+            every `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`.  Each item in the outermost
+            dimension (axis 0) of the array corresponds to a trial; each item within a trial corresponds to the
+            `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism.
 
+        simulation_results : 3d array
+            Stores the `results <Composition.results>` for executions of the Composition when it is executed using
+            its `evaluate <Composition.evaluate>` method.
 
         COMMENT:
         name : str
