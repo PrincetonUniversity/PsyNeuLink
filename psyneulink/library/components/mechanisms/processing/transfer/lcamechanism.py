@@ -18,10 +18,11 @@
 Overview
 --------
 
-An LCAMechanism is a subclass of `RecurrentTransferMechanism` that implements a single-layered leaky competitive accumulator
-network, in which each element is connected to every other element with mutually inhibitory weights. The LCAMechanism's recurrent
-projection matrix *always* consists of `self_excitation <LCAMechanism.self_excitation>` on the diagonal and -`competition
-<LCAMechanism.competition>` off-diagonal.
+An LCAMechanism is a subclass of `RecurrentTransferMechanism` that implements a single-layered `leaky competitng
+accumulator (LCA) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_  network, in which each element is connected to
+every other element with mutually inhibitory weights. The LCAMechanism's recurrent projection matrix *always* consists
+of `self_excitation <LCAMechanism.self_excitation>` on the diagonal and -`competition <LCAMechanism.competition>`
+off-diagonal.
 
     COMMENT:
     .. math::
@@ -233,7 +234,7 @@ class LCAMechanism_OUTPUT():
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class LCAMechanism(RecurrentTransferMechanism):
     """
-    LCAMechanism(                                   \
+    LCAMechanism(                          \
         default_variable=None,             \
         size=None,                         \
         function=Logistic,                 \

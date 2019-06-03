@@ -117,6 +117,8 @@ display and/or analysis (such as `NetworkX <https://networkx.github.io>`_ and `i
 .html>`_).  They can also be exported as a JSON file, in a format that is currently being developed for the exchange
 of computational models in neuroscience and psychology (see `BIDS <XXX>`)
 
+.. XXX USE show_graph(show_node_structure=True) HERE OR ABOVE::
+
 The Composition can be run by calling its `run <Composition.run>` method, with an input array appropriately sized for
 the first Mechanism in the pathway (in this case, the input_layer)::
 
@@ -302,27 +304,52 @@ function, and specifying in the call to the model's `run <Composition.run>` meth
     print (Stroop_model.results)
     >> [[array([[20.]]), array([[126.]])]]
 
-When the `DriftDiffusionIntegrator` is used as the DDM's `function <DDM.function>`, its default output is the value
+If the `DriftDiffusionIntegrator` is used as the DDM's `function <DDM.function>`, its default output is the value
 of its decision variable when it completed execution (which should be equal to either the postive or negative value
 of its threshold) and the number of executions it took to do so. So, that is what is recorded in the `results
-<Composition.results>` attribute of the Stroop model, as shown above.
+<Composition.results>` attribute of the Stroop model, as shown above (note: because there is noise in the integration
+process, running the model several times produces varying response times).
 
 This version of the model included Mechanisms that executed over different time-scales:  the ProcessingMechanisms
 completed their computations in a single execution, whereas the DDM took many executions to complete its computation.
 In this case, the coordination of time scales was straight forward, since the DDM was the last Mechanism in the
 Composition:  the ProcessingMechanisms in each pathway executed in sequence, ending in the DDM wich executed until
 it was complete.  PsyNeuLink's `Scheduler` can be used to handle more complicated dependencies among Mechanisms that
-execute over different time scales, by assigning one or more `Conditions <Condition>` to those Mechanisms.
+execute over different time scales, by assigning one or more `Conditions <Condition>` for execution of the Mechanisms.
 Conditions can specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each
-`TRIAL <TimeScale.TRIAL>`), or its behavior relative to that of one or more other Components (e.g., how many times it
-should execute or when it should stop executing relative to other Mechanisms).  For example, the following
-implements a Composition that integrates a 3-layered feedforward network for performing a simple stimulus-response
-mapping task, with a recurrent network that receives input from and feeds back to the feed-forward network, to
-provide a simple form of maintained context.  To allow the recurrent layer to settle following the presentation of
-each stimulus (which is not required for the feedforward network), the Scheduler can be used to execute the recurrent
-layer multiple times but the feedforward network only once in each `TRIAL <TimeScale.TRIAL>`, as follows::
+`TRIAL <TimeScale.TRIAL>`), its behavior relative to that of one or more other Components (e.g., how many times it
+should wait for another Mechanism to execute before it does so), or even arbitrary functions.  For example, the
+following implements a verion of the model above that uses a leaky competing accumulator `<https://www.ncbi.nlm.nih
+.gov/pubmed/11488378>`_ (`LCAMechanism`) for the task layer, that settles for a specified number of executions before
+the color and word hidden layers execute -- simulating a situation in which the task instruction is processed before
+processing the color or word stimuli::
 
-XXX REPLACE EXAMPLE WITH RECURRENT TASK LAYER THAT TAKES IN INSTRUCTION INPUTS AND SETTLES BEFORE EXECUTING STIMULI
+    # Modify task Mechanism:
+    task = LCAMechanism(name='TASK', size=2, )
+
+    # Assign conditions:
+    settling_time = 100
+    scheduler = Scheduler(composition=Stroop_model)
+    scheduler.add_condition(color_hidden, EveryNCalls(task, settling_time))
+    scheduler.add_condition(word_hidden, EveryNCalls(task, settling_time))
+    scheduler.add_condition(output,All(EveryNCalls(color_hidden, 1),
+                                       EveryNCalls(word_hidden, 1)))
+    scheduler.add_condition(decision, EveryNCalls(output, 1))
+
+    # Run with scheduler:
+    Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color},
+                     scheduler_processing=scheduler)
+    print (Stroop_model.results)
+    >>[[array([[20.]]), array([[42.]])]]
+
+
+.. that stimulus-response mapping task, with a recurrent
+.. network that receives
+.. input from and feeds back to the feed-forward
+.. network, to
+.. provide a simple form of maintained context.  To allow the recurrent layer to settle following the presentation of
+.. each stimulus (which is not required for the feedforward network), the Scheduler can be used to execute the recurrent
+.. layer multiple times but the feedforward network only once in each `TRIAL <TimeScale.TRIAL>`, as follows
 
 .. The following example shows how PsyNeuLink's `Scheduler` can be used to
 .. construct models involving more complicated dependencies among Mechanisms that execute over different time scales.
@@ -388,9 +415,12 @@ XXX REPLACE EXAMPLE WITH RECURRENT TASK LAYER THAT TAKES IN INSTRUCTION INPUTS A
 
 The two Conditions added to the Scheduler specify that:
 
-   1. ``my_hidden_layer`` should execute whenever either ``input_hidden_layer`` has executed once (to encode the stimulus and make available to the ``recurrent_layer``), or when the ``recurrent_layer`` has executed 10 times (to allow it to settle on a context representation and provide that back to the ``hidden_layer``)
+   1. ``hidden_layer`` should execute whenever either ``input_hidden_layer`` has executed once (to encode the stimulus
+      and make available to the ``recurrent_layer``), or when the ``recurrent_layer`` has executed 10 times (to allow
+      it to settle on a context representation and provide that back to the ``hidden_layer``)
 
-   2. the ``output_layer`` should execute only after the ``hidden_layer`` has executed twice (to integrate its inputs from both ``input_layer`` and ``recurrent_layer``).
+   2. the ``output_layer`` should execute only after the ``hidden_layer`` has executed twice (to integrate its inputs
+      from both ``input_layer`` and ``recurrent_layer``).
 
 More sophisticated Conditions can also be created.  For example, the ``recurrent_layer`` can be scheduled to
 execute until the change in its value falls below a specified threshold as follows::
