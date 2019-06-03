@@ -84,6 +84,8 @@ task_decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')
 color_task.set_log_conditions('value')      
 word_task.set_log_conditions('value')
 
+control_signal_range = (0,1)
+default_control_signal = np.mean(control_signal_range)
 
 c = pnl.Composition(name='Stroop XOR Model')
 c.add_node(color_stim)
@@ -119,7 +121,7 @@ lvoc = pnl.OptimizationControlMechanism(
             convergence_criterion=pnl.VALUE,
             convergence_threshold=0.001,
             step_size=1, #1
-            bounds=(0,1),
+            bounds=control_signal_range,
             # Note: Falk used 10 in the denom below, but indexed sample numbers from 1;
             #       but sample_num passed to _follow_gradient is indexed from 0, so use 11 below
             annealing_function=lambda x, y: x / np.sqrt(11+y),
@@ -130,17 +132,18 @@ lvoc = pnl.OptimizationControlMechanism(
     ),
     # opt control alloc used to compute ctrl sigs
     control_signals=pnl.ControlSignal(
-        projections=[(pnl.SLOPE, color_task), ('color_control', word_task)],
-        # function=pnl.ReLU,
-        # function=pnl.Logistic,
-        cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
-        # intensity_cost_function=pnl.Exponential(rate=0, bias=0), # 0.25, -3
-        # adjustment_cost_function=pnl.Exponential(rate=0, bias=0) # 0.25, -3
-        intensity_cost_function=pnl.Linear(slope=0, intercept=0), # 0.25, -3
-        adjustment_cost_function=pnl.Linear(slope=0, intercept=0) # 0.25, -3
-        # allocation_samples=[i / 2 for i in list(range(0, 50, 1))]
+            variable=default_control_signal,
+            projections=[(pnl.SLOPE, color_task), ('color_control', word_task)],
+            # function=pnl.ReLU,
+            # function=pnl.Logistic,
+            cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
+            # intensity_cost_function=pnl.Exponential(rate=0, bias=0), # 0.25, -3
+            # adjustment_cost_function=pnl.Exponential(rate=0, bias=0) # 0.25, -3
+            intensity_cost_function=pnl.Linear(slope=0, intercept=0), # 0.25, -3
+            adjustment_cost_function=pnl.Linear(slope=0, intercept=0) # 0.25, -3
+            # allocation_samples=[i / 2 for i in list(range(0, 50, 1))]
     )
-    )
+)
 
 lvoc.set_log_conditions('value')
 # lvoc.set_log_conditions('features')
