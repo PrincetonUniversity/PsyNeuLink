@@ -117,11 +117,13 @@ lvoc = pnl.OptimizationControlMechanism(
     # evaluate() computes outcome (obj mech) - costs given state (features) and sample ctrl alloc
     function=pnl.GradientOptimization(
             convergence_criterion=pnl.VALUE,
-            convergence_threshold=0.025,
+            convergence_threshold=0.001,
             step_size=1, #1
-            bounds=(0,None),
-            annealing_function=lambda x, y: x / np.sqrt(y),
-            max_iterations=1000
+            bounds=(0,1),
+            # Note: Falk used 10 in the denom below, but indexed sample numbers from 1;
+            #       but sample_num passed to _follow_gradient is indexed from 0, so use 11 below
+            annealing_function=lambda x, y: x / np.sqrt(11+y),
+            max_iterations=100
             # save_samples=True,
             # save_values=True,
             # direction=pnl.ASCENT
@@ -132,10 +134,10 @@ lvoc = pnl.OptimizationControlMechanism(
         # function=pnl.ReLU,
         # function=pnl.Logistic,
         cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
-        intensity_cost_function=pnl.Exponential(rate=0, bias=0), # 0.25, -3
-        adjustment_cost_function=pnl.Exponential(rate=0, bias=0) # 0.25, -3
-        # intensity_cost_function=pnl.Linear(slope=0, intercept=0), # 0.25, -3
-        # adjustment_cost_function=pnl.Linear(slope=0, intercept=0) # 0.25, -3
+        # intensity_cost_function=pnl.Exponential(rate=0, bias=0), # 0.25, -3
+        # adjustment_cost_function=pnl.Exponential(rate=0, bias=0) # 0.25, -3
+        intensity_cost_function=pnl.Linear(slope=0, intercept=0), # 0.25, -3
+        adjustment_cost_function=pnl.Linear(slope=0, intercept=0) # 0.25, -3
         # allocation_samples=[i / 2 for i in list(range(0, 50, 1))]
     )
     )

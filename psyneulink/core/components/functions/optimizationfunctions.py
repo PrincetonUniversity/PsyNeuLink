@@ -586,14 +586,14 @@ class GradientOptimization(OptimizationFunction):
           <GradientOptimization.gradient_function>`;
         ..
         - adjust `variable <GradientOptimization.variable>` based on the gradient, in the specified
-          `direction <GradientOptimization.direction>` and by an amount specified by `step
-          <GradientOptimization.step>` and possibly `annealing_function
+          `direction <GradientOptimization.direction>` and by an amount specified by `step_size
+          <GradientOptimization.step_size>` and possibly `annealing_function
           <GradientOptimization.annealing_function>`;
         ..
         - compute value of `objective_function <GradientOptimization.objective_function>` using the adjusted value of
           `variable <GradientOptimization.variable>`;
         ..
-        - adjust `step <GradientOptimization.udpate_rate>` using `annealing_function
+        - adjust `step_size <GradientOptimization.udpate_rate>` using `annealing_function
           <GradientOptimization.annealing_function>`, if specified, for use in the next iteration;
         ..
         - evaluate `convergence_criterion <GradientOptimization.convergence_criterion>` and test whether it is below
@@ -643,11 +643,11 @@ class GradientOptimization(OptimizationFunction):
         (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
         the gradient).
 
-    step : int or float : default 1.0
+    step_size : int or float : default 1.0
         specifies the rate at which the `variable <GradientOptimization.variable>` is updated in each
         iteration of the `optimization process <GradientOptimization_Procedure>`;  if `annealing_function
-        <GradientOptimization.annealing_function>` is specified, **step** specifies the intial value of
-        `step <GradientOptimization.step>`.
+        <GradientOptimization.annealing_function>` is specified, **step_size** specifies the intial value of
+        `step_size <GradientOptimization.step_size>`.
 
     bounds : tuple : default None
         specifies the upper and/or lower bounds for the sample; must be a two item tuple that specifies an interval.
@@ -655,9 +655,9 @@ class GradientOptimization(OptimizationFunction):
         the second (see `bounds <GradientOptimization.bounds>` for additional information).
 
     annealing_function : function or method : default None
-        specifies function used to adapt `step <GradientOptimization.step>` in each
+        specifies function used to adapt `step_size <GradientOptimization.step_size>` in each
         iteration of the `optimization process <GradientOptimization_Procedure>`;  must take accept two parameters —
-        `step <GradientOptimization.step>` and `iteration <GradientOptimization_Procedure>`, in that
+        `step_size <GradientOptimization.step_size>` and `iteration <GradientOptimization_Procedure>`, in that
         order — and return a scalar value, that is used for the next iteration of optimization.
 
     convergence_criterion : *VARIABLE* or *VALUE* : default *VALUE*
@@ -705,10 +705,10 @@ class GradientOptimization(OptimizationFunction):
         (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
         the gradient).
 
-    step : int or float
+    step_size : int or float
         determines the rate at which the `variable <GradientOptimization.variable>` is updated in each
         iteration of the `optimization process <GradientOptimization_Procedure>`;  if `annealing_function
-        <GradientOptimization.annealing_function>` is specified, `step <GradientOptimization.step>`
+        <GradientOptimization.annealing_function>` is specified, `step_size <GradientOptimization.step_size>`
         determines the initial value.
 
     bounds : tuple or None
@@ -717,9 +717,9 @@ class GradientOptimization(OptimizationFunction):
         reached or exceeded.
 
     annealing_function : function or method
-        function used to adapt `step <GradientOptimization.step>` in each iteration of the `optimization
-        process <GradientOptimization_Procedure>`;  if `None`, no call is made and the same `step
-        <GradientOptimization.step>` is used in each iteration.
+        function used to adapt `step_size <GradientOptimization.step_size>` in each iteration of the `optimization
+        process <GradientOptimization_Procedure>`;  if `None`, no call is made and the same `step_size
+        <GradientOptimization.step_size>` is used in each iteration.
 
     iteration : int
         the currention iteration of the `optimization process <GradientOptimization_Procedure>`.
@@ -819,8 +819,8 @@ class GradientOptimization(OptimizationFunction):
                     :type: list
                     :read only: True
 
-                step
-                    see `step <GradientOptimization.step>`
+                step_size
+                    see `step_size <GradientOptimization.step_size>`
 
                     :default value: 1.0
                     :type: float
@@ -833,7 +833,7 @@ class GradientOptimization(OptimizationFunction):
         previous_value = Parameter([[0], [0]], read_only=True)
 
         gradient_function = Parameter(None, stateful=False, loggable=False)
-        step = Parameter(1.0, modulable=True)
+        step_size = Parameter(1.0, modulable=True)
         bounds = Parameter(None)
         annealing_function = Parameter(None, stateful=False, loggable=False)
         convergence_threshold = Parameter(.001, modulable=True)
@@ -873,7 +873,7 @@ class GradientOptimization(OptimizationFunction):
         self.annealing_function = annealing_function
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(step=step,
+        params = self._assign_args_to_param_dicts(step_size=step_size,
                                                   bounds=bounds,
                                                   convergence_criterion=convergence_criterion,
                                                   convergence_threshold=convergence_threshold,
@@ -972,16 +972,17 @@ class GradientOptimization(OptimizationFunction):
         if self.gradient_function is None:
             return sample
 
+        # Index from 1 rather than 0
         # Update step_size
-        step_size = self.parameters.step.get(execution_id)
+        step_size = self.parameters.step_size.get(execution_id)
         if sample_num == 0:
             # FIX: 6/3/19: ASSIGN TO USER-SPECIFIED VALUE, NOT FACTORY DEFAULT
-            step_size = self.parameters.step.default_value
-            self.parameters.step.set(step_size, execution_id)
+            step_size = self.parameters.step_size.default_value
+            self.parameters.step_size.set(step_size, execution_id)
             # FIX: 6/3/19:  ANNEALING ONLY OCCURS ON SECOND STEP_SIZE (I.E., SKIPPED FOR SAMPLE_NUM 0 AND 1.
-        if sample_num != 0 and self.annealing_function:
+        if self.annealing_function:
             step_size = call_with_pruned_args(self.annealing_function, step_size, sample_num, execution_id=execution_id)
-            self.parameters.step.set(step_size, execution_id)
+            self.parameters.step_size.set(step_size, execution_id)
 
         # Compute gradients with respect to current sample
         _gradients = call_with_pruned_args(self.gradient_function, sample, execution_id=execution_id)
