@@ -559,7 +559,7 @@ class GradientOptimization(OptimizationFunction):
         objective_function=None,     \
         gradient_function=None,      \
         direction=ASCENT,            \
-        step=1.0,                    \
+        step_size=1.0,               \
         bounds=None,                 \
         annealing_function=None,     \
         convergence_criterion=VALUE, \
@@ -850,7 +850,7 @@ class GradientOptimization(OptimizationFunction):
                  objective_function:tc.optional(is_function_type)=None,
                  gradient_function:tc.optional(is_function_type)=None,
                  direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
-                 step:tc.optional(tc.any(int, float))=1.0,
+                 step_size:tc.optional(tc.any(int, float))=1.0,
                  bounds:tc.optional(tuple)=None,
                  annealing_function:tc.optional(is_function_type)=None,
                  convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=VALUE,
@@ -860,8 +860,7 @@ class GradientOptimization(OptimizationFunction):
                  save_values:tc.optional(bool)=False,
                  params=None,
                  owner=None,
-                 prefs=None,
-                 **kwargs):
+                 prefs=None):
 
         self.gradient_function = gradient_function
         search_function = self._follow_gradient
@@ -973,17 +972,22 @@ class GradientOptimization(OptimizationFunction):
         if self.gradient_function is None:
             return sample
 
-        # Update step
-        step = self.parameters.step.get(execution_id)
+        # Update step_size
+        step_size = self.parameters.step.get(execution_id)
+        if sample_num == 0:
+            # FIX: 6/3/19: ASSIGN TO USER-SPECIFIED VALUE, NOT FACTORY DEFAULT
+            step_size = self.parameters.step.default_value
+            self.parameters.step.set(step_size, execution_id)
+            # FIX: 6/3/19:  ANNEALING ONLY OCCURS ON SECOND STEP_SIZE (I.E., SKIPPED FOR SAMPLE_NUM 0 AND 1.
         if sample_num != 0 and self.annealing_function:
-            step = call_with_pruned_args(self.annealing_function, step, sample_num, execution_id=execution_id)
-            self.parameters.step.set(step, execution_id)
+            step_size = call_with_pruned_args(self.annealing_function, step_size, sample_num, execution_id=execution_id)
+            self.parameters.step.set(step_size, execution_id)
 
         # Compute gradients with respect to current sample
         _gradients = call_with_pruned_args(self.gradient_function, sample, execution_id=execution_id)
 
         # Get new sample based on new gradients
-        new_sample = sample + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
+        new_sample = sample + self.parameters.direction.get(execution_id) * step_size * np.array(_gradients)
 
         # Constrain new sample to be within bounds
         bounds = self.parameters.bounds.get(execution_id)

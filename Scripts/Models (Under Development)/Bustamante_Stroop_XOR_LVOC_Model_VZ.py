@@ -117,9 +117,9 @@ lvoc = pnl.OptimizationControlMechanism(
     # evaluate() computes outcome (obj mech) - costs given state (features) and sample ctrl alloc
     function=pnl.GradientOptimization(
             convergence_criterion=pnl.VALUE,
-            convergence_threshold=0.001,
+            convergence_threshold=0.025,
             step_size=1, #1
-            bounds=(0,1),
+            bounds=(0,None),
             annealing_function=lambda x, y: x / np.sqrt(y),
             max_iterations=1000
             # save_samples=True,
