@@ -905,14 +905,16 @@ class GradientOptimization(OptimizationFunction):
                 if bounds[0]>=bounds[1]:
                     raise OptimizationFunctionError(f"Illegal {repr(BOUNDS)} arg for {self.name}: {bounds}; "
                                                     f"1st item must be less than the 2nd item.")
-                len_0 = len(bounds[0])
-                len_1 = len(bounds[1])
+                len_0 = len(np.atleast_1d(bounds[0]))
+                len_1 = len(np.atleast_1d(bounds[1]))
                 if len_0!=1 and len_1!=1 and len_0!=len_1:
                     raise OptimizationFunctionError(f"Lower and upper values of {repr(BOUNDS)} arg for {self.name} "
                                                     f"({bounds}) are both vectors but are not of the same length.")
 
     def reinitialize(self, *args):
         super().reinitialize(*args)
+
+        # Differentiate objective_function using autograd.grad()
         if OBJECTIVE_FUNCTION in args[0]:
             try:
                 from autograd import grad
@@ -921,6 +923,8 @@ class GradientOptimization(OptimizationFunction):
                 raise OptimizationFunctionError("Unable to use autograd with {} specified for {} Function: {}.".
                                                 format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
                                                        args[0][OBJECTIVE_FUNCTION].__name__))
+
+        # Validate bounds and make same size as length of sample (replacing any None's with + or - inf)
         bounds = self.bounds
         if bounds:
             # FIX: 6/4/19 -- DEAL WITH SINGLE VALUE VS. ARRAY FOR EACH BOUND
@@ -928,24 +932,31 @@ class GradientOptimization(OptimizationFunction):
                 bounds = None
             else:
                 sample_len = len(args[0][DEFAULT_VARIABLE])
-
                 lower = np.atleast_1d(bounds[0])
                 if len(lower)==1:
+                    # Single value specified for lower bound, so distribute over array with length = sample_len
                     lower = np.full(sample_len, lower).reshape(sample_len,1)
                 elif len(lower!=sample_len):
-                    raise OptimizationFunctionError(f"XXX LOWER BOUND AND SAMPLE MUST BE SAME LENGTH")
+                    raise OptimizationFunctionError(f"Array used for lower value of {repr(BOUNDS)} arg for {self.name} "
+                                                    f"({lower}) must have the same number of elements ({sample_len}) "
+                                                    f"as the sample over which optimization is being performed.")
                 else:
+                    # Array specified for lower bound, so replace any None's with -inf
                     lower = np.array([[-float('inf')] if n[0] is None else n for n in lower])
 
                 upper = np.atleast_1d(bounds[1])
                 if len(upper)==1:
+                    # Single value specified for upper bound, so distribute over array with length = sample_len
                     upper = np.full(sample_len, upper).reshape(sample_len,1)
                 elif upper(upper!=sample_len):
-                    raise OptimizationFunctionError(f"XXX LOWER BOUND AND SAMPLE MUST BE SAME LENGTH")
+                    raise OptimizationFunctionError(f"Array used for upper value of {repr(BOUNDS)} arg for {self.name} "
+                                                    f"({upper}) must have the same number of elements ({sample_len}) "
+                                                    f"as the sample over which optimization is being performed.")
                 else:
+                    # Array specified for upper bound, so replace any None's with +inf
                     upper = np.array([[-float('inf')] if n[0] is None else n for n in upper])
 
-                bounds = (upper,upper)
+                bounds = (lower,upper)
         self.parameters.bounds.set((bounds))
 
     def function(self,
@@ -1020,7 +1031,7 @@ class GradientOptimization(OptimizationFunction):
             # new_variable[0] = max(bounds[0], min(bounds[1], new_variable[0]))
             # FIX 6/4/19 TO BE SURE IT IS ELEMENTWISE IF SAMPLE IS A MULTIELEMENT ARRAY USING np.maximum and minimum
             #  (ASSIGN BOUND WITH np.fill LATER)
-            new_sample = np.array(np.maximum(bounds[0], np.mininum(bounds[1], new_sample))).reshape(sample.shape)
+            new_sample = np.array(np.maximum(bounds[0], np.minimum(bounds[1], new_sample))).reshape(sample.shape)
 
         return new_sample
 
