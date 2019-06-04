@@ -407,7 +407,8 @@ import types
 import warnings
 
 from abc import ABCMeta
-from collections import Iterable, OrderedDict, UserDict
+from collections.abc import Iterable
+from collections import OrderedDict, UserDict
 from enum import Enum, IntEnum
 
 import numpy as np
@@ -2613,7 +2614,7 @@ class Component(object, metaclass=ComponentsMeta):
 
                 elif target_set is not None:
                     # Copy any iterables so that deletions can be made to assignments belonging to the instance
-                    from collections import Iterable
+                    from collections.abc import Iterable
                     if not isinstance(param_value, Iterable) or isinstance(param_value, str):
                         target_set[param_name] = param_value
                     else:

@@ -325,7 +325,7 @@ def is_iterable(x):
     if isinstance(x, np.ndarray) and x.ndim == 0:
         return False
     else:
-        return isinstance(x, collections.Iterable)
+        return isinstance(x, collections.abc.Iterable)
 
 
 kwCompatibilityType = "type"
@@ -629,7 +629,7 @@ def get_args(frame):
     return dict((key, value) for key, value in values.items() if key in args)
 
 
-from collections import Mapping
+from collections.abc import Mapping
 def recursive_update(d, u, non_destructive=False):
     """Recursively update entries of dictionary d with dictionary u
     From: https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
@@ -1391,7 +1391,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
     if cast_from is not None and isinstance(arr, cast_from):
         return np.asarray(arr, dtype=cast_to)
 
-    if not isinstance(arr, collections.Iterable) or isinstance(arr, str):
+    if not isinstance(arr, collections.abc.Iterable) or isinstance(arr, str):
         return np.array(arr)
 
     if isinstance(arr, np.matrix):
