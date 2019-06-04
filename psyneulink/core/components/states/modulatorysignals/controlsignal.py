@@ -739,7 +739,6 @@ class ControlSignal(ModulatorySignal):
                                                           ADJUSTMENT_COST_FUNCTION,
                                                           DURATION_COST_FUNCTION,
                                                           COMBINE_COSTS_FUNCTION}
-
     connectsWith = [PARAMETER_STATE]
     connectsWithAttribute = [PARAMETER_STATES]
     projectionSocket = RECEIVER
@@ -1027,49 +1026,6 @@ class ControlSignal(ModulatorySignal):
 
         elif isinstance(state_specific_spec, tuple):
 
-            # # In this format there is no explicit State spec;  it is the Projection (parsed below)
-            # state_spec = None
-            #
-            # try:
-            #     param_item, mech_item = state_specific_spec
-            # except:
-            #     raise ControlSignalError("Illegal {} specification tuple for {} ({});  "
-            #                              "it must contain two items: (<param_name>, <{}>)".
-            #                              format(ControlSignal.__name__, owner.name,
-            #                                     state_specific_spec, Mechanism.__name__))
-            # if not isinstance(mech_item, Mechanism):
-            #     raise ControlSignalError("Second item of the {} specification tuple for {} ({}) must be a Mechanism".
-            #                              format(ControlSignal.__name__, owner.name, mech, mech.name))
-            #
-            # param_specs = param_item if isinstance(param_item, list) else [param_item]
-            # param_list = []
-            # for param_name in param_specs:
-            #
-            #     if not isinstance(param_name, str):
-            #         raise ControlSignalError("First item of the {} specification tuple for {} ({}) must be a string "
-            #                                  "that is the name of a parameter of its second item ({})".
-            #                                  format(ControlSignal.__name__, owner.name, param_name, mech_item.name))
-            #     try:
-            #         parameter_state = mech_item.parameter_states[param_name]
-            #     except KeyError:
-            #         raise ControlSignalError("No {} found for {} param of {} in {} specification tuple for {}".
-            #                                  format(ParameterState.__name__, param_name, mech_item.name,
-            #                                         ControlSignal.__name__, owner.name))
-            #     except AttributeError:
-            #         raise ControlSignalError("{} does not have any {} specified, so can't"
-            #                                  "assign {} specified for {} ({})".
-            #                                  format(mech_item.name, ParameterState.__name__, ControlSignal.__name__,
-            #                                         owner.name, state_specific_spec))
-            #     param_list.append(parameter_state)
-            #
-            # # Assign connection specs to PROJECTIONS entry of params dict
-            # try:
-            #     params_dict[PROJECTIONS] = _parse_connection_specs(self,
-            #                                                        owner=owner,
-            #                                                        connections=param_list)
-            # except ControlSignalError:
-            #     raise ControlSignalError("Unable to parse {} specification dictionary for {} ({})".
-            #                                 format(ControlSignal.__name__, owner.name, state_specific_spec))
             state_spec = None
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
                                                                owner=owner,
@@ -1128,14 +1084,6 @@ class ControlSignal(ModulatorySignal):
                 duration_cost
             ])
         )
-
-    # @property
-    # def intensity(self):
-    #     return self._intensity
-    #
-    # @intensity.setter
-    # def intensity(self, new_value):
-    #     self._intensity = new_value
 
     @tc.typecheck
     def assign_costs(self, costs: tc.any(ControlSignalCosts, list), execution_context=None):
