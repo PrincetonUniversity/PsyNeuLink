@@ -426,7 +426,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     ..
     * After retrieval, the key-value pair in the call (`variable <ContentAddressableMemory.variable>`) is stored in
      `memory <ContentAddressableMemory.memory>` with probability `storage_prob <ContentAddressableMemory.storage_prob>`.
-      If the key (`variable <ContentAddressableMemory.variable>`\[0]) is identical to one already in `memory
+      If the key (`variable <ContentAddressableMemory.variable>`\\[0]) is identical to one already in `memory
       <ContentAddressableMemory.memory>` and `duplicate_keys <ContentAddressableMemory.duplicate_keys>`
       is set to False, storage is skipped; if it is set to *OVERWRITE*, the value of the key in memory is replaced
       with the one in the call.  If **rate** and/or **noise** arguments are specified in the

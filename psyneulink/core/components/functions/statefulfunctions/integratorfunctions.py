@@ -315,7 +315,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         increment \\cdot rate^{time\\ step}.
 
     Thus, accumulation increases lineary in steps of `increment <AccumulatorIntegrator.increment>`
-    if `rate <AccumulatorIntegrator.rate>`\=1.0, and exponentially otherwise.
+    if `rate <AccumulatorIntegrator.rate>`\\=1.0, and exponentially otherwise.
 
     *Modulatory Parameters:*
 
@@ -1783,18 +1783,18 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
     `function <InteractiveActivationIntegrator.function>` returns:
 
     .. math::
-        previous\_value + (rate * (variable + noise) * distance\_from\_asymptote) - (decay * distance\_from\_rest)
+        previous\\_value + (rate * (variable + noise) * distance\\_from\\_asymptote) - (decay * distance\\_from\\_rest)
 
     where:
 
     .. math::
-        if\ variable > 0,\ distance\_from\_asymptote = max\_val - previous\_value
+        if\\ variable > 0,\\ distance\\_from\\_asymptote = max\\_val - previous\\_value
 
     .. math::
-        if\ variable < 0,\ distance\_from\_asymptote = previous\_value - min\_val
+        if\\ variable < 0,\\ distance\\_from\\_asymptote = previous\\_value - min\\_val
 
     .. math::
-        if\ variable = 0,\ distance\_from\_asymptote = 0
+        if\\ variable = 0,\\ distance\\_from\\_asymptote = 0
 
 
     Arguments
