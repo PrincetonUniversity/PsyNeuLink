@@ -89,7 +89,7 @@ belongs is run. A ProcessingMechanism always executes before any `AdaptiveMechan
 
 """
 
-from collections import Iterable
+from collections.abc import Iterable
 
 import typecheck as tc
 

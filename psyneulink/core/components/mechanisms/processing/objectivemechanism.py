@@ -334,7 +334,8 @@ Class Reference
 import itertools
 import warnings
 
-from collections import Iterable, namedtuple
+from collections.abc import Iterable
+from collections import namedtuple
 
 import typecheck as tc
 

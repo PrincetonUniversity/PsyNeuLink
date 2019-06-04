@@ -389,8 +389,8 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from collections import Iterable, namedtuple
-from typing import NamedTuple
+from collections.abc import Iterable
+from collections import namedtuple
 
 from psyneulink.core.components.functions.function import \
     Function_Base, ModulationParam, _is_modulation_param, is_function_type
