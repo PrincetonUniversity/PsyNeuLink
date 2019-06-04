@@ -627,7 +627,7 @@ import datetime
 import types
 import warnings
 
-from collections import Iterable
+from collections.abc import Iterable
 from numbers import Number
 
 import numpy as np
