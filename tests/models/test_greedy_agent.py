@@ -124,7 +124,12 @@ def test_simplified_greedy_agent_random(benchmark, mode):
     pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
-def test_predator_prey(benchmark, mode):
+@pytest.mark.parametrize("samples", [[0,10],
+    pytest.param([0,3,6,10], marks=pytest.mark.stress),
+    pytest.param([0,2,4,6,8,10], marks=pytest.mark.stress),
+], ids=['2','4','6'])
+def test_predator_prey(benchmark, mode, samples):
+    benchmark.group = "Predator-Prey " + str(len(samples))
     # These should probably be replaced by reference to ForagerEnv constants:
     obs_len = 3
     obs_coords = 2
@@ -174,11 +179,11 @@ def test_predator_prey(benchmark, mode):
                                                                                        predator_obs,
                                                                                        prey_obs]),
                                        control_signals=[ControlSignal(projections=(VARIANCE,player_obs),
-                                                                      allocation_samples=[0, 10]),
+                                                                      allocation_samples=samples),
                                                         ControlSignal(projections=(VARIANCE,predator_obs),
-                                                                      allocation_samples=[0, 10]),
+                                                                      allocation_samples=samples),
                                                         ControlSignal(projections=(VARIANCE,prey_obs),
-                                                                      allocation_samples=[0, 10]),
+                                                                      allocation_samples=samples),
                                                         ],
                                        )
     agent_comp.add_controller(ocm)
@@ -191,12 +196,11 @@ def test_predator_prey(benchmark, mode):
                  }
     run_results = agent_comp.run(inputs=input_dict, num_trials=2, bin_execute=mode)
 
-    assert np.allclose(run_results[0], [[-19.06547277,   5.47274121]])
-    # KAM modified expected output 3/13 because Objective Mechanism is no longer considered an "OUTPUT" node.
-    # assert np.allclose(run_results[1], [[-7.95925672]])
-    if mode == 'Python':
-        assert np.allclose(ocm.feature_values, [[ 1.1576537,   0.60782117],
-                                                [-0.03479106, -0.47666293],
-                                                [-0.60836214,  0.1760381 ]])
+    if len(samples) == 2:
+        assert np.allclose(run_results[0], [[-19.06547277,   5.47274121]])
+        if mode == 'Python':
+            assert np.allclose(ocm.feature_values, [[ 1.1576537,   0.60782117],
+                                                    [-0.03479106, -0.47666293],
+                                                    [-0.60836214,  0.1760381 ]])
 
     benchmark(agent_comp.run, inputs=input_dict, bin_execute=mode)
