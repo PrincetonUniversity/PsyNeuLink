@@ -705,10 +705,11 @@ class ControlSignal(ModulatorySignal):
         # NOTE: if the specification of this getter is happening in several other classes, should consider
         # refactoring Parameter to allow individual attributes to be inherited, othwerise, leaving this is an
         # isolated case
-        variable = Parameter(np.array(defaultControlAllocation),
+        variable = Parameter(np.array([defaultControlAllocation]),
                              aliases='allocation',
                              getter=_output_state_variable_getter)
-        value = Parameter(np.array(defaultControlAllocation), read_only=True, aliases=['intensity'], history_min_length=1)
+        value = Parameter(np.array([defaultControlAllocation]), read_only=True, aliases=['intensity'],
+                          history_min_length=1)
         allocation_samples = Parameter(np.arange(0.1, 1.01, 0.3), modulable=True)
         cost_options = ControlSignalCosts.DEFAULTS
 

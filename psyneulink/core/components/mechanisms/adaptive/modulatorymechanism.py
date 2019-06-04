@@ -414,7 +414,7 @@ def _control_allocation_getter(owning_component=None, execution_id=None):
                                   for c in owning_component.control_signals]
         return np.array([owning_component.modulatory_allocation[i] for i in control_signal_indices])
     except TypeError:
-        return defaultControlAllocation
+        return [defaultControlAllocation]
 
 def _control_allocation_setter(value, owning_component=None, execution_id=None):
     control_signal_indices = [owning_component.modulatory_signals.index(c)
@@ -435,7 +435,7 @@ def _gating_allocation_getter(owning_component=None, execution_id=None):
                                   for g in owning_component.gating_signals]
         return np.array([owning_component.modulatory_allocation[i] for i in gating_signal_indices])
     except (TypeError):
-        return defaultGatingAllocation
+        return [defaultGatingAllocation]
 
 def _gating_allocation_setter(value, owning_component=None, execution_id=None):
     gating_signal_indices = [owning_component.modulatory_signals.index(c)
@@ -857,12 +857,12 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = np.array([defaultControlAllocation])
-        value = Parameter(np.array(defaultControlAllocation), aliases='modulatory_allocation')
-        control_allocation = Parameter(np.array(defaultControlAllocation),
+        value = Parameter(np.array([defaultControlAllocation]), aliases='modulatory_allocation')
+        control_allocation = Parameter(np.array([defaultControlAllocation]),
                                        getter=_control_allocation_getter,
                                        setter=_control_allocation_setter,
                                        read_only=True)
-        gating_allocation = Parameter(np.array(defaultGatingAllocation),
+        gating_allocation = Parameter(np.array([defaultGatingAllocation]),
                                       getter=_gating_allocation_getter,
                                       setter=_gating_allocation_setter,
                                       read_only=True)
@@ -1283,7 +1283,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         try:
             modulatory_signal = _instantiate_state(state_type=ControlSignal,
                                                    owner=self,
-                                                   # variable=variable,
                                                    reference_value=ControlSignal.defaults.allocation,
                                                    modulation=self.modulation,
                                                    state_spec=mod_spec,
@@ -1294,7 +1293,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         except ProjectionError:
             modulatory_signal = _instantiate_state(state_type=GatingSignal,
                                                    owner=self,
-                                                   # variable=variable,
                                                    reference_value=GatingSignal.defaults.allocation,
                                                    modulation=self.modulation,
                                                    state_spec=mod_spec,
