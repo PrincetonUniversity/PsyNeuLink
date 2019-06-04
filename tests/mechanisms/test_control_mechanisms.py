@@ -108,7 +108,11 @@ class TestLCControlMechanism:
             val = [s.value for s in LC.output_states]
 
         benchmark(EX, [10.0])
-        assert np.allclose(val, [3.00139776, 3.00139776, 3.00139776, 3.00139776])
+        # # MODIFIED 6/4/19 OLD:
+        # assert np.allclose(val, [3.00139776, 3.00139776, 3.00139776, 3.00139776])
+        # MODIFIED 6/4/19 NEW: [JDC]
+        assert np.allclose(val, [[[3.00139776]], [[0.51215226]], [[0.00279552]], [[0.05]]])
+        # MODIFIED 6/4/19 END
 
 
     def test_lc_control_modulated_mechanisms_all(self):
