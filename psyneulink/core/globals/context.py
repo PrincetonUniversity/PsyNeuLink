@@ -31,7 +31,7 @@ Context and Logging
 -------------------
 
 The `flags <Context.flags>` attribute is used by `Log` to identify conditions for logging (see).  Accordingly, the
-`LogCondition`\(s) used to specify such conditions in the `set_log_conditions <Log.set_log_conditions>` method of Log
+`LogCondition`\\(s) used to specify such conditions in the `set_log_conditions <Log.set_log_conditions>` method of Log
 are a subset of (and are aliased to) the flags in `ContextFlags`.
 
 .. _Context_Additional_Attributes:
