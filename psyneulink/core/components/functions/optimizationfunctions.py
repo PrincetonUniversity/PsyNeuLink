@@ -900,18 +900,16 @@ class GradientOptimization(OptimizationFunction):
             if len(bounds) != 2:
                 raise OptimizationFunctionError(f"{repr(BOUNDS)} arg for {self.name} of {self.owner.name} ({bounds})"
                                                 f"must be a 2-item tuple.")
-            elif bounds[0] is None and bounds[1] is None:
-                bounds = None
-            elif bounds[0] is None:
-                bounds = (-float('inf'),bounds[1])
-            elif bounds[1] is None:
-                bounds = (bounds[0],float('inf'))
-            if bounds[0]>=bounds[1]:
-                raise OptimizationFunctionError(f"Illegal {repr(BOUNDS)} arg for {self.name}: {bounds}; "
-                                                f"1st item must be less than the 2nd item.")
-            if bounds:
-                bounds = (float(bounds[0]),float(bounds[1]))
-            target_set[BOUNDS]=bounds
+            # FIX: 6/4/19 -- MODIFY TO DEAL WITH ARRAYS (CAN'T YET CHECK AGAINST DEFAULT_VALUE BUT CAN CHECK IF EQUAL
+            if not None in {bounds}:
+                if bounds[0]>=bounds[1]:
+                    raise OptimizationFunctionError(f"Illegal {repr(BOUNDS)} arg for {self.name}: {bounds}; "
+                                                    f"1st item must be less than the 2nd item.")
+                len_0 = len(bounds[0])
+                len_1 = len(bounds[1])
+                if len_0!=1 and len_1!=1 and len_0!=len_1:
+                    raise OptimizationFunctionError(f"Lower and upper values of {repr(BOUNDS)} arg for {self.name} "
+                                                    f"({bounds}) are both vectors but are not of the same length.")
 
     def reinitialize(self, *args):
         super().reinitialize(*args)
@@ -923,6 +921,32 @@ class GradientOptimization(OptimizationFunction):
                 raise OptimizationFunctionError("Unable to use autograd with {} specified for {} Function: {}.".
                                                 format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
                                                        args[0][OBJECTIVE_FUNCTION].__name__))
+        bounds = self.bounds
+        if bounds:
+            # FIX: 6/4/19 -- DEAL WITH SINGLE VALUE VS. ARRAY FOR EACH BOUND
+            if bounds[0] is None and bounds[1] is None:
+                bounds = None
+            else:
+                sample_len = len(args[0][DEFAULT_VARIABLE])
+
+                lower = np.atleast_1d(bounds[0])
+                if len(lower)==1:
+                    lower = np.full(sample_len, lower).reshape(sample_len,1)
+                elif len(lower!=sample_len):
+                    raise OptimizationFunctionError(f"XXX LOWER BOUND AND SAMPLE MUST BE SAME LENGTH")
+                else:
+                    lower = np.array([[-float('inf')] if n[0] is None else n for n in lower])
+
+                upper = np.atleast_1d(bounds[1])
+                if len(upper)==1:
+                    upper = np.full(sample_len, upper).reshape(sample_len,1)
+                elif upper(upper!=sample_len):
+                    raise OptimizationFunctionError(f"XXX LOWER BOUND AND SAMPLE MUST BE SAME LENGTH")
+                else:
+                    upper = np.array([[-float('inf')] if n[0] is None else n for n in upper])
+
+                bounds = (upper,upper)
+        self.parameters.bounds.set((bounds))
 
     def function(self,
                  variable=None,
@@ -994,7 +1018,9 @@ class GradientOptimization(OptimizationFunction):
         bounds = self.parameters.bounds.get(execution_id)
         if bounds:
             # new_variable[0] = max(bounds[0], min(bounds[1], new_variable[0]))
-            new_sample = np.array(max(bounds[0], min(bounds[1], new_sample))).reshape(sample.shape)
+            # FIX 6/4/19 TO BE SURE IT IS ELEMENTWISE IF SAMPLE IS A MULTIELEMENT ARRAY USING np.maximum and minimum
+            #  (ASSIGN BOUND WITH np.fill LATER)
+            new_sample = np.array(np.maximum(bounds[0], np.mininum(bounds[1], new_sample))).reshape(sample.shape)
 
         return new_sample
 
