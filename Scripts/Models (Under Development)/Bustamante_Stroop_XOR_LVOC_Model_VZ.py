@@ -121,7 +121,8 @@ lvoc = pnl.OptimizationControlMechanism(
             convergence_criterion=pnl.VALUE,
             convergence_threshold=0.001,
             step_size=1, #1
-            bounds=control_signal_range,
+            # bounds=control_signal_range,
+            bounds = ([[3],[2]], None),
             # Note: Falk used 10 in the denom below, but indexed sample numbers from 1;
             #       but sample_num passed to _follow_gradient is indexed from 0, so use 11 below
             annealing_function=lambda x, y: x / np.sqrt(11+y),

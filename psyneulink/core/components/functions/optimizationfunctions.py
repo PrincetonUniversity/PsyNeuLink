@@ -901,7 +901,7 @@ class GradientOptimization(OptimizationFunction):
                 raise OptimizationFunctionError(f"{repr(BOUNDS)} arg for {self.name} of {self.owner.name} ({bounds})"
                                                 f"must be a 2-item tuple.")
             # FIX: 6/4/19 -- MODIFY TO DEAL WITH ARRAYS (CAN'T YET CHECK AGAINST DEFAULT_VALUE BUT CAN CHECK IF EQUAL
-            if not None in {bounds}:
+            if not None in bounds:
                 if bounds[0]>=bounds[1]:
                     raise OptimizationFunctionError(f"Illegal {repr(BOUNDS)} arg for {self.name}: {bounds}; "
                                                     f"1st item must be less than the 2nd item.")
@@ -927,7 +927,6 @@ class GradientOptimization(OptimizationFunction):
         # Validate bounds and make same size as length of sample (replacing any None's with + or - inf)
         bounds = self.bounds
         if bounds:
-            # FIX: 6/4/19 -- DEAL WITH SINGLE VALUE VS. ARRAY FOR EACH BOUND
             if bounds[0] is None and bounds[1] is None:
                 bounds = None
             else:
@@ -936,25 +935,23 @@ class GradientOptimization(OptimizationFunction):
                 if len(lower)==1:
                     # Single value specified for lower bound, so distribute over array with length = sample_len
                     lower = np.full(sample_len, lower).reshape(sample_len,1)
-                elif len(lower!=sample_len):
-                    raise OptimizationFunctionError(f"Array used for lower value of {repr(BOUNDS)} arg for {self.name} "
-                                                    f"({lower}) must have the same number of elements ({sample_len}) "
+                elif len(lower)!=sample_len:
+                    raise OptimizationFunctionError(f"Array ({lower}) used for lower value of {repr(BOUNDS)} arg in "
+                                                    f"{self.name} must have the same number of elements ({sample_len}) "
                                                     f"as the sample over which optimization is being performed.")
-                else:
-                    # Array specified for lower bound, so replace any None's with -inf
-                    lower = np.array([[-float('inf')] if n[0] is None else n for n in lower])
+                # Array specified for lower bound, so replace any None's with -inf
+                lower = np.array([[-float('inf')] if n[0] is None else n for n in lower])
 
                 upper = np.atleast_1d(bounds[1])
                 if len(upper)==1:
                     # Single value specified for upper bound, so distribute over array with length = sample_len
                     upper = np.full(sample_len, upper).reshape(sample_len,1)
-                elif upper(upper!=sample_len):
-                    raise OptimizationFunctionError(f"Array used for upper value of {repr(BOUNDS)} arg for {self.name} "
-                                                    f"({upper}) must have the same number of elements ({sample_len}) "
+                elif len(upper)!=sample_len:
+                    raise OptimizationFunctionError(f"Array ({upper}) used for upper value of {repr(BOUNDS)} arg in "
+                                                    f"{self.name} must have the same number of elements ({sample_len}) "
                                                     f"as the sample over which optimization is being performed.")
-                else:
-                    # Array specified for upper bound, so replace any None's with +inf
-                    upper = np.array([[-float('inf')] if n[0] is None else n for n in upper])
+                # Array specified for upper bound, so replace any None's with +inf
+                upper = np.array([[float('inf')] if n[0] is None else n for n in upper])
 
                 bounds = (lower,upper)
         self.parameters.bounds.set((bounds))
