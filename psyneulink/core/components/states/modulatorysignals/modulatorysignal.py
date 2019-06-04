@@ -210,6 +210,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL
+from psyneulink.core.globals.defaults import defaultModulatoryAllocation
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -287,6 +288,9 @@ class ModulatorySignal(OutputState):
 
     Arguments
     ---------
+
+    variable : scalar : defaultModulatoryAllocation
+        specifies the default template and value used for `variable <ModulatorySignal.variable>`.
 
     owner : GatingMechanism
         specifies the `GatingMechanism` to which to assign the ModulatorySignal.
@@ -403,7 +407,7 @@ class ModulatorySignal(OutputState):
                  owner=None,
                  size=None,
                  reference_value=None,
-                 variable=None,
+                 variable=defaultModulatoryAllocation,
                  projections=None,
                  modulation=None,
                  index=None,

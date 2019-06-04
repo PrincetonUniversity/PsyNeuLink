@@ -266,6 +266,7 @@ class GatingSignal(ModulatorySignal):
     GatingSignal(                                   \
         owner,                                      \
         index=PRIMARY                               \
+        variable=defaultGatingAllocation            \
         function=Linear(),                          \
         modulation=ModulationParam.MULTIPLICATIVE,  \
         projections=None,                           \
@@ -307,6 +308,15 @@ class GatingSignal(ModulatorySignal):
     owner : GatingMechanism
         specifies the `GatingMechanism` to which to assign the GatingSignal.
 
+    COMMENT:
+    default_allocation : scalar, list or np.ndarray : defaultGatingAllocation
+        specifies the template and default value used for `allocation <GatingSignal.allocation>`;  must match the
+        shape of each item specified in `allocation_samples <GatingSignal.allocation_samples>`.
+    COMMENT
+    variable : scalar, list or np.ndarray : defaultGatingAllocation
+        specifies the template and default value used for `allocation <GatingSignal.allocation>`;  must match the
+        shape of each item specified in `allocation_samples <GatingSignal.allocation_samples>`.
+
     index : int : default PRIMARY
         specifies the item of the owner GatingMechanism's `gating_allocation <GatingMechanism.gating_allocation>` used as the
         GatingSignal's `value <GatingSignal.value>`.
@@ -344,8 +354,13 @@ class GatingSignal(ModulatorySignal):
     owner : GatingMechanism
         the `GatingMechanism` to which the GatingSignal belongs.
 
-    variable : number, list or np.ndarray
-        used by `function <GatingSignal.function>` to compute the GatingSignal's `value <GatingSignal.value>`.
+    variable : scalar, list or np.ndarray
+        same as `allocation <GatingSignal.allocation>`;  used by `function <GatingSignal.function>` to compute the
+        GatingSignal's `GatingSignal.intensity`.
+
+    allocation : float : default: defaultGatingAllocation
+        value used as `variable <GatingSignal.variable>` for the GatingSignal's `function <GatingSignal.function>`
+        to determine its `GatingSignal.intensity`.
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         provides the GatingSignal's `value <GatingMechanism.value>`; the default is an identity function that

@@ -42,7 +42,7 @@ components and requirements for configuration that must be met for it to functio
 When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism
 <ControlMechanism>`, the parameter(s) to be controlled must be specified.  If other attributes of the ControlSignal
 need to be specified (e.g., one or more of its `cost functions <ControlSignal_Costs>`), then the Constructor for the
-ConrolSignal can be used or a `state specification dictionary <State_Specification>`, in which the parameter(s) to be
+ControlSignal can be used or a `state specification dictionary <State_Specification>`, in which the parameter(s) to be
 controlled in the **projections** argument or *PROJECTIONS* entry, respectively, using any of the forms below.
 For convenience, the parameters can also be specified on their own in the **control_signals** argument of the
 ControlMechanism's constructor, in which case a default ControlSignal will be created for each.  In all cases, any
@@ -413,20 +413,21 @@ class ControlSignalError(Exception):
 
 class ControlSignal(ModulatorySignal):
     """
-    ControlSignal(                                                \
-        owner,                                                    \
-        index=SEQUENTIAL,                                         \
-        function=Linear(),                                        \
-        costs_options=None,                                       \
-        intensity_cost_function=Exponential,                      \
-        adjustment_cost_function=Linear,                          \
-        duration_cost_function=IntegratorFunction,                        \
-        combine_costs_function=Reduce(operation=SUM),             \
+    ControlSignal(                                                 \
+        owner,                                                     \
+        variable=defaultControlAllocation,                         \
+        index=SEQUENTIAL,                                          \
+        function=Linear(),                                         \
+        costs_options=None,                                        \
+        intensity_cost_function=Exponential,                       \
+        adjustment_cost_function=Linear,                           \
+        duration_cost_function=IntegratorFunction,                 \
+        combine_costs_function=Reduce(operation=SUM),              \
         allocation_samples=self.class_defaults.allocation_samples, \
-        modulation=ModulationParam.MULTIPLICATIVE                 \
-        projections=None                                          \
-        params=None,                                              \
-        name=None,                                                \
+        modulation=ModulationParam.MULTIPLICATIVE                  \
+        projections=None                                           \
+        params=None,                                               \
+        name=None,                                                 \
         prefs=None)
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `ControlMechanism <ControlMechanism>` to
@@ -462,6 +463,16 @@ class ControlSignal(ModulatorySignal):
 
     owner : ControlMechanism
         specifies the `ControlMechanism <ControlMechanism>` to which to assign the ControlSignal.
+
+    COMMENT:
+    default_allocation : scalar, list or np.ndarray : defaultControlAllocation
+        specifies the template and default value used for `allocation <ControlSignal.allocation>`;  must match the
+        shape of each item specified in `allocation_samples <ControlSignal.allocation_samples>`.
+    COMMENT
+
+    variable : scalar, list or np.ndarray : defaultControlAllocation
+        specifies the template and default value used for `allocation <ControlSignal.allocation>`;  must match the
+        shape of each item specified in `allocation_samples <ControlSignal.allocation_samples>`.
 
     index : int : default SEQUENTIAL
         specifies the item of the owner ControlMechanism's `control_allocation <ControlMechanism.control_allocation>`
@@ -521,13 +532,13 @@ class ControlSignal(ModulatorySignal):
     owner : ControlMechanism
         the `ControlMechanism <ControlMechanism>` to which the ControlSignal belongs.
 
-    variable : number, list or np.ndarray
+    variable : scalar, list or np.ndarray
         same as `allocation <ControlSignal.allocation>`;  used by `function <ControlSignal.function>` to compute the
-        ControlSignal's `intensity`.
+        ControlSignal's `ControlSignal.intensity`.
 
     allocation : float : default: defaultControlAllocation
         value used as `variable <ControlSignal.variable>` for the ControlSignal's `function <ControlSignal.function>`
-        to determine its `intensity`.
+        to determine its `ControlSignal.intensity`.
 
     last_allocation : float
         value of `allocation` in the previous execution of ControlSignal's `owner <ControlSignal.owner>`.
@@ -764,7 +775,8 @@ class ControlSignal(ModulatorySignal):
     def __init__(self,
                  owner=None,
                  reference_value=None,
-                 variable=None,
+                 # default_allocation=defaultControlAllocation,
+                 variable=defaultControlAllocation,
                  size=None,
                  index=None,
                  assign=None,
