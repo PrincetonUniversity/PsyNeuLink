@@ -67,7 +67,7 @@ Class Reference
 ---------------
 
 """
-from collections import Iterable
+from collections.abc import Iterable
 
 import typecheck as tc
 

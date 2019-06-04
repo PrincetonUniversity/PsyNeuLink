@@ -433,7 +433,8 @@ import re
 import warnings
 
 from PIL import Image
-from collections import Iterable, OrderedDict, namedtuple
+from collections.abc import Iterable
+from collections import OrderedDict, namedtuple
 from os import path, remove
 from shutil import rmtree
 

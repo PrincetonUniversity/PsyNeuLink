@@ -18,7 +18,7 @@
 import numpy as np
 
 import typecheck as tc
-from collections import Iterator
+from collections.abc import Iterator
 from inspect import isclass
 from decimal import Decimal, getcontext
 from numbers import Number
