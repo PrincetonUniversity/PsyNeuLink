@@ -408,6 +408,10 @@ class LLVMBuilderContext:
         if simulation:
             data_out.attributes.remove('nonnull')
 
+        if "clear_run_data" in debug_env:
+            data = builder.alloca(data.type.pointee)
+            builder.store(data.type.pointee(None), data)
+
         # Allocate and initialize condition structure
         cond_gen = ConditionGenerator(self, composition)
         cond_type = cond_gen.get_condition_struct_type()

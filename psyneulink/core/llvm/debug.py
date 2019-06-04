@@ -23,6 +23,7 @@
 # "isa" -- dump machine specific ISA
 # "cuda" -- enable execution on CUDA devices if available
 # "cuda_data" -- print data upload/download statistic (to GPU VRAM)
+# "clear_run_data" -- use clean slate to run trials instead of reusing data
 
 import os
 
