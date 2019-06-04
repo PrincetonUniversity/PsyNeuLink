@@ -1612,7 +1612,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "is not in it or any of its nested {}s ".
                                        format(repr(receiver), self.name, Composition.__name__, ))
             # MODIFIED 5/29/19 NEW:
-            # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below
+            # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below)
             if isinstance(receiver.owner, CompositionInterfaceMechanism):
                 receiver_mechanism = receiver.owner
             # MODIFIED 5/29/19 END
