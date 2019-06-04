@@ -321,7 +321,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, \
-    OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
+    OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -415,7 +415,7 @@ class ControlSignal(ModulatorySignal):
     """
     ControlSignal(                                                 \
         owner,                                                     \
-        variable=defaultControlAllocation,                         \
+        default_allocation=defaultControlAllocation,               \
         index=SEQUENTIAL,                                          \
         function=Linear(),                                         \
         costs_options=None,                                        \
@@ -464,13 +464,7 @@ class ControlSignal(ModulatorySignal):
     owner : ControlMechanism
         specifies the `ControlMechanism <ControlMechanism>` to which to assign the ControlSignal.
 
-    COMMENT:
     default_allocation : scalar, list or np.ndarray : defaultControlAllocation
-        specifies the template and default value used for `allocation <ControlSignal.allocation>`;  must match the
-        shape of each item specified in `allocation_samples <ControlSignal.allocation_samples>`.
-    COMMENT
-
-    variable : scalar, list or np.ndarray : defaultControlAllocation
         specifies the template and default value used for `allocation <ControlSignal.allocation>`;  must match the
         shape of each item specified in `allocation_samples <ControlSignal.allocation_samples>`.
 
@@ -533,12 +527,11 @@ class ControlSignal(ModulatorySignal):
         the `ControlMechanism <ControlMechanism>` to which the ControlSignal belongs.
 
     variable : scalar, list or np.ndarray
-        same as `allocation <ControlSignal.allocation>`;  used by `function <ControlSignal.function>` to compute the
-        ControlSignal's `ControlSignal.intensity`.
+        same as `allocation <ControlSignal.allocation>`.
 
     allocation : float : default: defaultControlAllocation
-        value used as `variable <ControlSignal.variable>` for the ControlSignal's `function <ControlSignal.function>`
-        to determine its `ControlSignal.intensity`.
+        value assigned by the ControlSignal's `owner <ControlSignal.owner>`, and used by the ControlSignal's `function
+        <ControlSignal.function>` to determine its `ControlSignal.intensity`.
 
     last_allocation : float
         value of `allocation` in the previous execution of ControlSignal's `owner <ControlSignal.owner>`.
@@ -775,8 +768,7 @@ class ControlSignal(ModulatorySignal):
     def __init__(self,
                  owner=None,
                  reference_value=None,
-                 # default_allocation=defaultControlAllocation,
-                 variable=defaultControlAllocation,
+                 default_allocation=defaultControlAllocation,
                  size=None,
                  index=None,
                  assign=None,
@@ -792,14 +784,8 @@ class ControlSignal(ModulatorySignal):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
-
-        if context is None:
-            context = ContextFlags.COMMAND_LINE
-            self.context.source = ContextFlags.COMMAND_LINE
-        else:
-            context = ContextFlags.CONSTRUCTOR
-            self.context.source = ContextFlags.CONSTRUCTOR
+                 context=None,
+                 **kwargs):
 
         # This is included in case ControlSignal was created by another Component (such as ControlProjection)
         #    that specified ALLOCATION_SAMPLES in params
@@ -827,7 +813,7 @@ class ControlSignal(ModulatorySignal):
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(owner=owner,
                          reference_value=reference_value,
-                         variable=variable,
+                         default_allocation=default_allocation,
                          size=size,
                          modulation=modulation,
                          index=index,
@@ -838,7 +824,7 @@ class ControlSignal(ModulatorySignal):
                          prefs=prefs,
                          context=context,
                          function=function,
-                         )
+                         **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate cost functions and allocation_samples
