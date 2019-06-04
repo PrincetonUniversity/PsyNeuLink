@@ -412,6 +412,10 @@ class LLVMBuilderContext:
             data = builder.alloca(data.type.pointee)
             builder.store(data.type.pointee(None), data)
 
+        if "force_runs" in debug_env:
+            num = int(debug_env["force_runs"]) if debug_env["force_runs"] else 1
+            builder.store(runs_ptr.type.pointee(num), runs_ptr)
+
         # Allocate and initialize condition structure
         cond_gen = ConditionGenerator(self, composition)
         cond_type = cond_gen.get_condition_struct_type()
@@ -468,7 +472,8 @@ class LLVMBuilderContext:
         builder.position_at_end(exit_block)
 
         # Store the number of executed iterations
-        builder.store(builder.load(iter_ptr), runs_ptr)
+        if "restrict_runs" not in debug_env:
+            builder.store(builder.load(iter_ptr), runs_ptr)
 
         builder.ret_void()
 
