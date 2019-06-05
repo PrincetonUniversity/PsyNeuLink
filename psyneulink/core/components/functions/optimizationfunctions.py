@@ -657,10 +657,11 @@ class GradientOptimization(OptimizationFunction):
 
     search_space : list or array : default None
         specifies bounds of the samples used to evaluate `objective_function <GaussianProcess.objective_function>`
-        along each dimension of `variable <GaussianProcess.variable>`;  each item must be a 2-item list or tuple,
-        the first element of which specifies the lower bound and the second of which specifies the upper bound.
-        Each of the bounds can be a scalar or None.  If both the lower and upper bounds for a dimension are scalars,
-        then the upper item (1st item) must be less than the upper bound (2nd item).
+        along each dimension of `variable <GaussianProcess.variable>`;  each item must be a list or tuple,
+        or a `SampleIterator` that resolves to one.  If the item has two elements, they are used as the lower and
+        upper bounds respectively, and the lower must be less than the upper;  None can be used in either place,
+        in which case that bound is ignored.  If an item has more than two elements, the min is used as the lower
+        bound and the max is used as the upper bound; none of the elements can be None.
 
     annealing_function : function or method : default None
         specifies function used to adapt `step_size <GradientOptimization.step_size>` in each
