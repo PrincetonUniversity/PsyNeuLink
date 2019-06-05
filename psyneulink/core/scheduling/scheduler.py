@@ -422,7 +422,6 @@ class Scheduler(object):
                 new_set.add(d)
             dependencies.append(new_set)
         self.consideration_queue = dependencies
-        logger.debug('Consideration queue: {0}'.format(self.consideration_queue))
 
     def _dfs_for_cycles(self, dependencies, node, loop_start_set, visited, loop):
 
@@ -612,7 +611,6 @@ class Scheduler(object):
             # this works because the enum is set so that higher granularities of time have lower values
             if ts.value <= time_scale.value:
                 for c in self.counts_total[execution_id][ts]:
-                    logger.debug('resetting counts_total[{0}][{1}] to 0'.format(ts, c))
                     self.counts_total[execution_id][ts][c] = 0
 
     def _reset_counts_useable(self, execution_id=None):
@@ -628,8 +626,6 @@ class Scheduler(object):
             termination_conds = self.termination_conds
         if self.termination_conds is None:
             termination_conds = dict(self.default_termination_conds)
-        if termination_conds is not None:
-            logger.info('Specified termination_conds {0} overriding {1}'.format(termination_conds, self.termination_conds))
         current_conditions = self.termination_conds.copy()
         current_conditions.update(termination_conds)
         return current_conditions
@@ -777,20 +773,11 @@ class Scheduler(object):
                 while True:
                     cur_consideration_set_has_changed = False
                     for current_node in cur_consideration_set:
-                        logger.debug('cur time_step exec: {0}'.format(cur_time_step_exec))
-                        for n in self.counts_useable[execution_id]:
-                            logger.debug('Counts of {0} useable by'.format(n))
-                            for n2 in self.counts_useable[execution_id][n]:
-                                logger.debug('\t{0}: {1}'.format(n2, self.counts_useable[execution_id][n][n2]))
-
                         # only add each node once during a single time step, this also serves
                         # to prevent infinitely cascading adds
                         if current_node not in cur_time_step_exec:
                             if self.conditions.conditions[current_node].is_satisfied(scheduler=self, execution_context=execution_id):
-                                logger.debug('adding {0} to execution list'.format(current_node))
-                                logger.debug('cur time_step exec pre add: {0}'.format(cur_time_step_exec))
                                 cur_time_step_exec.add(current_node)
-                                logger.debug('cur time_step exec post add: {0}'.format(cur_time_step_exec))
                                 execution_list_has_changed = True
                                 cur_consideration_set_has_changed = True
 
