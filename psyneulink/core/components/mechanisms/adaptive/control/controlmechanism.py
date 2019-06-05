@@ -654,7 +654,7 @@ class ControlMechanism(ModulatoryMechanism):
     #     kp<pref>: <setting>...}
 
     # # MODIFIED 5/18/19 NEW: [JDC]
-    # Override control_allocatdion and suppress gating_allocation
+    # Override control_allocation and suppress gating_allocation
     class Parameters(ModulatoryMechanism.Parameters):
         """
             Attributes
