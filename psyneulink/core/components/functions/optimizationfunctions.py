@@ -27,6 +27,7 @@ import warnings
 import itertools
 import numpy as np
 import typecheck as tc
+from numbers import Number
 
 from typing import Iterator
 
@@ -34,7 +35,7 @@ from psyneulink.core.components.functions.function import Function_Base, is_func
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
-    BOUNDS, DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
+    DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
@@ -565,7 +566,6 @@ class GradientOptimization(OptimizationFunction):
         direction=ASCENT,            \
         search_space=None,           \
         step_size=1.0,               \
-        bounds=None,                 \
         annealing_function=None,     \
         convergence_criterion=VALUE, \
         convergence_threshold=.001,  \
@@ -655,23 +655,12 @@ class GradientOptimization(OptimizationFunction):
         <GradientOptimization.annealing_function>` is specified, **step_size** specifies the intial value of
         `step_size <GradientOptimization.step_size>`.
 
-    COMMENT:
-    bounds : tuple : default None
-        specifies the upper and/or lower bounds for the sample.  It must be a tuple with two items, which specify the
-        lower and upper bounds, respectively.  Each can be a scalar, an array, or None.  Scalars are converted to an
-        array with the same number of elements as the sample;  a bound specified as an array must have the same
-        number of elements as the sample; and specifying None for any element causes that bound to be ignored.  If both
-        the lower and upper bounds are specified as values (i.e., both are scalars or numbers in corresponding
-        elements of the two arrays), then the element of the 1st (lower) array must be less than the corresponding
-        element of the 2nd (upper) array (see `bounds <GradientOptimization.bounds>` for additional information).
-    COMMENT
-
     search_space : list or array : default None
         specifies bounds of the samples used to evaluate `objective_function <GaussianProcess.objective_function>`
-        along each dimension of `variable <GaussianProcess.variable>`;  each item must be a tuple the first element
-        of which specifies the lower bound and the second of which specifies the upper bound.  Each of the bounds can
-        be a scalar or None.  If both the lower and upper bounds for a dimension are scalars, then the upper item
-        (1st item) must be less than the upper bound (2nd item).
+        along each dimension of `variable <GaussianProcess.variable>`;  each item must be a 2-item list or tuple,
+        the first element of which specifies the lower bound and the second of which specifies the upper bound.
+        Each of the bounds can be a scalar or None.  If both the lower and upper bounds for a dimension are scalars,
+        then the upper item (1st item) must be less than the upper bound (2nd item).
 
     annealing_function : function or method : default None
         specifies function used to adapt `step_size <GradientOptimization.step_size>` in each
@@ -729,12 +718,6 @@ class GradientOptimization(OptimizationFunction):
         iteration of the `optimization process <GradientOptimization_Procedure>`;  if `annealing_function
         <GradientOptimization.annealing_function>` is specified, `step_size <GradientOptimization.step_size>`
         determines the initial value.
-
-    bounds : tuple or None
-        tuple containing two arrays, each the length of the sample, that designate the lower and upper bounds for each
-        item in the sample;  if an item has no bound, its entry is either ``-inf`` (lower bound) or ``inf`` (upper
-        bound).  If the gradient causes an item of the sample to exceed a specified found, that item is set to the
-        value of the bound until it falls back within the bound.
 
     search_space : list or array
         contains tuples specifying bounds within which each dimension of `variable <GaussianProcess.variable>` is
@@ -817,12 +800,6 @@ class GradientOptimization(OptimizationFunction):
 
                     :default value: `ASCENT`
                     :type: str
-
-                bounds
-                    see `bounds <GradientOptimization.bounds>`
-
-                    :default value: None
-                    :type: tuple
 
                 max_iterations
                     see `max_iterations <GradientOptimization.max_iterations>`
@@ -920,20 +897,20 @@ class GradientOptimization(OptimizationFunction):
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-        if BOUNDS in request_set and request_set[BOUNDS] is not None:
-            bounds = request_set[BOUNDS]
-            if len(bounds) != 2:
-                raise OptimizationFunctionError(f"{repr(BOUNDS)} arg for {self.name} of {self.owner.name} ({bounds})"
-                                                f"must be a 2-item tuple.")
-            # FIX: 6/4/19 -- MODIFY TO DEAL WITH ARRAYS (CAN'T YET CHECK AGAINST DEFAULT_VALUE BUT CAN CHECK IF EQUAL
-            # If both are specified as arrays, check that their lengths are equal;
-            #    further checking is done in reinitialize, where the length of the sample is known.
-            if not None in bounds:
-                len_0 = len(np.atleast_1d(bounds[0]))
-                len_1 = len(np.atleast_1d(bounds[1]))
-                if len_0!=1 and len_1!=1 and len_0!=len_1:
-                    raise OptimizationFunctionError(f"Lower and upper values of {repr(BOUNDS)} arg for {self.name} "
-                                                    f"({bounds}) are both vectors but are not of the same length.")
+        if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
+            owner_str = ''
+            if self.owner:
+                owner_str = f' of {self.owner.name}'
+            search_space = request_set[SEARCH_SPACE]
+            # If search space is a single 2-item list or tuple, wrap it in an outer list for handling below
+            if len(search_space)==2 and all(isinstance(i, Number) for i in search_space):
+                search_space = [search_space]
+            for s in search_space:
+                if isinstance(s, SampleIterator):
+                    s = s()
+                if len(s) != 2:
+                    raise OptimizationFunctionError(f"All items in {repr(SEARCH_SPACE)} arg for {self.name}{owner_str} "
+                                                    f"must be or resolve a 2-item list or tuple; this doesn't: {s}.")
 
     def reinitialize(self, *args):
         super().reinitialize(*args)
@@ -956,9 +933,6 @@ class GradientOptimization(OptimizationFunction):
 
         # Get bounds from search_space if it has any non-None entries
         if any(i is not None for i in self.search_space):
-            if bounds is not None:
-                warnings.warn(f'Both {repr(BOUNDS)} ({bounds}) and {repr(SEARCH_SPACE)} args in {self.name}{owner_str} '
-                              f'were specified; {repr(BOUNDS)} will be ignored')
             # Get min and max of each dimension of search space
             #    and assign to corresponding elements of lower and upper items of bounds
             lower = []
@@ -969,12 +943,19 @@ class GradientOptimization(OptimizationFunction):
                     lower.append(None)
                     upper.append(None)
                 else:
-                    s = i()
-                    lower.append(min(s))
-                    upper.append(max(s))
+                    if isinstance(i, SampleIterator):
+                        i = i()
+                    # Spec is bound (tuple or list with two values: lower and uppper)
+                    if len(i)==2:
+                        lower.append(i[0])
+                        upper.append(i[1])
+                    else:
+                        lower.append(min(i))
+                        upper.append(max(i))
             bounds = b
 
-        # Validate bounds and make same size as length of sample (replacing any None's with + or - inf)
+        # Validate bounds and reformat into arrays for lower and upper bounds, for use in _follow_gradient
+        #     (each should be same length as sample), and replace any None's with + or - inf)
         if bounds:
             if bounds[0] is None and bounds[1] is None:
                 bounds = None

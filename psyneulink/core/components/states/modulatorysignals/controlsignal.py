@@ -901,7 +901,7 @@ class ControlSignal(ModulatorySignal):
         # - however, for convenience and compatibility, allow lists:
         #    check if it is a list of numbers, and if so convert to np.array
         if ALLOCATION_SAMPLES in request_set:
-
+            from psyneulink.core.globals.sampleiterator import allowable_specs
             allocation_samples = request_set[ALLOCATION_SAMPLES]
             if isinstance(allocation_samples, list):
                 if iscompatible(allocation_samples, **{kwCompatibilityType: list,
@@ -912,9 +912,7 @@ class ControlSignal(ModulatorySignal):
                     request_set[ALLOCATION_SAMPLES] = np.array(allocation_samples)
             elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
                 pass
-            elif isinstance(allocation_samples, range):
-                pass
-            elif isinstance(allocation_samples, (SampleSpec, SampleIterator)):
+            elif isinstance(allocation_samples, allowable_specs):
                 pass
             # MODIFIED 6/4/19 NEW: [JDC]
             elif allocation_samples is None:
