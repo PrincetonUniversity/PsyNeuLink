@@ -688,6 +688,7 @@ class LCControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def __init__(self,
+                 default_variable=None,
                  system:tc.optional(System_Base)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
@@ -718,8 +719,7 @@ class LCControlMechanism(ControlMechanism):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None,
-                 default_variable=None):
+                 context=None):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
