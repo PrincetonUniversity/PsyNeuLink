@@ -5,7 +5,7 @@ import pytest
 from collections import OrderedDict
 
 import psyneulink.core.components.functions.transferfunctions
-
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 
 class TestLog:
 
@@ -1264,8 +1264,10 @@ class TestFiltering:
                 ),
                 function=pnl.GridSearch(),
                 control_signals=[
-                    ("drift_rate", Decision),
-                    ("threshold", Decision)
+                    {PROJECTIONS: ("drift_rate", Decision),
+                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                    {PROJECTIONS: ("threshold", Decision),
+                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}
                 ]
             )
         )

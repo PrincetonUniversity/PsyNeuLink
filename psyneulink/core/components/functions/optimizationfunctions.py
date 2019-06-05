@@ -563,6 +563,7 @@ class GradientOptimization(OptimizationFunction):
         objective_function=None,     \
         gradient_function=None,      \
         direction=ASCENT,            \
+        search_space=None,           \
         step_size=1.0,               \
         bounds=None,                 \
         annealing_function=None,     \
@@ -622,9 +623,9 @@ class GradientOptimization(OptimizationFunction):
     :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`.  If the **gradient_function* argument of the
     constructor is not specified, then an attempt is made to use `Autograd's <https://github.com/HIPS/autograd>`_ `grad
     <autograd.grad>` method to generate `gradient_function <GradientOptimization.gradient_function>`.  If that fails,
-    an erorr occurs.  The **bounds** argument can be used to specify lower and/or upper `bounds
-    <GradientOptimization.bounds>` for the sample; if the gradient causes a sample to exceed a bound, the value of the
-    bound is used for the sample, unless it the gradient shifts and causes it to fall back within that bound.
+    an erorr occurs.  The **search_space** argument can be used to specify lower and/or upper bounds for each dimension
+    of the sample; if the gradient causes a value of the sample to exceed a bound along a dimenson, the value of the
+    bound is used for that dimension, unless/until the gradient shifts and causes it to return back within the bound.
 
     Arguments
     ---------
@@ -654,6 +655,7 @@ class GradientOptimization(OptimizationFunction):
         <GradientOptimization.annealing_function>` is specified, **step_size** specifies the intial value of
         `step_size <GradientOptimization.step_size>`.
 
+    COMMENT:
     bounds : tuple : default None
         specifies the upper and/or lower bounds for the sample.  It must be a tuple with two items, which specify the
         lower and upper bounds, respectively.  Each can be a scalar, an array, or None.  Scalars are converted to an
@@ -662,6 +664,14 @@ class GradientOptimization(OptimizationFunction):
         the lower and upper bounds are specified as values (i.e., both are scalars or numbers in corresponding
         elements of the two arrays), then the element of the 1st (lower) array must be less than the corresponding
         element of the 2nd (upper) array (see `bounds <GradientOptimization.bounds>` for additional information).
+    COMMENT
+
+    search_space : list or array : default None
+        specifies bounds of the samples used to evaluate `objective_function <GaussianProcess.objective_function>`
+        along each dimension of `variable <GaussianProcess.variable>`;  each item must be a tuple the first element
+        of which specifies the lower bound and the second of which specifies the upper bound.  Each of the bounds can
+        be a scalar or None.  If both the lower and upper bounds for a dimension are scalars, then the upper item
+        (1st item) must be less than the upper bound (2nd item).
 
     annealing_function : function or method : default None
         specifies function used to adapt `step_size <GradientOptimization.step_size>` in each
@@ -725,6 +735,11 @@ class GradientOptimization(OptimizationFunction):
         item in the sample;  if an item has no bound, its entry is either ``-inf`` (lower bound) or ``inf`` (upper
         bound).  If the gradient causes an item of the sample to exceed a specified found, that item is set to the
         value of the bound until it falls back within the bound.
+
+    search_space : list or array
+        contains tuples specifying bounds within which each dimension of `variable <GaussianProcess.variable>` is
+        sampled, and used to evaluate `objective_function <GaussianProcess.objective_function>` in iterations of the
+        `optimization process <GaussianProcess_Procedure>`.
 
     annealing_function : function or method
         function used to adapt `step_size <GradientOptimization.step_size>` in each iteration of the `optimization
@@ -939,14 +954,28 @@ class GradientOptimization(OptimizationFunction):
         if self.owner:
             owner_str = ' of {self.owner.name}'
 
+        # Get bounds from search_space if it has any non-None entries
         if any(i is not None for i in self.search_space):
             if bounds is not None:
                 warnings.warn(f'Both {repr(BOUNDS)} ({bounds}) and {repr(SEARCH_SPACE)} args in {self.name}{owner_str} '
                               f'were specified; {repr(BOUNDS)} will be ignored')
-            # FIX: USE SEARCH SSPACE TO SET BOUNDS (USING ITERATOR OR specification ATTRIBUTE
+            # Get min and max of each dimension of search space
+            #    and assign to corresponding elements of lower and upper items of bounds
+            lower = []
+            upper = []
+            b = (lower, upper)
+            for i in search_space:
+                if i is None:
+                    lower.append(None)
+                    upper.append(None)
+                else:
+                    s = i()
+                    lower.append(min(s))
+                    upper.append(max(s))
+            bounds = b
 
         # Validate bounds and make same size as length of sample (replacing any None's with + or - inf)
-        elif bounds:
+        if bounds:
             if bounds[0] is None and bounds[1] is None:
                 bounds = None
             else:
@@ -1293,7 +1322,11 @@ class GridSearch(OptimizationFunction):
             search_space = request_set[SEARCH_SPACE]
 
             # Check that all iterators are finite (i.e., with num!=None)
-            if not all(s.num is not None for s in search_space if s.num):
+            # # MODIFIED 6/4/19 OLD:
+            # if not all(s.num is not None for s in search_space if (s is not None and s.num)):
+            # MODIFIED 6/4/19 NEW: [JDC]
+            if not all(s.num is not None for s in search_space if (s is not None and s.num)):
+            # MODIFIED 6/4/19 END
                 raise OptimizationFunctionError("All {}s in {} arg of {} must be finite (i.e., SampleIteror.num!=None)".
                                                 format(SampleIterator.__name__,
                                                        repr(SEARCH_SPACE),
@@ -1313,10 +1346,16 @@ class GridSearch(OptimizationFunction):
         '''Assign size of `search_space <GridSearch.search_space>'''
         super(GridSearch, self).reinitialize(*args, execution_id=execution_id)
         sample_iterators = args[0]['search_space']
+        owner_str = ''
+        if self.owner:
+            owner_str = f' of {self.owner.name}'
         for i in sample_iterators:
+            if i is None:
+                raise OptimizationFunctionError(f"Invalid {repr(SEARCH_SPACE)} arg for {self.name}{owner_str}; "
+                                                f"every dimension must be assigned a {SampleIterator.__name__}.")
             if i.num is None:
-                raise OptimizationFunctionError("Invalid search_space on {}. Each SampleIterator must have a value for "
-                                                "its 'num' attribute.".format(self.name))
+                raise OptimizationFunctionError(f"Invalid {repr(SEARCH_SPACE)} arg for {self.name}{owner_str}; each "
+                                                f"{SampleIterator.__name__} must have a value for its 'num' attribute.")
 
         self.num_iterations = np.product([i.num for i in sample_iterators])
 
@@ -1743,6 +1782,7 @@ class GaussianProcess(OptimizationFunction):
     GaussianProcess(                 \
         default_variable=None,       \
         objective_function=None,     \
+        search_space=None,           \
         direction=MAXIMIZE,          \
         max_iterations=1000,         \
         save_samples=False,          \

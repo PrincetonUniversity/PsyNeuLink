@@ -141,7 +141,8 @@ lvoc = pnl.OptimizationControlMechanism(
             # adjustment_cost_function=pnl.Exponential(rate=0, bias=0) # 0.25, -3
             intensity_cost_function=pnl.Linear(slope=0, intercept=0), # 0.25, -3
             adjustment_cost_function=pnl.Linear(slope=0, intercept=0), # 0.25, -3
-            # allocation_samples=[0,1]
+            allocation_samples=range(0,20)
+            # allocation_samples = np.arange(0.1, 1.01, 0.3)
             # allocation_samples=[i / 2 for i in list(range(0, 50, 1))]
     )]
 )

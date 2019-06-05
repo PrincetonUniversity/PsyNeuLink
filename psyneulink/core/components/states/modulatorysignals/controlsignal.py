@@ -323,6 +323,7 @@ from psyneulink.core.globals.keywords import \
     ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, \
     OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, get_validator_by_function, get_validator_by_type_only
+from psyneulink.core.globals.sampleiterator import is_sample_spec
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -782,8 +783,7 @@ class ControlSignal(ModulatorySignal):
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
                  combine_costs_function:tc.optional(is_function_type)=Reduce(operation=SUM),
-                 allocation_samples:tc.optional(tc.any(list, range, np.ndarray,
-                                            SampleSpec))=Parameters.allocation_samples.default_value,
+                 allocation_samples=Parameters.allocation_samples.default_value,
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
                  params=None,

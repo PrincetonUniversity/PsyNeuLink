@@ -218,6 +218,11 @@ class SampleSpec():
 
 
 allowable_specs = (list, np.array, range, np.arange, callable, tuple, SampleSpec)
+def is_sample_spec(spec):
+    if spec is None or type(spec) in allowable_specs:
+        return True
+    return False
+
 
 class SampleIterator(Iterator):
     """
