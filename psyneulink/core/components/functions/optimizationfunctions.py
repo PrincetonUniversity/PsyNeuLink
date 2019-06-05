@@ -724,6 +724,10 @@ class GradientOptimization(OptimizationFunction):
         sampled, and used to evaluate `objective_function <GaussianProcess.objective_function>` in iterations of the
         `optimization process <GaussianProcess_Procedure>`.
 
+    bounds : tuple
+        contains two 2d arrays; the 1st contains the lower bounds for each dimension of the sample (`variable
+        <GradientOptimization.variable>`), and the 2nd the upper bounds.
+
     annealing_function : function or method
         function used to adapt `step_size <GradientOptimization.step_size>` in each iteration of the `optimization
         process <GradientOptimization_Procedure>`;  if `None`, no call is made and the same `step_size
@@ -836,7 +840,6 @@ class GradientOptimization(OptimizationFunction):
 
         gradient_function = Parameter(None, stateful=False, loggable=False)
         step_size = Parameter(1.0, modulable=True)
-        bounds = Parameter(None)
         annealing_function = Parameter(None, stateful=False, loggable=False)
         convergence_threshold = Parameter(.001, modulable=True)
         max_iterations = Parameter(1000, modulable=True)
@@ -852,8 +855,8 @@ class GradientOptimization(OptimizationFunction):
                  objective_function:tc.optional(is_function_type)=None,
                  gradient_function:tc.optional(is_function_type)=None,
                  direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
+                 search_space=None,
                  step_size:tc.optional(tc.any(int, float))=1.0,
-                 bounds:tc.optional(tuple)=None,
                  annealing_function:tc.optional(is_function_type)=None,
                  convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=VALUE,
                  convergence_threshold:tc.optional(tc.any(int, float))=.001,
@@ -876,7 +879,6 @@ class GradientOptimization(OptimizationFunction):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(step_size=step_size,
-                                                  bounds=bounds,
                                                   convergence_criterion=convergence_criterion,
                                                   convergence_threshold=convergence_threshold,
                                                   params=params)
@@ -884,7 +886,7 @@ class GradientOptimization(OptimizationFunction):
         super().__init__(default_variable=default_variable,
                          objective_function=objective_function,
                          search_function=search_function,
-                         search_space=NotImplemented,
+                         search_space=search_space,
                          search_termination_function=search_termination_function,
                          max_iterations=max_iterations,
                          save_samples=save_samples,
@@ -924,9 +926,8 @@ class GradientOptimization(OptimizationFunction):
                 raise OptimizationFunctionError("Unable to use autograd with {} specified for {} Function: {}.".
                                                 format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
                                                        args[0][OBJECTIVE_FUNCTION].__name__))
-
-        bounds = self.bounds
         search_space = self.search_space
+        bounds = None
 
         if self.owner:
             owner_str = ' of {self.owner.name}'
@@ -991,7 +992,8 @@ class GradientOptimization(OptimizationFunction):
                                                     f"more elements (lower: {lower.tolist()}; uuper: {upper.tolist()}).")
 
                 bounds = (lower,upper)
-        self.parameters.bounds.set((bounds))
+
+        self.bounds = bounds
 
     def function(self,
                  variable=None,
@@ -1060,12 +1062,9 @@ class GradientOptimization(OptimizationFunction):
         new_sample = sample + self.parameters.direction.get(execution_id) * step_size * np.array(_gradients)
 
         # Constrain new sample to be within bounds
-        bounds = self.parameters.bounds.get(execution_id)
-        if bounds:
-            # new_variable[0] = max(bounds[0], min(bounds[1], new_variable[0]))
-            # FIX 6/4/19 TO BE SURE IT IS ELEMENTWISE IF SAMPLE IS A MULTIELEMENT ARRAY USING np.maximum and minimum
-            #  (ASSIGN BOUND WITH np.fill LATER)
-            new_sample = np.array(np.maximum(bounds[0], np.minimum(bounds[1], new_sample))).reshape(sample.shape)
+        if self.bounds:
+            new_sample = np.array(np.maximum(self.bounds[0],
+                                             np.minimum(self.bounds[1], new_sample))).reshape(sample.shape)
 
         return new_sample
 
