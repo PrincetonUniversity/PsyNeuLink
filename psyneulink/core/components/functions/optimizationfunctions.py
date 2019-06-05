@@ -938,12 +938,15 @@ class GradientOptimization(OptimizationFunction):
 
         if self.owner:
             owner_str = ' of {self.owner.name}'
-        if any(i is not None for i in self.search_space) and bounds is not None:
-            warnings.warn(f'Both {repr(BOUNDS)} ({bounds}) and {repr(SEARCH_SPACE)} args in {self.name}{owner_str} '
-                          f'were specified; {repr(BOUNDS)} will be ignored')
+
+        if any(i is not None for i in self.search_space):
+            if bounds is not None:
+                warnings.warn(f'Both {repr(BOUNDS)} ({bounds}) and {repr(SEARCH_SPACE)} args in {self.name}{owner_str} '
+                              f'were specified; {repr(BOUNDS)} will be ignored')
+            # FIX: USE SEARCH SSPACE TO SET BOUNDS (USING ITERATOR OR specification ATTRIBUTE
 
         # Validate bounds and make same size as length of sample (replacing any None's with + or - inf)
-        if bounds:
+        elif bounds:
             if bounds[0] is None and bounds[1] is None:
                 bounds = None
             else:
