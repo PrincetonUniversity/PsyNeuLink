@@ -618,8 +618,9 @@ class GradientOptimization(OptimizationFunction):
     :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`.  If the **gradient_function* argument of the
     constructor is not specified, then an attempt is made to use `Autograd's <https://github.com/HIPS/autograd>`_ `grad
     <autograd.grad>` method to generate `gradient_function <GradientOptimization.gradient_function>`.  If that fails,
-    a warning is issued, and gradients are not calculated.
-
+    an erorr occurs.  The **bounds** argument can be used to specify lower and/or upper `bounds
+    <GradientOptimization.bounds>` for the sample; if the gradient causes a sample to exceed a bound, the value of the
+    bound is used for the sample, unless it the gradient shifts and causes it to fall back within that bound.
 
     Arguments
     ---------
@@ -650,9 +651,13 @@ class GradientOptimization(OptimizationFunction):
         `step_size <GradientOptimization.step_size>`.
 
     bounds : tuple : default None
-        specifies the upper and/or lower bounds for the sample; must be a two item tuple that specifies an interval.
-        If the either item is None, that bound is ignored;  if both items are specified, the 1st must be less than
-        the second (see `bounds <GradientOptimization.bounds>` for additional information).
+        specifies the upper and/or lower bounds for the sample.  It must be a tuple with two items, which specify the
+        lower and upper bounds, respectively.  Each can be a scalar, an array, or None.  Scalars are converted to an
+        array with the same number of elements as the sample;  a bound specified as an array must have the same
+        number of elements as the sample; and specifying None for any element causes that bound to be ignored.  If both
+        the lower and upper bounds are specified as values (i.e., both are scalars or numbers in corresponding
+        elements of the two arrays), then the element of the 1st (lower) array must be less than the corresponding
+        element of the 2nd (upper) array (see `bounds <GradientOptimization.bounds>` for additional information).
 
     annealing_function : function or method : default None
         specifies function used to adapt `step_size <GradientOptimization.step_size>` in each
@@ -712,9 +717,10 @@ class GradientOptimization(OptimizationFunction):
         determines the initial value.
 
     bounds : tuple or None
-        determines the lower and/or upper bound for the sample;  if it is a tuple and either item is None, that
-        bound is ignored. `Optimization process <GradientOptimization_Procedure>` terminates if either bound is
-        reached or exceeded.
+        tuple containing two arrays, each the length of the sample, that designate the lower and upper bounds for each
+        item in the sample;  if an item has no bound, its entry is either ``-inf`` (lower bound) or ``inf`` (upper
+        bound).  If the gradient causes an item of the sample to exceed a specified found, that item is set to the
+        value of the bound until it falls back within the bound.
 
     annealing_function : function or method
         function used to adapt `step_size <GradientOptimization.step_size>` in each iteration of the `optimization
@@ -901,10 +907,9 @@ class GradientOptimization(OptimizationFunction):
                 raise OptimizationFunctionError(f"{repr(BOUNDS)} arg for {self.name} of {self.owner.name} ({bounds})"
                                                 f"must be a 2-item tuple.")
             # FIX: 6/4/19 -- MODIFY TO DEAL WITH ARRAYS (CAN'T YET CHECK AGAINST DEFAULT_VALUE BUT CAN CHECK IF EQUAL
+            # If both are specified as arrays, check that their lengths are equal;
+            #    further checking is done in reinitialize, where the length of the sample is known.
             if not None in bounds:
-                if bounds[0]>=bounds[1]:
-                    raise OptimizationFunctionError(f"Illegal {repr(BOUNDS)} arg for {self.name}: {bounds}; "
-                                                    f"1st item must be less than the 2nd item.")
                 len_0 = len(np.atleast_1d(bounds[0]))
                 len_1 = len(np.atleast_1d(bounds[1]))
                 if len_0!=1 and len_1!=1 and len_0!=len_1:
@@ -952,6 +957,11 @@ class GradientOptimization(OptimizationFunction):
                                                     f"as the sample over which optimization is being performed.")
                 # Array specified for upper bound, so replace any None's with +inf
                 upper = np.array([[float('inf')] if n[0] is None else n for n in upper])
+
+                if not all(lower<upper):
+                    raise OptimizationFunctionError(f"Specification of {repr(BOUNDS)} arg ({bounds}) for {self.name} "
+                                                    f"resulted in lower >= upper for one or more elements"
+                                                    f"({(lower,upper)}).")
 
                 bounds = (lower,upper)
         self.parameters.bounds.set((bounds))
