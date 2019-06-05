@@ -405,7 +405,11 @@ class OptimizationFunction(Function_Base):
 
         if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
             search_space = request_set[SEARCH_SPACE]
-            if not all(isinstance(s, SampleIterator) for s in search_space):
+            # # MODIFIED 6/4/19 OLD:
+            # if not all(isinstance(s, SampleIterator) for s in search_space):
+            # MODIFIED 6/4/19 NEW: [JDC]
+            if not all(isinstance(s, (SampleIterator, type(None))) for s in search_space):
+            # MODIFIED 6/4/19 END
                 raise OptimizationFunctionError("All entries in list specified for {} arg of {} must be a {}".
                                                 format(repr(SEARCH_SPACE),
                                                        self.__class__.__name__,
@@ -929,8 +933,16 @@ class GradientOptimization(OptimizationFunction):
                                                 format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
                                                        args[0][OBJECTIVE_FUNCTION].__name__))
 
-        # Validate bounds and make same size as length of sample (replacing any None's with + or - inf)
         bounds = self.bounds
+        search_space = self.search_space
+
+        if self.owner:
+            owner_str = ' of {self.owner.name}'
+        if any(i is not None for i in self.search_space) and bounds is not None:
+            warnings.warn(f'Both {repr(BOUNDS)} ({bounds}) and {repr(SEARCH_SPACE)} args in {self.name}{owner_str} '
+                          f'were specified; {repr(BOUNDS)} will be ignored')
+
+        # Validate bounds and make same size as length of sample (replacing any None's with + or - inf)
         if bounds:
             if bounds[0] is None and bounds[1] is None:
                 bounds = None
@@ -942,8 +954,9 @@ class GradientOptimization(OptimizationFunction):
                     lower = np.full(sample_len, lower).reshape(sample_len,1)
                 elif len(lower)!=sample_len:
                     raise OptimizationFunctionError(f"Array used for lower value of {repr(BOUNDS)} arg ({lower}) in "
-                                                    f"{self.name} must have the same number of elements ({sample_len}) "
-                                                    f"as the sample over which optimization is being performed.")
+                                                    f"{self.name}{owner_str} must have the same number of elements "
+                                                    f"({sample_len}) as the sample over which optimization is being "
+                                                    f"performed.")
                 # Array specified for lower bound, so replace any None's with -inf
                 lower = np.array([[-float('inf')] if n[0] is None else n for n in lower.reshape(sample_len,1)])
 
@@ -953,15 +966,16 @@ class GradientOptimization(OptimizationFunction):
                     upper = np.full(sample_len, upper).reshape(sample_len,1)
                 elif len(upper)!=sample_len:
                     raise OptimizationFunctionError(f"Array used for upper value of {repr(BOUNDS)} arg ({upper}) in "
-                                                    f"{self.name} must have the same number of elements ({sample_len}) "
-                                                    f"as the sample over which optimization is being performed.")
+                                                    f"{self.name}{owner_str} must have the same number of elements "
+                                                    f"({sample_len}) as the sample over which optimization is being "
+                                                    f"performed.")
                 # Array specified for upper bound, so replace any None's with +inf
                 upper = np.array([[float('inf')] if n[0] is None else n for n in upper.reshape(sample_len,1)])
 
                 if not all(lower<upper):
-                    raise OptimizationFunctionError(f"Specification of {repr(BOUNDS)} arg ({bounds}) for {self.name} "
-                                                    f"resulted in lower >= corresponding upper for one or more elements"
-                                                    f" (lower: {lower.tolist()}; uuper: {upper.tolist()}).")
+                    raise OptimizationFunctionError(f"Specification of {repr(BOUNDS)} arg ({bounds}) for {self.name}"
+                                                    f"{owner_str} resulted in lower >= corresponding upper for one or "
+                                                    f"more elements (lower: {lower.tolist()}; uuper: {upper.tolist()}).")
 
                 bounds = (lower,upper)
         self.parameters.bounds.set((bounds))
