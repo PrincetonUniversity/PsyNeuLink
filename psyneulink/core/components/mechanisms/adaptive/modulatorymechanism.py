@@ -1239,7 +1239,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
             # Assign each ModulatorySignal's variable_spec to index of ModulatoryMechanism's value
             for i, modulatory_signal in enumerate(self.modulatory_signals):
-                # FIX: 5/18/19 - NEEDS TO ACCOMODATE owner_value_index WHICH MIGHT REMAIN 0 (THE WAY OLD GATINGMECHANISM DID)
+                # FIX: 5/18/19 - NEEDS TO ACCOMODATE owner_value_index WHICH MIGHT REMAIN 0 (AS OLD GATINGMECHANISM DID)
                 modulatory_signal._variable_spec = [(OWNER_VALUE, i)]
                 if not isinstance(modulatory_signal.owner_value_index, int):
                     raise ModulatoryMechanismError(

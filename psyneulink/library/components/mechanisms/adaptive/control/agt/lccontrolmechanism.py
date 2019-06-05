@@ -857,12 +857,6 @@ class LCControlMechanism(ControlMechanism):
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 
-    # @tc.typecheck
-    # def _add_process(self, process, role:str):
-    #     super()._add_process(process, role)
-    #     if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
-    #         self._instantiate_output_states(context=ContextFlags.METHOD)
-
     def _get_mech_params_type(self, ctx):
         return ctx.convert_python_struct_to_llvm_ir((self.scaling_factor_gain, self.base_level_gain))
 

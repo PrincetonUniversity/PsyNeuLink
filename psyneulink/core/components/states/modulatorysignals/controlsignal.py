@@ -912,12 +912,10 @@ class ControlSignal(ModulatorySignal):
                     request_set[ALLOCATION_SAMPLES] = np.array(allocation_samples)
             elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
                 pass
-            elif isinstance(allocation_samples, allowable_specs):
+            elif all(isinstance(allocation_samples, spec) for spec in allowable_specs):
                 pass
-            # MODIFIED 6/4/19 NEW: [JDC]
             elif allocation_samples is None:
                 pass
-            # MODIFIED 6/4/19 END
             else:
                 raise ControlSignalError("allocation_samples argument ({}) in {} must be "
                                          "a list or 1D array of numbers, a range, or a {}".

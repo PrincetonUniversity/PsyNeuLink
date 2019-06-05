@@ -406,11 +406,7 @@ class OptimizationFunction(Function_Base):
 
         if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
             search_space = request_set[SEARCH_SPACE]
-            # # MODIFIED 6/4/19 OLD:
-            # if not all(isinstance(s, SampleIterator) for s in search_space):
-            # MODIFIED 6/4/19 NEW: [JDC]
             if not all(isinstance(s, (SampleIterator, type(None))) for s in search_space):
-            # MODIFIED 6/4/19 END
                 raise OptimizationFunctionError("All entries in list specified for {} arg of {} must be a {}".
                                                 format(repr(SEARCH_SPACE),
                                                        self.__class__.__name__,
@@ -1047,10 +1043,9 @@ class GradientOptimization(OptimizationFunction):
         # Update step_size
         step_size = self.parameters.step_size.get(execution_id)
         if sample_num == 0:
-            # FIX: 6/3/19: ASSIGN TO USER-SPECIFIED VALUE, NOT FACTORY DEFAULT
+            # Start from initial value (sepcified by user in step_size arg)
             step_size = self.parameters.step_size.default_value
             self.parameters.step_size.set(step_size, execution_id)
-            # FIX: 6/3/19:  ANNEALING ONLY OCCURS ON SECOND STEP_SIZE (I.E., SKIPPED FOR SAMPLE_NUM 0 AND 1.
         if self.annealing_function:
             step_size = call_with_pruned_args(self.annealing_function, step_size, sample_num, execution_id=execution_id)
             self.parameters.step_size.set(step_size, execution_id)
@@ -1302,11 +1297,7 @@ class GridSearch(OptimizationFunction):
             search_space = request_set[SEARCH_SPACE]
 
             # Check that all iterators are finite (i.e., with num!=None)
-            # # MODIFIED 6/4/19 OLD:
-            # if not all(s.num is not None for s in search_space if (s is not None and s.num)):
-            # MODIFIED 6/4/19 NEW: [JDC]
             if not all(s.num is not None for s in search_space if (s is not None and s.num)):
-            # MODIFIED 6/4/19 END
                 raise OptimizationFunctionError("All {}s in {} arg of {} must be finite (i.e., SampleIteror.num!=None)".
                                                 format(SampleIterator.__name__,
                                                        repr(SEARCH_SPACE),
