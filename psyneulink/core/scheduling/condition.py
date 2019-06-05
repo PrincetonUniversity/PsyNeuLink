@@ -323,6 +323,15 @@ class ConditionSet(object):
     def __contains__(self, item):
         return item in self.conditions
 
+    def __repr__(self):
+        condition_str = '\n\t'.join([f'{owner}: {condition}' for owner, condition in self.conditions.items()])
+        return '{0}({1}{2}{3})'.format(
+            self.__class__.__name__,
+            '\n\t' if len(condition_str) > 0 else '',
+            condition_str,
+            '\n' if len(condition_str) > 0 else ''
+        )
+
     def __iter__(self):
         return iter(self.conditions)
 

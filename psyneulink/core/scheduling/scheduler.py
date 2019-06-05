@@ -57,7 +57,7 @@ COMMENT
 If both a System and a graph are specified, the System takes precedence, and the graph is ignored.
 
 Conditions can be added to a Scheduler when it is created by specifying a `ConditionSet` (a set of
-`Conditions <Condition>`) in the **condition_set** argument of its constructor.  Individual Conditions and/or
+`Conditions <Condition>`) in the **conditions** argument of its constructor.  Individual Conditions and/or
 ConditionSets can also be added after the  Scheduler has been created, using its `add_condition` and
 `add_condition_set` methods, respectively.
 
@@ -347,7 +347,7 @@ class Scheduler(object):
             naive scheduler
     COMMENT
 
-    condition_set  : ConditionSet
+    conditions  : ConditionSet
         set of `Conditions <Condition>` that specify when individual Components in **system**
         execute and any dependencies among them
 
@@ -358,7 +358,7 @@ class Scheduler(object):
     Attributes
     ----------
 
-    condition_set : ConditionSet
+    conditions : ConditionSet
         the set of Conditions the Scheduler uses when running
 
     execution_list : list
@@ -385,16 +385,16 @@ class Scheduler(object):
         system=None,
         composition=None,
         graph=None,
-        condition_set=None,
+        conditions=None,
         termination_conds=None,
         execution_id=None,
     ):
         '''
         :param self:
         :param composition: (Composition) - the Composition this scheduler is scheduling for
-        :param condition_set: (ConditionSet) - a :keyword:`ConditionSet` to be scheduled
+        :param conditions: (ConditionSet) - a :keyword:`ConditionSet` to be scheduled
         '''
-        self.condition_set = condition_set if condition_set is not None else ConditionSet()
+        self.conditions = conditions if conditions is not None else ConditionSet()
 
         # stores the in order list of self.run's yielded outputs
         self.consideration_queue = []
@@ -675,7 +675,7 @@ class Scheduler(object):
     #   to allow the user to ignore the ConditionSet internals
     ################################################################################
     def __contains__(self, item):
-        return self.condition_set.__contains__(item)
+        return self.conditions.__contains__(item)
 
     def add_condition(self, owner, condition):
         """
@@ -693,7 +693,7 @@ class Scheduler(object):
         condition : Condition
             specifies the Condition, associated with the **owner** to be added to the ConditionSet.
         """
-        self.condition_set.add_condition(owner, condition)
+        self.conditions.add_condition(owner, condition)
 
     def add_condition_set(self, conditions):
         """
@@ -713,20 +713,20 @@ class Scheduler(object):
                 governed) to a `Condition <Condition>`
 
         """
-        self.condition_set.add_condition_set(conditions)
+        self.conditions.add_condition_set(conditions)
 
     ################################################################################
     # Validation methods
     #   to provide the user with info if they do something odd
     ################################################################################
     def _validate_run_state(self):
-        self._validate_condition_set()
+        self._validate_conditions()
 
-    def _validate_condition_set(self):
+    def _validate_conditions(self):
         unspecified_nodes = []
         for node in self.nodes:
-            if node not in self.condition_set:
-                self.condition_set.add_condition(node, Always())
+            if node not in self.conditions:
+                self.conditions.add_condition(node, Always())
                 unspecified_nodes.append(node)
         if len(unspecified_nodes) > 0:
             logger.info('These nodes have no Conditions specified, and will be scheduled with condition Always: {0}'.format(unspecified_nodes))
@@ -791,7 +791,7 @@ class Scheduler(object):
                         # only add each node once during a single time step, this also serves
                         # to prevent infinitely cascading adds
                         if current_node not in cur_time_step_exec:
-                            if self.condition_set.conditions[current_node].is_satisfied(scheduler=self, execution_context=execution_id):
+                            if self.conditions.conditions[current_node].is_satisfied(scheduler=self, execution_context=execution_id):
                                 logger.debug('adding {0} to execution list'.format(current_node))
                                 logger.debug('cur time_step exec pre add: {0}'.format(cur_time_step_exec))
                                 cur_time_step_exec.add(current_node)
@@ -845,7 +845,7 @@ class Scheduler(object):
                     str(k): str(v) for k, v in self.termination_conds.items()
                 },
                 'node': {
-                    n.name: str(self.condition_set[n]) for n in self.nodes if n in self.condition_set
+                    n.name: str(self.conditions[n]) for n in self.nodes if n in self.conditions
                 }
             }
         }
