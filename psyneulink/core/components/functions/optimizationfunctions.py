@@ -727,7 +727,7 @@ class GradientOptimization(OptimizationFunction):
 
     bounds : tuple
         contains two 2d arrays; the 1st contains the lower bounds for each dimension of the sample (`variable
-        <GradientOptimization.variable>`), and the 2nd the upper bounds.
+        <GradientOptimization.variable>`), and the 2nd the upper bound of each.
 
     annealing_function : function or method
         function used to adapt `step_size <GradientOptimization.step_size>` in each iteration of the `optimization
@@ -939,7 +939,7 @@ class GradientOptimization(OptimizationFunction):
             #    and assign to corresponding elements of lower and upper items of bounds
             lower = []
             upper = []
-            b = (lower, upper)
+            bounds = (lower, upper)
             for i in search_space:
                 if i is None:
                     lower.append(None)
@@ -954,7 +954,6 @@ class GradientOptimization(OptimizationFunction):
                     else:
                         lower.append(min(i))
                         upper.append(max(i))
-            bounds = b
 
         # Validate bounds and reformat into arrays for lower and upper bounds, for use in _follow_gradient
         #     (each should be same length as sample), and replace any None's with + or - inf)
