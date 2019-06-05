@@ -2360,7 +2360,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Return relevant state of relevant CIM if found and nested Composition in which it was found, else (None, None)
         '''
 
-        receiver = receiver_input_state = graph_receiver = nested_comp = CIM_state_for_nested_node = None
+        nested_comp = CIM_state_for_nested_node = CIM = None
 
         nested_comps = [c for c in self.nodes if isinstance(c, Composition)]
         for nc in nested_comps:
@@ -2368,8 +2368,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Must be assigned Node.Role of INPUT or OUTPUT (depending on receiver vs sender)
                 if role not in nc.nodes_to_roles[node]:
                     raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
-                                           format(node.name, Composition.__name__, self.name, c.name,
+                                           format(node.name, Composition.__name__, self.name, nc.name,
                                                   NodeRole.__name__, repr(role)))
+                # With the current implementation, there should never be multiple nested compositions that contain the
+                # same mechanism -- because all nested compositions are passed the same execution ID
                 # if CIM_state_for_nested_node:
                 #     warnings.warn("{} found with {} of {} in more than one nested {} of {}; "
                 #                   "only first one found (in {}) will be used".
@@ -2379,8 +2381,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if isinstance(node_state, InputState):
                     CIM_state_for_nested_node = nc.input_CIM_states[node_state][0]
+                    CIM = nc.input_CIM
                 elif isinstance(node_state, OutputState):
                     CIM_state_for_nested_node = nc.output_CIM_states[node_state][1]
+                    CIM = nc.output_CIM
                 else:
                     # IMPLEMENTATION NOTE:  Place marker for future implementation of ParameterState handling
                     #                       However, typecheck above should have caught this
@@ -2389,7 +2393,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 nested_comp = nc
                 break
 
-        return nested_comp, CIM_state_for_nested_node, nested_comp, CIM_state_for_nested_node.owner
+        return nested_comp, CIM_state_for_nested_node, nested_comp, CIM
 
     def add_required_node_role(self, node, role):
         if role not in NodeRole:
