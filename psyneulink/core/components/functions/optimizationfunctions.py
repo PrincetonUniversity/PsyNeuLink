@@ -941,27 +941,27 @@ class GradientOptimization(OptimizationFunction):
                     # Single value specified for lower bound, so distribute over array with length = sample_len
                     lower = np.full(sample_len, lower).reshape(sample_len,1)
                 elif len(lower)!=sample_len:
-                    raise OptimizationFunctionError(f"Array ({lower}) used for lower value of {repr(BOUNDS)} arg in "
+                    raise OptimizationFunctionError(f"Array used for lower value of {repr(BOUNDS)} arg ({lower}) in "
                                                     f"{self.name} must have the same number of elements ({sample_len}) "
                                                     f"as the sample over which optimization is being performed.")
                 # Array specified for lower bound, so replace any None's with -inf
-                lower = np.array([[-float('inf')] if n[0] is None else n for n in lower])
+                lower = np.array([[-float('inf')] if n[0] is None else n for n in lower.reshape(sample_len,1)])
 
                 upper = np.atleast_1d(bounds[1])
                 if len(upper)==1:
                     # Single value specified for upper bound, so distribute over array with length = sample_len
                     upper = np.full(sample_len, upper).reshape(sample_len,1)
                 elif len(upper)!=sample_len:
-                    raise OptimizationFunctionError(f"Array ({upper}) used for upper value of {repr(BOUNDS)} arg in "
+                    raise OptimizationFunctionError(f"Array used for upper value of {repr(BOUNDS)} arg ({upper}) in "
                                                     f"{self.name} must have the same number of elements ({sample_len}) "
                                                     f"as the sample over which optimization is being performed.")
                 # Array specified for upper bound, so replace any None's with +inf
-                upper = np.array([[float('inf')] if n[0] is None else n for n in upper])
+                upper = np.array([[float('inf')] if n[0] is None else n for n in upper.reshape(sample_len,1)])
 
                 if not all(lower<upper):
                     raise OptimizationFunctionError(f"Specification of {repr(BOUNDS)} arg ({bounds}) for {self.name} "
-                                                    f"resulted in lower >= upper for one or more elements"
-                                                    f"({(lower,upper)}).")
+                                                    f"resulted in lower >= corresponding upper for one or more elements"
+                                                    f" (lower: {lower.tolist()}; uuper: {upper.tolist()}).")
 
                 bounds = (lower,upper)
         self.parameters.bounds.set((bounds))
