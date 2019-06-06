@@ -111,7 +111,6 @@ class TestLCControlMechanism:
         # assert np.allclose(val, [[[3.00139776]], [[0.51215226]], [[0.00279552]], [[0.05]]])
         # JDC: Hack to deal with current behavior that Python returns 3d array (above) but LLVM return only 2d array:
         assert np.allclose(np.squeeze(val), [3.00139776, 0.51215226, 0.00279552, 0.05])
-        # MODIFIED 6/4/19 END
 
 
     def test_lc_control_modulated_mechanisms_all(self):

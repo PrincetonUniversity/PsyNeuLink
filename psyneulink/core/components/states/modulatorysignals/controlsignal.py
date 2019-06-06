@@ -715,11 +715,7 @@ class ControlSignal(ModulatorySignal):
                              getter=_output_state_variable_getter)
         value = Parameter(np.array([defaultControlAllocation]), read_only=True, aliases=['intensity'],
                           history_min_length=1)
-        # # MODIFIED 6/4/19 OLD:
-        # allocation_samples = Parameter(np.arange(0.1, 1.01, 0.3), modulable=True)
-        # MODIFIED 6/4/19 NEW: [JDC]
         allocation_samples = Parameter(None, modulable=True)
-        # MODIFIED 6/4/19 END
         cost_options = ControlSignalCosts.DEFAULTS
 
         intensity_cost = None
@@ -944,10 +940,8 @@ class ControlSignal(ModulatorySignal):
 
         a = self.paramsCurrent[ALLOCATION_SAMPLES]
 
-        # MODIFIED 6/4/19 NEW: [JDC]
         if a is None:
             return
-        # MODIFIED 6/4/19 END
 
         # KDM 12/14/18: below is a temporary fix that exists to bypass a validation loop
         # resulting from the function_object->function refactor. When this validation/assign_params/etc.

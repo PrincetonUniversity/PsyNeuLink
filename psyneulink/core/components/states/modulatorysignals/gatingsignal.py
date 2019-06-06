@@ -451,11 +451,7 @@ class GatingSignal(ModulatorySignal):
                              aliases='allocation',
                              getter=_output_state_variable_getter)
         value = Parameter(np.array([defaultGatingAllocation]), read_only=True, aliases=['intensity'])
-        # # MODIFIED 6/4/19 OLD:
-        # allocation_samples = Parameter(np.arange(0.1, 1.01, 0.3), modulable=True)
-        # MODIFIED 6/4/19 NEW: [JDC]
         allocation_samples = Parameter(None, modulable=True)
-        # MODIFIED 6/4/19 END
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
