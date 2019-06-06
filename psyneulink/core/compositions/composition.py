@@ -1213,7 +1213,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._scheduler_processing = Scheduler(graph=self.graph_processing, execution_id=self.default_execution_id)
 
             if old_scheduler is not None:
-                self._scheduler_processing.add_condition_set(old_scheduler.condition_set)
+                self._scheduler_processing.add_condition_set(old_scheduler.conditions)
 
             self.needs_update_scheduler_processing = False
 
@@ -4779,10 +4779,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # NOTE: This is not ideal we don't need to depend on
         # the entire previous group. Only our dependencies
         cond = [EveryNCalls(dep, 1) for dep in dep_group]
-        if node not in self.scheduler_processing.condition_set.conditions:
+        if node not in self.scheduler_processing.conditions:
             cond.append(Always())
         else:
-            node_conds = self.scheduler_processing.condition_set.conditions[node]
+            node_conds = self.scheduler_processing.conditions[node]
             cond.append(node_conds)
 
         return All(*cond)
