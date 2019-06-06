@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; PsyNeuLink 0.5.3.2+170.gbc5698d documentation</title>
+  <title>Index &mdash; PsyNeuLink 0.5.3.2+171.g5e0d2bd documentation</title>
   
 
   
@@ -24,7 +24,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+170.gbc5698d',
+              VERSION:'0.5.3.2+171.g5e0d2bd',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -69,7 +69,7 @@
             
             
               <div class="version">
-                0.5.3.2+170
+                0.5.3.2+171
               </div>
             
           
@@ -283,10 +283,10 @@
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNCallsCombined">AfterNCallsCombined (class in psyneulink.core.scheduling.condition)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNPasses">AfterNPasses (class in psyneulink.core.scheduling.condition)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNRuns">AfterNRuns (class in psyneulink.core.scheduling.condition)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNTimeSteps">AfterNTimeSteps (class in psyneulink.core.scheduling.condition)</a>
@@ -318,7 +318,13 @@
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AllHaveRun">AllHaveRun (class in psyneulink.core.scheduling.condition)</a>
 </li>
       <li><a href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation">allocation (psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal attribute)</a>
+
+      <ul>
+        <li><a href="GatingSignal.html#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.allocation">(psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal attribute)</a>
 </li>
+        <li><a href="ModulatorySignal.html#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.allocation">(psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal attribute)</a>
+</li>
+      </ul></li>
       <li><a href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation_samples">allocation_samples (psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal attribute)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.Always">Always (class in psyneulink.core.scheduling.condition)</a>
@@ -413,9 +419,11 @@
         <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Tanh.bias">(psyneulink.core.components.functions.transferfunctions.Tanh attribute)</a>
 </li>
       </ul></li>
-      <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Exponential.bounds">bounds (psyneulink.core.components.functions.transferfunctions.Exponential attribute)</a>
+      <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.bounds">bounds (psyneulink.core.components.functions.optimizationfunctions.GradientOptimization attribute)</a>
 
       <ul>
+        <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Exponential.bounds">(psyneulink.core.components.functions.transferfunctions.Exponential attribute)</a>
+</li>
         <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear.bounds">(psyneulink.core.components.functions.transferfunctions.Linear attribute)</a>
 </li>
         <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.bounds">(psyneulink.core.components.functions.transferfunctions.Logistic attribute)</a>
@@ -3300,6 +3308,8 @@
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space">search_space (psyneulink.core.components.functions.optimizationfunctions.GaussianProcess attribute)</a>
 
       <ul>
+        <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.search_space">(psyneulink.core.components.functions.optimizationfunctions.GradientOptimization attribute)</a>
+</li>
         <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space">(psyneulink.core.components.functions.optimizationfunctions.GridSearch attribute)</a>
 </li>
         <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space">(psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction attribute)</a>
@@ -3351,10 +3361,10 @@
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.shadows">shadows (psyneulink.core.compositions.composition.Composition attribute)</a>
 </li>
-      <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.shenhav_et_al_compat_mode">shenhav_et_al_compat_mode (psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.shenhav_et_al_compat_mode">shenhav_et_al_compat_mode (psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical attribute)</a>
+</li>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DualAdaptiveIntegrator.short_term_bias">short_term_bias (psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DualAdaptiveIntegrator attribute)</a>
 </li>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DualAdaptiveIntegrator.short_term_gain">short_term_gain (psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DualAdaptiveIntegrator attribute)</a>
@@ -3437,7 +3447,7 @@
 </li>
       <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.states">states (psyneulink.core.components.mechanisms.mechanism.Mechanism_Base attribute)</a>, <a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.states">[1]</a>
 </li>
-      <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step">step (psyneulink.core.components.functions.optimizationfunctions.GradientOptimization attribute)</a>
+      <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.step_size">step_size (psyneulink.core.components.functions.optimizationfunctions.GradientOptimization attribute)</a>
 </li>
       <li><a href="MemoryFunctions.html#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob">storage_prob (psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory attribute)</a>
 </li>

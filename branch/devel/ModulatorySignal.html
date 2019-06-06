@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Modulatory Signals &mdash; PsyNeuLink 0.5.3.2+170.gbc5698d documentation</title>
+  <title>Modulatory Signals &mdash; PsyNeuLink 0.5.3.2+171.g5e0d2bd documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+170.gbc5698d',
+              VERSION:'0.5.3.2+171.g5e0d2bd',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+170
+                0.5.3.2+171
               </div>
             
           
@@ -390,7 +390,7 @@ which the state belongs is next executed; see <span class="xref std std-ref">Laz
 <span id="modulatorysignal-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.states.modulatorysignals.modulatorysignal.</code><code class="descname">ModulatorySignal</code><span class="sig-paren">(</span><em>owner</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>modulation=ModulationParam.MULTIPLICATIVE           projections=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.states.modulatorysignals.modulatorysignal.</code><code class="descname">ModulatorySignal</code><span class="sig-paren">(</span><em>owner</em>, <em>default_allocation=defaultModulatoryAllocation         function=LinearCombination(operation=SUM)</em>, <em>modulation=ModulationParam.MULTIPLICATIVE              projections=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> used by an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> to modulate the value
 of one more <a class="reference internal" href="State.html"><span class="doc">States</span></a>.</p>
 <div class="admonition note">
@@ -403,7 +403,8 @@ It should be instantiated using the constructor for a <a class="reference intern
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<a class="reference internal" href="GatingMechanism.html#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism"><em>GatingMechanism</em></a>) – specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the ModulatorySignal.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="ModulatoryMechanism.html#psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism" title="psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism"><em>ModulatoryMechanism</em></a>) – specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the ModulatorySignal.</li>
+<li><strong>default_allocation</strong> (<em>scalar : defaultModulatoryAllocation</em>) – specifies the default template and value used for <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.variable" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>function</strong> (<em>Function</em><em> or </em><em>method : default Linear</em>) – specifies the function used to determine the value of the ModulatorySignal from the value of its
 <code class="xref any docutils literal"><span class="pre">owner</span></code>.</li>
 <li><strong>modulation</strong> (<em>ModulationParam : default ModulationParam.MULTIPLICATIVE</em>) – specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.</li>
@@ -426,14 +427,19 @@ override any assigned to those parameters in arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> – value assigned by the ModulatorySignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.owner" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, and used by the ModulatorySignal’s
-<a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.function" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to compute its <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
+<dd><p><em>scalar, list or np.ndarray</em> – same as <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.allocation" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.allocation">
+<code class="descname">allocation</code><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – value used as <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.variable" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the ModulatorySignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.function" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to determine its <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">ModulatorySignal.value</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.function">
 <code class="descname">function</code><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TransferFunction :  default Linear(slope=1, intercept=0)</em> – provides the ModulatorySignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>; the default is an identity function that
+<dd><p><em>TransferFunction</em> – provides the ModulatorySignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>; the default is an identity function that
 assigns <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.variable" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> as ModulatorySignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
 </dd></dl>
 

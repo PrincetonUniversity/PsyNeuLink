@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EVCControlMechanism &mdash; PsyNeuLink 0.5.3.2+170.gbc5698d documentation</title>
+  <title>EVCControlMechanism &mdash; PsyNeuLink 0.5.3.2+171.g5e0d2bd documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+170.gbc5698d',
+              VERSION:'0.5.3.2+171.g5e0d2bd',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+170
+                0.5.3.2+171
               </div>
             
           
@@ -715,7 +715,7 @@ generated <a class="reference internal" href="#psyneulink.library.components.mec
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_allocation">
 <code class="descname">control_allocation</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_allocation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array : defaultControlAllocation</em> – determines the value assigned as the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.variable" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for each <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> and its
+<dd><p><em>2d np.array : [[defaultControlAllocation]]</em> – determines the value assigned as the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.variable" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for each <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> and its
 associated <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>.  Each item of the array must be a 1d array (usually containing a scalar)
 that specifies an <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> for the corresponding ControlSignal, and the number of items must equal the
 number of ControlSignals in the EVCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_signals" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> attribute.</p>

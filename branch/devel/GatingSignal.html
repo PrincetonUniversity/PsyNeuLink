@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GatingSignal &mdash; PsyNeuLink 0.5.3.2+170.gbc5698d documentation</title>
+  <title>GatingSignal &mdash; PsyNeuLink 0.5.3.2+171.g5e0d2bd documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+170.gbc5698d',
+              VERSION:'0.5.3.2+171.g5e0d2bd',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+170
+                0.5.3.2+171
               </div>
             
           
@@ -405,7 +405,7 @@ created directly and then assigned to <code class="docutils literal"><span class
 <h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.states.modulatorysignals.gatingsignal.</code><code class="descname">GatingSignal</code><span class="sig-paren">(</span><em>owner</em>, <em>index=PRIMARY                                       function=Linear()</em>, <em>modulation=ModulationParam.MULTIPLICATIVE</em>, <em>projections=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.states.modulatorysignals.gatingsignal.</code><code class="descname">GatingSignal</code><span class="sig-paren">(</span><em>owner</em>, <em>default_allocation=defaultGatingAllocation</em>, <em>index=PRIMARY                                       variable=defaultGatingAllocation                    function=Linear()</em>, <em>modulation=ModulationParam.MULTIPLICATIVE</em>, <em>projections=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal" title="Permalink to this definition">¶</a></dt>
 <dd><p>A subclass of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> used by a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to modulate the value(s)
 of one more <a class="reference internal" href="InputState.html"><span class="doc">InputState(s)</span></a> and/or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState(s)</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -414,6 +414,8 @@ of one more <a class="reference internal" href="InputState.html"><span class="do
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>owner</strong> (<a class="reference internal" href="GatingMechanism.html#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism"><em>GatingMechanism</em></a>) – specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the GatingSignal.</li>
+<li><strong>default_allocation</strong> (<em>scalar</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : defaultGatingAllocation</em>) – specifies the template and default value used for <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.allocation" title="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>;  must match the
+shape of each item specified in <code class="xref any docutils literal"><span class="pre">allocation_samples</span></code>.</li>
 <li><strong>index</strong> (<em>int : default PRIMARY</em>) – specifies the item of the owner GatingMechanism’s <a class="reference internal" href="GatingMechanism.html#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">gating_allocation</span></code></a> used as the
 GatingSignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.value" title="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
 <li><strong>function</strong> (<em>Function</em><em> or </em><em>method : default Linear</em>) – specifies the function used to determine the value of the GatingSignal from the value of its
@@ -444,7 +446,13 @@ details.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> – used by <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.function" title="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to compute the GatingSignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.value" title="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
+<dd><p><em>scalar, list or np.ndarray</em> – same as <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.allocation" title="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.allocation">
+<code class="descname">allocation</code><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default: defaultGatingAllocation</em> – value assigned by the GatingSignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.owner" title="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, and used by the GatingSignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.function" title="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to determine its <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.intensity" title="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">GatingSignal.intensity</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlSignal &mdash; PsyNeuLink 0.5.3.2+170.gbc5698d documentation</title>
+  <title>ControlSignal &mdash; PsyNeuLink 0.5.3.2+171.g5e0d2bd documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+170.gbc5698d',
+              VERSION:'0.5.3.2+171.g5e0d2bd',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+170
+                0.5.3.2+171
               </div>
             
           
@@ -219,7 +219,7 @@ components and requirements for configuration that must be met for it to functio
 <span id="controlsignal-specification"></span><h3><em>Specifying ControlSignals</em><a class="headerlink" href="#specifying-controlsignals" title="Permalink to this headline">¶</a></h3>
 <p>When a ControlSignal is specified in the <strong>control_signals</strong> argument of the constructor for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, the parameter(s) to be controlled must be specified.  If other attributes of the ControlSignal
 need to be specified (e.g., one or more of its <a class="reference internal" href="#controlsignal-costs"><span class="std std-ref">cost functions</span></a>), then the Constructor for the
-ConrolSignal can be used or a <a class="reference internal" href="State.html#state-specification"><span class="std std-ref">state specification dictionary</span></a>, in which the parameter(s) to be
+ControlSignal can be used or a <a class="reference internal" href="State.html#state-specification"><span class="std std-ref">state specification dictionary</span></a>, in which the parameter(s) to be
 controlled in the <strong>projections</strong> argument or <em>PROJECTIONS</em> entry, respectively, using any of the forms below.
 For convenience, the parameters can also be specified on their own in the <strong>control_signals</strong> argument of the
 ControlMechanism’s constructor, in which case a default ControlSignal will be created for each.  In all cases, any
@@ -482,7 +482,7 @@ ControlSignal’s <a class="reference internal" href="#psyneulink.core.component
 
 <dl class="class">
 <dt id="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.states.modulatorysignals.controlsignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>owner</em>, <em>index=SEQUENTIAL</em>, <em>function=Linear()</em>, <em>costs_options=None</em>, <em>intensity_cost_function=Exponential</em>, <em>adjustment_cost_function=Linear</em>, <em>duration_cost_function=IntegratorFunction</em>, <em>combine_costs_function=Reduce(operation=SUM)</em>, <em>allocation_samples=self.class_defaults.allocation_samples</em>, <em>modulation=ModulationParam.MULTIPLICATIVE                         projections=None                                                  params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.states.modulatorysignals.controlsignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>owner</em>, <em>default_allocation=defaultControlAllocation</em>, <em>index=SEQUENTIAL</em>, <em>function=Linear()</em>, <em>costs_options=None</em>, <em>intensity_cost_function=Exponential</em>, <em>adjustment_cost_function=Linear</em>, <em>duration_cost_function=IntegratorFunction</em>, <em>combine_costs_function=Reduce(operation=SUM)</em>, <em>allocation_samples=self.class_defaults.allocation_samples</em>, <em>modulation=ModulationParam.MULTIPLICATIVE                          projections=None                                                   params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
 <dd><p>A subclass of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> used by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> to
 modulate the parameter(s) of one or more other <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -491,6 +491,8 @@ modulate the parameter(s) of one or more other <a class="reference internal" hre
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>owner</strong> (<a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism"><em>ControlMechanism</em></a>) – specifies the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> to which to assign the ControlSignal.</li>
+<li><strong>default_allocation</strong> (<em>scalar</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : defaultControlAllocation</em>) – specifies the template and default value used for <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>;  must match the
+shape of each item specified in <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation_samples" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation_samples"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_samples</span></code></a>.</li>
 <li><strong>index</strong> (<em>int : default SEQUENTIAL</em>) – specifies the item of the owner ControlMechanism’s <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>
 used as the ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
 <li><strong>function</strong> (<em>Function</em><em> or </em><em>method : default Linear</em>) – specifies the function used to determine the <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> of the ControlSignal from its <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>.</li>
@@ -530,15 +532,13 @@ details.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> – same as <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>;  used by <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to compute the
-ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.</p>
+<dd><p><em>scalar, list or np.ndarray</em> – same as <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation">
 <code class="descname">allocation</code><a class="headerlink" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.allocation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float : default: defaultControlAllocation</em> – value used as <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.variable" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
-to determine its <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.</p>
+<dd><p><em>float : default: defaultControlAllocation</em> – value assigned by the ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.owner" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, and used by the ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to determine its <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">ControlSignal.intensity</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
