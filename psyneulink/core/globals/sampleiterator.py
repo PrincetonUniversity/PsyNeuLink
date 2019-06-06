@@ -217,7 +217,7 @@ class SampleSpec():
         getcontext().prec = _global_precision
 
 
-allowable_specs = (tuple, list, np.array, range, np.arange, callable, tuple, SampleSpec)
+allowable_specs = (tuple, list, np.array, range, np.arange, callable, SampleSpec)
 def is_sample_spec(spec):
     if spec is None or type(spec) in allowable_specs:
         return True

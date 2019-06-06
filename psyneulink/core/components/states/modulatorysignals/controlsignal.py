@@ -912,9 +912,8 @@ class ControlSignal(ModulatorySignal):
                     request_set[ALLOCATION_SAMPLES] = np.array(allocation_samples)
             elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
                 pass
-            elif all(isinstance(allocation_samples, spec) for spec in allowable_specs):
-                pass
-            elif allocation_samples is None:
+            # elif all(isinstance(allocation_samples, spec) for spec in allowable_specs):
+            elif is_sample_spec(allocation_samples):
                 pass
             else:
                 raise ControlSignalError("allocation_samples argument ({}) in {} must be "

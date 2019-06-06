@@ -669,7 +669,7 @@ class ControlMechanism(ModulatoryMechanism):
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        value = Parameter(np.array([[defaultControlAllocation]), aliases='modulatory_allocation')
+        value = Parameter(np.array([defaultControlAllocation]), aliases='modulatory_allocation')
         control_allocation = Parameter(np.array([defaultControlAllocation]),
                                       getter=_control_allocation_getter,
                                       setter=_control_allocation_setter,

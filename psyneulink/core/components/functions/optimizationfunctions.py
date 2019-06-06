@@ -896,18 +896,22 @@ class GradientOptimization(OptimizationFunction):
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
         if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
-            owner_str = ''
-            if self.owner:
-                owner_str = f' of {self.owner.name}'
             search_space = request_set[SEARCH_SPACE]
-            # If search space is a single 2-item list or tuple, wrap it in an outer list for handling below
+            if all(s == None for s in search_space):
+                return
+            # If search space is a single 2-item list or tuple with numbers (i.e., bounds),
+            #     wrap in list for handling below
             if len(search_space)==2 and all(isinstance(i, Number) for i in search_space):
                 search_space = [search_space]
             for s in search_space:
                 if isinstance(s, SampleIterator):
                     s = s()
                 if len(s) != 2:
+                    owner_str = ''
+                    if self.owner:
+                        owner_str = f' of {self.owner.name}'
                     raise OptimizationFunctionError(f"All items in {repr(SEARCH_SPACE)} arg for {self.name}{owner_str} "
                                                     f"must be or resolve a 2-item list or tuple; this doesn't: {s}.")
 
