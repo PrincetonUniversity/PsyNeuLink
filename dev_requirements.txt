@@ -13,3 +13,4 @@ graphviz
 pillow
 torch
 ipython
+autograd
