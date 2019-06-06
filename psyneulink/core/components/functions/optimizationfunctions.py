@@ -1026,9 +1026,9 @@ class GradientOptimization(OptimizationFunction):
                                                                                   execution_id=execution_id,
                                                                                   params=params,
                                                                                   context=context)
-        # TEST PRINT 5/30/19:
-        print(f'optimal_sample: {optimal_sample}')
-        print(f'optimal_value: {optimal_value}')
+        # # TEST PRINT 5/30/19:
+        # print(f'optimal_sample: {optimal_sample}')
+        # print(f'optimal_value: {optimal_value}')
 
         return_all_samples = return_all_values = []
         if self.parameters.save_samples.get(execution_id):

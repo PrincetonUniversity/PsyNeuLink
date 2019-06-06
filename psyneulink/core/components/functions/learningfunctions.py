@@ -597,8 +597,8 @@ class BayesGLM(LearningFunction):
         self.parameters.gamma_shape_n.set(gamma_shape_n, execution_id)
         self.parameters.gamma_size_n.set(gamma_size_n, execution_id)
 
-        # TEST PRINT:
-        print(f'MEAN WEIGHTS FOR BayesGLM:\n{mu_n}')
+        # # TEST PRINT:
+        # print(f'MEAN WEIGHTS FOR BayesGLM:\n{mu_n}')
 
         return self.sample_weights(gamma_shape_n, gamma_size_n, mu_n, Lambda_n)
 

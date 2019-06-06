@@ -136,8 +136,8 @@ lvoc = pnl.OptimizationControlMechanism(
             # function=pnl.ReLU,
             # function=pnl.Logistic,
             cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
-            # intensity_cost_function=pnl.Exponential(rate=0, bias=0), # 0.25, -3
-            # adjustment_cost_function=pnl.Exponential(rate=0, bias=0) # 0.25, -3
+            # intensity_cost_function=pnl.Exponential(rate=0.25, bias=-3), # 0.25, -3
+            # adjustment_cost_function=pnl.Exponential(rate=.25, bias=-3), # 0.25, -3
             intensity_cost_function=pnl.Linear(slope=0, intercept=0), # 0.25, -3
             adjustment_cost_function=pnl.Linear(slope=0, intercept=0), # 0.25, -3
             allocation_samples=control_signal_range
