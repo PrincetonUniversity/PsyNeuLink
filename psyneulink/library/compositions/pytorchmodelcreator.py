@@ -1,6 +1,8 @@
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.globals.context import ContextFlags
-
+from psyneulink.core import llvm as pnlvm
+from llvmlite import ir
+import functools
 try:
     import torch
     from torch import nn
@@ -38,6 +40,26 @@ class PytorchModelCreator(torch.nn.Module):
         self.params = nn.ParameterList()  # list that Pytorch optimizers will use to keep track of parameters
         self.device = device
 
+
+        # Get first component in network
+        inp_comp = self.execution_sets[0]
+        # Get any mechanism
+        inp_mech = min(inp_comp)
+
+        
+        # Get last component in network
+        out_comp = self.execution_sets[len(self.execution_sets)-1]
+        # Get any mechanism
+        out_mech = min(out_comp)
+
+
+
+        self.defaults = { # each of these should be of type array([[ ]]) for some reason
+            # Assign input shape
+            'variable':inp_mech.variable,
+            # Assign output shape
+            'value':out_mech.value
+        }
         for i in range(len(self.execution_sets)):
             for component in self.execution_sets[i]:
 
@@ -45,6 +67,8 @@ class PytorchModelCreator(torch.nn.Module):
                 biases = None  # the node's bias parameters
                 function = self.function_creator(component, execution_id)  # the node's function
                 afferents = {}  # dict for keeping track of afferent nodes and their connecting weights
+                with pnlvm.LLVMBuilderContext.get_global() as ctx:
+                    bin_func = self.bin_function_creator(ctx,component, execution_id)
 
                 if param_init_from_pnl:
                     if component.parameters.value.get(execution_id) is None:
@@ -57,7 +81,6 @@ class PytorchModelCreator(torch.nn.Module):
 
                 # if `node` is not an origin node (origin nodes don't have biases or afferent connections)
                 if i != 0:
-
                     # if not copying parameters from psyneulink, set up pytorch biases for node
                     if not param_init_from_pnl:
                         input_length = len(component.input_states[0].parameters.value.get(None))
@@ -88,7 +111,7 @@ class PytorchModelCreator(torch.nn.Module):
                         self.params.append(weights)
                         self.projections_to_pytorch_weights[mapping_proj] = weights
 
-                node_forward_info = [value, biases, function, afferents]
+                node_forward_info = [value, biases, function, afferents,bin_func]
                 # node_forward_info = [value, biases, function, afferents, value]
 
                 self.component_to_forward_info[component] = node_forward_info
@@ -96,6 +119,61 @@ class PytorchModelCreator(torch.nn.Module):
         # CW 12/3/18: this copies by reference so it only needs to be called during init, rather than
         # every time the weights are updated
         self.copy_weights_to_psyneulink(execution_id)
+
+
+        # TEST METHOD:
+        self._gen_llvm_forward_function()
+    # defines input type
+    def _get_input_struct_type(self,ctx):
+         return ir.types.LiteralStructType([
+             ctx.convert_python_struct_to_llvm_ir(self.defaults['variable'])
+         ])
+    
+    def _get_output_struct_type(self,ctx):
+        return ir.types.LiteralStructType([
+            ctx.convert_python_struct_to_llvm_ir(self.defaults['value'])
+        ])
+
+    def _get_param_struct_type(self,ctx):
+        return ir.types.DoubleType()
+
+    def _get_context_struct_type(self,ctx):
+        return ir.types.DoubleType()
+
+    # generates llvm function for self.forward (#TODO: allow forward func llvm to take weights as input, removing rebuild step)
+    def _gen_llvm_forward_function(self):
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            args = [ctx.get_param_struct_type(self).as_pointer(),
+                    ctx.get_context_struct_type(self).as_pointer(),
+                    ctx.get_input_struct_type(self).as_pointer(),
+                    ctx.get_output_struct_type(self).as_pointer()]
+            print(args)
+            builder = ctx.create_llvm_function(args,self) #NEED TO GET INPUT VECTOR SIZE (maybe just pass as ir.VectorType?)
+            llvm_func = builder.function
+            params, context, arg_in, arg_out = llvm_func.args[:len(args)]
+            llvm_func.attributes.add('alwaysinline')
+
+            params, context, arg_in, arg_out = llvm_func.args[:len(args)]
+            self._gen_llvm_forward_function_body(ctx,builder,params,context,arg_in,arg_out)
+
+        return llvm_func
+
+    # figure out type of arg_in
+    def _gen_llvm_forward_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+        # Sometimes we arg_out to 2d array
+        out_t = arg_out.type.pointee
+        if isinstance(out_t, pnlvm.ir.ArrayType) and isinstance(out_t.element, pnlvm.ir.ArrayType):
+            assert len(out_t) == 1
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+        # arg_out is a pointer to the beginning of the output array (TODO: add support for > 1 state)
+        #builder = ctx.create_llvm_function()
+        for i in range(len(self.execution_sets)):
+            current_exec_set = self.execution_sets[i]
+            for component in current_exec_set:
+                biases = self.component_to_forward_info[component][1]
+                bin_func = self.component_to_forward_info[component][4]
+                afferents = self.component_to_forward_info[component][3]
+                #print("BIAS",biases,"FUNC",bin_func,"AFFERENT",afferents)
 
     # performs forward computation for the model
     def forward(self, inputs, execution_id=None, do_logging=True):
@@ -169,6 +247,65 @@ class PytorchModelCreator(torch.nn.Module):
     def log_weights(self, execution_id=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
             projection.parameters.matrix._log_value(weights.detach().numpy(), execution_id, ContextFlags.COMMAND_LINE)
+
+    # helper method that functions the same as function_creator, but returns a llvm function instead
+    def bin_function_creator(self,ctx,node,execution_id=None):
+
+        builder = ctx.create_llvm_function([ir.types.DoubleType()],self,return_type=ir.types.DoubleType()) #NEED TO GET INPUT VECTOR SIZE (maybe just pass as ir.VectorType?)
+        llvm_func = builder.function
+        
+        llvm_func.attributes.add('alwaysinline')
+        
+        x = llvm_func.args[0]
+        def get_fct_param_value(param_name):
+            val = node.function.get_current_function_param(param_name, execution_id)
+            if val is None:
+                val = node.function.get_current_function_param(param_name, None)
+            return ir.Constant(ir.types.DoubleType(),val)
+
+        if isinstance(node.function, Linear):
+            slope = get_fct_param_value('slope')
+            intercept = get_fct_param_value('intercept')
+            
+            ret = builder.fadd(builder.fmul(x,slope),intercept)
+            builder.ret(ret)
+
+        elif isinstance(node.function, Logistic):
+            gain = get_fct_param_value('gain')
+            bias = get_fct_param_value('bias')
+            offset = get_fct_param_value('offset')
+
+            exp = ctx.get_llvm_function("__pnl_builtin_exp")
+            arg = builder.fadd(
+                builder.fmul(
+                    builder.neg(gain), builder.fsub(x,bias)
+                ),offset)
+            one = ir.Constant(ir.types.DoubleType(),1)
+            ret = builder.fdiv(one,builder.fadd(one,builder.call(exp,[arg])))
+            builder.ret(ret)
+            #return lambda x: 1 / (1 + torch.exp(-gain * (x - bias) + offset))
+
+        else:  # if we have relu function (the only other kind of function allowed by the autodiff composition)
+            gain = get_fct_param_value('gain')
+            bias = get_fct_param_value('bias')
+            leak = get_fct_param_value('leak')
+            zero = ir.Constant(ir.types.DoubleType(),0)
+            val = builder.fsub(x,bias)
+            pred = builder.fcmp_ordered(">",val,zero)
+
+            with builder.if_else(pred) as (then, otherwise):
+                with then:
+                    max = val
+                    min = zero
+                with otherwise:
+                    max = zero
+                    min = val
+            
+            ret = builder.fadd(
+                builder.fmul(max,gain),
+                builder.fmul(min,leak))
+            builder.ret(ret)
+        return builder.function
 
     # helper method that identifies the type of function used by a node, gets the function
     # parameters and uses them to create a function object representing the function, then returns it
