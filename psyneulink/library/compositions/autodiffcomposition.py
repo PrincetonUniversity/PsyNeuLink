@@ -435,7 +435,7 @@ class AutodiffComposition(Composition):
                  loss_spec='mse',
                  randomize=None,
                  refresh_losses=False,
-                 disable_cuda=False,
+                 disable_cuda=True,
                  cuda_index=None,
                  force_no_retain_graph=False,
                  name="autodiff_composition"):
