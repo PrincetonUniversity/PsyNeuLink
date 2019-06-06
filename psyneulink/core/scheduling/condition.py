@@ -273,7 +273,9 @@ Class Reference
 
 """
 
+import collections
 import logging
+import warnings
 
 from psyneulink.core.globals.parameters import parse_execution_context
 from psyneulink.core.globals.utilities import call_with_pruned_args
@@ -456,6 +458,26 @@ class Condition(object):
         kwargs_to_pass.update({'execution_context': execution_context})
 
         return call_with_pruned_args(self.func, *(self.args + args), **kwargs_to_pass)
+
+
+class _DependencyValidation:
+    @Condition.owner.setter
+    def owner(self, value):
+        # "dependency" or "dependencies" is always the first positional argument
+        if not isinstance(self.args[0], collections.abc.Iterable):
+            dependencies = [self.args[0]]
+        else:
+            dependencies = self.args[0]
+
+        if value in dependencies:
+            warnings.warn(
+                f'{self} is dependent on {value}, but you are assigning {value} as its owner.'
+                ' This may result in infinite loops or unknown behavior.',
+                stacklevel=5
+            )
+
+        self._owner = value
+
 
 #########################################################################################################
 # Included Conditions
@@ -1129,7 +1151,7 @@ class AfterNRuns(Condition):
 ######################################################################
 
 
-class BeforeNCalls(Condition):
+class BeforeNCalls(_DependencyValidation, Condition):
     """BeforeNCalls
 
     Parameters:
@@ -1165,7 +1187,7 @@ class BeforeNCalls(Condition):
 # Since this condition is unlikely to be used, it's best to leave it for now
 
 
-class AtNCalls(Condition):
+class AtNCalls(_DependencyValidation, Condition):
     """AtNCalls
 
     Parameters:
@@ -1195,7 +1217,7 @@ class AtNCalls(Condition):
         super().__init__(func, dependency, n)
 
 
-class AfterCall(Condition):
+class AfterCall(_DependencyValidation, Condition):
     """AfterCall
 
     Parameters:
@@ -1225,7 +1247,7 @@ class AfterCall(Condition):
         super().__init__(func, dependency, n)
 
 
-class AfterNCalls(Condition):
+class AfterNCalls(_DependencyValidation, Condition):
     """AfterNCalls
 
     Parameters:
@@ -1255,7 +1277,7 @@ class AfterNCalls(Condition):
         super().__init__(func, dependency, n)
 
 
-class AfterNCallsCombined(Condition):
+class AfterNCallsCombined(_DependencyValidation, Condition):
     """AfterNCallsCombined
 
     Parameters:
@@ -1294,7 +1316,7 @@ class AfterNCallsCombined(Condition):
         super().__init__(func, *dependencies, n=n)
 
 
-class EveryNCalls(Condition):
+class EveryNCalls(_DependencyValidation, Condition):
     """EveryNCalls
 
     Parameters:
@@ -1342,7 +1364,7 @@ class EveryNCalls(Condition):
         super().__init__(func, dependency, n)
 
 
-class JustRan(Condition):
+class JustRan(_DependencyValidation, Condition):
     """JustRan
 
     Parameters:
@@ -1370,7 +1392,7 @@ class JustRan(Condition):
         super().__init__(func, dependency)
 
 
-class AllHaveRun(Condition):
+class AllHaveRun(_DependencyValidation, Condition):
     """AllHaveRun
 
     Parameters:
@@ -1409,7 +1431,7 @@ class AllHaveRun(Condition):
         super().__init__(func, *dependencies)
 
 
-class WhenFinished(Condition):
+class WhenFinished(_DependencyValidation, Condition):
     """WhenFinished
 
     Parameters:
@@ -1438,7 +1460,7 @@ class WhenFinished(Condition):
         super().__init__(func, dependency)
 
 
-class WhenFinishedAny(Condition):
+class WhenFinishedAny(_DependencyValidation, Condition):
     """WhenFinishedAny
 
     Parameters:
@@ -1475,7 +1497,7 @@ class WhenFinishedAny(Condition):
         super().__init__(func, *dependencies)
 
 
-class WhenFinishedAll(Condition):
+class WhenFinishedAll(_DependencyValidation, Condition):
     """WhenFinishedAll
 
     Parameters:
