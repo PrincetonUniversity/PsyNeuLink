@@ -1148,8 +1148,8 @@ class EVCControlMechanism(ControlMechanism):
         for control_signal in self.control_signals:
             control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id)())
 
-        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
-        #                                     (one sample from the allocationSample of each ControlProjection)
+        # Construct control_signal_search_space:  set of all permutations of ControlSignal allocations
+        #                                     (one sample from the allocationSample of each ControlSignal)
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
         self.parameters.control_signal_search_space.set(
@@ -1237,7 +1237,14 @@ class EVCControlMechanism(ControlMechanism):
         # Implement the current control_allocation over ControlSignals (OutputStates),
         #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states
         for i in range(len(self.control_signals)):
-            self.parameters.value.get(execution_id)[i] = np.atleast_1d(allocation_vector[i])
+            # # MODIFIED 6/6/19 OLD:
+            # self.parameters.value.get(execution_id)[i] = np.atleast_1d(allocation_vector[i])
+            # MODIFIED 6/6/19 NEW: [JDC]
+            self._apply_control_allocation(control_allocation=allocation_vector,
+                                           runtime_params=runtime_params,
+                                           context=context,
+                                           execution_id=execution_id)
+            # MODIFIED 6/6/19 END
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         # RUN SIMULATION

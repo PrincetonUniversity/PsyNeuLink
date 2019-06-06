@@ -1213,11 +1213,9 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
     # ---------------------------------------------------
 
         if self.modulatory_signals:
-            self._output_states = []
-            self.defaults.value = None
-
-            for modulatory_signal in self.modulatory_signals:
-                self._instantiate_modulatory_signal(modulatory_signal, context=context)
+            # self._output_states = []
+            # self.defaults.value = None
+            self._instantiate_modulatory_signals(context=context)
 
         super()._instantiate_output_states(context=context)
 
@@ -1311,6 +1309,11 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         #                          format(ControlSignal.__name__, self.name, len(self.modulatory_signals),
         #                                 MODULATORY_ALLOCATION, len(self.defaults.value)))
 
+    def _instantiate_modulatory_signals(self, context):
+        '''Give subclassess a chance to override'''
+        for modulatory_signal in self.modulatory_signals:
+            self._instantiate_modulatory_signal(modulatory_signal, context=context)
+
     def _instantiate_modulatory_signal(self,  modulatory_signal, context=None):
         '''Parse and instantiate modulatory_signal specifications (in call to State._parse_state_spec)
            and any embedded Projection specifications (in call to <State>._instantiate_projections)
@@ -1362,6 +1365,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         #     control_signal._intensity = function.initializer
 
         # Add ModulatorySignal to output_states list
+        if self._output_states is None:
+            self._output_states = []
         self._output_states.append(modulatory_signal)
 
         return modulatory_signal

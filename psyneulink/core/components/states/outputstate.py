@@ -1521,8 +1521,7 @@ class StandardOutputStates():
     output_state_dicts : list of dicts
         list of dictionaries specifying OutputStates for the Component specified by `owner`
 
-    indices : PRIMARY,
-    SEQUENTIAL, list of ints
+    indices : PRIMARY, SEQUENTIAL, list of ints
         specifies how to assign the (OWNER_VALUE, int) entry for each dict listed in `output_state_dicts`;
 
         The effects of each value of indices are as follows:
