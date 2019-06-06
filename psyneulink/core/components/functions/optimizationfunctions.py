@@ -27,6 +27,7 @@ import warnings
 import itertools
 import numpy as np
 import typecheck as tc
+from numbers import Number
 
 from typing import Iterator
 
@@ -405,7 +406,7 @@ class OptimizationFunction(Function_Base):
 
         if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
             search_space = request_set[SEARCH_SPACE]
-            if not all(isinstance(s, SampleIterator) for s in search_space):
+            if not all(isinstance(s, (SampleIterator, type(None))) for s in search_space):
                 raise OptimizationFunctionError("All entries in list specified for {} arg of {} must be a {}".
                                                 format(repr(SEARCH_SPACE),
                                                        self.__class__.__name__,
@@ -559,7 +560,8 @@ class GradientOptimization(OptimizationFunction):
         objective_function=None,     \
         gradient_function=None,      \
         direction=ASCENT,            \
-        step=1.0,                    \
+        search_space=None,           \
+        step_size=1.0,               \
         annealing_function=None,     \
         convergence_criterion=VALUE, \
         convergence_threshold=.001,  \
@@ -585,14 +587,14 @@ class GradientOptimization(OptimizationFunction):
           <GradientOptimization.gradient_function>`;
         ..
         - adjust `variable <GradientOptimization.variable>` based on the gradient, in the specified
-          `direction <GradientOptimization.direction>` and by an amount specified by `step
-          <GradientOptimization.step>` and possibly `annealing_function
+          `direction <GradientOptimization.direction>` and by an amount specified by `step_size
+          <GradientOptimization.step_size>` and possibly `annealing_function
           <GradientOptimization.annealing_function>`;
         ..
         - compute value of `objective_function <GradientOptimization.objective_function>` using the adjusted value of
           `variable <GradientOptimization.variable>`;
         ..
-        - adjust `step <GradientOptimization.udpate_rate>` using `annealing_function
+        - adjust `step_size <GradientOptimization.udpate_rate>` using `annealing_function
           <GradientOptimization.annealing_function>`, if specified, for use in the next iteration;
         ..
         - evaluate `convergence_criterion <GradientOptimization.convergence_criterion>` and test whether it is below
@@ -617,8 +619,9 @@ class GradientOptimization(OptimizationFunction):
     :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`.  If the **gradient_function* argument of the
     constructor is not specified, then an attempt is made to use `Autograd's <https://github.com/HIPS/autograd>`_ `grad
     <autograd.grad>` method to generate `gradient_function <GradientOptimization.gradient_function>`.  If that fails,
-    a warning is issued, and gradients are not calculated.
-
+    an erorr occurs.  The **search_space** argument can be used to specify lower and/or upper bounds for each dimension
+    of the sample; if the gradient causes a value of the sample to exceed a bound along a dimenson, the value of the
+    bound is used for that dimension, unless/until the gradient shifts and causes it to return back within the bound.
 
     Arguments
     ---------
@@ -642,16 +645,24 @@ class GradientOptimization(OptimizationFunction):
         (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
         the gradient).
 
-    step : int or float : default 1.0
+    step_size : int or float : default 1.0
         specifies the rate at which the `variable <GradientOptimization.variable>` is updated in each
         iteration of the `optimization process <GradientOptimization_Procedure>`;  if `annealing_function
-        <GradientOptimization.annealing_function>` is specified, **step** specifies the intial value of
-        `step <GradientOptimization.step>`.
+        <GradientOptimization.annealing_function>` is specified, **step_size** specifies the intial value of
+        `step_size <GradientOptimization.step_size>`.
+
+    search_space : list or array : default None
+        specifies bounds of the samples used to evaluate `objective_function <GaussianProcess.objective_function>`
+        along each dimension of `variable <GaussianProcess.variable>`;  each item must be a list or tuple,
+        or a `SampleIterator` that resolves to one.  If the item has two elements, they are used as the lower and
+        upper bounds respectively, and the lower must be less than the upper;  None can be used in either place,
+        in which case that bound is ignored.  If an item has more than two elements, the min is used as the lower
+        bound and the max is used as the upper bound; none of the elements can be None.
 
     annealing_function : function or method : default None
-        specifies function used to adapt `step <GradientOptimization.step>` in each
+        specifies function used to adapt `step_size <GradientOptimization.step_size>` in each
         iteration of the `optimization process <GradientOptimization_Procedure>`;  must take accept two parameters —
-        `step <GradientOptimization.step>` and `iteration <GradientOptimization_Procedure>`, in that
+        `step_size <GradientOptimization.step_size>` and `iteration <GradientOptimization_Procedure>`, in that
         order — and return a scalar value, that is used for the next iteration of optimization.
 
     convergence_criterion : *VARIABLE* or *VALUE* : default *VALUE*
@@ -699,16 +710,25 @@ class GradientOptimization(OptimizationFunction):
         (i.e., "up" the gradient);  if *DESCENT*, movement is attempted in the negative direction (i.e. "down"
         the gradient).
 
-    step : int or float
+    step_size : int or float
         determines the rate at which the `variable <GradientOptimization.variable>` is updated in each
         iteration of the `optimization process <GradientOptimization_Procedure>`;  if `annealing_function
-        <GradientOptimization.annealing_function>` is specified, `step <GradientOptimization.step>`
+        <GradientOptimization.annealing_function>` is specified, `step_size <GradientOptimization.step_size>`
         determines the initial value.
 
+    search_space : list or array
+        contains tuples specifying bounds within which each dimension of `variable <GaussianProcess.variable>` is
+        sampled, and used to evaluate `objective_function <GaussianProcess.objective_function>` in iterations of the
+        `optimization process <GaussianProcess_Procedure>`.
+
+    bounds : tuple
+        contains two 2d arrays; the 1st contains the lower bounds for each dimension of the sample (`variable
+        <GradientOptimization.variable>`), and the 2nd the upper bound of each.
+
     annealing_function : function or method
-        function used to adapt `step <GradientOptimization.step>` in each iteration of the `optimization
-        process <GradientOptimization_Procedure>`;  if `None`, no call is made and the same `step
-        <GradientOptimization.step>` is used in each iteration.
+        function used to adapt `step_size <GradientOptimization.step_size>` in each iteration of the `optimization
+        process <GradientOptimization_Procedure>`;  if `None`, no call is made and the same `step_size
+        <GradientOptimization.step_size>` is used in each iteration.
 
     iteration : int
         the currention iteration of the `optimization process <GradientOptimization_Procedure>`.
@@ -802,8 +822,8 @@ class GradientOptimization(OptimizationFunction):
                     :type: list
                     :read only: True
 
-                step
-                    see `step <GradientOptimization.step>`
+                step_size
+                    see `step_size <GradientOptimization.step_size>`
 
                     :default value: 1.0
                     :type: float
@@ -816,9 +836,8 @@ class GradientOptimization(OptimizationFunction):
         previous_value = Parameter([[0], [0]], read_only=True)
 
         gradient_function = Parameter(None, stateful=False, loggable=False)
+        step_size = Parameter(1.0, modulable=True)
         annealing_function = Parameter(None, stateful=False, loggable=False)
-
-        step = Parameter(1.0, modulable=True)
         convergence_threshold = Parameter(.001, modulable=True)
         max_iterations = Parameter(1000, modulable=True)
 
@@ -833,7 +852,8 @@ class GradientOptimization(OptimizationFunction):
                  objective_function:tc.optional(is_function_type)=None,
                  gradient_function:tc.optional(is_function_type)=None,
                  direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
-                 step:tc.optional(tc.any(int, float))=1.0,
+                 search_space=None,
+                 step_size:tc.optional(tc.any(int, float))=1.0,
                  annealing_function:tc.optional(is_function_type)=None,
                  convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=VALUE,
                  convergence_threshold:tc.optional(tc.any(int, float))=.001,
@@ -842,8 +862,7 @@ class GradientOptimization(OptimizationFunction):
                  save_values:tc.optional(bool)=False,
                  params=None,
                  owner=None,
-                 prefs=None,
-                 **kwargs):
+                 prefs=None):
 
         self.gradient_function = gradient_function
         search_function = self._follow_gradient
@@ -856,7 +875,7 @@ class GradientOptimization(OptimizationFunction):
         self.annealing_function = annealing_function
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(step=step,
+        params = self._assign_args_to_param_dicts(step_size=step_size,
                                                   convergence_criterion=convergence_criterion,
                                                   convergence_threshold=convergence_threshold,
                                                   params=params)
@@ -864,7 +883,7 @@ class GradientOptimization(OptimizationFunction):
         super().__init__(default_variable=default_variable,
                          objective_function=objective_function,
                          search_function=search_function,
-                         search_space=NotImplemented,
+                         search_space=search_space,
                          search_termination_function=search_termination_function,
                          max_iterations=max_iterations,
                          save_samples=save_samples,
@@ -874,16 +893,107 @@ class GradientOptimization(OptimizationFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
+            search_space = request_set[SEARCH_SPACE]
+            if all(s == None for s in search_space):
+                return
+            # If search space is a single 2-item list or tuple with numbers (i.e., bounds),
+            #     wrap in list for handling below
+            if len(search_space)==2 and all(isinstance(i, Number) for i in search_space):
+                search_space = [search_space]
+            for s in search_space:
+                if isinstance(s, SampleIterator):
+                    s = s()
+                if len(s) != 2:
+                    owner_str = ''
+                    if self.owner:
+                        owner_str = f' of {self.owner.name}'
+                    raise OptimizationFunctionError(f"All items in {repr(SEARCH_SPACE)} arg for {self.name}{owner_str} "
+                                                    f"must be or resolve a 2-item list or tuple; this doesn't: {s}.")
+
     def reinitialize(self, *args):
         super().reinitialize(*args)
+
+        # Differentiate objective_function using autograd.grad()
         if OBJECTIVE_FUNCTION in args[0]:
             try:
                 from autograd import grad
                 self.gradient_function = grad(self.objective_function)
             except:
-                warnings.warn("Unable to use autograd with {} specified for {} Function: {}.".
-                              format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
-                                     args[0][OBJECTIVE_FUNCTION].__name__))
+                raise OptimizationFunctionError("Unable to use autograd with {} specified for {} Function: {}.".
+                                                format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
+                                                       args[0][OBJECTIVE_FUNCTION].__name__))
+        search_space = self.search_space
+        bounds = None
+
+        if self.owner:
+            owner_str = ' of {self.owner.name}'
+
+        # Get bounds from search_space if it has any non-None entries
+        if any(i is not None for i in self.search_space):
+            # Get min and max of each dimension of search space
+            #    and assign to corresponding elements of lower and upper items of bounds
+            lower = []
+            upper = []
+            bounds = (lower, upper)
+            for i in search_space:
+                if i is None:
+                    lower.append(None)
+                    upper.append(None)
+                else:
+                    if isinstance(i, SampleIterator):
+                        i = i()
+                    # Spec is bound (tuple or list with two values: lower and uppper)
+                    if len(i)==2:
+                        lower.append(i[0])
+                        upper.append(i[1])
+                    else:
+                        lower.append(min(i))
+                        upper.append(max(i))
+
+        # Validate bounds and reformat into arrays for lower and upper bounds, for use in _follow_gradient
+        #     (each should be same length as sample), and replace any None's with + or - inf)
+        if bounds:
+            if bounds[0] is None and bounds[1] is None:
+                bounds = None
+            else:
+                sample_len = len(args[0][DEFAULT_VARIABLE])
+                lower = np.atleast_1d(bounds[0])
+                if len(lower)==1:
+                    # Single value specified for lower bound, so distribute over array with length = sample_len
+                    lower = np.full(sample_len, lower).reshape(sample_len,1)
+                elif len(lower)!=sample_len:
+                    raise OptimizationFunctionError(f"Array used for lower value of {repr(BOUNDS)} arg ({lower}) in "
+                                                    f"{self.name}{owner_str} must have the same number of elements "
+                                                    f"({sample_len}) as the sample over which optimization is being "
+                                                    f"performed.")
+                # Array specified for lower bound, so replace any None's with -inf
+                lower = np.array([[-float('inf')] if n[0] is None else n for n in lower.reshape(sample_len,1)])
+
+                upper = np.atleast_1d(bounds[1])
+                if len(upper)==1:
+                    # Single value specified for upper bound, so distribute over array with length = sample_len
+                    upper = np.full(sample_len, upper).reshape(sample_len,1)
+                elif len(upper)!=sample_len:
+                    raise OptimizationFunctionError(f"Array used for upper value of {repr(BOUNDS)} arg ({upper}) in "
+                                                    f"{self.name}{owner_str} must have the same number of elements "
+                                                    f"({sample_len}) as the sample over which optimization is being "
+                                                    f"performed.")
+                # Array specified for upper bound, so replace any None's with +inf
+                upper = np.array([[float('inf')] if n[0] is None else n for n in upper.reshape(sample_len,1)])
+
+                if not all(lower<upper):
+                    raise OptimizationFunctionError(f"Specification of {repr(BOUNDS)} arg ({bounds}) for {self.name}"
+                                                    f"{owner_str} resulted in lower >= corresponding upper for one or "
+                                                    f"more elements (lower: {lower.tolist()}; uuper: {upper.tolist()}).")
+
+                bounds = (lower,upper)
+
+        self.bounds = bounds
 
     def function(self,
                  variable=None,
@@ -916,6 +1026,10 @@ class GradientOptimization(OptimizationFunction):
                                                                                   execution_id=execution_id,
                                                                                   params=params,
                                                                                   context=context)
+        # # TEST PRINT 5/30/19:
+        # print(f'optimal_sample: {optimal_sample}')
+        # print(f'optimal_value: {optimal_value}')
+
         return_all_samples = return_all_values = []
         if self.parameters.save_samples.get(execution_id):
             return_all_samples = all_samples
@@ -924,22 +1038,34 @@ class GradientOptimization(OptimizationFunction):
         # return last_variable
         return optimal_sample, optimal_value, return_all_samples, return_all_values
 
-    def _follow_gradient(self, variable, sample_num, execution_id=None):
+    def _follow_gradient(self, sample, sample_num, execution_id=None):
 
         if self.gradient_function is None:
-            return variable
+            return sample
 
-        # Update step
-        step = self.parameters.step.get(execution_id)
-        if sample_num != 0 and self.annealing_function:
-            step = call_with_pruned_args(self.annealing_function, step, sample_num, execution_id=execution_id)
-            self.parameters.step.set(step, execution_id)
+        # Index from 1 rather than 0
+        # Update step_size
+        step_size = self.parameters.step_size.get(execution_id)
+        if sample_num == 0:
+            # Start from initial value (sepcified by user in step_size arg)
+            step_size = self.parameters.step_size.default_value
+            self.parameters.step_size.set(step_size, execution_id)
+        if self.annealing_function:
+            step_size = call_with_pruned_args(self.annealing_function, step_size, sample_num, execution_id=execution_id)
+            self.parameters.step_size.set(step_size, execution_id)
 
-        # Compute gradients with respect to current variable
-        _gradients = call_with_pruned_args(self.gradient_function, variable, execution_id=execution_id)
+        # Compute gradients with respect to current sample
+        _gradients = call_with_pruned_args(self.gradient_function, sample, execution_id=execution_id)
 
-        # Update variable based on new gradients
-        return variable + self.parameters.direction.get(execution_id) * step * np.array(_gradients)
+        # Get new sample based on new gradients
+        new_sample = sample + self.parameters.direction.get(execution_id) * step_size * np.array(_gradients)
+
+        # Constrain new sample to be within bounds
+        if self.bounds:
+            new_sample = np.array(np.maximum(self.bounds[0],
+                                             np.minimum(self.bounds[1], new_sample))).reshape(sample.shape)
+
+        return new_sample
 
     def _convergence_condition(self, variable, value, iteration, execution_id=None):
         previous_variable = self.parameters.previous_variable.get(execution_id)
@@ -1175,7 +1301,7 @@ class GridSearch(OptimizationFunction):
             search_space = request_set[SEARCH_SPACE]
 
             # Check that all iterators are finite (i.e., with num!=None)
-            if not all(s.num is not None for s in search_space if s.num):
+            if not all(s.num is not None for s in search_space if (s is not None and s.num)):
                 raise OptimizationFunctionError("All {}s in {} arg of {} must be finite (i.e., SampleIteror.num!=None)".
                                                 format(SampleIterator.__name__,
                                                        repr(SEARCH_SPACE),
@@ -1195,10 +1321,16 @@ class GridSearch(OptimizationFunction):
         '''Assign size of `search_space <GridSearch.search_space>'''
         super(GridSearch, self).reinitialize(*args, execution_id=execution_id)
         sample_iterators = args[0]['search_space']
+        owner_str = ''
+        if self.owner:
+            owner_str = f' of {self.owner.name}'
         for i in sample_iterators:
+            if i is None:
+                raise OptimizationFunctionError(f"Invalid {repr(SEARCH_SPACE)} arg for {self.name}{owner_str}; "
+                                                f"every dimension must be assigned a {SampleIterator.__name__}.")
             if i.num is None:
-                raise OptimizationFunctionError("Invalid search_space on {}. Each SampleIterator must have a value for "
-                                                "its 'num' attribute.".format(self.name))
+                raise OptimizationFunctionError(f"Invalid {repr(SEARCH_SPACE)} arg for {self.name}{owner_str}; each "
+                                                f"{SampleIterator.__name__} must have a value for its 'num' attribute.")
 
         self.num_iterations = np.product([i.num for i in sample_iterators])
 
@@ -1625,6 +1757,7 @@ class GaussianProcess(OptimizationFunction):
     GaussianProcess(                 \
         default_variable=None,       \
         objective_function=None,     \
+        search_space=None,           \
         direction=MAXIMIZE,          \
         max_iterations=1000,         \
         save_samples=False,          \

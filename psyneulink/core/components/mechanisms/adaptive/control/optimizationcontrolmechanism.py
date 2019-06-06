@@ -19,7 +19,7 @@ an optimal `control_allocation <ControlMechanism.control_allocation>` for a give
 <OptimizationControlMechanism_State>`. The `OptimizationFunction` uses the OptimizationControlMechanism's
 `evaluation_function` <OptimizationControlMechanism.evalutate_function>` to evaluate `control_allocation
 <ControlMechanism.control_allocation>` samples, and then implements the one that yields the best predicted result.
-The result returned by the `evaluation_function` <OptimizationControlMechanism.evalutate_function>` is ordinally
+The result returned by the `evaluation_function` <OptimizationControlMechanism.evalutate_function>` is ordinarily
 the `net_outcome <ControlMechanism.net_outcome>` computed by the OptimizationControlMechanism for the `Composition`
 (or part of one) that it controls, and its `ObjectiveFunction` seeks to maximize this, which corresponds to
 maximizing the Expected Value of Control, as described below.
@@ -389,11 +389,13 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from collections import Iterable, namedtuple
-from typing import NamedTuple
+from collections.abc import Iterable
+from collections import namedtuple
 
-from psyneulink.core.components.functions.function import Function_Base, ModulationParam, _is_modulation_param, is_function_type
-from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE
+from psyneulink.core.components.functions.function import \
+    Function_Base, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.optimizationfunctions import \
+    OBJECTIVE_FUNCTION, SEARCH_SPACE, OptimizationFunction
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -405,7 +407,9 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
+from psyneulink.core.globals.keywords import \
+    DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, \
+    PARAMETER_STATES, PARAMS, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -723,7 +727,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  search_statefulness=None,
                  params=None,
                  **kwargs):
-        '''Abstract class that implements OptimizationControlMechanism'''
+        '''Implement OptimizationControlMechanism'''
 
         self.agent_rep = agent_rep
         self.search_function = search_function
@@ -747,17 +751,19 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
+        if self.function is None:
+            raise OptimizationControlMechanismError(f"The {repr(FUNCTION)} arg of an {self.__class__.__name__} must "
+                                                    f"be specified and be an {OptimizationFunction.__name__}")
+
         from psyneulink.core.compositions.composition import Composition
         if self.agent_rep is None:
-            raise OptimizationControlMechanismError("The {} arg of an {} must be specified and be a {}".
-                                                    format(repr(AGENT_REP), self.__class__.__name__,
-                                                           Composition.__name__))
+            raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} must "
+                                                    f"be specified and be a {Composition.__name__}")
 
         elif not (isinstance(self.agent_rep, Composition)
                   or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, Composition))):
-            raise OptimizationControlMechanismError("The {} arg of an {} must be either a {}".
-                                                    format(repr(AGENT_REP),self.__class__.__name__,
-                                                           Composition.__name__))
+            raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} "
+                                                    f"must be either a {Composition.__name__} or a sublcass of one")
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from features and objective_mechanism.
@@ -872,7 +878,7 @@ class OptimizationControlMechanism(ControlMechanism):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
 
         if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING):
-            return defaultControlAllocation
+            return [defaultControlAllocation]
 
         # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
         self.parameters.feature_values.set(_parse_feature_values_from_variable(variable), execution_id)

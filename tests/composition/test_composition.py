@@ -24,7 +24,7 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
-from psyneulink.core.globals.keywords import INPUT_STATE, NAME
+from psyneulink.core.globals.keywords import INPUT_STATE, NAME, PROJECTIONS, ALLOCATION_SAMPLES
 from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.condition import AfterNCalls
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -482,16 +482,19 @@ class TestAnalyzeGraph:
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         comp.add_linear_processing_pathway([A, B])
-
         comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
-                                                                                  features=[A.input_state],
-                                                                                  objective_mechanism=pnl.ObjectiveMechanism(
-                                                                                      function=pnl.LinearCombination(
-                                                                                          operation=pnl.PRODUCT),
-                                                                                      monitor=[A]),
-                                                                                  function=pnl.GridSearch(),
-                                                                                  control_signals=[("slope", B)]
-                                                                                  )
+                                                                        features=[A.input_state],
+                                                                        objective_mechanism=pnl.ObjectiveMechanism(
+                                                                                function=pnl.LinearCombination(
+                                                                                        operation=pnl.PRODUCT),
+                                                                                monitor=[A]),
+                                                                        function=pnl.GridSearch(),
+                                                                        control_signals=[
+                                                                            {PROJECTIONS:("slope", B),
+                                                                             ALLOCATION_SAMPLES:np.arange(0.1,
+                                                                                                          1.01,
+                                                                                                          0.3)}]
+                                                                        )
                                        )
         comp._analyze_graph()
         assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
@@ -508,14 +511,18 @@ class TestAnalyzeGraph:
         comp.add_linear_processing_pathway([A, B])
 
         comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
-                                                                                  features=[A.input_state],
-                                                                                  objective_mechanism=pnl.ObjectiveMechanism(
-                                                                                      function=pnl.LinearCombination(
-                                                                                          operation=pnl.PRODUCT),
-                                                                                      monitor=[A, B]),
-                                                                                  function=pnl.GridSearch(),
-                                                                                  control_signals=[("slope", B)]
-                                                                                  )
+                                                                        features=[A.input_state],
+                                                                        objective_mechanism=pnl.ObjectiveMechanism(
+                                                                                function=pnl.LinearCombination(
+                                                                                        operation=pnl.PRODUCT),
+                                                                                monitor=[A, B]),
+                                                                        function=pnl.GridSearch(),
+                                                                        control_signals=[
+                                                                            {PROJECTIONS:("slope", B),
+                                                                             ALLOCATION_SAMPLES:np.arange(0.1,
+                                                                                                          1.01,
+                                                                                                          0.3)}]
+                                                                        )
                                        )
         comp._analyze_graph()
         assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)

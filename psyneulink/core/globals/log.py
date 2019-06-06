@@ -504,7 +504,7 @@ def _time_string(time):
 
 #region Custom Entries Dict
 # Modified from: http://stackoverflow.com/questions/7760916/correct-useage-of-getter-setter-for-dictionary-values
-from collections import MutableMapping
+from collections.abc import MutableMapping
 class EntriesDict(MutableMapping,dict):
     """Maintains a Dict of Log entries; assignment of a LogEntry to an entry appends it to the list for that entry.
 

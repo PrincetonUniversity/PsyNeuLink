@@ -425,12 +425,12 @@ def _gating_allocation_setter(value, owning_component=None, execution_id=None, *
 class ControlMechanism(ModulatoryMechanism):
     """
     ControlMechanism(                                            \
-        system=None                                              \
+        system=None,                                             \
         monitor_for_control=None,                                \
         objective_mechanism=None,                                \
         function=Linear,                                         \
         control_signals=None,                                    \
-        modulation=ModulationParam.MULTIPLICATIVE                \
+        modulation=ModulationParam.MULTIPLICATIVE,               \
         combine_costs=np.sum,                                    \
         compute_reconfiguration_cost=None,                       \
         compute_net_outcome=lambda x,y:x-y,                      \
@@ -654,7 +654,7 @@ class ControlMechanism(ModulatoryMechanism):
     #     kp<pref>: <setting>...}
 
     # # MODIFIED 5/18/19 NEW: [JDC]
-    # Override control_allocatdion and suppress gating_allocation
+    # Override control_allocation and suppress gating_allocation
     class Parameters(ModulatoryMechanism.Parameters):
         """
             Attributes
@@ -669,8 +669,8 @@ class ControlMechanism(ModulatoryMechanism):
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        value = Parameter(np.array(defaultControlAllocation), aliases='modulatory_allocation')
-        control_allocation = Parameter(np.array(defaultControlAllocation),
+        value = Parameter(np.array([defaultControlAllocation]), aliases='modulatory_allocation')
+        control_allocation = Parameter(np.array([defaultControlAllocation]),
                                       getter=_control_allocation_getter,
                                       setter=_control_allocation_setter,
                                       read_only=True)

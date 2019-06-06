@@ -387,7 +387,7 @@ from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGa
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTEXT, \
     CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, \
     EID_SIMULATION, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, \
-    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, SYSTEM
+    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, SYSTEM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -414,7 +414,7 @@ def _control_allocation_getter(owning_component=None, execution_id=None):
                                   for c in owning_component.control_signals]
         return np.array([owning_component.modulatory_allocation[i] for i in control_signal_indices])
     except TypeError:
-        return defaultControlAllocation
+        return [defaultControlAllocation]
 
 def _control_allocation_setter(value, owning_component=None, execution_id=None):
     control_signal_indices = [owning_component.modulatory_signals.index(c)
@@ -435,7 +435,7 @@ def _gating_allocation_getter(owning_component=None, execution_id=None):
                                   for g in owning_component.gating_signals]
         return np.array([owning_component.modulatory_allocation[i] for i in gating_signal_indices])
     except (TypeError):
-        return defaultGatingAllocation
+        return [defaultGatingAllocation]
 
 def _gating_allocation_setter(value, owning_component=None, execution_id=None):
     gating_signal_indices = [owning_component.modulatory_signals.index(c)
@@ -856,13 +856,13 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = np.array([defaultControlAllocation])
-        value = Parameter(np.array(defaultControlAllocation), aliases='modulatory_allocation')
-        control_allocation = Parameter(np.array(defaultControlAllocation),
+        variable = np.array([[defaultControlAllocation]])
+        value = Parameter(np.array([[defaultControlAllocation]]), aliases='modulatory_allocation')
+        control_allocation = Parameter(np.array([defaultControlAllocation]),
                                        getter=_control_allocation_getter,
                                        setter=_control_allocation_setter,
                                        read_only=True)
-        gating_allocation = Parameter(np.array(defaultGatingAllocation),
+        gating_allocation = Parameter(np.array([defaultGatingAllocation]),
                                       getter=_gating_allocation_getter,
                                       setter=_gating_allocation_setter,
                                       read_only=True)
@@ -1228,7 +1228,34 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                        list=[state for state in self.output_states
                                                              if isinstance(state, (ControlSignal, GatingSignal))])
 
-        # If the ModulatoryMechanism's control_allocation has more than one item,
+        # Assign ModulatoryMechanism's default modulatory_allocation (value) from its modulatory_siginals' defaults,
+        # and assign each ModulatorySignal's variable_spec (i.e., its index into the Mechanism's value)
+        for modulatory_signal in self.modulatory_signals:
+            self.defaults.value = np.array([modulatory_signal.parameters.variable.default_value
+                                            for i in range(len(self._output_states))])
+            self.parameters.value.set(copy.deepcopy(self.defaults.value))
+            if isinstance(self.function, DefaultAllocationFunction):
+                self.function.num_modulatory_signals = len(self._output_states)
+
+            # Assign each ModulatorySignal's variable_spec to index of ModulatoryMechanism's value
+            for i, modulatory_signal in enumerate(self.modulatory_signals):
+                # FIX: 5/18/19 - NEEDS TO ACCOMODATE owner_value_index WHICH MIGHT REMAIN 0 (AS OLD GATINGMECHANISM DID)
+                modulatory_signal._variable_spec = [(OWNER_VALUE, i)]
+                if not isinstance(modulatory_signal.owner_value_index, int):
+                    raise ModulatoryMechanismError(
+                            "PROGRAM ERROR: The \'owner_value_index\' attribute for {} of {} ({})is not an int."
+                                .format(modulatory_signal.name, self.name, modulatory_signal.owner_value_index))
+                # Validate index
+                try:
+                    self.defaults.value[modulatory_signal.owner_value_index]
+                except IndexError:
+                    raise ModulatoryMechanismError("Index specified for {} of {} ({}) "
+                                                   "exceeds the number of items of its {} ({})".
+                                                   format(modulatory_signal.__class__.__name__, self.name,
+                                                          modulatory_signal.owner_value_index,
+                                                          MODULATORY_ALLOCATION, len(self.defaults.value)))
+
+        # If the ModulatoryMechanism's modulatory_allocation has more than one item,
         #    warn if the number of items does not equal the number of its ControlSignals
         #    (note:  there must be fewer ControlSignals than items in control_allocation,
         #            as the reverse is an error that is checked for in _instantiate_control_signal)
@@ -1250,12 +1277,12 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         from psyneulink.core.components.states.state import _instantiate_state
         from psyneulink.core.components.projections.projection import ProjectionError
 
-        # Try to instantiate as ControlSignal;  if that fails, try GatingSignal
         mod_spec = modulatory_signal
+
+        # Try to instantiate as ControlSignal;  if that fails, try GatingSignal
         try:
             modulatory_signal = _instantiate_state(state_type=ControlSignal,
                                                    owner=self,
-                                                   variable=defaultControlAllocation,
                                                    reference_value=ControlSignal.defaults.allocation,
                                                    modulation=self.modulation,
                                                    state_spec=mod_spec,
@@ -1266,7 +1293,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         except ProjectionError:
             modulatory_signal = _instantiate_state(state_type=GatingSignal,
                                                    owner=self,
-                                                   variable=defaultGatingAllocation,
                                                    reference_value=GatingSignal.defaults.allocation,
                                                    modulation=self.modulation,
                                                    state_spec=mod_spec,
@@ -1291,84 +1317,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         # Add ModulatorySignal to output_states list
         self._output_states.append(modulatory_signal)
-
-        # FIX: 5/18/19 - NEEDS TO GET APPROPRIATE DEFAULT FOR TYPE BEING IMPLEMENTED
-        # FIX: 5/18/19 - NEEDS TO ACCOMODATE owner_value_index WHICH MIGHT REMAIN 0 (THE WAY OLD GATINGMECHANISM DID)
-        # # MODIFIED 5/18/19 OLD:
-        # # since output_states is exactly control_signals is exactly the shape of value, we can just construct it here
-        # self.defaults.value = np.array([[ControlSignal.defaults.allocation]
-        #                                          for i in range(len(self._output_states))])
-        # self.parameters.value.set(copy.deepcopy(self.defaults.value))
-        #
-        # # Assign ModulatorySignal's variable to index of owner's value
-        # modulatory_signal._variable_spec = [(OWNER_VALUE, len(self.defaults.value) - 1)]
-        # if not isinstance(modulatory_signal.owner_value_index, int):
-        #     raise ModulatoryMechanismError(
-        #             "PROGRAM ERROR: The \'owner_value_index\' attribute for {} of {} ({})is not an int."
-        #                 .format(modulatory_signal.name, self.name, modulatory_signal.owner_value_index))
-        # # Validate index
-        # try:
-        #     self.defaults.value[modulatory_signal.owner_value_index]
-        # except IndexError:
-        #     raise ModulatoryMechanismError("Index specified for {} of {} ({}) "
-        #                                    "exceeds the number of items of its {} ({})".
-        #                                    format(modulatory_signal.__class__.__name__, self.name,
-        #                                           modulatory_signal.owner_value_index,
-        #                                           MODULATORY_ALLOCATION, len(self.defaults.value)
-        #         )
-        #     )
-        # # MODIFIED 5/18/19 NEW: [JDC]
-        # # Adjust shape of ModulatoryMechanism's value parameter to accomodate modulatory_signal
-        # # - check modulatory_signal's owner_value_index (the value of the ModulatoryMechanism to which it refers)
-        # # - if it's index is within the range of number of items already on value, then leave as is
-        # # - if it's index is outside the range, then add a new item and reassign value accordingly
-        # self.defaults.value = np.array([[type(modulatory_signal).defaults.allocation]
-        #                                          for i in range(len(self._output_states))])
-        # self.parameters.value.set(copy.deepcopy(self.defaults.value))
-        #
-        # # Assign ModulatorySignal's variable to index of owner's value
-        # modulatory_signal._variable_spec = [(OWNER_VALUE, len(self.defaults.value) - 1)]
-        # if not isinstance(modulatory_signal.owner_value_index, int):
-        #     raise ModulatoryMechanismError(
-        #             "PROGRAM ERROR: The \'owner_value_index\' attribute for {} of {} ({})is not an int."
-        #                 .format(modulatory_signal.name, self.name, modulatory_signal.owner_value_index))
-        # # Validate index
-        # try:
-        #     self.defaults.value[modulatory_signal.owner_value_index]
-        # except IndexError:
-        #     raise ModulatoryMechanismError("Index specified for {} of {} ({}) "
-        #                                    "exceeds the number of items of its {} ({})".
-        #                                    format(modulatory_signal.__class__.__name__, self.name,
-        #                                           modulatory_signal.owner_value_index,
-        #                                           MODULATORY_ALLOCATION, len(self.defaults.value)
-        #         )
-        #     )
-        # MODIFIED 5/18/19 NEWER:
-        # # Adjust shape of ModulatoryMechanism's value parameter to accomodate modulatory_signal
-        self.defaults.value = np.array([[type(modulatory_signal).defaults.allocation]
-                                                 for i in range(len(self._output_states))])
-        self.parameters.value.set(copy.deepcopy(self.defaults.value))
-        if isinstance(self.function, DefaultAllocationFunction):
-            self.function.num_modulatory_signals = len(self._output_states)
-
-        # Assign ModulatorySignal's variable to index of owner's value
-        modulatory_signal._variable_spec = [(OWNER_VALUE, len(self.defaults.value) - 1)]
-        if not isinstance(modulatory_signal.owner_value_index, int):
-            raise ModulatoryMechanismError(
-                    "PROGRAM ERROR: The \'owner_value_index\' attribute for {} of {} ({})is not an int."
-                        .format(modulatory_signal.name, self.name, modulatory_signal.owner_value_index))
-        # Validate index
-        try:
-            self.defaults.value[modulatory_signal.owner_value_index]
-        except IndexError:
-            raise ModulatoryMechanismError("Index specified for {} of {} ({}) "
-                                           "exceeds the number of items of its {} ({})".
-                                           format(modulatory_signal.__class__.__name__, self.name,
-                                                  modulatory_signal.owner_value_index,
-                                                  MODULATORY_ALLOCATION, len(self.defaults.value)
-                )
-            )
-        # MODIFIED 5/18/19 END
 
         return modulatory_signal
 
