@@ -241,7 +241,7 @@ from psyneulink.core.scheduling.scheduler import Scheduler
 import numpy as np
 import copy
 
-from collections import Iterable
+from collections.abc import Iterable
 from toposort import toposort
 
 import logging

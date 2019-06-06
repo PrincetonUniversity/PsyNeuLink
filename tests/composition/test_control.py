@@ -7,6 +7,7 @@ import re
 
 from psyneulink.core.components.functions.optimizationfunctions import OptimizationFunctionError
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 
 
 class TestControlMechanisms:
@@ -23,7 +24,11 @@ class TestControlMechanisms:
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
-                                                control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
+                                                control_signals=[
+                                                    {PROJECTIONS: (pnl.SLOPE, m1),
+                                                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                                    {PROJECTIONS: (pnl.SLOPE, m2),
+                                                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
 
@@ -43,7 +48,11 @@ class TestControlMechanisms:
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
-                                                control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
+                                                control_signals=[
+                                                    {PROJECTIONS: (pnl.SLOPE, m1),
+                                                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                                    {PROJECTIONS: (pnl.SLOPE, m2),
+                                                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
 
@@ -216,16 +225,20 @@ class TestModelBasedOptimizationControlMechanisms:
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
-        comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
-                                                                                  features=[Input.input_state, reward.input_state],
-                                                                                  feature_function=pnl.AdaptiveIntegrator(rate=0.5),
-                                                                                  objective_mechanism=pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT),
-                                                                                                                             monitor=[reward,
-                                                                                                                                                      Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
-                                                                                                                                                      (Decision.output_states[pnl.RESPONSE_TIME], -1, 1)]),
-                                                                                  function=pnl.GridSearch(),
-                                                                                  control_signals=[("drift_rate", Decision),
-                                                                                                   ("threshold", Decision)])
+        comp.add_controller(controller=pnl.OptimizationControlMechanism(
+                                                agent_rep=comp,
+                                                features=[Input.input_state, reward.input_state],
+                                                feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                                                objective_mechanism=pnl.ObjectiveMechanism(
+                                                        function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                                                        monitor=[reward,
+                                                                 Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
+                                                                 (Decision.output_states[pnl.RESPONSE_TIME], -1, 1)]),
+                                                function=pnl.GridSearch(),
+                                                control_signals=[{PROJECTIONS: ("drift_rate", Decision),
+                                                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                                                 {PROJECTIONS: ("threshold", Decision),
+                                                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
                                        )
 
         comp.enable_controller = True

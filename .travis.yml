@@ -28,7 +28,6 @@ env: PYTHONWARNINGS="ignore::DeprecationWarning"
 # Cache installed python packages
 cache:
   pip
-  apt
 
 addons:
   apt:

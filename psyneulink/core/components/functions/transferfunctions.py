@@ -51,15 +51,15 @@ from psyneulink.core.components.functions.function import \
     Function_Base, FunctionError, function_keywords, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
 from psyneulink.core.components.component import function_type
 from psyneulink.core.globals.keywords import \
-    PER_ITEM, TRANSFER_FUNCTION_TYPE, IDENTITY_FUNCTION, \
-    LINEAR_FUNCTION, SLOPE, INTERCEPT, PARAMETER_STATE_PARAMS, \
-    VARIABLE, EXPONENTIAL_FUNCTION, RATE, BIAS, SCALE, OFFSET, \
-    LOGISTIC_FUNCTION, GAIN, X_0, RELU_FUNCTION, LEAK, VARIANCE, \
-    SOFTMAX_FUNCTION, ALL, MAX_VAL, MAX_INDICATOR, PROB, OUTPUT_TYPE, PROB_INDICATOR, LINEAR_MATRIX_FUNCTION, MATRIX, \
-    RECEIVER, HAS_INITIALIZERS, MATRIX_KEYWORD_VALUES, IDENTITY_MATRIX, HOLLOW_MATRIX, \
-    MATRIX_KEYWORD_NAMES, AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX, kwPreferenceSetName, \
-    GAUSSIAN_FUNCTION, STANDARD_DEVIATION, GAUSSIAN_DISTORT_FUNCTION
-
+    ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, GAUSSIAN_DISTORT_FUNCTION, GAIN, \
+    FULL_CONNECTIVITY_MATRIX, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
+    IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, \
+    LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
+    MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, OFFSET, \
+    PARAMETER_STATE_PARAMS, PER_ITEM, PROB, OUTPUT_TYPE, PROB_INDICATOR, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, \
+    STANDARD_DEVIATION, SCALE, SLOPE, SOFTMAX_FUNCTION, TRANSFER_FUNCTION_TYPE,\
+    VARIANCE, VARIABLE, X_0, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
 from psyneulink.core.globals.context import ContextFlags
@@ -67,10 +67,7 @@ from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
 
 __all__ = ['TransferFunction', 'Identity', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'Tanh', 'ReLU',
-           'Gaussian', 'GaussianDistort', 'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
-
-BOUNDS = 'bounds'
-MODE = 'mode'
+           'Gaussian', 'GaussianDistort', 'SoftMax', 'get_matrix']
 
 
 class TransferFunction(Function_Base):

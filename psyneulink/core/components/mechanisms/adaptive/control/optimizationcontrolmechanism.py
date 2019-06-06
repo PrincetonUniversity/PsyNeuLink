@@ -389,8 +389,8 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from collections import Iterable, namedtuple
-from typing import NamedTuple
+from collections.abc import Iterable
+from collections import namedtuple
 
 from psyneulink.core.components.functions.function import \
     Function_Base, ModulationParam, _is_modulation_param, is_function_type
@@ -878,7 +878,7 @@ class OptimizationControlMechanism(ControlMechanism):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
 
         if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING):
-            return defaultControlAllocation
+            return [defaultControlAllocation]
 
         # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
         self.parameters.feature_values.set(_parse_feature_values_from_variable(variable), execution_id)
