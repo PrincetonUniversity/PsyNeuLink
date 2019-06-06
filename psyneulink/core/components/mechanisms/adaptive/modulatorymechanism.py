@@ -1227,43 +1227,89 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self._modulatory_signals = ContentAddressableList(component_type=ModulatorySignal,
                                                        list=[state for state in self.output_states
                                                              if isinstance(state, (ControlSignal, GatingSignal))])
+        num_mod_signals = len(self._modulatory_signals)
+        len_fct_value = len(self.function.value)
 
         # Assign ModulatoryMechanism's default modulatory_allocation (value) from its modulatory_siginals' defaults,
         # and assign each ModulatorySignal's variable_spec (i.e., its index into the Mechanism's value)
         for modulatory_signal in self.modulatory_signals:
-            self.defaults.value = np.array([modulatory_signal.parameters.variable.default_value
-                                            for i in range(len(self._output_states))])
-            self.parameters.value.set(copy.deepcopy(self.defaults.value))
+            # # MODIFIED 6/6/19 OLD:
+            # self.defaults.value = np.array([modulatory_signal.parameters.variable.default_value
+            #                                 for i in range(len(self._output_states))])
+            # self.parameters.value.set(copy.deepcopy(self.defaults.value))
+            # if isinstance(self.function, DefaultAllocationFunction):
+            #     self.function.num_modulatory_signals = len(self._output_states)
+            #
+            # # Assign each ModulatorySignal's variable_spec to index of ModulatoryMechanism's value
+            # for i, modulatory_signal in enumerate(self.modulatory_signals):
+            #     # FIX: 5/18/19 - NEEDS TO ACCOMODATE owner_value_index WHICH MIGHT REMAIN 0 (AS OLD GATINGMECHANISM DID)
+            #     modulatory_signal._variable_spec = [(OWNER_VALUE, i)]
+            #     if not isinstance(modulatory_signal.owner_value_index, int):
+            #         raise ModulatoryMechanismError(
+            #                 "PROGRAM ERROR: The \'owner_value_index\' attribute for {} of {} ({})is not an int."
+            #                     .format(modulatory_signal.name, self.name, modulatory_signal.owner_value_index))
+            #     # Validate index
+            #     try:
+            #         self.defaults.value[modulatory_signal.owner_value_index]
+            #     except IndexError:
+            #         raise ModulatoryMechanismError("Index specified for {} of {} ({}) "
+            #                                        "exceeds the number of items of its {} ({})".
+            #                                        format(modulatory_signal.__class__.__name__, self.name,
+            #                                               modulatory_signal.owner_value_index,
+            #                                               MODULATORY_ALLOCATION, len(self.defaults.value)))
+
+            # MODIFIED 6/6/19 NEW: [JDC]
+            # self.defaults.value = np.array([modulatory_signal.parameters.variable.default_value
+            #                                 for i in range(len(self._output_states))])
+            # self.parameters.value.set(copy.deepcopy(self.defaults.value))
             if isinstance(self.function, DefaultAllocationFunction):
+                self.defaults.value = np.array([modulatory_signal.parameters.variable.default_value
+                                                for i in range(len(self._output_states))])
+                self.parameters.value.set(copy.deepcopy(self.defaults.value))
                 self.function.num_modulatory_signals = len(self._output_states)
+
+                    # raise ModulatoryMechanismError(f"Number of {OutputState.__name__}s for {self.name} "
+                    #                                f"({len(output_states)}) does not match the number of items "
+                    #                                f"({len(value)}) in its function's value ()")
 
             # Assign each ModulatorySignal's variable_spec to index of ModulatoryMechanism's value
             for i, modulatory_signal in enumerate(self.modulatory_signals):
-                # FIX: 5/18/19 - NEEDS TO ACCOMODATE owner_value_index WHICH MIGHT REMAIN 0 (AS OLD GATINGMECHANISM DID)
-                modulatory_signal._variable_spec = [(OWNER_VALUE, i)]
-                if not isinstance(modulatory_signal.owner_value_index, int):
-                    raise ModulatoryMechanismError(
-                            "PROGRAM ERROR: The \'owner_value_index\' attribute for {} of {} ({})is not an int."
-                                .format(modulatory_signal.name, self.name, modulatory_signal.owner_value_index))
-                # Validate index
-                try:
-                    self.defaults.value[modulatory_signal.owner_value_index]
-                except IndexError:
-                    raise ModulatoryMechanismError("Index specified for {} of {} ({}) "
-                                                   "exceeds the number of items of its {} ({})".
-                                                   format(modulatory_signal.__class__.__name__, self.name,
-                                                          modulatory_signal.owner_value_index,
-                                                          MODULATORY_ALLOCATION, len(self.defaults.value)))
 
-        # If the ModulatoryMechanism's modulatory_allocation has more than one item,
-        #    warn if the number of items does not equal the number of its ControlSignals
-        #    (note:  there must be fewer ControlSignals than items in control_allocation,
-        #            as the reverse is an error that is checked for in _instantiate_control_signal)
-        if len(self.defaults.value) > 1 and len(self.modulatory_signals) != len(self.defaults.value):
-            if self.verbosePref:
-                warnings.warning("The number of {}s for {} ({}) does not equal the number of items in its {} ({})".
-                                 format(ControlSignal.__name__, self.name, len(self.modulatory_signals),
-                                        MODULATORY_ALLOCATION, len(self.defaults.value)))
+                # If number of modulatory_signals is same as number of items in function's value,
+                #    assume that each ModulatorySignal is assigned to one of the function's values
+                if len_fct_value == num_mod_signals:
+                    modulatory_signal._variable_spec = [(OWNER_VALUE, i)]
+
+                # # If function returns only one value, but there are multiple ModulatorySignals,
+                # #    then use their specifications;  default (OWNER_VALUE, 0) will assign them all to that one value
+                # #    or, if they have been explicitly specified and it doesn't fly, it will be detected below.
+                # # Otherwise,
+                # else len_fct_value==1 and len_fct_value != num_mod_signals:
+                # modulatory_signal._variable_spec = [(OWNER_VALUE, index)]
+
+                if not isinstance(modulatory_signal.owner_value_index, int):
+                    assert False, \
+                        f"PROGRAM ERROR: The \'owner_value_index\' attribute for {modulatory_signal.name} " \
+                            f"of {self.name} ({modulatory_signal.owner_value_index})is not an int."
+        #       # Validate index
+        #         try:
+        #             self.defaults.value[modulatory_signal.owner_value_index]
+        #         except IndexError:
+        #             raise ModulatoryMechanismError(f"Index specified for {modulatory_signal.__class__.__name__} of "
+        #                                            f"{self.name} ({modulatory_signal.owner_value_index}) exceeds the "
+        #                                            f"number of items of its {MODULATORY_ALLOCATION} "
+        #                                            f"({self.defaults.value}).")
+        #     # MODIFIED 6/6/19 END
+        #
+        # # If the ModulatoryMechanism's modulatory_allocation has more than one item,
+        # #    warn if the number of items does not equal the number of its ControlSignals
+        # #    (note:  there must be fewer ControlSignals than items in control_allocation,
+        # #            as the reverse is an error that is checked for in _instantiate_control_signal)
+        # if len(self.defaults.value) > 1 and len(self.modulatory_signals) != len(self.defaults.value):
+        #     if self.verbosePref:
+        #         warnings.warning("The number of {}s for {} ({}) does not equal the number of items in its {} ({})".
+        #                          format(ControlSignal.__name__, self.name, len(self.modulatory_signals),
+        #                                 MODULATORY_ALLOCATION, len(self.defaults.value)))
 
     def _instantiate_modulatory_signal(self,  modulatory_signal, context=None):
         '''Parse and instantiate modulatory_signal specifications (in call to State._parse_state_spec)
@@ -1530,6 +1576,21 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         for proj in dependent_projections:
             proj._activate_for_compositions(compositions)
+
+    # def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None, **kwargs):
+    #
+    #     value = super()._execute(variable, execution_id, runtime_params, context, **kwargs)
+    #
+    #     FIX: 6/6/19 JDC: THIS DOESN'T WORK SINCE CAN HAVE OUTPUTSTATES THAT ALREADY ALL REFERENCE A SINGLE VALUE ITEM
+    #     output_states = self.output_states
+    #     if output_states and len(output_states) != len(variable):
+    #         if len(value)==1:
+    #             value = np.tile(value, (len(output_states), 1))
+    #         else:
+    #             raise ModulatoryMechanismError(f"Number of {OutputState.__name__}s for {self.name} "
+    #                                            f"({len(output_states)}) does not match the number of items "
+    #                                            f"({len(value)}) in its function's value ()")
+    #     return value
 
     def _apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
         self._apply_modulatory_allocation(self, control_allocation, runtime_params, context, execution_id=None)

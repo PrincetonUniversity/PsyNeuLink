@@ -386,10 +386,11 @@ some criterion
 
 <EVC EXAMPLE HERE>
 Demonstrates:
+• Explain use and sizing of default_variable, and relate to:
 • Use of inputstates and outputstates (INputStates and OUtputStates allow Mechanisms to differentially manage
 projections from different sources/destinations
-•  assignment of a custom function to a Mechanism
-
+• Assignment of a custom function to a Mechanism
+• 
 
 .. _BasicsAndSampler_Control:
 
