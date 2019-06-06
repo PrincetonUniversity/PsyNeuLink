@@ -149,7 +149,6 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
     # Create init function
     init_scalar = ir.Function(ctx.module, init_ty, name="__pnl_builtin_mt_rand_init_scalar")
     init_scalar.attributes.add('argmemonly')
-    init_scalar.attributes.add('alwaysinline')
 
     block = init_scalar.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
@@ -203,7 +202,6 @@ def _setup_mt_rand_init(ctx, state_ty, init_scalar):
     # Create init_array function
     init = ir.Function(ctx.module, init_ty, name="__pnl_builtin_mt_rand_init")
     init.attributes.add('argmemonly')
-    init.attributes.add('alwaysinline')
 
     block = init.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
@@ -303,7 +301,6 @@ def _setup_mt_rand_integer(ctx, state_ty):
     gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), int64_ty.as_pointer()))
     gen_int = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_int32")
     gen_int.attributes.add('argmemonly')
-    gen_int.attributes.add('alwaysinline')
 
     block = gen_int.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
@@ -413,7 +410,6 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
     gen_float = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_double")
     gen_float.attributes.add('argmemonly')
-    gen_float.attributes.add('alwaysinline')
 
     block = gen_float.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
@@ -453,7 +449,7 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
     gen_normal = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_normal")
     gen_normal.attributes.add('argmemonly')
-    gen_normal.attributes.add('alwaysinline')
+    gen_normal.attributes.add('noinline')
 
     block = gen_normal.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
