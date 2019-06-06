@@ -18,7 +18,7 @@
 import numpy as np
 
 import typecheck as tc
-from collections import Iterator
+from collections.abc import Iterator
 from inspect import isclass
 from decimal import Decimal, getcontext
 from numbers import Number
@@ -217,7 +217,12 @@ class SampleSpec():
         getcontext().prec = _global_precision
 
 
-allowable_specs = (list, np.array, range, np.arange, callable, tuple, SampleSpec)
+allowable_specs = (tuple, list, np.array, range, np.arange, callable, SampleSpec)
+def is_sample_spec(spec):
+    if spec is None or type(spec) in allowable_specs:
+        return True
+    return False
+
 
 class SampleIterator(Iterator):
     """
@@ -300,7 +305,7 @@ class SampleIterator(Iterator):
         # FIX Are nparrays allowed? Below assumes one list dimension. How to handle nested arrays/lists?
         self.specification = specification
 
-        if isinstance(specification, range):
+        if isinstance(specification, (tuple, range)):
             specification = list(specification)
 
         elif callable(specification):

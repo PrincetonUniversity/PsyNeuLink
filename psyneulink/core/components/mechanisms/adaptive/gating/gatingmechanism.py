@@ -386,8 +386,8 @@ class GatingMechanism(ModulatoryMechanism):
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        value = Parameter(np.array(defaultGatingAllocation), aliases='modulatory_allocation')
-        gating_allocation = Parameter(np.array(defaultGatingAllocation),
+        value = Parameter(np.array([defaultGatingAllocation]), aliases='modulatory_allocation')
+        gating_allocation = Parameter(np.array([defaultGatingAllocation]),
                                       getter=_gating_allocation_getter,
                                       setter=_gating_allocation_setter,
                                       read_only=True)

@@ -178,7 +178,7 @@ import numpy as np
 import typecheck as tc
 import warnings
 
-from collections import Iterable
+from collections.abc import Iterable
 from types import MethodType
 
 from psyneulink.core import llvm as pnlvm

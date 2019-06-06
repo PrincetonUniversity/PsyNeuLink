@@ -7,7 +7,8 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.system import System
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, OUTPUT_MEAN, RESULT, OUTPUT_VARIANCE
+from psyneulink.core.globals.keywords import \
+    ALLOCATION_SAMPLES, IDENTITY_MATRIX, OUTPUT_MEAN, RESULT, OUTPUT_VARIANCE, PROJECTIONS
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.scheduling.condition import Never
@@ -526,8 +527,10 @@ def test_laming_validation_specify_control_signals():
             (Decision.RESPONSE_TIME, -1, 1)
         ],
         control_signals=[
-            (DRIFT_RATE, Decision),
-            (THRESHOLD, Decision)
+            {PROJECTIONS: (DRIFT_RATE, Decision),
+             ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+            {PROJECTIONS: (THRESHOLD, Decision),
+             ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}
         ],
         name='EVC Test System'
     )

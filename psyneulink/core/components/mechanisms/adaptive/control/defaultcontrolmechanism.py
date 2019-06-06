@@ -164,7 +164,7 @@ class DefaultControlMechanism(ControlMechanism):
                                                format(control_signal))
 
         # Instantiate input_states and control_allocation attribute for control_signal allocations
-        self._instantiate_default_input_state(input_name, defaultControlAllocation, context=context)
+        self._instantiate_default_input_state(input_name, [defaultControlAllocation], context=context)
         self.control_allocation = self.input_values
 
         # Call super to instantiate ControlSignal
@@ -237,7 +237,6 @@ class DefaultControlMechanism(ControlMechanism):
         input_state = _instantiate_state(owner=self,
                                          state_type=InputState,
                                          name=input_state_name,
-                                         # state_spec=defaultControlAllocation,
                                          reference_value=np.array(self.defaults.variable[variable_item_index]),
                                          reference_value_name='Default control allocation',
                                          params=None,

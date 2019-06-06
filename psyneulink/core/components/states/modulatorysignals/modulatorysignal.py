@@ -209,7 +209,8 @@ from psyneulink.core.components.component import component_keywords
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL
+from psyneulink.core.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL, VARIABLE
+from psyneulink.core.globals.defaults import defaultModulatoryAllocation
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -244,13 +245,14 @@ modulatory_signal_keywords.update(component_keywords)
 
 class ModulatorySignal(OutputState):
     """
-    ModulatorySignal(                               \
-        owner,                                      \
-        function=LinearCombination(operation=SUM),  \
-        modulation=ModulationParam.MULTIPLICATIVE   \
-        projections=None,                           \
-        params=None,                                \
-        name=None,                                  \
+    ModulatorySignal(                                  \
+        owner,                                         \
+        default_allocation=defaultModulatoryAllocation \
+        function=LinearCombination(operation=SUM),     \
+        modulation=ModulationParam.MULTIPLICATIVE      \
+        projections=None,                              \
+        params=None,                                   \
+        name=None,                                     \
         prefs=None)
 
     Subclass of `OutputState` used by an `AdaptiveMechanism <AdaptiveMechanism>` to modulate the value
@@ -288,8 +290,11 @@ class ModulatorySignal(OutputState):
     Arguments
     ---------
 
-    owner : GatingMechanism
+    owner : ModulatoryMechanism
         specifies the `GatingMechanism` to which to assign the ModulatorySignal.
+
+    default_allocation : scalar : defaultModulatoryAllocation
+        specifies the default template and value used for `variable <ModulatorySignal.variable>`.
 
     function : Function or method : default Linear
         specifies the function used to determine the value of the ModulatorySignal from the value of its
@@ -316,11 +321,14 @@ class ModulatorySignal(OutputState):
     owner : AdaptiveMechanism
         the `AdaptiveMechanism <AdaptiveMechanism>` to which the ModulatorySignal belongs.
 
-    variable : number, list or np.ndarray
-        value assigned by the ModulatorySignal's `owner <ModulatorySignal.owner>`, and used by the ModulatorySignal's
-        `function <ModulatorySignal.function>` to compute its `value <ModulatorySignal.value>`.
+    variable : scalar, list or np.ndarray
+        same as `allocation <ModulatorySignal.allocation>`.
 
-    function : TransferFunction :  default Linear(slope=1, intercept=0)
+    allocation : float
+        value used as `variable <ModulatorySignal.variable>` for the ModulatorySignal's `function
+        <ModulatorySignal.function>` to determine its `ModulatorySignal.value`.
+
+    function : TransferFunction
         provides the ModulatorySignal's `value <ModulatorySignal.value>`; the default is an identity function that
         assigns `variable <ModulatorySignal.variable>` as ModulatorySignal's `value <ModulatorySignal.value>`.
 
@@ -403,7 +411,7 @@ class ModulatorySignal(OutputState):
                  owner=None,
                  size=None,
                  reference_value=None,
-                 variable=None,
+                 default_allocation=defaultModulatoryAllocation,
                  projections=None,
                  modulation=None,
                  index=None,
@@ -413,8 +421,16 @@ class ModulatorySignal(OutputState):
                  prefs=None,
                  context=None,
                  function=None,
+                 **kwargs
                  ):
 
+        if kwargs:
+            if VARIABLE in kwargs:
+                default_allocation = kwargs.pop(VARIABLE, default_allocation)
+            if kwargs:
+                raise TypeError(f'{self.__class__.__name__} got one or more unexpected keyword argument(s): '
+                                f'{", ".join([repr(k) for k in list(kwargs.keys())])}')
+        
         # Deferred initialization
         # if self.context.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
         if self.context.initialization_status & ContextFlags.DEFERRED_INIT:
@@ -432,7 +448,7 @@ class ModulatorySignal(OutputState):
 
         super().__init__(owner=owner,
                          reference_value=reference_value,
-                         variable=variable,
+                         variable=default_allocation,
                          size=size,
                          projections=projections,
                          index=index,

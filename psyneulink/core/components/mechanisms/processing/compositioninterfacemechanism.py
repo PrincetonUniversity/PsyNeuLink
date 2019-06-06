@@ -48,7 +48,7 @@ Class Reference
 
 import typecheck as tc
 
-from collections import Iterable
+from collections.abc import Iterable
 
 from psyneulink.core.components.functions.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism

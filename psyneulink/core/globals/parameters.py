@@ -265,7 +265,7 @@ def get_validator_by_type_only(valid_types):
         :return: A validation method for use with Parameters classes that rejects any assignment that is not one of the **valid_types**
         :rtype: types.FunctionType
     """
-    if not isinstance(valid_types, collections.Iterable):
+    if not isinstance(valid_types, collections.abc.Iterable):
         valid_types = [valid_types]
 
     def validator(self, value):

@@ -335,7 +335,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING or
                 self.owner.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING):
-            return defaultControlAllocation
+            return [defaultControlAllocation]
 
         # Get value of, or set default for standard args
         if controller is None:
