@@ -285,15 +285,18 @@ Dynamics of Execution
 ..     the value specified in its threhosld parameter, as follows::
 
 One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
-different time scales.  In the Stroop model above, all of the Mechanisms complete their computations in
-a single execution. For example, the `DDM` Mechanism uses `DriftDiffusionAnalytical` as its default `function <DDM
-.function>` that computes, each time it is executed, an analytic solution to the distribution of responses expected
-for a DDM integration process for a specified `threshold <DriftDiffusionAnalytical.threshold>`, and returns the
-probability of crossing one of the thresholds and the mean crossing time.  However, it is also possible to simulate
-the dynamics of processing at a finer time scale, simply by assigning the DDM `DriftDiffusionIntegrator` as its
-function, and specifying in the call to the model's `run <Composition.run>` method that it terminate a `TRIAL
-<TimeScale.TRIAL>` only when the ``decision`` Mechanism has completed its execution::
+different time scales.  By default, each Mechanism executes once per pass through the Composition, in the order
+determined by the projections between (and shown in the `show_graph <Composition.show_graph>` method.  In the
+``Stroop_model`` above, the ``decison`` Mechanism executes once per pass, just after the ``ouput`` Mechanism.  This
+is a `DDM` Mechanism, that uses `DriftDiffusionAnalytical` as its default `function <DDM.function>`, which computes an
+analytic solution to the distribution of responses the DDM integration process (at a specified `threshold
+<DriftDiffusionAnalytical.threshold>`), and returns both the probability of threshold crossing and the mean
+crossing time.  However, it is also possible to simulate the dynamics of the integration process by assigning
+`DriftDiffusionIntegrator` as the Mechanism's `function <DDM.function>` and specifying, in the call to the
+Composition's `run <Composition.run>` method, that a `TRIAL <TimeScale.TRIAL>` terminate only when the ``decision``
+Mechanism has completed its execution, as follows::
 
+    # Modify consruction of decision Mechanism:
     decision = DDM(name='DECISION',
                    input_format=ARRAY,
                    function=DriftDiffusionIntegrator(noise=0.5, threshold=20)
@@ -304,167 +307,88 @@ function, and specifying in the call to the model's `run <Composition.run>` meth
     print (Stroop_model.results)
     >> [[array([[20.]]), array([[126.]])]]
 
-If the `DriftDiffusionIntegrator` is used as the DDM's `function <DDM.function>`, its default output is the value
-of its decision variable when it completed execution (which should be equal to either the postive or negative value
-of its threshold) and the number of executions it took to do so. So, that is what is recorded in the `results
-<Composition.results>` attribute of the Stroop model, as shown above (note: because there is noise in the integration
-process, running the model several times produces varying response times).
+The output is now the result of the `DriftDiffusionIntegrator`, which is the value of the decision variable when it
+crosses threshold (which is, by definition, equal to either the postive or negative value of the `threshold
+<DriftDiffusionAnalytical.threshold>`) and the number of executions it took to do so.  Since the ``decsion``
+Mechanism is the last (`TERMINAL`) Mechanism of the Composition, it is also its `OUTPUT` Mechanism, and therefore it
+output is recorded in the `results <Composition.results>` attribute of the Stroop model, as shown above (note: because
+there is noise in the integration process, running the model several times produces varying response times).
 
-This version of the model included Mechanisms that executed over different time-scales:  the ProcessingMechanisms
+This version of the model includes Mechanisms that execute over different time-scales:  the ProcessingMechanisms
 completed their computations in a single execution, whereas the DDM took many executions to complete its computation.
-In this case, the coordination of time scales was straight forward, since the DDM was the last Mechanism in the
+In this case, the coordination of time scales was straightforward, since the DDM was the last Mechanism in the
 Composition:  the ProcessingMechanisms in each pathway executed in sequence, ending in the DDM wich executed until
-it was complete.  PsyNeuLink's `Scheduler` can be used to handle more complicated dependencies among Mechanisms that
-execute over different time scales, by assigning one or more `Conditions <Condition>` for execution of the Mechanisms.
-Conditions can specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each
-`TRIAL <TimeScale.TRIAL>`), its behavior relative to that of one or more other Components (e.g., how many times it
-should wait for another Mechanism to execute before it does so), or even arbitrary functions.  For example, the
+it was complete.  PsyNeuLink's `Scheduler` can also be used to implement more complicated dependencies among Mechanisms
+that execute over different time scales, by assigning one or more `Conditions <Condition>` for execution of the
+Mechanisms to the `Scheduler` for the Composition. Conditions can specify the isolated behavior of a Mechanism (e.g.,
+how many times it should be executed in each `TRIAL <TimeScale.TRIAL>`), its behavior relative to that of one or more
+other Components (e.g., how many times it should wait for another Mechanism to execute before it does so), or even
+arbitrary functions (e.g., a convergence criterion for the settling of a recurrent network). For example, the
 following implements a verion of the model above that uses a leaky competing accumulator `<https://www.ncbi.nlm.nih
-.gov/pubmed/11488378>`_ (`LCAMechanism`) for the task layer, that settles for a specified number of executions before
-the color and word hidden layers execute -- simulating a situation in which the task instruction is processed before
-processing the color or word stimuli::
+.gov/pubmed/11488378>`_ (`LCAMechanism`) for the ``task`` Mechanism, that settles for a specified number of executions
+before the color and word hidden layers execute -- simulating a situation in which the task instruction is processed
+before processing the color or word stimuli::
 
-    # Modify task Mechanism:
-    task = LCAMechanism(name='TASK', size=2, )
+    # Modify consruction of task Mechanism:
+    task = LCAMechanism(name='TASK', size=2)
 
-    # Assign conditions:
-    settling_time = 100
-    scheduler = Scheduler(composition=Stroop_model)
-    scheduler.add_condition(color_hidden, EveryNCalls(task, settling_time))
-    scheduler.add_condition(word_hidden, EveryNCalls(task, settling_time))
-    scheduler.add_condition(output,All(EveryNCalls(color_hidden, 1),
-                                       EveryNCalls(word_hidden, 1)))
-    scheduler.add_condition(decision, EveryNCalls(output, 1))
+    # Assign conditions to scheduler:
+    Stroop_model.processing_scheduler.add_condition(color_hidden, EveryNExecutions(task, 100))
+    Stroop_model.processing_scheduler.add_condition(word_hidden, EveryNExecutions(task, 100))
 
     # Run with scheduler:
-    Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color},
-                     scheduler_processing=scheduler)
+    Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color})
     print (Stroop_model.results)
     >>[[array([[20.]]), array([[42.]])]]
 
+In the example above, the ``color_hidden`` and ``word_hidden`` Mechanisms both wait to execute until the ``task``
+Mechanism has executed 100 times.  They could also each have been made to wait different number of times;  in that case,
+since the ``output`` Mechanism depends on both them, it would have waited until they had both executed before doing so
+itself.  This imposes a fixed "setting time" (100 executions) on the ``task`` Mechanism. However, it could also be
+allowed to settle until it reaches some criterion.  For example, the ``color_hidden`` and ``word_hidden`` can be
+configured to wait until the value of the ``task`` Mechanism "converges", by changing the conditions for execution
+of the ``color_hidden`` and ``task_hidden`` Mechanism's to depend on a function, as follows::
 
-.. that stimulus-response mapping task, with a recurrent
-.. network that receives
-.. input from and feeds back to the feed-forward
-.. network, to
-.. provide a simple form of maintained context.  To allow the recurrent layer to settle following the presentation of
-.. each stimulus (which is not required for the feedforward network), the Scheduler can be used to execute the recurrent
-.. layer multiple times but the feedforward network only once in each `TRIAL <TimeScale.TRIAL>`, as follows
+    # Define a function that detects when the a Mechanism's value has converged, such that the change in all of the
+    elements of its value attribute from the last execution (given by its delta attribute) falls below ``epsilon``
 
-.. The following example shows how PsyNeuLink's `Scheduler` can be used to
-.. construct models involving more complicated dependencies among Mechanisms that execute over different time scales.
-
-.. This is done by assigning one or more `Conditions <Condition>` to any Mechanism. Conditions can specify the isolated
-.. behavior of a Mechanism (e.g., how many times it should be executed in each `TRIAL`), or its behavior relative to
-.. that of one or more other Components (e.g., how many times it should execute or when it should stop executing
-.. relative to other Mechanisms).
-
-.. ORIGINAL VERSION:
-.. One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
-.. different time scales.  A Composition can include some Mechanisms that carry out "single-shot" computations with ones
-.. that carry out more fine-grained updates, or that depend another Mechanism to complete its execution before proceding.
-.. For example, in the model above, all of the Mechanisms were configured to execute in a single pass.  However, one or
-.. more layers of the feedforward network can be changed to time-average it input by replacing the ProcessingMechanism
-.. with a `TransferMechanism` -- a more powerful type that can be assigned an `integrator_mode <TransferMechanism
-.. .integrator_mode>`.  Simiarly, by default, the DDM Mechanism uses `DriftDiffusionAnalytical` Function, but that can be
-.. replaced by the `DriftDiffusionIntegrator` to carry out path (Euler) integraton.  One issue that arises when mixing
-.. single-shot and integration computations in the same model is the coordination of their time scales:  integration is
-.. generally assumed to occur on a finer time scale than single-shot compuations (which are often used for efficiency to
-.. implement asymptotic outcomes).  A similar issue arises when mixing recurrent networks that involve a settling
-.. process (for which there is often not a clear analytical solution) with single-shot, feedforward computations.  The
-.. following example illustrates how these situations can be managed with the `Scheduler` in PsyNeuLink.
-
-.. By default, when a Composition is run, each Component in it is
-.. executed at least once.  However, PsyNeuLink has a `Scheduler` that can be used to design more complex dynamics of
-.. execution by assigning one or more `Conditions <Condition>` to any Mechanism. Conditions can specify the isolated
-.. behavior of a Mechanism (e.g., how many times it should be executed in each `TRIAL`), or its behavior relative to
-.. that of one or more other Components (e.g., how many times it should execute or when it should stop executing
-.. relative to other Mechanisms).
-
-.. XXX REWORK TO FLOW FROM ABOVE:
-.. As another example, that illustrates how execution of one Mechanism can be made contingent on the completion of
-.. another, the following script implements a Composition that integrates a 3-layered feedforward network for
-.. performing a simple stimulus-response mapping task, with a recurrent network that receives input from and feeds back
-.. to the feed-forward network, to provide a simple form of maintained context.  To allow the recurrent layer to settle
-.. following the presentation of each stimulus (which is not required for the feedforward network), the Scheduler can
-.. be used to execute the recurrent layer multiple times but the feedforward network only once in each `TRIAL`, as
-.. follows::
-
-    # Construct the Mechanisms:
-    input_layer = ProcessingMechanism(name='INPUT', size=10)
-    hidden_layer = ProcessingMechanism(name='HIDDEN', size=100)
-    output_layer = ProcessingMechanism(name='OUTPUT', size=10)
-    recurrent_layer = RecurrentTransferMechanism(name='RECURRENT', size=10)
-
-    # Construct the model:
-    full_model = Composition()
-    feed_forward_network = [input_layer, hidden_layer, output_layer]
-    recurrent_network = [hidden_layer, recurrent_layer, hidden_layer]
-    full_model.add_linear_processing_pathway(feed_forward_network)
-    full_model.add_linear_processing_pathway(recurrent_network)
-
-    # Construct the Scheduler:
-    model_scheduler = Scheduler(composition=model_scheduler)
-
-    # Add Conditions to the Scheduler:
-    model_scheduler.add_condition(hidden_layer,
-                                  Any(EveryNCalls(input_layer, 1),
-                                      EveryNCalls(recurrent_layer, 10)))
-    model_scheduler.add_condition(output_layer,
-                                  EveryNCalls(hidden_layer, 2))
-
-The two Conditions added to the Scheduler specify that:
-
-   1. ``hidden_layer`` should execute whenever either ``input_hidden_layer`` has executed once (to encode the stimulus
-      and make available to the ``recurrent_layer``), or when the ``recurrent_layer`` has executed 10 times (to allow
-      it to settle on a context representation and provide that back to the ``hidden_layer``)
-
-   2. the ``output_layer`` should execute only after the ``hidden_layer`` has executed twice (to integrate its inputs
-      from both ``input_layer`` and ``recurrent_layer``).
-
-More sophisticated Conditions can also be created.  For example, the ``recurrent_layer`` can be scheduled to
-execute until the change in its value falls below a specified threshold as follows::
-
-    # Define a function ``converge`` that detects when a Mechanism has converged such that
-    # none of elements has changed more than ``epsilon`` since the last execution
     def converge(mech, thresh):
-        for val in mech.delta:
-            if abs(val) >= thresh:
-                return False
-        return True
+        return all(abs(v) <= thresh for v in mech.delta)
+
+    # Add Conditions to the ``color_hidden`` and ``word_hidden`` Mechanisms that depend on the converge function:
     epsilon = 0.01
+    Stroop_model.processing_scheduler.add_condition(color_hidden, When(converge, task, epsilon)))
+    Stroop_model.processing_scheduler.add_condition(word_hidden, When(converge, task, epsilon)))
 
-    # Add a Condition to the Scheduler that uses the ``converge`` function to continue
-    # executing the ``recurrent_layer`` while until it has converged
-    model_scheduler.add_condition(hidden_layer,
-                                  Any(EveryNCalls(input_layer, 1),
-                                  EveryNCalls(recurrent_layer, 1)))
-    model_scheduler.add_condition(my_recurrent_layer,
-                                  All(EveryNCalls(hidden_layer, 1),
-                                  WhileNot(converge, recurrent_mech, epsilon)))
+Conditions can be made to depend on any Python function.  There is also a rich set of `pre-defined Conditions
+<Condition_Pre-Specified_List>` (such as ``When`` used in the examples above).  Together, these can be flexibly
+combined to construct virtually any schedule of execution that is logically possible.
 
-Here, the criterion for stopping execution is defined as a function (``converge``), that is used in a `WhileNot`
-Condition.  Any arbitrary Conditions can be created and flexibly combined to construct virtually any schedule of
-execution that is logically sensible.
 
 .. _BasicsAndSampler_Control:
 
 Control
 ~~~~~~~
 
-One of the distinctive features of PsyNeuLink is the ability to easily create models that include control;  that is,
-Mechanism that can evaluate the output of other Mechanisms (or nested Compositions), and use this to regulate
-the processing of those Mechanisms.  For example, the following extension of the Stroop model monitors conflict in
-the output_layer of the Stroop model above on each `TRIAL <TimeScale.TRIAL>`, and uses that to determine how much to
-control to allocate to the ColorNaming vs. WordReading pathways.
+Another distinctive feature of PsyNeuLink is the ability to easily create models that include control;  that is,
+Mechanisms that can evaluate the output of other Mechanisms (or nested Compositions), and use this to regulate the
+processing of those Mechanisms.  For example, the following extension of ``Stroop_model`` monitors conflict in
+the ``output`` Mechanism on each `TRIAL <TimeScale.TRIAL>`, and uses that to regulate processing by the
+``color_hidden`` and ``word_hidden`` Mechanisms::
 
-<CONFLICT MONITORING EXAMPLE HERE>
+    # Construct ControlMechanism:
+    <CONFLICT MONITORING EXAMPLE HERE>
+
 
 A more elaborate example of this model can be found at `BotvinickConflictMonitoringModel`. More complicated forms of
 control are also possible, for example, ones run internal simulations to determine the amount of control to optimize
 some criterion
 
 <EVC EXAMPLE HERE>
+Demonstrates:
+• Use of inputstates and outputstates (INputStates and OUtputStates allow Mechanisms to differentially manage
+projections from different sources/destinations
+•  assignment of a custom function to a Mechanism
 
 
 .. _BasicsAndSampler_Control:

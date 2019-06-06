@@ -137,6 +137,7 @@ class TestLCControlMechanism:
                 # function=pnl.Linear,
                 default_variable=[1],
                 monitor_for_control=Ty,
+                objective_mechanism=True,
                 control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
                                                   projections=(pnl.SLOPE,Tz)))
         P1=pnl.Process(pathway=[Tx,Tz])
