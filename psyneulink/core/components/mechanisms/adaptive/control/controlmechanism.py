@@ -725,6 +725,10 @@ class ControlMechanism(ModulatoryMechanism):
                                                prefs=prefs,
                                                context=ContextFlags.CONSTRUCTOR)
 
+    def _instantiate_output_states(self, context=None):
+        self._register_modulatory_signal_type(ControlSignal,context)
+        super()._instantiate_output_states(context)
+
     def _instantiate_control_signal(self, control_signal, context):
         return super()._instantiate_modulatory_signal(modulatory_signal=control_signal, context=context)
 

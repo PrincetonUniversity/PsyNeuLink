@@ -831,8 +831,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 control_signal.cost_options = ControlSignalCosts.DEFAULTS
                 control_signal._instantiate_cost_attributes()
 
-    def _instantiate_control_signal(self, control_signal, context):
-        return super()._instantiate_modulatory_signal(modulatory_signal=control_signal, context=context)
+    # def _instantiate_control_signal(self, control_signal, context):
+    #     return super()._instantiate_modulatory_signal(modulatory_signal=control_signal, context=context)
 
     def _instantiate_modulatory_signals(self, context):
         '''Give subclassess a chance to override'''

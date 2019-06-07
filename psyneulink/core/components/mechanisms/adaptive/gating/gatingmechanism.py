@@ -422,6 +422,10 @@ class GatingMechanism(ModulatoryMechanism):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+    def _instantiate_output_states(self, context=None):
+        self._register_modulatory_signal_type(GatingSignal,context)
+        super()._instantiate_output_states(context)
+
     def _instantiate_gating_signal(self, gating_signal, context=None):
         """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection
         Return GatingSignal (OutputState)

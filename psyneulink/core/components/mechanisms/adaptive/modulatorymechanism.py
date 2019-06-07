@@ -1186,6 +1186,17 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self._objective_projection = projection_from_objective
         self.monitor_for_modulation = self.monitored_output_states
 
+
+    def _register_modulatory_signal_type(self, modulatory_signal_type:ModulatorySignal, context=None):
+        from psyneulink.core.globals.registry import register_category
+        from psyneulink.core.components.states.state import State_Base
+
+        # Create registry for ControlSignals (to manage names)
+        register_category(entry=modulatory_signal_type,
+                          base_class=State_Base,
+                          registry=self._stateRegistry,
+                          context=context)
+
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
         self.input_state.name = OUTCOME
@@ -1196,14 +1207,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
-        from psyneulink.core.globals.registry import register_category
-        from psyneulink.core.components.states.state import State_Base
-
-        # Create registry for ControlSignals (to manage names)
-        register_category(entry=ControlSignal,
-                          base_class=State_Base,
-                          registry=self._stateRegistry,
-                          context=context)
 
     # ---------------------------------------------------
     # FIX 5/23/17: PROJECTIONS AND PARAMS SHOULD BE PASSED BY ASSIGNING TO STATE SPECIFICATION DICT
