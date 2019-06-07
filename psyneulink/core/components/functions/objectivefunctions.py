@@ -11,6 +11,8 @@
 '''
 
 * `Stability`
+* `Energy`
+* `Entropy`
 * `Distance`
 
 Functions that return a scalar evaluation of their input.
@@ -91,7 +93,7 @@ class Stability(ObjectiveFunction):
     value using the `distance metric <DistanceMetric>` specified by `metric <Stability.metric>`.  If `normalize
     <Stability.normalize>` is `True`, the result is normalized by the length of (number of elements in) `variable
     <Stability.variable>`.
-
+    #
     Arguments
     ---------
 
@@ -430,6 +432,7 @@ class Energy(Stability):
     Energy(                           \
         default_variable=None,        \
         matrix=INVERSE_HOLLOW_MATRIX, \
+        transfer_fct=None             \
         normalize=False,              \
         params=None,                  \
         owner=None,                   \
@@ -449,6 +452,10 @@ class Energy(Stability):
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default INVERSE_HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
+
+    transfer_fct : function or method : Default None
+        specifies the function used to transform output of `matrix <Stability.matrix>` prior to the energy calculation
+        (see `Stablility` for explanation).
 
     normalize : bool : Default False
         specifies whether to normalize the energy value by the length of `variable <Stability.variable>`.
@@ -480,7 +487,8 @@ class Energy(Stability):
         the energy calculation.
 
     transfer_fct : function or method
-        function used to transform output of weight `matrix <Stability.matrix>` prior to computing energy.
+        function used to transform output of `matrix <Stability.matrix>` prior to computing energy
+        (see `Stablility` for explanation).
 
     normalize : bool
         if `True`, result of energy calculation is normalized by the length of `variable <Energy.variable>`.
@@ -500,6 +508,7 @@ class Energy(Stability):
     def __init__(self,
                  default_variable=None,
                  normalize:bool=False,
+                 transfer_fct=None,
                  params=None,
                  owner=None,
                  prefs=None):
@@ -507,6 +516,7 @@ class Energy(Stability):
         super().__init__(default_variable=default_variable,
                          metric=ENERGY,
                          matrix=INVERSE_HOLLOW_MATRIX,
+                         transfer_fct=transfer_fct,
                          normalize=normalize,
                          params=params,
                          owner=owner,
@@ -518,6 +528,7 @@ class Entropy(Stability):
     Entropy(                           \
         default_variable=None,        \
         matrix=INVERSE_HOLLOW_MATRIX, \
+        transfer_fct=None             \
         normalize=False,              \
         params=None,                  \
         owner=None,                   \
@@ -537,6 +548,10 @@ class Entropy(Stability):
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default INVERSE_HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
+
+    transfer_fct : function or method : Default None
+        specifies the function used to transform output of `matrix <Stability.matrix>` prior to the entropy calculation
+        (see `Stablility` for explanation).
 
     normalize : bool : Default False
         specifies whether to normalize the entropy value by the length of `variable <Stability.variable>`.
@@ -568,7 +583,8 @@ class Entropy(Stability):
         the entropy calculation.
 
     transfer_fct : function or method
-        function used to transform output of weight `matrix <Stability.matrix>` prior to computing entropy.
+        function used to transform output of `matrix <Stability.matrix>` prior to computing entropy
+        (see `Stablility` for explanation).
 
     normalize : bool
         if `True`, result of entropy calculation is normalized by the length of `variable <Entropy.variable>`.
@@ -588,6 +604,7 @@ class Entropy(Stability):
     def __init__(self,
                  default_variable=None,
                  normalize:bool=False,
+                 transfer_fct=None,
                  params=None,
                  owner=None,
                  prefs=None):
@@ -595,6 +612,7 @@ class Entropy(Stability):
         super().__init__(default_variable=default_variable,
                          # matrix=matrix,
                          metric=ENTROPY,
+                         transfer_fct=transfer_fct,
                          normalize=normalize,
                          params=params,
                          owner=owner,
