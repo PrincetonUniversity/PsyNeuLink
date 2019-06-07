@@ -1062,7 +1062,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # construct input
             num_features = len(arg_in.type.pointee) - 1
-            comp_input = builder.alloca(sim_f.args[3].type.pointee, num_features)
+            comp_input = builder.alloca(sim_f.args[3].type.pointee)
+
             for i in range(num_features):
                 src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
                 # destination is a struct of 2d arrays
