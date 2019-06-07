@@ -117,8 +117,9 @@ Composition or graph specification dictionary, and any `Conditions <Condition>`,
 For each call to the `run <Scheduler.run>` method, the Scheduler sequentially evaluates its
 `consideration_sets <consideration_set>` in their order in the `consideration_queue`.  For each set, it  determines
 which Components in the set are allowed to execute, based on whether their associated `Condition <Condition>` has
-been met. Any Component that does not have a `Condition` explicitly specified is assigned the Condition `Always`,
-that allows it to execute any time it is under consideration. All of the Components within a `consideration_set` that
+been met. Any Component that does not have a `Condition` explicitly specified is assigned a Condition that causes it
+to be executed whenever it is `under consideration <Scheduler_Algorithm>` and all its structural parents have been executed
+at least once since the Component's last execution. All of the Components within a `consideration_set` that
 are allowed to execute comprise a `TIME_STEP` of execution. These Components are
 considered as executing simultaneously.
 
@@ -272,7 +273,7 @@ import warnings
 
 from toposort import toposort
 
-from psyneulink.core.scheduling.condition import AllHaveRun, Always, Condition, ConditionSet, Never
+from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never
 from psyneulink.core.scheduling.time import Clock, TimeScale
 
 __all__ = [
@@ -698,10 +699,32 @@ class Scheduler(object):
         unspecified_nodes = []
         for node in self.nodes:
             if node not in self.conditions:
-                self.conditions.add_condition(node, Always())
+                # determine parent nodes
+                node_index = 0
+                for i in range(len(self.consideration_queue)):
+                    if node in self.consideration_queue[i]:
+                        node_index = i
+                        break
+
+                if node_index > 0:
+                    dependencies = list(self.consideration_queue[i - 1])
+                    if len(dependencies) == 1:
+                        cond = EveryNCalls(dependencies[0], 1)
+                    elif len(dependencies) > 1:
+                        cond = All(*[EveryNCalls(x, 1) for x in dependencies])
+                    else:
+                        raise SchedulerError(f'{self}: Empty consideration set in consideration_queue[{i - 1}]')
+                else:
+                    cond = Always()
+
+                self.conditions.add_condition(node, cond)
                 unspecified_nodes.append(node)
         if len(unspecified_nodes) > 0:
-            logger.info('These nodes have no Conditions specified, and will be scheduled with condition Always: {0}'.format(unspecified_nodes))
+            logger.info(
+                'These nodes have no Conditions specified, and will be scheduled with conditions: {0}'.format(
+                    {node: self.conditions[node] for node in unspecified_nodes}
+                )
+            )
 
     ################################################################################
     # Run methods
