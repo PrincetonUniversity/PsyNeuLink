@@ -109,7 +109,7 @@ class TestLCControlMechanism:
 
         benchmark(EX, [10.0])
 
-        # All are the same because LCControlMechanism assigns all of its ControlSignals to the same value
+        # All values are the same because LCControlMechanism assigns all of its ControlSignals to the same value
         # (the 1st item of its function's value).
         # FIX: 6/6/19 - Python returns 3d array but LLVM returns 2d array
         #               (np.allclose bizarrely passes for LLVM because all the values are the same)
