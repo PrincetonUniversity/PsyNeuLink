@@ -946,9 +946,12 @@ class LinearCombination(
         pow_f = ctx.get_builtin("pow", [ctx.float_ty])
 
         for i in range(vi.type.pointee.count):
+            ptri = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(i), index])
+            in_val = builder.load(ptri)
+
             # No exponent
             if isinstance(exponent_type, pnlvm.ir.LiteralStructType):
-                exponent = ctx.float_ty(1.0)
+                pass
             # Vector exponent
             elif isinstance(exponent_type, pnlvm.ir.ArrayType):
                 assert len(exponent_type) > 1
@@ -957,13 +960,11 @@ class LinearCombination(
                 exponent_index = builder.add(exponent_index, index)
                 exponent_ptr = builder.gep(exponent_param_ptr, [ctx.int32_ty(0), exponent_index])
                 exponent = builder.load(exponent_ptr)
+                in_val = builder.call(pow_f, [in_val, exponent])
             # Scalar exponent
             else:
                 exponent = builder.load(exponent_param_ptr)
-
-            ptri = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(i), index])
-            in_val = builder.load(ptri)
-            in_val = builder.call(pow_f, [in_val, exponent])
+                in_val = builder.call(pow_f, [in_val, exponent])
 
             # No weights
             if isinstance(weights_type, pnlvm.ir.LiteralStructType):
