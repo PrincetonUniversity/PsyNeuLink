@@ -821,17 +821,9 @@ class OptimizationControlMechanism(ControlMechanism):
         #                                                    repr(MONITORED_OUTPUT_STATES)))
 
     def _instantiate_output_states(self, context=None):
-        '''Implement defaults.value of correct size for ControlSIgnals and assign ControlSignalCosts.DEFAULTS as
-        default for cost_option of ControlSignals.
+        '''Assign ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals.
         OptimizationControlMechanism requires use of at least one of the cost options
         '''
-
-        from psyneulink.core.globals.keywords import OWNER_VALUE
-        for i, spec in enumerate(self.modulatory_signals):
-            modulatory_signal = self._instantiate_modulatory_signal(spec, context=context)
-            modulatory_signal._variable_spec = (OWNER_VALUE, i)
-            self.modulatory_signals = modulatory_signal
-
         super()._instantiate_output_states(context)
 
         for control_signal in self.control_signals:
@@ -839,11 +831,18 @@ class OptimizationControlMechanism(ControlMechanism):
                 control_signal.cost_options = ControlSignalCosts.DEFAULTS
                 control_signal._instantiate_cost_attributes()
 
-    # def _instantiate_control_signal(self, control_signal, context):
-    #     return super()._instantiate_modulatory_signal(modulatory_signal=control_signal, context=context)
-
     def _instantiate_modulatory_signals(self, context):
-        '''Give subclassess a chance to override'''
+        '''Size control_allocation and assign modulatory_signals
+        Set size of control_allocadtion equal to number of modulatory_signals.
+        Assign each modulatory_signal sequentially to corresponding item of control_allocation.
+        '''
+        from psyneulink.core.globals.keywords import OWNER_VALUE
+        for i, spec in enumerate(self.modulatory_signals):
+            modulatory_signal = self._instantiate_modulatory_signal(spec, context=context)
+            modulatory_signal._variable_spec = (OWNER_VALUE, i)
+            self._modulatory_signals[i] = modulatory_signal
+        self.defaults.value = np.tile(modulatory_signal.parameters.variable.default_value, (i+1, 1))
+        self.parameters.control_allocation.set(copy.deepcopy(self.defaults.value))
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Instantiate OptimizationControlMechanism's OptimizatonFunction attributes'''
