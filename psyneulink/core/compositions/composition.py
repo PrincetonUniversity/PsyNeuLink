@@ -1208,7 +1208,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             :getter: Returns the default processing scheduler, and builds it if it needs updating since the last access.
         '''
-        if self.needs_update_scheduler_processing or self._scheduler_processing is None:
+        if self.needs_update_scheduler_processing or not isinstance(self._scheduler_processing, Scheduler):
             old_scheduler = self._scheduler_processing
             self._scheduler_processing = Scheduler(graph=self.graph_processing, execution_id=self.default_execution_id)
 
@@ -1218,6 +1218,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.needs_update_scheduler_processing = False
 
         return self._scheduler_processing
+
+    @scheduler_processing.setter
+    def scheduler_processing(self, value: Scheduler):
+        warnings.warn(
+            f'If {self} is changed (nodes or projections are added or removed), scheduler_processing '
+            ' will be rebuilt, and will be different than the Scheduler you are now setting it to.',
+            stacklevel=2
+        )
+
+        self._scheduler_processing = value
 
     @property
     def termination_processing(self):
