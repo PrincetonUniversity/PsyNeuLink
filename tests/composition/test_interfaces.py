@@ -789,10 +789,8 @@ class TestSimplifedNestedCompositionSyntax:
     def test_connect_outer_composition_to_all_input_nodes_in_inner_comp(self):
 
         inner1 = Composition(name="inner")
-
         A1 = TransferMechanism(name="A1",
                                function=Linear(slope=2.0))
-
         B1 = TransferMechanism(name="B1",
                                function=Linear(slope=3.0))
 
@@ -800,11 +798,8 @@ class TestSimplifedNestedCompositionSyntax:
         inner1._analyze_graph()
 
         inner2 = Composition(name="inner2")
-
         A2 = TransferMechanism(name="A2")
-
         B2 = TransferMechanism(name="B2")
-
         C2 = TransferMechanism(name="C2")
 
         inner2.add_nodes([A2, B2, C2])
@@ -812,40 +807,19 @@ class TestSimplifedNestedCompositionSyntax:
 
         outer1 = Composition(name="outer1")
         outer1.add_nodes([inner1, inner2])
-        outer1.add_projection(sender=B1, receiver=A2)
+
+        # Spec 1: add projection *node in* inner1 --> inner 2 (implies first input state -- corresponding to A2)
+        outer1.add_projection(sender=B1, receiver=inner2)
+        # Spec 2:  add projection *node in* inner1 --> *node in* inner2
         outer1.add_projection(sender=B1, receiver=B2)
-        outer1.add_projection(sender=B1, receiver=C2)
-        res = outer1.run(inputs={inner1: [[1.]]})
-        outer1.show_graph()
-        for node in outer1.nodes:
-            print(node.name, " value = ", node.value)
-            if isinstance(node, Composition):
-                print(node.name, "internal results: ")
-                for n in node.nodes:
-                    print(n.name, " value = ", n.value)
-        # assert np.allclose(res, [[[180.0]]])
-        #
-        # assert np.allclose(inner1.output_state.parameters.value.get(outer1), [30.0])
-        # assert np.allclose(inner2.output_state.parameters.value.get(outer1), [180.0])
-        # assert np.allclose(outer1.output_state.parameters.value.get(outer1), [180.0])
-        #
-        # outer2 = Composition(name="outer2")
-        # outer2.add_nodes([inner1, inner2])
-        # outer2.add_projection(sender=inner1, receiver=A2)
-        #
-        # res = outer2.run(inputs={inner1: [[5.]]})
-        # assert np.allclose(res, [[[180.0]]])
-        #
-        # assert np.allclose(inner1.output_state.parameters.value.get(outer2), [30.0])
-        # assert np.allclose(inner2.output_state.parameters.value.get(outer2), [180.0])
-        # assert np.allclose(outer2.output_state.parameters.value.get(outer2), [180.0])
-        #
-        # outer3 = Composition(name="outer3")
-        # outer3.add_nodes([inner1, inner2])
-        # outer3.add_projection(sender=B1, receiver=A2)
-        #
-        # res = outer3.run(inputs={inner1: [[5.]]})
-        # assert np.allclose(res, [[[180.0]]])
-        # assert np.allclose(inner1.output_state.parameters.value.get(outer3), [30.0])
-        # assert np.allclose(inner2.output_state.parameters.value.get(outer3), [180.0])
-        # assert np.allclose(outer3.output_state.parameters.value.get(outer3), [180.0])
+        # Spec 3: add projection inner1 --> *node in* inner2
+        outer1.add_projection(sender=inner1, receiver=C2)
+        eid = "eid"
+        outer1.run(inputs={inner1: [[1.]]},
+                   execution_id=eid)
+
+        assert np.allclose(A1.parameters.value.get(eid), [[2.0]])
+        assert np.allclose(B1.parameters.value.get(eid), [[6.0]])
+
+        for node in [A2, B2, C2]:
+            assert np.allclose(node.parameters.value.get(eid), [[6.0]])
