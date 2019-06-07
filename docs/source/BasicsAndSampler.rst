@@ -375,73 +375,103 @@ Control
 Another distinctive feature of PsyNeuLink is the ability to easily create models that include control;  that is,
 Mechanisms that can evaluate the output of other Mechanisms (or nested Compositions), and use this to regulate the
 processing of those Mechanisms.  For example, the extension of ``Stroop_model`` below monitors conflict in
-the ``output`` Mechanism on each `TRIAL <TimeScale.TRIAL>`, and uses that to regulate processing by the
-``color_hidden`` and ``word_hidden`` Mechanisms::
+the ``output`` Mechanism on each `TRIAL <TimeScale.TRIAL>`, and uses that to regulate the gain of the ``task``
+Mechanism::
 
+    # Construct control mechanism
     control = ControlMechanism(name='CONTROL',
-                               default_variable=[[0,0]],
-                               function= lambda var: 1-np.abs(var[0][0]-var[0][1]),
-                               control_signals=[(GAIN, color_hidden),(GAIN, word_hidden)])
-    ...
-    Stroop_model.add_linear_processing_pathway([output,control])
+                               monitor_for_control=output,
+                               objective_mechanism=ObjectiveMechanism(name='Conflict Monitor',
+                                                                      function=Energy),
+                               control_signals=[(GAIN, task)])
 
-The figure below shows the model with the ControlMechanism added::
-
-XXX FIGURE HERE
+    # Construct the Composition using the control Mechanism as its controller:
+    Stroop_model = Composition(name='Stroop Model', controller=control)
 
 
-The ``control`` Mechanism receives the output of the ``phonology`` Mechanism, and uses the function defined in its
-constructor to compute a measure of conflict between the ``red`` and ``green`` representations (based on the absolute
-difference of their activations).  The result is used to determine the value of the two **control_signals**,
-that modulate the `gain <Logistic.gain>` parameter of the `Logistic` Function for the ``color_hidden`` and
-``word_hidden`` Mechanisms.
 
-XXX EFFECTS OF CONFLICT AND TIMING OF CONTROL;  SHOW OUTPUT OF SERIES OF TRIALS WITH SEQUENTIAL ADJUSTMENT EFFECT
+XXX Explain:
+Composition controller
+ObjectiveMechanism
+monitor_for_control
+control_signals
+Automatiion of their construction
 
-• Assignment of a custom function to a Mechanism
-• change name of ``output`` Mechanism above to ``phonology``
-• change name of ``color_hidden`` to ``color``
-• change name of ``word_hidden`` to ``orthography``
+The constructor for the ControlMechanism specifies how control should be configured, and automates the process of
+implementing it:  the **monitor_for_control** argument specifies the Mechanisms to be monitored;
+**objective_mechanism** specifies the ObjectiveMechanism and its function used to do the monitoring; and
+**control_signals** specifies the parameters of the Mechanisms to be regulated.  These are used to construct
+ObjectiveMechanism and ControlMechanisms, and the ControlMechanism is then assigned to the ``Stroop_model`` as its
+`controller <Stroop_model.controller>` when the Composition is constructed.  The figure below shows the result:
 
+.. _BasicsAndSampler_Stroop_Example_With_Control_Figure:
 
+.. figure:: _static/BasicsAndSampler_Control.svg
+   :width: 50%
+
+   **Stroop Model with Controller.** Representation of the Composition in the example above, using
+   ``Stroop_model.show_graph(show_controller)``
+
+When the Composition executes, the Objective Mechanism receives the output of the ``output`` Mechanism, and uses
+the `Energy` function assigned to it to compute conflict in the ``output`` Mechanism (the degree of co-activity of
+it respresentations of the ``red`` and ``green`` responses).  The result passed to the ``control`` Mechanism, which
+uses it to set the `gain <Logistic.gain>` of the `Logistic` function used by the ``task`` Mechahnism.  The ``control``
+Mechanism executes at the end of each `TRIAL <TimeScale.TRIAL>`, which has its effects on the ``task`` Mechanism the
+next time it executes (i.e., on the next `TRIAL <TimeScale.TRIAL>`).  Running the model for several trials shows that
+it adapts its behavior based on the previous inputs::
+
+    XXX EXAMPLE OUTPUT HERE XXX
+
+ControlMechanisms and ObjectiveMechanisms can also be manually configured, and added as free-standing nodes in
+Composition (i.e., not necessarily as its `controller <Composition.controller>`.  As described above, the timing of
+execution can also be configured in other ways.
+
+.. XXX
+.. • Explain:
+..  - energy function
+..  - special status of controller
+.. • Replace figure with once double projections are corrected
+.. • Change names of:
+..   - ``output`` Mechanism above to ``phonology``
+..   - ``color_hidden`` to ``color``
+..   - ``word_hidden`` to ``orthography``
 
 A more elaborate example of this model can be found at `BotvinickConflictMonitoringModel`. More complicated forms of
 control are also possible, for example, ones that run internal simulations to determine the amount of control to
-optimize some criterion
+optimize some criterion.
 
-
-.. _BasicsAndSampler_Learning:
-
-Learning
-~~~~~~~~
-
-For example, the feedforward network above can be
-trained using backpropagation simply by adding the **learning** argument to the constructor for the Process::
-
-    my_encoder = Process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
-
-and then specifying the target for each trial when it is executed (here, the Process' `run <Process.run>` command
-is used to execute a series of five training trials, one that trains it on each element of the input)::
-
-    my_encoder.run(input=[[0,0,0,0,0], [1,0,0,0,0], [0,0,1,0,0], [0,0,0,1,0], [0,0,0,0,1]],
-                   target=[[0,0,0,0,0], [1,0,0,0,0], [0,0,1,0,0], [0,0,0,1,0], [0,0,0,0,1]])
-
-`Backpropagation <BackPropagation>` is the default learning method, but PsyNeuLink also currently supports
-`Reinforcement Learning <Reinforcement>`, and others are currently being implemented (including Hebbian, Temporal
-Differences, and supervised learning for recurrent networks).
-
-
------------------
-
-STUFF TO ADD:
-
-One of the most useful applications for PsyNeuLink is the design of models that include control processes.
-XXX USER DEFINED FUNCTIONS
-XXX CONTROL (STROOP)
-XXX HETEROGENOUS TYPES: ADD DECISION MAKING USING DDM;  FitzHugh-Nagumo Mechanism
-XXX LEARNING:  USING RL AND BP
-XXX NESTED COMPOSITIONS: AUTODIFF
-XXX COMPILATION
-
-The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,
-and the `Tutorial` provides an interactive introduction to its use.
+.. .. _BasicsAndSampler_Learning:
+..
+.. Learning
+.. ~~~~~~~~
+..
+.. For example, the feedforward network above can be
+.. trained using backpropagation simply by adding the **learning** argument to the constructor for the Process::
+..
+..     my_encoder = Process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
+..
+.. and then specifying the target for each trial when it is executed (here, the Process' `run <Process.run>` command
+.. is used to execute a series of five training trials, one that trains it on each element of the input)::
+..
+..     my_encoder.run(input=[[0,0,0,0,0], [1,0,0,0,0], [0,0,1,0,0], [0,0,0,1,0], [0,0,0,0,1]],
+..                    target=[[0,0,0,0,0], [1,0,0,0,0], [0,0,1,0,0], [0,0,0,1,0], [0,0,0,0,1]])
+..
+.. `Backpropagation <BackPropagation>` is the default learning method, but PsyNeuLink also currently supports
+.. `Reinforcement Learning <Reinforcement>`, and others are currently being implemented (including Hebbian, Temporal
+.. Differences, and supervised learning for recurrent networks).
+..
+..
+.. -----------------
+..
+.. STUFF TO ADD:
+..
+.. One of the most useful applications for PsyNeuLink is the design of models that include control processes.
+.. XXX USER DEFINED FUNCTIONS
+.. XXX CONTROL (STROOP)
+.. XXX HETEROGENOUS TYPES: ADD DECISION MAKING USING DDM;  FitzHugh-Nagumo Mechanism
+.. XXX LEARNING:  USING RL AND BP
+.. XXX NESTED COMPOSITIONS: AUTODIFF
+.. XXX COMPILATION
+..
+.. The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,
+.. and the `Tutorial` provides an interactive introduction to its use.

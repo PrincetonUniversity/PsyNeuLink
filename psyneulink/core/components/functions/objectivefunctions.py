@@ -84,7 +84,7 @@ class Stability(ObjectiveFunction):
         prefs=None                              \
         )
 
-    .. _Stability:
+    .. _StabilityFunction:
 
     Return the stability of `variable <Stability.variable>` based on a state transformation matrix.
 
@@ -93,14 +93,14 @@ class Stability(ObjectiveFunction):
     value using the `distance metric <DistanceMetric>` specified by `metric <Stability.metric>`.  If `normalize
     <Stability.normalize>` is `True`, the result is normalized by the length of (number of elements in) `variable
     <Stability.variable>`.
-    #
+
     Arguments
     ---------
 
     variable : list of numbers or 1d np.array : Default class_defaults.variable
         the array for which stability is calculated.
 
-    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
+    matrix : list, np.ndarray, np.matrix, or matrix keyword : default HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
@@ -449,13 +449,13 @@ class Energy(Stability):
     variable : list of numbers or 1d np.array : Default class_defaults.variable
         the array for which energy is calculated.
 
-    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default INVERSE_HOLLOW_MATRIX
+    matrix : list, np.ndarray, np.matrix, or matrix keyword : default INVERSE_HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
     transfer_fct : function or method : Default None
         specifies the function used to transform output of `matrix <Stability.matrix>` prior to the energy calculation
-        (see `Stablility` for explanation).
+        (see `Stablility <Stability>` for explanation).
 
     normalize : bool : Default False
         specifies whether to normalize the energy value by the length of `variable <Stability.variable>`.
@@ -481,14 +481,14 @@ class Energy(Stability):
     variable : 1d np.array
         array for which energy is calculated.
 
-    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection
+    matrix : list, np.ndarray, np.matrix, or matrix keyword
         weight matrix from each element of `variable <Energy.variablity>` to each other;  if a matrix other
         than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from 
         the energy calculation.
 
     transfer_fct : function or method
         function used to transform output of `matrix <Stability.matrix>` prior to computing energy
-        (see `Stablility` for explanation).
+        (see `Stability` for explanation).
 
     normalize : bool
         if `True`, result of energy calculation is normalized by the length of `variable <Energy.variable>`.
@@ -545,13 +545,13 @@ class Entropy(Stability):
     variable : list of numbers or 1d np.array : Default class_defaults.variable
         the array for which entropy is calculated.
 
-    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default INVERSE_HOLLOW_MATRIX
+    matrix : list, np.ndarray, np.matrix, or matrix keyword : default INVERSE_HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
     transfer_fct : function or method : Default None
         specifies the function used to transform output of `matrix <Stability.matrix>` prior to the entropy calculation
-        (see `Stablility` for explanation).
+        (see `Stability` for explanation).
 
     normalize : bool : Default False
         specifies whether to normalize the entropy value by the length of `variable <Stability.variable>`.
@@ -577,14 +577,14 @@ class Entropy(Stability):
     variable : 1d np.array
         array for which entropy is calculated.
 
-    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection
+    matrix : list, np.ndarray, np.matrix, or matrix keyword
         weight matrix from each element of `variable <Entropy.variablity>` to each other;  if a matrix other
         than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from 
         the entropy calculation.
 
     transfer_fct : function or method
         function used to transform output of `matrix <Stability.matrix>` prior to computing entropy
-        (see `Stablility` for explanation).
+        (see `Stability` for explanation).
 
     normalize : bool
         if `True`, result of entropy calculation is normalized by the length of `variable <Entropy.variable>`.
