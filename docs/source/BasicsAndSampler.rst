@@ -6,6 +6,8 @@ Basics and Sampler
     * `BasicsAndSampler_Simple_Configurations`
     * `BasicsAndSampler_Elaborate_Configurations`
     * `BasicsAndSampler_Dynamics_of_Execution`
+    * `BasicsAndSampler_Control`
+    * `BasicsAndSampler_Learning`
 
 .. _BasicsAndSampler_Basics:
 
@@ -378,29 +380,37 @@ the ``output`` Mechanism on each `TRIAL <TimeScale.TRIAL>`, and uses that to reg
 
     control = ControlMechanism(name='CONTROL',
                                default_variable=[[0,0]],
-                               function= lambda x:1-np.abs(x[0][0]-x[0][1]),
+                               function= lambda var: 1-np.abs(var[0][0]-var[0][1]),
                                control_signals=[(GAIN, color_hidden),(GAIN, word_hidden)])
     ...
     Stroop_model.add_linear_processing_pathway([output,control])
 
-The ``control`` Mechanism takes the output of the ``output`` Mechanism
-The **control_signals** argument of the ControlMechanism's consructor specify that it modulate the
-`gain <Logistic.gain>` parameter of the `Logistic` Function for the ``color_hidden`` and ``word_hidden`` Mechanisms.
+The figure below shows the model with the ControlMechanism added::
+
+XXX FIGURE HERE
+
+
+The ``control`` Mechanism receives the output of the ``phonology`` Mechanism, and uses the function defined in its
+constructor to compute a measure of conflict between the ``red`` and ``green`` representations (based on the absolute
+difference of their activations).  The result is used to determine the value of the two **control_signals**,
+that modulate the `gain <Logistic.gain>` parameter of the `Logistic` Function for the ``color_hidden`` and
+``word_hidden`` Mechanisms.
+
+XXX EFFECTS OF CONFLICT AND TIMING OF CONTROL;  SHOW OUTPUT OF SERIES OF TRIALS WITH SEQUENTIAL ADJUSTMENT EFFECT
+
+• Assignment of a custom function to a Mechanism
+• change name of ``output`` Mechanism above to ``phonology``
+• change name of ``color_hidden`` to ``color``
+• change name of ``word_hidden`` to ``orthography``
+
 
 
 A more elaborate example of this model can be found at `BotvinickConflictMonitoringModel`. More complicated forms of
-control are also possible, for example, ones run internal simulations to determine the amount of control to optimize
-some criterion
+control are also possible, for example, ones that run internal simulations to determine the amount of control to
+optimize some criterion
 
-<EVC EXAMPLE HERE>
-Demonstrates:
-• Explain use and sizing of default_variable, and relate to:
-• Use of inputstates and outputstates (INputStates and OUtputStates allow Mechanisms to differentially manage
-projections from different sources/destinations
-• Assignment of a custom function to a Mechanism
-• change name of ``output`` Mechanism above to ``verbal_output``
 
-.. _BasicsAndSampler_Control:
+.. _BasicsAndSampler_Learning:
 
 Learning
 ~~~~~~~~

@@ -30,7 +30,7 @@ from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, \
-    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, \
+    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, INVERSE_HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -38,7 +38,7 @@ from psyneulink.core.globals.utilities import is_distance_metric
 from psyneulink.core.globals.utilities import is_iterable
 
 
-__all__ = ['ObjectiveFunction', 'Stability', 'Distance']
+__all__ = ['ObjectiveFunction', 'Stability', 'Distance', 'Energy', 'Entropy']
 
 
 class ObjectiveFunction(Function_Base):
@@ -91,35 +91,6 @@ class Stability(ObjectiveFunction):
     value using the `distance metric <DistanceMetric>` specified by `metric <Stability.metric>`.  If `normalize
     <Stability.normalize>` is `True`, the result is normalized by the length of (number of elements in) `variable
     <Stability.variable>`.
-
-COMMENT:
-*** 11/11/17 - DELETE THIS ONCE Stability IS STABLE:
-    Stability s is calculated according as specified by `metric <Distance.metric>`, using the formulae below,
-    where :math:`i` and :math:`j` are each elements of `variable <Stability.variable>`, *len* is its length,
-    :math:`\\bar{v}` is its mean, :math:`\\sigma_v` is its standard deviation, and :math:`w_{ij}` is the entry of the
-    weight matrix for the connection between entries :math:`i` and :math:`j` in `variable <Stability.variable>`.
-
-    *ENTROPY*:
-
-       :math:`s = -\\sum\\limits^{len}(i*log(j))`
-
-    *DIFFERENCE*:
-
-       :math:`s = \\sum\\limits^{len}(i-j)`
-
-    *EUCLIDEAN*:
-
-       :math:`s = \\sum\\limits^{len}\\sqrt{(i-j)^2}`
-
-    *CORRELATION*:
-
-       :math:`s = \\frac{\\sum\\limits^{len}(i-\\bar{i})(j-\\bar{j})}{(len-1)\\sigma_{i}\\sigma_{j}}`
-
-    **normalize**:
-
-       :math:`s = \\frac{s}{len}`
-COMMENT
-
 
     Arguments
     ---------
@@ -441,20 +412,7 @@ COMMENT
         if self.transfer_fct is not None:
             transformed = self.transfer_fct(transformed)
 
-        # # MODIFIED 11/12/15 OLD:
-        # if self.metric is ENERGY:
-        #     result = -np.sum(current * transformed)/2
-        # else:
-        #     result = self._metric_fct(variable=[current,transformed], context=context)
-        #
-        # if self.normalize:
-        #     if self.metric is ENERGY:
-        #         result /= len(variable)**2
-        #     else:
-        #         result /= len(variable)
-        # MODIFIED 11/12/15 NEW:
         result = self._metric_fct(variable=[current, transformed], execution_id=execution_id, context=context)
-        # MODIFIED 11/12/15 END
 
         return self.convert_output_type(result)
 
@@ -465,6 +423,182 @@ COMMENT
             [self._metric_fct] if self._metric_fct is not None else [],
             [self.transfer_fct] if self.transfer_fct is not None else [],
         ))
+
+
+class Energy(Stability):
+    """
+    Energy(                           \
+        default_variable=None,        \
+        matrix=INVERSE_HOLLOW_MATRIX, \
+        normalize=False,              \
+        params=None,                  \
+        owner=None,                   \
+        prefs=None                    \
+        )
+
+    .. _EnergyFunction:
+
+    Subclass of `Stability` Function that returns the energy of an array.
+
+    Arguments
+    ---------
+
+    variable : list of numbers or 1d np.array : Default class_defaults.variable
+        the array for which energy is calculated.
+
+    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default INVERSE_HOLLOW_MATRIX
+        specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
+        length of `variable <Stability.variable>`.
+
+    normalize : bool : Default False
+        specifies whether to normalize the energy value by the length of `variable <Stability.variable>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 1d np.array
+        array for which energy is calculated.
+
+    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection
+        weight matrix from each element of `variable <Energy.variablity>` to each other;  if a matrix other
+        than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from 
+        the energy calculation.
+
+    transfer_fct : function or method
+        function used to transform output of weight `matrix <Stability.matrix>` prior to computing energy.
+
+    normalize : bool
+        if `True`, result of energy calculation is normalized by the length of `variable <Energy.variable>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
+    
+    def __init__(self,
+                 default_variable=None,
+                 normalize:bool=False,
+                 params=None,
+                 owner=None,
+                 prefs=None):
+
+        super().__init__(default_variable=default_variable,
+                         metric=ENERGY,
+                         matrix=INVERSE_HOLLOW_MATRIX,
+                         normalize=normalize,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs)
+
+
+class Entropy(Stability):
+    """
+    Entropy(                           \
+        default_variable=None,        \
+        matrix=INVERSE_HOLLOW_MATRIX, \
+        normalize=False,              \
+        params=None,                  \
+        owner=None,                   \
+        prefs=None                    \
+        )
+
+    .. _EntropyFunction:
+
+    Subclass of `Stability` Function that returns the entropy of an array.
+
+    Arguments
+    ---------
+
+    variable : list of numbers or 1d np.array : Default class_defaults.variable
+        the array for which entropy is calculated.
+
+    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default INVERSE_HOLLOW_MATRIX
+        specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
+        length of `variable <Stability.variable>`.
+
+    normalize : bool : Default False
+        specifies whether to normalize the entropy value by the length of `variable <Stability.variable>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 1d np.array
+        array for which entropy is calculated.
+
+    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection
+        weight matrix from each element of `variable <Entropy.variablity>` to each other;  if a matrix other
+        than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from 
+        the entropy calculation.
+
+    transfer_fct : function or method
+        function used to transform output of weight `matrix <Stability.matrix>` prior to computing entropy.
+
+    normalize : bool
+        if `True`, result of entropy calculation is normalized by the length of `variable <Entropy.variable>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
+
+    def __init__(self,
+                 default_variable=None,
+                 normalize:bool=False,
+                 params=None,
+                 owner=None,
+                 prefs=None):
+
+        super().__init__(default_variable=default_variable,
+                         # matrix=matrix,
+                         metric=ENTROPY,
+                         normalize=normalize,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs)
 
 
 class Distance(ObjectiveFunction):
