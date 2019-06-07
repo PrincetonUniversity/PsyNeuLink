@@ -1482,7 +1482,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             sender, sender_output_state, graph_sender, sender_mechanism = self._get_nested_node_CIM_state(sender_mechanism,
                                                                                                           sender_output_state,
                                                                                                           NodeRole.OUTPUT)
-            nested_compositions.append(sender)
+            nested_compositions.append(graph_sender)
             if sender is None:
                 receiver_name = 'node'
                 if hasattr(projection, 'receiver'):
@@ -1562,7 +1562,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             receiver, receiver_input_state, graph_receiver, receiver_mechanism = self._get_nested_node_CIM_state(receiver_mechanism,
                                                                                                                  receiver_input_state,
                                                                                                                  NodeRole.INPUT)
-            nested_compositions.append(receiver)
+
+            nested_compositions.append(graph_receiver)
             # Otherwise, there was a mistake in the spec
             if receiver is None:
                 raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
@@ -1621,7 +1622,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
         receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
-
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         if sender_mechanism != self.input_CIM and receiver_mechanism != self.output_CIM \
@@ -2393,7 +2393,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 nested_comp = nc
                 break
 
-        return nested_comp, CIM_state_for_nested_node, nested_comp, CIM
+        return CIM_state_for_nested_node, CIM_state_for_nested_node, nested_comp, CIM
 
     def add_required_node_role(self, node, role):
         if role not in NodeRole:
@@ -2480,6 +2480,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    name="(" + interface_output_state.name + ") to ("
                                                         + input_state.owner.name + "-" + input_state.name + ")")
                     projection._activate_for_compositions(self)
+
                     if isinstance(node, Composition):
                         projection._activate_for_compositions(node)
 

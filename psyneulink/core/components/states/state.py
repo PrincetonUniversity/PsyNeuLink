@@ -1532,12 +1532,12 @@ class State_Base(State):
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.path_afferents or mod_afferents lists
-            if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
-                warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
-                              format(Projection.__name__, repr(projection.sender.name),
-                                     projection.sender.owner.name,
-                              repr(self.name), self.owner.name, repr(projection.name)))
-                continue
+            # if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+            #     warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
+            #                   format(Projection.__name__, repr(projection.sender.name),
+            #                          projection.sender.owner.name,
+            #                   repr(self.name), self.owner.name, repr(projection.name)))
+            #     continue
 
             # reassign default variable shape to this state and its function
             if isinstance(projection, PathwayProjection_Base) and not projection in self.path_afferents:
