@@ -666,3 +666,160 @@ class TestInputSpec:
 
         comp.run(inputs={A: [5.0, 10.0, 15.0]})
         assert np.allclose(comp.results, [[[5.0]], [[5.0]], [[10.0]], [[15.0]]])
+
+
+class TestSimplifedNestedCompositionSyntax:
+    def test_connect_outer_composition_to_only_input_node_in_inner_comp_option1(self):
+
+        inner1 = Composition(name="inner")
+
+        A1 = TransferMechanism(name="A1",
+                               function=Linear(slope=2.0))
+
+        B1 = TransferMechanism(name="B1",
+                               function=Linear(slope=3.0))
+
+        inner1.add_linear_processing_pathway([A1, B1])
+        inner1._analyze_graph()
+
+        inner2 = Composition(name="inner2")
+
+        A2 = TransferMechanism(name="A2",
+                               function=Linear(slope=2.0))
+
+        B2 = TransferMechanism(name="B2",
+                               function=Linear(slope=3.0))
+
+        inner2.add_linear_processing_pathway([A2, B2])
+        inner2._analyze_graph()
+
+        outer = Composition(name="outer")
+        outer.add_nodes([inner1, inner2])
+        outer.add_projection(sender=B1, receiver=inner2)
+
+        # comp1:  input = 5.0   |  mechA: 2.0*5.0 = 10.0    |  mechB: 3.0*10.0 = 30.0    |  output = 30.0
+        # comp2:  input = 30.0  |  mechA2: 2.0*30.0 = 60.0  |  mechB2: 3.0*60.0 = 180.0  |  output = 180.0
+        # comp3:  input = 5.0   |  output = 180.0
+
+        res = outer.run(inputs={inner1: [[5.]]})
+        assert np.allclose(res, [[[180.0]]])
+
+        assert np.allclose(inner1.output_state.parameters.value.get(outer), [30.0])
+        assert np.allclose(inner2.output_state.parameters.value.get(outer), [180.0])
+        assert np.allclose(outer.output_state.parameters.value.get(outer), [180.0])
+
+    def test_connect_outer_composition_to_only_input_node_in_inner_comp_option2(self):
+        inner1 = Composition(name="inner")
+
+        A1 = TransferMechanism(name="A1",
+                               function=Linear(slope=2.0))
+
+        B1 = TransferMechanism(name="B1",
+                               function=Linear(slope=3.0))
+
+        inner1.add_linear_processing_pathway([A1, B1])
+        inner1._analyze_graph()
+
+        inner2 = Composition(name="inner2")
+
+        A2 = TransferMechanism(name="A2",
+                               function=Linear(slope=2.0))
+
+        B2 = TransferMechanism(name="B2",
+                               function=Linear(slope=3.0))
+
+        inner2.add_linear_processing_pathway([A2, B2])
+        inner2._analyze_graph()
+
+        outer = Composition(name="outer")
+        outer.add_nodes([inner1, inner2])
+        outer.add_projection(sender=inner1, receiver=A2)
+        outer.show_graph(show_node_structure=True,
+                         show_nested=True)
+        # comp1:  input = 5.0   |  mechA: 2.0*5.0 = 10.0    |  mechB: 3.0*10.0 = 30.0    |  output = 30.0
+        # comp2:  input = 30.0  |  mechA2: 2.0*30.0 = 60.0  |  mechB2: 3.0*60.0 = 180.0  |  output = 180.0
+        # comp3:  input = 5.0   |  output = 180.0
+
+        res = outer.run(inputs={inner1: [[5.]]})
+        assert np.allclose(res, [[[180.0]]])
+
+        assert np.allclose(inner1.output_state.parameters.value.get(outer), [30.0])
+        assert np.allclose(inner2.output_state.parameters.value.get(outer), [180.0])
+        assert np.allclose(outer.output_state.parameters.value.get(outer), [180.0])
+
+    def test_connect_outer_composition_to_only_input_node_in_inner_comp_option3(self):
+
+        inner1 = Composition(name="inner")
+
+        A1 = TransferMechanism(name="A1",
+                               function=Linear(slope=2.0))
+
+        B1 = TransferMechanism(name="B1",
+                               function=Linear(slope=3.0))
+
+        inner1.add_linear_processing_pathway([A1, B1])
+        inner1._analyze_graph()
+
+        inner2 = Composition(name="inner2")
+
+        A2 = TransferMechanism(name="A2",
+                               function=Linear(slope=2.0))
+
+        B2 = TransferMechanism(name="B2",
+                               function=Linear(slope=3.0))
+
+        inner2.add_linear_processing_pathway([A2, B2])
+        inner2._analyze_graph()
+
+        outer = Composition(name="outer")
+        outer.add_nodes([inner1, inner2])
+        outer.add_projection(sender=B1, receiver=A2)
+
+        # comp1:  input = 5.0   |  mechA: 2.0*5.0 = 10.0    |  mechB: 3.0*10.0 = 30.0    |  output = 30.0
+        # comp2:  input = 30.0  |  mechA2: 2.0*30.0 = 60.0  |  mechB2: 3.0*60.0 = 180.0  |  output = 180.0
+        # comp3:  input = 5.0   |  output = 180.0
+
+        res = outer.run(inputs={inner1: [[5.]]})
+        assert np.allclose(res, [[[180.0]]])
+
+        assert np.allclose(inner1.output_state.parameters.value.get(outer), [30.0])
+        assert np.allclose(inner2.output_state.parameters.value.get(outer), [180.0])
+        assert np.allclose(outer.output_state.parameters.value.get(outer), [180.0])
+
+    def test_connect_outer_composition_to_all_input_nodes_in_inner_comp(self):
+
+        inner1 = Composition(name="inner")
+        A1 = TransferMechanism(name="A1",
+                               function=Linear(slope=2.0))
+        B1 = TransferMechanism(name="B1",
+                               function=Linear(slope=3.0))
+
+        inner1.add_linear_processing_pathway([A1, B1])
+        inner1._analyze_graph()
+
+        inner2 = Composition(name="inner2")
+        A2 = TransferMechanism(name="A2")
+        B2 = TransferMechanism(name="B2")
+        C2 = TransferMechanism(name="C2")
+
+        inner2.add_nodes([A2, B2, C2])
+        inner2._analyze_graph()
+
+        outer1 = Composition(name="outer1")
+        outer1.add_nodes([inner1, inner2])
+
+        # Spec 1: add projection *node in* inner1 --> inner 2 (implies first input state -- corresponding to A2)
+        outer1.add_projection(sender=B1, receiver=inner2)
+        # Spec 2:  add projection *node in* inner1 --> *node in* inner2
+        outer1.add_projection(sender=B1, receiver=B2)
+        # Spec 3: add projection inner1 --> *node in* inner2
+        outer1.add_projection(sender=inner1, receiver=C2)
+        eid = "eid"
+        outer1.run(inputs={inner1: [[1.]]},
+                   execution_id=eid)
+
+        assert np.allclose(A1.parameters.value.get(eid), [[2.0]])
+        assert np.allclose(B1.parameters.value.get(eid), [[6.0]])
+
+        for node in [A2, B2, C2]:
+            assert np.allclose(node.parameters.value.get(eid), [[6.0]])
