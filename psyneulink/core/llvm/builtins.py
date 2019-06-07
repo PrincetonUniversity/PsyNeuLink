@@ -110,6 +110,48 @@ def setup_vxm(ctx):
     with builder.goto_block(outer_out_block):
         builder.ret_void()
 
+# Setup vector addition builtin
+def setup_vec_add(ctx):
+     # Setup types
+    double_ptr_ty = ctx.float_ty.as_pointer()
+    
+    # builtin vector addition func
+    # param1: ptr to vector 1
+    # param2: ptr to vector 2
+    # param3: sizeof vectors (must be the same)
+    # param4: ptr to output vector (make sure this is same size as param3)
+    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, ctx.int32_ty, double_ptr_ty))
+
+    # Create function
+    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_vec_add")
+    function.attributes.add('argmemonly')
+    function.attributes.add('alwaysinline')
+
+    block = function.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
+    u, v, x, o = function.args
+
+    # Add function arg attributes
+    for a in u,v, o:
+        a.attributes.add('nonnull')
+        a.attributes.add('noalias')
+
+    index = None
+
+    # Addition
+    with helpers.for_loop_zero_inc(builder, x, "zero") as (builder, index):
+        u_ptr = builder.gep(u,[index])
+        v_ptr = builder.gep(v,[index])
+        o_ptr = builder.gep(o, [index])
+        u_val = builder.load(u_ptr)
+        v_val = builder.load(v_ptr)
+        
+        u_v_sum = builder.fsum(u_val,v_val)
+        builder.store(u_v_sum, o_ptr)
+
+    builder.ret_void()
+
 def setup_pnl_intrinsics(ctx):
     # Setup types
     single_intr_ty = ir.FunctionType(ctx.float_ty, [ctx.float_ty])
@@ -521,6 +563,9 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     builder.store(p_last_avail.type.pointee(1), p_last_avail)
 
     builder.ret_void()
+
+
+
 
 def get_mersenne_twister_state_struct(ctx):
     return ir.LiteralStructType([

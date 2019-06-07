@@ -52,8 +52,6 @@ class PytorchModelCreator(torch.nn.Module):
         # Get any mechanism
         out_mech = min(out_comp)
 
-
-
         self.defaults = { # each of these should be of type array([[ ]]) for some reason
             # Assign input shape
             'variable':inp_mech.variable,
@@ -164,16 +162,43 @@ class PytorchModelCreator(torch.nn.Module):
         out_t = arg_out.type.pointee
         if isinstance(out_t, pnlvm.ir.ArrayType) and isinstance(out_t.element, pnlvm.ir.ArrayType):
             assert len(out_t) == 1
+            # arg_out is a pointer to the beginning of the output array (TODO: add support for > 1 state)
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
-        # arg_out is a pointer to the beginning of the output array (TODO: add support for > 1 state)
-        #builder = ctx.create_llvm_function()
+        
+        frozen_values = builder.alloca(ctx.int32_ty,ctx.int32_ty(i)) # this should be static because i is known before compilation
         for i in range(len(self.execution_sets)):
             current_exec_set = self.execution_sets[i]
             for component in current_exec_set:
                 biases = self.component_to_forward_info[component][1]
                 bin_func = self.component_to_forward_info[component][4]
-                afferents = self.component_to_forward_info[component][3]
-                #print("BIAS",biases,"FUNC",bin_func,"AFFERENT",afferents)
+                afferents = self.component_to_forward_info[component][3] #TODO: Pass in afferents as input to func
+                value = None
+                cmp_arg = builder.gep(arg_in,[ctx.int32_ty(0),ctx.int32_ty(i)])
+                if i == 0:
+                    value = builder.call(bin_func,[cmp_arg])
+                # forward computation if we do not have origin node
+                else:
+                    value = np.zeros(len(component.input_states[0].defaults.value)).ctypes.data_as() #convert inp to ctype
+                    for input_node, weights in afferents.items():
+                        if input_node.component in current_exec_set:
+                            j = current_exec_set.index()
+                            input_value = builder.load(frozen_values,builder.gep(frozen_values,[ctx.int32_ty(j)])) # load the value from prev node
+                        else:
+                            input_value = self.component_to_forward_info[input_node.component][0].ctypes.data_as()
+                        value += torch.matmul(input_value, weights)
+                    if biases is not None:
+                        value = value + biases
+                    value = function(value)
+
+                # store the current value of the node
+                self.component_to_forward_info[component][0] = value
+                if do_logging:
+                    detached_value = value.detach().numpy()
+                    component.parameters.value._log_value(detached_value, execution_id, ContextFlags.COMMAND_LINE)
+
+                # save value in output list if we're at a node in the last execution set
+                if i == len(self.execution_sets) - 1:
+                    outputs[component] = value
 
     # performs forward computation for the model
     def forward(self, inputs, execution_id=None, do_logging=True):

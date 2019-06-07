@@ -148,7 +148,7 @@ def init_builtins():
         builtins.setup_pnl_intrinsics(ctx)
         builtins.setup_vxm(ctx)
         builtins.setup_mersenne_twister(ctx)
-
+        builtins.setup_vec_add(ctx)
 def cleanup():
     _cpu_engine.clean_module()
     if ptx_enabled:
