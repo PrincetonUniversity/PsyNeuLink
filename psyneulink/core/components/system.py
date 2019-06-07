@@ -2598,14 +2598,14 @@ class System(System_Base):
 
         condition_set = {}
         for item in self.execution_list:
-            if hasattr(item, CONDITION) and item.condition and not item in self.scheduler_processing.condition_set:
+            if hasattr(item, CONDITION) and item.condition and not item in self.scheduler_processing.conditions:
                 condition_set[item] = item.condition
         self.scheduler_processing.add_condition_set(condition_set)
 
         # FIX: DEAL WITH LEARNING PROJECTIONS HERE (ADD CONDITIONS ATTRIBUTE?)
         condition_set = {}
         for item in self.learning_execution_list:
-            if hasattr(item, CONDITION) and item.condition and not item in self.scheduler_learning.condition_set:
+            if hasattr(item, CONDITION) and item.condition and not item in self.scheduler_learning.conditions:
                 condition_set[item] = item.condition
         self.scheduler_learning.add_condition_set(condition_set)
 

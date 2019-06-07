@@ -561,8 +561,14 @@ class BayesGLM(LearningFunction):
         # Today's prior is yesterday's posterior
         Lambda_prior = self.get_current_function_param('Lambda_n', execution_id)
         mu_prior = self.get_current_function_param('mu_n', execution_id)
-        gamma_shape_prior = self.get_current_function_param('gamma_shape_n', execution_id)
-        gamma_size_prior = self.get_current_function_param('gamma_size_n', execution_id)
+        # # MODIFIED 6/3/19 OLD: [JDC]: THE FOLLOWING ARE YOTAM'S ADDITION (NOT in FALK's CODE)
+        # gamma_shape_prior = self.get_current_function_param('gamma_shape_n', execution_id)
+        # gamma_size_prior = self.get_current_function_param('gamma_size_n', execution_id)
+        # MODIFIED 6/3/19 NEW:
+        gamma_shape_prior = self.parameters.gamma_shape_n.default_value
+        gamma_size_prior = self.parameters.gamma_size_n.default_value
+        # MODIFIED 6/3/19 END
+
 
         variable = self._check_args(
             [np.atleast_2d(variable[0]), np.atleast_2d(variable[1])],
@@ -590,6 +596,9 @@ class BayesGLM(LearningFunction):
         self.parameters.mu_n.set(mu_n, execution_id)
         self.parameters.gamma_shape_n.set(gamma_shape_n, execution_id)
         self.parameters.gamma_size_n.set(gamma_size_n, execution_id)
+
+        # # TEST PRINT:
+        # print(f'MEAN WEIGHTS FOR BayesGLM:\n{mu_n}')
 
         return self.sample_weights(gamma_shape_n, gamma_size_n, mu_n, Lambda_n)
 

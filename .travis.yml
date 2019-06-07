@@ -15,8 +15,9 @@ branches:
 install:
   - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then pip install coveralls; fi
   - pip install git+https://github.com/benureau/leabra.git@master
-  # Upgrade pytest explicitly, Travis bundles an old version
-  - pip install -U 'pytest<4.6'
+  # Travis bundles pytest 4.3.1 in Linux Xenial, new pytest-xdist
+  # requires pytest>=4.4.0, and the dependencies are broken
+  - pip install -U pytest
   - pip install -e .[dev]
 
 os: linux
@@ -28,7 +29,6 @@ env: PYTHONWARNINGS="ignore::DeprecationWarning"
 # Cache installed python packages
 cache:
   pip
-  apt
 
 addons:
   apt:

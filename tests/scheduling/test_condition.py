@@ -231,6 +231,7 @@ class TestCondition:
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, BeforeTimeStep(2))
+            sched.add_condition(B, Always())
 
             termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
@@ -300,6 +301,8 @@ class TestCondition:
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, AtPass(0))
+            sched.add_condition(B, Always())
+            sched.add_condition(C, Always())
 
             termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)

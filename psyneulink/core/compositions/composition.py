@@ -1208,16 +1208,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             :getter: Returns the default processing scheduler, and builds it if it needs updating since the last access.
         '''
-        if self.needs_update_scheduler_processing or self._scheduler_processing is None:
+        if self.needs_update_scheduler_processing or not isinstance(self._scheduler_processing, Scheduler):
             old_scheduler = self._scheduler_processing
             self._scheduler_processing = Scheduler(graph=self.graph_processing, execution_id=self.default_execution_id)
 
             if old_scheduler is not None:
-                self._scheduler_processing.add_condition_set(old_scheduler.condition_set)
+                self._scheduler_processing.add_condition_set(old_scheduler.conditions)
 
             self.needs_update_scheduler_processing = False
 
         return self._scheduler_processing
+
+    @scheduler_processing.setter
+    def scheduler_processing(self, value: Scheduler):
+        warnings.warn(
+            f'If {self} is changed (nodes or projections are added or removed), scheduler_processing '
+            ' will be rebuilt, and will be different than the Scheduler you are now setting it to.',
+            stacklevel=2
+        )
+
+        self._scheduler_processing = value
 
     @property
     def termination_processing(self):
@@ -1622,6 +1632,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
         receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
+
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         if sender_mechanism != self.input_CIM and receiver_mechanism != self.output_CIM \
@@ -4787,10 +4798,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # NOTE: This is not ideal we don't need to depend on
         # the entire previous group. Only our dependencies
         cond = [EveryNCalls(dep, 1) for dep in dep_group]
-        if node not in self.scheduler_processing.condition_set.conditions:
+        if node not in self.scheduler_processing.conditions:
             cond.append(Always())
         else:
-            node_conds = self.scheduler_processing.condition_set.conditions[node]
+            node_conds = self.scheduler_processing.conditions[node]
             cond.append(node_conds)
 
         return All(*cond)
