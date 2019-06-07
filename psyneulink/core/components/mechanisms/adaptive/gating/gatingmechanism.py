@@ -424,7 +424,6 @@ class GatingMechanism(ModulatoryMechanism):
 
     def _instantiate_output_states(self, context=None):
         self._register_modulatory_signal_type(GatingSignal,context)
-
         super()._instantiate_output_states(context)
 
     def _instantiate_gating_signal(self, gating_signal, context=None):

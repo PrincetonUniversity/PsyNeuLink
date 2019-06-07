@@ -821,9 +821,17 @@ class OptimizationControlMechanism(ControlMechanism):
         #                                                    repr(MONITORED_OUTPUT_STATES)))
 
     def _instantiate_output_states(self, context=None):
-        '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
+        '''Implement defaults.value of correct size for ControlSIgnals and assign ControlSignalCosts.DEFAULTS as
+        default for cost_option of ControlSignals.
         OptimizationControlMechanism requires use of at least one of the cost options
         '''
+
+        from psyneulink.core.globals.keywords import OWNER_VALUE
+        for i, spec in enumerate(self.modulatory_signals):
+            modulatory_signal = self._instantiate_modulatory_signal(spec, context=context)
+            modulatory_signal._variable_spec = (OWNER_VALUE, i)
+            self.modulatory_signals = modulatory_signal
+
         super()._instantiate_output_states(context)
 
         for control_signal in self.control_signals:
@@ -836,10 +844,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _instantiate_modulatory_signals(self, context):
         '''Give subclassess a chance to override'''
-        from psyneulink.core.globals.keywords import OWNER_VALUE
-        for i, spec in enumerate(self.modulatory_signals):
-            modulatory_signal = self._instantiate_modulatory_signal(spec, context=context)
-            modulatory_signal._variable_spec = (OWNER_VALUE, i)
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Instantiate OptimizationControlMechanism's OptimizatonFunction attributes'''

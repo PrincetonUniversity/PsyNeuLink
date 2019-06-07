@@ -1263,6 +1263,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             # self.defaults.value = np.array([modulatory_signal.parameters.variable.default_value
             #                                 for i in range(len(self._output_states))])
             # self.parameters.value.set(copy.deepcopy(self.defaults.value))
+            # FIX: THIS SHOULD BE MOVED TO DefaultAllocationFunction
             if isinstance(self.function, DefaultAllocationFunction):
                 self.defaults.value = np.array([modulatory_signal.parameters.variable.default_value
                                                 for i in range(len(self._output_states))])
