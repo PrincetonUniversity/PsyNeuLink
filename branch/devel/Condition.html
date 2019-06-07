@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.5.3.2+176.g02cc0d1 documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.5.3.2+177.gf064848 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+176.g02cc0d1',
+              VERSION:'0.5.3.2+177.gf064848',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+176
+                0.5.3.2+177
               </div>
             
           
@@ -252,8 +252,9 @@ thus scheduling it to execute one time when all of the elements of <code class="
 <div class="section" id="structure">
 <span id="condition-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> associates every Component with a Condition.  If a Component has not been explicitly assigned a
-Condition, it is assigned the Condition <a class="reference internal" href="#psyneulink.core.scheduling.condition.Always" title="psyneulink.core.scheduling.condition.Always"><code class="xref any py py-class docutils literal"><span class="pre">Always</span></code></a> that causes it to be executed whenever it is
-<a class="reference internal" href="Scheduler.html#scheduler-algorithm"><span class="std std-ref">under consideration</span></a>.  Condition subclasses (<a class="reference internal" href="#condition-pre-specified-list"><span class="std std-ref">listed below</span></a>)
+Condition, it is assigned a Condition that causes it to be executed whenever it is <a class="reference internal" href="Scheduler.html#scheduler-algorithm"><span class="std std-ref">under consideration</span></a>
+and all its structural parents have been executed at least once since the Component’s last execution.
+Condition subclasses (<a class="reference internal" href="#condition-pre-specified-list"><span class="std std-ref">listed below</span></a>)
 provide a standard set of Conditions that can be implemented simply by specifying their parameter(s). There are
 five types:</p>
 <blockquote>
