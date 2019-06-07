@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.5.3.2+174.g31e35ec documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.5.3.2+176.g02cc0d1 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+174.g31e35ec',
+              VERSION:'0.5.3.2+176.g02cc0d1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+174
+                0.5.3.2+176
               </div>
             
           
@@ -206,9 +206,8 @@ can also be assigned for execution (e.g., during <a class="reference internal" h
 <p>A Scheduler can be created explicitly using its constructor.  However, more commonly it is created automatically
 for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> when it is created.  When creating a Scheduler explicitly, the set of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> to be executed and their order must be specified in the Scheduler’s constructor using one the following:</p>
 <ul class="simple">
-<li>a <a class="reference internal" href="System.html"><span class="doc">System</span></a> in the <strong>system</strong> argument - if a System is specified,
-the Scheduler is created using the Components in the System’s <a class="reference internal" href="System.html#psyneulink.core.components.system.System.execution_list" title="psyneulink.core.components.system.System.execution_list"><code class="xref any py py-attr docutils literal"><span class="pre">execution_list</span></code></a> and an
-order of execution specified by the dependencies among the Components in its <a class="reference internal" href="System.html#psyneulink.core.components.system.System.execution_graph" title="psyneulink.core.components.system.System.execution_graph"><code class="xref any py py-attr docutils literal"><span class="pre">execution_graph</span></code></a>.</li>
+<li>a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> in the <strong>composition</strong> argument - if a Composition is specified,
+the Scheduler is created using the nodes and edges in the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph_processing" title="psyneulink.core.compositions.composition.Composition.graph_processing"><code class="xref any py py-attr docutils literal"><span class="pre">graph</span></code></a>.</li>
 <li>a <em>graph specification dictionary</em> in the <strong>graph</strong> argument -
 each entry of the dictionary must be a Component of a Composition, and the value of each entry must be a set of
 zero or more Components that project directly to the key.  The graph must be acyclic; an error is generated if any
@@ -216,7 +215,7 @@ cycles (e.g., recurrent dependencies) are detected.  The Scheduler computes a <c
 used as the default order of executions, subject to any <a class="reference internal" href="#scheduler-algorithm"><span class="std std-ref">Condition`s that have been specified
 (see `below</span></a>).</li>
 </ul>
-<p>If both a System and a graph are specified, the System takes precedence, and the graph is ignored.</p>
+<p>If both a Composition and a graph are specified, the Composition takes precedence, and the graph is ignored.</p>
 <p>Conditions can be added to a Scheduler when it is created by specifying a <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet" title="psyneulink.core.scheduling.condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a> (a set of
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>) in the <strong>conditions</strong> argument of its constructor.  Individual Conditions and/or
 ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet.add_condition" title="psyneulink.core.scheduling.condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
@@ -226,7 +225,7 @@ ConditionSets can also be added after the  Scheduler has been created, using its
 <span id="scheduler-algorithm"></span><h2>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">¶</a></h2>
 <p>When a Scheduler is created, it constructs a <a class="reference internal" href="#psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue" title="psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue"><code class="xref any py py-attr docutils literal"><span class="pre">consideration_queue</span></code></a>:  a list of <code class="xref any docutils literal"><span class="pre">consideration_sets</span></code>
 that defines the order in which Components are eligible to be executed.  This is based on the pattern of projections
-among them specified in the System, or on the dependencies specified in the graph specification dictionary, whichever
+among them specified in the Composition, or on the dependencies specified in the graph specification dictionary, whichever
 was provided in the Scheduler’s constructor.  Each <code class="xref any docutils literal"><span class="pre">consideration_set</span></code> is a set of Components that are eligible to
 execute at the same time/<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> (i.e., that appear at the same “depth” in a sequence of dependencies, and
 among which there are no dependencies).  The first <code class="xref any docutils literal"><span class="pre">consideration_set</span></code> consists of only <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms.
@@ -270,7 +269,7 @@ while TimeScale.TRIAL termination conditions are not satisfied:
 <div class="section" id="execution">
 <span id="scheduler-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When a Scheduler is run, it provides a set of Components that should be run next, based on their dependencies in the
-System or graph specification dictionary, and any <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>, specified in the Scheduler’s constructor.
+Composition or graph specification dictionary, and any <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>, specified in the Scheduler’s constructor.
 For each call to the <a class="reference internal" href="#psyneulink.core.scheduling.scheduler.Scheduler.run" title="psyneulink.core.scheduling.scheduler.Scheduler.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method, the Scheduler sequentially evaluates its
 <code class="xref any docutils literal"><span class="pre">consideration_sets</span></code> in their order in the <a class="reference internal" href="#psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue" title="psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue"><code class="xref any py py-attr docutils literal"><span class="pre">consideration_queue</span></code></a>.  For each set, it  determines
 which Components in the set are allowed to execute, based on whether their associated <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> has
@@ -324,7 +323,7 @@ when all Components have run at least once within the trial, and the termination
 when all of its constituent trials have terminated. These defaults may be overriden when running a Composition,
 by passing a dictionary mapping <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScales</span></code></a> to <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> in the
 <strong>termination_processing</strong> argument of a call to <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">Composition.run</span></code></a> (to terminate the execution of processing):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">System</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Composition</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
     <span class="o">...</span><span class="p">,</span>
     <span class="n">termination_processing</span><span class="o">=</span><span class="p">{</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">:</span> <span class="n">WhenFinished</span><span class="p">(</span><span class="n">ddm</span><span class="p">)}</span>
     <span class="p">)</span>
@@ -336,46 +335,29 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 <li><p class="first">Basic phasing in a linear process:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">],</span>
-<span class="gp">... </span>    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;p&#39;</span>
-<span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
-<span class="gp">... </span>    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;s&#39;</span>
-<span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">])</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># implicit condition of Always for A</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># implicit AllHaveRun Termination condition</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span>
 <span class="go">[{(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism C)}]</span>
 </pre></div>
 </div>
 </li>
 <li><p class="first">Alternate basic phasing in a linear process:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">])</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">],</span>
-<span class="gp">... </span>    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;p&#39;</span>
-<span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
-<span class="gp">... </span>    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;s&#39;</span>
-<span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">A</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span>
 <span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">AtPass</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
@@ -383,7 +365,7 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 <span class="gp">... </span>    <span class="p">)</span>
 <span class="gp">... </span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">B</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span>
 <span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
@@ -394,34 +376,20 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 <span class="gp">&gt;&gt;&gt; </span><span class="n">termination_conds</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_scale</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
 <span class="gp">... </span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>
-
-<span class="go">execution_sequence: [A, B, B, A, B, B]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span>
+<span class="go">[{(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism B)}]</span>
 </pre></div>
 </div>
 </li>
 <li><p class="first">Basic phasing in two processes:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">A</span><span class="p">,</span> <span class="n">C</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">])</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
-<span class="gp">... </span>        <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">C</span><span class="p">],</span>
-<span class="gp">... </span>        <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;p&#39;</span>
-<span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
-<span class="gp">... </span>        <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">],</span>
-<span class="gp">... </span>        <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;q&#39;</span>
-<span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span>
-<span class="gp">... </span>        <span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">],</span>
-<span class="gp">... </span>        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;s&#39;</span>
-<span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNPasses</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNPasses</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">C</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">Any</span><span class="p">(</span>
 <span class="gp">... </span>        <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
@@ -432,9 +400,9 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 <span class="gp">&gt;&gt;&gt; </span><span class="n">termination_conds</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>    <span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AfterNCalls</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">time_scale</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
 <span class="gp">... </span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>
-
-<span class="go">execution_sequence: [A, {A,B}, A, C, {A,B}, C, A, C, {A,B}, C]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">termination_conds</span><span class="o">=</span><span class="n">termination_conds</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">execution_sequence</span>  
+<span class="go">[{(TransferMechanism A)}, {(TransferMechanism A), (TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism C)}, {(TransferMechanism A), (TransferMechanism B)}, {(TransferMechanism C)}, {(TransferMechanism A)}, {(TransferMechanism C)}, {(TransferMechanism A), (TransferMechanism B)}, {(TransferMechanism C)}]</span>
 </pre></div>
 </div>
 </li>
@@ -443,7 +411,7 @@ by passing a dictionary mapping <a class="reference internal" href="Time.html#ps
 <h4>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="psyneulink.core.scheduling.scheduler.Scheduler">
-<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.scheduler.</code><code class="descname">Scheduler</code><span class="sig-paren">(</span><em>system=None</em>, <em>composition=None</em>, <em>graph=None</em>, <em>conditions=None</em>, <em>termination_conds=None</em>, <em>execution_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.scheduler.</code><code class="descname">Scheduler</code><span class="sig-paren">(</span><em>composition=None</em>, <em>graph=None</em>, <em>conditions=None</em>, <em>termination_conds=None</em>, <em>execution_id=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates an order of execution for <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> in a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> or graph
 specification dictionary, possibly determined by a set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -451,9 +419,9 @@ specification dictionary, possibly determined by a set of <a class="reference in
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>system</strong> (<a class="reference internal" href="System.html#psyneulink.core.components.system.System" title="psyneulink.core.components.system.System"><em>System</em></a>) – specifies the Components to be ordered for execution, and any dependencies among them, based on the
-System’s <a class="reference internal" href="System.html#psyneulink.core.components.system.System.execution_graph" title="psyneulink.core.components.system.System.execution_graph"><code class="xref any py py-attr docutils literal"><span class="pre">execution_graph</span></code></a> and <a class="reference internal" href="System.html#psyneulink.core.components.system.System.execution_list" title="psyneulink.core.components.system.System.execution_list"><code class="xref any py py-attr docutils literal"><span class="pre">execution_list</span></code></a>.</li>
-<li><strong>conditions</strong> (<a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet" title="psyneulink.core.scheduling.condition.ConditionSet"><em>ConditionSet</em></a>) – set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when individual Components in <strong>system</strong>
+<li><strong>composition</strong> (<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – specifies the Components to be ordered for execution, and any dependencies among them, based on the
+Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph_processing" title="psyneulink.core.compositions.composition.Composition.graph_processing"><code class="xref any py py-attr docutils literal"><span class="pre">graph</span></code></a>.</li>
+<li><strong>conditions</strong> (<a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet" title="psyneulink.core.scheduling.condition.ConditionSet"><em>ConditionSet</em></a>) – set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when individual Components in <strong>composition</strong>
 execute and any dependencies among them</li>
 <li><strong>graph</strong> (<em>Dict</em><em>[</em><em>Component: set</em><em>(</em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>)</em><em>]</em>) – a graph specification dictionary - each entry of the dictionary must be a Component,
 and the value of each entry must be a set of zero or more Components that project directly to the key.</li>
