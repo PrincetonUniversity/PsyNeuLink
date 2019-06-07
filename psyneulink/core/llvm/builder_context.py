@@ -408,7 +408,7 @@ class LLVMBuilderContext:
         if simulation:
             data_out.attributes.remove('nonnull')
 
-        if "clear_run_data" in debug_env:
+        if not simulation and "clear_run_data" in debug_env:
             data = builder.alloca(data.type.pointee)
             builder.store(data.type.pointee(None), data)
 
