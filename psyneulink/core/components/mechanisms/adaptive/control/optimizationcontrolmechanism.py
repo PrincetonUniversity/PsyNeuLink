@@ -1021,6 +1021,59 @@ class OptimizationControlMechanism(ControlMechanism):
         return pnlvm.ir.ArrayType(ctx.float_ty,
                                   len(self.control_allocation_search_space))
 
+    def _gen_llvm_net_outcome_function(self, ctx):
+        args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
+                self._get_evaluate_context_struct_type(ctx).as_pointer(),
+                self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
+                ctx.float_ty.as_pointer(),
+                ctx.float_ty.as_pointer()]
+
+        builder = ctx.create_llvm_function(args, self, str(self) + "_net_outcome")
+        llvm_func = builder.function
+        for p in llvm_func.args:
+            p.attributes.add('nonnull')
+        params, state, allocation_sample, objective_ptr, arg_out = llvm_func.args
+
+        # calculate cost function
+        total_cost = builder.alloca(ctx.float_ty)
+        builder.store(ctx.float_ty(-0.0), total_cost)
+        for i, os in enumerate(self.output_states):
+            # FIXME: Add support for other cost types
+            assert os.cost_options == ControlSignalCosts.INTENSITY
+
+            func = ctx.get_llvm_function(os.intensity_cost_function)
+            func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            func_out = builder.alloca(func.args[3].type.pointee)
+            func_in = builder.alloca(func.args[2].type.pointee)
+
+            # copy allocation_sample, the input is 1-element array
+            data_in = builder.gep(allocation_sample, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            data_out = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(builder.load(data_in), data_out)
+            builder.call(func, [func_params, func_state, func_in, func_out])
+
+            # extract cost result
+            res_in = builder.gep(func_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            cost = builder.load(res_in)
+            # simplified version of combination fmax(cost, 0)
+            ltz = builder.fcmp_ordered("<", cost, cost.type(0))
+            cost = builder.select(ltz, ctx.float_ty(0), cost)
+
+            # combine is not a PNL function
+            assert self.combine_costs is np.sum
+            val = builder.load(total_cost)
+            val = builder.fadd(val, cost)
+            builder.store(val, total_cost)
+
+        # compute net outcome
+        objective = builder.load(objective_ptr)
+        net_outcome = builder.fsub(objective, builder.load(total_cost))
+        builder.store(net_outcome, arg_out)
+
+        builder.ret_void()
+        return llvm_func
+
     def _gen_llvm_evaluate_function(self):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
@@ -1100,43 +1153,9 @@ class OptimizationControlMechanism(ControlMechanism):
                                             [ctx.int32_ty(0), ctx.int32_ty(0),
                                              ctx.int32_ty(0)])
 
-            objective = builder.load(objective_val_ptr)
+            net_outcome_f = self._gen_llvm_net_outcome_function(ctx);
+            builder.call(net_outcome_f, [params, state, allocation_sample, objective_val_ptr, arg_out]);
 
-            # calculate cost function
-            total_cost = builder.alloca(ctx.float_ty)
-            builder.store(ctx.float_ty(-0.0), total_cost)
-            for i, os in enumerate(self.output_states):
-                # FIXME: Add support for other cost types
-                assert os.cost_options == ControlSignalCosts.INTENSITY
-
-                func = ctx.get_llvm_function(os.intensity_cost_function)
-                func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-                func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-                func_out = builder.alloca(func.args[3].type.pointee)
-                func_in = builder.alloca(func.args[2].type.pointee)
-
-                # copy allocation_sample the input is 1-element array
-                data_in = builder.gep(allocation_sample, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                data_out = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-                builder.store(builder.load(data_in), data_out)
-                builder.call(func, [func_params, func_state, func_in, func_out])
-
-                # extract cost result
-                res_in = builder.gep(func_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-                cost = builder.load(res_in)
-                # simplified version of combination fmax(cost, 0)
-                ltz = builder.fcmp_ordered("<", cost, cost.type(0))
-                cost = builder.select(ltz, ctx.float_ty(0), cost)
-
-                # combine is not a PNL functions
-                assert self.combine_costs is np.sum
-                val = builder.load(total_cost)
-                val = builder.fadd(val, cost)
-                builder.store(val, total_cost)
-
-            # compute net outcome
-            net_outcome = builder.fsub(objective, builder.load(total_cost))
-            builder.store(net_outcome, arg_out)
             builder.ret_void()
 
         return llvm_func
