@@ -215,6 +215,23 @@ be modified either by specifying a different `function <ModulatoryMechanism.func
 individual ControlSignals and/or GatingSignals reference different items in `modulatory_allocation` as their
 allocation (i.e., the value of their `variable <ModulatorySignal.variable>`.
 
+
+A ModulatoryMechanism's `function <ModulatoryMechanism.function>` uses `outcome <ModulatoryMechanism.outcome>`
+(the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `modulatory_allocation
+<ModulatoryMechanism.modulatory_allocation>`.  By default, `function <ModulatoryMechanism.function>` is assigned
+the `DefaultAllocationFunction`, which takes a single value as its input, and assigns that as the value of each item
+of `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`.  Each of these items is assigned as the
+allocation for the corresponding  `ModulatorySignal` in `modulatory_signals <ModulatoryMechanism.modulatory_signals>`.
+Thus, by default, the ModulatoryMechanism distributes its input as the allocation to each of its `modulatory_signals
+<ModulatoryMechanism.modulatory_signals>`.  This same behavior also applies to any custom function assigned to a
+ModulatoryMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
+assigned that returns a 2d array with more than one item, and it has the same number of `modulatory_signals
+<ModulatoryMechanism.modulatory_signals>`, then each ModulatorySignal is assigned to the corresponding item of the
+function's value.  However, these default behaviors can be modified by specifying that individual ModulatorySignals
+reference different items in `modulatory_allocation` as their `variable <ModulatorySignal.variable>`
+(see `OutputState_Variable`).
+
+
 .. _ModulatoryMechanism_Output:
 
 *Output*

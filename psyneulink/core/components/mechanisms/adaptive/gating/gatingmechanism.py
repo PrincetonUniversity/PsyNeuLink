@@ -89,13 +89,16 @@ as the input to the GatingMechanism's `function <GatingMechanism.function>`.
 A GatingMechanism's `function <GatingMechanism.function>` uses `outcome <GatingMechanism.outcome>`
 (the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `gating_allocation
 <GatingMechanism.gating_allocation>`.  By default, `function <GatingMechanism.function>` is assigned
-the `DefaultAllocationFunction`, which takes a single value as its input, and assigns this as the value of
+the `DefaultAllocationFunction`, which takes a single value as its input, and assigns that as the value of
 each item of `modulatory_allocation <GatingMechanism.gating_allocation>`.  Each of these items is assigned as
-the allocation for the corresponding  `GatingSignal` in `gating_signals <GatingMechanism.gating_signals>`. Thus, 
-by default, the GatingMechanism distributes its input as the allocation to each of its `gating_signals  
-<GatingMechanism.gating_signals>. However, this behavior can be modified either by specifying a different 
-`function <GatingMechanism.function>`, and/or by specifying that individual GatingSignals  reference different 
-items in `gating_allocation` as their allocation (i.e., the value of their `variable <GatingSignal.variable>`.
+the allocation for the corresponding  `GatingSignal` in `gating_signals <GatingMechanism.gating_signals>`. Thus,
+by default, the GatingMechanism distributes its input as the allocation to each of its `gating_signals
+<GatingMechanism.gating_signals>`.  This same behavior also applies to any custom function assigned to a
+GatingMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
+assigned that returns a 2d array with more than one item, and it has the same number of `gating_signals
+<GatingMechanism.gating_signals>`, then each GatingSignal is assigned to the corresponding item of the function's
+value.  However, these default behaviors can be modified by specifying that individual GatingSignals reference
+different items in `gating_allocation` as their `variable <GatingSignal.variable>` (see `OutputState_Variable`).
 
 .. _GatingMechanism_Output:
 

@@ -211,13 +211,17 @@ evaluates the specified OutputStates, and the result is conveyed as the input to
 A ControlMechanism's `function <ControlMechanism.function>` uses `outcome <ControlMechanism.outcome>`
 (the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `control_allocation
 <ControlMechanism.control_allocation>`.  By default, `function <ControlMechanism.function>` is assigned
-the `DefaultAllocationFunction`, which takes a single value as its input, and assigns this as the value of
+the `DefaultAllocationFunction`, which takes a single value as its input, and assigns that as the value of
 each item of `modulatory_allocation <ControlMechanism.control_allocation>`.  Each of these items is assigned as
 the allocation for the corresponding  `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. Thus,
 by default, the ControlMechanism distributes its input as the allocation to each of its `control_signals
-<ControlMechanism.control_signals>. However, this behavior can be modified either by specifying a different
-`function <ControlMechanism.function>`, and/or by specifying that individual ControlSignals  reference different
-items in `control_allocation` as their allocation (i.e., the value of their `variable <ControlSignal.variable>`.
+<ControlMechanism.control_signals>`.  This same behavior also applies to any custom function assigned to a
+ControlMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
+assigned that returns a 2d array with more than one item, and it has the same number of `control_signals
+<ControlMechanism.control_signals>`, then each ControlSignal is assigned to the corresponding item of the function's
+value.  However, these default behaviors can be modified by specifying that individual ControlSignals reference
+different items in `control_allocation` as their `variable <ControlSignal.variable>`
+(see `OutputState_Variable`).
 
 .. _ControlMechanism_Output:
 
