@@ -428,9 +428,10 @@ execution can also be configured in other ways.
 
 .. XXX
 .. • Explain:
+..  - use call_after_trial to print stuff (and explain it as a hook), and then explain log (or use with print_entries??)
 ..  - energy function
 ..  - special status of controller
-.. • Replace figure with once double projections are corrected
+.. • Replace figure once double projections to task unit are corrected
 .. • Change names of:
 ..   - ``output`` Mechanism above to ``phonology``
 ..   - ``color_hidden`` to ``color``
