@@ -237,6 +237,7 @@ from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.globals.parameters import Parameter
 
 import numpy as np
 import copy
@@ -417,6 +418,7 @@ class AutodiffComposition(Composition):
 
         """
         optimizer = None
+        # learning_rate = Parameter(.001, fallback_default=True)
         learning_rate = .001
         losses = None
         patience = None
@@ -428,7 +430,8 @@ class AutodiffComposition(Composition):
                  param_init_from_pnl=True,
                  patience=None,
                  min_delta=0,
-                 learning_rate=0.001,
+                 learning_rate=Parameter(.001, fallback_default=True),
+                 # learning_rate=.001,
                  learning_enabled=True,
                  optimizer_type='sgd',
                  weight_decay=0,
@@ -440,16 +443,13 @@ class AutodiffComposition(Composition):
                  force_no_retain_graph=False,
                  name="autodiff_composition"):
 
-        self.learning_enabled = True
         if not torch_available:
             raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
                                            '`pip install torch` or `pip3 install torch`')
 
-        # params = self._assign_args_to_param_dicts(learning_rate=learning_rate)
+        params = self._assign_args_to_param_dicts(learning_rate=learning_rate)
 
-        # since this does not pass params argument, defaults will not be automatically set..
-        super(AutodiffComposition, self).__init__(name=name)
-        # super(AutodiffComposition, self).__init__(params=params, name=name)
+        super(AutodiffComposition, self).__init__(params=params, name=name)
 
         self.learning_enabled = learning_enabled
         self.optimizer_type = optimizer_type
@@ -459,7 +459,6 @@ class AutodiffComposition(Composition):
 
         # pytorch representation of model and associated training parameters
         self.pytorch_representation = None
-        self.learning_rate = learning_rate
         self.weight_decay = weight_decay
         self.optimizer = None
         self.loss = None
@@ -509,7 +508,10 @@ class AutodiffComposition(Composition):
         if old_opt is not None:
             logger.warning("Overwriting optimizer for AutodiffComposition {}! Old optimizer: {}".format(
                 self, old_opt))
-        opt = self._make_optimizer(self.optimizer_type, self.learning_rate, self.weight_decay, execution_id)
+        opt = self._make_optimizer(self.optimizer_type,
+                                   self.parameters.learning_rate.get(execution_id),
+                                   self.weight_decay,
+                                   execution_id)
         self.parameters.optimizer.set(opt, execution_id)
 
         # Set up loss function
