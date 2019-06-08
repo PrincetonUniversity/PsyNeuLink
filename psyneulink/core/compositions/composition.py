@@ -1671,13 +1671,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                           sender, receiver,
                                           sender_mechanism, receiver_mechanism,
                                           learning_projection)
-
-        # if self._check_for_duplicate_projections(projection):
-        #     if projection in projection.sender.efferents:
-        #         del projection.sender.efferents[projection.sender.efferents.index(projection)]
-        #     if projection in projection.receiver.path_afferents:
-        #         del projection.receiver.path_afferents[projection.receiver.path_afferents.index(projection)]
-
         if valid:
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
@@ -2100,44 +2093,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              learning_projection,
                              ):
 
-        # # MODIFIED 6/8/19 OLD:
-        # # FIX 5/29/19 [JDC] WHY ASSIGN BOTH sender *AND* receiver IF *EITHER* IS NOT SPECIFIED?
-        # # FIX:              WHY NOT JUST ASSIGN THE ONE THAT IS NOT SPECIFIED?
-        # if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):
-        #     # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
-        #     if isinstance(sender, OutputState):
-        #         projection.init_args['sender'] = sender
-        #     else:
-        #         projection.init_args['sender'] = graph_sender
-        #     if isinstance(receiver, InputState):
-        #         projection.init_args['receiver'] = receiver
-        #     else:
-        #         projection.init_args['receiver'] = graph_receiver
-        #     # FIX: [JDC 6/8/19] WHY IS THIS BEING SET HERE?  IT SHOULD ALREADY HAVE BEEN SET
-        #     projection.context.initialization_status = ContextFlags.DEFERRED_INIT
-        #     projection._deferred_init(context=" INITIALIZING ")
-        # MODIFIED 6/8/19 NEW: [JDC]
-        if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):
+        if hasattr(projection, "sender") and hasattr(projection, "receiver"):
+            # if self._check_for_duplicate_projections(projection=projection):
+            #     return False
+            pass
+
+        # Deferred init
+        else:
             # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
             if not isinstance(sender, OutputState):
                 sender = graph_sender
             if not isinstance(receiver, InputState):
                receiver = graph_receiver
+
+            # Check if Projection to be instantiated is a duplicate;  if so, skip
             if self._check_for_duplicate_projections(sender=sender, receiver=receiver):
                 return False
+
+            # Initialize Projection
             projection.init_args['sender'] = sender
             projection.init_args['receiver'] = receiver
             # Check for duplicate here, to avoid warning in State._add_projection_to
-            projection.context.initialization_status = ContextFlags.DEFERRED_INIT
+            # # FIX: [JDC 6/8/19] WHY IS THIS BEING SET HERE?  IT SHOULD ALREADY HAVE BEEN SET
+            # projection.context.initialization_status = ContextFlags.DEFERRED_INIT
             projection._deferred_init(context=" INITIALIZING ")
-        # MODIFIED 6/8/19 END
-
-        # if self._check_for_duplicate_projections(projection):
-        #     if projection in projection.sender.efferents:
-        #         del projection.sender.efferents[projection.sender.efferents.index(projection)]
-        #     if projection in projection.receiver.path_afferents:
-        #         del projection.receiver.path_afferents[projection.receiver.path_afferents.index(projection)]
-        #     return False
 
         # Skip this validation on learning projections because they have non-standard senders and receivers
         if not learning_projection:
@@ -2212,14 +2191,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                          projection=None,
                                          sender=None,
                                          receiver=None):
-
         assert projection or (sender and receiver), \
             f'_check_for_duplicate_projections must be passed a projection or a sender and receiver'
 
         if projection:
             sender = projection.sender
             receiver = projection.receiver
-
         else:
             if isinstance(sender, Mechanism):
                 sender = sender.output_state
@@ -2230,13 +2207,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif isinstance(receiver, Composition):
                 receiver = receiver.input_CIM.input_state
 
-        projections = [proj for proj in sender.efferents if proj.sender is sender and proj.receiver is receiver]
-        if len(projections) != 1:
+        if [proj for proj in sender.efferents if proj.sender is sender and proj.receiver is receiver]:
             return True
-        # if any(proj.receiver is receiver for proj in sender.efferents):
-        #     return True
         return False
-
 
     def _analyze_consideration_queue(self, q, objective_mechanism):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
