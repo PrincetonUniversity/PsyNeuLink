@@ -1595,7 +1595,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection
 
-    def add_projection(self, projection=None, sender=None, receiver=None, feedback=False, learning_projection=False, name=None):
+    def add_projection(self,
+                       projection=None,
+                       sender=None,
+                       receiver=None,
+                       feedback=False,
+                       learning_projection=False,
+                       name=None,
+                       allow_duplicates=False
+                       ):
         '''
 
             Add a projection to the Composition, if it is not already added.
@@ -1659,17 +1667,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
-        self._validate_projection(projection, sender, receiver, sender_mechanism, receiver_mechanism, learning_projection)
+        valid = self._validate_projection(projection,
+                                          sender, receiver,
+                                          sender_mechanism, receiver_mechanism,
+                                          learning_projection)
 
-        self.needs_update_graph = True
-        self.needs_update_graph_processing = True
-        self.needs_update_scheduler_processing = True
+        # if self._check_for_duplicate_projections(projection):
+        #     if projection in projection.sender.efferents:
+        #         del projection.sender.efferents[projection.sender.efferents.index(projection)]
+        #     if projection in projection.receiver.path_afferents:
+        #         del projection.receiver.path_afferents[projection.receiver.path_afferents.index(projection)]
 
-        projection._activate_for_compositions(self)
-        for comp in nested_compositions:
-            projection._activate_for_compositions(comp)
+        if valid:
+            self.needs_update_graph = True
+            self.needs_update_graph_processing = True
+            self.needs_update_scheduler_processing = True
+
+            projection._activate_for_compositions(self)
+            for comp in nested_compositions:
+                projection._activate_for_compositions(comp)
+
+        # Note: do all of the following even if Projection is a duplicate and they are not allowed,
+        #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
 
         # Create "shadow" projections to any input states that are meant to shadow this projection's receiver
+        # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
         if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
             for shadow in self.shadows[receiver_mechanism]:
                 for input_state in shadow.input_states:
@@ -1759,6 +1781,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
 
     def add_linear_processing_pathway(self, pathway, feedback=False, *args):
+        '''Add sequence of Mechanisms or Compositions possibly with intercolated Projections
+        Tuples (Mechanism, NodeRole(s)) can be used to assign required_roles to Mechanisms.
+        '''
         # First, verify that the pathway begins with a node
         if not isinstance(pathway, (list, tuple)):
             raise CompositionError(f"First arg for add_linear_processing_pathway method of '{self.name}' "
@@ -1770,37 +1795,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise CompositionError("The first item in a linear processing pathway must be a Node (Mechanism or "
                                    "Composition).")
+
         # Then, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
-            # # MODIFIED 5/29/19 OLD:
-            # # if the current item is a mechanism, add it
-            # if isinstance(pathway[c], Mechanism):
-            #     self.add_nodes([pathway[c]])
-            # MODIFIED 5/29/19 NEW: [JDC]
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
             if isinstance(pathway[c], (Mechanism, Composition, tuple)):
                 self.add_nodes([pathway[c]])
-            # MODIFIED 5/29/19 END
 
-        # Then, loop through and validate that the mechanism-projection relationships make sense
+        # Then, loop through and validate that the Mechanism-Projection relationships make sense
         # and add MappingProjections where needed
         for c in range(1, len(pathway)):
             # if the current item is a Node
             if isinstance(pathway[c], (Mechanism, Composition, tuple)):
                 if isinstance(pathway[c - 1], (Mechanism, Composition, tuple)):
                     # if the previous item was also a Composition Node, add a mapping projection between them
-                    # # MODIFIED 5/29/19 OLD:
-                    # self.add_projection(MappingProjection(sender=pathway[c - 1],
-                    #                                       receiver=pathway[c]),
-                    #                     pathway[c - 1],
-                    #                     pathway[c],
-                    #                     feedback=feedback)
-                    # MODIFIED 5/29/19 NEW: [JDC]
                     self.add_projection(sender=pathway[c - 1],
                                         receiver=pathway[c],
                                         feedback=feedback)
-                    # MODIFIED 5/9/19 END
-            # if the current item is a Projection
+            # if the current item is a Projection specification
             elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
                 if c == len(pathway) - 1:
                     raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
@@ -1813,7 +1825,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         proj = MappingProjection(sender=pathway[c - 1],
                                                  matrix=pathway[c],
                                                  receiver=pathway[c + 1])
-                    self.add_projection(proj, pathway[c - 1], pathway[c + 1], feedback=feedback)
+                    self.add_projection(proj, pathway[c - 1], pathway[c + 1],
+                                        feedback=feedback,
+                                        allow_duplicates=False)
                 else:
                     raise CompositionError(
                         "{} is not between two Composition Nodes. A Projection in a linear processing pathway must be "
@@ -2083,28 +2097,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              sender, receiver,
                              graph_sender,
                              graph_receiver,
-                             learning_projection
+                             learning_projection,
                              ):
 
-        # FIX 5/29/19 [JDC] WHY ASSIGN BOTH sender *AND* receiver IF *EITHER* IS NOT SPECIFIED?
-        # FIX:              WHY NOT JUST ASSIGN THE ONE THAT IS NOT SPECIFIED?
+        # # MODIFIED 6/8/19 OLD:
+        # # FIX 5/29/19 [JDC] WHY ASSIGN BOTH sender *AND* receiver IF *EITHER* IS NOT SPECIFIED?
+        # # FIX:              WHY NOT JUST ASSIGN THE ONE THAT IS NOT SPECIFIED?
+        # if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):
+        #     # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
+        #     if isinstance(sender, OutputState):
+        #         projection.init_args['sender'] = sender
+        #     else:
+        #         projection.init_args['sender'] = graph_sender
+        #     if isinstance(receiver, InputState):
+        #         projection.init_args['receiver'] = receiver
+        #     else:
+        #         projection.init_args['receiver'] = graph_receiver
+        #     # FIX: [JDC 6/8/19] WHY IS THIS BEING SET HERE?  IT SHOULD ALREADY HAVE BEEN SET
+        #     projection.context.initialization_status = ContextFlags.DEFERRED_INIT
+        #     projection._deferred_init(context=" INITIALIZING ")
+        # MODIFIED 6/8/19 NEW: [JDC]
         if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):
-            # # MODIFIED 5/29/19 OLD:
-            # projection.init_args['sender'] = graph_sender
-            # projection.init_args['receiver'] = graph_receiver
-            # MODIFIED 5/29/19 NEW:
             # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
-            if isinstance(sender, OutputState):
-                projection.init_args['sender'] = sender
-            else:
-                projection.init_args['sender'] = graph_sender
-            if isinstance(receiver, InputState):
-                projection.init_args['receiver'] = receiver
-            else:
-                projection.init_args['receiver'] = graph_receiver
-            # MODIFIED 5/29/19 END
+            if not isinstance(sender, OutputState):
+                sender = graph_sender
+            if not isinstance(receiver, InputState):
+               receiver = graph_receiver
+            if self._check_for_duplicate_projections(sender=sender, receiver=receiver):
+                return False
+            projection.init_args['sender'] = sender
+            projection.init_args['receiver'] = receiver
+            # Check for duplicate here, to avoid warning in State._add_projection_to
             projection.context.initialization_status = ContextFlags.DEFERRED_INIT
             projection._deferred_init(context=" INITIALIZING ")
+        # MODIFIED 6/8/19 END
+
+        # if self._check_for_duplicate_projections(projection):
+        #     if projection in projection.sender.efferents:
+        #         del projection.sender.efferents[projection.sender.efferents.index(projection)]
+        #     if projection in projection.receiver.path_afferents:
+        #         del projection.receiver.path_afferents[projection.receiver.path_afferents.index(projection)]
+        #     return False
 
         # Skip this validation on learning projections because they have non-standard senders and receivers
         if not learning_projection:
@@ -2114,6 +2147,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if projection.receiver.owner != graph_receiver:
                 raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
                                        "Components in the Composition.".format(projection, receiver))
+        return True
 
     def _get_original_senders(self, input_state, projections):
         original_senders = set()
@@ -2173,6 +2207,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a sender')
             if not projection.receiver:
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
+
+    def _check_for_duplicate_projections(self,
+                                         projection=None,
+                                         sender=None,
+                                         receiver=None):
+
+        assert projection or (sender and receiver), \
+            f'_check_for_duplicate_projections must be passed a projection or a sender and receiver'
+
+        if projection:
+            sender = projection.sender
+            receiver = projection.receiver
+
+        else:
+            if isinstance(sender, Mechanism):
+                sender = sender.output_state
+            elif isinstance(sender, Composition):
+                sender = sender.output_CIM.output_state
+            if isinstance(receiver, Mechanism):
+                receiver = receiver.input_state
+            elif isinstance(receiver, Composition):
+                receiver = receiver.input_CIM.input_state
+
+        projections = [proj for proj in sender.efferents if proj.sender is sender and proj.receiver is receiver]
+        if len(projections) != 1:
+            return True
+        # if any(proj.receiver is receiver for proj in sender.efferents):
+        #     return True
+        return False
+
 
     def _analyze_consideration_queue(self, q, objective_mechanism):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
