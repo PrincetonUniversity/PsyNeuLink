@@ -1604,50 +1604,76 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        name=None,
                        allow_duplicates=False
                        ):
-        '''
+        '''Add **projection** to the Composition, if one with the same sender and receiver doesn't already exist.
 
-            Add a projection to the Composition, if it is not already added.
+        If **projection** is not specified, create a default `MappingProjection` using **sender** and **receiver**.
 
-            If a *projection* is not specified, then a default MappingProjection is created.
+        If **projection** is specified:
 
-            The sender and receiver of a particular Projection vertex within the Composition (the *sender* and
-            *receiver* arguments of add_projection) must match the `sender <Projection.sender>` and `receiver
-            <Projection.receiver>` specified on the Projection object itself.
+        • if **projection** has already been instantiated, and **sender** and **receiver** are also specified,
+          they must match the `sender <MappingProjection.sender>` and `receiver <MappingProjection.receiver>`
+          of **projection**.
 
-                - If the *sender* and/or *receiver* arguments are not specified, then the `sender <Projection.sender>`
-                  and/or `receiver <Projection.receiver>` attributes of the Projection object set the missing value(s).
-                - If the `sender <Projection.sender>` and/or `receiver <Projection.receiver>` attributes of the
-                  Projection object are not specified, then the *sender* and/or *receiver* arguments set the missing
-                  value(s).
+        • if the status of **projection** is `deferred_init`:
 
-            Arguments
-            ---------
+          - if its `sender <Projection.sender>` and/or `receiver <Projection.receiver>` attributes are not specified,
+            then **sender** and/or **receiver** are used.
 
-            sender : Mechanism, Composition, or OutputState
-                the sender of **projection**
+          - if `sender <Projection.sender>` and/or `receiver <Projection.receiver>` attributes are specified,
+            they must match **sender** and/or **receiver** if those have also been specified.
 
-            projection : Projection, matrix
-                the projection to add
+          - if a Projection between the specified sender and receiver does *not* already exist, it is initialized; if
+            it *does* already exist, the request to add it is ignored, however requests to shadow it and/or mark it as
+            a`feedback` Projection are implemented (in case it has not already been done for the existing Projection).
 
-            receiver : Mechanism, Composition, or InputState
-                the receiver of **projection**
+        .. note::
 
-            feedback : Boolean
-                When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
-                means that each Projections within the cycle actually passes to its receiver its sender's value from
-                the sender's previous execution.
 
-                When True, this Projection "breaks" the cycle, such that all Nodes execute in sequence, and only the
-                Projection marked as 'feedback' passes to its receiver its sender's value from the sender's previous
-                execution.
-        '''
+        Arguments
+        ---------
+
+        sender : Mechanism, Composition, or OutputState
+            the sender of **projection**
+
+        projection : Projection, matrix
+            the projection to add
+
+        receiver : Mechanism, Composition, or InputState
+            the receiver of **projection**
+
+        feedback : bool
+            When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
+            means that each Projections within the cycle actually passes to its `receiver <Projection.receiver>`
+            the `value <Projection.value>` of its `sender <Projection.sender>` from the previous execution.
+            When True, this Projection "breaks" the cycle, such that all Nodes execute in sequence, and only the
+            Projection marked as 'feedback' passes to its `receiver <Projection.receiver>` the
+            `value <Projection.value>` of its `sender <Projection.sender>` from the previous execution.
+    '''
 
         projection = self._parse_projection_spec(projection, name)
+        duplicate = False
 
         # Parse sender and receiver specs
         sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
         receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
+        
+        # If Deferred init
+        if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
+            if not isinstance(sender, OutputState):
+                # sender = graph_sender
+                sender = sender_mechanism
+            if not isinstance(receiver, InputState):
+                # receiver = graph_receiver
+                receiver = receiver_mechanism
+            # Check if Projection to be initialized already exists;  if so, mark as duplicate and skip
+            duplicate = self._check_for_existing_projection(sender=sender, receiver=receiver)
+            if not duplicate:
+                # Initialize Projection
+                projection.init_args['sender'] = sender
+                projection.init_args['receiver'] = receiver
+                projection._deferred_init(context=" INITIALIZING ")
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
@@ -1667,11 +1693,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
-        valid = self._validate_projection(projection,
-                                          sender, receiver,
-                                          sender_mechanism, receiver_mechanism,
-                                          learning_projection)
-        if valid:
+        if not duplicate:
+            self._validate_projection(projection,
+                                      sender, receiver,
+                                      sender_mechanism, receiver_mechanism,
+                                      learning_projection)
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
             self.needs_update_scheduler_processing = True
@@ -1680,7 +1706,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for comp in nested_compositions:
                 projection._activate_for_compositions(comp)
 
-        # Note: do all of the following even if Projection is a duplicate and they are not allowed,
+        # Note: do all of the following even if Projection is a duplicate,
         #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
 
         # Create "shadow" projections to any input states that are meant to shadow this projection's receiver
@@ -2093,23 +2119,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              learning_projection,
                              ):
 
-        # Deferred init
-        if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):
-            # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
-            if not isinstance(sender, OutputState):
-                sender = graph_sender
-            if not isinstance(receiver, InputState):
-               receiver = graph_receiver
-
-            # Check if Projection to be initialized is a duplicate;  if so, skip
-            if self._check_for_duplicate_projections(sender=sender, receiver=receiver):
-                return False
-
-            # Initialize Projection
-            projection.init_args['sender'] = sender
-            projection.init_args['receiver'] = receiver
-            projection._deferred_init(context=" INITIALIZING ")
-
         # FIX: [JDC 6/8/19] SHOULDN'T THERE BE A CHECK FOR THEM LearningProjections? OR ARE THOSE DONE ELSEWHERE?
         # Skip this validation on learning projections because they have non-standard senders and receivers
         if not learning_projection:
@@ -2119,7 +2128,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if projection.receiver.owner != graph_receiver:
                 raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
                                        "Components in the Composition.".format(projection, receiver))
-        return True
 
     def _get_original_senders(self, input_state, projections):
         original_senders = set()
@@ -2180,12 +2188,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not projection.receiver:
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
 
-    def _check_for_duplicate_projections(self,
+    def _check_for_existing_projection(self,
                                          projection=None,
                                          sender=None,
                                          receiver=None):
         assert projection or (sender and receiver), \
-            f'_check_for_duplicate_projections must be passed a projection or a sender and receiver'
+            f'_check_for_existing_projection must be passed a projection or a sender and receiver'
 
         if projection:
             sender = projection.sender
