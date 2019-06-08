@@ -2093,31 +2093,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              learning_projection,
                              ):
 
-        if hasattr(projection, "sender") and hasattr(projection, "receiver"):
-            # if self._check_for_duplicate_projections(projection=projection):
-            #     return False
-            pass
-
         # Deferred init
-        else:
+        if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):
             # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
             if not isinstance(sender, OutputState):
                 sender = graph_sender
             if not isinstance(receiver, InputState):
                receiver = graph_receiver
 
-            # Check if Projection to be instantiated is a duplicate;  if so, skip
+            # Check if Projection to be initialized is a duplicate;  if so, skip
             if self._check_for_duplicate_projections(sender=sender, receiver=receiver):
                 return False
 
             # Initialize Projection
             projection.init_args['sender'] = sender
             projection.init_args['receiver'] = receiver
-            # Check for duplicate here, to avoid warning in State._add_projection_to
-            # # FIX: [JDC 6/8/19] WHY IS THIS BEING SET HERE?  IT SHOULD ALREADY HAVE BEEN SET
-            # projection.context.initialization_status = ContextFlags.DEFERRED_INIT
             projection._deferred_init(context=" INITIALIZING ")
 
+        # FIX: [JDC 6/8/19] SHOULDN'T THERE BE A CHECK FOR THEM LearningProjections? OR ARE THOSE DONE ELSEWHERE?
         # Skip this validation on learning projections because they have non-standard senders and receivers
         if not learning_projection:
             if projection.sender.owner != graph_sender:
