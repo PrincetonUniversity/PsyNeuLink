@@ -26,7 +26,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import function_type, method_type
+from psyneulink.core.components.component import function_type, method_type, DefaultsFlexibility
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
 from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.context import ContextFlags
@@ -219,6 +219,12 @@ class Stability(ObjectiveFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+        # MODIFIED 6/8/19 NEW: [JDC]
+        self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+        # MODIFIED 6/8/19 END
+
+
+
     def _validate_variable(self, variable, context=None):
         """Validates that variable is 1d array
         """
@@ -278,11 +284,7 @@ class Stability(ObjectiveFunction):
                                     format(param_type_string, MATRIX, self.name, matrix))
             rows = matrix.shape[0]
             cols = matrix.shape[1]
-            # MODIFIED 11/25/17 OLD:
-            # size = len(np.squeeze(self.defaults.variable))
-            # MODIFIED 11/25/17 NEW:
             size = len(self.defaults.variable)
-            # MODIFIED 11/25/17 END
 
             if rows != size:
                 raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
@@ -403,6 +405,12 @@ class Stability(ObjectiveFunction):
         stability : scalar
 
         """
+
+        # MODIFIED 6/8/19 NEW: [JDC]
+        if variable.ndim > 1:
+            variable = np.squeeze(variable)
+        # MODIFIED 6/8/19 END
+
         # Validate variable and validate params
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 

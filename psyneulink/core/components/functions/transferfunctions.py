@@ -3140,7 +3140,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         if rows != cols:
             raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
-        return 1-np.identity(rows) * -1
+        return (1-np.identity(rows)) * -1
 
     if specification == RANDOM_CONNECTIVITY_MATRIX:
         return np.random.rand(rows, cols)
