@@ -31,9 +31,10 @@ from psyneulink.core.components.functions.function import EPSILON, FunctionError
 from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, \
-    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, INVERSE_HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, \
-    NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
+    CORRELATION, COSINE, CROSS_ENTROPY, \
+    DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, \
+    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, \
+    NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_distance_metric
@@ -75,6 +76,7 @@ class Stability(ObjectiveFunction):
     """
     Stability(                                  \
         default_variable=None,                  \
+        size=None,                              \
         matrix=HOLLOW_MATRIX,                   \
         metric=ENERGY                           \
         transfer_fct=None                       \
@@ -97,8 +99,13 @@ class Stability(ObjectiveFunction):
     Arguments
     ---------
 
-    variable : list of numbers or 1d np.array : Default class_defaults.variable
-        the array for which stability is calculated.
+    variable : list or 1d array of numbers: Default class_defaults.variable
+        specifies shape and default value of the array for which stability is calculated.
+
+    size : int : None
+        specifies length of the array over which stability is calculated;  can be used in place of default_value,
+        in which case zeros are assigned as the value(s). An error is generated if both are specified but
+        size != len(default_value).
 
     matrix : list, np.ndarray, np.matrix, or matrix keyword : default HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
@@ -131,8 +138,11 @@ class Stability(ObjectiveFunction):
     Attributes
     ----------
 
-    variable : 1d np.array
+    variable : 1d array
         array for which stability is calculated.
+
+    size : int
+        length of array for which stability is calculated.
 
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
         weight matrix from each element of `variable <Stability.variablity>` to each other;  if a matrix other
@@ -198,6 +208,7 @@ class Stability(ObjectiveFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
+                 size=None,
                  matrix=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
                  metric: tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric) = ENERGY,
@@ -206,6 +217,14 @@ class Stability(ObjectiveFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
+
+        if size:
+            if default_variable is None:
+                default_variable = np.zeros(size)
+            elif size != len(default_variable):
+                raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(SIZE)} ({size}) "
+                                    f"are specified for {self.name} but are {SIZE}!=len({DEFAULT_VARIABLE}).")
+
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   metric=metric,
@@ -437,6 +456,7 @@ class Energy(Stability):
     """
     Energy(                           \
         default_variable=None,        \
+        size=None,                    \
         matrix=INVERSE_HOLLOW_MATRIX, \
         transfer_fct=None             \
         normalize=False,              \
@@ -452,8 +472,13 @@ class Energy(Stability):
     Arguments
     ---------
 
-    variable : list of numbers or 1d np.array : Default class_defaults.variable
-        the array for which energy is calculated.
+    variable : list or 1d array of numbers: Default class_defaults.variable
+        specifies shape and default value of the array for which energy is calculated.
+
+    size : int : None
+        specifies length of the array over which energy is calculated;  can be used in place of default_value,
+        in which case zeros are assigned as the value(s). An error is generated if both are specified but
+        size != len(default_value).
 
     matrix : list, np.ndarray, np.matrix, or matrix keyword : default INVERSE_HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
@@ -484,8 +509,11 @@ class Energy(Stability):
     Attributes
     ----------
 
-    variable : 1d np.array
+    variable : 1d array
         array for which energy is calculated.
+
+    size : int
+        length of array for which energy is calculated.
 
     matrix : list, np.ndarray, np.matrix, or matrix keyword
         weight matrix from each element of `variable <Energy.variablity>` to each other;  if a matrix other
@@ -513,6 +541,7 @@ class Energy(Stability):
     
     def __init__(self,
                  default_variable=None,
+                 size=None,
                  normalize:bool=False,
                  # transfer_fct=None,
                  matrix=HOLLOW_MATRIX,
@@ -521,6 +550,7 @@ class Energy(Stability):
                  prefs=None):
 
         super().__init__(default_variable=default_variable,
+                         size=size,
                          metric=ENERGY,
                          matrix=matrix,
                          # transfer_fct=transfer_fct,
@@ -532,8 +562,9 @@ class Energy(Stability):
 
 class Entropy(Stability):
     """
-    Entropy(                           \
+    Entropy(                          \
         default_variable=None,        \
+        size=None,                    \
         matrix=INVERSE_HOLLOW_MATRIX, \
         transfer_fct=None             \
         normalize=False,              \
@@ -549,8 +580,13 @@ class Entropy(Stability):
     Arguments
     ---------
 
-    variable : list of numbers or 1d np.array : Default class_defaults.variable
-        the array for which entropy is calculated.
+    variable : list or 1d array of numbers: Default class_defaults.variable
+        specifies shape and default value of the array for which entropy is calculated.
+
+    size : int : None
+        specifies length of the array over which entropy is calculated;  can be used in place of default_value,
+        in which case zeros are assigned as the value(s). An error is generated if both are specified but
+        size != len(default_value).
 
     matrix : list, np.ndarray, np.matrix, or matrix keyword : default INVERSE_HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
@@ -581,8 +617,11 @@ class Entropy(Stability):
     Attributes
     ----------
 
-    variable : 1d np.array
+    variable : 1d array
         array for which entropy is calculated.
+
+    size : int
+        length of array for which energy is calculated.
 
     matrix : list, np.ndarray, np.matrix, or matrix keyword
         weight matrix from each element of `variable <Entropy.variablity>` to each other;  if a matrix other
@@ -647,7 +686,7 @@ class Distance(ObjectiveFunction):
     Arguments
     ---------
 
-    variable : 2d np.array with two items : Default class_defaults.variable
+    variable : 2d array with two items : Default class_defaults.variable
         the arrays between which the distance is calculated.
 
     metric : keyword in DistancesMetrics : Default EUCLIDEAN
@@ -674,7 +713,7 @@ class Distance(ObjectiveFunction):
     Attributes
     ----------
 
-    variable : 2d np.array with two items
+    variable : 2d array with two items
         contains the arrays between which the distance is calculated.
 
     metric : keyword in DistanceMetrics

@@ -762,7 +762,6 @@ class Component(object, metaclass=ComponentsMeta):
         if self.prev_context == context:
             return
 
-
     Class methods:
         - _handle_size(size, variable)
         - _validate_variable(variable)

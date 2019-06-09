@@ -374,35 +374,52 @@ Control
 
 Another distinctive feature of PsyNeuLink is the ability to easily create models that include control;  that is,
 Mechanisms that can evaluate the output of other Mechanisms (or nested Compositions), and use this to regulate the
-processing of those Mechanisms.  For example, the extension of ``Stroop_model`` below monitors conflict in
-the ``output`` Mechanism on each `TRIAL <TimeScale.TRIAL>`, and uses that to regulate the gain of the ``task``
-Mechanism::
+processing of those Mechanisms.  For example, modifications of the ``Stroop_model`` shown below allow it to monitor
+conflict in the ``output`` Mechanism on each `TRIAL <TimeScale.TRIAL>`, and use that to regulate the gain of the
+``task`` Mechanism::
 
     # Construct control mechanism
     control = ControlMechanism(name='CONTROL',
-                               monitor_for_control=output,
                                objective_mechanism=ObjectiveMechanism(name='Conflict Monitor',
-                                                                      function=Energy),
+                                                                      function=Energy(size=2,
+                                                                                      matrix=[[0,-2.5],[-2.5,0]]),
+                                                                      monitor=output),
                                control_signals=[(GAIN, task)])
 
     # Construct the Composition using the control Mechanism as its controller:
     Stroop_model = Composition(name='Stroop Model', controller=control)
 
+    # Set up run and then execute it
 
+    task.initial_value = [0.5,0.5]      # Assign "neutral" starting point for task units on each trial
+    task.reinitialize_when=AtPass(n=0)  # Reinitialize task units at beginning of each trial
+    num_trials = 5
+    stimuli = {color_input:[red]*num_trials,
+               word_input:[green]*num_trials,
+               task_input:[color]*num_trials}
+    Stroop_model.run(inputs=stimuli,
+                     call_before_trial=print_before,
+                     call_after_trial=print_after
+                     )
 
-XXX Explain:
-Composition controller
-ObjectiveMechanism
-monitor_for_control
-control_signals
-Automatiion of their construction
+.. XXX Explain:
+.. ObjectiveMechanism:
+..   function, size and matrix
+..   monitor
+.. control_signals
+.. Automation of their construction
+.. Composition controller
+.. hooks for call_before_trial / call_after_trial
 
-The constructor for the ControlMechanism specifies how control should be configured, and automates the process of
-implementing it:  the **monitor_for_control** argument specifies the Mechanisms to be monitored;
-**objective_mechanism** specifies the ObjectiveMechanism and its function used to do the monitoring; and
-**control_signals** specifies the parameters of the Mechanisms to be regulated.  These are used to construct
-ObjectiveMechanism and ControlMechanisms, and the ControlMechanism is then assigned to the ``Stroop_model`` as its
-`controller <Stroop_model.controller>` when the Composition is constructed.  The figure below shows the result:
+This takes advantage of several additional features of PsyNeuLink, including its ability to automate certain forms of
+construction, and perform various operations (e.g., reinitialize variables and call user-defined functions) at
+specified points during execution.  For example, the constructor for the ControlMechanism specifies how control should
+be configured, and automates the process of implementing it:  the **monitor_for_control** argument specifies the
+Mechanisms to be monitored; **objective_mechanism** specifies the ObjectiveMechanism and its function used to do the
+monitoring; and **control_signals** specifies the parameters of the Mechanisms to be regulated.  These are used to
+construct ObjectiveMechanism and ControlMechanisms, and the ControlMechanism is then assigned to the
+``Stroop_model`` as its `controller <Stroop_model.controller>` when the Composition is constructed.  The figure below
+shows the result:
 
 .. _BasicsAndSampler_Stroop_Example_With_Control_Figure:
 
