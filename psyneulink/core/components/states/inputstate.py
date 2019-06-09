@@ -1281,14 +1281,14 @@ class InputState(State_Base):
 
         if isinstance(spec, Mechanism):
             return True
-        if isinstance(spec, collections.Iterable):
+        if isinstance(spec, collections.abc.Iterable):
             # generally 2-4 tuple spec, but allows list spec
             for item in spec:
                 if isinstance(item, Mechanism):
                     return True
                 # handles tuple spec where first item of tuple is itself a (name, Mechanism) tuple
                 elif (
-                    isinstance(item, collections.Iterable)
+                    isinstance(item, collections.abc.Iterable)
                     and len(item) >= 2
                     and isinstance(item[1], Mechanism)
                 ):

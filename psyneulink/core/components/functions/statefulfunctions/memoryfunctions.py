@@ -22,7 +22,7 @@ Functions that store and can return a record of their input.
 
 '''
 
-from collections.__init__ import deque, OrderedDict
+from collections import deque, OrderedDict
 from random import choice
 
 import numpy as np
