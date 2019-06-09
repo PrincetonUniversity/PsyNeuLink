@@ -406,10 +406,8 @@ class Stability(ObjectiveFunction):
 
         """
 
-        # MODIFIED 6/8/19 NEW: [JDC]
         if variable.ndim > 1:
             variable = np.squeeze(variable)
-        # MODIFIED 6/8/19 END
 
         # Validate variable and validate params
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
@@ -516,15 +514,16 @@ class Energy(Stability):
     def __init__(self,
                  default_variable=None,
                  normalize:bool=False,
-                 transfer_fct=None,
+                 # transfer_fct=None,
+                 matrix=HOLLOW_MATRIX,
                  params=None,
                  owner=None,
                  prefs=None):
 
         super().__init__(default_variable=default_variable,
                          metric=ENERGY,
-                         matrix=INVERSE_HOLLOW_MATRIX,
-                         transfer_fct=transfer_fct,
+                         matrix=matrix,
+                         # transfer_fct=transfer_fct,
                          normalize=normalize,
                          params=params,
                          owner=owner,
