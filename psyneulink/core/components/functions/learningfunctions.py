@@ -22,7 +22,7 @@ Functions that parameterize a function.
 
 '''
 
-from collections.__init__ import namedtuple
+from collections import namedtuple
 
 import numpy as np
 import typecheck as tc

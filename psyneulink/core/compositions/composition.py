@@ -3586,7 +3586,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             active_items = []
         elif active_items is INITIAL_FRAME:
             active_items = [INITIAL_FRAME]
-        elif not isinstance(active_items, collections.Iterable):
+        elif not isinstance(active_items, collections.abc.Iterable):
             active_items = [active_items]
         elif not isinstance(active_items, list):
             active_items = list(active_items)
@@ -4454,7 +4454,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # store the result of this execute in case it will be the final result
 
             # object.results.append(result)
-            if isinstance(trial_output, collections.Iterable):
+            if isinstance(trial_output, collections.abc.Iterable):
                 result_copy = trial_output.copy()
             else:
                 result_copy = trial_output
