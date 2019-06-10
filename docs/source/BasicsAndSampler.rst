@@ -7,6 +7,7 @@ Basics and Sampler
     * `BasicsAndSampler_Elaborate_Configurations`
     * `BasicsAndSampler_Dynamics_of_Execution`
     * `BasicsAndSampler_Control`
+    * `BasicsAndSampler_Logging_and_Animation`
     * `BasicsAndSampler_Learning`
 
 .. _BasicsAndSampler_Basics:
@@ -73,7 +74,7 @@ capabilities.  They assume some experience with computational modeling and/or re
 `tutorial <>` provides additional introductory material for those who are newer to computational modeling, as well as a
 more detailed and comprehensive introduction to the use of PsyNeuLink.
 
-.. _Simple_Configurations:
+.. _BasicsAndSampler_Simple_Configurations:
 
 Simple Configurations
 ~~~~~~~~~~~~~~~~~~~~~
@@ -381,16 +382,15 @@ conflict in the ``output`` Mechanism on each `TRIAL <TimeScale.TRIAL>`, and use 
     # Construct control mechanism
     control = ControlMechanism(name='CONTROL',
                                objective_mechanism=ObjectiveMechanism(name='Conflict Monitor',
+                                                                      monitor=output
                                                                       function=Energy(size=2,
-                                                                                      matrix=[[0,-2.5],[-2.5,0]]),
-                                                                      monitor=output),
+                                                                                      matrix=[[0,-2.5],[-2.5,0]])),
                                control_signals=[(GAIN, task)])
 
     # Construct the Composition using the control Mechanism as its controller:
     Stroop_model = Composition(name='Stroop Model', controller=control)
 
     # Set up run and then execute it
-
     task.initial_value = [0.5,0.5]      # Assign "neutral" starting point for task units on each trial
     task.reinitialize_when=AtPass(n=0)  # Reinitialize task units at beginning of each trial
     num_trials = 5
@@ -403,50 +403,73 @@ conflict in the ``output`` Mechanism on each `TRIAL <TimeScale.TRIAL>`, and use 
                      )
 
 .. XXX Explain:
-.. ObjectiveMechanism:
-..   function, size and matrix
-..   monitor
-.. control_signals
-.. Automation of their construction
 .. Composition controller
-.. hooks for call_before_trial / call_after_trial
 
-This takes advantage of several additional features of PsyNeuLink, including its ability to automate certain forms of
-construction, and perform various operations (e.g., reinitialize variables and call user-defined functions) at
-specified points during execution.  For example, the constructor for the ControlMechanism specifies how control should
-be configured, and automates the process of implementing it:  the **monitor_for_control** argument specifies the
-Mechanisms to be monitored; **objective_mechanism** specifies the ObjectiveMechanism and its function used to do the
-monitoring; and **control_signals** specifies the parameters of the Mechanisms to be regulated.  These are used to
-construct ObjectiveMechanism and ControlMechanisms, and the ControlMechanism is then assigned to the
-``Stroop_model`` as its `controller <Stroop_model.controller>` when the Composition is constructed.  The figure below
-shows the result:
+This example takes advantage of several additional features of PsyNeuLink, including its ability to automate certain
+forms of construction, and perform specified operations at various points during execution (e.g., reinitialize variables
+and call user-defined functions).  For example, the constructor for the ControlMechanism can be used to specify how
+control should be configured, and automates the process of implementing it:  the **objective_mechanism** argument
+specifies the construction of an ObjectiveMechanism for the ControlMechanism that provides its input, and
+the **control_signals** argument specifies the parameters of the Mechanisms it should regulate and constructs the
+`ControlProjections <ControlProjection>` that implement this.  Furthermore, the constructor for the
+`ObjectiveMechanism` used in the **objective_mechanism** argument specifies that it should monitor the value of the
+``output`` Mechanism, and use the `Energy` Function to evaluate it.  PsyNeuLink automatically constructs the
+MappingProjections from ``output`` to the ObjectiveMechanism, and from the latter to the ControlMechanism.  The latter
+is then added to the ``Stroop_model`` as its `controller <Composition .controller>` in its constructor.
+The result is shown in the figure below, using the **show_controller** option of the Composition's `show_graph
+<Composition.show_graph>` method:
 
 .. _BasicsAndSampler_Stroop_Example_With_Control_Figure:
 
 .. figure:: _static/BasicsAndSampler_Control.svg
    :width: 50%
 
-   **Stroop Model with Controller.** Representation of the Composition in the example above, using
-   ``Stroop_model.show_graph(show_controller)``
+   **Stroop Model with Controller.** Representation of the Composition with the ``control`` Mechanism added, using
+   ``Stroop_model.show_graph(show_controller)``.
 
-When the Composition executes, the Objective Mechanism receives the output of the ``output`` Mechanism, and uses
-the `Energy` function assigned to it to compute conflict in the ``output`` Mechanism (the degree of co-activity of
-it respresentations of the ``red`` and ``green`` responses).  The result passed to the ``control`` Mechanism, which
-uses it to set the `gain <Logistic.gain>` of the `Logistic` function used by the ``task`` Mechahnism.  The ``control``
-Mechanism executes at the end of each `TRIAL <TimeScale.TRIAL>`, which has its effects on the ``task`` Mechanism the
-next time it executes (i.e., on the next `TRIAL <TimeScale.TRIAL>`).  Running the model for several trials shows that
-it adapts its behavior based on the previous inputs::
+The ``task`` Mechanism is configured to reinitialize at the beginning of each `trial <TimeScale.TRIAL>`, and the
+**call_after_trial** argument of the Composition's `run <Composition.run>` method is used to print Mechanism values
+at the end of each `trial <TimeScale.TRIAL>` (see `below <Stroop_model_output>`).
+
+When the Composition executes, the Objective Mechanism receives the output of the ``output`` Mechanism, and uses the
+`Energy` function assigned to it to compute conflict in the ``output`` Mechanism (i.e., the degree of co-activity of
+the ``red`` and ``green`` values).  The result passed to the ``control`` Mechanism, which uses it to set the `gain
+<Logistic .gain>` of the `Logistic` function used by the ``task`` Mechahnism.  The ``task`` Mechanism is configured to
+reinitialize at the beginning of each `trial <TimeScale.TRIAL>`; and the ``control`` Mechanism, as the Composition's
+`controller <Composition.controller>`, executes by default at the end of each `trial <TimeScale.TRIAL>`, which has
+its effects on the ``task`` Mechanism the next time it executes (i.e., on the next ). Finally, the
+**call_after_trial** argument of the Composition's `run <Composition.run>` method is used to print Mechanism values
+at the end of each `trial <TimeScale.TRIAL>`. Running it for several `trials <TimeScale.TRIAL>` produces the
+following output::
+
+    .. _Stroop_model_output:
 
     XXX EXAMPLE OUTPUT HERE XXX
 
+
+.. _BasicsAndSampler_Logging_and_Animation:
+
+Logging and Animation
+~~~~~~~~~~~~~~~~~~~~~
+
+.. The **animate** argument of the `run <Composition.run>` method can be used to generate an animation of the
+.. Composition's execution::
+..
+..     XXX ANIMATION EXAMPLE HERE
+
+The print statements used in the example above illustrate the availability of "hooks" that can be used to carry out
+custom operations at various points during execution (XXX OTHER HOOKS HERE).  However, PsyNeuLink also has powerful
+logging capabilities that can be used to store and generate any parameter of a model standard forms (e.g, as numpy
+arrays, in CSV format, or easy to read formats for console output, as shown below::
+
+    XXX LOG EXAMPLE HERE
+
 ControlMechanisms and ObjectiveMechanisms can also be manually configured, and added as free-standing nodes in
-Composition (i.e., not necessarily as its `controller <Composition.controller>`.  As described above, the timing of
-execution can also be configured in other ways.
+Composition (i.e., not necessarily as its `controller <Composition.controller>`.
 
 .. XXX
 .. • Explain:
 ..  - use call_after_trial to print stuff (and explain it as a hook), and then explain log (or use with print_entries??)
-..  - energy function
 ..  - special status of controller
 .. • Replace figure once double projections to task unit are corrected
 .. • Change names of:
@@ -455,14 +478,23 @@ execution can also be configured in other ways.
 ..   - ``word_hidden`` to ``orthography``
 
 A more elaborate example of this model can be found at `BotvinickConflictMonitoringModel`. More complicated forms of
-control are also possible, for example, ones that run internal simulations to determine the amount of control to
-optimize some criterion.
+control are also possible, for example, ones that run internal simulations to optimize the amount of control to
+optimize some criterion (e.g,. maximize the `expected value of control <https://royalsocietypublishing
+.org/doi/full/10.1098/rstb.2013.0478>`_ (see XXX EVC script), or to implement `model-based learning
+<https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_ (see XXX LVOC script).
+
+.. XXX MENTION SPECIFIC EXAMPLE SCRIPTS/MODELS HERE
 
 .. .. _BasicsAndSampler_Learning:
 ..
 .. Learning
 .. ~~~~~~~~
 ..
+.. Impelements all major forms of learning (autoassociative, RL and BP)
+.. Implementation favors modulariziation / depiction of process flow (pedagogical tool, e.g., animation - SHOW EXAMPLE)
+.. But integrates PyTorch for efficiency and generality: Autodiff EXAMPLE (Rumelhart network)
+..
+.. OLD:
 .. For example, the feedforward network above can be
 .. trained using backpropagation simply by adding the **learning** argument to the constructor for the Process::
 ..
