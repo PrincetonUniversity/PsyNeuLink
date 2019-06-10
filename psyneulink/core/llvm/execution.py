@@ -10,7 +10,8 @@
 
 from psyneulink.core.globals.utilities import NodeRole
 
-import copy, ctypes
+import copy
+import ctypes
 from collections import defaultdict
 import numpy as np
 
@@ -20,6 +21,7 @@ from . import helpers, jit_engine
 from .debug import debug_env
 
 __all__ = ['CompExecution', 'FuncExecution', 'MechExecution']
+
 
 def _convert_ctype_to_python(x):
     if isinstance(x, ctypes.Structure):
@@ -32,6 +34,7 @@ def _convert_ctype_to_python(x):
         return x
 
     assert False, "Don't know how to convert: {}".format(x)
+
 
 def _tupleize(x):
     try:
@@ -200,7 +203,7 @@ class MechExecution(FuncExecution):
 
 class CompExecution(CUDAExecution):
 
-    def __init__(self, composition, execution_ids = [None]):
+    def __init__(self, composition, execution_ids=[None]):
         super().__init__(buffers=['context_struct', 'param_struct', 'data_struct', 'conditions'])
         self._composition = composition
         self._execution_ids = execution_ids
@@ -211,7 +214,6 @@ class CompExecution(CUDAExecution):
         self.__bin_run_multi_func = None
         self.__debug_env = debug_env
         self.__frozen_vals = None
-
 
         # TODO: Consolidate these
         if len(execution_ids) > 1:
@@ -315,7 +317,7 @@ class CompExecution(CUDAExecution):
         if len(self._execution_ids) > 1:
             self.__data_struct = data_struct
         else:
-            self._composition._compilation_data.data_struct.set(data_struct, execution_context = self._execution_ids[0])
+            self._composition._compilation_data.data_struct.set(data_struct, execution_context=self._execution_ids[0])
 
     def _extract_node_struct(self, node, data):
         # context structure consists of a list of node contexts,
@@ -375,7 +377,7 @@ class CompExecution(CUDAExecution):
     def freeze_values(self):
         self.__frozen_vals = copy.deepcopy(self._data_struct)
 
-    def execute_node(self, node, inputs = None, execution_id=None):
+    def execute_node(self, node, inputs=None, execution_id=None):
         # We need to reconstruct the inputs here if they were not provided.
         # This happens during node execution of nested compositions.
         if inputs is None and node is self._composition.input_CIM:
@@ -501,8 +503,8 @@ class CompExecution(CUDAExecution):
         input_count = ctypes.c_int(num_input_sets)
         if len(self._execution_ids) > 1:
             self._bin_run_multi_func.wrap_call(self._context_struct, self._param_struct,
-                                         self._data_struct, inputs, outputs,
-                                         runs_count, input_count, self._ct_len)
+                                               self._data_struct, inputs, outputs,
+                                               runs_count, input_count, self._ct_len)
         else:
             self._bin_run_func.wrap_call(self._context_struct, self._param_struct,
                                          self._data_struct, inputs, outputs,
@@ -519,11 +521,11 @@ class CompExecution(CUDAExecution):
         if len(self._execution_ids) > 1:
             output_type = output_type * len(self._execution_ids)
         output_size = ctypes.sizeof(output_type)
-        data_out  = jit_engine.pycuda.driver.mem_alloc(output_size)
+        data_out = jit_engine.pycuda.driver.mem_alloc(output_size)
 
         runs_count = jit_engine.pycuda.driver.In(np.int32(runs))
         input_count = jit_engine.pycuda.driver.In(np.int32(num_input_sets))
-        self._uploaded_bytes += 8 # runs_count + input_count
+        self._uploaded_bytes += 8   # runs_count + input_count
 
         self._bin_run_func.cuda_call(self._cuda_context_struct,
                                      self._cuda_param_struct,
