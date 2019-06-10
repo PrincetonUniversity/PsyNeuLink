@@ -51,15 +51,15 @@ from psyneulink.core.components.functions.function import \
     Function_Base, FunctionError, function_keywords, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
 from psyneulink.core.components.component import function_type
 from psyneulink.core.globals.keywords import \
-    PER_ITEM, TRANSFER_FUNCTION_TYPE, IDENTITY_FUNCTION, \
-    LINEAR_FUNCTION, SLOPE, INTERCEPT, PARAMETER_STATE_PARAMS, \
-    VARIABLE, EXPONENTIAL_FUNCTION, RATE, BIAS, SCALE, OFFSET, \
-    LOGISTIC_FUNCTION, GAIN, X_0, RELU_FUNCTION, LEAK, VARIANCE, \
-    SOFTMAX_FUNCTION, ALL, MAX_VAL, MAX_INDICATOR, PROB, OUTPUT_TYPE, PROB_INDICATOR, LINEAR_MATRIX_FUNCTION, MATRIX, \
-    RECEIVER, HAS_INITIALIZERS, MATRIX_KEYWORD_VALUES, IDENTITY_MATRIX, HOLLOW_MATRIX, \
-    MATRIX_KEYWORD_NAMES, AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX, kwPreferenceSetName, \
-    GAUSSIAN_FUNCTION, STANDARD_DEVIATION, GAUSSIAN_DISTORT_FUNCTION
-
+    ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, GAUSSIAN_DISTORT_FUNCTION, GAIN, \
+    FULL_CONNECTIVITY_MATRIX, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
+    IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, \
+    LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
+    MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, OFFSET, \
+    PARAMETER_STATE_PARAMS, PER_ITEM, PROB, OUTPUT_TYPE, PROB_INDICATOR, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, \
+    STANDARD_DEVIATION, SCALE, SLOPE, SOFTMAX_FUNCTION, TRANSFER_FUNCTION_TYPE,\
+    VARIANCE, VARIABLE, X_0, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
 from psyneulink.core.globals.context import ContextFlags
@@ -67,10 +67,7 @@ from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
 
 __all__ = ['TransferFunction', 'Identity', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'Tanh', 'ReLU',
-           'Gaussian', 'GaussianDistort', 'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
-
-BOUNDS = 'bounds'
-MODE = 'mode'
+           'Gaussian', 'GaussianDistort', 'SoftMax', 'get_matrix']
 
 
 class TransferFunction(Function_Base):
@@ -1049,7 +1046,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         Either **input** or **ouput** must be specified.  If **output** is not specified, it is computed from **input**.
         If both are specified, **input** is ignored unless paramValidationPref is set, in which case
-        an error is generated if **output** does not correspond to `function <Logistic.function>`\(**input**).
+        an error is generated if **output** does not correspond to `function <Logistic.function>`\\(**input**).
 
         Arguments
         ---------
@@ -1107,7 +1104,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     .. math::
 
-        \\frac{1 - e^{-2(gain*(variable+bias-x\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\_0)+offset)}}
+        \\frac{1 - e^{-2(gain*(variable+bias-x\\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\\_0)+offset)}}
 
     .. note::
 
@@ -1117,8 +1114,8 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     `derivative <Tanh.derivative>` returns the derivative of the hyperbolic tangent at its **input**:
 
     .. math::
-        \\frac{gain*scale}{(\\frac{1+e^{-2(gain*(variable+bias-x\_0)+offset)}}{2e^{-(gain*(
-       variable+bias-x\_0)+offset)}})^2}
+        \\frac{gain*scale}{(\\frac{1+e^{-2(gain*(variable+bias-x\\_0)+offset)}}{2e^{-(gain*(
+       variable+bias-x\\_0)+offset)}})^2}
 
     Arguments
     ---------
@@ -1397,7 +1394,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     `derivative <ReLU.derivative>` returns the derivative of of the rectified linear tranform at its **input**:
 
     .. math::
-        gain\ if\ input > 0,\ gain*leak\ otherwise
+        gain\\ if\\ input > 0,\\ gain*leak\\ otherwise
 
     Arguments
     ---------
@@ -2162,7 +2159,7 @@ class SoftMax(TransferFunction):
     others):
 
     .. math::
-        D_jS_i = S_i(\\delta_{i,j} - S_j),\ where\ \\delta_{i,j}=1\ if\ i=j\ and\ \\delta_{i,j}=0\ if\ i≠j.
+        D_jS_i = S_i(\\delta_{i,j} - S_j),\\ where\\ \\delta_{i,j}=1\\ if\\ i=j\\ and\\ \\delta_{i,j}=0\\ if\\ i≠j.
 
     If *OUTPUT_TYPE* is *MAX_VAL* or *MAX_INDICATOR*, returns 1d array of the derivatives of the maximum
     value with respect to the others (calculated as above). If *OUTPUT_TYPE* is *PROB*, raises an exception

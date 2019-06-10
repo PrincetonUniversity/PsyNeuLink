@@ -1208,16 +1208,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             :getter: Returns the default processing scheduler, and builds it if it needs updating since the last access.
         '''
-        if self.needs_update_scheduler_processing or self._scheduler_processing is None:
+        if self.needs_update_scheduler_processing or not isinstance(self._scheduler_processing, Scheduler):
             old_scheduler = self._scheduler_processing
             self._scheduler_processing = Scheduler(graph=self.graph_processing, execution_id=self.default_execution_id)
 
             if old_scheduler is not None:
-                self._scheduler_processing.add_condition_set(old_scheduler.condition_set)
+                self._scheduler_processing.add_condition_set(old_scheduler.conditions)
 
             self.needs_update_scheduler_processing = False
 
         return self._scheduler_processing
+
+    @scheduler_processing.setter
+    def scheduler_processing(self, value: Scheduler):
+        warnings.warn(
+            f'If {self} is changed (nodes or projections are added or removed), scheduler_processing '
+            ' will be rebuilt, and will be different than the Scheduler you are now setting it to.',
+            stacklevel=2
+        )
+
+        self._scheduler_processing = value
 
     @property
     def termination_processing(self):
@@ -1439,6 +1449,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return projection
 
     def _parse_sender_spec(self, projection, sender):
+
+        # if a sender was not passed, check for a sender OutputState stored on the Projection object
         if sender is None:
             if hasattr(projection, "sender"):
                 sender = projection.sender.owner
@@ -1447,19 +1459,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "either on the Projection or in the call to Composition.add_projection(). {}"
                                        " is missing a sender specification. ".format(projection.name))
 
-        subcompositions = []
+        # initialize all receiver-related variables
+        graph_sender = sender_mechanism = sender_output_state = sender
 
-        graph_sender = sender
+        nested_compositions = []
         if isinstance(sender, Mechanism):
-            sender_mechanism = sender
+            # Mechanism spec -- update sender_output_state to reference primary OutputState
             sender_output_state = sender.output_state
+
         elif isinstance(sender, OutputState):
-            sender_mechanism = sender.owner
-            sender_output_state = sender
-            graph_sender = sender.owner
+            # InputState spec -- update sender_mechanism and graph_sender to reference owner Mechanism
+            sender_mechanism = graph_sender = sender.owner
+
         elif isinstance(sender, Composition):
+            # Nested Composition Spec -- update sender_mechanism to CIM; sender_output_state to CIM's primary O.S.
             sender_mechanism = sender.output_CIM
-            subcompositions.append(sender)
+            sender_output_state = sender_mechanism.output_state
+            nested_compositions.append(sender)
+
         else:
             raise CompositionError("sender arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
                                    format(sender, self.name,
@@ -1469,27 +1486,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not isinstance(sender, Composition)
                 and sender_mechanism not in self.nodes):
             sender_name = sender.name
-            # Check if sender is in a nested Composition and, if so, if it is an OUTPUT Mechanism
-            #    - if so, then use self.output_CIM_states[output_state] for that OUTPUT Mechanism as sender
-            #    - otherwise, raise error
-            sender, graph_sender = self._get_nested_node_CIM_state(sender_mechanism,
-                                                                   sender_output_state,
-                                                                   NodeRole.OUTPUT)
+
+            # if the sender is IN a nested Composition AND sender is an OUTPUT Node
+            # then use the corresponding CIM on the nested comp as the sender going forward
+            sender, sender_output_state, graph_sender, sender_mechanism = self._get_nested_node_CIM_state(sender_mechanism,
+                                                                                                          sender_output_state,
+                                                                                                          NodeRole.OUTPUT)
+            nested_compositions.append(graph_sender)
             if sender is None:
-                # raise CompositionError(f"sender ({repr(name_of_specified_sender)}) in call to add_projection method "
-                #                        f"of {self.name} is not in it or any of its nested {Composition.__name__}s .")
                 receiver_name = 'node'
                 if hasattr(projection, 'receiver'):
                     receiver_name = f'{repr(projection.receiver.owner.name)}'
                 raise CompositionError(f"A {Projection.__name__} specified to {receiver_name} in {self.name} "
                                        f"has a sender ({repr(sender_name)}) that is not (yet) in it "
                                        f"or any of its nested {Composition.__name__}s.")
-
-            # MODIFIED 5/29/19 NEW:
-            # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below
-            if isinstance(sender.owner, CompositionInterfaceMechanism):
-                sender_mechanism = sender.owner
-            # MODIFIED 5/29/19 NEW:
+            #
+            # # MODIFIED 5/29/19 NEW:
+            # # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below
+            # if isinstance(sender.owner, CompositionInterfaceMechanism):
+            #     sender_mechanism = sender.owner
+            # # MODIFIED 5/29/19 NEW:
 
         if hasattr(projection, "sender"):
             if projection.sender.owner != sender and \
@@ -1498,11 +1514,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("The position of {} in {} conflicts with its sender attribute."
                                        .format(projection.name, self.name))
 
-        return sender, sender_mechanism, graph_sender, subcompositions
+        return sender, sender_mechanism, graph_sender, nested_compositions
 
-    def _parse_receiver_spec(self, projection, receiver, sender, subcompositions, learning_projection):
-        # Manage receiver spec -------------------------------------------------
+    def _parse_receiver_spec(self, projection, receiver, sender, learning_projection):
 
+        # if a receiver was not passed, check for a receiver InputState stored on the Projection object
         if receiver is None:
             if hasattr(projection, "receiver"):
                 receiver = projection.receiver.owner
@@ -1510,36 +1526,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("For a Projection to be added to a Composition, a receiver must be specified, "
                                        "either on the Projection or in the call to Composition.add_projection(). {}"
                                        " is missing a receiver specification. ".format(projection.name))
-        graph_receiver = receiver
-        receiver_input_state = None
-        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        # Add autoassociative learning mechanism + related projections to composition as processing components
 
+        # initialize all receiver-related variables
+        graph_receiver = receiver_mechanism = receiver_input_state = receiver
+
+        nested_compositions = []
         if isinstance(receiver, Mechanism):
-            receiver_mechanism = receiver
+            # Mechanism spec -- update receiver_input_state to reference primary InputState
             receiver_input_state = receiver.input_state
+
         elif isinstance(receiver, InputState):
-            receiver_mechanism = receiver.owner
-            receiver_input_state = receiver
-            # FIX: 5/29/19 [JDC] THIS IS STILL A PROBLEM, IN PARTICULAR IN CONTEXT OF REFERENCING A NODE IN NESTED COMP
-            # FIX:               SHOULD BE FIXED BY MOD IN _validate_projection()
-            # FIX: THE FOLLOWING FAILS TO KEEP TRACK OF SPECIFIED InputState AS *ACTUAL* RECEIVER
-            # FIX: IN CALL TO _validate_projection BELOW;  ASSUMES MECHANISM AND THEREFORE ASSIGNS PRIMARY InputState
-            # FIX: BUT CHANGING IT TO receiver (I.E., ALLOWING IT TO REMAIN SPECIFIED InputState
-            # FIX: CAUSES ERROR IN _validate_projection
-            graph_receiver = receiver.owner
+            # InputState spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
+            receiver_mechanism = graph_receiver = receiver.owner
+
         elif isinstance(receiver, Composition):
+            # Nested Composition Spec -- update receiver_mechanism to CIM; receiver_input_state to CIM's primary I.S.
             receiver_mechanism = receiver.input_CIM
-            subcompositions.append(receiver)
+            receiver_input_state = receiver_mechanism.input_state
+            nested_compositions.append(receiver)
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         elif isinstance(receiver, AutoAssociativeProjection):
             receiver_mechanism = receiver.owner_mech
+            receiver_input_state = receiver_mechanism.input_state
             learning_projection = True
 
         elif isinstance(sender, LearningMechanism):
             receiver_mechanism = receiver.receiver.owner
+            receiver_input_state = receiver_mechanism.input_state
             learning_projection = True
 
         else:
@@ -1547,7 +1562,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    format(receiver, self.name,
                                           Mechanism.__name__, InputState.__name__, Composition.__name__))
 
-        return receiver, receiver_mechanism, graph_receiver, receiver_input_state, subcompositions, learning_projection
+        if not isinstance(receiver_mechanism, CompositionInterfaceMechanism) \
+                and not isinstance(receiver, Composition)\
+                and receiver_mechanism not in self.nodes\
+                and not learning_projection:
+
+            # if the receiver is IN a nested Composition AND receiver is an INPUT Node
+            # then use the corresponding CIM on the nested comp as the receiver going forward
+            receiver, receiver_input_state, graph_receiver, receiver_mechanism = self._get_nested_node_CIM_state(receiver_mechanism,
+                                                                                                                 receiver_input_state,
+                                                                                                                 NodeRole.INPUT)
+
+            nested_compositions.append(graph_receiver)
+            # Otherwise, there was a mistake in the spec
+            if receiver is None:
+                raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
+                                       "is not in it or any of its nested {}s ".
+                                       format(repr(receiver), self.name, Composition.__name__, ))
+            # MODIFIED 5/29/19 NEW:
+            # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below
+            # if isinstance(receiver.owner, CompositionInterfaceMechanism):
+            #     receiver_mechanism = receiver.owner
+            # MODIFIED 5/29/19 END
+
+        return receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection
 
     def add_projection(self, projection=None, sender=None, receiver=None, feedback=False, learning_projection=False, name=None):
         '''
@@ -1591,35 +1629,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projection = self._parse_projection_spec(projection, name)
 
         # Parse sender and receiver specs
-        sender, sender_mechanism, graph_sender, subcompositions = self._parse_sender_spec(projection, sender)
-        receiver, receiver_mechanism, graph_receiver, receiver_input_state, subcompositions, learning_projection = \
-            self._parse_receiver_spec(projection, receiver, sender, subcompositions, learning_projection)
-
-        # FIX 5/29/19 [JDC]:  WHY ISN"T THIS IN _parse_receiver_spec (as it is for _parse_sender_spec)
-        # Handle Projection to node in nested Composition
-        if (not isinstance(receiver_mechanism, CompositionInterfaceMechanism)
-                and not isinstance(receiver, Composition)
-                and receiver_mechanism not in self.nodes
-                and not learning_projection):
-            # Check if receiver is in a nested Composition and, if so, if it is an INPUT Mechanism
-            #    - if so, then use self.input_CIM_states[input_state] for that INPUT Mechanism as sender
-            #    - otherwise, raise error
-            receiver, graph_receiver = self._get_nested_node_CIM_state(receiver_mechanism,
-                                                                       receiver_input_state,
-                                                                       NodeRole.INPUT)
-            if receiver is None:
-                raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
-                                       "is not in it or any of its nested {}s ".
-                                       format(repr(receiver), self.name, Composition.__name__, ))
-            # MODIFIED 5/29/19 NEW:
-            # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below
-            if isinstance(receiver.owner, CompositionInterfaceMechanism):
-                receiver_mechanism = receiver.owner
-            # MODIFIED 5/29/19 END
+        sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
+        receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
+            self._parse_receiver_spec(projection, receiver, sender, learning_projection)
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
-        if sender_mechanism != self.input_CIM and receiver != self.output_CIM \
+        if sender_mechanism != self.input_CIM and receiver_mechanism != self.output_CIM \
                 and projection not in [vertex.component for vertex in self.graph.vertices] and not learning_projection:
 
             projection.is_processing = False
@@ -1642,7 +1658,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_scheduler_processing = True
 
         projection._activate_for_compositions(self)
-        for comp in subcompositions:
+        for comp in nested_compositions:
             projection._activate_for_compositions(comp)
 
         # Create "shadow" projections to any input states that are meant to shadow this projection's receiver
@@ -2355,38 +2371,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Return relevant state of relevant CIM if found and nested Composition in which it was found, else (None, None)
         '''
 
-        # FIX: DOESN'T WORK FOR COMPOSITION REFERENCED AS RECEIVER IN A NESTED COMPOSITION
+        nested_comp = CIM_state_for_nested_node = CIM = None
 
-        CIM_state_for_nested_node = None
         nested_comps = [c for c in self.nodes if isinstance(c, Composition)]
-        nested_comp = None
-        for c in nested_comps:
-            if node in c.nodes:
-                # Must be assigned Node.Role of role
-                if not role in c.nodes_to_roles[node]:
+        for nc in nested_comps:
+            if node in nc.nodes:
+                # Must be assigned Node.Role of INPUT or OUTPUT (depending on receiver vs sender)
+                if role not in nc.nodes_to_roles[node]:
                     raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
-                                           format(node.name, Composition.__name__, self.name, c.name,
+                                           format(node.name, Composition.__name__, self.name, nc.name,
                                                   NodeRole.__name__, repr(role)))
-                if CIM_state_for_nested_node:
-                    warnings.warn("{} found with {} of {} in more than one nested {} of {}; "
-                                  "only first one found (in {}) will be used".
-                                  format(node.name, NodeRole.__name__, repr(role),
-                                         Composition.__name__, self.name, nested_comp.name))
-                    continue
-                # # MODIFIED 5/29/19 OLD:
-                # CIM_state_for_nested_node = c.input_CIM_states[node_state][0]
-                # MODIFIED 5/29/19 NEW:
+                # With the current implementation, there should never be multiple nested compositions that contain the
+                # same mechanism -- because all nested compositions are passed the same execution ID
+                # if CIM_state_for_nested_node:
+                #     warnings.warn("{} found with {} of {} in more than one nested {} of {}; "
+                #                   "only first one found (in {}) will be used".
+                #                   format(node.name, NodeRole.__name__, repr(role),
+                #                          Composition.__name__, self.name, nested_comp.name))
+                #     continue
+
                 if isinstance(node_state, InputState):
-                    CIM_state_for_nested_node = c.input_CIM_states[node_state][0]
+                    CIM_state_for_nested_node = nc.input_CIM_states[node_state][0]
+                    CIM = nc.input_CIM
                 elif isinstance(node_state, OutputState):
-                    CIM_state_for_nested_node = c.output_CIM_states[node_state][0]
+                    CIM_state_for_nested_node = nc.output_CIM_states[node_state][1]
+                    CIM = nc.output_CIM
                 else:
                     # IMPLEMENTATION NOTE:  Place marker for future implementation of ParameterState handling
                     #                       However, typecheck above should have caught this
                     assert False
-               # MODIFIED 5/29/19 END
-                nested_comp = c
-        return CIM_state_for_nested_node, nested_comp
+
+                nested_comp = nc
+                break
+
+        return CIM_state_for_nested_node, CIM_state_for_nested_node, nested_comp, CIM
 
     def add_required_node_role(self, node, role):
         if role not in NodeRole:
@@ -2473,6 +2491,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    name="(" + interface_output_state.name + ") to ("
                                                         + input_state.owner.name + "-" + input_state.name + ")")
                     projection._activate_for_compositions(self)
+
                     if isinstance(node, Composition):
                         projection._activate_for_compositions(node)
 
@@ -3567,7 +3586,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             active_items = []
         elif active_items is INITIAL_FRAME:
             active_items = [INITIAL_FRAME]
-        elif not isinstance(active_items, collections.Iterable):
+        elif not isinstance(active_items, collections.abc.Iterable):
             active_items = [active_items]
         elif not isinstance(active_items, list):
             active_items = list(active_items)
@@ -4435,7 +4454,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # store the result of this execute in case it will be the final result
 
             # object.results.append(result)
-            if isinstance(trial_output, collections.Iterable):
+            if isinstance(trial_output, collections.abc.Iterable):
                 result_copy = trial_output.copy()
             else:
                 result_copy = trial_output
@@ -4779,10 +4798,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # NOTE: This is not ideal we don't need to depend on
         # the entire previous group. Only our dependencies
         cond = [EveryNCalls(dep, 1) for dep in dep_group]
-        if node not in self.scheduler_processing.condition_set.conditions:
+        if node not in self.scheduler_processing.conditions:
             cond.append(Always())
         else:
-            node_conds = self.scheduler_processing.condition_set.conditions[node]
+            node_conds = self.scheduler_processing.conditions[node]
             cond.append(node_conds)
 
         return All(*cond)

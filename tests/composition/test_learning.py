@@ -271,3 +271,56 @@ class TestReinforcement:
 
         assert np.allclose(trial_50_expected, delta_vals[49][0])
 
+class TestNestedLearning:
+
+    def test_nested_learning(self):
+        stim_size = 10
+        context_size = 2
+        num_actions = 4
+
+        def Concatenate(variable):
+            return np.append(variable[0], variable[1])
+
+        stim_in = pnl.ProcessingMechanism(name='Stimulus',
+                                          size=stim_size)
+        context_in = pnl.ProcessingMechanism(name='Context',
+                                             size=context_size)
+        reward_in = pnl.ProcessingMechanism(name='Reward',
+                                            size=1)
+
+        perceptual_state = pnl.ProcessingMechanism(name='Current State',
+                                                   function=Concatenate,
+                                                   input_states=[{pnl.NAME: 'STIM',
+                                                                  pnl.SIZE: stim_size,
+                                                                  pnl.PROJECTIONS: stim_in},
+                                                                 {pnl.NAME: 'CONTEXT',
+                                                                  pnl.SIZE: context_size,
+                                                                  pnl.PROJECTIONS: context_in}])
+
+        action = pnl.ProcessingMechanism(name='Action',
+                                         size=num_actions)
+
+        # Nested Composition
+        rl_agent_state = pnl.ProcessingMechanism(name='RL Agent State',
+                                                 size=5)
+        rl_agent_action = pnl.ProcessingMechanism(name='RL Agent Action',
+                                                  size=5)
+        rl_agent = pnl.Composition(name='RL Agent')
+        rl_learning_components = rl_agent.add_reinforcement_learning_pathway([rl_agent_state,
+                                                                              rl_agent_action])
+        rl_agent._analyze_graph()
+
+
+        model = pnl.Composition(name='Adaptive Replay Model')
+        model.add_nodes([stim_in, context_in, reward_in, perceptual_state, rl_agent, action])
+        model.add_projection(sender=perceptual_state, receiver=rl_agent_state)
+        model.add_projection(sender=reward_in, receiver=rl_learning_components[pnl.TARGET_MECHANISM])
+        model.add_projection(sender=rl_agent_action, receiver=action)
+        model.add_projection(sender=rl_agent, receiver=action)
+
+        model.show_graph(show_controller=True, show_nested=True, show_node_structure=True)
+
+        stimuli = {stim_in: np.array([1] * stim_size),
+                   context_in: np.array([10] * context_size)}
+        #
+        # print(model.run(inputs=stimuli))

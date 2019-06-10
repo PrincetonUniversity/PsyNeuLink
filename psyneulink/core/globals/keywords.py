@@ -28,7 +28,7 @@ __all__ = [
     'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM', 'AFTER',
     'ALL', 'ALLOCATION_SAMPLES', 'ANGLE', 'ARGUMENT_THERAPY_FUNCTION', 'ASSERT', 'ASSIGN', 'ASSIGN_VALUE',
     'AUTO','AUTO_ASSIGN_MATRIX', 'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
-    'BACKPROPAGATION_FUNCTION', 'BEFORE', 'BETA', 'BIAS', 'BOLD', 'BUFFER_FUNCTION', 'CHANGED', 'CLAMP_INPUT',
+    'BACKPROPAGATION_FUNCTION', 'BEFORE', 'BETA', 'BIAS', 'BOLD', 'BOUNDS', 'BUFFER_FUNCTION', 'CHANGED', 'CLAMP_INPUT',
     'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION', 'COMBINE_OUTCOME_AND_COST_FUNCTION',
     'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT', 'COMPONENT_INIT',
     'COMPOSITION', 'COMPOSITION_INTERFACE_MECHANISM',
@@ -83,7 +83,8 @@ __all__ = [
     'MAKE_DEFAULT_GATING_MECHANISM', 'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS','MatrixKeywords',
     'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_ABS_DIFF', 'MAX_INDICATOR', 'MAX_VAL', 'MECHANISM', 'METRIC', 'NodeRoles',
-    'MECHANISM_VALUE', 'MIN_VAL', 'MODULATION', 'MODULATORY_PROJECTION', 'MODULATORY_SIGNAL', 'MODULATORY_MECHANISM',
+    'MECHANISM_VALUE', 'MIN_VAL', 'MODE',
+    'MODULATION', 'MODULATORY_PROJECTION', 'MODULATORY_SIGNAL', 'MODULATORY_MECHANISM',
     'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MONITOR_FOR_MODULATION', 'MUTUAL_ENTROPY',
     'NAME', 'NEWEST', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY',
     'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
@@ -898,29 +899,22 @@ HETERO = 'hetero'
 #region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
 
-FUNCTION_OUTPUT_TYPE = 'output_type'
+# General ------------------------------------------------
 
-COMBINE = 'combine'
-SUM = 'sum'
-DIFFERENCE = DIFFERENCE # Defined above for DISTANCE_METRICS
-PRODUCT = 'product'
-QUOTIENT = 'quotient'
-SUBTRACTION = 'subtraction'
-DIVISION = 'division'
-SCALAR = 'scalar'
-VECTOR = 'vector'
-
+FUNCTION_PARAMETER_PREFIX = 'func_'
 CUSTOM_FUNCTION = 'custom_function'
+FUNCTION_OUTPUT_TYPE = 'output_type'
+OUTPUT_TYPE = 'output'
+OVERWRITE = 'overwrite'
+REINITIALIZE = "reinitialize"
 
-GAIN = 'gain'
-BIAS = 'bias'
-X_0 = "x_0"
-LEAK = 'leak'
-SLOPE = 'slope'
-INTERCEPT = 'intercept'
-RATE = 'rate'
-SCALE = 'scale'
-NOISE = 'noise'
+LOW = 'low'
+HIGH = 'high'
+BOUNDS = 'bounds'
+MODE = 'mode'
+REST = "rest"
+
+# Function-specific ---------------------------------------
 
 STATEFUL_FUNCTION = 'stateful_function'
 INTEGRATOR_FUNCTION = 'integrator_function'
@@ -932,11 +926,34 @@ TIME_STEP_SIZE = 'time_step_size'
 DECAY = 'decay'
 INTEGRATOR_MODE_VALUE = "integrator_mode_value"
 INSTANTANEOUS_MODE_VALUE = "instantaenous_mode_value"
-REINITIALIZE = "reinitialize"
-REST = "rest"
+LINEAR = 'linear'
+CONSTANT = 'constant'
+SIMPLE = 'scaled'
+ADAPTIVE = 'adaptive'
+DIFFUSION = 'diffusion'
+EXPONENTIAL = 'exponential'
+GAUSSIAN = 'gaussian'
+SINUSOID = 'sinusoid'
 
-LOW = 'low'
-HIGH = 'high'
+COMBINE = 'combine'
+SUM = 'sum'
+DIFFERENCE = DIFFERENCE # Defined above for DISTANCE_METRICS
+PRODUCT = 'product'
+QUOTIENT = 'quotient'
+SUBTRACTION = 'subtraction'
+DIVISION = 'division'
+SCALAR = 'scalar'
+VECTOR = 'vector'
+
+GAIN = 'gain'
+BIAS = 'bias'
+X_0 = "x_0"
+LEAK = 'leak'
+SLOPE = 'slope'
+INTERCEPT = 'intercept'
+RATE = 'rate'
+SCALE = 'scale'
+NOISE = 'noise'
 
 BETA = 'beta'
 
@@ -946,7 +963,6 @@ STANDARD_DEVIATION = 'standard_deviation'
 VARIANCE = 'variance'
 DIST_MEAN = 'mean'
 
-OUTPUT_TYPE = 'output'
 MAX_VAL = 'MAX_VAL'
 MAX_ABS_VAL = 'MAX_ABS_VAL'
 MAX_INDICATOR = 'MAX_INDICATOR'
@@ -967,21 +983,9 @@ WEIGHTS = "weights"
 EXPONENTS = "exponents"
 OPERATION = "operation"
 OFFSET = "offset"
-LINEAR = 'linear'
-CONSTANT = 'constant'
-SIMPLE = 'scaled'
-ADAPTIVE = 'adaptive'
-DIFFUSION = 'diffusion'
-EXPONENTIAL = 'exponential'
-GAUSSIAN = 'gaussian'
-SINUSOID = 'sinusoid'
 
 REWARD = 'reward'
 NETWORK = 'network'
 
-OVERWRITE = 'overwrite'
-
 GAMMA = 'gamma'
-
-FUNCTION_PARAMETER_PREFIX = 'func_'
 #endregion

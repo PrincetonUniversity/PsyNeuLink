@@ -1010,6 +1010,7 @@ class OutputState(State_Base):
             # Store args for deferred initialization
             self.init_args = locals().copy()
             del self.init_args['kwargs']
+            # self.init_args['variable'] = variable
             self.init_args['context'] = context
             self.init_args['name'] = name
             self.init_args['projections'] = projections

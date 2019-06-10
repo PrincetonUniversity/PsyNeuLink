@@ -129,10 +129,10 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     ---------
 
     content_size : int : default 1
-        specifies length of the content stored in the `function <EpisodicMemoryMechanism.function>`\s memory.
+        specifies length of the content stored in the `function <EpisodicMemoryMechanism.function>`\\s memory.
 
     assoc_size : int : default 0
-        specifies length of the assoc stored in the `function <EpisodicMemoryMechanism.function>`\s memory;
+        specifies length of the assoc stored in the `function <EpisodicMemoryMechanism.function>`\\s memory;
         if it is 0 (the default) then no *ASSOC_INPUT* InputState or *ASSOC_OUTPUT* OutputState are created.
 
     function : function : default ContentAddressableMemory
