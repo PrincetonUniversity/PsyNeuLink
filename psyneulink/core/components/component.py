@@ -1193,7 +1193,7 @@ class Component(object, metaclass=ComponentsMeta):
     # ------------------------------------------------------------------------------------------------------------------
 
     def _handle_default_variable(self, default_variable=None, size=None):
-        '''
+        """
             Finds whether default_variable can be determined using **default_variable** and **size**
             arguments.
 
@@ -1201,7 +1201,7 @@ class Component(object, metaclass=ComponentsMeta):
             -------
                 a default variable if possible
                 None otherwise
-        '''
+        """
         if self._default_variable_handled:
             return default_variable
 
@@ -2362,9 +2362,9 @@ class Component(object, metaclass=ComponentsMeta):
     # ------------------------------------------------------------------------------------------------------------------
 
     def _validate(self):
-        '''
+        """
             Eventually should contain all validation methods, occurs at end of Component.__init__
-        '''
+        """
         # 4/18/18 kmantel: below is a draft of what such a method should look like
         # it's beyond the scope of the current changes however
 

@@ -61,7 +61,7 @@ PREDICTION_WEIGHT_PRIORS = 'prediction_weight_priors'
 
 class PV(Enum):
 # class PV(AutoNumberEnum):
-    '''PV()
+    """PV()
     Specifies terms used to compute `vector <PredictionVector.vector>` attribute of `PredictionVector`.
 
     Attributes
@@ -91,7 +91,7 @@ class PV(Enum):
         <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>`.
     COST
         Main effect of `costs <ControlSignal.cost>` of `control_signals <ControlMechanism.control_signals>`.
-    '''
+    """
     # F =    auto()
     # C =    auto()
     # FF =   auto()
@@ -118,7 +118,7 @@ class RegressionCFAError(Exception):
 
 
 class RegressionCFA(CompositionFunctionApproximator):
-    '''Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
+    """Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
     <CompositionFunctionApproximator.evaluate>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
     for a `Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, from a set of `feature_values
     <OptimizationControlMechanism.feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
@@ -141,7 +141,7 @@ class RegressionCFA(CompositionFunctionApproximator):
     predict the `net_outcome <ControlMechanism.net_outcome>` from the
     `prediction_vector <RegressorCFA.prediction_vector>`.
 
-    '''
+    """
 
     class Parameters(CompositionFunctionApproximator.Parameters):
         """
@@ -182,7 +182,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                  name=None,
                  update_weights=BayesGLM,
                  prediction_terms:tc.optional(list)=None):
-        '''
+        """
 
         Arguments
         ---------
@@ -228,7 +228,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             result returned by `update_weights <RegressorCFA.update_weights>, and used by
             `evaluate <RegressorCFA.evaluate>` method together with `prediction_vector <RegressorCFA.prediction_vector>`
             to generate predicted `net_outcome <OptimiziationControlMechanism.net_outcome>`.
-        '''
+        """
 
         self.update_weights = update_weights
         self._instantiate_prediction_terms(prediction_terms)
@@ -265,10 +265,10 @@ class RegressionCFA(CompositionFunctionApproximator):
 
     # def initialize(self, owner):
     def initialize(self, features_array, control_signals):
-        '''Assign owner and instantiate `prediction_vector <RegressorCFA.prediction_vector>`
+        """Assign owner and instantiate `prediction_vector <RegressorCFA.prediction_vector>`
 
         Must be called before RegressorCFA's methods can be used.
-        '''
+        """
 
         prediction_terms = self.prediction_terms
         self.prediction_vector = self.PredictionVector(features_array, control_signals, prediction_terms)
@@ -282,8 +282,8 @@ class RegressionCFA(CompositionFunctionApproximator):
             self.update_weights.reinitialize({DEFAULT_VARIABLE: update_weights_default_variable})
 
     def adapt(self, feature_values, control_allocation, net_outcome, execution_id=None):
-        '''Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
-        **net_outcome** from **feature_values** and **control_allocation**.'''
+        """Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
+        **net_outcome** from **feature_values** and **control_allocation**."""
         prediction_vector = self.parameters.prediction_vector._get(execution_id)
         previous_state = self.parameters.previous_state._get(execution_id)
 
@@ -312,7 +312,7 @@ class RegressionCFA(CompositionFunctionApproximator):
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
     # def evaluate(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
     def evaluate(self, feature_values, control_allocation, num_estimates, context, execution_id=None):
-        '''Update prediction_vector <RegressorCFA.prediction_vector>`,
+        """Update prediction_vector <RegressorCFA.prediction_vector>`,
         then multiply by regression_weights.
 
         Uses the current values of `regression_weights <RegressorCFA.regression_weights>` together with
@@ -322,7 +322,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         .. note::
             If this method is assigned as the `objective_funtion of a `GradientOptimization` `Function`,
             it is differentiated using `autograd <https://github.com/HIPS/autograd>`_\\.grad().
-        '''
+        """
         # # TEST PRINT 5/30/19:
         # print(f'control allocation: {control_allocation}')
 
@@ -365,7 +365,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         ))
 
     class PredictionVector():
-        '''Maintain a `vector <PredictionVector.vector>` of terms for a regression model specified by a list of
+        """Maintain a `vector <PredictionVector.vector>` of terms for a regression model specified by a list of
         `specified_terms <PredictionVector.specified_terms>`.
 
         Terms are maintained in lists indexed by the `PV` Enum and, in "flattened" form within fields of a 1d
@@ -420,7 +420,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             `terms <PredictionVector.terms>`. Only entries for terms in `specified_terms
             <PredictionVector.specified_terms>` are assigned values; others are assigned `None`.
 
-        '''
+        """
 
         _deepcopy_shared_keys = ['control_signal_functions', '_compute_costs']
 
@@ -562,7 +562,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             self.vector = np.zeros(i)
 
         def __call__(self, terms:tc.any(PV, list))->tc.any(PV, tuple):
-            '''Return subvector(s) for specified term(s)'''
+            """Return subvector(s) for specified term(s)"""
             if not isinstance(terms, list):
                 return self.idx[terms.value]
             else:
@@ -572,14 +572,14 @@ class RegressionCFA(CompositionFunctionApproximator):
 
         # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
         def update_vector(self, variable, feature_values=None, execution_id=None):
-            '''Update vector with flattened versions of values returned from the `compute_terms
+            """Update vector with flattened versions of values returned from the `compute_terms
             <PredictionVector.compute_terms>` method of the `prediction_vector
             <RegressorCFA.prediction_vector>`.
 
             Updates `vector <PredictionVector.vector>` with current values of variable and, optionally,
             and feature_values.
 
-            '''
+            """
 
             # # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
             # if reference_variable is not None:
@@ -596,11 +596,11 @@ class RegressionCFA(CompositionFunctionApproximator):
                     self.vector[self.idx[k.value]] = v.reshape(-1)
 
         def compute_terms(self, control_allocation, execution_id=None):
-            '''Calculate interaction terms.
+            """Calculate interaction terms.
 
             Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
             Values of entries are nd arrays.
-            '''
+            """
 
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
             # ref_variables = ref_variables or self.reference_variable

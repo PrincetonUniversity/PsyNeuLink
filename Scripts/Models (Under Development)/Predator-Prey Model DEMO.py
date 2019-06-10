@@ -154,7 +154,7 @@ difference = Distance(metric=DIFFERENCE)
 #   function for ObjectiveMechanism
 
 def objective_function(variable):
-    '''Return difference between optimal and actual actions'''
+    """Return difference between optimal and actual actions"""
     actual_action = variable[0]
     optimal_action = variable[1]
     similarity = 1-difference([optimal_action, actual_action])/4

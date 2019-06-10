@@ -8,7 +8,7 @@
 #
 #
 # *****************************************  OBJECTIVE FUNCTIONS *******************************************************
-'''
+"""
 
 * `Stability`
 * `Energy`
@@ -17,7 +17,7 @@
 
 Functions that return a scalar evaluation of their input.
 
-'''
+"""
 
 import functools
 import itertools

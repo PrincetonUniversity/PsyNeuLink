@@ -958,7 +958,7 @@ class Projection_Base(Projection):
                 RECEIVER:receiver}
 
     def _projection_added(self, projection, context=None):
-        '''Stub that can be overidden by subclasses that need to know when a projection is added to the Projection'''
+        """Stub that can be overidden by subclasses that need to know when a projection is added to the Projection"""
         pass
 
     def _assign_default_name(self, **kwargs):

@@ -1626,13 +1626,13 @@ class Process(Process_Base):
             self.learning = LEARNING
 
     def _check_for_duplicate_projection(self, sndr_mech, rcvr_mech, proj_spec, pathway_index):
-        '''Check if there is already a projection between sndr_mech and rcvr_mech
+        """Check if there is already a projection between sndr_mech and rcvr_mech
         If so:
             - if it has just found the same project (e.g., as in case of AutoAssociativeProjection), let pass
             - otherwise:
                 - if verbosePref, warn
                 - replace proj_spec with existing projection
-        '''
+        """
 
         for input_state in rcvr_mech.input_states:
             for proj in input_state.path_afferents:

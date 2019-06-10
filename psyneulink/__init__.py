@@ -8,7 +8,7 @@
 #
 # ***********************************************  Init ****************************************************************
 
-'''
+"""
 PsyNeuLink is a "block modeling system" for cognitive neuroscience.
 
 Documentation is available at https://princetonuniversity.github.io/PsyNeuLink/
@@ -17,7 +17,7 @@ Example scripts are available at https://github.com/PrincetonUniversity/PsyNeuLi
 
 If you have trouble installing PsyNeuLink, run into any bugs, or have suggestions for development,
 please contact psyneulinkhelp@princeton.edu.
-'''
+"""
 
 import logging as _logging
 

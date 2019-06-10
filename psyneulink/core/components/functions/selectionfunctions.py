@@ -8,7 +8,7 @@
 #
 #
 # *******************************************  SELECTION FUNCTIONS *****************************************************
-'''
+"""
 
 * `OneHot`
 
@@ -20,7 +20,7 @@ COMMENT
 
 Functions that selects a subset of elements to maintain or transform, while nulling the others.
 
-'''
+"""
 
 __all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_NEXT', 'MAX_VS_AVG']
 

@@ -8,7 +8,7 @@
 #
 #
 # *******************************************  MEMORY FUNCTIONS ********************************************************
-'''
+"""
 
 Functions that store and can retrieve a record of their current input.
 
@@ -20,7 +20,7 @@ Overview
 
 Functions that store and can return a record of their input.
 
-'''
+"""
 
 from collections import deque, OrderedDict
 from random import choice
@@ -968,7 +968,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                     format(repr(STORAGE_PROB), self.__class___.__name__, storage_prob))
 
     def _validate(self):
-        '''Validate distance_function, selection_function and memory store'''
+        """Validate distance_function, selection_function and memory store"""
         distance_function = self.distance_function
         test_var = [self.defaults.variable[KEYS], self.defaults.variable[VALS]]
         if isinstance(distance_function, type):
@@ -1011,13 +1011,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                 f'({result}) must return an array of the same length it receives')
 
     def _initialize_previous_value(self, initializer, execution_context=None):
-        '''Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
+        """Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
 
         - Validate, if initializer is specified, it is a 3d array
             (must be done here rather than in validate_params as it is needed to initialize previous_value
         - Insure that it has exactly 2 items in outer dimension (axis 0)
             and that all items in each of those two items are all arrays
-        '''
+        """
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
 
         previous_value = np.ndarray(shape=(2, 0))
@@ -1350,7 +1350,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                         self.parameters.previous_value._set(self._memory, execution_id)
 
     def _parse_memories(self, memories, method, execution_id=None):
-        '''Parse passing of single vs. multiple memories, validate memories, and return ndarray'''
+        """Parse passing of single vs. multiple memories, validate memories, and return ndarray"""
         memories = np.array(memories)
         if not 1 <= memories.ndim <= 3:
             raise FunctionError(f"'memories' arg for {method} method of {self.__class__.__name__} "

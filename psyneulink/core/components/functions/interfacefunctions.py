@@ -9,11 +9,11 @@
 #
 # *********************************************  INTERFACE FUNCTIONS ***************************************************
 
-'''
+"""
 
 * InterfaceStateMap
 
-'''
+"""
 
 import numpy as np
 import typecheck as tc
