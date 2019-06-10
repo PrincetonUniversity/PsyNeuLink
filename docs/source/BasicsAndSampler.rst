@@ -172,8 +172,8 @@ More Elaborate Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Configuring more complex models is also straightforward.  For example, the script below implements a model of the
-`Stroop task <https://en.wikipedia.org/wiki/Stroop_effect>` by creating two feedforward neural network pathways
--- one for color naming and another for word reading -- as well as a corresponding pair of pathways that deterine which
+`Stroop task <https://en.wikipedia.org/wiki/Stroop_effect>`_ by creating two feedforward neural network pathways
+-- one for color naming and another for word reading -- as well as a corresponding pair of pathways that determine which
 of those to perform based on a task instruction. These all converge on a common output mechanism that projects to a
 drift diffusion (DDM) decision mechanism responsible for determining the response::
 
@@ -214,31 +214,8 @@ drift diffusion (DDM) decision mechanism responsible for determining the respons
 This is a simplified version the model described in `Cohen et al. (1990) <https://www.researchgate
 .net/publication/20956134_Cohen_JD_McClelland_JL_Dunbar_K_On_the_control_of_automatic_processes_a_parallel_distributed_processing_account_of_the_Stroop_effect_Psychol_Rev_97_332-361>`_,
 a more complete version of which can be found in the `PsyNeuLink Library <https://princetonuniversity.github
-.io/PsyNeuLink/Library.html>`_ at `Stroop Model <XXXX>`.  The figure belows shows the model using the show_graph()
-method.
-
-.. A model can be run with a sequence of inputs, by specifying them in a dictionary containing a list for each input
-.. Mechanism, as follows::
-..
-..  red = [1,0]
-..  green = [0,1]
-..  Stroop_model.run(inputs={color_input:[red,red], word_input:[red,green]})
-..
-.. The run method returns the results of the just the last trial run (in this case, ``red`` to ``color_input`` and
-.. ``green`` to ``word_input``.  However, the results of all the trials are stored in its ``results`` attribute::
-..
-..    print(Stroop_model.results)
-..    >>[[array([1.]), array([0.45185041])], [array([-1.]), array([0.67122189])]]
-..
-.. Each item in the 2d array returned by results contains a list of the model's outputs for a single trial's worth of
-.. stimuli.  The DDM Mechanism, which provides the output of the model, returns two values each time it is executed:
-.. the result of the decision (here, 1 for ``red`` and -1 for ``green``), and the response time.  So, ``results``
-.. contains two such pairs, one for each trial's worth of inputs.  Note that the input for the first trial is
-.. "congruent" -- that is the stimuus is the same (``red``) for both the color and word inputs, and so the model
-.. responds ``red``.  For the second trial, the inputs are incongruent (they disagree);  in this case, the model
-.. responds with ``green``, since the weights in that pathway are stronger.   Notice also that the DDM Mechanism also
-.. reports a longer response time.  We'll return to this in examples of models that monitor performance and adjust
-.. control below.
+.io/PsyNeuLink/Library.html>`_ at `Stroop Model <XXXX GET FROM Q>`.  The figure belows shows the model using the
+Composition's `show_graph <Composition.show_graph>` method.
 
 .. _BasicsAndSampler_Simple_Stroop_Example_Figure:
 
@@ -266,14 +243,14 @@ by a color naming incongruent trial::
     >> [[array([1.]), array([2.80488344])], [array([1.]), array([3.94471513])]]
 
 When a Composition is run, its `results <Composition.results>` attribute stores the values of its `OUTPUT` Mechanisms
-at the end of each `TRIAL <TimeScale.TRIAL>`. In this case, the `DDM` Mechanism is the only `OUTPUT` Mechanism, and it
+at the end of each `trial <TimeScale.TRIAL>`. In this case, the `DDM` Mechanism is the only `OUTPUT` Mechanism, and it
 has two output values by default: the outcome of the decision (1 or -1, in this case corresponding to ``red`` or
 ``green``), and the estimated mean decision time for the decision (in seconds).  So, the value returned by the `results
 <Composition.results>` attribute is a 3d array containing two 2d arrays, each of which has the two outputs of the DDM
-for each `TRIAL <TimeScale.TRIAL>` (notice that the estimated response time for the second, incongruent trial was
+for each `trial <TimeScale.TRIAL>` (notice that the estimated response time for the second, incongruent trial was
 significantly longer than for the first, congruent trial;  note also that, on some executions it might return -1 as
 the response in the second trials since, by default, the `function <DDM.function>` used for the decision process has
-a non-zero `noise <DriftDiffusionAnalytical.noise> term).
+a non-zero `noise <DriftDiffusionAnalytical.noise>` term).
 
 .. _BasicsAndSampler_Dynamics_of_Execution:
 
@@ -295,7 +272,7 @@ analytic solution to the distribution of responses the DDM integration process (
 <DriftDiffusionAnalytical.threshold>`), and returns both the probability of threshold crossing and the mean
 crossing time.  However, it is also possible to simulate the dynamics of the integration process by assigning
 `DriftDiffusionIntegrator` as the Mechanism's `function <DDM.function>` and specifying, in the call to the
-Composition's `run <Composition.run>` method, that a `TRIAL <TimeScale.TRIAL>` terminate only when the ``decision``
+Composition's `run <Composition.run>` method, that a `trial <TimeScale.TRIAL>` terminate only when the ``decision``
 Mechanism has completed its execution, as follows::
 
     # Modify consruction of decision Mechanism:
@@ -323,7 +300,7 @@ Composition:  the ProcessingMechanisms in each pathway executed in sequence, end
 it was complete.  PsyNeuLink's `Scheduler` can also be used to implement more complicated dependencies among Mechanisms
 that execute over different time scales, by assigning one or more `Conditions <Condition>` for execution of the
 Mechanisms to the `Scheduler` for the Composition. Conditions can specify the isolated behavior of a Mechanism (e.g.,
-how many times it should be executed in each `TRIAL <TimeScale.TRIAL>`), its behavior relative to that of one or more
+how many times it should be executed in each `trial <TimeScale.TRIAL>`), its behavior relative to that of one or more
 other Components (e.g., how many times it should wait for another Mechanism to execute before it does so), or even
 arbitrary functions (e.g., a convergence criterion for the settling of a recurrent network). For example, the
 following implements a verion of the model above that uses a leaky competing accumulator `<https://www.ncbi.nlm.nih
@@ -375,7 +352,7 @@ Control
 Another distinctive feature of PsyNeuLink is the ability to easily create models that include control;  that is,
 Mechanisms that can evaluate the output of other Mechanisms (or nested Compositions), and use this to regulate the
 processing of those Mechanisms.  For example, the extension of ``Stroop_model`` below monitors conflict in
-the ``output`` Mechanism on each `TRIAL <TimeScale.TRIAL>`, and uses that to regulate the gain of the ``task``
+the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and uses that to regulate the gain of the ``task``
 Mechanism::
 
     # Construct control mechanism
@@ -398,27 +375,29 @@ control_signals
 Automatiion of their construction
 
 The constructor for the ControlMechanism specifies how control should be configured, and automates the process of
-implementing it:  the **monitor_for_control** argument specifies the Mechanisms to be monitored;
-**objective_mechanism** specifies the ObjectiveMechanism and its function used to do the monitoring; and
-**control_signals** specifies the parameters of the Mechanisms to be regulated.  These are used to construct
-ObjectiveMechanism and ControlMechanisms, and the ControlMechanism is then assigned to the ``Stroop_model`` as its
-`controller <Stroop_model.controller>` when the Composition is constructed.  The figure below shows the result:
+implementing it:  the **monitor_for_control** argument specifies the Mechanisms to be monitored; **objective_mechanism**
+specifies the `ObjectiveMechanism` and its `function <ObjectiveMechanism.function>` used to do the monitoring; and
+**control_signals** specifies the parameters of Mechanisms in the Composition to be regulated.  These are used to
+construct ObjectiveMechanism and ControlMechanisms, and the ControlMechanism is then assigned to the ``Stroop_model``
+as its `controller <Stroop_model .controller>` when the Composition is constructed.  The figure below shows the result:
 
 .. _BasicsAndSampler_Stroop_Example_With_Control_Figure:
 
 .. figure:: _static/BasicsAndSampler_Control.svg
    :width: 50%
 
-   **Stroop Model with Controller.** Representation of the Composition in the example above, using
-   ``Stroop_model.show_graph(show_controller)``
+   **Stroop Model with Controller.** Representation of the Composition in the example above, generated by a call to
+   ``Stroop_model.show_graph(show_controller)``.
 
-When the Composition executes, the Objective Mechanism receives the output of the ``output`` Mechanism, and uses
+When the Composition executes, the ObjectiveMechanism receives the output of the ``output`` Mechanism, and uses
 the `Energy` function assigned to it to compute conflict in the ``output`` Mechanism (the degree of co-activity of
-it respresentations of the ``red`` and ``green`` responses).  The result passed to the ``control`` Mechanism, which
-uses it to set the `gain <Logistic.gain>` of the `Logistic` function used by the ``task`` Mechahnism.  The ``control``
-Mechanism executes at the end of each `TRIAL <TimeScale.TRIAL>`, which has its effects on the ``task`` Mechanism the
-next time it executes (i.e., on the next `TRIAL <TimeScale.TRIAL>`).  Running the model for several trials shows that
-it adapts its behavior based on the previous inputs::
+it respresentations of the ``red`` and ``green`` responses).  The result is passed to the ``control`` Mechanism, which
+uses it to set the `gain <Logistic.gain>` of the ``task`` Mechanism's `Logistic` function.  Since the ``control``
+Mechanism was assigned as the Composition's `controller <Composition.controller>`, it executes at the end of each
+`trial <TimeScale.TRIAL>`, after all of the other Mechanisms in the Composition have executed, which has its effects
+on the ``task`` Mechanism the next time it executes (i.e., on the next `trial <TimeScale.TRIAL>`;  a Composition's
+`controller <Composition.controller>` can also be configured to execute at the start of a `trial <TimeScale.TRIAL>`).
+Running the model for several trials shows that it adapts its behavior based on its performance on the previous trials::
 
     XXX EXAMPLE OUTPUT HERE XXX
 
