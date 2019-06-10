@@ -5,7 +5,7 @@ import psyneulink.core.components.functions.transferfunctions
 
 
 def test_control_mechanism_assignment():
-    '''ControlMechanism assignment/replacement,  monitor_for_control, and control_signal specifications'''
+    """ControlMechanism assignment/replacement,  monitor_for_control, and control_signal specifications"""
 
     T1 = pnl.TransferMechanism(size=3, name='T-1')
     T2 = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic, output_states=[{pnl.NAME: 'O-1'}], name='T-2')
@@ -52,7 +52,7 @@ def test_control_mechanism_assignment():
 
 
 # def test_control_mechanism_assignment_additional():
-#     '''Tests "free-standing" specifications of monitor_for_control and ControlSignal (i.e., outside of a list)'''
+#     """Tests "free-standing" specifications of monitor_for_control and ControlSignal (i.e., outside of a list)"""
 #     T_1 = pnl.TransferMechanism(name='T_1')
 #     T_2 = pnl.TransferMechanism(name='T_2')
 #     T_3 = pnl.TransferMechanism(name='T_3')
@@ -73,7 +73,7 @@ def test_control_mechanism_assignment():
 
 
 def test_control_mechanism_assignment_additional():
-    '''Tests "free-standing" specifications of monitor_for_control and ControlSignal (i.e., outside of a list)'''
+    """Tests "free-standing" specifications of monitor_for_control and ControlSignal (i.e., outside of a list)"""
     T_1 = pnl.TransferMechanism(name='T_1')
     T_2 = pnl.TransferMechanism(name='T_2')
     S = pnl.sys([T_1,T_2],
@@ -86,7 +86,7 @@ def test_control_mechanism_assignment_additional():
     assert T_2.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
 
 def test_prediction_mechanism_assignment():
-    '''Tests prediction mechanism assignment and more tests for ObjectiveMechanism and ControlSignal assignments'''
+    """Tests prediction mechanism assignment and more tests for ObjectiveMechanism and ControlSignal assignments"""
 
     T1 = pnl.TransferMechanism(name='T1')
     T2 = pnl.TransferMechanism(name='T2')
@@ -121,7 +121,7 @@ def test_prediction_mechanism_assignment():
                                     [[2.]], [[3.]], [[4.]], [[10.]], [[15.]], [[20.]], [[20.]], [[30.]], [[40.]]]
 
 def test_prediction_mechanism_filter_function():
-    '''Tests prediction mechanism assignment and more tests for ObjectiveMechanism and ControlSignal assignments'''
+    """Tests prediction mechanism assignment and more tests for ObjectiveMechanism and ControlSignal assignments"""
 
     f = lambda x: [x[0]*7]
     T = pnl.TransferMechanism(name='T')

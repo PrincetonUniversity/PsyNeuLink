@@ -358,11 +358,11 @@ class Scheduler(object):
         execution_id=None,
         **kwargs
     ):
-        '''
+        """
         :param self:
         :param composition: (Composition) - the Composition this scheduler is scheduling for
         :param conditions: (ConditionSet) - a :keyword:`ConditionSet` to be scheduled
-        '''
+        """
         self.conditions = conditions if conditions is not None else ConditionSet()
 
         # stores the in order list of self.run's yielded outputs
@@ -530,7 +530,7 @@ class Scheduler(object):
         self.consideration_queue, self.removed_dependencies, self.visual_graph = self._call_toposort(graph)
 
     def _init_counts(self, execution_id=None, base_execution_id=None):
-        '''
+        """
             Attributes
             ----------
 
@@ -541,7 +541,7 @@ class Scheduler(object):
                 base_execution_id : uuid.uuid4
                     if specified, the counts for execution_id will be copied from the counts of base_execution_id
                     default : None
-        '''
+        """
         # all counts are divided by execution_id, which provides a context for the scheduler's execution, so that
         # it can be reused in multiple contexts
 
@@ -723,13 +723,13 @@ class Scheduler(object):
     ################################################################################
 
     def run(self, termination_conds=None, execution_id=None, base_execution_id=None, skip_trial_time_increment=False):
-        '''
+        """
         run is a python generator, that when iterated over provides the next `TIME_STEP` of
         executions at each iteration
 
         :param termination_conds: (dict) - a mapping from `TimeScale`\\s to `Condition`\\s that when met
                terminate the execution of the specified `TimeScale`
-        '''
+        """
         self._validate_run_state()
         if termination_conds is None:
             termination_conds = self.termination_conds

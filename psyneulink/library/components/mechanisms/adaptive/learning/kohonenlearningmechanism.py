@@ -432,11 +432,11 @@ class KohonenLearningMechanism(LearningMechanism):
         return [learning_signal]
 
     def _update_output_states(self, execution_id=None, runtime_params=None, context=None):
-        '''Update the weights for the MappingProjection for which this is the KohonenLearningMechanism
+        """Update the weights for the MappingProjection for which this is the KohonenLearningMechanism
 
         Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
         This insures that weights are updated within the same trial in which they have been learned
-        '''
+        """
 
         super()._update_output_states(execution_id, runtime_params, context)
 

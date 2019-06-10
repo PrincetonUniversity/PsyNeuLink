@@ -437,11 +437,11 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         return value
 
     def _update_output_states(self, execution_id=None, runtime_params=None, context=None):
-        '''Update the weights for the AutoAssociativeProjection for which this is the AutoAssociativeLearningMechanism
+        """Update the weights for the AutoAssociativeProjection for which this is the AutoAssociativeLearningMechanism
 
         Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
         This insures that weights are updated within the same trial in which they have been learned
-        '''
+        """
 
         super()._update_output_states(execution_id, runtime_params, context)
 

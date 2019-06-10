@@ -136,7 +136,7 @@ optimal_action = [0,0]
 d=0
 
 def objective_function(variable):
-    '''Return difference between optimal and actual actions'''
+    """Return difference between optimal and actual actions"""
     global optimal_action
     global d
     player_veridical = variable[0]

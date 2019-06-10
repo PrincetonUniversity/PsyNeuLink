@@ -9,7 +9,7 @@
 #
 # *****************************************  COMBINATION FUNCTIONS  ****************************************************
 
-'''
+"""
 * `Concatenate`
 * `Rearrange`
 * `Reduce`
@@ -29,7 +29,7 @@ this is for use by ModulatoryProjections (and, in particular, GatingProjections,
 when the CombinationFunction is used as the function of an InputState or OutputState).
 
 
-'''
+"""
 
 import numbers
 
@@ -523,12 +523,12 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        '''Insure all items of arrangement are tuples and compatibility with default_variable
+        """Insure all items of arrangement are tuples and compatibility with default_variable
 
         If arrangement is specified, convert all items to tuples
         If default_variable is NOT specified, assign with length in outer dimension = max index in arragnement
         If default_variable IS _user_specified, compatiblility with arrangement is checked in _validate_params
-        '''
+        """
 
         arrangement = self.parameters.arrangement.get()
 

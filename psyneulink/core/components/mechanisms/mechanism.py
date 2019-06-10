@@ -1512,7 +1512,7 @@ class Mechanism_Base(Mechanism):
     # ------------------------------------------------------------------------------------------------------------------
 
     def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
-        '''
+        """
             Finds whether default_variable can be determined using **default_variable** and **size**
             arguments.
 
@@ -1520,7 +1520,7 @@ class Mechanism_Base(Mechanism):
             -------
                 a default variable if possible
                 None otherwise
-        '''
+        """
         default_variable_from_input_states = None
 
         # handle specifying through params dictionary
@@ -1578,7 +1578,7 @@ class Mechanism_Base(Mechanism):
         return super()._handle_default_variable(default_variable=default_variable, size=size)
 
     def _handle_arg_input_states(self, input_states):
-        '''
+        """
         Takes user-inputted argument **input_states** and returns an defaults.variable-like
         object that it represents
 
@@ -1587,7 +1587,7 @@ class Mechanism_Base(Mechanism):
             A, B where
             A is an defaults.variable-like object
             B is True if **input_states** contained an explicit variable specification, False otherwise
-        '''
+        """
 
         if input_states is None:
             return None, False
@@ -2076,7 +2076,7 @@ class Mechanism_Base(Mechanism):
         _add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
     def _projection_added(self, projection, context=None):
-        '''Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism'''
+        """Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism"""
         pass
 
     def reinitialize(self, *args, execution_context=None):
@@ -3000,8 +3000,8 @@ class Mechanism_Base(Mechanism):
         inner_table_spec = '<table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD">'
 
         def mech_cell():
-            '''Return html with name of Mechanism, possibly with function and/or value
-            Inclusion of roles, function and/or value is determined by arguments of call to show_structure()'''
+            """Return html with name of Mechanism, possibly with function and/or value
+            Inclusion of roles, function and/or value is determined by arguments of call to show_structure()"""
             header = ''
             if show_headers:
                 header = mech_header
@@ -3062,18 +3062,18 @@ class Mechanism_Base(Mechanism):
         def state_table(state_list:ContentAddressableList,
                         state_type:tc.enum(InputState, ParameterState, OutputState)):
 
-            '''Return html with table for each state in state_list, including functions and/or values as specified
+            """Return html with table for each state in state_list, including functions and/or values as specified
 
             Each table has a header cell and and inner table with cells for each state in the list
             InputState and OutputState cells are aligned horizontally;  ParameterState cells are aligned vertically.
             Use show_functions, show_values and include_labels arguments from call to show_structure()
             See show_structure docstring for full template.
-            '''
+            """
 
             def state_cell(state, include_function:bool=False, include_value:bool=False, use_label:bool=False):
-                '''Return html for cell in state inner table
+                """Return html for cell in state inner table
                 Format:  <td port="StatePort">StateName<br/><i>function 1</i><br/><i>=value</i></td>
-                '''
+                """
 
                 function = ''
                 fct_params = ''
@@ -3593,7 +3593,7 @@ class Mechanism_Base(Mechanism):
 
     @property
     def attributes_dict(self):
-        '''Note: this needs to be updated each time it is called, as it must be able to report current values'''
+        """Note: this needs to be updated each time it is called, as it must be able to report current values"""
 
         # # MODIFIED 6/29/18 OLD:
         # attribs_dict = MechParamsDict(

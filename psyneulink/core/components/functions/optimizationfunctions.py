@@ -8,7 +8,7 @@
 #
 #
 # ******************************************   OPTIMIZATION FUNCTIONS **************************************************
-'''
+"""
 
 * `OptimizationFunction`
 * `GradientOptimization`
@@ -20,7 +20,7 @@ Overview
 
 Functions that return the sample of a variable yielding the optimized value of an objective_function.
 
-'''
+"""
 
 import warnings
 # from fractions import Fraction
@@ -425,7 +425,7 @@ class OptimizationFunction(Function_Base):
                                                        self.__class__.__name__))
 
     def reinitialize(self, *args, execution_id=None):
-        '''Reinitialize parameters of the OptimizationFunction
+        """Reinitialize parameters of the OptimizationFunction
 
         Parameters to be reinitialized should be specified in a parameter specification dictionary, in which they key
         for each entry is the name of one of the following parameters, and its value is the value to be assigned to the
@@ -435,7 +435,7 @@ class OptimizationFunction(Function_Base):
             * `objective_function <OptimizationFunction.objective_function>`
             * `search_function <OptimizationFunction.search_function>`
             * `search_termination_function <OptimizationFunction.search_termination_function>`
-        '''
+        """
 
         self._validate_params(request_set=args[0])
 
@@ -464,7 +464,7 @@ class OptimizationFunction(Function_Base):
                  params=None,
                  context=None,
                  **kwargs):
-        '''Find the sample that yields the optimal value of `objective_function
+        """Find the sample that yields the optimal value of `objective_function
         <OptimizationFunction.objective_function>`.
 
         See `optimization process <OptimizationFunction_Procedure>` for details.
@@ -480,7 +480,7 @@ class OptimizationFunction(Function_Base):
             they were evaluated; otherwise it is empty.  If `save_values <OptimizationFunction.save_values>` is `True`,
             second list contains the values returned by `objective_function <OptimizationFunction.objective_function>`
             for all the samples in the order they were evaluated; otherwise it is empty.
-        '''
+        """
 
         if self._unspecified_args and self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZED:
             warnings.warn("The following arg(s) were not specified for {}: {} -- using default(s)".
@@ -545,7 +545,7 @@ class OptimizationFunction(Function_Base):
         return new_sample, new_value, samples, values
 
     def _report_value(self, new_value):
-        '''Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample.'''
+        """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
         pass
 
 
@@ -1001,7 +1001,7 @@ class GradientOptimization(OptimizationFunction):
                  params=None,
                  context=None,
                  **kwargs):
-        '''Return the sample that yields the optimal value of `objective_function
+        """Return the sample that yields the optimal value of `objective_function
         <GradientOptimization.objective_function>`, and possibly all samples evaluated and their corresponding values.
 
         Optimal value is defined by `direction <GradientOptimization.direction>`:
@@ -1020,7 +1020,7 @@ class GradientOptimization(OptimizationFunction):
             <GradientOptimization.save_values>` is `True`, second list contains the values returned by
             `objective_function <GradientOptimization.objective_function>` for all the samples in the order they were
             evaluated; otherwise it is empty.
-        '''
+        """
 
         optimal_sample, optimal_value, all_samples, all_values = super().function(variable=variable,
                                                                                   execution_id=execution_id,
@@ -1318,7 +1318,7 @@ class GridSearch(OptimizationFunction):
 
 
     def reinitialize(self, *args, execution_id=None):
-        '''Assign size of `search_space <GridSearch.search_space>'''
+        """Assign size of `search_space <GridSearch.search_space>"""
         super(GridSearch, self).reinitialize(*args, execution_id=execution_id)
         sample_iterators = args[0]['search_space']
         owner_str = ''
@@ -1335,7 +1335,7 @@ class GridSearch(OptimizationFunction):
         self.num_iterations = np.product([i.num for i in sample_iterators])
 
     def reset_grid(self):
-        '''Reset iterators in `search_space <GridSearch.search_space>'''
+        """Reset iterators in `search_space <GridSearch.search_space>"""
         for s in self.search_space:
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
@@ -1566,7 +1566,7 @@ class GridSearch(OptimizationFunction):
                  params=None,
                  context=None,
                  **kwargs):
-        '''Return the sample that yields the optimal value of `objective_function <GridSearch.objective_function>`,
+        """Return the sample that yields the optimal value of `objective_function <GridSearch.objective_function>`,
         and possibly all samples evaluated and their corresponding values.
 
         Optimal value is defined by `direction <GridSearch.direction>`:
@@ -1584,7 +1584,7 @@ class GridSearch(OptimizationFunction):
             evaluated; otherwise it is empty.  If `save_values <GridSearch.save_values>` is `True`, second list
             contains the values returned by `objective_function <GridSearch.objective_function>` for all the samples
             in the order they were evaluated; otherwise it is empty.
-        '''
+        """
 
         self.reset_grid()
         return_all_samples = return_all_values = []
@@ -1727,9 +1727,9 @@ class GridSearch(OptimizationFunction):
         return sample_optimal, value_optimal, return_all_samples, return_all_values
 
     def _traverse_grid(self, variable, sample_num, execution_id=None):
-        '''Get next sample from grid.
+        """Get next sample from grid.
         This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
-        '''
+        """
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             return [signal.start for signal in self.search_space]
         try:
@@ -1742,10 +1742,10 @@ class GridSearch(OptimizationFunction):
         return sample
 
     def _grid_complete(self, variable, value, iteration, execution_id=None):
-        '''Return False when search of grid is complete
+        """Return False when search of grid is complete
         This is assigned as the `search_termination_function <OptimizationFunction.search_termination_function>`
         of the `OptimizationFunction`.
-        '''
+        """
         try:
             return iteration == self.num_iterations
         except AttributeError:
@@ -1974,7 +1974,7 @@ class GaussianProcess(OptimizationFunction):
                  params=None,
                  context=None,
                  **kwargs):
-        '''Return the sample that yields the optimal value of `objective_function <GaussianProcess.objective_function>`,
+        """Return the sample that yields the optimal value of `objective_function <GaussianProcess.objective_function>`,
         and possibly all samples evaluated and their corresponding values.
 
         Optimal value is defined by `direction <GaussianProcess.direction>`:
@@ -1992,7 +1992,7 @@ class GaussianProcess(OptimizationFunction):
             evaluated; otherwise it is empty.  If `save_values <GaussianProcess.save_values>` is `True`, second list
             contains the values returned by `objective_function <GaussianProcess.objective_function>` for all the
             samples in the order they were evaluated; otherwise it is empty.
-        '''
+        """
 
         return_all_samples = return_all_values = []
 
@@ -2021,7 +2021,7 @@ class GaussianProcess(OptimizationFunction):
 
     # FRED: THESE ARE THE SHELLS FOR THE METHODS I BELIEVE YOU NEED:
     def _gaussian_process_sample(self, variable, sample_num, execution_id=None):
-        '''Draw and return sample from search_space.'''
+        """Draw and return sample from search_space."""
         # FRED: YOUR CODE HERE;  THIS IS THE search_function METHOD OF OptimizationControlMechanism (i.e., PARENT)
         # NOTES:
         #   This method is assigned as the search function of GaussianProcess,
@@ -2039,7 +2039,7 @@ class GaussianProcess(OptimizationFunction):
         return variable
 
     def _gaussian_process_satisfied(self, variable, value, iteration, execution_id=None):
-        '''Determine whether search should be terminated;  return `True` if so, `False` if not.'''
+        """Determine whether search should be terminated;  return `True` if so, `False` if not."""
         # FRED: YOUR CODE HERE;    THIS IS THE search_termination_function METHOD OF OptimizationControlMechanism (
         # i.e., PARENT)
         return iteration==2# [BOOLEAN, SPECIFIYING WHETHER TO END THE SEARCH/SAMPLING PROCESS]

@@ -513,10 +513,10 @@ def _net_outcome_getter(owning_component=None, execution_id=None):
         return [0]
 
 class DefaultAllocationFunction(Function_Base):
-    '''Take a single 1d item and return a 2d array with n identical items
+    """Take a single 1d item and return a 2d array with n identical items
     Takes the default input (a single value in the *OUTCOME* InputState of the ModulatoryMechanism),
     and returns the same allocation for each of its `modulatory_signals <ModulatoryMechanism.modulatory_signals>`.
-    '''
+    """
     componentName = 'Default Modulatory Function'
     class Parameters(Function_Base.Parameters):
         num_modulatory_signals = Parameter(1, stateful=False)
@@ -1277,7 +1277,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                              if isinstance(state, (ControlSignal, GatingSignal))])
 
     def _instantiate_modulatory_signals(self, context):
-        '''Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)'''
+        """Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)"""
         for i, modulatory_signal in enumerate(self.modulatory_signals):
             self.modulatory_signals[i] = self._instantiate_modulatory_signal(modulatory_signal, context=context)
         num_modulatory_signals = i+1
@@ -1315,14 +1315,14 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
 
     def _instantiate_modulatory_signal(self,  modulatory_signal, context=None):
-        '''Parse and instantiate modulatory_signal specifications (in call to State._parse_state_spec)
+        """Parse and instantiate modulatory_signal specifications (in call to State._parse_state_spec)
            and any embedded Projection specifications (in call to <State>._instantiate_projections)
 
         Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
            value, output_states and modulatory_signals haven't been expanded yet to accomodate the new
            ModulatorySignal; reassign modulatory_signal.variable to actual OWNER_VALUE below,
            once value has been expanded
-        '''
+        """
         from psyneulink.core.components.states.state import _instantiate_state
         from psyneulink.core.components.projections.projection import ProjectionError
 
@@ -1594,10 +1594,10 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             proj._activate_for_compositions(compositions)
 
     def _apply_modulatory_allocation(self, modulatory_allocation, runtime_params, context, execution_id=None):
-        '''Update values to `modulatory_signals <ModulatoryMechanism.modulatory_signals>`
+        """Update values to `modulatory_signals <ModulatoryMechanism.modulatory_signals>`
         based on specified `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`
         (used by controller of a Composition in simulations)
-        '''
+        """
         value = [np.atleast_1d(a) for a in modulatory_allocation]
         self.parameters.value._set(value, execution_id)
         self._update_output_states(execution_id=execution_id,

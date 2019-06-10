@@ -1017,14 +1017,14 @@ class RecurrentTransferMechanism(TransferMechanism):
                          prefs=prefs)
 
     # def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
-    #     '''Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item'''
+    #     """Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item"""
     #     default_variable = super()._handle_default_variable(default_variable, size, input_states, params)
     #     self.recurrent_size = self.recurrent_size or len(default_variable[0])
     #     return default_variable
 
     def _instantiate_defaults(
             self,variable=None,request_set=None,assign_missing=True,target_set=None,default_set=None,context=None):
-        '''Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item of variable'''
+        """Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item of variable"""
         self.recurrent_size = self.recurrent_size or len(variable[0])
         super()._instantiate_defaults(variable,request_set,assign_missing,target_set,default_set,context)
 
@@ -1540,9 +1540,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @property
     def _learning_signal_source(self):
-        '''Return default source of learning signal (`Primary OutputState <OutputState_Primary>)`
+        """Return default source of learning signal (`Primary OutputState <OutputState_Primary>)`
               Subclass can override this to provide another source (e.g., see `ContrastiveHebbianMechanism`)
-        '''
+        """
         return self.output_state
 
     def _get_input_struct_type(self, ctx):

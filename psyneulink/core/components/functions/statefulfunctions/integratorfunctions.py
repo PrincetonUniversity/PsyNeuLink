@@ -8,7 +8,7 @@
 #
 #
 # *****************************************  INTEGRATOR FUNCTIONS ******************************************************
-'''
+"""
 
 Functions that integrate current value of input with previous value.
 
@@ -23,7 +23,7 @@ Functions that integrate current value of input with previous value.
 * `LeakyCompetingIntegrator`
 * `FitzHughNagumoIntegrator`
 
-'''
+"""
 
 import itertools
 import numbers
@@ -251,7 +251,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
     # FIX CONSIDER MOVING THIS TO THE LEVEL OF Function_Base OR EVEN Component
     def _validate_params(self, request_set, target_set=None, context=None):
-        '''Check inner dimension (length) of all parameters used for the function
+        """Check inner dimension (length) of all parameters used for the function
 
         Insure that for any parameters that are in the Paramaters class, designated as function_arg, and
             specified by the user with length>1:
@@ -261,7 +261,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                - was NOT specified by the user, they all have the same length as each other;
                  note:  in this case, default_variable will be set to the length of those parameters in
                         _instantiate_attributes_before_function below
-        '''
+        """
 
         # Use dict to be able to report names of params that are in violating set
         params_to_check = {}
@@ -298,7 +298,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
     # MODIFIED 6/21/19 NEW: [JDC]
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        '''Insure inner dimension of default_variable matches the length of any parameters that have len>1'''
+        """Insure inner dimension of default_variable matches the length of any parameters that have len>1"""
 
         # Note:  if default_variable was user specfied, equal length of parameters was validated in _validate_params
         if not self.parameters.variable._user_specified:
@@ -327,12 +327,12 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     # MODIFIED 6/21/19 END
 
     def _EWMA_filter(self, previous_value, rate, variable):
-        '''Return `exponentially weighted moving average (EWMA)
-        <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of a variable'''
+        """Return `exponentially weighted moving average (EWMA)
+        <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of a variable"""
         return (1 - rate) * previous_value + rate * variable
 
     def _logistic(self, variable, gain, bias):
-        '''Return logistic transform of variable'''
+        """Return logistic transform of variable"""
         return 1 / (1 + np.exp(-(gain * variable) + bias))
 
     def _euler(self, previous_value, previous_time, slope, time_step_size):

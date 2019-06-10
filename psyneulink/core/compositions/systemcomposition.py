@@ -15,7 +15,7 @@ class SystemCompositionError(Exception):
 
 
 class SystemComposition(Composition):
-    '''
+    """
 
             Arguments
             ----------
@@ -25,7 +25,7 @@ class SystemComposition(Composition):
 
             Returns
             ----------
-    '''
+    """
 
     def __init__(self):
         super(SystemComposition, self).__init__()
