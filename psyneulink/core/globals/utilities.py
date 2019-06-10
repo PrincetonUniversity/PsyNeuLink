@@ -1484,9 +1484,16 @@ def _get_arg_from_stack(arg_name:str):
     return arg_val
 
 
+_unused_args_sig_cache = {}
+
+
 def prune_unused_args(func, args=None, kwargs=None):
     # use the func signature to filter out arguments that aren't compatible
-    sig = inspect.signature(func)
+    try:
+        sig = _unused_args_sig_cache[func]
+    except KeyError:
+        sig = inspect.signature(func)
+        _unused_args_sig_cache[func] = sig
 
     has_args_param = False
     has_kwargs_param = False

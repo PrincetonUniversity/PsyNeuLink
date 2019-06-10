@@ -42,10 +42,8 @@ COMMENT:
    JDC: WE MAY WANT TO CHANGE THE NAME OF THE ARGUMENT TO 'COMPOSITION` ONCE THAT IS IMPLEMENTED, TO BE FULLY GENERAL
 COMMENT
 
-* a `System` in the **system** argument - if a System is specified,
-  the Scheduler is created using the Components in the System's `execution_list <System.execution_list>` and an
-  order of execution specified by the dependencies among the Components in its `execution_graph
-  <System.execution_graph>`.
+* a `Composition` in the **composition** argument - if a Composition is specified,
+  the Scheduler is created using the nodes and edges in the Composition's `graph <Composition.graph_processing>`.
 
 * a *graph specification dictionary* in the **graph** argument -
   each entry of the dictionary must be a Component of a Composition, and the value of each entry must be a set of
@@ -54,7 +52,7 @@ COMMENT
   used as the default order of executions, subject to any `Condition`s that have been specified
   (see `below <Scheduler_Algorithm>`).
 
-If both a System and a graph are specified, the System takes precedence, and the graph is ignored.
+If both a Composition and a graph are specified, the Composition takes precedence, and the graph is ignored.
 
 Conditions can be added to a Scheduler when it is created by specifying a `ConditionSet` (a set of
 `Conditions <Condition>`) in the **conditions** argument of its constructor.  Individual Conditions and/or
@@ -68,7 +66,7 @@ Algorithm
 
 When a Scheduler is created, it constructs a `consideration_queue`:  a list of `consideration_sets <consideration_set>`
 that defines the order in which Components are eligible to be executed.  This is based on the pattern of projections
-among them specified in the System, or on the dependencies specified in the graph specification dictionary, whichever
+among them specified in the Composition, or on the dependencies specified in the graph specification dictionary, whichever
 was provided in the Scheduler's constructor.  Each `consideration_set` is a set of Components that are eligible to
 execute at the same time/`TIME_STEP` (i.e., that appear at the same "depth" in a sequence of dependencies, and
 among which there are no dependencies).  The first `consideration_set` consists of only `ORIGIN` Mechanisms.
@@ -115,12 +113,13 @@ Execution
 ---------
 
 When a Scheduler is run, it provides a set of Components that should be run next, based on their dependencies in the
-System or graph specification dictionary, and any `Conditions <Condition>`, specified in the Scheduler's constructor.
+Composition or graph specification dictionary, and any `Conditions <Condition>`, specified in the Scheduler's constructor.
 For each call to the `run <Scheduler.run>` method, the Scheduler sequentially evaluates its
 `consideration_sets <consideration_set>` in their order in the `consideration_queue`.  For each set, it  determines
 which Components in the set are allowed to execute, based on whether their associated `Condition <Condition>` has
-been met. Any Component that does not have a `Condition` explicitly specified is assigned the Condition `Always`,
-that allows it to execute any time it is under consideration. All of the Components within a `consideration_set` that
+been met. Any Component that does not have a `Condition` explicitly specified is assigned a Condition that causes it
+to be executed whenever it is `under consideration <Scheduler_Algorithm>` and all its structural parents have been executed
+at least once since the Component's last execution. All of the Components within a `consideration_set` that
 are allowed to execute comprise a `TIME_STEP` of execution. These Components are
 considered as executing simultaneously.
 
@@ -177,7 +176,7 @@ when all of its constituent trials have terminated. These defaults may be overri
 by passing a dictionary mapping `TimeScales <TimeScale>` to `Conditions <Condition>` in the
 **termination_processing** argument of a call to `Composition.run` (to terminate the execution of processing)::
 
-    System.run(
+    Composition.run(
         ...,
         termination_processing={TimeScale.TRIAL: WhenFinished(ddm)}
         )
@@ -191,45 +190,28 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 
     >>> import psyneulink as pnl
 
-    >>> A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
-    >>> B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
-    >>> C = pnl.TransferMechanism(function=pnl.Linear(), name='C')
+    >>> A = pnl.TransferMechanism(name='A')
+    >>> B = pnl.TransferMechanism(name='B')
+    >>> C = pnl.TransferMechanism(name='C')
 
-    >>> p = pnl.Process(
-    ...     pathway=[A, B, C],
-    ...     name = 'p'
-    ... )
-    >>> s = pnl.System(
-    ...     processes=[p],
-    ...     name='s'
-    ... )
-    >>> my_scheduler = pnl.Scheduler(system=s)
+    >>> comp = pnl.Composition()
+    >>> comp.add_linear_processing_pathway([A, B, C])
 
     >>> # implicit condition of Always for A
-    >>> my_scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
-    >>> my_scheduler.add_condition(C, pnl.EveryNCalls(B, 3))
+    >>> comp.scheduler_processing.add_condition(B, pnl.EveryNCalls(A, 2))
+    >>> comp.scheduler_processing.add_condition(C, pnl.EveryNCalls(B, 3))
 
     >>> # implicit AllHaveRun Termination condition
-    >>> execution_sequence = list(my_scheduler.run())
+    >>> execution_sequence = list(comp.scheduler_processing.run())
     >>> execution_sequence
     [{(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism C)}]
 
 * Alternate basic phasing in a linear process::
 
-    >>> A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
-    >>> B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
+    >>> comp = pnl.Composition()
+    >>> comp.add_linear_processing_pathway([A, B])
 
-    >>> p = pnl.Process(
-    ...     pathway=[A, B],
-    ...     name = 'p'
-    ... )
-    >>> s = pnl.System(
-    ...     processes=[p],
-    ...     name='s'
-    ... )
-    >>> my_scheduler = pnl.Scheduler(system=s)
-
-    >>> my_scheduler.add_condition(
+    >>> comp.scheduler_processing.add_condition(
     ...     A,
     ...     pnl.Any(
     ...         pnl.AtPass(0),
@@ -237,7 +219,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     ...     )
     ... )
 
-    >>> my_scheduler.add_condition(
+    >>> comp.scheduler_processing.add_condition(
     ...     B,
     ...     pnl.Any(
     ...         pnl.EveryNCalls(A, 1),
@@ -248,36 +230,19 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     >>> termination_conds = {
     ...     pnl.TimeScale.TRIAL: pnl.AfterNCalls(B, 4, time_scale=pnl.TimeScale.TRIAL)
     ... }
-    >>> execution_sequence = list(my_scheduler.run())
-
-    COMMENT:
-        TODO: Add output for execution sequence
-    COMMENT
-    execution_sequence: [A, B, B, A, B, B]
+    >>> execution_sequence = list(comp.scheduler_processing.run(termination_conds=termination_conds))
+    >>> execution_sequence
+    [{(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism B)}]
 
 * Basic phasing in two processes::
 
-    >>> A = pnl.TransferMechanism(function=pnl.Linear(), name='A')
-    >>> B = pnl.TransferMechanism(function=pnl.Linear(), name='B')
-    >>> C = pnl.TransferMechanism(function=pnl.Linear(), name='C')
+    >>> comp = pnl.Composition()
+    >>> comp.add_linear_processing_pathway([A, C])
+    >>> comp.add_linear_processing_pathway([B, C])
 
-    >>> p = pnl.Process(
-    ...         pathway=[A, C],
-    ...         name = 'p'
-    ... )
-    >>> q = pnl.Process(
-    ...         pathway=[B, C],
-    ...         name = 'q'
-    ... )
-    >>> s = pnl.System(
-    ...         processes=[p, q],
-    ...         name='s'
-    ... )
-    >>> my_scheduler = pnl.Scheduler(system=s)
-
-    >>> my_scheduler.add_condition(A, pnl.EveryNPasses(1))
-    >>> my_scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
-    >>> my_scheduler.add_condition(
+    >>> comp.scheduler_processing.add_condition(A, pnl.EveryNPasses(1))
+    >>> comp.scheduler_processing.add_condition(B, pnl.EveryNCalls(A, 2))
+    >>> comp.scheduler_processing.add_condition(
     ...     C,
     ...     pnl.Any(
     ...         pnl.AfterNCalls(A, 3),
@@ -288,9 +253,9 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     >>> termination_conds = {
     ...     pnl.TimeScale.TRIAL: pnl.AfterNCalls(C, 4, time_scale=pnl.TimeScale.TRIAL)
     ... }
-    >>> execution_sequence = list(my_scheduler.run())
-
-    execution_sequence: [A, {A,B}, A, C, {A,B}, C, A, C, {A,B}, C]
+    >>> execution_sequence = list(comp.scheduler_processing.run(termination_conds=termination_conds))
+    >>> execution_sequence  # doctest: +SKIP
+    [{(TransferMechanism A)}, {(TransferMechanism A), (TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism C)}, {(TransferMechanism A), (TransferMechanism B)}, {(TransferMechanism C)}, {(TransferMechanism A)}, {(TransferMechanism C)}, {(TransferMechanism A), (TransferMechanism B)}, {(TransferMechanism C)}]
 
 .. _Scheduler_Class_Reference
 
@@ -299,15 +264,16 @@ Class Reference
 
 """
 
+import collections
 import copy
 import datetime
 import logging
 import uuid
-import collections
+import warnings
 
 from toposort import toposort
 
-from psyneulink.core.scheduling.condition import AllHaveRun, Always, Condition, ConditionSet, Never
+from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never
 from psyneulink.core.scheduling.time import Clock, TimeScale
 
 __all__ = [
@@ -333,9 +299,9 @@ class Scheduler(object):
     Arguments
     ---------
 
-    system : System
+    composition : Composition
         specifies the Components to be ordered for execution, and any dependencies among them, based on the
-        System's `execution_graph <System.execution_graph>` and `execution_list <System.execution_list>`.
+        Composition's `graph <Composition.graph_processing>`.
 
     COMMENT:
         [**??IS THE FOLLOWING CORRECT]:
@@ -348,7 +314,7 @@ class Scheduler(object):
     COMMENT
 
     conditions  : ConditionSet
-        set of `Conditions <Condition>` that specify when individual Components in **system**
+        set of `Conditions <Condition>` that specify when individual Components in **composition**
         execute and any dependencies among them
 
     graph : Dict[Component: set(Component)]
@@ -382,12 +348,12 @@ class Scheduler(object):
     """
     def __init__(
         self,
-        system=None,
         composition=None,
         graph=None,
         conditions=None,
         termination_conds=None,
         execution_id=None,
+        **kwargs
     ):
         '''
         :param self:
@@ -406,16 +372,23 @@ class Scheduler(object):
 
         self.cycle_nodes = set()
 
-        if system is not None:
-            self.nodes = [m for m in system.execution_list]
-            self._init_consideration_queue_from_system(system)
-            if execution_id is None:
-                execution_id = system.default_execution_id
-        elif composition is not None:
+        # can remove this once system is fully eliminated from tests/support
+        try:
+            system = kwargs['system']
+            warnings.warn('Systems are no longer updated, new code should use Compositions.', DeprecationWarning)
+        except KeyError:
+            system = None
+
+        if composition is not None:
             self.nodes = [vert.component for vert in composition.graph_processing.vertices]
             self._init_consideration_queue_from_graph(composition.graph_processing)
             if execution_id is None:
                 execution_id = composition.default_execution_id
+        elif system is not None:
+            self.nodes = [m for m in system.execution_list]
+            self._init_consideration_queue_from_system(system)
+            if execution_id is None:
+                execution_id = system.default_execution_id
         elif graph is not None:
             try:
                 self.nodes = [vert.component for vert in graph.vertices]
@@ -427,7 +400,7 @@ class Scheduler(object):
                     for node in consideration_set:
                         self.nodes.append(node)
         else:
-            raise SchedulerError('Must instantiate a Scheduler with either a System (kwarg system) '
+            raise SchedulerError('Must instantiate a Scheduler with either a Composition (kwarg composition) '
                                  'or a graph dependency dict (kwarg graph)')
 
         self.default_execution_id = execution_id
@@ -726,10 +699,32 @@ class Scheduler(object):
         unspecified_nodes = []
         for node in self.nodes:
             if node not in self.conditions:
-                self.conditions.add_condition(node, Always())
+                # determine parent nodes
+                node_index = 0
+                for i in range(len(self.consideration_queue)):
+                    if node in self.consideration_queue[i]:
+                        node_index = i
+                        break
+
+                if node_index > 0:
+                    dependencies = list(self.consideration_queue[i - 1])
+                    if len(dependencies) == 1:
+                        cond = EveryNCalls(dependencies[0], 1)
+                    elif len(dependencies) > 1:
+                        cond = All(*[EveryNCalls(x, 1) for x in dependencies])
+                    else:
+                        raise SchedulerError(f'{self}: Empty consideration set in consideration_queue[{i - 1}]')
+                else:
+                    cond = Always()
+
+                self.conditions.add_condition(node, cond)
                 unspecified_nodes.append(node)
         if len(unspecified_nodes) > 0:
-            logger.info('These nodes have no Conditions specified, and will be scheduled with condition Always: {0}'.format(unspecified_nodes))
+            logger.info(
+                'These nodes have no Conditions specified, and will be scheduled with conditions: {0}'.format(
+                    {node: self.conditions[node] for node in unspecified_nodes}
+                )
+            )
 
     ################################################################################
     # Run methods
