@@ -367,6 +367,20 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
     # Construct the Composition using the control Mechanism as its controller:
     Stroop_model = Composition(name='Stroop Model', controller=control)
 
+    np.set_printoptions(precision=2)
+    t = 0
+    def print_after():
+        global t
+        print(f'AFTER trial {t}:')
+        print(f'\t\t\t\t  red\tgreen')
+        print(f'\ttask:\t\t{task.value[0]}')
+        print(f'\toutput:\t\t{output.value[0]}')
+        print(f'\tdecision variable:\t{decision.variable}')
+        print(f'\tdecision:\t{decision.value[0]}\t{decision.value[1]}')
+        print(f'\tconflict:\t\t{control._objective_mechanism.value[0]}')
+        print(f'\tcontrol:\t\t{control.control_signals[0].value}')
+        t += 1
+
     # Set up run and then execute it
     task.initial_value = [0.5,0.5]      # Assign "neutral" starting point for task units on each trial
     task.reinitialize_when=AtPass(n=0)  # Reinitialize task units at beginning of each trial
@@ -374,10 +388,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
     stimuli = {color_input:[red]*num_trials,
                word_input:[green]*num_trials,
                task_input:[color]*num_trials}
-    Stroop_model.run(inputs=stimuli,
-                     call_before_trial=print_before,
-                     call_after_trial=print_after
-                     )
+    Stroop_model.run(inputs=stimuli, call_after_trial=print_after)
 
 This example takes advantage of several additional features of PsyNeuLink, including its ability to automate certain
 forms of construction, and perform specified operations at various points during execution (e.g., reinitialize variables
@@ -420,8 +431,38 @@ following output::
 
     .. _Stroop_model_output:
 
-    XXX EXAMPLE OUTPUT HERE XXX
-
+    End of trial 0:
+                      red	green
+        task:		[ 0.67  0.33]
+        output:		[ 0.38  0.62]
+        decision variable:	[[-0.23]]
+        decision:	[-1.]	[ 3.35]
+        conflict:		[ 0.59]
+        control:		[ 0.59]
+    End of trial 1:
+                      red	green
+        task:		[ 0.77  0.23]
+        output:		[ 0.48  0.52]
+        decision variable:	[[-0.03]]
+        decision:	[-1.]	[ 4.18]
+        conflict:		[ 0.62]
+        control:		[ 0.62]
+    End of trial 2:
+                      red	green
+        task:		[ 0.94  0.06]
+        output:		[ 0.63  0.37]
+        decision variable:	[[ 0.27]]
+        decision:	[ 1.]	[ 3.14]
+        conflict:		[ 0.58]
+        control:		[ 0.58]
+    End of trial 3:
+                      red	green
+        task:		[ 0.99  0.01]
+        output:		[ 0.67  0.33]
+        decision variable:	[[ 0.34]]
+        decision:	[ 1.]	[ 2.8]
+        conflict:		[ 0.55]
+        control:		[ 0.55]
 
 .. _BasicsAndSampler_Logging_and_Animation:
 
