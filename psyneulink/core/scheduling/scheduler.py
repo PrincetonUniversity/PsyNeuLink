@@ -351,7 +351,10 @@ class Scheduler(object):
         composition=None,
         graph=None,
         conditions=None,
-        termination_conds=None,
+        termination_conds={
+            TimeScale.RUN: Never(),
+            TimeScale.TRIAL: AllHaveRun(),
+        },
         execution_id=None,
         **kwargs
     ):
@@ -364,11 +367,8 @@ class Scheduler(object):
 
         # stores the in order list of self.run's yielded outputs
         self.consideration_queue = []
-        self.default_termination_conds = {
-            TimeScale.RUN: Never(),
-            TimeScale.TRIAL: AllHaveRun(),
-        }
-        self.termination_conds = termination_conds
+        self.default_termination_conds = Scheduler._parse_termination_conditions(termination_conds)
+        self._termination_conds = termination_conds.copy()
 
         self.cycle_nodes = set()
 
@@ -622,18 +622,14 @@ class Scheduler(object):
         }
 
     def update_termination_conditions(self, termination_conds):
-        if termination_conds is None:
-            termination_conds = self.termination_conds
-        if self.termination_conds is None:
-            termination_conds = dict(self.default_termination_conds)
-        current_conditions = self.termination_conds.copy()
-        current_conditions.update(termination_conds)
-        return current_conditions
+        termination_conds = Scheduler._parse_termination_conditions(termination_conds)
+        new_conds = self.termination_conds.copy()
+        new_conds.update(termination_conds)
 
-    def _parse_termination_conditions(self, termination_conds):
-        if termination_conds is None:
-            return None
+        return new_conds
 
+    @staticmethod
+    def _parse_termination_conditions(termination_conds):
         try:
             return {k: termination_conds[k] for k in termination_conds if isinstance(k, TimeScale) and isinstance(termination_conds[k], Condition)}
         except TypeError:
@@ -735,7 +731,10 @@ class Scheduler(object):
                terminate the execution of the specified `TimeScale`
         '''
         self._validate_run_state()
-        termination_conds = self.update_termination_conditions(self._parse_termination_conditions(termination_conds))
+        if termination_conds is None:
+            termination_conds = self.termination_conds
+        else:
+            termination_conds = self.update_termination_conditions(Scheduler._parse_termination_conditions(termination_conds))
 
         if execution_id is None:
             execution_id = self.default_execution_id
