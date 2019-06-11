@@ -5,6 +5,7 @@ import uuid
 
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -1093,3 +1094,34 @@ class TestTermination:
 
         expected_output = [A, A, B]
         assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    def test_partial_override_scheduler(self):
+        comp = Composition()
+        A = TransferMechanism(name='scheduler-pytests-A')
+        B = TransferMechanism(name='scheduler-pytests-B')
+        for m in [A, B]:
+            comp.add_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+
+        sched = Scheduler(composition=comp)
+        sched.add_condition(B, EveryNCalls(A, 2))
+        termination_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
+
+        output = list(sched.run(termination_conds=termination_conds))
+
+        expected_output = [A, A, B, A, A, B]
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    def test_partial_override_composition(self):
+        comp = Composition()
+        A = TransferMechanism(name='scheduler-pytests-A')
+        B = IntegratorMechanism(name='scheduler-pytests-B')
+        for m in [A, B]:
+            comp.add_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+
+        termination_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
+
+        output = comp.run(inputs={A: 1}, termination_processing=termination_conds)
+        # two executions of B
+        assert output == [.75]

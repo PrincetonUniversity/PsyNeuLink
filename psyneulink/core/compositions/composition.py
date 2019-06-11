@@ -4338,6 +4338,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if termination_processing is None:
             termination_processing = self.termination_processing
+        else:
+            new_conds = self.termination_processing.copy()
+            new_conds.update(termination_processing)
+            termination_processing = new_conds
 
         if initial_values is not None:
             for node in initial_values:
@@ -4373,8 +4377,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         execution_id = self._assign_execution_ids(execution_id)
 
         scheduler_processing._init_counts(execution_id=execution_id)
-
-        scheduler_processing.update_termination_conditions(termination_processing)
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
@@ -4466,8 +4468,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if call_before_trial:
                 call_with_pruned_args(call_before_trial, execution_context=execution_id)
 
-            if termination_processing[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
-                                                                  execution_context=execution_id):
+            if termination_processing[TimeScale.RUN].is_satisfied(
+                scheduler=scheduler_processing,
+                execution_context=execution_id
+            ):
                 break
             # PROCESSING ------------------------------------------------------------------------
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
