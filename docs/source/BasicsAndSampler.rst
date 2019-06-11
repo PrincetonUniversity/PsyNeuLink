@@ -313,8 +313,8 @@ before processing the color or word stimuli::
     task = LCAMechanism(name='TASK', size=2)
 
     # Assign conditions to scheduler:
-    Stroop_model.processing_scheduler.add_condition(color_hidden, EveryNExecutions(task, 100))
-    Stroop_model.processing_scheduler.add_condition(word_hidden, EveryNExecutions(task, 100))
+    Stroop_model.processing_scheduler.add_condition(color_hidden, EveryNExecutions(task, 10))
+    Stroop_model.processing_scheduler.add_condition(word_hidden, EveryNExecutions(task, 10))
 
     # Run with scheduler:
     Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color})
@@ -433,48 +433,48 @@ following output::
 
     End of trial 0:
                     color  word
-        task:		[0.67 0.51]
-        task gain:	   [0.5]
+        task:		[ 0.67  0.51]
+        task gain:	   [ 0.5]
                     red   green
-        output:		[0.28 0.72]
-        decision:	[-1.][2.36]
-        conflict:	  [0.51]
+        output:		[ 0.28  0.72]
+        decision:	[-1.][ 2.36]
+        conflict:	  [ 0.51]
 
     End of trial 1:
                     color  word
-        task:		[0.81 0.4 ]
-        task gain:	   [0.51]
+        task:		[ 0.81  0.4 ]
+        task gain:	   [ 0.51]
                     red   green
-        output:		[0.38 0.62]
-        decision:	[-1.][3.33]
-        conflict:	  [0.59]
+        output:		[ 0.38  0.62]
+        decision:	[-1.][ 3.33]
+        conflict:	  [ 0.59]
 
     End of trial 2:
                     color  word
-        task:		[0.97 0.19]
-        task gain:	   [0.59]
+        task:		[ 0.97  0.19]
+        task gain:	   [ 0.59]
                     red   green
-        output:		[0.55 0.45]
-        decision:	[1.][3.97]
-        conflict:	  [0.62]
+        output:		[ 0.55  0.45]
+        decision:	[ 1.][ 3.97]
+        conflict:	  [ 0.62]
 
     End of trial 3:
                     color  word
-        task:		[1.   0.04]
-        task gain:	   [0.62]
+        task:		[ 1.    0.04]
+        task gain:	   [ 0.62]
                     red   green
-        output:		[0.65 0.35]
-        decision:	[1.][2.95]
-        conflict:	  [0.57]
+        output:		[ 0.65  0.35]
+        decision:	[ 1.][ 2.95]
+        conflict:	  [ 0.57]
 
     End of trial 4:
                     color  word
-        task:		[1. 0.]
-        task gain:	   [0.57]
+        task:		[ 1.  0.]
+        task gain:	   [ 0.57]
                     red   green
-        output:		[0.67 0.33]
-        decision:	[1.][2.77]
-        conflict:	  [0.55]
+        output:		[ 0.67  0.33]
+        decision:	[ 1.][ 2.77]
+        conflict:	  [ 0.55]
 
 
 .. _BasicsAndSampler_Logging_and_Animation:
