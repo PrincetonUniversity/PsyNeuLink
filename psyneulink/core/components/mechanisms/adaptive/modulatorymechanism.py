@@ -432,6 +432,8 @@ def _control_allocation_getter(owning_component=None, execution_id=None):
         return np.array([owning_component.modulatory_allocation[i] for i in control_signal_indices])
     except TypeError:
         return [defaultControlAllocation]
+        # FIX: 6/10/19
+        # return [owning_component.parameters.control_allocation.default_value]
 
 def _control_allocation_setter(value, owning_component=None, execution_id=None):
     control_signal_indices = [owning_component.modulatory_signals.index(c)
@@ -453,6 +455,8 @@ def _gating_allocation_getter(owning_component=None, execution_id=None):
         return np.array([owning_component.modulatory_allocation[i] for i in gating_signal_indices])
     except (TypeError):
         return [defaultGatingAllocation]
+        # FIX: 6/10/19
+        # return [owning_component.parameters.gating_allocation.default_value]
 
 def _gating_allocation_setter(value, owning_component=None, execution_id=None):
     gating_signal_indices = [owning_component.modulatory_signals.index(c)
@@ -1548,24 +1552,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         for proj in dependent_projections:
             proj._activate_for_compositions(compositions)
-
-    # def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None, **kwargs):
-    #
-    #     value = super()._execute(variable, execution_id, runtime_params, context, **kwargs)
-    #
-    #     FIX: 6/6/19 JDC: THIS DOESN'T WORK SINCE CAN HAVE OUTPUTSTATES THAT ALREADY ALL REFERENCE A SINGLE VALUE ITEM
-    #     output_states = self.output_states
-    #     if output_states and len(output_states) != len(variable):
-    #         if len(value)==1:
-    #             value = np.tile(value, (len(output_states), 1))
-    #         else:
-    #             raise ModulatoryMechanismError(f"Number of {OutputState.__name__}s for {self.name} "
-    #                                            f"({len(output_states)}) does not match the number of items "
-    #                                            f"({len(value)}) in its function's value ()")
-    #     return value
-
-    def _apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
-        self._apply_modulatory_allocation(self, control_allocation, runtime_params, context, execution_id=None)
 
     def _apply_modulatory_allocation(self, modulatory_allocation, runtime_params, context, execution_id=None):
         '''Update values to `modulatory_signals <ModulatoryMechanism.modulatory_signals>`

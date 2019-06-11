@@ -693,6 +693,7 @@ class ControlMechanism(ModulatoryMechanism):
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  objective_mechanism=None,
                  function=None,
+                 default_allocation=None,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
@@ -708,6 +709,8 @@ class ControlMechanism(ModulatoryMechanism):
                 for i in kwargs.keys():
                     raise ControlMechanismError("Unrecognized arg in constructor for {}: {}".
                                                 format(self.__class__.__name__, repr(i)))
+
+        self.parameters.control_allocation.default_value = default_allocation or defaultControlAllocation
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,

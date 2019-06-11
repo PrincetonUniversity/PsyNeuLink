@@ -425,11 +425,12 @@ class Stability(ObjectiveFunction):
 
         """
 
-        if variable.ndim > 1:
-            variable = np.squeeze(variable)
-
         # Validate variable and validate params
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+
+        variable = np.array(variable)
+        if variable.ndim > 1:
+            variable = np.squeeze(variable)
 
         matrix = self.get_current_function_param(MATRIX, execution_id)
 
