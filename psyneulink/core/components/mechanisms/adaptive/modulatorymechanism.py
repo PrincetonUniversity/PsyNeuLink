@@ -215,7 +215,6 @@ be modified either by specifying a different `function <ModulatoryMechanism.func
 individual ControlSignals and/or GatingSignals reference different items in `modulatory_allocation` as their
 allocation (i.e., the value of their `variable <ModulatorySignal.variable>`.
 
-
 A ModulatoryMechanism's `function <ModulatoryMechanism.function>` uses `outcome <ModulatoryMechanism.outcome>`
 (the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `modulatory_allocation
 <ModulatoryMechanism.modulatory_allocation>`.  By default, `function <ModulatoryMechanism.function>` is assigned
@@ -224,13 +223,12 @@ of `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`.  Each of
 allocation for the corresponding  `ModulatorySignal` in `modulatory_signals <ModulatoryMechanism.modulatory_signals>`.
 Thus, by default, the ModulatoryMechanism distributes its input as the allocation to each of its `modulatory_signals
 <ModulatoryMechanism.modulatory_signals>`.  This same behavior also applies to any custom function assigned to a
-ModulatoryMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
+ModulatoryMechanism that returns a 2d array with a single item in its outer dimension (axis 0). If a function is
 assigned that returns a 2d array with more than one item, and it has the same number of `modulatory_signals
 <ModulatoryMechanism.modulatory_signals>`, then each ModulatorySignal is assigned to the corresponding item of the
 function's value.  However, these default behaviors can be modified by specifying that individual ModulatorySignals
 reference different items in `modulatory_allocation` as their `variable <ModulatorySignal.variable>`
 (see `OutputState_Variable`).
-
 
 .. _ModulatoryMechanism_Output:
 
@@ -244,9 +242,12 @@ modulated by a ModulatoryMechanism's `modulatory_signals <ModulatoryMechanism.mo
 using its `show <ModulatoryMechanism.show>` method. By default, each item of the ModulatoryMechanism's
 `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>` attribute is assigned to the `variable` of the
 corresponding `ControlSignal` or `GatingSignal` in its `modulatory_signals <ModulatoryMechanism.modulatory_signals>`
-attribute;  however, subtypes of ModulatoryMechanism may assign values differently.  The allocations to any
-ControlSignals are also listed in the `control_signals <ModulatoryMechanism.control_signals>` attribute; and the
-allocations to any GatingSignals are listed in the `gating_signals <ModulatoryMechanism.gating_signals>` attribute.
+attribute;  however, subtypes of ModulatoryMechanism may assign values differently;  the `default_allocation
+<ModulatoryMechanism.default_allocation>` attribute can be used to specify a default allocation for ModulatorySignals
+that have not been assigned their own `default_allocation <ModulatorySignal.default_allocation>`. The  current
+allocations to ControlSignals are also listed in the `control_allocation <ModulatoryMechanism.control_allocation>`
+attribute; and the  allocations to GatingSignals are listed in the  `gating_allocation
+<ModulatoryMechanism.gating_allocation>` attribute.
 
 .. _ModulatoryMechanism_Costs:
 
@@ -431,13 +432,8 @@ def _control_allocation_getter(owning_component=None, execution_id=None):
                                   for c in owning_component.control_signals]
         return np.array([owning_component.modulatory_allocation[i] for i in control_signal_indices])
     except TypeError:
-        # # MODIFIED 6/10/19 OLD:
-        # return [defaultControlAllocation]
-        # MODIFIED 6/10/19 NEW: [JDC]
-        # return [owning_component.parameters.control_allocation.default_value]
-        # MODIFIED 6/10/19 NEWER: [JDC]
-        return [owning_component.parameters.default_allocation]
-        # MODIFIED 6/10/19 END
+        return owning_component.parameters.default_allocation or \
+               [owning_component.parameters.control_allocation.default_value]
 
 def _control_allocation_setter(value, owning_component=None, execution_id=None):
     control_signal_indices = [owning_component.modulatory_signals.index(c)
@@ -457,12 +453,9 @@ def _gating_allocation_getter(owning_component=None, execution_id=None):
         gating_signal_indices = [owning_component.modulatory_signals.index(g)
                                   for g in owning_component.gating_signals]
         return np.array([owning_component.modulatory_allocation[i] for i in gating_signal_indices])
-    except (TypeError):
-        # # MODIFIED 6/10/19 OLD:
-        # return [defaultGatingAllocation]
-        # MODIFIED 6/10/19 NEW: [JDC]
-        return [owning_component.parameters.gating_allocation.default_value]
-        # MODIFIED 6/10/19 END
+    except TypeError:
+        return owning_component.parameters.default_allocation or \
+               [owning_component.parameters.gating_allocation.default_value]
 
 def _gating_allocation_setter(value, owning_component=None, execution_id=None):
     gating_signal_indices = [owning_component.modulatory_signals.index(c)
@@ -544,8 +537,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         monitor_for_modulation=None,                             \
         objective_mechanism=None,                                \
         function=DefaultAllocationFunction,                      \
-        modulatory_signals=None,                                 \
         default_allocation=None,                                 \
+        modulatory_signals=None,                                 \
         modulation=ModulationParam.MULTIPLICATIVE                \
         combine_costs=np.sum,                                    \
         compute_reconfiguration_cost=None,                       \
@@ -622,8 +615,10 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         specifies the parameters to be controlled by the ModulatoryMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
 
-    default_allocation : '
-        FIX: XXX IF NONE, USES DEFAULT FOR MODULATORY SIGNAL
+    default_allocation : number, list or 1d array : None
+        specifies the default_allocation of any `modulatory_signals <ModulatoryMechanism.modulatory.signals>` for
+        which the **default_allocation** was not specified in its constructor (see default_allocation
+        <ModulatoryMechanism.default_allocation>` for additional details).
 
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
         specifies the default form of modulation used by the ModulatoryMechanism's `ControlSignals <ControlSignal>`,
@@ -696,6 +691,12 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
         **monitor_for_modulation** argument of the ModulatoryMechanism's constructor are used to generate its
         `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`.
+
+    default_allocation : number, list or 1d array
+        determines the default_allocation of any `modulatory_signals <ModulatoryMechanism.modulatory.signals>` for
+        which the **default_allocation** was not specified in its constructor;  if it is None (not specified)
+        then the ModulatorySignal's parameters.allocation.default_value, specified by its class, is used.
+        See documentation for **default_allocation** argument of ModulatorySignal constructor for additional details.
 
     modulatory_signals : ContentAddressableList[ModulatorySignal]
         list of the ModulatoryMechanisms `ControlSignals <ControlSignals>` and `GatingSignals <GatingSignals>`,
@@ -931,14 +932,13 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                  # objective_mechanism:tc.optional(ObjectiveMechanism, list, bool)=None,
                  objective_mechanism=None,
                  function=None,
+                 default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
                  modulatory_signals:tc.optional(tc.any(is_iterable,
                                                        ParameterState,
                                                        InputState,
                                                        OutputState,
                                                        ControlSignal,
                                                        GatingSignal))=None,
-                 # default_allocation:tc.optional(int, float, list, np.ndarray)=None,
-                 default_allocation=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
@@ -979,10 +979,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                   monitor_for_modulation=monitor_for_modulation,
                                                   objective_mechanism=objective_mechanism,
                                                   function=function,
-                                                  modulatory_signals=modulatory_signals,
-                                                  # control_signals=None,
-                                                  # gating_signals=None,
                                                   default_allocation=default_allocation,
+                                                  modulatory_signals=modulatory_signals,
                                                   modulation=modulation,
                                                   params=params)
 
