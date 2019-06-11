@@ -1228,7 +1228,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     def _compute_conditional_rt_moments(drift_rate, noise, threshold, starting_point, t0):
         """
         This is a helper function for computing the conditional decison time moments for the DDM.
-        It is based completely off of Matlab\DDMFunctions\ddm_metrics_cond_Mat.m.
+        It is based completely off of Matlab\\DDMFunctions\\ddm_metrics_cond_Mat.m.
 
         :param drift_rate: The drift rate of the DDM
         :param noise: The diffusion rate.

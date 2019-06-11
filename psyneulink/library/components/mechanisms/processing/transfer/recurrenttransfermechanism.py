@@ -611,7 +611,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         the variable of the mechanism is first passed into the following equation:
 
         .. math::
-            value = previous\_value(1-integration\_rate) + variable \cdot integration\_rate + noise
+            value = previous\\_value(1-integration\\_rate) + variable \\cdot integration\\_rate + noise
 
         The result of the integrator function above is then passed into the mechanism's `function
         <RecurrentTransferMechanism.function>`. Note that on the first execution, *initial_value* determines the

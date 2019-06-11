@@ -3176,7 +3176,7 @@ class System(System_Base):
             in the dict to specify parameters of the animation.  If the **animate** argument is specified simply as
             `True`, defaults are used for all arguments of `show_graph <System.show_graph>` and the options below:
 
-            * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\ *EXECUTION_SET*\ ) -- specifies which Components to
+            * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components to
               treat as active in each call to `show_graph <System.show_graph>`. *COMPONENT* generates an image for the
               execution of each Component.  *EXECUTION_SET* generates an image for each `execution_set
               <System.execution_sets>`, showing all of the Components in that set as active.
@@ -3187,13 +3187,13 @@ class System(System_Base):
               If the number specified is less than the total number of trials being run, only the number specified are
               animated; if it is greater than the number of trials being run, only the number being run are animated.
 
-            * *MOVIE_NAME*: str (default=\ `name <System.name>` + 'movie') -- specifies the name to be used for the
+            * *MOVIE_NAME*: str (default=\\ `name <System.name>` + 'movie') -- specifies the name to be used for the
               movie file; it is automatically appended with '.gif'.
 
-            * *SAVE_IMAGES*: bool (default=\ `False`\ ) -- specifies whether to save each of the images used to
+            * *SAVE_IMAGES*: bool (default=\\ `False`\\ ) -- specifies whether to save each of the images used to
               construct the animation in separate gif files, in addition to the file containing the animation.
 
-            * *SHOW*: bool (default=\ `False`\ ) -- specifies whether to show the animation after it is constructed,
+            * *SHOW*: bool (default=\\ `False`\\ ) -- specifies whether to show the animation after it is constructed,
               using the OS's default viewer.
 
         Examples

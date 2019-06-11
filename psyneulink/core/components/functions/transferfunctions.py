@@ -1046,7 +1046,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         Either **input** or **ouput** must be specified.  If **output** is not specified, it is computed from **input**.
         If both are specified, **input** is ignored unless paramValidationPref is set, in which case
-        an error is generated if **output** does not correspond to `function <Logistic.function>`\(**input**).
+        an error is generated if **output** does not correspond to `function <Logistic.function>`\\(**input**).
 
         Arguments
         ---------
@@ -1104,7 +1104,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     .. math::
 
-        \\frac{1 - e^{-2(gain*(variable+bias-x\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\_0)+offset)}}
+        \\frac{1 - e^{-2(gain*(variable+bias-x\\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\\_0)+offset)}}
 
     .. note::
 
@@ -1114,8 +1114,8 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     `derivative <Tanh.derivative>` returns the derivative of the hyperbolic tangent at its **input**:
 
     .. math::
-        \\frac{gain*scale}{(\\frac{1+e^{-2(gain*(variable+bias-x\_0)+offset)}}{2e^{-(gain*(
-       variable+bias-x\_0)+offset)}})^2}
+        \\frac{gain*scale}{(\\frac{1+e^{-2(gain*(variable+bias-x\\_0)+offset)}}{2e^{-(gain*(
+       variable+bias-x\\_0)+offset)}})^2}
 
     Arguments
     ---------
@@ -1394,7 +1394,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     `derivative <ReLU.derivative>` returns the derivative of of the rectified linear tranform at its **input**:
 
     .. math::
-        gain\ if\ input > 0,\ gain*leak\ otherwise
+        gain\\ if\\ input > 0,\\ gain*leak\\ otherwise
 
     Arguments
     ---------
@@ -2159,7 +2159,7 @@ class SoftMax(TransferFunction):
     others):
 
     .. math::
-        D_jS_i = S_i(\\delta_{i,j} - S_j),\ where\ \\delta_{i,j}=1\ if\ i=j\ and\ \\delta_{i,j}=0\ if\ i≠j.
+        D_jS_i = S_i(\\delta_{i,j} - S_j),\\ where\\ \\delta_{i,j}=1\\ if\\ i=j\\ and\\ \\delta_{i,j}=0\\ if\\ i≠j.
 
     If *OUTPUT_TYPE* is *MAX_VAL* or *MAX_INDICATOR*, returns 1d array of the derivatives of the maximum
     value with respect to the others (calculated as above). If *OUTPUT_TYPE* is *PROB*, raises an exception
