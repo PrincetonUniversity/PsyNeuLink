@@ -432,37 +432,50 @@ following output::
     .. _Stroop_model_output:
 
     End of trial 0:
-                      red	green
-        task:		[ 0.67  0.33]
-        output:		[ 0.38  0.62]
-        decision variable:	[[-0.23]]
-        decision:	[-1.]	[ 3.35]
-        conflict:		[ 0.59]
-        control:		[ 0.59]
+                    color  word
+        task:		[0.67 0.51]
+        task gain:	   [0.5]
+                    red   green
+        output:		[0.28 0.72]
+        decision:	[-1.][2.36]
+        conflict:	  [0.51]
+
     End of trial 1:
-                      red	green
-        task:		[ 0.77  0.23]
-        output:		[ 0.48  0.52]
-        decision variable:	[[-0.03]]
-        decision:	[-1.]	[ 4.18]
-        conflict:		[ 0.62]
-        control:		[ 0.62]
+                    color  word
+        task:		[0.81 0.4 ]
+        task gain:	   [0.51]
+                    red   green
+        output:		[0.38 0.62]
+        decision:	[-1.][3.33]
+        conflict:	  [0.59]
+
     End of trial 2:
-                      red	green
-        task:		[ 0.94  0.06]
-        output:		[ 0.63  0.37]
-        decision variable:	[[ 0.27]]
-        decision:	[ 1.]	[ 3.14]
-        conflict:		[ 0.58]
-        control:		[ 0.58]
+                    color  word
+        task:		[0.97 0.19]
+        task gain:	   [0.59]
+                    red   green
+        output:		[0.55 0.45]
+        decision:	[1.][3.97]
+        conflict:	  [0.62]
+
     End of trial 3:
-                      red	green
-        task:		[ 0.99  0.01]
-        output:		[ 0.67  0.33]
-        decision variable:	[[ 0.34]]
-        decision:	[ 1.]	[ 2.8]
-        conflict:		[ 0.55]
-        control:		[ 0.55]
+                    color  word
+        task:		[1.   0.04]
+        task gain:	   [0.62]
+                    red   green
+        output:		[0.65 0.35]
+        decision:	[1.][2.95]
+        conflict:	  [0.57]
+
+    End of trial 4:
+                    color  word
+        task:		[1. 0.]
+        task gain:	   [0.57]
+                    red   green
+        output:		[0.67 0.33]
+        decision:	[1.][2.77]
+        conflict:	  [0.55]
+
 
 .. _BasicsAndSampler_Logging_and_Animation:
 
