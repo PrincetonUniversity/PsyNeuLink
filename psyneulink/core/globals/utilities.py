@@ -1484,7 +1484,7 @@ def _get_arg_from_stack(arg_name:str):
     return arg_val
 
 
-_unused_args_sig_cache = {}
+_unused_args_sig_cache = weakref.WeakKeyDictionary()
 
 
 def prune_unused_args(func, args=None, kwargs=None):
