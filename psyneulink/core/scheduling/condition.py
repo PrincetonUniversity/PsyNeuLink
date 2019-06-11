@@ -97,8 +97,9 @@ Structure
 ---------
 
 The `Scheduler` associates every Component with a Condition.  If a Component has not been explicitly assigned a
-Condition, it is assigned the Condition `Always` that causes it to be executed whenever it is
-`under consideration <Scheduler_Algorithm>`.  Condition subclasses (`listed below <Condition_Pre-Specified_List>`)
+Condition, it is assigned a Condition that causes it to be executed whenever it is `under consideration <Scheduler_Algorithm>`
+and all its structural parents have been executed at least once since the Component's last execution.
+Condition subclasses (`listed below <Condition_Pre-Specified_List>`)
 provide a standard set of Conditions that can be implemented simply by specifying their parameter(s). There are
 five types:
 

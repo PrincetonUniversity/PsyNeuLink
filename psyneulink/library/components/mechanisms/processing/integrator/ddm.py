@@ -175,7 +175,7 @@ The Drift Diffusion Model `Functions <Function>` that calculate analytic solutio
 `DDM_Execution` for details). In addition to `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and
 `RESPONSE_TIME <DDM_RESPONSE_TIME>`, the Function returns an accuracy value (represented in the
 `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputState), and an error rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>`
-OutputState, and moments (mean, variance, and skew) for conditional (correct\positive or incorrect\negative) response time distributions.
+OutputState, and moments (mean, variance, and skew) for conditional (correct\\positive or incorrect\\negative) response time distributions.
 These are; the mean RT for correct responses  (`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>`, the RT variance for correct responses
 (`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`, the RT skew for correct responses (`RT_CORRECT_SKEW <DDM_RT_CORRECT_SKEW>`,
 the mean RT for incorrect responses  (`RT_INCORRECT_MEAN <DDM_RT_INCORRECT_MEAN>`, the RT variance for incorrect
@@ -1182,8 +1182,8 @@ class DDM(ProcessingMechanism_Base):
         try:
             single_value = self.function.get_previous_value(execution_context)
         except AttributeError:
-            # Analytical function so fall back to more standard behavior
-            return super().is_finished(execution_context)
+            # Analytical function so it is always finished after it is called
+            return True
 
         # indexing into a matrix doesn't reduce dimensionality
         if not isinstance(single_value, (np.matrix, str)):
