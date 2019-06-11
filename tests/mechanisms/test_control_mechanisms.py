@@ -151,7 +151,7 @@ class TestLCControlMechanism:
         result = S.run(inputs={Tx:[1,1], Ty:[4,4]})
         assert result == [[[4.], [4.]], [[4.], [4.]]]
 
-    def test_control_signal_default_allocation_specification():
+    def test_control_signal_default_allocation_specification(self):
     
         m1 = pnl.ProcessingMechanism()
         m2 = pnl.ProcessingMechanism()
