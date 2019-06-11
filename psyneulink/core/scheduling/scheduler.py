@@ -351,7 +351,10 @@ class Scheduler(object):
         composition=None,
         graph=None,
         conditions=None,
-        termination_conds=None,
+        termination_conds={
+            TimeScale.RUN: Never(),
+            TimeScale.TRIAL: AllHaveRun(),
+        },
         execution_id=None,
         **kwargs
     ):
@@ -364,11 +367,8 @@ class Scheduler(object):
 
         # stores the in order list of self.run's yielded outputs
         self.consideration_queue = []
-        self.default_termination_conds = {
-            TimeScale.RUN: Never(),
-            TimeScale.TRIAL: AllHaveRun(),
-        }
-        self.termination_conds = termination_conds
+        self.default_termination_conds = Scheduler._parse_termination_conditions(termination_conds)
+        self._termination_conds = termination_conds.copy()
 
         self.cycle_nodes = set()
 
@@ -422,7 +422,6 @@ class Scheduler(object):
                 new_set.add(d)
             dependencies.append(new_set)
         self.consideration_queue = dependencies
-        logger.debug('Consideration queue: {0}'.format(self.consideration_queue))
 
     def _dfs_for_cycles(self, dependencies, node, loop_start_set, visited, loop):
 
@@ -612,7 +611,6 @@ class Scheduler(object):
             # this works because the enum is set so that higher granularities of time have lower values
             if ts.value <= time_scale.value:
                 for c in self.counts_total[execution_id][ts]:
-                    logger.debug('resetting counts_total[{0}][{1}] to 0'.format(ts, c))
                     self.counts_total[execution_id][ts][c] = 0
 
     def _reset_counts_useable(self, execution_id=None):
@@ -624,20 +622,14 @@ class Scheduler(object):
         }
 
     def update_termination_conditions(self, termination_conds):
-        if termination_conds is None:
-            termination_conds = self.termination_conds
-        if self.termination_conds is None:
-            termination_conds = dict(self.default_termination_conds)
-        if termination_conds is not None:
-            logger.info('Specified termination_conds {0} overriding {1}'.format(termination_conds, self.termination_conds))
-        current_conditions = self.termination_conds.copy()
-        current_conditions.update(termination_conds)
-        return current_conditions
+        termination_conds = Scheduler._parse_termination_conditions(termination_conds)
+        new_conds = self.termination_conds.copy()
+        new_conds.update(termination_conds)
 
-    def _parse_termination_conditions(self, termination_conds):
-        if termination_conds is None:
-            return None
+        return new_conds
 
+    @staticmethod
+    def _parse_termination_conditions(termination_conds):
         try:
             return {k: termination_conds[k] for k in termination_conds if isinstance(k, TimeScale) and isinstance(termination_conds[k], Condition)}
         except TypeError:
@@ -739,7 +731,10 @@ class Scheduler(object):
                terminate the execution of the specified `TimeScale`
         '''
         self._validate_run_state()
-        termination_conds = self.update_termination_conditions(self._parse_termination_conditions(termination_conds))
+        if termination_conds is None:
+            termination_conds = self.termination_conds
+        else:
+            termination_conds = self.update_termination_conditions(Scheduler._parse_termination_conditions(termination_conds))
 
         if execution_id is None:
             execution_id = self.default_execution_id
@@ -777,20 +772,11 @@ class Scheduler(object):
                 while True:
                     cur_consideration_set_has_changed = False
                     for current_node in cur_consideration_set:
-                        logger.debug('cur time_step exec: {0}'.format(cur_time_step_exec))
-                        for n in self.counts_useable[execution_id]:
-                            logger.debug('Counts of {0} useable by'.format(n))
-                            for n2 in self.counts_useable[execution_id][n]:
-                                logger.debug('\t{0}: {1}'.format(n2, self.counts_useable[execution_id][n][n2]))
-
                         # only add each node once during a single time step, this also serves
                         # to prevent infinitely cascading adds
                         if current_node not in cur_time_step_exec:
                             if self.conditions.conditions[current_node].is_satisfied(scheduler=self, execution_context=execution_id):
-                                logger.debug('adding {0} to execution list'.format(current_node))
-                                logger.debug('cur time_step exec pre add: {0}'.format(cur_time_step_exec))
                                 cur_time_step_exec.add(current_node)
-                                logger.debug('cur time_step exec post add: {0}'.format(cur_time_step_exec))
                                 execution_list_has_changed = True
                                 cur_consideration_set_has_changed = True
 
@@ -868,6 +854,6 @@ class Scheduler(object):
     @termination_conds.setter
     def termination_conds(self, termination_conds):
         if termination_conds is None:
-            self._termination_conds = self.default_termination_conds
+            self._termination_conds = self.default_termination_conds.copy()
         else:
             self._termination_conds.update(termination_conds)
