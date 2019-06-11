@@ -710,7 +710,8 @@ class ControlMechanism(ModulatoryMechanism):
                     raise ControlMechanismError("Unrecognized arg in constructor for {}: {}".
                                                 format(self.__class__.__name__, repr(i)))
 
-        self.parameters.control_allocation.default_value = default_allocation or defaultControlAllocation
+        if default_allocation is not None:
+            self.parameters.control_allocation.default_value = np.atleast_1d(default_allocation)
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,

@@ -2417,7 +2417,10 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
             if not state.init_args[OWNER]:
                 state.init_args[OWNER] = owner
             if not VARIABLE in state.init_args or state.init_args[VARIABLE] is None:
-                state.init_args[VARIABLE] = owner.defaults.variable[0]
+                if variable is not None:
+                    state.init_args[VARIABLE] = variable
+                else:
+                    state.init_args[VARIABLE] = owner.defaults.variable[0]
             if not hasattr(state, REFERENCE_VALUE):
                 if REFERENCE_VALUE in state.init_args and state.init_args[REFERENCE_VALUE] is not None:
                     state.reference_value = state.init_args[REFERENCE_VALUE]

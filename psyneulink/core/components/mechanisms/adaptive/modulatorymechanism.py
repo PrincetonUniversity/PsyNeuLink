@@ -402,8 +402,8 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGatingAllocation
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTEXT, \
-    CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, \
-    EID_SIMULATION, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, \
+    CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, EID_SIMULATION, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
+    MODULATORY_SIGNAL, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, SYSTEM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -1303,20 +1303,29 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         try:
             modulatory_signal = _instantiate_state(state_type=ControlSignal,
                                                    owner=self,
-                                                   reference_value=ControlSignal.defaults.allocation,
+                                                   variable=self.parameters.control_allocation.default_value,
+                                                   # reference_value=ControlSignal.defaults.allocation,
+                                                   reference_value=self.parameters.control_allocation.default_value,
                                                    modulation=self.modulation,
                                                    state_spec=mod_spec,
                                                    context=context)
             if not type(modulatory_signal) in convert_to_list(self.outputStateTypes):
                 raise ProjectionError(f'{type(modulatory_signal)} inappropriate for {self.name}')
 
-        except ProjectionError:
-            modulatory_signal = _instantiate_state(state_type=GatingSignal,
-                                                   owner=self,
-                                                   reference_value=GatingSignal.defaults.allocation,
-                                                   modulation=self.modulation,
-                                                   state_spec=mod_spec,
-                                                   context=context)
+        except:
+            try:
+                modulatory_signal = _instantiate_state(state_type=GatingSignal,
+                                                       owner=self,
+                                                       variable=self.parameters.gating_allocation.default_value,
+                                                       # reference_value=GatingSignal.defaults.allocation,
+                                                       reference_value=self.parameters.gating_allocation.default_value,
+                                                       modulation=self.modulation,
+                                                       state_spec=mod_spec,
+                                                       context=context)
+            except:
+                assert False, f"PROGRAM ERROR: "\
+                    f"Unrecognized {repr(MODULATORY_SIGNAL)} specification for {self.name} ({modulatory_signal})"
+
         modulatory_signal.owner = self
 
         if isinstance(modulatory_signal, ControlSignal):
