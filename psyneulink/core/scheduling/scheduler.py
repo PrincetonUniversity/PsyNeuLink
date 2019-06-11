@@ -855,6 +855,6 @@ class Scheduler(object):
     @termination_conds.setter
     def termination_conds(self, termination_conds):
         if termination_conds is None:
-            self._termination_conds = self.default_termination_conds
+            self._termination_conds = self.default_termination_conds.copy()
         else:
             self._termination_conds.update(termination_conds)
