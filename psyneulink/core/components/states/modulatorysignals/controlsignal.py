@@ -788,9 +788,6 @@ class ControlSignal(ModulatorySignal):
                  context=None,
                  **kwargs):
 
-        if default_allocation is not None:
-            self.parameters.variable.user_assigned = True
-
         # This is included in case ControlSignal was created by another Component (such as ControlProjection)
         #    that specified ALLOCATION_SAMPLES in params
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:

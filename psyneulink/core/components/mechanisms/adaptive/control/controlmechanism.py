@@ -710,8 +710,10 @@ class ControlMechanism(ModulatoryMechanism):
                     raise ControlMechanismError("Unrecognized arg in constructor for {}: {}".
                                                 format(self.__class__.__name__, repr(i)))
 
-        if default_allocation is not None:
-            self.parameters.control_allocation.default_value = np.atleast_1d(default_allocation)
+        # # MODIFIED 6/10/19 NEW: [JDC]
+        # if default_allocation is not None:
+        #     self.parameters.control_allocation.default_value = np.atleast_1d(default_allocation)
+        # MODIFIED 6/10/19 END
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
@@ -727,6 +729,7 @@ class ControlMechanism(ModulatoryMechanism):
                                                compute_reconfiguration_cost=compute_reconfiguration_cost,
                                                compute_net_outcome=compute_net_outcome,
                                                modulatory_signals=control_signals,
+                                               default_allocation=default_allocation,
                                                modulation=modulation,
                                                params=params,
                                                name=name,

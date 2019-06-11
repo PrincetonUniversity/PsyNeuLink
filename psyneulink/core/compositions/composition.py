@@ -4384,8 +4384,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 inputs = {next(iter(input_nodes)): inputs}
             else:
                 raise CompositionError(
-                    "Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
-                    "nodes.".format(self.name, len(input_nodes)))
+                    f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
+                    f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
         elif callable(inputs):
             num_inputs_sets = 1
             autodiff_stimuli = {}

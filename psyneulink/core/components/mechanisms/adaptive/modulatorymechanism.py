@@ -431,9 +431,13 @@ def _control_allocation_getter(owning_component=None, execution_id=None):
                                   for c in owning_component.control_signals]
         return np.array([owning_component.modulatory_allocation[i] for i in control_signal_indices])
     except TypeError:
-        return [defaultControlAllocation]
-        # FIX: 6/10/19
+        # # MODIFIED 6/10/19 OLD:
+        # return [defaultControlAllocation]
+        # MODIFIED 6/10/19 NEW: [JDC]
         # return [owning_component.parameters.control_allocation.default_value]
+        # MODIFIED 6/10/19 NEWER: [JDC]
+        return [owning_component.parameters.default_allocation]
+        # MODIFIED 6/10/19 END
 
 def _control_allocation_setter(value, owning_component=None, execution_id=None):
     control_signal_indices = [owning_component.modulatory_signals.index(c)
@@ -454,9 +458,11 @@ def _gating_allocation_getter(owning_component=None, execution_id=None):
                                   for g in owning_component.gating_signals]
         return np.array([owning_component.modulatory_allocation[i] for i in gating_signal_indices])
     except (TypeError):
-        return [defaultGatingAllocation]
-        # FIX: 6/10/19
-        # return [owning_component.parameters.gating_allocation.default_value]
+        # # MODIFIED 6/10/19 OLD:
+        # return [defaultGatingAllocation]
+        # MODIFIED 6/10/19 NEW: [JDC]
+        return [owning_component.parameters.gating_allocation.default_value]
+        # MODIFIED 6/10/19 END
 
 def _gating_allocation_setter(value, owning_component=None, execution_id=None):
     gating_signal_indices = [owning_component.modulatory_signals.index(c)
@@ -510,12 +516,14 @@ class DefaultAllocationFunction(Function_Base):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 params=None
+                 params=None,
+                 owner=None
                  ):
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
         super().__init__(default_variable=default_variable,
                          params=params,
+                         owner=owner,
                          context=ContextFlags.CONSTRUCTOR)
 
     def function(self,
@@ -537,6 +545,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         objective_mechanism=None,                                \
         function=DefaultAllocationFunction,                      \
         modulatory_signals=None,                                 \
+        default_allocation=None,                                 \
         modulation=ModulationParam.MULTIPLICATIVE                \
         combine_costs=np.sum,                                    \
         compute_reconfiguration_cost=None,                       \
@@ -612,6 +621,9 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
     modulatory_signals : ControlSignal specification or List[ControlSignal specification, ...]
         specifies the parameters to be controlled by the ModulatoryMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
+
+    default_allocation : '
+        FIX: XXX IF NONE, USES DEFAULT FOR MODULATORY SIGNAL
 
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
         specifies the default form of modulation used by the ModulatoryMechanism's `ControlSignals <ControlSignal>`,
@@ -879,6 +891,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = np.array([[defaultControlAllocation]])
         value = Parameter(np.array([[defaultControlAllocation]]), aliases='modulatory_allocation')
+        default_allocation = None,
         control_allocation = Parameter(np.array([defaultControlAllocation]),
                                        getter=_control_allocation_getter,
                                        setter=_control_allocation_setter,
@@ -924,6 +937,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                        OutputState,
                                                        ControlSignal,
                                                        GatingSignal))=None,
+                 # default_allocation:tc.optional(int, float, list, np.ndarray)=None,
+                 default_allocation=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
@@ -967,6 +982,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                   modulatory_signals=modulatory_signals,
                                                   # control_signals=None,
                                                   # gating_signals=None,
+                                                  default_allocation=default_allocation,
                                                   modulation=modulation,
                                                   params=params)
 
@@ -1303,7 +1319,9 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         try:
             modulatory_signal = _instantiate_state(state_type=ControlSignal,
                                                    owner=self,
-                                                   variable=self.parameters.control_allocation.default_value,
+                                                   # variable=self.parameters.control_allocation.default_value,
+                                                   variable=self.default_allocation or
+                                                            self.parameters.control_allocation.default_value,
                                                    # reference_value=ControlSignal.defaults.allocation,
                                                    reference_value=self.parameters.control_allocation.default_value,
                                                    modulation=self.modulation,
