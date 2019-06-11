@@ -6,7 +6,6 @@ import pytest
 import psyneulink.core.components.functions.transferfunctions
 import psyneulink.core.llvm as pnlvm
 
-
 class TestLCControlMechanism:
 
     @pytest.mark.mechanism
@@ -151,3 +150,82 @@ class TestLCControlMechanism:
         assert Tz.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == C
         result = S.run(inputs={Tx:[1,1], Ty:[4,4]})
         assert result == [[[4.], [4.]], [[4.], [4.]]]
+
+    def test_control_signal_default_allocation_specification():
+    
+        m1 = pnl.ProcessingMechanism()
+        m2 = pnl.ProcessingMechanism()
+        m3 = pnl.ProcessingMechanism()
+    
+        # default_allocation not specified in constructor of pnl.ControlMechanism,
+        #     so should be set to defaultControlAllocation (=[1]) if not specified in pnl.ControlSignal constructor  
+        c1 = pnl.ControlMechanism(
+                name='C1',
+                default_variable=[10],
+                control_signals=[pnl.ControlSignal(projections=(pnl.SLOPE, m1)), # test for assignment to defaultControlAllocation
+                                 pnl.ControlSignal(default_allocation=2,    # test for scalar assignment
+                                                   projections=(pnl.SLOPE, m2)),
+                                 pnl.ControlSignal(default_allocation=[3],  # test for array assignment
+                                                   projections=(pnl.SLOPE, m3))])
+        comp = pnl.Composition()
+        comp.add_nodes([m1,m2,m3])
+        comp.add_controller(c1)
+        assert c1.control_signals[0].value == [1]      # defaultControlAllocation assigned (as no default_allocation from pnl.ControlMechanism)
+        assert m1.parameter_states[pnl.SLOPE].value == [1]   
+        assert c1.control_signals[1].value == [2]      # default_allocation from pnl.ControlSignal (converted scalar) 
+        assert m2.parameter_states[pnl.SLOPE].value == [1]
+        assert c1.control_signals[2].value == [3]      # default_allocation from pnl.ControlSignal
+        assert m3.parameter_states[pnl.SLOPE].value == [1]
+        result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
+        assert np.allclose(result, [[2.], [6.], [12.]])
+        assert c1.control_signals[0].value == [10]
+        assert m1.parameter_states[pnl.SLOPE].value == [1]
+        assert c1.control_signals[1].value == [10]
+        assert m2.parameter_states[pnl.SLOPE].value == [2]
+        assert c1.control_signals[2].value == [10]
+        assert m3.parameter_states[pnl.SLOPE].value == [3]
+        result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
+        assert np.allclose(result, [[20.], [30.], [40.]])
+        assert c1.control_signals[0].value == [10]
+        assert m1.parameter_states[pnl.SLOPE].value == [10]
+        assert c1.control_signals[1].value == [10]
+        assert m2.parameter_states[pnl.SLOPE].value == [10]
+        assert c1.control_signals[2].value == [10]
+        assert m3.parameter_states[pnl.SLOPE].value == [10]
+    
+        # default_allocation *is* specified in constructor of pnl.ControlMechanism,
+        #     so should be used unless specified in pnl.ControlSignal constructor  
+        c2 = pnl.ControlMechanism(
+                name='C3',
+                default_variable=[10],
+                default_allocation=[4],
+                control_signals=[pnl.ControlSignal(projections=(pnl.SLOPE, m1)), # tests for assignment to default_allocation
+                                 pnl.ControlSignal(default_allocation=5,    # tests for override of default_allocation
+                                                   projections=(pnl.SLOPE, m2)),
+                                 pnl.ControlSignal(default_allocation=[6],  # as above same but with array
+                                                   projections=(pnl.SLOPE, m3))])
+        comp = pnl.Composition()
+        comp.add_nodes([m1,m2,m3])
+        comp.add_controller(c2)
+        assert c2.control_signals[0].value == [4]        # default_allocation from pnl.ControlMechanism assigned
+        assert m1.parameter_states[pnl.SLOPE].value == [10]  # has not yet received pnl.ControlSignal value
+        assert c2.control_signals[1].value == [5]        # default_allocation from pnl.ControlSignal assigned (converted scalar)
+        assert m2.parameter_states[pnl.SLOPE].value == [10]
+        assert c2.control_signals[2].value == [6]        # default_allocation from pnl.ControlSignal assigned
+        assert m3.parameter_states[pnl.SLOPE].value == [10]
+        result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
+        assert np.allclose(result, [[8.], [15.], [24.]])
+        assert c2.control_signals[0].value == [10]
+        assert m1.parameter_states[pnl.SLOPE].value == [4]
+        assert c2.control_signals[1].value == [10]
+        assert m2.parameter_states[pnl.SLOPE].value == [5]
+        assert c2.control_signals[2].value == [10]
+        assert m3.parameter_states[pnl.SLOPE].value == [6]
+        result = comp.run(inputs={m1:[2],m2:[3],m3:[4]})
+        assert np.allclose(result, [[20.], [30.], [40.]])
+        assert c2.control_signals[0].value == [10]
+        assert m1.parameter_states[pnl.SLOPE].value == [10]
+        assert c2.control_signals[1].value == [10]
+        assert m2.parameter_states[pnl.SLOPE].value == [10]
+        assert c2.control_signals[2].value == [10]
+        assert m3.parameter_states[pnl.SLOPE].value == [10]
