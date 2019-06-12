@@ -2464,10 +2464,12 @@ class Mechanism_Base(Mechanism):
         Aggregate results (using InputState execute method)
         Update InputState.value
         """
+
         for i in range(len(self.input_states)):
             state = self.input_states[i]
             state.update(execution_id=execution_id, params=runtime_params, context=context)
-        return np.array([state.parameters.value.get(execution_id) for state in self.input_states])
+
+        return self.get_input_values(execution_id)
 
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
 
@@ -3437,7 +3439,13 @@ class Mechanism_Base(Mechanism):
             return None
 
     def get_input_values(self, execution_context=None):
-        return [input_state.parameters.value.get(execution_context) for input_state in self.input_states]
+        input_values = []
+        for input_state in self.input_states:
+            if "LearningSignal" in input_state.name:
+                input_values.append(input_state.parameters.value.get(execution_context).flatten())
+            else:
+                input_values.append(input_state.parameters.value.get(execution_context))
+        return input_values
 
     @property
     def external_input_states(self):
