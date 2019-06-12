@@ -699,7 +699,8 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, \
+    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT,\
+    LABELS, \
     LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX_KEYWORD_VALUES, MECHANISMS, NO_CLAMP, OUTPUT, OWNER_VALUE, \
     PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES, NAME, SAMPLE, TARGET, TARGET_MECHANISM, VARIABLE, PROJECTIONS, \
     WEIGHT, OUTCOME
@@ -719,12 +720,14 @@ __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'STATE_FUNCTION_PARAMS'
 ]
 
+NUM_TRIALS = 'num_trials'
 UNIT = 'unit'
 DURATION = 'duration'
 MOVIE_NAME = 'movie_name'
 SAVE_IMAGES = 'save_images'
 SHOW = 'show'
 INITIAL_FRAME = 'INITIAL_FRAME'
+EXECUTION_SET = 'EXECUTION_SET'
 
 
 logger = logging.getLogger(__name__)
@@ -3930,6 +3933,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if bin_execute == 'Python':
             bin_execute = False
 
+        if not hasattr(self, '_animate'):
+            # These are meant to be assigned in run method;  needed here for direct call to execute method
+            self._animate = False
+            self._component_execution_count = 0
+
         # KAM Note 4/29/19
         # The nested var is set to True if this Composition is nested in another Composition, otherwise False
         # Later on, this is used to determine:
@@ -4702,6 +4710,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.parameters.results.set(full_results, execution_id)
 
         self.most_recent_execution_context = execution_id
+
+        if self._animate is not False:
+            # Save list of gifs in self._animation as movie file
+            movie_path = self._animate_directory + '/' + self._movie_filename
+            self._animation[0].save(fp=movie_path,
+                                    format='GIF',
+                                    save_all=True,
+                                    append_images=self._animation[1:],
+                                    duration=self._image_duration*1000,
+                                    loop=0)
+            print('\nSaved movie for {}: {}'.format(self.name, self._movie_filename))
+            if self._show_animation:
+                movie = Image.open(movie_path)
+                movie.show()
+
         return trial_output
 
     # def save_state(self):
