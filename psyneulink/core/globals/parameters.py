@@ -806,6 +806,12 @@ class Parameter(types.SimpleNamespace):
         else:
             execution_id = parse_execution_context(execution_context)
 
+        return self._get(execution_id, **kwargs)
+
+    def _get(self, execution_id=None, **kwargs):
+        if not self.stateful:
+            execution_id = None
+
         if self.getter is not None:
             kwargs = {**self._default_getter_kwargs, **{'execution_id': execution_id}, **kwargs}
             value = call_with_pruned_args(self.getter, **kwargs)
@@ -862,7 +868,7 @@ class Parameter(types.SimpleNamespace):
                 )
             ) from e
 
-    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
+    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=3, **kwargs):
         """
             Sets the value of this `Parameter` in the context of **execution_context**
             If no execution_context is specified, attributes on the associated `Component` will be used
@@ -881,13 +887,16 @@ class Parameter(types.SimpleNamespace):
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `setter` if it exists
         """
-        if not override and self.read_only:
-            warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=_ro_warning_stacklevel)
-
         if not self.stateful:
             execution_id = None
         else:
             execution_id = parse_execution_context(execution_context)
+
+        self._set(value, execution_id, override, skip_history, skip_log, _ro_warning_stacklevel, **kwargs)
+
+    def _set(self, value, execution_id=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
+        if not override and self.read_only:
+            warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=_ro_warning_stacklevel)
 
         if self.setter is not None:
             kwargs = {
