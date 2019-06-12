@@ -1311,6 +1311,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         from psyneulink.core.components.states.state import _instantiate_state
         from psyneulink.core.components.projections.projection import ProjectionError
 
+        if self._output_states is None:
+            self._output_states = []
         mod_spec = modulatory_signal
 
         # Try to instantiate as ControlSignal;  if that fails, try GatingSignal
@@ -1361,8 +1363,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         #     control_signal._intensity = function.initializer
 
         # Add ModulatorySignal to output_states list
-        if self._output_states is None:
-            self._output_states = []
         self._output_states.append(modulatory_signal)
 
         return modulatory_signal
