@@ -3938,6 +3938,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         '''
 
+        # ASSIGNMENTS **************************************************************************************************
+
         if bin_execute == 'Python':
             bin_execute = False
 
@@ -3964,8 +3966,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
 
+        # FIX: 6/12/19: NECESSARY?  WHY NOT JUST USE scheduler_processing below
+        execution_scheduler = scheduler_processing
+
         execution_context = self.parameters.context.get(execution_id)
 
+        if termination_processing is None:
+            termination_processing = self.termination_processing
+
+        # Skip initialization if possible (for efficiency):
+        # - and(execution_id and context have not changed
+        # -     structure of the graph has not changed
+        # -     not a nested composition
+        # -     its not a simulation)
+        # - or(gym forage env is being used)
+        # (e.g., when run is called externally repeated for the same environment)
         # KAM added HACK below "or self.env is None" in order to merge in interactive inputs fix for speed improvement
         # TBI: Clean way to call _initialize_from_context if execution_id has not changed, BUT composition has changed
         # for example:
@@ -3985,6 +4000,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             self._assign_context_values(execution_id, composition=self)
 
+        # FIX: 6/12/19 MOVE TO EXECUTE BELOW? (i.e., with bin_execute / _comp_ex.execute_node(self.input_CIM, inputs))
+        # Execute input_CIMs
         if nested:
             self.input_CIM.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
             self.input_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
@@ -3992,9 +4009,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs = self._adjust_execution_stimuli(inputs)
             self._assign_values_to_input_CIM(inputs, execution_id=execution_id)
 
-        if termination_processing is None:
-            termination_processing = self.termination_processing
-
+        # FIX: 6/12/19 Deprecate?
+        # Manage input clamping
         next_pass_before = 1
         next_pass_after = 1
         if clamp_input:
@@ -4002,10 +4018,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, input_nodes)
             pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, input_nodes)
             no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, input_nodes)
-        # run scheduler to receive sets of nodes that may be executed at this time step in any order
-        execution_scheduler = scheduler_processing
 
-        # COMPILE (if specified) ***************************************************************************************
+
+        # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
+
+        # Compile controller execution (if compilation is specified) --------------------------------
 
         if bin_execute:
             is_simulation = (execution_context is not None and
@@ -4056,7 +4073,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 print("WARNING: {}".format(string))
                 bin_execute = False
 
-        # EXECUTE CONTROLLER (if controller_mode == BEFORE) ************************************************************
+        # Execute controller --------------------------------------------------------
 
         if (self.enable_controller and
             self.controller_mode is BEFORE and
@@ -4087,11 +4104,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     )
                 self._component_animation_execution_count += 1
 
+        # EXECUTE (each execution_set) *********************************************************************************
 
-        # PREPROCESS (get inputs, call_before_pass, animate first frame) ***********************************************
+        # PREPROCESS (get inputs, call_before_pass, animate first frame) ----------------------------------
 
         if bin_execute:
             _comp_ex.execute_node(self.input_CIM, inputs)
+        # FIX: 6/12/19 MOVE non-compiled version from above to here;
+        #              WHY DO BOTH?  WHY NOT if-else?
 
         if call_before_pass:
             call_with_pruned_args(call_before_pass, execution_context=execution_id)
@@ -4109,12 +4129,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 **self._animate, output_fmt='gif',
                                 execution_id=self.default_execution_id)
 
-        # EXECUTE (each execution_sets) ********************************************************************************
-
+        # GET execution_set -------------------------------------------------------------------------
+        # run scheduler to receive sets of nodes that may be executed at this time step in any order
         for next_execution_set in execution_scheduler.run(termination_conds=termination_processing,
+                                                          execution_id=execution_id):
 
             # SETUP EXECUTION ----------------------------------------------------------------------------
-                                                          execution_id=execution_id):
+
+            # FIX: 6/12/19 WHY IS call_*after*_pass BEING CALLED BEFORE THE PASS?
             if call_after_pass:
                 if next_pass_after == \
                         execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS,
@@ -4143,7 +4165,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if call_before_time_step:
                 call_with_pruned_args(call_before_time_step, execution_context=execution_id)
 
-            # Store all node values *before* the start of each timestep
+            # MANAGE EXECUTION OF FEEDBACK / CYCLIC GRAPHS ------------------------------------------------
+            # Set up storage of all node values *before* the start of each timestep
             # If nodes within a timestep are connected by projections, those projections must pass their senders'
             # values from the beginning of the timestep (i.e. their "frozen values")
             # This ensures that the order in which nodes execute does not affect the results of this timestep
@@ -4152,19 +4175,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if bin_execute:
                 _comp_ex.freeze_values()
 
+            # PURGE LEARNING IF NOT ENABLED ---------------------------------------------------------------
+
             # If learning is turned off, check for any learning related nodes and remove them from the execution set
             if not self.learning_enabled:
                 next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
+            # FIX: 6/12/19 NEEDED?
             # if not self._animate is False and self._animate_unit is EXECUTION_SET:
             #     self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif',
             #                     execution_id=execution_id)
 
-            # EXECUTE (each node) -----------------------------------------------------------------------------
+            # EXECUTE (each node) --------------------------------------------------------------------------
 
             # execute each node with EXECUTING in context
             for node in next_execution_set:
+
+                # Store values of all nodes in this execution_set for use by other nodes in the execution set
+                #    throughout this timestep (e.g., for recurrent Projections)
                 frozen_values[node] = node.get_output_values(execution_id)
+
+                # FIX: 6/12/19 Deprecate?
                 if node in input_nodes:
                     if clamp_input:
                         if node in hard_clamp_inputs:
@@ -4177,7 +4208,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 self.input_CIM_states[input_state][1].parameters.value.set(0.0, execution_id,
                                                                                            override=True)
 
-                # MECHANISM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # EXECUTE A MECHANISM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
                 if isinstance(node, Mechanism):
 
@@ -4190,8 +4221,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                            execution_context=execution_id):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
+                    # Set execution_phase for node's context to PROCESSING
                     node.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
+                    # Execute node
                     if bin_execute:
                         _comp_ex.execute_node(node)
                     else:
@@ -4202,6 +4235,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 context=ContextFlags.COMPOSITION
                             )
 
+                    # Reset runtime_params for node and its function if specified
                         if execution_id in node._runtime_params_reset:
                             for key in node._runtime_params_reset[execution_id]:
                                 node._set_parameter_value(key, node._runtime_params_reset[execution_id][key],
@@ -4217,17 +4251,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 )
                         node.function._runtime_params_reset[execution_id] = {}
 
+                    # Set execution_phase for node's context back to IDLE
                     node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
-                # COMPOSITION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # EXECUTE A NESTED COMPOSITION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
                 elif isinstance(node, Composition):
+
+                    # Set up compilation
                     if bin_execute:
-                        # Values of node with compiled wrappers are
-                        # in binary data structure
+                        # Values of node with compiled wrappers are in binary data structure
                         srcs = (proj.sender.owner for proj in node.input_CIM.afferents if
                                 proj.sender.owner in self.__generated_node_wrappers)
-
                         for srnode in srcs:
                             assert srnode in self.nodes or srnode is self.input_CIM
                             data = _comp_ex.extract_frozen_node_output(srnode)
@@ -4236,20 +4271,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 srnode.output_states[i].parameters.value.set(v, execution_id, skip_history=True,
                                                                              skip_log=True, override=True)
 
+                    # Pass outer execution_id to nested Composition
                     node._assign_context_values(execution_id, composition=node)
 
+                    # Execute Composition
+                    # FIX: 6/12/19 WHERE IS COMPILED EXECUTION OF NESTED NODE?
                     # autodiff compositions must be passed extra inputs
                     pytorch_enabled = False
                     if hasattr(node, "pytorch_representation"):
                         if node.learning_enabled:
                             pytorch_enabled = True
+                    # Autodiff execution
                     if pytorch_enabled:
                         ret = node.execute(inputs=autodiff_stimuli[node],
                                            execution_id=execution_id,
                                            context=ContextFlags.COMPOSITION)
+                    # Standard execution
                     else:
                         ret = node.execute(execution_id=execution_id,
                                            context=ContextFlags.COMPOSITION)
+
+
+                    # Get output info from compiled execution
                     if bin_execute:
                         # Update result in binary data structure
                         _comp_ex.insert_node_output(node, ret)
@@ -4267,8 +4310,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
                 # MANAGE INPUTS (for next # execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # FIX: WHAT IS THIS DOING? TRY WITHOUT?
 
+                # FIX: 6/12/19 Deprecate?
                 if node in input_nodes:
                     if clamp_input:
                         if node in pulse_clamp_inputs:
@@ -4276,16 +4319,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # clamp = None --> "turn off" input node
                                 self.input_CIM_states[input_state][1].parameters.value.set(0, execution_id,
                                                                                            override=True)
-                new_values[node] = node.get_output_values(execution_id)
 
+                # Store new value generated by node,
+                #    then set back to frozen value for use by other nodes in execution_set
+                new_values[node] = node.get_output_values(execution_id)
                 for i in range(len(node.output_states)):
                     node.output_states[i].parameters.value.set(frozen_values[node][i], execution_id, override=True,
                                                                skip_history=True, skip_log=True)
 
 
-            # FIX: WHAT IS THIS DOING?
+            # Set all nodes to new values
             for node in next_execution_set:
-
                 for i in range(len(node.output_states)):
                     node.output_states[i].parameters.value.set(new_values[node][i], execution_id, override=True,
                                                                skip_history=True, skip_log=True)
