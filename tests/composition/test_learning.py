@@ -324,3 +324,31 @@ class TestNestedLearning:
                    context_in: np.array([10] * context_size)}
         #
         # print(model.run(inputs=stimuli))
+
+class TestBackProp:
+
+    def test_back_prop(self):
+
+        input_layer = pnl.TransferMechanism(name="input",
+                                            size=2,
+                                            function=pnl.Logistic())
+
+        hidden_layer = pnl.TransferMechanism(name="hidden",
+                                             size=2,
+                                             function=pnl.Logistic())
+
+        output_layer = pnl.TransferMechanism(name="output",
+                                             size=2,
+                                             function=pnl.Logistic())
+
+        comp = pnl.Composition(name="backprop-composition")
+        comp.add_linear_processing_pathway(pathway=[input_layer, hidden_layer])
+        learning_components = comp.add_back_propagation_pathway(pathway=[hidden_layer, output_layer])
+        learned_projection = learning_components[pnl.LEARNED_PROJECTION]
+        learning_mechanism = learning_components[pnl.LEARNING_MECHANISM]
+        target_mechanism = learning_components[pnl.TARGET_MECHANISM]
+        comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
+
+        comp.show_graph()
+        comp.run(inputs={input_layer: [[1.0, 1.0]],
+                         target_mechanism: [[1.0, 1.0]]})
