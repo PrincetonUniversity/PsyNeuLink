@@ -2687,8 +2687,9 @@ class Mechanism_Base(Mechanism):
 
         # Call parameter states for function
         for idx, f_param in enumerate(func._get_param_ids()):
-            param_in_ptr = builder.gep(f_params_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-            raw_param_val = builder.load(param_in_ptr)
+            p_name = f_param + "_" + str(func)
+            param_in_ptr = builder.gep(f_params_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx)], name="ptr_raw_" + p_name)
+            raw_param_val = builder.load(param_in_ptr, name="raw_" + p_name)
             param_out_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             # If there is no param state, provide a copy of the user param value
             # FIXME: why wouldn't it be there?
