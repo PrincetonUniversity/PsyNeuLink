@@ -289,8 +289,8 @@ def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, execution
     from psyneulink.library.components.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
 
     try:
-        a = get_auto_matrix(owning_component.parameters.auto.get(execution_id), owning_component.size[0])
-        c = get_hetero_matrix(owning_component.parameters.hetero.get(execution_id), owning_component.size[0])
+        a = get_auto_matrix(owning_component.parameters.auto._get(execution_id), owning_component.size[0])
+        c = get_hetero_matrix(owning_component.parameters.hetero._get(execution_id), owning_component.size[0])
         return a + c
     except TypeError:
         return None
@@ -1279,7 +1279,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 state.update(execution_id=execution_id, params=runtime_params, context=context)
 
     def _update_previous_value(self, execution_id=None):
-        value = self.parameters.value.get(execution_id)
+        value = self.parameters.value._get(execution_id)
         if value is None:
             value = self.defaults.value
         self.parameters.previous_value.set(value, execution_id, override=True)

@@ -547,7 +547,7 @@ class BayesGLM(LearningFunction):
 
         '''
 
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             self.initialize_priors()
 
         # # MODIFIED 10/26/18 OLD:
@@ -1370,15 +1370,15 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
 
 def _activation_input_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.variable.get(execution_id)[LEARNING_ACTIVATION_INPUT]
+    return owning_component.parameters.variable._get(execution_id)[LEARNING_ACTIVATION_INPUT]
 
 
 def _activation_output_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.variable.get(execution_id)[LEARNING_ACTIVATION_OUTPUT]
+    return owning_component.parameters.variable._get(execution_id)[LEARNING_ACTIVATION_OUTPUT]
 
 
 def _error_signal_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.variable.get(execution_id)[LEARNING_ERROR_OUTPUT]
+    return owning_component.parameters.variable._get(execution_id)[LEARNING_ERROR_OUTPUT]
 
 
 
@@ -2070,7 +2070,7 @@ class BackPropagation(LearningFunction):
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
         if error_matrix is None:
-            if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
                 error_matrix = np.zeros(
                     (len(variable[LEARNING_ACTIVATION_OUTPUT]), len(variable[LEARNING_ERROR_OUTPUT]))
                 )

@@ -281,9 +281,9 @@ class MaskedMappingProjection(MappingProjection):
         #  and that it is applied to the updated matrix param
         super()._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
-        mask = self.parameters.mask.get(execution_id)
-        mask_operation = self.parameters.mask_operation.get(execution_id)
-        matrix = self.parameters.matrix.get(execution_id)
+        mask = self.parameters.mask._get(execution_id)
+        mask_operation = self.parameters.mask_operation._get(execution_id)
+        matrix = self.parameters.matrix._get(execution_id)
         # Apply mask to matrix using mask_operation
         if mask is not None:
             if mask_operation is ADD:

@@ -327,7 +327,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
         # Just return current input (for validation).
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable
 
         previous_value = np.array(self.get_previous_value(execution_id))
@@ -1129,7 +1129,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # and return current value (variable[1]) for validation.
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable
 
         # Set key_size and val_size if this is the first entry
@@ -1144,7 +1144,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_STATE
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
-            memory = [[0]* self.parameters.key_size.get(execution_id), [0]* self.parameters.val_size.get(execution_id)]
+            memory = [[0]* self.parameters.key_size._get(execution_id), [0]* self.parameters.val_size._get(execution_id)]
         # Store variable to dict:
         if noise:
             key += noise
@@ -1171,9 +1171,9 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     @tc.typecheck
     def _validate_key(self, key:tc.any(list, np.ndarray), execution_id):
         # Length of key must be same as that of existing entries (so it can be matched on retrieval)
-        if len(key) != self.parameters.key_size.get(execution_id):
+        if len(key) != self.parameters.key_size._get(execution_id):
             raise FunctionError(f"Length of 'key' ({key}) to store in {self.__class__.__name__} ({len(key)}) "
-                                f"must be same as others in the dict ({self.parameters.key_size.get(execution_id)})")
+                                f"must be same as others in the dict ({self.parameters.key_size._get(execution_id)})")
 
     @tc.typecheck
     def get_memory(self, query_key:tc.any(list, np.ndarray), execution_id=None):
@@ -1225,8 +1225,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                             for other in indices_of_selected_items[1:])):
                 warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of ' \
                                   f'{self.owner.name} even though {repr("duplicate_keys")} is False')
-                return [[0]* self.parameters.key_size.get(execution_id),
-                        [0]* self.parameters.val_size.get(execution_id)]
+                return [[0]* self.parameters.key_size._get(execution_id),
+                        [0]* self.parameters.val_size._get(execution_id)]
             if self.equidistant_keys_select == RANDOM:
                 index_of_selected_item = choice(indices_of_selected_items)
             elif self.equidistant_keys_select == OLDEST:

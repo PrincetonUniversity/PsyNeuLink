@@ -414,8 +414,8 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             context=context
         )
 
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
-            print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal.get(execution_id)))
+        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+            print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal._get(execution_id)))
 
         # # TEST PRINT
         # if not self.context.initialization_status == ContextFlags.INITIALIZING:
@@ -446,10 +446,10 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         super()._update_output_states(execution_id, runtime_params, context)
 
         from psyneulink.core.components.process import Process
-        if self.parameters.learning_enabled.get(execution_id) and self.parameters.context.get(execution_id).composition and not isinstance(self.parameters.context.get(execution_id).composition, Process):
+        if self.parameters.learning_enabled._get(execution_id) and self.parameters.context._get(execution_id).composition and not isinstance(self.parameters.context._get(execution_id).composition, Process):
             learned_projection = self.activity_source.recurrent_projection
             learned_projection.execute(execution_id=execution_id, context=ContextFlags.LEARNING)
-            learned_projection.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
+            learned_projection.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
     @property
     def activity_source(self):

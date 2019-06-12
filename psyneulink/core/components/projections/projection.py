@@ -923,7 +923,7 @@ class Projection_Base(Projection):
             # set by the statement below. For example, if state_name is 'matrix', the statement below sets
             # params['matrix'] to state.value, calls setattr(state.owner, 'matrix', state.value), which sets the
             # 'matrix' parameter state's variable to ALSO be equal to state.value! If this is unintended, please change.
-            value = state.parameters.value.get(execution_id)
+            value = state.parameters.value._get(execution_id)
             param[state_name] = type_match(value, param_type)
             # manual setting of previous value to matrix value (happens in above param['matrix'] setting
             if state_name == MATRIX:
@@ -934,10 +934,10 @@ class Projection_Base(Projection):
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         if variable is None:
-            variable = self.sender.parameters.value.get(execution_id)
+            variable = self.sender.parameters.value._get(execution_id)
 
-        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-        self.parameters.context.get(execution_id).string = context
+        self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+        self.parameters.context._get(execution_id).string = context
 
         value = super()._execute(
             variable=variable,
@@ -945,7 +945,7 @@ class Projection_Base(Projection):
             runtime_params=runtime_params,
             context=context
         )
-        self.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
+        self.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
         return value
 
     def _activate_for_compositions(self, composition):

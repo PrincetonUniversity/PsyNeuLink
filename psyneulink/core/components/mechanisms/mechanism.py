@@ -988,7 +988,7 @@ class MechParamsDict(UserDict):
 
 def _input_state_variables_getter(owning_component=None, execution_id=None):
     try:
-        return [input_state.parameters.variable.get(execution_id) for input_state in owning_component.input_states]
+        return [input_state.parameters.variable._get(execution_id) for input_state in owning_component.input_states]
     except TypeError:
         return None
 
@@ -2174,9 +2174,9 @@ class Mechanism_Base(Mechanism):
                                  "for {}'s default variable, try {}.defaults.variable."
                                  .format(self.name, self.name))
         try:
-            return self._parameter_states[param_name].parameters.value.get(execution_id)
+            return self._parameter_states[param_name].parameters.value._get(execution_id)
         except (AttributeError, TypeError):
-            return getattr(self.parameters, param_name).get(execution_id)
+            return getattr(self.parameters, param_name)._get(execution_id)
 
     def execute(self,
                 input=None,
@@ -2242,22 +2242,22 @@ class Mechanism_Base(Mechanism):
         if execution_id is not None:
             self._assign_context_values(execution_id)
 
-        if not self.parameters.context.get(execution_id).source or context & ContextFlags.COMMAND_LINE:
-            self.parameters.context.get(execution_id).source = ContextFlags.COMMAND_LINE
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZED:
-            self.parameters.context.get(execution_id).string = "{} EXECUTING {}: {}".format(context.name,self.name,
+        if not self.parameters.context._get(execution_id).source or context & ContextFlags.COMMAND_LINE:
+            self.parameters.context._get(execution_id).source = ContextFlags.COMMAND_LINE
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZED:
+            self.parameters.context._get(execution_id).string = "{} EXECUTING {}: {}".format(context.name,self.name,
                                                                ContextFlags._get_context_string(
-                                                                       self.parameters.context.get(execution_id).flags, EXECUTION_PHASE))
+                                                                       self.parameters.context._get(execution_id).flags, EXECUTION_PHASE))
         else:
-            self.parameters.context.get(execution_id).string = "{} INITIALIZING {}".format(context.name, self.name)
+            self.parameters.context._get(execution_id).string = "{} INITIALIZING {}".format(context.name, self.name)
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
 
         # Limit init to scope specified by context
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
-            if self.parameters.context.get(execution_id).composition:
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            if self.parameters.context._get(execution_id).composition:
                 # Run full execute method for init of Process and System
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
@@ -2315,14 +2315,14 @@ class Mechanism_Base(Mechanism):
         # Executing or simulating Process or System, get input by updating input_states
 
         if (input is None
-            and (self.parameters.context.get(execution_id).execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))
+            and (self.parameters.context._get(execution_id).execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))
             and (self.input_state.path_afferents != [])):
             variable = self._update_input_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
             if context & ContextFlags.COMMAND_LINE:
-                self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+                self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
             if input is None:
                 input = self.defaults.variable
             #     FIX:  this input value is sent to input CIMs when compositions are nested
@@ -2372,9 +2372,9 @@ class Mechanism_Base(Mechanism):
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         # REPORT EXECUTION
-        if self.prefs.reportOutputPref and (self.parameters.context.get(execution_id).execution_phase &
+        if self.prefs.reportOutputPref and (self.parameters.context._get(execution_id).execution_phase &
                                             ContextFlags.PROCESSING|ContextFlags.LEARNING):
-            self._report_mechanism_execution(self.get_input_values(execution_id), self.user_params, self.output_state.parameters.value.get(execution_id))
+            self._report_mechanism_execution(self.get_input_values(execution_id), self.user_params, self.output_state.parameters.value._get(execution_id))
         return value
 
     def run(
@@ -2457,7 +2457,7 @@ class Mechanism_Base(Mechanism):
         return np.array(self.get_input_values(execution_id))
 
     def _update_previous_value(self, execution_id=None):
-        self.parameters.previous_value.set(self.parameters.value.get(execution_id), execution_id, override=True)
+        self.parameters.previous_value.set(self.parameters.value._get(execution_id), execution_id, override=True)
 
     def _update_input_states(self, execution_id=None, runtime_params=None, context=None):
         """ Update value for each InputState in self.input_states:
@@ -2469,7 +2469,7 @@ class Mechanism_Base(Mechanism):
         for i in range(len(self.input_states)):
             state = self.input_states[i]
             state.update(execution_id=execution_id, params=runtime_params, context=context)
-        return np.array([state.parameters.value.get(execution_id) for state in self.input_states])
+        return np.array([state.parameters.value._get(execution_id) for state in self.input_states])
 
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
 
@@ -2789,7 +2789,7 @@ class Mechanism_Base(Mechanism):
         if input_val is None:
             input_val = self.get_input_values(execution_id)
         if output is None:
-            output = self.output_state.parameters.value.get(execution_id)
+            output = self.output_state.parameters.value._get(execution_id)
         params = params or self.user_params
 
         import re
@@ -3043,7 +3043,7 @@ class Mechanism_Base(Mechanism):
                     fct_params = []
                     for param in [param for param in self.function_parameters
                                   if param.modulable and param.name not in {ADDITIVE_PARAM, MULTIPLICATIVE_PARAM}]:
-                        fct_params.append(f'{param.name}={param.get()}')
+                        fct_params.append(f'{param.name}={param._get()}')
                     fct_params = ", ".join(fct_params)
                 mech_function = f'<br/><i>{self.function.__class__.__name__}({fct_params})</i>'
             mech_value = ''
@@ -3080,7 +3080,7 @@ class Mechanism_Base(Mechanism):
                         fct_params = []
                         for param in [param for param in self.function_parameters
                                       if param.modulable and param.name not in {ADDITIVE_PARAM, MULTIPLICATIVE_PARAM}]:
-                            fct_params.append(f'{param.name}={param.get()}')
+                            fct_params.append(f'{param.name}={param._get()}')
                         fct_params = ", ".join(fct_params)
                     function = f'<br/><i>{state.function.__class__.__name__}({fct_params})</i>'
                 value=''

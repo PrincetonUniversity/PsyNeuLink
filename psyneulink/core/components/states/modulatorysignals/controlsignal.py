@@ -1049,14 +1049,14 @@ class ControlSignal(ModulatorySignal):
         '''
         super().update(execution_id=execution_id, params=params, context=context)
 
-        if self.parameters.cost_options.get(execution_id):
-            intensity = self.parameters.value.get(execution_id)
+        if self.parameters.cost_options._get(execution_id):
+            intensity = self.parameters.value._get(execution_id)
             self.parameters.cost.set(self.compute_costs(intensity, execution_id), execution_id)
 
     def compute_costs(self, intensity, execution_id=None):
         """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
 
-        cost_options = self.parameters.cost_options.get(execution_id)
+        cost_options = self.parameters.cost_options._get(execution_id)
 
         try:
             intensity_change = intensity - self.parameters.intensity.get_previous(execution_id)
@@ -1075,7 +1075,7 @@ class ControlSignal(ModulatorySignal):
             self.parameters.adjustment_cost.set(adjustment_cost, execution_id)
 
         if ControlSignalCosts.DURATION & cost_options:
-            duration_cost = self.duration_cost_function(self.parameters.cost.get(execution_id))
+            duration_cost = self.duration_cost_function(self.parameters.cost._get(execution_id))
             self.parameters.duration_cost.set(duration_cost, execution_id)
 
         return max(

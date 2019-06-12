@@ -804,9 +804,9 @@ class ParameterState(State_Base):
         if variable is not None:
             return super()._execute(variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
         else:
-            # variable = getattr(self.owner.function.parameters, self.name).get(execution_id)
+            # variable = getattr(self.owner.function.parameters, self.name)._get(execution_id)
             # FIX 3/6/19: source does not yet seem to have been assigned to owner.function
-            variable = getattr(self.source.parameters, self.name).get(execution_id)
+            variable = getattr(self.source.parameters, self.name)._get(execution_id)
             return super()._execute(
                 variable=variable,
                 execution_id=execution_id,

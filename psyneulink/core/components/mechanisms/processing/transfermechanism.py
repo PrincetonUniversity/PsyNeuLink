@@ -472,12 +472,12 @@ class TransferError(Exception):
 def _integrator_mode_setter(value, owning_component=None, execution_id=None):
     if value is True:
         if (
-            not owning_component.parameters.integrator_mode.get(execution_id)
-            and owning_component.parameters.has_integrated.get(execution_id)
+            not owning_component.parameters.integrator_mode._get(execution_id)
+            and owning_component.parameters.has_integrated._get(execution_id)
         ):
             if owning_component.integrator_function is not None:
                 if owning_component.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
-                    owning_component.reinitialize(owning_component.parameters.value.get(execution_id), execution_context=execution_id)
+                    owning_component.reinitialize(owning_component.parameters.value._get(execution_id), execution_context=execution_id)
                 elif owning_component.on_resume_integrator_mode == REINITIALIZE:
                     owning_component.reinitialize(execution_context=execution_id)
         owning_component.parameters.has_initializers.set(True, execution_id)
@@ -1476,8 +1476,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         self.parameters.previous_value.set(None, execution_context, override=True)
 
     def _update_previous_value(self, execution_id=None):
-        if self.parameters.integrator_mode.get(execution_id):
-            value = self.parameters.value.get(execution_id)
+        if self.parameters.integrator_mode._get(execution_id):
+            value = self.parameters.value._get(execution_id)
             if value is None:
                 value = self.defaults.value
             self.parameters.previous_value.set(value, execution_id, override=True)
@@ -1488,7 +1488,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             return super(TransferMechanism, self)._parse_function_variable(variable=variable, execution_id=execution_id, context=context)
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        integrator_mode = self.parameters.integrator_mode.get(execution_id)
+        integrator_mode = self.parameters.integrator_mode._get(execution_id)
         noise = self.get_current_mechanism_param(NOISE, execution_id)
 
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
@@ -1523,15 +1523,15 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def delta(self, value=NotImplemented, execution_id=None):
         if value is NotImplemented:
-            value = self.parameters.value.get(execution_id)
-        return self.convergence_function([value[0], self.parameters.previous_value.get(execution_id)[0]])
+            value = self.parameters.value._get(execution_id)
+        return self.convergence_function([value[0], self.parameters.previous_value._get(execution_id)[0]])
 
     def is_converged(self, value=NotImplemented, execution_id=None):
         # Check for convergence
         if (
             self.convergence_criterion is not None
-            and self.parameters.previous_value.get(execution_id) is not None
-            and self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING
+            and self.parameters.previous_value._get(execution_id) is not None
+            and self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING
         ):
             if self.delta(value, execution_id) <= self.convergence_criterion:
                 return True

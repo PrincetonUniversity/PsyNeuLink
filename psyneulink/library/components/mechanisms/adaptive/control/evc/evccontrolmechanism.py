@@ -1157,7 +1157,7 @@ class EVCControlMechanism(ControlMechanism):
 
 
         for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id)())
+            control_signal_sample_lists.append(control_signal.parameters.allocation_samples._get(execution_id)())
 
         # Construct control_signal_search_space:  set of all permutations of ControlSignal allocations
         #                                     (one sample from the allocationSample of each ControlSignal)
@@ -1207,7 +1207,7 @@ class EVCControlMechanism(ControlMechanism):
         for origin_mech in self.system.origin_mechanisms:
             # Get origin Mechanism for each process
             # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN Mechanism
-            self.parameters.predicted_input.get(execution_id)[origin_mech] = self.origin_prediction_mechanisms[origin_mech].parameters.value.get(execution_id)
+            self.parameters.predicted_input._get(execution_id)[origin_mech] = self.origin_prediction_mechanisms[origin_mech].parameters.value._get(execution_id)
             # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
 
     def evaluate(
@@ -1241,7 +1241,7 @@ class EVCControlMechanism(ControlMechanism):
 
         """
 
-        if self.parameters.value.get(execution_id) is None:
+        if self.parameters.value._get(execution_id) is None:
             # Initialize value if it is None
             self.parameters.value.set(np.empty(len(self.control_signals)), execution_id, override=True)
 
@@ -1249,7 +1249,7 @@ class EVCControlMechanism(ControlMechanism):
         #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states
         for i in range(len(self.control_signals)):
             # MODIFIED 6/6/19 OLD:
-            self.parameters.value.get(execution_id)[i] = np.atleast_1d(allocation_vector[i])
+            self.parameters.value._get(execution_id)[i] = np.atleast_1d(allocation_vector[i])
             # # MODIFIED 6/6/19 NEW: [JDC]
             # self._apply_control_allocation(control_allocation=allocation_vector,
             #                                runtime_params=runtime_params,
@@ -1264,7 +1264,7 @@ class EVCControlMechanism(ControlMechanism):
         animate_buffer = self.system._animate
 
         # Run simulation
-        self.system.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
+        self.system.parameters.context._get(execution_id).execution_phase = ContextFlags.SIMULATION
         self.system.run(
             inputs=inputs,
             execution_id=execution_id,
@@ -1272,7 +1272,7 @@ class EVCControlMechanism(ControlMechanism):
             animate=False,
             context=context
         )
-        self.system.parameters.context.get(execution_id).execution_phase = ContextFlags.CONTROL
+        self.system.parameters.context._get(execution_id).execution_phase = ContextFlags.CONTROL
 
         # Restore System attributes
         self.system._animate = animate_buffer
@@ -1290,10 +1290,10 @@ class EVCControlMechanism(ControlMechanism):
         #     if self.control_signal_costs[i].cost_options is not None:
         #         self.control_signal_costs[i] = self.control_signals[i].cost
         # MODIFIED 9/18/18 NEWER:
-        control_signal_costs = self.parameters.control_signal_costs.get(execution_id)
+        control_signal_costs = self.parameters.control_signal_costs._get(execution_id)
         for i, c in enumerate(self.control_signals):
-            if c.parameters.cost_options.get(execution_id) is not None:
-                control_signal_costs[i] = c.parameters.cost.get(execution_id)
+            if c.parameters.cost_options._get(execution_id) is not None:
+                control_signal_costs[i] = c.parameters.cost._get(execution_id)
         self.parameters.control_signal_costs.set(control_signal_costs, execution_id, override=True)
         # MODIFIED 9/18/18 END
 

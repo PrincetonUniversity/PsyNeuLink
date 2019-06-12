@@ -145,7 +145,7 @@ class FuncExecution(CUDAExecution):
 
     def _get_compilation_param(self, name, initializer, arg, execution_id):
         param = getattr(self._component._compilation_data, name)
-        struct = param.get(execution_id)
+        struct = param._get(execution_id)
         if struct is None:
             initializer = getattr(self._component, initializer)(execution_id)
             struct_ty = self._bin_func.byref_arg_types[arg]
@@ -266,7 +266,7 @@ class CompExecution(CUDAExecution):
                 self.__conds = cond_type(*cond_initializer)
             return self.__conds
 
-        conds = self._composition._compilation_data.scheduler_conditions.get(self._execution_ids[0])
+        conds = self._composition._compilation_data.scheduler_conditions._get(self._execution_ids[0])
         if conds is None:
             cond_type = self._bin_func.byref_arg_types[4]
             gen = helpers.ConditionGenerator(None, self._composition)
@@ -277,7 +277,7 @@ class CompExecution(CUDAExecution):
 
     def _get_compilation_param(self, name, initializer, arg, execution_id):
         param = getattr(self._composition._compilation_data, name)
-        struct = param.get(execution_id)
+        struct = param._get(execution_id)
         if struct is None:
             initializer = getattr(self._composition, initializer)(execution_id)
             struct_ty = self._bin_func.byref_arg_types[arg]
@@ -382,7 +382,7 @@ class CompExecution(CUDAExecution):
             # This assumes origin mechanisms are in the same order as
             # CIM input states
             origins = (n for n in self._composition.get_nodes_by_role(NodeRole.INPUT) for istate in n.input_states)
-            input_data = ([proj.parameters.value.get(execution_id) for proj in state.all_afferents] for state in node.input_states)
+            input_data = ([proj.parameters.value._get(execution_id) for proj in state.all_afferents] for state in node.input_states)
             inputs = defaultdict(list)
             for n, d in zip(origins, input_data):
                 inputs[n].append(d[0])

@@ -201,7 +201,7 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         """
 
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return (np.array([0]), np.array([0]), np.array([0]))
 
         # remove this in favor of attribute or parameter?
@@ -333,8 +333,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         """
 
-        if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING or
-                self.owner.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING):
+        if (self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING or
+                self.owner.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
             return [defaultControlAllocation]
 
         # Get value of, or set default for standard args
@@ -349,8 +349,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
         # FIX 3/30/18 - IS controller CORRECT FOR THIS, OR SHOULD IT BE System (controller.system)??
-        controller.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
-        controller.parameters.context.get(execution_id).string = "{0} EXECUTING {1} of {2}".format(controller.name,
+        controller.parameters.context._get(execution_id).execution_phase = ContextFlags.SIMULATION
+        controller.parameters.context._get(execution_id).string = "{0} EXECUTING {1} of {2}".format(controller.name,
                                                                       EVC_SIMULATION,
                                                                       controller.system.name)
         # Get allocation_samples for all ControlSignals
@@ -579,7 +579,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
 
 
     # Run one simulation and get EVC for each trial's worth of inputs in predicted_input
-    predicted_input = ctlr.parameters.predicted_input.get(execution_id)
+    predicted_input = ctlr.parameters.predicted_input._get(execution_id)
 
     origin_mechs = list(predicted_input.keys())
     # number of trials' worth of inputs in predicted_input should be the same for all ORIGIN Mechanisms, so use first:
@@ -611,7 +611,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
     for i in range(num_trials):
         sim_execution_id = ctlr.get_next_sim_id(execution_id)
         try:
-            ctlr.parameters.simulation_ids.get(execution_id).append(sim_execution_id)
+            ctlr.parameters.simulation_ids._get(execution_id).append(sim_execution_id)
         except AttributeError:
             ctlr.parameters.simulation_ids.set([sim_execution_id], execution_id)
 
@@ -631,7 +631,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
             ctlr.value_function(
                 controller=ctlr,
                 outcome=outcome,
-                costs=ctlr.parameters.control_signal_costs.get(sim_execution_id),
+                costs=ctlr.parameters.control_signal_costs._get(sim_execution_id),
                 execution_id=sim_execution_id,
                 context=context
             )
@@ -944,9 +944,9 @@ class PredictionMechanism(IntegratorMechanism):
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Update predicted value on "real" but not simulation runs '''
 
-        if self.parameters.context.get(execution_id).execution_phase == ContextFlags.SIMULATION:
+        if self.parameters.context._get(execution_id).execution_phase == ContextFlags.SIMULATION:
             # Just return current value for simulation runs
-            value = self.parameters.value.get(execution_id)
+            value = self.parameters.value._get(execution_id)
         else:
             # Update deque with new input for any other type of run
             value = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)

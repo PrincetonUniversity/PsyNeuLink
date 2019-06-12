@@ -1909,10 +1909,10 @@ class State_Base(State):
         # Set context to owner's context:
         self._assign_context_values(
             execution_id,
-            execution_phase=self.owner.parameters.context.get(execution_id).execution_phase,
+            execution_phase=self.owner.parameters.context._get(execution_id).execution_phase,
         )
-        # self.parameters.context.get(execution_id).execution_phase = self.owner.parameters.context.get(execution_id).execution_phase
-        self.parameters.context.get(execution_id).string = self.owner.parameters.context.get(execution_id).string
+        # self.parameters.context._get(execution_id).execution_phase = self.owner.parameters.context._get(execution_id).execution_phase
+        self.parameters.context._get(execution_id).string = self.owner.parameters.context._get(execution_id).string
 
         # SET UP ------------------------------------------------------------------------------------------------
 
@@ -1973,10 +1973,10 @@ class State_Base(State):
                                                                                      self.owner.name))
                 continue
 
-            if not self.afferents_info[projection].is_active_in_composition(self.parameters.context.get(execution_id).composition):
+            if not self.afferents_info[projection].is_active_in_composition(self.parameters.context._get(execution_id).composition):
                 continue
 
-            projection._assign_context_values(execution_id, composition=self.parameters.context.get(execution_id).composition)
+            projection._assign_context_values(execution_id, composition=self.parameters.context._get(execution_id).composition)
             # Only accept projections from a Process to which the owner Mechanism belongs
             if isinstance(sender, ProcessInputState):
                 if not sender.owner in self.owner.processes.keys():
@@ -1996,17 +1996,17 @@ class State_Base(State):
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
-            if isinstance(projection, LearningProjection) and self.parameters.context.get(execution_id).execution_phase != ContextFlags.LEARNING:
+            if isinstance(projection, LearningProjection) and self.parameters.context._get(execution_id).execution_phase != ContextFlags.LEARNING:
                 projection_value = projection.defaults.value * 0.0
             else:
-                projection_value = projection.execute(variable=projection.sender.parameters.value.get(execution_id),
+                projection_value = projection.execute(variable=projection.sender.parameters.value._get(execution_id),
                                                       execution_id=execution_id,
                                                       runtime_params=projection_params,
                                                       context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
             try:
-                if projection.parameters.context.get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
+                if projection.parameters.context._get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
                     continue
             except AttributeError:
                 pass

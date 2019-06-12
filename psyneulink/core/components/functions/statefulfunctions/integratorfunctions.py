@@ -532,7 +532,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                         continue
                     if execution_id not in self._runtime_params_reset:
                         self._runtime_params_reset[execution_id] = {}
-                    self._runtime_params_reset[execution_id][param_name] = getattr(self.parameters, param_name).get(execution_id)
+                    self._runtime_params_reset[execution_id][param_name] = getattr(self.parameters, param_name)._get(execution_id)
                     self._set_parameter_value(param_name, runtime_params[param_name], execution_id)
 
     def function(self,
@@ -586,7 +586,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(value, execution_id, override=True)
 
         return self.convert_output_type(value)
@@ -807,7 +807,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
@@ -1163,7 +1163,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
@@ -1682,7 +1682,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
         value = self._combine_terms(short_term_avg, long_term_avg, execution_id=execution_id)
 
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_short_term_avg.set(short_term_avg, execution_id)
             self.parameters.previous_long_term_avg.set(long_term_avg, execution_id)
 
@@ -2120,7 +2120,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
 
         new_value = previous_value + (rate * (current_input + noise) * dist_from_asymptote) - (decay * dist_from_rest)
 
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(new_value, execution_id)
 
         return self.convert_output_type(new_value)
@@ -2473,7 +2473,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         previous_time = self.get_current_function_param('previous_time', execution_id)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             previous_value = adjusted_value
             previous_time = previous_time + time_step_size
             if not np.isscalar(variable):
@@ -2824,7 +2824,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         adjusted_value = value + offset
 
         previous_time = self.get_current_function_param('previous_time', execution_id)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             previous_value = adjusted_value
             previous_time = previous_time + time_step_size
             if not np.isscalar(variable):
@@ -3080,7 +3080,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
@@ -4056,7 +4056,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             raise FunctionError("Invalid integration method ({}) selected for {}".
                                 format(integration_method, self.name))
 
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             previous_v = approximate_values[0]
             previous_w = approximate_values[1]
             previous_time = previous_time + time_step_size

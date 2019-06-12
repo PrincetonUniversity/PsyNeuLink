@@ -988,9 +988,10 @@ class InputState(State_Base):
             path_proj_values = []
             # Check for Projections that are active in the Composition being run
             for proj in self.path_afferents:
-                if self.afferents_info[proj].is_active_in_composition(self.parameters.context.get(
-                        execution_id).composition):
-                    path_proj_values.append(proj.parameters.value.get(execution_id))
+                if self.afferents_info[proj].is_active_in_composition(
+                        self.parameters.context._get(execution_id).composition
+                ):
+                    path_proj_values.append(proj.parameters.value._get(execution_id))
             # If there are any active PathwayProjections
             if len(path_proj_values) > 0:
                 # Combine Projection values

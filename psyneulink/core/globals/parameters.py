@@ -113,7 +113,7 @@ To create new Parameters, reference this example of a new class *B*
 
             def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None):
                 try:
-                    return [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in owning_component.control_signals]
+                    return [c.compute_costs(c.parameters.variable._get(execution_id), execution_id=execution_id) for c in owning_component.control_signals]
                 except TypeError:
                     return None
 
@@ -946,7 +946,7 @@ class Parameter(types.SimpleNamespace):
         if context is ContextFlags.COMMAND_LINE:
             try:
                 # attempt to infer the time via this Parameters object's context if it exists
-                owner_context = self._owner.context.get(execution_id)
+                owner_context = self._owner.context._get(execution_id)
                 time = _get_time(self._owner._owner, owner_context.execution_phase, execution_id)
             except AttributeError:
                 time = time_object(None, None, None, None)
@@ -961,7 +961,7 @@ class Parameter(types.SimpleNamespace):
 
             if context is None:
                 try:
-                    context = self._owner.context.get(execution_id)
+                    context = self._owner.context._get(execution_id)
                 except AttributeError:
                     logger.warning('Attempted to log {0} but has no context attribute'.format(self))
 

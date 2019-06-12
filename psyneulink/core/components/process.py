@@ -1828,7 +1828,7 @@ class Process(Process_Base):
         if input is None:
             input = self.first_mechanism.defaults.variable
             if (self.prefs.verbosePref and not (context == ContextFlags.COMMAND_LINE or
-                                                self.parameters.context.get(execution_id).initializaton_status == ContextFlags.INITIALIZING)):
+                                                self.parameters.context._get(execution_id).initializaton_status == ContextFlags.INITIALIZING)):
                 print("- No input provided;  default will be used: {0}")
 
         else:
@@ -2246,7 +2246,7 @@ class Process(Process_Base):
         self._initialize_from_context(execution_id, base_execution_id, override=False)
 
         # Report output if reporting preference is on and this is not an initialization run
-        report_output = self.prefs.reportOutputPref and self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZED
+        report_output = self.prefs.reportOutputPref and self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZED
 
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
@@ -2270,10 +2270,10 @@ class Process(Process_Base):
 
             # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            mechanism.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+            mechanism.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
             context = ContextFlags.PROCESS
             mechanism.execute(execution_id=execution_id, context=context)
-            mechanism.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
+            mechanism.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
             if report_output:
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
@@ -2292,7 +2292,7 @@ class Process(Process_Base):
             self._report_process_completion(separator=True, execution_context=execution_id)
 
         # FIX:  WHICH SHOULD THIS BE?
-        return self.output_state.parameters.value.get(execution_id)
+        return self.output_state.parameters.value._get(execution_id)
         # return self.output
 
     def _execute_learning(self, execution_id=None, target=None, context=None):
@@ -2349,7 +2349,7 @@ class Process(Process_Base):
             mech._assign_context_values(execution_id, execution_phase=ContextFlags.LEARNING)
             mech._assign_context_values(
                 execution_id,
-                string=self.parameters.context.get(execution_id).string.replace(EXECUTING, LEARNING + ' ')
+                string=self.parameters.context._get(execution_id).string.replace(EXECUTING, LEARNING + ' ')
             )
 
             # IMPLEMENTATION NOTE:
@@ -2376,7 +2376,7 @@ class Process(Process_Base):
                     #       since parameter_state.update() handles parsing of LearningProjection-specific params
                     projection._assign_context_values(
                         execution_id,
-                        string=self.parameters.context.get(execution_id).string.replace(EXECUTING, LEARNING + ' '),
+                        string=self.parameters.context._get(execution_id).string.replace(EXECUTING, LEARNING + ' '),
                         execution_phase=ContextFlags.LEARNING
                     )
 
@@ -2408,7 +2408,7 @@ class Process(Process_Base):
             mech._assign_context_values(
                 execution_id,
                 execution_phase=ContextFlags.IDLE,
-                string=self.parameters.context.get(execution_id).string.replace(LEARNING, EXECUTING)
+                string=self.parameters.context._get(execution_id).string.replace(LEARNING, EXECUTING)
             )
 
     def run(self,

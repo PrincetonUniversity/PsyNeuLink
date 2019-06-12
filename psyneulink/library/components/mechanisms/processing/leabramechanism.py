@@ -282,14 +282,14 @@ class LeabraFunction(Function_Base):
                  context=None):
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
-        network = self.parameters.network.get(execution_id)
+        network = self.parameters.network._get(execution_id)
         # HACK: otherwise the INITIALIZING function executions impact the state of the leabra network
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             output_size = len(network.layers[-1].units)
             return np.zeros(output_size)
 
         try:
-            training_flag = self.owner.parameters.training_flag.get(execution_id)
+            training_flag = self.owner.parameters.training_flag._get(execution_id)
         except AttributeError:
             training_flag = False
 
@@ -315,7 +315,7 @@ class LeabraFunction(Function_Base):
 
 def _network_getter(owning_component=None, execution_id=None):
     try:
-        return owning_component.function.parameters.network.get(execution_id)
+        return owning_component.function.parameters.network._get(execution_id)
     except AttributeError:
         return None
 
@@ -326,9 +326,9 @@ def _network_setter(value, owning_component=None, execution_id=None):
 
 
 def _training_flag_setter(value, self=None, owning_component=None, execution_id=None):
-    if value is not self.get(execution_id):
+    if value is not self._get(execution_id):
         try:
-            set_training(owning_component.parameters.network.get(execution_id), value)
+            set_training(owning_component.parameters.network._get(execution_id), value)
         except AttributeError:
             return None
 

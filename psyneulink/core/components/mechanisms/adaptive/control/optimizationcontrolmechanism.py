@@ -879,25 +879,25 @@ class OptimizationControlMechanism(ControlMechanism):
         # "Outcome"
         outcome_input_state = self.input_state
         outcome_input_state.update(execution_id=execution_id, params=runtime_params, context=context)
-        state_values = [np.atleast_2d(outcome_input_state.parameters.value.get(execution_id))]
+        state_values = [np.atleast_2d(outcome_input_state.parameters.value._get(execution_id))]
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
             state.update(execution_id=execution_id, params=runtime_params, context=context)
-            state_values.append(state.parameters.value.get(execution_id))
+            state_values.append(state.parameters.value._get(execution_id))
 
         return np.array(state_values)
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
 
-        if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING):
+        if (self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
             return [defaultControlAllocation]
 
         # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
         self.parameters.feature_values.set(_parse_feature_values_from_variable(variable), execution_id)
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
-        control_allocation = self.parameters.control_allocation.get(execution_id)
+        control_allocation = self.parameters.control_allocation._get(execution_id)
         if control_allocation is None:
             control_allocation = [c.defaults.variable for c in self.control_signals]
             self.parameters.control_allocation.set(control_allocation, execution_id=None, override=True)
@@ -906,7 +906,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if hasattr(self.agent_rep, "adapt"):
             # KAM 4/11/19 switched from a try/except to hasattr because in the case where we don't
             # have an adapt method, we also don't need to call the net_outcome getter
-            net_outcome = self.parameters.net_outcome.get(execution_id)
+            net_outcome = self.parameters.net_outcome._get(execution_id)
 
             self.agent_rep.adapt(_parse_feature_values_from_variable(variable),
                                  control_allocation,
@@ -949,7 +949,7 @@ class OptimizationControlMechanism(ControlMechanism):
             sim_execution_id += f'-{control_allocation}'
 
         try:
-            self.parameters.simulation_ids.get(base_execution_id).append(sim_execution_id)
+            self.parameters.simulation_ids._get(base_execution_id).append(sim_execution_id)
         except AttributeError:
             self.parameters.simulation_ids.set([sim_execution_id], base_execution_id)
 
@@ -982,21 +982,21 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 new_execution_id = execution_id
 
-            result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
+            result = self.agent_rep.evaluate(self.parameters.feature_values._get(execution_id),
                                              control_allocation,
-                                             self.parameters.num_estimates.get(execution_id),
+                                             self.parameters.num_estimates._get(execution_id),
                                              base_execution_id=execution_id,
                                              execution_id=new_execution_id,
-                                             context=self.function.parameters.context.get(execution_id),
-                                             execution_mode=self.parameters.comp_execution_mode.get(execution_id)
+                                             context=self.function.parameters.context._get(execution_id),
+                                             execution_mode=self.parameters.comp_execution_mode._get(execution_id)
             )
         # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
-            result = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
+            result = self.agent_rep.evaluate(self.parameters.feature_values._get(execution_id),
                                              control_allocation,
-                                             self.parameters.num_estimates.get(execution_id),
+                                             self.parameters.num_estimates._get(execution_id),
                                              execution_id=execution_id,
-                                             context=self.function.parameters.context.get(execution_id)
+                                             context=self.function.parameters.context._get(execution_id)
             )
 
         return result
@@ -1008,7 +1008,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return pnlvm.ir.LiteralStructType([intensity_cost_struct, num_estimates])
 
     def _get_evaluate_param_initializer(self, execution_id):
-        num_estimates = self.parameters.num_estimates.get(execution_id) or 0
+        num_estimates = self.parameters.num_estimates._get(execution_id) or 0
         # FIXME: The intensity cost function is not setup with the right execution id
         intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
         return (intensity_cost, num_estimates)

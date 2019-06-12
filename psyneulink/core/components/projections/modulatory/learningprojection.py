@@ -209,7 +209,7 @@ class LearningProjectionError(Exception):
 
 
 def _learning_signal_getter(owning_component=None, execution_id=None):
-    return owning_component.sender.parameters.value.get(execution_id)
+    return owning_component.sender.parameters.value._get(execution_id)
 
 
 def _learning_signal_setter(value, owning_component=None, execution_id=None, override=False):
@@ -676,14 +676,14 @@ class LearningProjection(ModulatoryProjection_Base):
         runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
-            return self.parameters.context.get(execution_id).initialization_status
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
+            return self.parameters.context._get(execution_id).initialization_status
 
         if variable is not None:
             learning_signal = variable
         else:
-            learning_signal = self.sender.parameters.value.get(execution_id)
-        matrix = self.receiver.parameters.value.get(execution_id)
+            learning_signal = self.sender.parameters.value._get(execution_id)
+        matrix = self.receiver.parameters.value._get(execution_id)
         # If learning_signal is lower dimensional than matrix being trained
         #    and the latter is a diagonal matrix (square, with values only along the main diagonal)
         #    and the learning_signal is the same as the matrix,
@@ -718,11 +718,11 @@ class LearningProjection(ModulatoryProjection_Base):
             context=context
         )
 
-        learning_rate = self.parameters.learning_rate.get(execution_id)
+        learning_rate = self.parameters.learning_rate._get(execution_id)
         if learning_rate is not None:
             value *= learning_rate
 
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(value)))
 
         return value

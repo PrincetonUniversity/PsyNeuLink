@@ -313,16 +313,16 @@ def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
     #    (stored in _original_function) is restored.
     '''
     # # MODIFIED 5/24/19 OLD:
-    # return owning_component.function.parameters.matrix.get(execution_id)
+    # return owning_component.function.parameters.matrix._get(execution_id)
     # MODIFIED 5/24/19 NEW [JDC]:
     try:
-        return owning_component.function.parameters.matrix.get(execution_id)
+        return owning_component.function.parameters.matrix._get(execution_id)
     # If MappingProjection uses Identity function, it doesn't have a matrix parameter, so return Identity matrix
     except AttributeError:
         assert isinstance(owning_component.function, Identity),  \
             f'PROGRAM ERROR: AttributeError getting {MATRIX} parameter for {MappingProjection.__name__} ' \
                 f'({owning_component.name}) that is does not use {Identity.__name__}'
-        # return np.identity(len(owning_component.parameters.variable.get(execution_id)))
+        # return np.identity(len(owning_component.parameters.variable._get(execution_id)))
         return IDENTITY_MATRIX
     # MODIFIED 5/24/19 END
 
@@ -343,19 +343,19 @@ def _mapping_projection_matrix_setter(matrix, owning_component=None, execution_i
     If suppress_identity_function is passed in kwargs, and is set to True,
         then use originally assigned function and IDENTITY_MATRIX
     '''
-    current_function = owning_component.parameters.function.get(execution_id)
-    current_function_variable = current_function.parameters.variable.get(execution_id)
+    current_function = owning_component.parameters.function._get(execution_id)
+    current_function_variable = current_function.parameters.variable._get(execution_id)
     num_mod_afferents = len(owning_component._parameter_states[MATRIX].mod_afferents)
     if 'suppress_identity_function' in kwargs:
         suppress_identity_function = kwargs['suppress_identity_function']
     else:
-        suppress_identity_function =  owning_component.parameters.suppress_identity_function.get(execution_id)
+        suppress_identity_function =  owning_component.parameters.suppress_identity_function._get(execution_id)
 
     # First determine whether an identity matrix was specified
     if not isinstance(matrix, np.ndarray):
         matrix = get_matrix(matrix,
-                            rows=len(owning_component.sender.parameters.value.get(execution_id)),
-                            cols=len(owning_component.receiver.parameters.variable.get(execution_id)))
+                            rows=len(owning_component.sender.parameters.value._get(execution_id)),
+                            cols=len(owning_component.receiver.parameters.variable._get(execution_id)))
     rows, cols = matrix.shape
     if rows==cols and (matrix == np.identity(rows)).all():
         is_identity_matrix = True
@@ -797,8 +797,8 @@ class MappingProjection(PathwayProjection_Base):
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
-        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-        self.parameters.context.get(execution_id).string = context
+        self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+        self.parameters.context._get(execution_id).string = context
 
         # If function is Identity Function, no need to update ParameterStates, as matrix is not used
         if not isinstance(self.function, Identity):
@@ -806,9 +806,9 @@ class MappingProjection(PathwayProjection_Base):
             if (hasattr(self.context, "composition") and
                     hasattr(self.context.composition, "learning_enabled") and
                     self.context.composition.learning_enabled):
-                self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
+                self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
                 self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-                self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+                self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
 
             self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 

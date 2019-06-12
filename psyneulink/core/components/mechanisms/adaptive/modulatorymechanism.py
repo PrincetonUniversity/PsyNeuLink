@@ -442,7 +442,7 @@ def _control_allocation_setter(value, owning_component=None, execution_id=None):
         raise ModulatoryMechanismError(f"Attempt to set '{CONTROL_ALLOCATION}' parameter of {owning_component.name} "
                                        f"with value ({value} that has a different length ({len(value)}) "
                                        f"than the number of its {CONTROL_SIGNALS} ({len(control_signal_indices)})")
-    mod_alloc = owning_component.parameters.modulatory_allocation.get(execution_id)
+    mod_alloc = owning_component.parameters.modulatory_allocation._get(execution_id)
     for j, i in enumerate(control_signal_indices):
         mod_alloc[i] = value[j]
     owning_component.parameters.modulatory_allocation.set(np.array(mod_alloc), execution_id)
@@ -464,7 +464,7 @@ def _gating_allocation_setter(value, owning_component=None, execution_id=None):
         raise ModulatoryMechanismError(f"Attempt to set {GATING_ALLOCATION} parameter of {owning_component.name} "
                                        f"with value ({value} that has a different length than the number of its"
                                        f"{GATING_SIGNALS} ({len(gating_signal_indices)})")
-    mod_alloc = owning_component.parameters.modulatory_allocation.get(execution_id)
+    mod_alloc = owning_component.parameters.modulatory_allocation._get(execution_id)
     for j, i in enumerate(gating_signal_indices):
         mod_alloc[i] = value[j]
     owning_component.parameters.modulatory_allocation.set(np.array(mod_alloc), execution_id)
@@ -473,7 +473,7 @@ def _gating_allocation_setter(value, owning_component=None, execution_id=None):
 def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
-        costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
+        costs = [c.compute_costs(c.parameters.variable._get(execution_id), execution_id=execution_id)
                  for c in owning_component.control_signals]
         return costs
 
@@ -482,7 +482,7 @@ def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None)
 
 def _outcome_getter(owning_component=None, execution_id=None):
     try:
-        return owning_component.parameters.variable.get(execution_id)[0]
+        return owning_component.parameters.variable._get(execution_id)[0]
     except TypeError:
         return None
 
@@ -492,8 +492,8 @@ def _net_outcome_getter(owning_component=None, execution_id=None):
 
     try:
         c = owning_component
-        return c.compute_net_outcome(c.parameters.outcome.get(execution_id),
-                                     c.combine_costs(c.parameters.costs.get(execution_id)))
+        return c.compute_net_outcome(c.parameters.outcome._get(execution_id),
+                                     c.combine_costs(c.parameters.costs._get(execution_id)))
     except TypeError:
         return [0]
 
@@ -1348,7 +1348,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         if isinstance(modulatory_signal, ControlSignal):
             # Update control_signal_costs to accommodate instantiated Projection
-            control_signal_costs = self.parameters.control_signal_costs.get()
+            control_signal_costs = self.parameters.control_signal_costs._get()
             try:
                 control_signal_costs = np.append(control_signal_costs, np.zeros((1, 1)), axis=0)
             except (AttributeError, ValueError):
