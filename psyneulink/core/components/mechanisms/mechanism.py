@@ -3750,10 +3750,10 @@ class MechanismList(UserList):
                 values.append(output_state.value)
         return values
 
-    def get_output_state_values(self, execution_id):
+    def get_output_state_values(self, execution_context):
         """Return values of OutputStates for all mechanisms in MechanismList for **execution_id**"""
         values = []
         for item in self.mechanisms:
             for output_state in item.output_states:
-                values.append(output_state.parameters.value.get(execution_id))
+                values.append(output_state.parameters.value.get(execution_context))
         return values
