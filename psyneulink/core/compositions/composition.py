@@ -677,6 +677,7 @@ import typecheck as tc
 import uuid
 
 from PIL import Image
+from os import path, remove
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta, function_type
@@ -717,6 +718,14 @@ __all__ = [
 
     'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'STATE_FUNCTION_PARAMS'
 ]
+
+UNIT = 'unit'
+DURATION = 'duration'
+MOVIE_NAME = 'movie_name'
+SAVE_IMAGES = 'save_images'
+SHOW = 'show'
+INITIAL_FRAME = 'INITIAL_FRAME'
+
 
 logger = logging.getLogger(__name__)
 
@@ -4281,8 +4290,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             retain_old_simulation_data=False,
             animate=False,
-            context=None
-    ):
+            context=None):
+
         '''Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.  See `Run` for details of formatting input specifications. See `Run` for details of
         formatting input specifications. Use **animate** to generate a gif of the execution sequence.
@@ -4349,6 +4358,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
 
+            animate : dict or bool : False
+                specifies use of the `show_graph <Composition.show_graph>` method to generate a gif movie showing the
+                sequence of Components executed in a run.  A dict can be specified containing options to pass to
+                the `show_graph <Composition.show_graph>` method;  each key must be an argument of the `show_graph
+                <Composition.show_graph>` method, and its value a specification for that argument.  The entries
+                listed below can also be included in the dict to specify parameters of the animation.  If the
+                **animate** argument is specified simply as `True`, defaults are used for all arguments of
+                `show_graph <Composition.show_graph>` and the options below:
+
+                * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components
+                  to treat as active in each call to `show_graph <Composition.show_graph>`. *COMPONENT* generates an
+                  image for the execution of each Component.  *EXECUTION_SET* generates an image for each `execution_set
+                  <Component.execution_sets>`, showing all of the Components in that set as active.
+
+                * *DURATION*: float (default=0.75) -- specifies the duration (in seconds) of each image in the movie.
+
+                * *NUM_TRIALS*: int (default=1) -- specifies the number of trials to animate;  by default, this is 1.
+                  If the number specified is less than the total number of trials being run, only the number specified
+                  are animated; if it is greater than the number of trials being run, only the number being run is
+                  animated.
+
+                * *MOVIE_NAME*: str (default=\\ `name <System.name>` + 'movie') -- specifies the name to be used for
+                  the movie file; it is automatically appended with '.gif'.
+
+                * *SAVE_IMAGES*: bool (default=\\ `False`\\ ) -- specifies whether to save each of the images used to
+                  construct the animation in separate gif files, in addition to the file containing the animation.
+
+                * *SHOW*: bool (default=\\ `False`\\ ) -- specifies whether to show the animation after it is
+                  constructed, using the OS's default viewer.
+
             log : bool, LogCondition
                 Sets the `log_condition <Parameter.log_condition>` for every primary `node <Composition.nodes>` and
                 `projection <Composition.projections>` in this Composition, if it is not already set.
@@ -4361,11 +4400,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if True, all Parameter values generated during simulations will be saved for later inspection;
                 if False, simulation values will be deleted unless otherwise specified by individual Parameters
 
+        COMMENT:
+        REPLACE WITH EVC/OCM EXAMPLE
+        Examples
+        --------
 
-            Returns
-            ---------
+        This figure shows an animation of the Composition in the XXX example script, with
+        the show_graph **show_learning** argument specified as *ALL*:
 
-            output value of the final Node executed in the composition : various
+        .. _Composition_XXX_movie:
+
+        .. figure:: _static/XXX_movie.gif
+           :alt: Animation of Composition in XXX example script
+           :scale: 50 %
+
+        This figure shows an animation of the Composition in the XXX example script, with
+        the show_graph **show_control** argument specified as *ALL* and *UNIT* specified as *EXECUTION_SET*:
+
+        .. _Composition_XXX_movie:
+
+        .. figure:: _static/XXX_movie.gif
+           :alt: Animation of Composition in XXX example script
+           :scale: 150 %
+        COMMENT
+
+        Returns
+        ---------
+
+        output value of the final Node executed in the composition : various
         '''
 
         if scheduler_processing is None:
@@ -4406,6 +4468,58 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     and item.parameters.value.log_condition is LogCondition.OFF
                 ):
                     item.parameters.value.log_condition = LogCondition.EXECUTION
+
+        # Set animation attributes
+        if animate is True:
+            animate = {}
+        self._animate = animate
+        if isinstance(self._animate, dict):
+            # Assign directory for animation files
+            here = path.abspath(path.dirname(__file__))
+            self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " gifs")
+            # try:
+            #     rmtree(self._animate_directory)
+            # except:
+            #     pass
+            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
+            self._image_duration = self._animate.pop(DURATION, 0.75)
+            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
+            self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
+            self._save_images = self._animate.pop(SAVE_IMAGES, False)
+            self._show_animation = self._animate.pop(SHOW, False)
+            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
+                                  format(repr(UNIT), repr('animate'), repr('run'),
+                                         self.name, self._animate_unit, repr(COMPONENT), repr(EXECUTION_SET)))
+            if not isinstance(self._image_duration, (int, float)):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be an int or a float".
+                                  format(repr(DURATION), repr('animate'), repr('run'),
+                                         self.name, self._image_duration))
+            if not isinstance(self._animate_num_trials, int):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must an integer".
+                                  format(repr(NUM_TRIALS), repr('animate'), repr('run'),
+                                         self.name, self._animate_num_trials, repr('show_graph')))
+            if not isinstance(self._movie_filename, str):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be a string".
+                                  format(repr(MOVIE_NAME), repr('animate'), repr('run'),
+                                         self.name, self._movie_filename))
+            if not isinstance(self._save_images, bool):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
+                                  format(repr(MOVIE_NAME), repr('animate'), repr('run'),
+                                         self.name, self._save_images, repr(True), repr(False)))
+            if not isinstance(self._save_images, bool):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
+                                  format(repr(SHOW), repr('animate'), repr('run'),
+                                         self.name, self._show_animation, repr(True), repr(False)))
+
+        elif self._animate:
+            # self._animate should now be False or a dict
+            raise SystemError("{} argument for {} method of {} ({}) must boolean or "
+                              "a dictionary of argument specifications for its {} method".
+                              format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
+
+
+        # SET UP EXECUTION -----------------------------------------------
 
         results = []
 
