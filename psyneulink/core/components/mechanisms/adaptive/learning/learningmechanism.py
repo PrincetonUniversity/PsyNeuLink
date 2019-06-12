@@ -1289,11 +1289,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
         current_error_signal_inputs = self.error_signal_input_states
         curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
         error_signal_inputs = variable[curr_indices]
-        # KAM added 3/27/19 to get past None error
-        if not self.error_matrices:
-            self.error_matrices = [[0.]]
-        error_matrices = np.array(self.error_matrices)
+
+        if self.error_matrices is None:
+            self.error_matrices = np.zeros_like(error_signal_inputs)
         error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
+
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterState):
                 error_matrices[i] = error_matrices[i].parameters.value.get(execution_id)
