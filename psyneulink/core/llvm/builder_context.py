@@ -413,6 +413,11 @@ class LLVMBuilderContext:
             data = builder.alloca(data.type.pointee)
             builder.store(data.type.pointee(None), data)
 
+        if not simulation and "const_input" in debug_env:
+            builder.store(inputs_ptr.type.pointee(None), inputs_ptr)
+            input_init = pnlvm._tupleize([[os.defaults.variable] for os in composition.input_CIM.input_states])
+            builder.store(data_in.type.pointee(input_init), data_in)
+
         if "force_runs" in debug_env:
             num = int(debug_env["force_runs"]) if debug_env["force_runs"] else 1
             builder.store(runs_ptr.type.pointee(num), runs_ptr)

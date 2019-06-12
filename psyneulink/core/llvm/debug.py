@@ -15,6 +15,7 @@
 # "debug_info" -- emit line debugging information when generating LLVM IR
 # "const_params" -- hardcode base parameter values into generated code,
 #                   instead of loading them from param_struct
+# "const_input" -- hardcode input values for composition runs
 # "alloca_data" -- use alloca'd storage for composition data (exposes data flow)
 # "comp_node_debug" -- print intermediate results after execution composition node wrapper.
 # "llvm" -- dumps LLVM IR into a file (named after the dumped module).
