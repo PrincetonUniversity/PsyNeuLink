@@ -8,6 +8,7 @@
 
 # ********************************************* LLVM bindings **************************************************************
 
+import ast
 import atexit
 import ctypes
 import functools
@@ -415,7 +416,13 @@ class LLVMBuilderContext:
 
         if not simulation and "const_input" in debug_env:
             builder.store(inputs_ptr.type.pointee(None), inputs_ptr)
-            input_init = pnlvm._tupleize([[os.defaults.variable] for os in composition.input_CIM.input_states])
+            if not debug_env["const_input"]:
+                input_init = pnlvm._tupleize([[os.defaults.variable] for os in composition.input_CIM.input_states])
+                print("Setting default input: ", input_init)
+            else:
+                input_init = ast.literal_eval(debug_env["const_input"])
+                print("Setting user input: ", input_init)
+
             builder.store(data_in.type.pointee(input_init), data_in)
 
         if "force_runs" in debug_env:
