@@ -3999,7 +3999,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # comp.add_node(new_node)
         # comp.run().
         # execution_id has not changed on the comp, BUT new_node's execution id needs to be set from None --> ID
-        if self.most_recent_execution_context != execution_id or self.env is None:
+        if self.most_recent_execution_id != execution_id or self.env is None:
             # initialize from base context but don't overwrite any values already set for this execution_id
             if (
                 not skip_initialization
@@ -4781,7 +4781,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.parameters.results.set(full_results, execution_id)
                 # KAM added the [-1] index after changing Composition run()
                 # behavior to return only last trial of run (11/7/18)
-                self.most_recent_execution_context = execution_id
+                self.most_recent_execution_id = execution_id
                 return full_results[-1]
 
             except Exception as e:
@@ -4886,7 +4886,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.parameters.results.set(full_results, execution_id)
 
-        self.most_recent_execution_context = execution_id
+        self.most_recent_execution_id = execution_id
 
         if self._animate is not False:
             # Save list of gifs in self._animation as movie file

@@ -618,7 +618,7 @@ def make_parameter_property(name):
             # would refer to class parameters before an instance of Parameters is created for self
             return getattr(self, backing_field)
         else:
-            return getattr(self.parameters, name).get(self.most_recent_execution_context)
+            return getattr(self.parameters, name).get(self.most_recent_execution_id)
 
     def setter(self, value):
         if not _parameters_belongs_to_obj(self):
@@ -626,7 +626,7 @@ def make_parameter_property(name):
             setattr(self, backing_field, value)
         else:
             # stack level 3 instead of normal 2 to properly show source when setting using dot notation
-            getattr(self.parameters, name).set(value, self.most_recent_execution_context, _ro_warning_stacklevel=3)
+            getattr(self.parameters, name).set(value, self.most_recent_execution_id, _ro_warning_stacklevel=3)
 
     return property(getter).setter(setter)
 
@@ -2951,7 +2951,7 @@ class Component(object, metaclass=ComponentsMeta):
     def execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
         if execution_id is None:
-            execution_id = self.most_recent_execution_context
+            execution_id = self.most_recent_execution_id
 
         # initialize context for this execution_id if not done already
         if execution_id is not None:
@@ -3019,7 +3019,7 @@ class Component(object, metaclass=ComponentsMeta):
 
         function_context.execution_phase = ContextFlags.IDLE
 
-        self.most_recent_execution_context = execution_id
+        self.most_recent_execution_id = execution_id
         return value
 
     def _parse_param_state_sources(self):
@@ -3225,7 +3225,7 @@ class Component(object, metaclass=ComponentsMeta):
                 # ensure parameters is not class_parameters
                 raise ValueError
 
-            return self.parameters.context.get(self.most_recent_execution_context)
+            return self.parameters.context.get(self.most_recent_execution_id)
         except (AttributeError, ValueError):
             try:
                 return self._context
@@ -3237,7 +3237,7 @@ class Component(object, metaclass=ComponentsMeta):
     def context(self, context):
         if isinstance(context, Context):
             try:
-                self.parameters.context.set(context, self.most_recent_execution_context)
+                self.parameters.context.set(context, self.most_recent_execution_id)
             except AttributeError:
                 self._context = context
         else:
@@ -3301,7 +3301,7 @@ class Component(object, metaclass=ComponentsMeta):
 
         for p in self.parameters:
             if p.user and p.name not in parameter_black_list:
-                val = p.get(self.most_recent_execution_context)
+                val = p.get(self.most_recent_execution_id)
 
                 if isinstance(val, np.ndarray):
                     val = f'numpy.array({val})'
@@ -3443,19 +3443,19 @@ class Component(object, metaclass=ComponentsMeta):
         return []
 
     @property
-    def most_recent_execution_context(self):
+    def most_recent_execution_id(self):
         """
             used to set a default behavior for attributes that correspond to parameters
         """
         try:
-            return self._most_recent_execution_context
+            return self._most_recent_execution_id
         except AttributeError:
-            self._most_recent_execution_context = None
-            return self._most_recent_execution_context
+            self._most_recent_execution_id = None
+            return self._most_recent_execution_id
 
-    @most_recent_execution_context.setter
-    def most_recent_execution_context(self, value):
-        self._most_recent_execution_context = value
+    @most_recent_execution_id.setter
+    def most_recent_execution_id(self, value):
+        self._most_recent_execution_id = value
 
 
 COMPONENT_BASE_CLASS = Component

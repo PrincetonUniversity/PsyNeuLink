@@ -2128,7 +2128,7 @@ class Mechanism_Base(Mechanism):
         # (1) reinitialize it, (2) update value, (3) update output states
         if isinstance(self.function, StatefulFunction):
             new_value = self.function.reinitialize(*args, execution_context=execution_context)
-            self.parameters.value.set(np.atleast_2d(new_value), execution_context=execution_context, override=True)
+            self.parameters.value.set(np.atleast_2d(new_value), execution_id=execution_id, override=True)
             self._update_output_states(execution_id=execution_id,
                                        context="REINITIALIZING")
 
@@ -2140,7 +2140,7 @@ class Mechanism_Base(Mechanism):
                 new_input = self.integrator_function.reinitialize(*args, execution_context=execution_context)[0]
                 self.parameters.value.set(
                     self.function.execute(variable=new_input, execution_id=execution_id, context="REINITIALIZING"),
-                    execution_context=execution_context,
+                    execution_id=execution_id,
                     override=True
                 )
                 self._update_output_states(execution_id=execution_id,

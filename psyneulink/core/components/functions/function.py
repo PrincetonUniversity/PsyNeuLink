@@ -688,22 +688,22 @@ class Function_Base(Function):
             raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
                                 format(param, param_name, self.__class__.__name__, owner_name))
 
-    def get_current_function_param(self, param_name, execution_context=None):
+    def get_current_function_param(self, param_name, execution_id=None):
         if param_name == "variable":
             raise FunctionError("The method 'get_current_function_param' is intended for retrieving the current value "
                                 "of a function parameter. 'variable' is not a function parameter. If looking for {}'s "
                                 "default variable, try {}.defaults.variable.".format(self.name, self.name))
         try:
-            return self.owner._parameter_states[param_name].parameters.value.get(execution_context)
+            return self.owner._parameter_states[param_name].parameters.value.get(execution_id)
         except (AttributeError, TypeError):
             try:
-                return getattr(self.parameters, param_name).get(execution_context)
+                return getattr(self.parameters, param_name).get(execution_id)
             except AttributeError:
                 raise FunctionError("{0} has no parameter '{1}'".format(self, param_name))
 
-    def get_previous_value(self, execution_context=None):
+    def get_previous_value(self, execution_id=None):
         # temporary method until previous values are integrated for all parameters
-        value = self.parameters.previous_value.get(execution_context)
+        value = self.parameters.previous_value.get(execution_id)
         if value is None:
             value = self.parameters.previous_value.get()
 
