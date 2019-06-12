@@ -762,7 +762,6 @@ class Component(object, metaclass=ComponentsMeta):
         if self.prev_context == context:
             return
 
-
     Class methods:
         - _handle_size(size, variable)
         - _validate_variable(variable)
@@ -2936,7 +2935,8 @@ class Component(object, metaclass=ComponentsMeta):
         """
             If the component's execute method involves execution of an `IntegratorFunction` Function, this method
             effectively begins the function's accumulation over again at the specified value, and may update related
-            values on the component, depending on the component type.
+            values on the component, depending on the component type.  Otherwise, it simply reassigns the Component's
+            value based on its default_variable.
         """
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
         if isinstance(self.function, IntegratorFunction):

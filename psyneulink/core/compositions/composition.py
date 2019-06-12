@@ -463,7 +463,6 @@ A `controller <Composition.controller>` can be assigned either by specifying it 
 Composition's constructor, or using its `add_controller <Composition.add_controller>` method.
 
 COMMENT:
-
 TBI [PARALLELING SYSTEM]:
 Specyfing Parameters to Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -683,6 +682,8 @@ from psyneulink.core.components.component import Component, ComponentsMeta, func
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
+from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
+from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ERROR_SIGNAL
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -1065,7 +1066,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         execution_ids : set
             Stores all execution_ids used by this Composition.
 
+        results : 3d array
+            Stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` Mechanisms in the Composition for
+            every `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`.  Each item in the outermost
+            dimension (axis 0) of the array corresponds to a trial; each item within a trial corresponds to the
+            `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism.
 
+        simulation_results : 3d array
+            Stores the `results <Composition.results>` for executions of the Composition when it is executed using
+            its `evaluate <Composition.evaluate>` method.
 
         COMMENT:
         name : str
@@ -1110,7 +1119,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def __init__(
             self,
             name=None,
-            controller=None,
+            controller:ModulatoryMechanism=None,
             enable_controller=None,
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
             controller_condition:Condition=Always(),
@@ -1382,7 +1391,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 these apply to any items in the list of nodes that are not in a tuple;  these apply to any specified
                 in any role-specification tuples in the **nodes** argument.
         """
-
         if not isinstance(nodes, list):
             raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
                                    f"must be a list of nodes or (node, required_roles) tuples")
@@ -1390,15 +1398,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, (Mechanism, Composition)):
                 self.add_node(node, required_roles)
             elif isinstance(node, tuple):
-                self.add_node(node=node[0],
-                              required_roles=convert_to_list(node[1]).append(convert_to_list(required_roles)))
+                node_specific_roles = convert_to_list(node[1])
+                if required_roles:
+                    node_specific_roles.append(required_roles)
+                self.add_node(node=node[0], required_roles=node_specific_roles)
             else:
                 raise CompositionError(f"Node specified in 'add_nodes' method of '{self.name}' {Composition.__name__} "
                                        f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
                                        f"or a tuple containing one of those and a {NodeRole.__name__} or list of them")
     # MODIFIED 5/29/19 END
 
-    def add_controller(self, controller):
+    def add_controller(self, controller:ModulatoryMechanism):
         """
         Add an `OptimizationControlMechanism` as the `controller
         <Composition.controller>` of the Composition, which gives the OCM access to the
@@ -1418,7 +1428,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
         self._update_shadows_dict(controller)
 
-        for input_state in controller.input_states:
+        # Skip first (OUTCOME) input_state
+        for input_state in controller.input_states[1:]:
             if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
                 for proj in input_state.shadow_inputs.path_afferents:
                     sender = proj.sender
@@ -1430,6 +1441,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         shadow_proj = MappingProjection(sender=proj.sender, receiver=input_state)
                         shadow_proj._activate_for_compositions(self)
+            # MODIFIED 6/11/19 NEW: [JDC]
+            for proj in input_state.path_afferents:
+                proj._activate_for_compositions(self)
+            # MODIFIED 6/11/19 END
 
     def _parse_projection_spec(self, projection, name):
         if isinstance(projection, (np.ndarray, np.matrix, list)):
@@ -1587,51 +1602,99 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection
 
-    def add_projection(self, projection=None, sender=None, receiver=None, feedback=False, learning_projection=False, name=None):
-        '''
+    def add_projection(self,
+                       projection=None,
+                       sender=None,
+                       receiver=None,
+                       feedback=False,
+                       learning_projection=False,
+                       name=None,
+                       allow_duplicates=False
+                       ):
+        '''Add **projection** to the Composition, if one with the same sender and receiver doesn't already exist.
 
-            Add a projection to the Composition, if it is not already added.
+        If **projection** is not specified, create a default `MappingProjection` using **sender** and **receiver**.
 
-            If a *projection* is not specified, then a default MappingProjection is created.
+        If **projection** is specified:
 
-            The sender and receiver of a particular Projection vertex within the Composition (the *sender* and
-            *receiver* arguments of add_projection) must match the `sender <Projection.sender>` and `receiver
-            <Projection.receiver>` specified on the Projection object itself.
+        • if **projection** has already been instantiated, and **sender** and **receiver** are also specified,
+          they must match the `sender <MappingProjection.sender>` and `receiver <MappingProjection.receiver>`
+          of **projection**.
 
-                - If the *sender* and/or *receiver* arguments are not specified, then the `sender <Projection.sender>`
-                  and/or `receiver <Projection.receiver>` attributes of the Projection object set the missing value(s).
-                - If the `sender <Projection.sender>` and/or `receiver <Projection.receiver>` attributes of the
-                  Projection object are not specified, then the *sender* and/or *receiver* arguments set the missing
-                  value(s).
+        • if the status of **projection** is `deferred_init`:
 
-            Arguments
-            ---------
+          - if its `sender <Projection.sender>` and/or `receiver <Projection.receiver>` attributes are not specified,
+            then **sender** and/or **receiver** are used.
 
-            sender : Mechanism, Composition, or OutputState
-                the sender of **projection**
+          - if `sender <Projection.sender>` and/or `receiver <Projection.receiver>` attributes are specified,
+            they must match **sender** and/or **receiver** if those have also been specified.
 
-            projection : Projection, matrix
-                the projection to add
+          - if a Projection between the specified sender and receiver does *not* already exist, it is initialized; if
+            it *does* already exist, the request to add it is ignored, however requests to shadow it and/or mark it as
+            a`feedback` Projection are implemented (in case it has not already been done for the existing Projection).
 
-            receiver : Mechanism, Composition, or InputState
-                the receiver of **projection**
+        .. note::
+           If **projection** is an instantiated projection (i.e., not in `deferred_init`) and one already exists
+           between its `sender <Projection.sender>` and `receiver <Projection.receiver>` a warning is generated.
 
-            feedback : Boolean
-                When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
-                means that each Projections within the cycle actually passes to its receiver its sender's value from
-                the sender's previous execution.
+        COMMENT:
+        IMPLEMENTATION NOTE:
+            Duplicates are determined by the **States** to which they project, not the Mechanisms (to allow
+            multiple Projections to exist between the same pair of Mechanisms using different States).
+            -
+            If an already instantiated Projection is passed to add_projection and is a duplicate of an existing one,
+            it is detected and suppresed, with a warning, in State._instantiate_projections_to_state.
+            -
+            If a Projection with deferred_init status is a duplicate, it is fully suppressed here,
+            as these are generated by add_linear_processing_pathway if the pathway overlaps with an existing one,
+            and so warnings are unnecessary and would be confusing to users.
+        COMMENT
 
-                When True, this Projection "breaks" the cycle, such that all Nodes execute in sequence, and only the
-                Projection marked as 'feedback' passes to its receiver its sender's value from the sender's previous
-                execution.
-        '''
+        Arguments
+        ---------
+
+        sender : Mechanism, Composition, or OutputState
+            the sender of **projection**
+
+        projection : Projection, matrix
+            the projection to add
+
+        receiver : Mechanism, Composition, or InputState
+            the receiver of **projection**
+
+        feedback : bool
+            When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
+            means that each Projections within the cycle actually passes to its `receiver <Projection.receiver>`
+            the `value <Projection.value>` of its `sender <Projection.sender>` from the previous execution.
+            When True, this Projection "breaks" the cycle, such that all Nodes execute in sequence, and only the
+            Projection marked as 'feedback' passes to its `receiver <Projection.receiver>` the
+            `value <Projection.value>` of its `sender <Projection.sender>` from the previous execution.
+    '''
 
         projection = self._parse_projection_spec(projection, name)
+        duplicate = False
 
         # Parse sender and receiver specs
         sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
         receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
+        
+        # If Deferred init
+        if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
+            if not isinstance(sender, OutputState):
+                # sender = graph_sender
+                sender = sender_mechanism
+            if not isinstance(receiver, InputState):
+                # receiver = graph_receiver
+                receiver = receiver_mechanism
+            # Check if Projection to be initialized already exists;  if so, mark as duplicate and skip
+            duplicate = self._check_for_existing_projection(sender=sender, receiver=receiver)
+            if not duplicate:
+                # Initialize Projection
+                projection.init_args['sender'] = sender
+                projection.init_args['receiver'] = receiver
+                projection._deferred_init(context=" INITIALIZING ")
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
@@ -1651,17 +1714,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
-        self._validate_projection(projection, sender, receiver, sender_mechanism, receiver_mechanism, learning_projection)
+        if not duplicate:
+            self._validate_projection(projection,
+                                      sender, receiver,
+                                      sender_mechanism, receiver_mechanism,
+                                      learning_projection)
+            self.needs_update_graph = True
+            self.needs_update_graph_processing = True
+            self.needs_update_scheduler_processing = True
 
-        self.needs_update_graph = True
-        self.needs_update_graph_processing = True
-        self.needs_update_scheduler_processing = True
+            projection._activate_for_compositions(self)
+            for comp in nested_compositions:
+                projection._activate_for_compositions(comp)
 
-        projection._activate_for_compositions(self)
-        for comp in nested_compositions:
-            projection._activate_for_compositions(comp)
+        # Note: do all of the following even if Projection is a duplicate,
+        #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
 
         # Create "shadow" projections to any input states that are meant to shadow this projection's receiver
+        # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
         if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
             for shadow in self.shadows[receiver_mechanism]:
                 for input_state in shadow.input_states:
@@ -1690,7 +1760,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             projections : list of Projections
                 list of Projections to be added to the Composition
-
         '''
 
         if isinstance(projections, list):
@@ -1727,7 +1796,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             ---------
 
             path: the Pathway (Composition) to be added
-
         '''
 
         # identify nodes and projections
@@ -1751,6 +1819,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
 
     def add_linear_processing_pathway(self, pathway, feedback=False, *args):
+        '''Add sequence of Mechanisms or Compositions possibly with intercolated Projections
+        Tuples (Mechanism, NodeRole(s)) can be used to assign required_roles to Mechanisms.
+        '''
         # First, verify that the pathway begins with a node
         if not isinstance(pathway, (list, tuple)):
             raise CompositionError(f"First arg for add_linear_processing_pathway method of '{self.name}' "
@@ -1762,37 +1833,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise CompositionError("The first item in a linear processing pathway must be a Node (Mechanism or "
                                    "Composition).")
+
         # Then, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
-            # # MODIFIED 5/29/19 OLD:
-            # # if the current item is a mechanism, add it
-            # if isinstance(pathway[c], Mechanism):
-            #     self.add_nodes([pathway[c]])
-            # MODIFIED 5/29/19 NEW: [JDC]
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
             if isinstance(pathway[c], (Mechanism, Composition, tuple)):
                 self.add_nodes([pathway[c]])
-            # MODIFIED 5/29/19 END
 
-        # Then, loop through and validate that the mechanism-projection relationships make sense
+        # Then, loop through and validate that the Mechanism-Projection relationships make sense
         # and add MappingProjections where needed
         for c in range(1, len(pathway)):
             # if the current item is a Node
             if isinstance(pathway[c], (Mechanism, Composition, tuple)):
                 if isinstance(pathway[c - 1], (Mechanism, Composition, tuple)):
                     # if the previous item was also a Composition Node, add a mapping projection between them
-                    # # MODIFIED 5/29/19 OLD:
-                    # self.add_projection(MappingProjection(sender=pathway[c - 1],
-                    #                                       receiver=pathway[c]),
-                    #                     pathway[c - 1],
-                    #                     pathway[c],
-                    #                     feedback=feedback)
-                    # MODIFIED 5/29/19 NEW: [JDC]
                     self.add_projection(sender=pathway[c - 1],
                                         receiver=pathway[c],
                                         feedback=feedback)
-                    # MODIFIED 5/9/19 END
-            # if the current item is a Projection
+            # if the current item is a Projection specification
             elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
                 if c == len(pathway) - 1:
                     raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
@@ -1805,7 +1863,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         proj = MappingProjection(sender=pathway[c - 1],
                                                  matrix=pathway[c],
                                                  receiver=pathway[c + 1])
-                    self.add_projection(proj, pathway[c - 1], pathway[c + 1], feedback=feedback)
+                    self.add_projection(proj, pathway[c - 1], pathway[c + 1],
+                                        feedback=feedback,
+                                        allow_duplicates=False)
                 else:
                     raise CompositionError(
                         "{} is not between two Composition Nodes. A Projection in a linear processing pathway must be "
@@ -1968,7 +2028,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
              COMPARATOR_MECHANISM: comparator,
              TARGET_MECHANISM: target,
              LEARNED_PROJECTION: learned_projection}
-
         """
 
         if not error_function:
@@ -2075,29 +2134,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              sender, receiver,
                              graph_sender,
                              graph_receiver,
-                             learning_projection
+                             learning_projection,
                              ):
 
-        # FIX 5/29/19 [JDC] WHY ASSIGN BOTH sender *AND* receiver IF *EITHER* IS NOT SPECIFIED?
-        # FIX:              WHY NOT JUST ASSIGN THE ONE THAT IS NOT SPECIFIED?
-        if not hasattr(projection, "sender") or not hasattr(projection, "receiver"):
-            # # MODIFIED 5/29/19 OLD:
-            # projection.init_args['sender'] = graph_sender
-            # projection.init_args['receiver'] = graph_receiver
-            # MODIFIED 5/29/19 NEW:
-            # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
-            if isinstance(sender, OutputState):
-                projection.init_args['sender'] = sender
-            else:
-                projection.init_args['sender'] = graph_sender
-            if isinstance(receiver, InputState):
-                projection.init_args['receiver'] = receiver
-            else:
-                projection.init_args['receiver'] = graph_receiver
-            # MODIFIED 5/29/19 END
-            projection.context.initialization_status = ContextFlags.DEFERRED_INIT
-            projection._deferred_init(context=" INITIALIZING ")
-
+        # FIX: [JDC 6/8/19] SHOULDN'T THERE BE A CHECK FOR THEM LearningProjections? OR ARE THOSE DONE ELSEWHERE?
         # Skip this validation on learning projections because they have non-standard senders and receivers
         if not learning_projection:
             if projection.sender.owner != graph_sender:
@@ -2165,6 +2205,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a sender')
             if not projection.receiver:
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
+
+    def _check_for_existing_projection(self,
+                                         projection=None,
+                                         sender=None,
+                                         receiver=None):
+        assert projection or (sender and receiver), \
+            f'_check_for_existing_projection must be passed a projection or a sender and receiver'
+
+        if projection:
+            sender = projection.sender
+            receiver = projection.receiver
+        else:
+            if isinstance(sender, Mechanism):
+                sender = sender.output_state
+            elif isinstance(sender, Composition):
+                sender = sender.output_CIM.output_state
+            if isinstance(receiver, Mechanism):
+                receiver = receiver.input_state
+            elif isinstance(receiver, Composition):
+                receiver = receiver.input_CIM.input_state
+
+        if [proj for proj in sender.efferents if proj.sender is sender and proj.receiver is receiver]:
+            return True
+        return False
 
     def _analyze_consideration_queue(self, q, objective_mechanism):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
@@ -2903,8 +2967,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    composition_color='pink',
                    output_fmt:tc.enum('pdf','gv','jupyter','gif')='pdf',
                    execution_id=NotImplemented,
-                   **kwargs,
-                   ):
+                   **kwargs):
         """
         show_graph(                           \
            show_node_structure=False,         \
@@ -3179,34 +3242,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            rank=rcvr_rank,
                            penwidth=rcvr_penwidth)
 
-                # handle auto-recurrent projections
-                for input_state in rcvr.input_states:
-                    for proj in input_state.path_afferents:
-                        if proj.sender.owner is not rcvr:
-                            continue
-                        if show_node_structure:
-                            sndr_proj_label = '{}:{}'.format(rcvr_label, rcvr._get_port_name(proj.sender))
-                            proc_mech_rcvr_label = '{}:{}'.format(rcvr_label, rcvr._get_port_name(proj.receiver))
-                        else:
-                            sndr_proj_label = proc_mech_rcvr_label = rcvr_label
-                        if show_projection_labels:
-                            edge_label = self._get_graph_node_label(proj, show_dimensions)
-                        else:
-                            edge_label = ''
-
-                        # show projection as edge
-                        if proj.sender in active_items:
-                            if active_color is BOLD:
-                                proj_color = default_node_color
-                            else:
-                                proj_color = active_color
-                            proj_width = str(default_width + active_thicker_by)
-                            self.active_item_rendered = True
-                        else:
-                            proj_color = default_node_color
-                            proj_width = str(default_width)
-                        g.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
-                               color=proj_color, penwidth=proj_width)
+                # MODIFIED 5/29/19 OLD: [JDC] SEEMS TO BE HANDLED BY ADDITION OF CALL TO _assign_incoming_edges BELOW
+                # # handle auto-recurrent projections
+                # for input_state in rcvr.input_states:
+                #     for proj in input_state.path_afferents:
+                #         if proj.sender.owner is not rcvr:
+                #             continue
+                #         if show_node_structure:
+                #             sndr_proj_label = '{}:{}'.format(rcvr_label, rcvr._get_port_name(proj.sender))
+                #             proc_mech_rcvr_label = '{}:{}'.format(rcvr_label, rcvr._get_port_name(proj.receiver))
+                #         else:
+                #             sndr_proj_label = proc_mech_rcvr_label = rcvr_label
+                #         if show_projection_labels:
+                #             edge_label = self._get_graph_node_label(proj, show_dimensions)
+                #         else:
+                #             edge_label = ''
+                #
+                #         # show projection as edge
+                #         if proj.sender in active_items:
+                #             if active_color is BOLD:
+                #                 proj_color = default_node_color
+                #             else:
+                #                 proj_color = active_color
+                #             proj_width = str(default_width + active_thicker_by)
+                #             self.active_item_rendered = True
+                #         else:
+                #             proj_color = default_node_color
+                #             proj_width = str(default_width)
+                #         g.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label,
+                #                color=proj_color, penwidth=proj_width)
+                # # MODIFIED 5/29/19 END
 
             # loop through senders to implement edges
             sndrs = processing_graph[rcvr]
@@ -4327,8 +4392,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 inputs = {next(iter(input_nodes)): inputs}
             else:
                 raise CompositionError(
-                    "Inputs to {} must be specified in a dictionary with a key for each of its {} INPUT "
-                    "nodes.".format(self.name, len(input_nodes)))
+                    f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
+                    f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
         elif callable(inputs):
             num_inputs_sets = 1
             autodiff_stimuli = {}

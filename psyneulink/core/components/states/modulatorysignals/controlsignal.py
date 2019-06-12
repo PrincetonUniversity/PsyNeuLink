@@ -769,7 +769,7 @@ class ControlSignal(ModulatorySignal):
     def __init__(self,
                  owner=None,
                  reference_value=None,
-                 default_allocation=defaultControlAllocation,
+                 default_allocation=None,
                  size=None,
                  index=None,
                  assign=None,

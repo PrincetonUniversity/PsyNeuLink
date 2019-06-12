@@ -375,6 +375,7 @@ Class Reference
 """
 
 import itertools
+import copy
 import numpy as np
 import typecheck as tc
 import warnings
@@ -923,6 +924,19 @@ class EVCControlMechanism(ControlMechanism):
             self._instantiate_prediction_mechanisms(system=self.system, context=context)
         super()._instantiate_input_states(context=context)
 
+    def _instantiate_modulatory_signals(self, context):
+        '''Size control_allocation and assign modulatory_signals
+        Set size of control_allocadtion equal to number of modulatory_signals.
+        Assign each modulatory_signal sequentially to corresponding item of control_allocation.
+        '''
+        from psyneulink.core.globals.keywords import OWNER_VALUE
+        for i, spec in enumerate(self.modulatory_signals):
+            modulatory_signal = self._instantiate_modulatory_signal(spec, context=context)
+            modulatory_signal._variable_spec = (OWNER_VALUE, i)
+            self._modulatory_signals[i] = modulatory_signal
+        self.defaults.value = np.tile(modulatory_signal.parameters.variable.default_value, (i+1, 1))
+        self.parameters.control_allocation.set(copy.deepcopy(self.defaults.value))
+
     def _instantiate_prediction_mechanisms(self, system:System_Base, context=None):
         """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in system
 
@@ -1102,12 +1116,9 @@ class EVCControlMechanism(ControlMechanism):
         '''
         control_signal = super()._instantiate_control_signal(control_signal, context)
 
-        # MODIFIED 9/18/18 OLD:
         if control_signal.cost_options is None:
             control_signal.cost_options = ControlSignalCosts.DEFAULTS
-        # MODIFIED 9/18/18 NEW:
             control_signal._instantiate_cost_attributes()
-        # MODIFIED 9/18/18 END
         return control_signal
 
     @tc.typecheck
@@ -1148,8 +1159,8 @@ class EVCControlMechanism(ControlMechanism):
         for control_signal in self.control_signals:
             control_signal_sample_lists.append(control_signal.parameters.allocation_samples.get(execution_id)())
 
-        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
-        #                                     (one sample from the allocationSample of each ControlProjection)
+        # Construct control_signal_search_space:  set of all permutations of ControlSignal allocations
+        #                                     (one sample from the allocationSample of each ControlSignal)
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
         self.parameters.control_signal_search_space.set(
@@ -1237,7 +1248,14 @@ class EVCControlMechanism(ControlMechanism):
         # Implement the current control_allocation over ControlSignals (OutputStates),
         #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states
         for i in range(len(self.control_signals)):
+            # MODIFIED 6/6/19 OLD:
             self.parameters.value.get(execution_id)[i] = np.atleast_1d(allocation_vector[i])
+            # # MODIFIED 6/6/19 NEW: [JDC]
+            # self._apply_control_allocation(control_allocation=allocation_vector,
+            #                                runtime_params=runtime_params,
+            #                                context=context,
+            #                                execution_id=execution_id)
+            # MODIFIED 6/6/19 END
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         # RUN SIMULATION

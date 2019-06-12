@@ -26,18 +26,17 @@
 Overview
 --------
 
-A TransferMechanism transforms its input using a simple mathematical function, that maintains the form (dimensionality)
-of its input.  The input can be a single scalar value, a multidimensional array (list or numpy array), or several
-independent ones.
+A TransferMechanism is a subclass of `ProcessingMechanism` that adds the ability to integrate its input.
 
-The function used to carry out the transformation can be selected from the following PsyNeuLink
-`Functions <Function>`: `Linear`, `Exponential`, `Logistic`, or `SoftMax`.
+Like a ProcessingMechanism, it transforms its input using a simple mathematical function, that maintains the form
+(dimensionality) of its input.  The input can be a single scalar value, a multidimensional array (list or numpy
+array), or several independent ones. The function used to carry out the transformation can be selected from the
+following PsyNeuLink `Functions <Function>`: `Linear`, `Exponential`, `Logistic`, or `SoftMax`.
 
-The **integrator_mode** argument can switch the transformation from an "instantaneous"  to a "time averaged"
+Its **integrator_mode** argument can switch the transformation from an "instantaneous"  to a "time averaged"
 (integrated) manner of execution. When `integrator_mode <TransferMechanism.integrator_mode>` is set to True, the
-mechanism's input is first transformed by its `integrator_function <TransferMechanism.integrator_function>` (the
-`AdaptiveIntegrator`). That result is then transformed by the mechanism's `function
-<TransferMechanism.function>`.
+mechanism's input is first transformed by its `integrator_function <TransferMechanism.integrator_function>` (
+`AdaptiveIntegrator`). That result is then transformed by the mechanism's `function <TransferMechanism.function>`.
 
 .. _Transfer_Creation:
 

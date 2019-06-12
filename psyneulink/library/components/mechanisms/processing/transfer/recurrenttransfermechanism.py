@@ -22,8 +22,9 @@ Overview
 A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent
 network, in which each element is connected to every other element (instantiated in a recurrent
 `AutoAssociativeProjection` referenced by the Mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).
-It can report the energy and, if appropriate, the entropy of its output, and can be configured to implement
-autoassociative (e.g., Hebbian) learning.
+Like a TransferMechanism, it can integrate its input prior to executing its `function
+<RecurrentTransferMechanism.function>`. It can also report the energy and, if appropriate, the entropy of its output,
+and can be configured to implement autoassociative (e.g., Hebbian) learning.
 
 .. _Recurrent_Transfer_Creation:
 
@@ -1515,13 +1516,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         if self.learning_mechanism is None:
             self.learning_enabled = False
 
-    # def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-    #
-    #     if self.context.initialization_status != ContextFlags.INITIALIZING:
-    #         self.parameters.previous_value.set(self.value, override=True)
-    #     self._output = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
-    #     return self._output
-    #     # return super()._execute(variable, runtime_params, context)
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+
+        # if self.context.initialization_status != ContextFlags.INITIALIZING:
+        #     self.parameters.previous_value.set(self.value, override=True)
+        # self._output = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
+        # return self._output
+        return super()._execute(variable, execution_id, runtime_params, context)
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         if self.has_recurrent_input_state:

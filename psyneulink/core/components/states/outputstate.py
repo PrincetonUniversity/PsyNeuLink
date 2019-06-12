@@ -385,10 +385,12 @@ constructor, the corresponding entries (*VARIABLE* and *FUNCTION*) of an `Output
 dictionary <OutputState_Specification_Dictionary>`, or in the variable spec (2nd) item of a `3-item tuple
 <OutputState_Tuple_Specification>` for the OutputState.
 
+.. _OutputState_Variable:
+
 *OutputState* `variable <OutputState.variable>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, an OutputState uses the first (and usually only) item of the owner Mechanism's `value
+By default, an OutputState uses the first (and often only) item of the owner Mechanism's `value
 <Mechanism_Base.value>` as its `variable <OutputState.variable>`.  However, this can be customized by specifying
 any other item of its `owner <OutputState.owner>`\\s `value <Mechanism_Base.value>`, the full `value
 <Mechanism_Base.value>` itself, other attributes of the `owner <OutputState.owner>`, or any combination of these
@@ -1521,8 +1523,7 @@ class StandardOutputStates():
     output_state_dicts : list of dicts
         list of dictionaries specifying OutputStates for the Component specified by `owner`
 
-    indices : PRIMARY,
-    SEQUENTIAL, list of ints
+    indices : PRIMARY, SEQUENTIAL, list of ints
         specifies how to assign the (OWNER_VALUE, int) entry for each dict listed in `output_state_dicts`;
 
         The effects of each value of indices are as follows:

@@ -211,31 +211,38 @@ evaluates the specified OutputStates, and the result is conveyed as the input to
 A ControlMechanism's `function <ControlMechanism.function>` uses `outcome <ControlMechanism.outcome>`
 (the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `control_allocation
 <ControlMechanism.control_allocation>`.  By default, `function <ControlMechanism.function>` is assigned
-the `DefaultAllocationFunction`, which takes a single value as its input, and assigns this as the value of
+the `DefaultAllocationFunction`, which takes a single value as its input, and assigns that as the value of
 each item of `modulatory_allocation <ControlMechanism.control_allocation>`.  Each of these items is assigned as
 the allocation for the corresponding  `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. Thus,
 by default, the ControlMechanism distributes its input as the allocation to each of its `control_signals
-<ControlMechanism.control_signals>. However, this behavior can be modified either by specifying a different
-`function <ControlMechanism.function>`, and/or by specifying that individual ControlSignals  reference different
-items in `control_allocation` as their allocation (i.e., the value of their `variable <ControlSignal.variable>`.
+<ControlMechanism.control_signals>`.  This same behavior also applies to any custom function assigned to a
+ControlMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
+assigned that returns a 2d array with more than one item, and it has the same number of `control_signals
+<ControlMechanism.control_signals>`, then each ControlSignal is assigned to the corresponding item of the function's
+value.  However, these default behaviors can be modified by specifying that individual ControlSignals reference
+different items in `control_allocation` as their `variable <ControlSignal.variable>`
+(see `OutputState_Variable`).
 
 .. _ControlMechanism_Output:
 
 *Output*
 ~~~~~~~~
 
-A ControlMechanism has a `ControlSignal` for each parameter specified in its `control_signals
-<ControlMechanism.control_signals>` attribute, that sends a `ControlProjection` to the `ParameterState` for the
-corresponding parameter. ControlSignals are a type of `OutputState`, and so they are also listed in the
-ControlMechanism's `output_states <ControlMechanism.output_states>` attribute. The parameters modulated by a
-ControlMechanism's ControlSignals can be displayed using its `show <ControlMechanism.show>` method. By default,
-each value of each `ControlSignal` is assigned the value of the corresponding item from the ControlMechanism's
-`control_allocation <ControlMechanism.control_allocation>`;  however, subtypes of ControlMechanism may assign values
-differently.  The `allocation <ControlSignal.allocation>` is used by each ControlSignal to determine
-its `intensity <ControlSignal.intensity>`, which is then assigned as the `value <ControlProjection.value>` of the
-ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used by the
-`ParameterState` to which it projects to modify the value of the parameter it controls (see
-`ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
+A ControlMechanism has a `ControlSignal` for each parameter specified in the **control_signals** argument of its
+constructor, that sends a `ControlProjection` to the `ParameterState` for the corresponding parameter.  The
+ControlSignals are listed in the `control_signals <ControlMechanism.control_signals>` attribute;  since they are a type
+of `OutputState`, they are also listed in the ControlMechanism's `output_states  <ControlMechanism.output_states>`
+attribute. The parameters modulated by a ControlMechanism's ControlSignals can be displayed using its `show
+<ControlMechanism.show>` method. By default, each `ControlSignal` is assigned as its `allocation
+<ControlSignal.allocation>` the value of the  corresponding item of the ControlMechanism's `control_allocation
+<ControlMechanism.control_allocation>`;  however, subtypes of ControlMechanism may assign allocations differently.
+The `default_allocation  <ControlMechanism.default_allocation>` attribute can be used to specify a  default allocation
+for ControlSignals that have not been assigned their own `default_allocation  <ControlSignal.default_allocation>`. The
+`allocation <ControlSignal.allocation>` is used by each ControlSignal to determine its `intensity
+<ControlSignal.intensity>`, which is then assigned to the `value <ControlProjection.value>` of the ControlSignal's
+`ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used by the `ParameterState`
+to which it projects to modify the value of the parameter it controls (see `ControlSignal_Modulation` for description
+of how a ControlSignal modulates the value of a parameter).
 
 .. _ControlMechanism_Output:
 
@@ -424,18 +431,19 @@ def _gating_allocation_setter(value, owning_component=None, execution_id=None, *
 
 class ControlMechanism(ModulatoryMechanism):
     """
-    ControlMechanism(                                            \
-        system=None,                                             \
-        monitor_for_control=None,                                \
-        objective_mechanism=None,                                \
-        function=Linear,                                         \
-        control_signals=None,                                    \
-        modulation=ModulationParam.MULTIPLICATIVE,               \
-        combine_costs=np.sum,                                    \
-        compute_reconfiguration_cost=None,                       \
-        compute_net_outcome=lambda x,y:x-y,                      \
-        params=None,                                             \
-        name=None,                                               \
+    ControlMechanism(                               \
+        system=None,                                \
+        monitor_for_control=None,                   \
+        objective_mechanism=None,                   \
+        function=Linear,                            \
+        default_allocation=None,                    \
+        control_signals=None,                       \
+        modulation=ModulationParam.MULTIPLICATIVE,  \
+        combine_costs=np.sum,                       \
+        compute_reconfiguration_cost=None,          \
+        compute_net_outcome=lambda x,y:x-y,         \
+        params=None,                                \
+        name=None,                                  \
         prefs=None)
 
     Subclass of `AdaptiveMechanism <AdaptiveMechanism>` that modulates the parameter(s)
@@ -500,6 +508,11 @@ class ControlMechanism(ModulatoryMechanism):
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputStates.
+
+    default_allocation : number, list or 1d array : None
+        specifies the default_allocation of any `control_signals <ControlMechanism.control.signals>` for
+        which the **default_allocation** was not specified in its constructor (see default_allocation
+        <ControlMechanism.default_allocation>` for additional details).
 
     control_signals : ControlSignal specification or List[ControlSignal specification, ...]
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
@@ -576,6 +589,12 @@ class ControlMechanism(ModulatoryMechanism):
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
         **monitor_for_control** argument of the ControlMechanism's constructor are used to generate its
         `control_allocation <ControlMechanism.control_allocation>`.
+
+    default_allocation : number, list or 1d array
+        determines the default_allocation of any `control_signals <ControlMechanism.control.signals>` for
+        which the **default_allocation** was not specified in its constructor;  if it is None (not specified)
+        then the ControlSignal's parameters.allocation.default_value is used. See documentation for
+        **default_allocation** argument of ControlSignal constructor for additional details.
 
     control_allocation : 2d array
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
@@ -687,8 +706,9 @@ class ControlMechanism(ModulatoryMechanism):
                  size=None,
                  system:tc.optional(tc.any(System_Base, Composition_Base))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
-                 objective_mechanism=True,
+                 objective_mechanism=None,
                  function=None,
+                 default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
@@ -715,6 +735,7 @@ class ControlMechanism(ModulatoryMechanism):
                                                monitor_for_modulation=monitor_for_control,
                                                objective_mechanism=objective_mechanism,
                                                function=function,
+                                               default_allocation=default_allocation,
                                                combine_costs=combine_costs,
                                                compute_reconfiguration_cost=compute_reconfiguration_cost,
                                                compute_net_outcome=compute_net_outcome,
@@ -724,6 +745,10 @@ class ControlMechanism(ModulatoryMechanism):
                                                name=name,
                                                prefs=prefs,
                                                context=ContextFlags.CONSTRUCTOR)
+
+    def _instantiate_output_states(self, context=None):
+        self._register_modulatory_signal_type(ControlSignal,context)
+        super()._instantiate_output_states(context)
 
     def _instantiate_control_signal(self, control_signal, context):
         return super()._instantiate_modulatory_signal(modulatory_signal=control_signal, context=context)
