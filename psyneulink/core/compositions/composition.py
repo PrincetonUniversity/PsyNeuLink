@@ -720,6 +720,7 @@ __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'STATE_FUNCTION_PARAMS'
 ]
 
+# show_graph animation options
 NUM_TRIALS = 'num_trials'
 UNIT = 'unit'
 DURATION = 'duration'
@@ -728,6 +729,8 @@ SAVE_IMAGES = 'save_images'
 SHOW = 'show'
 INITIAL_FRAME = 'INITIAL_FRAME'
 EXECUTION_SET = 'EXECUTION_SET'
+SHOW_CONTROL = 'show_control'
+SHOW_LEARNING = 'show_learning'
 
 
 logger = logging.getLogger(__name__)
@@ -2993,7 +2996,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_dimensions:bool=False,
                    show_projection_labels:bool=False,
                    direction:tc.enum('BT', 'TB', 'LR', 'RL')='BT',
-                   active_items:tc.optional(list)=None,
+                   # active_items:tc.optional(list)=None,
+                   active_items=None,
                    active_color=BOLD,
                    input_color='green',
                    output_color='red',
@@ -3811,7 +3815,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif output_fmt == 'gif':
             if self.active_item_rendered or INITIAL_FRAME in active_items:
                 G.format = 'gif'
+                # MODIFIED 6/12/19 OLD:
                 execution_phase = self.parameters.context.get(execution_id).execution_phase
+                # # MODIFIED 6/12/19 NEW: [JDC]
+                # execution_phase = self.parameters.context.get().execution_phase
+                # MODIFIED 6/12/19 END
                 if INITIAL_FRAME in active_items:
                     time_string = ''
                     phase_string = ''
@@ -3831,7 +3839,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     phase_string = 'Control phase'
                 else:
                     raise CompositionError(
-                        "PROGRAM ERROR:  Unrecognized phase during execution of {}".format(self.name))
+                        f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase}")
                 label = '\n{}\n{}{}\n'.format(self.name, phase_string, time_string)
                 G.attr(label=label)
                 G.attr(labelloc='b')
@@ -3840,7 +3848,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if INITIAL_FRAME in active_items:
                     index = '-'
                 else:
-                    index = repr(self._component_execution_count)
+                    index = repr(self._component_animation_execution_count)
                 image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + index + '-'
                 image_file = self._animate_directory + '/' + image_filename + '.gif'
                 G.render(filename=image_filename,
@@ -3936,7 +3944,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not hasattr(self, '_animate'):
             # These are meant to be assigned in run method;  needed here for direct call to execute method
             self._animate = False
-            self._component_execution_count = 0
+            self._component_animation_execution_count = 0
 
         # KAM Note 4/29/19
         # The nested var is set to True if this Composition is nested in another Composition, otherwise False
@@ -3996,6 +4004,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
 
+        # COMPILE (if specified) ***************************************************************************************
+
         if bin_execute:
             is_simulation = (execution_context is not None and
                              execution_context.execution_phase == ContextFlags.SIMULATION)
@@ -4045,6 +4055,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 print("WARNING: {}".format(string))
                 bin_execute = False
 
+        # EXECUTE CONTROLLER (if controller_mode == BEFORE) ************************************************************
+
         if (self.enable_controller and
             self.controller_mode is BEFORE and
             self.controller_condition.is_satisfied(scheduler=execution_scheduler,
@@ -4066,13 +4078,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if bin_execute:
                     _comp_ex.execute_node(self.controller)
 
+                if self._animate != False and SHOW_CONTROL in self._animate and self._animate[SHOW_CONTROL]:
+                    self.show_graph(active_items=self.controller,
+                                    **self._animate,
+                                    output_fmt='gif',
+                                    execution_id=execution_id
+                                    )
+                self._component_animation_execution_count += 1
+
+
+        # PREPROCESS (get inputs, call_before_pass, animate first frame) ***********************************************
+
         if bin_execute:
             _comp_ex.execute_node(self.input_CIM, inputs)
 
         if call_before_pass:
             call_with_pruned_args(call_before_pass, execution_context=execution_id)
 
+        # Generate first frame of animation without any active_items
+        if self._animate is not False:
+            # If this fails, the scheduler has no data for execution_id yet.
+            # It also may be the first, so fall back to default execution_id
+            try:
+                self.show_graph(active_items=INITIAL_FRAME,
+                                **self._animate, output_fmt='gif',
+                                execution_id=execution_id)
+            except KeyError:
+                self.show_graph(active_items=INITIAL_FRAME,
+                                **self._animate, output_fmt='gif',
+                                execution_id=self.default_execution_id)
+
+        # EXECUTE (each execution_sets) ********************************************************************************
+
         for next_execution_set in execution_scheduler.run(termination_conds=termination_processing,
+
+            # SETUP EXECUTION ----------------------------------------------------------------------------
                                                           execution_id=execution_id):
             if call_after_pass:
                 if next_pass_after == \
@@ -4115,6 +4155,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not self.learning_enabled:
                 next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
+            # if not self._animate is False and self._animate_unit is EXECUTION_SET:
+            #     self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif',
+            #                     execution_id=execution_id)
+
+            # EXECUTE (each node) -----------------------------------------------------------------------------
+
             # execute each node with EXECUTING in context
             for node in next_execution_set:
                 frozen_values[node] = node.get_output_values(execution_id)
@@ -4129,6 +4175,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             for input_state in node.input_states:
                                 self.input_CIM_states[input_state][1].parameters.value.set(0.0, execution_id,
                                                                                            override=True)
+
+                # MECHANISM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
                 if isinstance(node, Mechanism):
 
@@ -4170,6 +4218,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     node.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
+                # COMPOSITION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
                 elif isinstance(node, Composition):
                     if bin_execute:
                         # Values of node with compiled wrappers are
@@ -4207,6 +4257,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             node.output_CIM.output_states[i].parameters.value.set(v, execution_id, skip_history=True,
                                                                                   skip_log=True, override=True)
 
+                # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+                if not self._animate is False and self._animate_unit is COMPONENT:
+                    self.show_graph(active_items=node, **self._animate, output_fmt='gif',
+                                    execution_id=execution_id)
+                self._component_animation_execution_count += 1
+
+
+                # MANAGE INPUTS (for next # execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # FIX: WHAT IS THIS DOING? TRY WITHOUT?
+
                 if node in input_nodes:
                     if clamp_input:
                         if node in pulse_clamp_inputs:
@@ -4220,6 +4281,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     node.output_states[i].parameters.value.set(frozen_values[node][i], execution_id, override=True,
                                                                skip_history=True, skip_log=True)
 
+
+            # FIX: WHAT IS THIS DOING?
             for node in next_execution_set:
 
                 for i in range(len(node.output_states)):
@@ -4231,6 +4294,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if call_after_pass:
             call_with_pruned_args(call_after_pass, execution_context=execution_id)
+
+        # EXECUTE CONTROLLER (if controller_mode == BEFORE) ************************************************************
 
         if (self.enable_controller and
                 self.controller_mode == AFTER and
@@ -4253,6 +4318,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if bin_execute:
                     _comp_ex.freeze_values()
                     _comp_ex.execute_node(self.controller)
+
+                if self._animate != False and SHOW_CONTROL in self._animate and self._animate[SHOW_CONTROL]:
+                    self.show_graph(active_items=self.controller, **self._animate, output_fmt='gif',
+                                    execution_id=execution_id)
+                self._component_animation_execution_count += 1
+
+        # REPORT RESULTS ***********************************************************************************************
+
 
         # extract result here
         if bin_execute:
@@ -4478,6 +4551,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     item.parameters.value.log_condition = LogCondition.EXECUTION
 
         # Set animation attributes
+        self._component_animation_execution_count=0
         if animate is True:
             animate = {}
         self._animate = animate
