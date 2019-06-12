@@ -11,8 +11,8 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-RUN = True
-SHOW_GRAPH = False
+RUN = False
+SHOW_GRAPH = True
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
@@ -148,9 +148,12 @@ action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]],
 # ************************************** BASIC COMPOSITION *************************************************************
 
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
+# VERSION WITH ocm AS REGULAR NODE:
 # agent_comp.add_nodes([player_percept, predator_percept, prey_percept, trial_type_input_mech, reward_input_mech],
 #                      required_roles=NodeRole.INPUT)
+# VERSION WITH ocm AS controller:
 agent_comp.add_nodes([player_percept, predator_percept, prey_percept, trial_type_input_mech, reward_input_mech])
+
 agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
 
 a = MappingProjection(sender=player_percept, receiver=action_mech.input_states[0])
@@ -185,7 +188,12 @@ ocm = OptimizationControlMechanism(name='EVC',
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
                                                                                                       bias=COST_BIAS))])
 # Add controller to Composition
+
+# VERSION WITH ocm AS REGULAR NODE:
 # agent_comp.add_node(ocm)
+# agent_comp.scheduler_processing.add_condition((ocm,CONTROLLER_CONDITION))
+
+# VERSION WITH ocm AS controller:
 agent_comp.add_controller(ocm)
 agent_comp.enable_controller = True
 agent_comp.controller_mode = BEFORE
