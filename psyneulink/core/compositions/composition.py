@@ -3949,6 +3949,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         runtime_params = self._parse_runtime_params(runtime_params)
 
+        # Assign the same execution_ids to all nodes in the Composition and get it (if it was None)
         execution_id = self._assign_execution_ids(execution_id)
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
