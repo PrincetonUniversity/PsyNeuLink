@@ -1289,9 +1289,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
         current_error_signal_inputs = self.error_signal_input_states
         curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
         error_signal_inputs = variable[curr_indices]
-
         if self.error_matrices is None:
-            self.error_matrices = np.zeros_like(error_signal_inputs)
+            if self.function is BackPropagation or isinstance(self.function, BackPropagation):
+                self.error_matrices = np.zeros_like(error_signal_inputs)
+            else:
+                self.error_matrices = [[0.]]
+
         error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
 
         for i, matrix in enumerate(error_matrices):
