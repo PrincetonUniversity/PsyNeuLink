@@ -2122,12 +2122,14 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
+        execution_id = parse_execution_context(execution_context)
+
         # If the primary function of the mechanism is stateful:
         # (1) reinitialize it, (2) update value, (3) update output states
         if isinstance(self.function, StatefulFunction):
             new_value = self.function.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.atleast_2d(new_value), execution_context=execution_context, override=True)
-            self._update_output_states(execution_id=parse_execution_context(execution_context),
+            self._update_output_states(execution_id=execution_id,
                                        context="REINITIALIZING")
 
         # If the mechanism has an auxiliary integrator function:
@@ -2137,11 +2139,11 @@ class Mechanism_Base(Mechanism):
             if isinstance(self.integrator_function, IntegratorFunction):
                 new_input = self.integrator_function.reinitialize(*args, execution_context=execution_context)[0]
                 self.parameters.value.set(
-                    self.function.execute(variable=new_input, execution_id=execution_context, context="REINITIALIZING"),
+                    self.function.execute(variable=new_input, execution_id=execution_id, context="REINITIALIZING"),
                     execution_context=execution_context,
                     override=True
                 )
-                self._update_output_states(execution_id=parse_execution_context(execution_context),
+                self._update_output_states(execution_id=execution_id,
                                            context="REINITIALIZING")
 
             elif self.integrator_function is None or isinstance(self.integrator_function, type):
