@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Control Mechanisms &mdash; PsyNeuLink 0.5.3.2+187.g383cb4a documentation</title>
+  <title>Control Mechanisms &mdash; PsyNeuLink 0.5.3.2+188.gab5e12a documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+187.g383cb4a',
+              VERSION:'0.5.3.2+188.gab5e12a',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+187
+                0.5.3.2+188
               </div>
             
           
@@ -264,7 +264,7 @@ can be specified for a System.</p>
 <span id="controlmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.</code><code class="descname">ControlMechanism</code><span class="sig-paren">(</span><em>system=None</em>, <em>monitor_for_control=None</em>, <em>objective_mechanism=None</em>, <em>function=Linear</em>, <em>control_signals=None</em>, <em>modulation=ModulationParam.MULTIPLICATIVE</em>, <em>combine_costs=np.sum</em>, <em>compute_reconfiguration_cost=None</em>, <em>compute_net_outcome=lambda x</em>, <em>y:x-y</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.</code><code class="descname">ControlMechanism</code><span class="sig-paren">(</span><em>system=None</em>, <em>monitor_for_control=None</em>, <em>objective_mechanism=None</em>, <em>function=Linear</em>, <em>default_allocation=None</em>, <em>control_signals=None</em>, <em>modulation=ModulationParam.MULTIPLICATIVE</em>, <em>combine_costs=np.sum</em>, <em>compute_reconfiguration_cost=None</em>, <em>compute_net_outcome=lambda x</em>, <em>y:x-y</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> that modulates the parameter(s)
 of one or more <a class="reference internal" href="Component.html"><span class="doc">Component(s)</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -279,6 +279,9 @@ of one or more <a class="reference internal" href="Component.html"><span class="
 should monitor; if a list of <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">OutputState specifications</span></a> is used,
 a default ObjectiveMechanism is created and the list is passed to its <strong>monitored_output_states</strong> argument.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em><em>(</em><em>slope=1</em><em>, </em><em>intercept=0</em><em>)</em>) – specifies function used to combine values of monitored OutputStates.</li>
+<li><strong>default_allocation</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>1d array : None</em>) – specifies the default_allocation of any <code class="xref any docutils literal"><span class="pre">control_signals</span></code> for
+which the <strong>default_allocation</strong> was not specified in its constructor (see default_allocation
+&lt;ControlMechanism.default_allocation&gt;` for additional details).</li>
 <li><strong>control_signals</strong> (<em>ControlSignal specification</em><em> or </em><em>List</em><em>[</em><em>ControlSignal specification</em><em>, </em><em>..</em><em>]</em>) – specifies the parameters to be controlled by the ControlMechanism; a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is created for each
 (see <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">Specifying ControlSignals</span></a> for details of specification).</li>
 <li><strong>modulation</strong> (<em>ModulationParam : ModulationParam.MULTIPLICATIVE</em>) – specifies the default form of modulation used by the ControlMechanism’s <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>,
@@ -348,6 +351,15 @@ which receives its <a class="reference internal" href="Projection.html"><span cl
 <dd><p><em>TransferFunction : default Linear(slope=1, intercept=0)</em> – determines how the <code class="xref any docutils literal"><span class="pre">value</span></code> s of the <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> specified in the
 <strong>monitor_for_control</strong> argument of the ControlMechanism’s constructor are used to generate its
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.default_allocation">
+<code class="descname">default_allocation</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.default_allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or 1d array</em> – determines the default_allocation of any <code class="xref any docutils literal"><span class="pre">control_signals</span></code> for
+which the <strong>default_allocation</strong> was not specified in its constructor;  if it is None (not specified)
+then the ControlSignal’s parameters.allocation.default_value is used. See documentation for
+<strong>default_allocation</strong> argument of ControlSignal constructor for additional details.</p>
 </dd></dl>
 
 <dl class="attribute">

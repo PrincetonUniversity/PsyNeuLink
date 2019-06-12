@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to PsyNeuLink &mdash; PsyNeuLink 0.5.3.2+187.g383cb4a documentation</title>
+  <title>Welcome to PsyNeuLink &mdash; PsyNeuLink 0.5.3.2+188.gab5e12a documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+187.g383cb4a',
+              VERSION:'0.5.3.2+188.gab5e12a',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -69,7 +69,7 @@
             
             
               <div class="version">
-                0.5.3.2+187
+                0.5.3.2+188
               </div>
             
           
@@ -262,9 +262,8 @@ interpreted vs. compiled).</p>
 <p>That said, priorities for ongoing development of PsyNeuLink are:  i) acceleration, using just-in-time
 compilation methods and parallelization; ii) enhancement of the API to facilitate wrapping modules from
 other packages for integration into the PsyNeuLink environment (examples currently exist for Pytorch and Emergent); iii)
-integration of tools for parameter estimation, model comparison and data fitting; and iv) a graphic interface for the</p>
-<blockquote>
-<div>construction of models and realtime display of their execution.</div></blockquote>
+integration of tools for parameter estimation, model comparison and data fitting; and iv) a graphic interface for the
+construction of models and realtime display of their execution.</p>
 </div>
 <div class="section" id="environment-overview">
 <span id="overview"></span><h2>Environment Overview<a class="headerlink" href="#environment-overview" title="Permalink to this headline">¶</a></h2>
@@ -287,8 +286,23 @@ switch to your preferred python3 environment, then run</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
 </pre></div>
 </div>
+<p>Dependencies that are automatically installed (except those noted as optional) include:</p>
+<blockquote>
+<div><ul class="simple">
+<li>numpy (version 1.16)</li>
+<li>matplotlib</li>
+<li>toposort (version 1.4)</li>
+<li>typecheck-decorator (version 1.2)</li>
+<li>pillow</li>
+<li>llvmlite</li>
+<li>mpi4py (optional)</li>
+<li>autograd (optional)</li>
+</ul>
+</div></blockquote>
 <p>Lists of required packages for PsyNeuLink, developing PsyNeuLink, and running the PsyNeuLink tutorial are also
 stored in pip-style <code class="xref any docutils literal"><span class="pre">requirements.txt</span></code>, <code class="xref any docutils literal"><span class="pre">dev_requirements.txt</span></code>, and <code class="xref any docutils literal"><span class="pre">tutorial_requirements.txt</span></code> in the source code.</p>
+<p>PsyNeuLink is an open source project maintined on <a class="reference external" href="https://github.com">GitHub</a>. The repo can be cloned
+from <a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink">here</a>.</p>
 <p>If you have trouble installing the package, or run into other problems, please contact <a class="reference external" href="mailto:psyneulinkhelp&#37;&#52;&#48;princeton&#46;edu">psyneulinkhelp<span>&#64;</span>princeton<span>&#46;</span>edu</a>.</p>
 </div>
 <div class="section" id="tutorial">

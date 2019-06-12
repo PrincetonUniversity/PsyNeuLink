@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.3.2+187.g383cb4a documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.3.2+188.gab5e12a documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+187.g383cb4a',
+              VERSION:'0.5.3.2+188.gab5e12a',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+187
+                0.5.3.2+188
               </div>
             
           
@@ -220,7 +220,7 @@ following Composition methods:</p>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><code class="xref any docutils literal"><span class="pre">add_linear_processing_pathway</span></code></dt>
+<dt><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal"><span class="pre">add_linear_processing_pathway</span></code></a></dt>
 <dd>Adds and connects a list of nodes and/or Projections to the Composition;
 Inserts a default Projection between any adjacent Nodes</dd>
 </dl>
@@ -804,7 +804,7 @@ these can be shown as follows:</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller=None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x119ee7208&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>learning_enabled=False</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller: psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism = None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11ef0a1d0&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>learning_enabled=False</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -926,12 +926,35 @@ executes the controller on every trial.</p>
 <dd><p><em>set</em> – Stores all execution_ids used by this Composition.</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="psyneulink.core.compositions.composition.Composition.results">
+<code class="descname">results</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.results" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>3d array</em> – Stores the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="psyneulink.core.globals.utilities.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Mechanisms in the Composition for
+every <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> executed in a call to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>.  Each item in the outermost
+dimension (axis 0) of the array corresponds to a trial; each item within a trial corresponds to the
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> of an <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="psyneulink.core.globals.utilities.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Mechanism.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.compositions.composition.Composition.simulation_results">
+<code class="descname">simulation_results</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.simulation_results" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>3d array</em> – Stores the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal"><span class="pre">results</span></code></a> for executions of the Composition when it is executed using
+its <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a> method.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_controller">
-<code class="descname">add_controller</code><span class="sig-paren">(</span><em>controller</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_controller" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_controller</code><span class="sig-paren">(</span><em>controller: psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_controller" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> as the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> of the Composition, which gives the OCM access to the
 <a class="reference internal" href="#"><span class="doc">Composition</span></a>’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a> method. This allows the OCM to use simulations to determine
 an optimal Control policy.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway">
+<code class="descname">add_linear_processing_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>feedback=False</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add sequence of Mechanisms or Compositions possibly with intercolated Projections
+Tuples (Mechanism, NodeRole(s)) can be used to assign required_roles to Mechanisms.</p>
 </dd></dl>
 
 <dl class="method">
@@ -991,20 +1014,30 @@ in any role-specification tuples in the <strong>nodes</strong> argument.</li>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_projection">
-<code class="descname">add_projection</code><span class="sig-paren">(</span><em>projection=None</em>, <em>sender=None</em>, <em>receiver=None</em>, <em>feedback=False</em>, <em>learning_projection=False</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_projection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add a projection to the Composition, if it is not already added.</p>
-<p>If a <em>projection</em> is not specified, then a default MappingProjection is created.</p>
-<p>The sender and receiver of a particular Projection vertex within the Composition (the <em>sender</em> and
-<em>receiver</em> arguments of add_projection) must match the <code class="xref any docutils literal"><span class="pre">sender</span></code> and <code class="xref any docutils literal"><span class="pre">receiver</span></code> specified on the Projection object itself.</p>
-<blockquote>
-<div><ul class="simple">
-<li>If the <em>sender</em> and/or <em>receiver</em> arguments are not specified, then the <code class="xref any docutils literal"><span class="pre">sender</span></code>
-and/or <code class="xref any docutils literal"><span class="pre">receiver</span></code> attributes of the Projection object set the missing value(s).</li>
-<li>If the <code class="xref any docutils literal"><span class="pre">sender</span></code> and/or <code class="xref any docutils literal"><span class="pre">receiver</span></code> attributes of the
-Projection object are not specified, then the <em>sender</em> and/or <em>receiver</em> arguments set the missing
-value(s).</li>
+<code class="descname">add_projection</code><span class="sig-paren">(</span><em>projection=None</em>, <em>sender=None</em>, <em>receiver=None</em>, <em>feedback=False</em>, <em>learning_projection=False</em>, <em>name=None</em>, <em>allow_duplicates=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add <strong>projection</strong> to the Composition, if one with the same sender and receiver doesn’t already exist.</p>
+<p>If <strong>projection</strong> is not specified, create a default <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> using <strong>sender</strong> and <strong>receiver</strong>.</p>
+<p>If <strong>projection</strong> is specified:</p>
+<ul class="simple">
+<li>if <strong>projection</strong> has already been instantiated, and <strong>sender</strong> and <strong>receiver</strong> are also specified,
+they must match the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>
+of <strong>projection</strong>.</li>
+<li>if the status of <strong>projection</strong> is <code class="xref any docutils literal"><span class="pre">deferred_init</span></code>:<ul>
+<li>if its <code class="xref any docutils literal"><span class="pre">sender</span></code> and/or <code class="xref any docutils literal"><span class="pre">receiver</span></code> attributes are not specified,
+then <strong>sender</strong> and/or <strong>receiver</strong> are used.</li>
+<li>if <code class="xref any docutils literal"><span class="pre">sender</span></code> and/or <code class="xref any docutils literal"><span class="pre">receiver</span></code> attributes are specified,
+they must match <strong>sender</strong> and/or <strong>receiver</strong> if those have also been specified.</li>
+<li>if a Projection between the specified sender and receiver does <em>not</em> already exist, it is initialized; if
+it <em>does</em> already exist, the request to add it is ignored, however requests to shadow it and/or mark it as
+a`feedback` Projection are implemented (in case it has not already been done for the existing Projection).</li>
 </ul>
-</div></blockquote>
+</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If <strong>projection</strong> is an instantiated projection (i.e., not in <code class="xref any docutils literal"><span class="pre">deferred_init</span></code>) and one already exists
+between its <code class="xref any docutils literal"><span class="pre">sender</span></code> and <code class="xref any docutils literal"><span class="pre">receiver</span></code> a warning is generated.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1013,13 +1046,12 @@ value(s).</li>
 <li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a>) – the sender of <strong>projection</strong></li>
 <li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><em>matrix</em></a>) – the projection to add</li>
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState" title="psyneulink.core.components.states.inputstate.InputState"><em>InputState</em></a>) – the receiver of <strong>projection</strong></li>
-<li><strong>feedback</strong> (<em>Boolean</em>) – <p>When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
-means that each Projections within the cycle actually passes to its receiver its sender’s value from
-the sender’s previous execution.</p>
-<p>When True, this Projection “breaks” the cycle, such that all Nodes execute in sequence, and only the
-Projection marked as ‘feedback’ passes to its receiver its sender’s value from the sender’s previous
-execution.</p>
-</li>
+<li><strong>feedback</strong> (<em>bool</em>) – When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
+means that each Projections within the cycle actually passes to its <code class="xref any docutils literal"><span class="pre">receiver</span></code>
+the <code class="xref any docutils literal"><span class="pre">value</span></code> of its <code class="xref any docutils literal"><span class="pre">sender</span></code> from the previous execution.
+When True, this Projection “breaks” the cycle, such that all Nodes execute in sequence, and only the
+Projection marked as ‘feedback’ passes to its <code class="xref any docutils literal"><span class="pre">receiver</span></code> the
+<code class="xref any docutils literal"><span class="pre">value</span></code> of its <code class="xref any docutils literal"><span class="pre">sender</span></code> from the previous execution.</li>
 </ul>
 </td>
 </tr>

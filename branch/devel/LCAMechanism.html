@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCAMechanism &mdash; PsyNeuLink 0.5.3.2+187.g383cb4a documentation</title>
+  <title>LCAMechanism &mdash; PsyNeuLink 0.5.3.2+188.gab5e12a documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+187.g383cb4a',
+              VERSION:'0.5.3.2+188.gab5e12a',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+187
+                0.5.3.2+188
               </div>
             
           
@@ -199,9 +199,11 @@
 <span id="lcamechanism"></span><h1>LCAMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.transfer.lcamechanism" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>An LCAMechanism is a subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that implements a single-layered leaky competitive accumulator
-network, in which each element is connected to every other element with mutually inhibitory weights. The LCAMechanism’s recurrent
-projection matrix <em>always</em> consists of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> on the diagonal and -<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a> off-diagonal.</p>
+<p>An LCAMechanism is a subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that implements a single-layered <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/11488378">leaky competitng
+accumulator (LCA)</a>  network, in which each element is connected to
+every other element with mutually inhibitory weights. The LCAMechanism’s recurrent projection matrix <em>always</em> consists
+of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> on the diagonal and -<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a>
+off-diagonal.</p>
 <p>When all of the following conditions are true:</p>
 <ul class="simple">
 <li>The <a class="reference internal" href="#"><span class="doc">LCAMechanism</span></a> mechanism has two elements</li>
@@ -308,7 +310,7 @@ other elements</dd>
 
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.</code><code class="descname">LCAMechanism</code><span class="sig-paren">(</span><em>                                           default_variable=None,                     size=None,                                 function=Logistic,                         initial_value=None,                        leak=0.5,                                  competition=1.0,                           self_excitation=0.0,                       noise=0.0,                                 integrator_mode = True                     time_step_size = 0.1                       clip=[float:min, float:max],               params=None,                               name=None,                                 prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.</code><code class="descname">LCAMechanism</code><span class="sig-paren">(</span><em>                                  default_variable=None,                     size=None,                                 function=Logistic,                         initial_value=None,                        leak=0.5,                                  competition=1.0,                           self_excitation=0.0,                       noise=0.0,                                 integrator_mode = True                     time_step_size = 0.1                       clip=[float:min, float:max],               params=None,                               name=None,                                 prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that implements a Leaky Competitive Accumulator.</p>
 <p>The key distinguishing features of an LCAMechanism are:</p>
 <p>1. its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.integrator_function" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>, which implements the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.LeakyCompetingIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">LeakyCompetingIntegrator</span></code></a>. (where <em>rate</em>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputState &mdash; PsyNeuLink 0.5.3.2+187.g383cb4a documentation</title>
+  <title>OutputState &mdash; PsyNeuLink 0.5.3.2+188.gab5e12a documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+187.g383cb4a',
+              VERSION:'0.5.3.2+188.gab5e12a',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+187
+                0.5.3.2+188
               </div>
             
           
@@ -526,8 +526,8 @@ and/or <a class="reference internal" href="#psyneulink.core.components.states.ou
 constructor, the corresponding entries (<em>VARIABLE</em> and <em>FUNCTION</em>) of an <a class="reference internal" href="#outputstate-specification-dictionary"><span class="std std-ref">OutputState specification
 dictionary</span></a>, or in the variable spec (2nd) item of a <a class="reference internal" href="#outputstate-tuple-specification"><span class="std std-ref">3-item tuple</span></a> for the OutputState.</p>
 <div class="section" id="outputstate-variable">
-<h4><em>OutputState</em> <a class="reference internal" href="#psyneulink.core.components.states.outputstate.OutputState.variable" title="psyneulink.core.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a><a class="headerlink" href="#outputstate-variable" title="Permalink to this headline">¶</a></h4>
-<p>By default, an OutputState uses the first (and usually only) item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> as its <a class="reference internal" href="#psyneulink.core.components.states.outputstate.OutputState.variable" title="psyneulink.core.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  However, this can be customized by specifying
+<span id="id7"></span><h4><em>OutputState</em> <a class="reference internal" href="#psyneulink.core.components.states.outputstate.OutputState.variable" title="psyneulink.core.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a><a class="headerlink" href="#outputstate-variable" title="Permalink to this headline">¶</a></h4>
+<p>By default, an OutputState uses the first (and often only) item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> as its <a class="reference internal" href="#psyneulink.core.components.states.outputstate.OutputState.variable" title="psyneulink.core.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  However, this can be customized by specifying
 any other item of its <a class="reference internal" href="#psyneulink.core.components.states.outputstate.OutputState.owner" title="psyneulink.core.components.states.outputstate.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, the full <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> itself, other attributes of the <a class="reference internal" href="#psyneulink.core.components.states.outputstate.OutputState.owner" title="psyneulink.core.components.states.outputstate.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, or any combination of these
 using the following:</p>
 <blockquote>
@@ -805,7 +805,7 @@ If the OutputState has been assigned to:
 
 <dl class="class">
 <dt id="psyneulink.core.components.states.outputstate.StandardOutputStates">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.states.outputstate.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: psyneulink.core.components.component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x1124b3908&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.states.outputstate.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.states.outputstate.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: psyneulink.core.components.component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x11978f320&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.states.outputstate.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputState specification dicts for <a class="reference internal" href="#outputstate-standard"><span class="std std-ref">standard OutputStates</span></a> of a class.</p>
 <p>Parses specification of VARIABLE, assigning indices to OWNER_VALUE if specified.
 Adds &lt;NAME_INDEX&gt; of each OutputState as property of the owner’s class, that returns the index of the OutputState
@@ -817,8 +817,7 @@ in the list.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – the Component to which this OutputState belongs</li>
 <li><strong>output_state_dicts</strong> (<em>list of dicts</em>) – list of dictionaries specifying OutputStates for the Component specified by <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Reduce.owner" title="psyneulink.core.components.functions.combinationfunctions.Reduce.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></li>
-<li><strong>indices</strong> (<em>PRIMARY</em><em>,</em>) – </li>
-<li><strong>list of ints</strong> (<em>SEQUENTIAL</em><em>,</em>) – <p>specifies how to assign the (OWNER_VALUE, int) entry for each dict listed in <code class="xref any docutils literal"><span class="pre">output_state_dicts</span></code>;</p>
+<li><strong>indices</strong> (<em>PRIMARY</em><em>, </em><em>SEQUENTIAL</em><em>, </em><em>list of ints</em>) – <p>specifies how to assign the (OWNER_VALUE, int) entry for each dict listed in <code class="xref any docutils literal"><span class="pre">output_state_dicts</span></code>;</p>
 <p>The effects of each value of indices are as follows:</p>
 <blockquote>
 <div><ul>
@@ -827,7 +826,7 @@ specified;</li>
 <li><em>SEQUENTIAL</em> – assigns sequentially incremented int to (OWNER_VALUE, int) spec of each OutputState,
 ignoring any VARIABLE entries previously specified for individual OutputStates;</li>
 <li>list of ints – assigns each int to an (OWNER_VALUE, int) entry of the corresponding OutputState in
-<a href="#id7"><span class="problematic" id="id8">`</span></a>output_state_dicts, ignoring any VARIABLE entries previously specified for individual OutputStates;</li>
+<a href="#id8"><span class="problematic" id="id9">`</span></a>output_state_dicts, ignoring any VARIABLE entries previously specified for individual OutputStates;</li>
 <li>None – assigns <code class="xref any docutils literal"><span class="pre">None</span></code> to VARIABLE entries for all OutputStates for which it is not already specified.</li>
 </ul>
 </div></blockquote>

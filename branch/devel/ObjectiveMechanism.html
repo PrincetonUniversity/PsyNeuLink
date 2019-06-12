@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.5.3.2+187.g383cb4a documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.5.3.2+188.gab5e12a documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+187.g383cb4a',
+              VERSION:'0.5.3.2+188.gab5e12a',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+187
+                0.5.3.2+188
               </div>
             
           
@@ -261,8 +261,8 @@ with that of the other InputStates to generate the ObjectiveMechanism’s <a cla
 the items in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.variable" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>. However, by assigning values to the ‘weight
 &lt;InputState.weight&gt;` and/or ‘exponent &lt;InputState.exponent&gt;` attributes of the corresponding InputStates,
 it can be configured to calculate differences, ratios,  etc. (see <a class="reference internal" href="#objectivemechanism-weights-and-exponents-example"><span class="std std-ref">example</span></a> below).  The <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>  can also
-be replaced with any <code class="xref any docutils literal"><span class="pre">CombinationFunction</span></code>, or any python function that takes an ndarray as its input (with a number of
-items in axis 0 equal to the number of the ObjectiveMechanism’s InputStates), and generates a 1d array as its result.
+be replaced with any <code class="xref any docutils literal"><span class="pre">CombinationFunction</span></code>, or any python function that takes an 2d array as its input (with a number
+of items in axis 0 equal to the number of the ObjectiveMechanism’s InputStates), and generates a 1d array as its result.
 If it implements <code class="xref std std-keyword docutils literal"><span class="pre">weight</span></code> and/or <code class="xref std std-keyword docutils literal"><span class="pre">exponent</span></code> attributes, those are assigned from <code class="xref any docutils literal"><span class="pre">weight</span></code> and <code class="xref any docutils literal"><span class="pre">exponent</span></code> attributes of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_states" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> (also listed in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor_weights_and_exponents" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor_weights_and_exponents"><code class="xref any py py-attr docutils literal"><span class="pre">monitor_weights_and_exponents</span></code></a> attribute);  otherwise, they are ignored.</p>
 </div>
 <div class="section" id="output">
