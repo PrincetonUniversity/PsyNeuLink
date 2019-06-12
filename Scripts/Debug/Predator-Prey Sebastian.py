@@ -148,6 +148,8 @@ action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]],
 # ************************************** BASIC COMPOSITION *************************************************************
 
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
+# agent_comp.add_nodes([player_percept, predator_percept, prey_percept, trial_type_input_mech, reward_input_mech],
+#                      required_roles=NodeRole.INPUT)
 agent_comp.add_nodes([player_percept, predator_percept, prey_percept, trial_type_input_mech, reward_input_mech])
 agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
 
@@ -183,6 +185,7 @@ ocm = OptimizationControlMechanism(name='EVC',
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
                                                                                                       bias=COST_BIAS))])
 # Add controller to Composition
+# agent_comp.add_node(ocm)
 agent_comp.add_controller(ocm)
 agent_comp.enable_controller = True
 agent_comp.controller_mode = BEFORE
@@ -190,13 +193,13 @@ agent_comp.controller_condition=CONTROLLER_CONDITION
 
 if SHOW_GRAPH:
     # agent_comp.show_graph()
-    # agent_comp.show_graph(show_model_based_optimizer=True, show_cim=True)
+    agent_comp.show_graph(show_controller=True, show_cim=True)
     # agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
-    agent_comp.show_graph(show_controller=True,
-                          show_cim=True,
-                          show_node_structure=ALL,
-                          show_headers=True,
-                          )
+    # agent_comp.show_graph(show_controller=True,
+    #                       show_cim=True,
+    #                       show_node_structure=ALL,
+    #                       show_headers=True,
+    #                       )
 
 
 # *********************************************************************************************************************
@@ -248,7 +251,7 @@ def main():
             run_results = agent_comp.run(inputs={player_percept:[observation[player_coord_slice]],
                                                  predator_percept:[observation[predator_coord_slice]],
                                                  prey_percept:[observation[prey_coord_slice]],
-                                                 trial_type_input_mech:trialType,
+                                                 trial_type_input_mech:[trialType],
                                                  reward_input_mech:[reward]},
                                          execution_id=execution_id,
                                          bin_execute=BIN_EXECUTE,

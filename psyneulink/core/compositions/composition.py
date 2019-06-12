@@ -1391,7 +1391,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 these apply to any items in the list of nodes that are not in a tuple;  these apply to any specified
                 in any role-specification tuples in the **nodes** argument.
         """
-
         if not isinstance(nodes, list):
             raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
                                    f"must be a list of nodes or (node, required_roles) tuples")
@@ -1399,8 +1398,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, (Mechanism, Composition)):
                 self.add_node(node, required_roles)
             elif isinstance(node, tuple):
-                self.add_node(node=node[0],
-                              required_roles=convert_to_list(node[1]).append(convert_to_list(required_roles)))
+                node_specific_roles = convert_to_list(node[1])
+                if required_roles:
+                    node_specific_roles.append(required_roles)
+                self.add_node(node=node[0], required_roles=node_specific_roles)
             else:
                 raise CompositionError(f"Node specified in 'add_nodes' method of '{self.name}' {Composition.__name__} "
                                        f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
@@ -1427,7 +1428,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
         self._update_shadows_dict(controller)
 
-        for input_state in controller.input_states:
+        # Skip first (OUTCOME) input_state
+        for input_state in controller.input_states[1:]:
             if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
                 for proj in input_state.shadow_inputs.path_afferents:
                     sender = proj.sender
@@ -1439,6 +1441,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         shadow_proj = MappingProjection(sender=proj.sender, receiver=input_state)
                         shadow_proj._activate_for_compositions(self)
+            # MODIFIED 6/11/19 NEW: [JDC]
+            for proj in input_state.path_afferents:
+                proj._activate_for_compositions(self)
+            # MODIFIED 6/11/19 END
 
     def _parse_projection_spec(self, projection, name):
         if isinstance(projection, (np.ndarray, np.matrix, list)):

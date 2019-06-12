@@ -484,8 +484,6 @@ class GatingSignal(ModulatorySignal):
             context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
 
-        # Note: assign is not currently used by GatingSignal;
-        #       it is included here for consistency with OutputState and possible use by subclasses.
         if index is None and owner is not None:
             allocation = owner.gating_allocation
             if len(allocation)==1:

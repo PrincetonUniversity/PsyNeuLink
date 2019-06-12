@@ -367,6 +367,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
     # Construct the Composition using the control Mechanism as its controller:
     Stroop_model = Composition(name='Stroop Model', controller=control)
 
+    # Print statements show state of
     np.set_printoptions(precision=2)
     t = 0
     def print_after():
@@ -467,15 +468,7 @@ following output::
         decision:	[ 1.][ 2.95]
         conflict:	  [ 0.57]
 
-    End of trial 4:
-                    color  word
-        task:		[ 1.  0.]
-        task gain:	   [ 0.57]
-                    red   green
-        output:		[ 0.67  0.33]
-        decision:	[ 1.][ 2.77]
-        conflict:	  [ 0.55]
-
+The control
 
 .. _BasicsAndSampler_Logging_and_Animation:
 
