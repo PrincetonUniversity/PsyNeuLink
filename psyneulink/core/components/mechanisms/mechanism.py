@@ -2469,7 +2469,7 @@ class Mechanism_Base(Mechanism):
             state = self.input_states[i]
             state.update(execution_id=execution_id, params=runtime_params, context=context)
 
-        return self.get_input_values(execution_id)
+        return np.array(self.get_input_values(execution_id))
 
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
 
