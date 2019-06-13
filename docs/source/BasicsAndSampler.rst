@@ -425,20 +425,18 @@ the ``red`` and ``green`` values).  The result passed to the ``control`` Mechani
 reinitialize at the beginning of each `trial <TimeScale.TRIAL>`; and,since the ``control`` Mechanism was assigned as
 the Composition's `controller <Composition.controller>`, it executes at the end of each `trial <TimeScale.TRIAL>`
 after all of the other Mechanisms in the Composition have executed, which has its effects on the ``task`` Mechanism
-the next time it executes (i.e., on the next `trial <TimeScale.TRIAL>`;  a Composition's `controller <Composition
-.controller>` can also be configured to execute at the start of a `trial <TimeScale.TRIAL>`). Finally, the
+the next time it executes (i.e., on the next `trial <TimeScale.TRIAL>`;  a Composition's `controller
+<Composition.controller>` can also be configured to execute at the start of a `trial <TimeScale.TRIAL>`). Finally, the
 **call_after_trial** argument of the Composition's `run <Composition.run>` method is used to print Mechanism values
 at the end of each `trial <TimeScale.TRIAL>`.  The **animate** argument of the `run <Composition.run>` method can be
 used to generate an animation of the Composition's execution, as shown below::
 
-.. _BasicsAndSampler_Stroop_Movie:
 
 .. figure:: _static/BasicsAndSampler_Stroop_Model_movie.gif
    :width: 75%
 
-   **Animationg of Stroop Model with Controller.** Generate by a call to ``Stroop_model.show_graph(show_controller)
-   with ``animate={"show_controller":True}`` in call to the `run <Composition.run>``.
-
+   **Animation of Stroop Model with Controller.** Generate by a call to ``Stroop_model.show_graph(show_controller)
+   with ``animate={"show_controller":True}`` in call to the `run <Composition.run>`.
 
 
 Running it for several `trials <TimeScale.TRIAL>` produces the
@@ -482,7 +480,7 @@ following output::
         decision:	[ 1.][ 2.95]
         conflict:	  [ 0.57]
 
-Notice that initially, because control starts out relatively low (``default_allocation=[0.5]), the representation of
+Notice that initially, because control starts out relatively low (``default_allocation=[0.5]``), the representation of
 the instruction in the ``task`` Mechanism (color = ``[1,0]``) is relatively weak (``[0.67, 0.51]``).  As a result,
 the model generates the incorrect response to the incongrent stimulus([-1] = green, rather than [1] = red), due to
 the stronger weights of the Projections in the ``word_pathway``.  However, beacuse this is associated with a moderate
@@ -495,7 +493,7 @@ internal simulations to optimize the amount of control to optimize some criterio
 script), or to implement `model-based learning <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_
 (see XXX LVOC script).
 
-.. XXX
+.. XXXX
 .. Change names of:
 ..   - ``output`` Mechanism above to ``phonology``
 ..   - ``color_hidden`` to ``color``
