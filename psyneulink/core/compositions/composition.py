@@ -3817,26 +3817,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 G.format = 'gif'
                 execution_phase = self.parameters.context.get(execution_id).execution_phase
                 if INITIAL_FRAME in active_items:
+                    phase_string = '                                            '
                     time_string = ''
-                    phase_string = ''
                 elif execution_phase == ContextFlags.PROCESSING:
                     # time_string = repr(self.scheduler_processing.clock.simple_time)
-                    time = self.scheduler_processing.get_clock(execution_id).time
-                    time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
-                        format(time.run, time.trial, time.pass_, time.time_step)
                     phase_string = 'Processing Phase - '
+                    time = self.scheduler_processing.get_clock(execution_id).time
+                    time_string = \
+                        f"Time(run: {time.run}, trial: {time.trial}, pass: {time.pass_}, time_step: {time.time_step}"
                 # elif execution_phase == ContextFlags.LEARNING:
                 #     time = self.scheduler_learning.get_clock(execution_id).time
                 #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
                 #         format(time.run, time.trial, time.pass_, time.time_step)
                 #     phase_string = 'Learning Phase - '
                 elif execution_phase == ContextFlags.CONTROL:
-                    time_string = ''
                     phase_string = 'Control phase'
+                    time_string = ''
                 else:
                     raise CompositionError(
                         f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase}")
-                label = '\n{}\n{}{}\n'.format(self.name, phase_string, time_string)
+                label = f'\n{self.name}\n{phase_string}{time_string}\n'
                 G.attr(label=label)
                 G.attr(labelloc='b')
                 G.attr(fontname='Helvetica')
@@ -4097,8 +4097,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     and execution_phase != ContextFlags.SIMULATION
             ):
                 if self.controller and not bin_execute:
-                    # # MODIFIED 6/12/19 OLD:
-                    # self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+                    # MODIFIED 6/12/19 OLD:
+                    self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
                     # MODIFIED 6/12/19 NEW: [JDC]
                     control_allocation = self.controller.execute(execution_id=execution_id, context=context)
                     self.controller._apply_control_allocation(control_allocation, execution_id=execution_id,
