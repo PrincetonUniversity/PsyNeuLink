@@ -4103,8 +4103,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
                     # FIX: END REMOVE
                     self.controller.execute(execution_id=execution_id, context=context)
-                    # self.controller._apply_control_allocation(control_allocation, execution_id=execution_id,
-                    #                                                 runtime_params=runtime_params, context=context)
 
                 if bin_execute:
                     _comp_ex.execute_node(self.controller)
@@ -4394,8 +4392,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
                     # FIX: END REMOVE
                     self.controller.execute(execution_id=execution_id, context=context)
-                    # self.controller._apply_control_allocation(control_allocation, execution_id=execution_id,
-                    #                                                 runtime_params=runtime_params, context=context)
 
                 if bin_execute:
                     _comp_ex.freeze_values()
