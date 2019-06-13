@@ -85,7 +85,7 @@ stim_list_dict = {target_stim: targetFeatures,
                   flanker_stim: flankerFeatures,
                   reward: rewardValues}
 
-evc_gratton.show_graph(show_model_based_optimizer=True,
+evc_gratton.show_graph(show_controller=True,
                        show_node_structure=ALL)
 # evc_gratton.show_graph(show_model_based_optimizer=True, show_node_structure=ALL)
 
