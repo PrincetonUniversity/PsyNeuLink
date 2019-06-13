@@ -4498,8 +4498,9 @@ class AccuracyIntegrator(IntegratorFunction):  # -------------------------------
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         previous_value = self.get_previous_value(execution_id)
 
-        print("New Trial")
-        print("Input to Accuracy Function: ", variable)
+        # print("New Trial")
+        # print("Input to Accuracy Function: ", variable)
+
         # Unload contents of trialInformation
         # Origin Node Inputs
         taskInputs = variable[0]
@@ -4515,32 +4516,32 @@ class AccuracyIntegrator(IntegratorFunction):  # -------------------------------
         accuracy = 0
 
         # Beginning of Accuracy Calculation
-        colorTrial = (taskInputs[0] == 1)
-        motionTrial = (taskInputs[1] == 1)
+        colorTrial = (taskInputs[0] > 0)
+        motionTrial = (taskInputs[1] > 0)
 
         # Based on the task dimension information, decide which response is "correct"
         # Obtain accuracy probability from DDM thresholds in "correct" direction
         if colorTrial:
-            if stimulusInputs[0] == 1:
+            if stimulusInputs[0] > 0:
                 accuracy = upperThreshold[0]
-            elif stimulusInputs[0] == -1:
+            elif stimulusInputs[0] < 0:
                 accuracy = lowerThreshold[0]
 
         if motionTrial:
-            if stimulusInputs[1] == 1:
+            if stimulusInputs[1] > 0:
                 accuracy = upperThreshold[0]
-            elif stimulusInputs[1] == -1:
+            elif stimulusInputs[1] < 0:
                 accuracy = lowerThreshold[0]
 
         # Accounts for initialization runs that have no variable input
         # if len(accuracy) == 0:
         #     accuracy = [0]
 
-        print("Accuracy: ", accuracy)
-        print("Previous Value: ", round(previous_value[0], 10))
+        #print("Accuracy: ", accuracy)
+        #print("Previous Value: ", round(previous_value[0], 10))
 
         adjusted_value = accuracy + previous_value
-        print("Current Value: ", round(adjusted_value[0], 10))
+        #print("Current Value: ", round(adjusted_value[0], 10))
 
         if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(adjusted_value, execution_id)
@@ -4745,8 +4746,8 @@ class RewardRateIntegrator(IntegratorFunction):  # -----------------------------
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         previous_value = self.get_previous_value(execution_id)
 
-        print("New Trial")
-        print("Input to Accuracy Function: ", variable)
+        #print("New Trial")
+        #print("Input to Accuracy Function: ", variable)
         # Unload contents of trialInformation
         # Origin Node Inputs
 
@@ -4783,11 +4784,11 @@ class RewardRateIntegrator(IntegratorFunction):  # -----------------------------
 
         rewardRate = reward * accuracy / (interTrialInterval + reactionTime)
 
-        print("Accuracy: ", accuracy)
-        print("Previous Value: ", round(previous_value[0], 10))
+        #print("Accuracy: ", accuracy)
+        #print("Previous Value: ", round(previous_value[0], 10))
 
         adjusted_value = rewardRate + previous_value
-        print("Current Value: ", round(adjusted_value[0], 10))
+        #print("Current Value: ", round(adjusted_value[0], 10))
 
         if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value.set(adjusted_value, execution_id)
