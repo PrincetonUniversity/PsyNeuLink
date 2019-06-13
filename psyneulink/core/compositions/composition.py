@@ -3962,13 +3962,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
 
+        # MODIFIED 6/12/19 NEW: [JDC] MOVED
         # FIX: 6/12/19: NECESSARY?  WHY NOT JUST USE scheduler_processing below
         execution_scheduler = scheduler_processing
+        # MODIFIED 6/12/19 END
 
         execution_context = self.parameters.context.get(execution_id)
 
+        # MODIFIED 6/12/19 NEW: [JDC] MOVED
         if termination_processing is None:
             termination_processing = self.termination_processing
+        # MODIFIED 6/12/19 END
 
         # Skip initialization if possible (for efficiency):
         # - and(execution_id and context have not changed
@@ -4005,6 +4009,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs = self._adjust_execution_stimuli(inputs)
             self._assign_values_to_input_CIM(inputs, execution_id=execution_id)
 
+        # # MODIFIED 6/12/19 OLD: [MOVED]
+        # if termination_processing is None:
+        #     termination_processing = self.termination_processing
+        # MODIFIED 6/12/19 END
+
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping
         next_pass_before = 1
@@ -4014,6 +4023,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, input_nodes)
             pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, input_nodes)
             no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, input_nodes)
+
+        # # MODIFIED 6/12/19 OLD: [MOVED]
+        # # run scheduler to receive sets of nodes that may be executed at this time step in any order
+        # execution_scheduler = scheduler_processing
+        # MODIFIED 6/12/19 END
 
         # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
 
