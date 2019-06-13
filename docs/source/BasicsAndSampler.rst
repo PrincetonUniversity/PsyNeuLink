@@ -493,7 +493,7 @@ internal simulations to optimize the amount of control to optimize some criterio
 script), or to implement `model-based learning <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_
 (see XXX LVOC script).
 
-.. XXX
+.. XXXX
 .. Change names of:
 ..   - ``output`` Mechanism above to ``phonology``
 ..   - ``color_hidden`` to ``color``
