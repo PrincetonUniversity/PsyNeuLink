@@ -3827,12 +3827,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 execution_phase = self.parameters.context.get(execution_id).execution_phase
                 if INITIAL_FRAME in active_items:
                     # phase_string = ''
-                    phase_string = 'Processing Phase - '
+                    phase_string = f'%16s' % 'Initializing'  + ' - '
                     # time_string = ''
-                    time_string = f"Time(run: _, trial: _, pass: _, time_step: _"
+                    time_string = f"Time(run: _, trial: _, pass: _, time_step: _)"
                 elif execution_phase == ContextFlags.PROCESSING:
                     # time_string = repr(self.scheduler_processing.clock.simple_time)
-                    phase_string = 'Processing Phase - '
+                    phase_string = f'%16s' % 'Processing Phase'  + ' - '
                     time = self.scheduler_processing.get_clock(execution_id).time
                     time_string = \
                         f"Time(run: {time.run}, trial: {time.trial}, pass: {time.pass_}, time_step: {time.time_step})"
@@ -3842,15 +3842,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #         format(time.run, time.trial, time.pass_, time.time_step)
                 #     phase_string = 'Learning Phase - '
                 elif execution_phase == ContextFlags.CONTROL:
-                    phase_string = 'Control phase'
-                    time_string = ''
+                    phase_string = f'%16s' % 'Control Phase'  + ' - '
+                    # time_string = ''
+                    time = self.scheduler_processing.get_clock(execution_id).time
+                    time_string = \
+                        f"Time(run: {time.run}, trial: {time.trial}, pass: {time.pass_}, time_step: {time.time_step})"
                 else:
                     raise CompositionError(
                         f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
                 label = f'\n{self.name}\n{phase_string}{time_string}\n'
                 G.attr(label=label)
                 G.attr(labelloc='b')
-                G.attr(fontname='Helvetica')
+                G.attr(fontname='Monaco')
                 G.attr(fontsize='14')
                 if INITIAL_FRAME in active_items:
                     index = '-'
