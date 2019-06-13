@@ -1291,7 +1291,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         error_signal_inputs = variable[curr_indices]
         if self.error_matrices is None:
             if self.function is BackPropagation or isinstance(self.function, BackPropagation):
-                self.error_matrices = np.zeros_like(error_signal_inputs)
+                # self.error_matrices = np.zeros_like(error_signal_inputs)
+                self.error_matrices = np.ones_like(error_signal_inputs)
             else:
                 self.error_matrices = [[0.]]
 

@@ -271,6 +271,7 @@ class TestReinforcement:
 
         assert np.allclose(trial_50_expected, delta_vals[49][0])
 
+
 class TestNestedLearning:
 
     def test_nested_learning(self):
@@ -325,6 +326,7 @@ class TestNestedLearning:
         #
         # print(model.run(inputs=stimuli))
 
+
 class TestBackProp:
 
     def test_back_prop(self):
@@ -345,10 +347,159 @@ class TestBackProp:
         comp.add_linear_processing_pathway(pathway=[input_layer, hidden_layer])
         learning_components = comp.add_back_propagation_pathway(pathway=[hidden_layer, output_layer])
         learned_projection = learning_components[pnl.LEARNED_PROJECTION]
+        learned_projection.log.set_log_conditions(pnl.MATRIX)
         learning_mechanism = learning_components[pnl.LEARNING_MECHANISM]
         target_mechanism = learning_components[pnl.TARGET_MECHANISM]
         comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
-
+        for node in comp.nodes:
+            node.log.set_log_conditions(pnl.VALUE)
         comp.show_graph()
+        eid="eid"
         comp.run(inputs={input_layer: [[1.0, 1.0]],
-                         target_mechanism: [[1.0, 1.0]]})
+                         target_mechanism: [[1.0, 1.0]]},
+                 execution_id=eid)
+        print("\n\n\n")
+        for node in comp.nodes:
+            try:
+                log = node.log.nparray_dictionary()
+            except ValueError:
+                continue
+            if eid in log:
+                print(node.name, " values:")
+                values = log[eid][pnl.VALUE]
+                for i, val in enumerate(values):
+                    print("     Trial ", i, ":  ", val)
+                print("\n - - - - - - - - - - - - - - - - - - \n")
+            else:
+                print(node.name, " EMPTY LOG!")
+
+    def test_stroop_with_backprop(self):
+        # Mechanisms
+        color = pnl.TransferMechanism(size=2,
+                                      function=pnl.Linear(),
+                                      name='color')
+        word = pnl.TransferMechanism(size=2,
+                                     function=pnl.Linear(),
+                                     name='word')
+        hidden = pnl.TransferMechanism(size=2,
+                                       function=pnl.Logistic(),
+                                       name='hidden')
+        response = pnl.TransferMechanism(size=2,
+                                         function=pnl.Logistic(),
+                                         name='response')
+        output = pnl.TransferMechanism(size=2,
+                                       function=pnl.Logistic(),
+                                       name='output')
+        # Weights
+        ch_weights = np.arange(4).reshape((2, 2))
+        wh_weights = np.arange(4).reshape((2, 2))
+        ho_weights = np.arange(4).reshape((2, 2))
+
+        # Assemble Composition
+        comp = pnl.Composition(name='stroop-with-learning')
+        comp.add_linear_processing_pathway(pathway=[color, ch_weights, hidden])
+        comp.add_linear_processing_pathway(pathway=[word, wh_weights, hidden])
+        comp.add_linear_processing_pathway(pathway=[hidden, ho_weights, output, response])
+
+        # color_naming_process = Process(
+        #     default_variable=[1, 2.5],
+        #     pathway=[colors, CH_Weights, hidden, HO_Weights, response],
+        #     learning=LEARNING,
+        #     target=[2, 2],
+        #     name='Color Naming',
+        #     prefs=process_prefs,
+        # )
+
+        # word_reading_process = Process(
+        #     default_variable=[.5, 3],
+        #     pathway=[words, WH_Weights, hidden],
+        #     name='Word Reading',
+        #     learning=LEARNING,
+        #     target=[3, 3],
+        #     prefs=process_prefs,
+        # )
+        #
+        # s = System(
+        #     processes=[color_naming_process, word_reading_process],
+        #     targets=[20, 20],
+        #     name='Stroop Model',
+        #     prefs=system_prefs,
+        # )
+
+        # def show_target():
+        #     print('\nColor Naming\n\tInput: {}\n\tTarget: {}'.format(
+        #         [np.ndarray.tolist(item.parameters.value.get(s)) for item in colors.input_states], s.targets))
+        #     print('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.format(
+        #         [np.ndarray.tolist(item.parameters.value.get(s)) for item in words.input_states], s.targets))
+        #     print('Response: \n', response.output_state.parameters.value.get(s))
+        #     print('Hidden-Output:')
+        #     print(HO_Weights.get_mod_matrix(s))
+        #     print('Color-Hidden:')
+        #     print(CH_Weights.get_mod_matrix(s))
+        #     print('Word-Hidden:')
+        #     print(WH_Weights.get_mod_matrix(s))
+
+        # stim_list_dict = {
+        #     colors: [[1, 1]],
+        #     words: [[-2, -2]]
+        # }
+        #
+        # target_list_dict = {response: [[1, 1]]}
+        #
+        # results = s.run(
+        #     num_trials=2,
+        #     inputs=stim_list_dict,
+        #     targets=target_list_dict,
+        #     call_after_trial=show_target,
+        # )
+        #
+        # results_list = []
+        # for elem in s.results:
+        #     for nested_elem in elem:
+        #         nested_elem = nested_elem.tolist()
+        #         try:
+        #             iter(nested_elem)
+        #         except TypeError:
+        #             nested_elem = [nested_elem]
+        #         results_list.extend(nested_elem)
+        #
+        # objective_response = s.mechanisms[3]
+        # objective_hidden = s.mechanisms[7]
+        # from pprint import pprint
+        # pprint(CH_Weights.__dict__)
+        # print(CH_Weights._parameter_states["matrix"].value)
+        # print(CH_Weights.get_mod_matrix(s))
+        # expected_output = [
+        #     (colors.output_states[0].parameters.value.get(s), np.array([1., 1.])),
+        #     (words.output_states[0].parameters.value.get(s), np.array([-2., -2.])),
+        #     (hidden.output_states[0].parameters.value.get(s), np.array([0.13227553, 0.01990677])),
+        #     (response.output_states[0].parameters.value.get(s), np.array([0.51044657, 0.5483048])),
+        #     (objective_response.output_states[0].parameters.value.get(s), np.array([0.48955343, 0.4516952])),
+        #     (objective_response.output_states[MSE].parameters.value.get(s), np.array(0.22184555903789838)),
+        #     (CH_Weights.get_mod_matrix(s), np.array([
+        #         [0.02512045, 1.02167245],
+        #         [2.02512045, 3.02167245],
+        #     ])),
+        #     (WH_Weights.get_mod_matrix(s), np.array([
+        #         [-0.05024091, 0.9566551],
+        #         [1.94975909, 2.9566551],
+        #     ])),
+        #     (HO_Weights.get_mod_matrix(s), np.array([
+        #         [0.03080958, 1.02830959],
+        #         [2.00464242, 3.00426575],
+        #     ])),
+        #     (results, [[np.array([0.50899214, 0.54318254])], [np.array([0.51044657, 0.5483048])]]),
+        # ]
+        #
+        # for i in range(len(expected_output)):
+        #     val, expected = expected_output[i]
+        #     # setting absolute tolerance to be in accordance with reference_output precision
+        #     # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
+        #     # which WILL FAIL unless you gather higher precision values to use as reference
+        #     np.testing.assert_allclose(val, expected, atol=1e-08,
+        #                                err_msg='Failed on expected_output[{0}]'.format(i))
+        #
+        # # KDM 10/16/18: Comparator Mechanism for Hidden is not executed by the system, because it's not associated with
+        # # an output mechanism. So it actually should be None instead of previously [0, 0] which was likely
+        # # a side effect with of conflation of different execution contexts
+        # assert objective_hidden.output_states[0].parameters.value.get(s) is None
