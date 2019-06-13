@@ -3815,11 +3815,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif output_fmt == 'gif':
             if self.active_item_rendered or INITIAL_FRAME in active_items:
                 G.format = 'gif'
-                # MODIFIED 6/12/19 OLD:
                 execution_phase = self.parameters.context.get(execution_id).execution_phase
-                # # MODIFIED 6/12/19 NEW: [JDC]
-                # execution_phase = self.parameters.context.get().execution_phase
-                # MODIFIED 6/12/19 END
                 if INITIAL_FRAME in active_items:
                     time_string = ''
                     phase_string = ''
@@ -4019,7 +4015,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, input_nodes)
             no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, input_nodes)
 
-
         # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
 
         # Compile controller execution (if compilation is specified) --------------------------------
@@ -4088,7 +4083,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     and execution_phase != ContextFlags.SIMULATION
             ):
                 if self.controller and not bin_execute:
-                    self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+                    # # MODIFIED 6/12/19 OLD:
+                    # self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+                    # MODIFIED 6/12/19 NEW: [JDC]
                     control_allocation = self.controller.execute(execution_id=execution_id, context=context)
                     self.controller._apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
@@ -4107,6 +4104,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # EXECUTE (each execution_set) *********************************************************************************
 
         # PREPROCESS (get inputs, call_before_pass, animate first frame) ----------------------------------
+
+        if execution_context:
+            entry_execution_phase = execution_context.execution_phase
+            self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
         if bin_execute:
             _comp_ex.execute_node(self.input_CIM, inputs)
@@ -4181,10 +4182,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not self.learning_enabled:
                 next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
-            # FIX: 6/12/19 NEEDED?
-            # if not self._animate is False and self._animate_unit is EXECUTION_SET:
-            #     self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif',
-            #                     execution_id=execution_id)
+            if not self._animate is False and self._animate_unit is EXECUTION_SET:
+                self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif',
+                                execution_id=execution_id)
 
             # EXECUTE (each node) --------------------------------------------------------------------------
 
@@ -4196,6 +4196,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 frozen_values[node] = node.get_output_values(execution_id)
 
                 # FIX: 6/12/19 Deprecate?
+                # Handle input clamping
                 if node in input_nodes:
                     if clamp_input:
                         if node in hard_clamp_inputs:
@@ -4312,6 +4313,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # MANAGE INPUTS (for next # execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
                 # FIX: 6/12/19 Deprecate?
+                # Handle input clamping
                 if node in input_nodes:
                     if clamp_input:
                         if node in pulse_clamp_inputs:
@@ -4339,6 +4341,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if call_after_pass:
             call_with_pruned_args(call_after_pass, execution_context=execution_id)
+
+        # Restore execution_context to state entry of execute method
+        if execution_context:
+            execution_context.execution_phase = entry_execution_phase
 
         # EXECUTE CONTROLLER (if controller_mode == BEFORE) ************************************************************
 
@@ -4371,8 +4377,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # REPORT RESULTS ***********************************************************************************************
 
-
-        # extract result here
+        # Extract result here
         if bin_execute:
             _comp_ex.freeze_values()
             _comp_ex.execute_node(self.output_CIM)
