@@ -246,7 +246,7 @@ class LLVMBuilderContext:
 
         if "const_params" in debug_env:
             const_params = params.type.pointee(composition._get_param_initializer(None))
-            params = builder.alloca(const_params.type)
+            params = builder.alloca(const_params.type, name="const_params_loc")
             builder.store(const_params, params)
 
         if "alloca_data" in debug_env:
