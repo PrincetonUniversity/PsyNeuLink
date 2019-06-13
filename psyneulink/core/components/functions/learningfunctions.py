@@ -577,7 +577,7 @@ class BayesGLM(LearningFunction):
             context
         )
         predictors = variable[0]
-        dependent_vars = variable[1]
+        dependent_vars = variable[1].astype(float)
 
         # online update rules as per the given reference
         Lambda_n = (predictors.T @ predictors) + Lambda_prior

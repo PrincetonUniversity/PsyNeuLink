@@ -407,8 +407,8 @@ def decision_variable_to_array(x):
     else:
         return [0,x]
 
-DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or lower threshold in TRIAL mode
-                              {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL in TIME_STEP mode
+DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analtyic function
+                              {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL for Integrator function
                               {NAME: PROBABILITY_UPPER_THRESHOLD},  # Accuracy (TRIAL mode only)
                               {NAME: PROBABILITY_LOWER_THRESHOLD},  # Error rate (TRIAL mode only)
                               {NAME: RT_CORRECT_MEAN},              # (DriftDiffusionAnalytical only)
@@ -1182,8 +1182,8 @@ class DDM(ProcessingMechanism_Base):
         try:
             single_value = self.function.get_previous_value(execution_context)
         except AttributeError:
-            # Analytical function so fall back to more standard behavior
-            return super().is_finished(execution_context)
+            # Analytical function so it is always finished after it is called
+            return True
 
         # indexing into a matrix doesn't reduce dimensionality
         if not isinstance(single_value, (np.matrix, str)):

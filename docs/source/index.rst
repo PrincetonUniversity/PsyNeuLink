@@ -55,13 +55,19 @@ What PsyNeuLink **IS**
 It is:
 
  - *open source*, freeing users of the costs or restrictions associated with proprietary software.
+
  ..
+
  - *computationally general* -- it can be used to implement, seamlessly integrate, and simulate interactions among
    disparate components that vary in their granularity of representation and function (from individual neurons or
    neural populations to functional subsystems and abstract cognitive functions) and at any time scale of execution.
+
  ..
+
  - *integrative* -- it provides a standard and accessible environment for model comparison, sharing, and documentation;
+
  ..
+
  - *extensible* -- it has an interface (API) that allows it to be used with other powerful tools for implementing
    individual components, such as:
 
@@ -110,7 +116,7 @@ That said, priorities for ongoing development of PsyNeuLink are:  i) acceleratio
 compilation methods and parallelization; ii) enhancement of the API to facilitate wrapping modules from
 other packages for integration into the PsyNeuLink environment (examples currently exist for Pytorch and Emergent); iii)
 integration of tools for parameter estimation, model comparison and data fitting; and iv) a graphic interface for the
- construction of models and realtime display of their execution.
+construction of models and realtime display of their execution.
 
 .. _Overview:
 
@@ -144,8 +150,23 @@ switch to your preferred python3 environment, then run
 
     pip install .
 
+Dependencies that are automatically installed (except those noted as optional) include:
+
+   * numpy (version 1.16)
+   * matplotlib
+   * toposort (version 1.4)
+   * typecheck-decorator (version 1.2)
+   * pillow
+   * llvmlite
+   * mpi4py (optional)
+   * autograd (optional)
+
 Lists of required packages for PsyNeuLink, developing PsyNeuLink, and running the PsyNeuLink tutorial are also
 stored in pip-style `requirements.txt`, `dev_requirements.txt`, and `tutorial_requirements.txt` in the source code.
+
+
+PsyNeuLink is an open source project maintined on `GitHub <https://github.com>`_. The repo can be cloned
+from `here <https://github.com/PrincetonUniversity/PsyNeuLink>`_.
 
 If you have trouble installing the package, or run into other problems, please contact psyneulinkhelp@princeton.edu.
 

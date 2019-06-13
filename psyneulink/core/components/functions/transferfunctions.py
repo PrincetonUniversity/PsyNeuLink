@@ -53,7 +53,7 @@ from psyneulink.core.components.component import function_type
 from psyneulink.core.globals.keywords import \
     ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, GAUSSIAN_DISTORT_FUNCTION, GAIN, \
     FULL_CONNECTIVITY_MATRIX, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
-    IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, \
+    IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, INVERSE_HOLLOW_MATRIX,\
     LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
     MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, OFFSET, \
     PARAMETER_STATE_PARAMS, PER_ITEM, PROB, OUTPUT_TYPE, PROB_INDICATOR, \
@@ -3093,6 +3093,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
             + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
             + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
             + HOLLOW_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
+            + INVERSE_HOLLOW_MATRIX: 0's on diagonal, -1's elsewhere (must be square matrix), otherwise generates error
             + FULL_CONNECTIVITY_MATRIX: all 1's
             + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
         + 2D list or np.ndarray of numbers
@@ -3134,6 +3135,12 @@ def get_matrix(specification, rows=1, cols=1, context=None):
             raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
         return 1-np.identity(rows)
+
+    if specification == INVERSE_HOLLOW_MATRIX:
+        if rows != cols:
+            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
+                                format(rows, cols, specification))
+        return (1-np.identity(rows)) * -1
 
     if specification == RANDOM_CONNECTIVITY_MATRIX:
         return np.random.rand(rows, cols)
