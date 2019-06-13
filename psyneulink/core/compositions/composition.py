@@ -4904,46 +4904,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return trial_output
 
-    # def save_state(self):
-    #     saved_state = {}
-    #     for node in self.stateful_nodes:
-    #         # "save" the current state of each stateful mechanism by storing the values of each of its stateful
-    #         # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
-    #         # the reinitialize method on each stateful mechanism.
-    #         reinitialization_value = []
-    #
-    #         if isinstance(node, Composition):
-    #             # TBI: Store state for a Composition, Reinitialize Composition
-    #             pass
-    #         elif isinstance(node, Mechanism):
-    #             if isinstance(node.function, IntegratorFunction):
-    #                 for attr in node.function.stateful_attributes:
-    #                     reinitialization_value.append(getattr(node.function, attr))
-    #             elif hasattr(node, "integrator_function"):
-    #                 if isinstance(node.integrator_function, IntegratorFunction):
-    #                     for attr in node.integrator_function.stateful_attributes:
-    #                         reinitialization_value.append(getattr(node.integrator_function, attr))
-    #
-    #         saved_state[node] = reinitialization_value
-    #
-    #     node_values = {}
-    #     for node in self.nodes:
-    #         node_values[node] = (node.value, node.output_values)
-    #
-    #     self.sim_reinitialize_values, self.sim_node_values = saved_state, node_values
-    #     return saved_state, node_values
-
-    # def _get_predicted_input(self, execution_id=None, context=None):
-    #     """
-    #     Called by the `controller <Composition.controller>` of the `Composition` before any
-    #     simulations are run in order to (1) generate predicted inputs, (2) store current values that must be
-    #     reinstated after all simulations are complete, and (3) set the number of trials of simulations.
-    #     """
-    #
-    #     predicted_input = self._update_predicted_input(execution_id=execution_id)
-    #
-    #     return predicted_input
-
     def _after_agent_rep_execution(self, context=None):
         pass
 
