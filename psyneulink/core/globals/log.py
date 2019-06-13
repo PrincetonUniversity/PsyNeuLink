@@ -1153,8 +1153,10 @@ class Log:
                       format(entry_name, self.owner.name))
             else:
                 import numpy as np
+                multiple_eids = len(datum)>1
                 for eid in datum:
-                    print('{0}:'.format(eid))
+                    if multiple_eids:
+                        print(f'execution_context: {eid}:')
                     for i, item in enumerate(datum[eid]):
 
                         time, context, value = item
@@ -1724,7 +1726,8 @@ class Log:
 class CompositionLog(Log):
     @property
     def all_items(self):
-        return super().all_items + [item.name for item in self.owner.nodes + self.owner.projections]
+        return super().all_items + [item.name for item in self.owner.nodes + self.owner.projections] + \
+               [self.owner.controller.name]
 
     def _get_parameter_from_item_string(self, string):
         param = super()._get_parameter_from_item_string(string)
@@ -1737,6 +1740,11 @@ class CompositionLog(Log):
 
             try:
                 return self.owner.projections[string].parameters.value
+            except (AttributeError, TypeError):
+                pass
+
+            try:
+                return self.owner.controller.parameters.value
             except (AttributeError, TypeError):
                 pass
         else:

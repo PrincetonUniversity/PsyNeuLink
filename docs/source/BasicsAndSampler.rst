@@ -362,6 +362,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
                                                                       monitor=output
                                                                       function=Energy(size=2,
                                                                                       matrix=[[0,-2.5],[-2.5,0]])),
+                               default_allocation=[0.5],
                                control_signals=[(GAIN, task)])
 
     # Construct the Composition using the control Mechanism as its controller:
@@ -424,11 +425,21 @@ the ``red`` and ``green`` values).  The result passed to the ``control`` Mechani
 reinitialize at the beginning of each `trial <TimeScale.TRIAL>`; and,since the ``control`` Mechanism was assigned as
 the Composition's `controller <Composition.controller>`, it executes at the end of each `trial <TimeScale.TRIAL>`
 after all of the other Mechanisms in the Composition have executed, which has its effects on the ``task`` Mechanism
-the next time it executes (i.e., on the next `trial <TimeScale.TRIAL>`;  a Composition's `controller <Composition
-.controller>` can also be configured to execute at the start of a `trial <TimeScale.TRIAL>`). Finally, the
+the next time it executes (i.e., on the next `trial <TimeScale.TRIAL>`;  a Composition's `controller
+<Composition.controller>` can also be configured to execute at the start of a `trial <TimeScale.TRIAL>`). Finally, the
 **call_after_trial** argument of the Composition's `run <Composition.run>` method is used to print Mechanism values
-at the end of each `trial <TimeScale.TRIAL>`. Running it for several `trials <TimeScale.TRIAL>` produces the
-following output::
+at the end of each `trial <TimeScale.TRIAL>`.  The **animate** argument of the `run <Composition.run>` method can be
+used to generate an animation of the Composition's execution, as shown below::
+
+
+.. figure:: _static/BasicsAndSampler_Stroop_Model_movie.gif
+   :width: 75%
+
+   **Animation of Stroop Model with Controller.** Generate by a call to ``Stroop_model.show_graph(show_controller)
+   with ``animate={"show_controller":True}`` in call to the `run <Composition.run>`.
+
+
+Running it for several `trials <TimeScale.TRIAL>` produces the following output::
 
     .. _Stroop_model_output:
 
@@ -468,45 +479,80 @@ following output::
         decision:	[ 1.][ 2.95]
         conflict:	  [ 0.57]
 
-The control
+Notice that initially, because control starts out relatively low (``default_allocation=[0.5]``), the representation of
+the instruction in the ``task`` Mechanism (color = ``[1,0]``) is relatively weak (``[0.67, 0.51]``).  As a result,
+the model generates the incorrect response to the incongrent stimulus([-1] = green, rather than [1] = red), due to
+the stronger weights of the Projections in the ``word_pathway``.  However, beacuse this is associated with a moderate
+amount of conflict (``[0.51]``), control is increased on the next trial, which in turn increases the gain of the
+``task`` Mechanism, stengthening its representation of the instruction so that it eventually fully activates the
+color task and generates the correct response. A more elaborate example of this model can be found at
+`BotvinickConflictMonitoringModel`. More complicated forms of control are also possible, for example, ones that run
+internal simulations to optimize the amount of control to optimize some criterion (e.g,. maximize the
+`expected value of control <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_ (see XXX EVC
+script), or to implement `model-based learning <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_
+(see XXX LVOC script).
+
+.. XXXX
+.. Change names of:
+..   - ``output`` Mechanism above to ``phonology``
+..   - ``color_hidden`` to ``color``
+..   - ``word_hidden`` to ``orthography``
+
 
 .. _BasicsAndSampler_Logging_and_Animation:
 
 Logging and Animation
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. The **animate** argument of the `run <Composition.run>` method can be used to generate an animation of the
-.. Composition's execution::
-..
-..     XXX ANIMATION EXAMPLE HERE
+The print statements in the example are generated using the **call_after_trial** argument in the Composition's `run
+<Composition.run>` method, that calls the ``print_after`` function defined in Python.  There are other similar "hooks"
+in the `run <Composition.run>` method that can be used to carry out custom operations at various points during
+execution (before and/or after each `run <TimeScale.RUN>`, `run <TimeScale.TRIAL>` or execution of the Components
+in a trial).  PsyNeuLink also has powerful logging capabilities that can be used to track and report any parameter of
+a model.  For example, including the following lines in the script for ``Stroop_model``,  after the ``task`` and
+``control`` Mechanisms are constructed::
 
-The print statements used in the example above illustrate the availability of "hooks" that can be used to carry out
-custom operations at various points during execution (XXX OTHER HOOKS HERE).  However, PsyNeuLink also has powerful
-logging capabilities that can be used to store and generate any parameter of a model standard forms (e.g, as numpy
-arrays, in CSV format, or easy to read formats for console output, as shown below::
+    task.log.set_log_conditions(VALUE)
+    control.log.set_log_conditions(VARIABLE)
+    control.log.set_log_conditions(VALUE)
+    ...
+    # after call to Stroop_model.run:
+    Stroop_model.log.print_entries(display=[TIME, VALUE])
 
-    XXX LOG EXAMPLE HERE
+report the value of the ``control`` and ``task`` Mechanims each time they executed for three trials::
 
-ControlMechanisms and ObjectiveMechanisms can also be manually configured, and added as free-standing nodes in
-Composition (i.e., not necessarily as its `controller <Composition.controller>`.
+    Log for Stroop Model:
 
-.. XXX
-.. • Explain:
-..  - use call_after_trial to print stuff (and explain it as a hook), and then explain log (or use with print_entries??)
-..  - special status of controller
-.. • Replace figure once double projections to task unit are corrected
-.. • Change names of:
-..   - ``output`` Mechanism above to ``phonology``
-..   - ``color_hidden`` to ``color``
-..   - ``word_hidden`` to ``orthography``
+    Logged Item:   Time          Value
 
-A more elaborate example of this model can be found at `BotvinickConflictMonitoringModel`. More complicated forms of
-control are also possible, for example, ones that run internal simulations to optimize the amount of control to
-optimize some criterion (e.g,. maximize the `expected value of control <https://royalsocietypublishing
-.org/doi/full/10.1098/rstb.2013.0478>`_ (see XXX EVC script), or to implement `model-based learning
-<https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_ (see XXX LVOC script).
+    'CONTROL'      0:1:0:0      [[0.51]]
+    'CONTROL'      0:2:0:0      [[0.59]]
 
-.. XXX MENTION SPECIFIC EXAMPLE SCRIPTS/MODELS HERE
+    'TASK'         0:0:0:1      [[0.57 0.56]]
+    'TASK'         0:0:1:1      [[0.58 0.55]]
+    'TASK'         0:0:2:1      [[0.59 0.55]]
+    'TASK'         0:0:3:1      [[0.6  0.54]]
+    'TASK'         0:0:4:1      [[0.61 0.54]]
+    'TASK'         0:0:5:1      [[0.62 0.53]]
+    'TASK'         0:0:6:1      [[0.63 0.53]]
+    'TASK'         0:0:7:1      [[0.64 0.52]]
+    'TASK'         0:0:8:1      [[0.65 0.51]]
+    'TASK'         0:0:9:1      [[0.67 0.51]]
+    'TASK'         0:1:0:1      [[0.68 0.5 ]]
+    'TASK'         0:1:1:1      [[0.69 0.49]]
+    'TASK'         0:1:2:1      [[0.71 0.48]]
+    'TASK'         0:1:3:1      [[0.72 0.47]]
+    'TASK'         0:1:4:1      [[0.74 0.46]]
+    'TASK'         0:1:5:1      [[0.75 0.45]]
+    'TASK'         0:1:6:1      [[0.77 0.44]]
+    'TASK'         0:1:7:1      [[0.78 0.42]]
+    'TASK'         0:1:8:1      [[0.8  0.41]]
+    'TASK'         0:1:9:1      [[0.81 0.4 ]]
+
+The time is reported as run:trial:pass:time_step.  Note that there is only one entry for the ``control`` Mechanism,
+since it only executed once per trial, but there are ten entries for the ``task`` Mechanism since it executed 10
+times, as specified in the Conditions described above.  The output of the `Log` can also be reported in various other
+formats, including a numpy array, a dictionary of values for each entry, and CSV format.
 
 .. .. _BasicsAndSampler_Learning:
 ..
