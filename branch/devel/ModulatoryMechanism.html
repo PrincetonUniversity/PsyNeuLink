@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModulatoryMechanism &mdash; PsyNeuLink 0.5.3.2+192.g164ec40 documentation</title>
+  <title>ModulatoryMechanism &mdash; PsyNeuLink 0.5.3.2+193.g4a76cb9 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+192.g164ec40',
+              VERSION:'0.5.3.2+193.g4a76cb9',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+192
+                0.5.3.2+193
               </div>
             
           
@@ -354,9 +354,9 @@ value assigned to its <a class="reference internal" href="#psyneulink.core.compo
 allocation it is assigned to calculate its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> or <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>
 <a class="reference internal" href="GatingSignal.html#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.intensity" title="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>. These are used by their <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> or
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a>, respectively, to modulate the value of the States to which they project.
-Those values are then used in the subsequent <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution. If a ModulatoryMechanism is a Composition’s
+Those values are then used in the subsequent <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution. If a ModulatoryMechanism is a Composition’s
 <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>, it is generally either the first or the last <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to be
-executed in a <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, although this can be customized (see <a class="reference internal" href="Composition.html#composition-controller-execution"><span class="std std-ref">Composition Controller</span></a>).</p>
+executed in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, although this can be customized (see <a class="reference internal" href="Composition.html#composition-controller-execution"><span class="std std-ref">Composition Controller</span></a>).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last"><a class="reference internal" href="ParameterState.html"><span class="doc">ParameterStates</span></a> that receive <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>, and <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> and/or <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> that receive <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, do not

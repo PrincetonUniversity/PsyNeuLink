@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Adaptive Mechanisms &mdash; PsyNeuLink 0.5.3.2+192.g164ec40 documentation</title>
+  <title>Adaptive Mechanisms &mdash; PsyNeuLink 0.5.3.2+193.g4a76cb9 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+192.g164ec40',
+              VERSION:'0.5.3.2+193.g4a76cb9',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+192
+                0.5.3.2+193
               </div>
             
           
@@ -257,8 +257,8 @@ subtypes of AdaptiveMechanism for more specific information about their structur
 </div>
 <div class="section" id="execution">
 <span id="adaptivemechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>LearningMechanism and ControlMechanism are always executed at the end of a <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, after all <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in the <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which they belong have been executed; all LearningMechanism
-executed first, and then ControlMechanism.  All modifications made are available during the next <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.
+<p>LearningMechanism and ControlMechanism are always executed at the end of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, after all <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in the <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which they belong have been executed; all LearningMechanism
+executed first, and then ControlMechanism.  All modifications made are available during the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.
 GatingMechanism are executed in the same manner as ProcessingMechanisms;  however, because they almost invariably
 introduce recurrent connections, care must be given to their <a class="reference internal" href="GatingMechanism.html#gatingmechanism-execution"><span class="std std-ref">initialization and/or scheduling</span></a>).</p>
 </div>

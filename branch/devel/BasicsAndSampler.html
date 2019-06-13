@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+192.g164ec40 documentation</title>
+  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+193.g4a76cb9 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+192.g164ec40',
+              VERSION:'0.5.3.2+193.g4a76cb9',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+192
+                0.5.3.2+193
               </div>
             
           
@@ -549,8 +549,7 @@ used to generate an animation of the Composition’s execution, as shown below:<
 <p><strong>Animation of Stroop Model with Controller.</strong> Generate by a call to <code class="docutils literal"><span class="pre">Stroop_model.show_graph(show_controller)</span>
 <span class="pre">with</span> <span class="pre">``animate={&quot;show_controller&quot;:True}</span></code> in call to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>.</p>
 </div></blockquote>
-<p>Running it for several <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trials</span></code></a> produces the
-following output:</p>
+<p>Running it for several <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trials</span></code></a> produces the following output:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">_Stroop_model_output</span><span class="p">:</span>
 
 <span class="n">End</span> <span class="n">of</span> <span class="n">trial</span> <span class="mi">0</span><span class="p">:</span>
@@ -609,11 +608,50 @@ script), or to implement <a class="reference external" href="https://royalsociet
 in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method that can be used to carry out custom operations at various points during
 execution (before and/or after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">run</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">run</span></code></a> or execution of the Components
 in a trial).  PsyNeuLink also has powerful logging capabilities that can be used to track and report any parameter of
-a model in various standard forms (e.g, as numpy arrays, in CSV format, or easy to read formats for console output, as
-shown below:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">XXX</span> <span class="n">LOG</span> <span class="n">EXAMPLE</span> <span class="n">HERE</span>
+a model.  For example, including the following lines in the script for <code class="docutils literal"><span class="pre">Stroop_model</span></code>,  after the <code class="docutils literal"><span class="pre">task</span></code> and
+<code class="docutils literal"><span class="pre">control</span></code> Mechanisms are constructed:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">task</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">(</span><span class="n">VALUE</span><span class="p">)</span>
+<span class="n">control</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">(</span><span class="n">VARIABLE</span><span class="p">)</span>
+<span class="n">control</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">(</span><span class="n">VALUE</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="c1"># after call to Stroop_model.run:</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="p">[</span><span class="n">TIME</span><span class="p">,</span> <span class="n">VALUE</span><span class="p">])</span>
 </pre></div>
 </div>
+<p>report the value of the <code class="docutils literal"><span class="pre">control</span></code> and <code class="docutils literal"><span class="pre">task</span></code> Mechanims each time they executed for three trials:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Log</span> <span class="k">for</span> <span class="n">Stroop</span> <span class="n">Model</span><span class="p">:</span>
+
+<span class="n">Logged</span> <span class="n">Item</span><span class="p">:</span>   <span class="n">Time</span>          <span class="n">Value</span>
+
+<span class="s1">&#39;CONTROL&#39;</span>      <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span>      <span class="p">[[</span><span class="mf">0.51</span><span class="p">]]</span>
+<span class="s1">&#39;CONTROL&#39;</span>      <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span>      <span class="p">[[</span><span class="mf">0.59</span><span class="p">]]</span>
+
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.57</span> <span class="mf">0.56</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.58</span> <span class="mf">0.55</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.59</span> <span class="mf">0.55</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.6</span>  <span class="mf">0.54</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.61</span> <span class="mf">0.54</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.62</span> <span class="mf">0.53</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.63</span> <span class="mf">0.53</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">7</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.64</span> <span class="mf">0.52</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">8</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.65</span> <span class="mf">0.51</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">9</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.67</span> <span class="mf">0.51</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.68</span> <span class="mf">0.5</span> <span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.69</span> <span class="mf">0.49</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.71</span> <span class="mf">0.48</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.72</span> <span class="mf">0.47</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.74</span> <span class="mf">0.46</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">5</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.75</span> <span class="mf">0.45</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">6</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.77</span> <span class="mf">0.44</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">7</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.78</span> <span class="mf">0.42</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">8</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.8</span>  <span class="mf">0.41</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">9</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.81</span> <span class="mf">0.4</span> <span class="p">]]</span>
+</pre></div>
+</div>
+<p>The time is reported as run:trial:pass:time_step.  Note that there is only one entry for the <code class="docutils literal"><span class="pre">control</span></code> Mechanism,
+since it only executed once per trial, but there are ten entries for the <code class="docutils literal"><span class="pre">task</span></code> Mechanism since it executed 10
+times, as specified in the Conditions described above.  The output of the <a class="reference internal" href="Log.html"><span class="doc">Log</span></a> can also be reported in various other
+formats, including a numpy array, a dictionary of values for each entry, and CSV format.</p>
 </div>
 </div>
 </div>
