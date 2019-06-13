@@ -722,7 +722,6 @@ __all__ = [
 
 # show_graph animation options
 NUM_TRIALS = 'num_trials'
-NUM_RUNS = 'num_Runs'
 UNIT = 'unit'
 DURATION = 'duration'
 MOVIE_NAME = 'movie_name'
@@ -730,7 +729,7 @@ SAVE_IMAGES = 'save_images'
 SHOW = 'show'
 INITIAL_FRAME = 'INITIAL_FRAME'
 EXECUTION_SET = 'EXECUTION_SET'
-SHOW_CONTROLLER = 'show_controller'
+SHOW_CONTROL = 'show_control'
 SHOW_LEARNING = 'show_learning'
 
 
@@ -3673,16 +3672,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if execution_id is NotImplemented:
             execution_id = self.default_execution_id
 
-        if active_items:
-            if self.scheduler_processing.clock.time.run >= self._animate_num_runs:
-                return
-            if not show_controller and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
-                return
-            # If controller is run at end of trial, trial number has already been incremented, so add 1
-            if (show_controller and
-                    self.controller_mode==AFTER and
-                    self.scheduler_processing.clock.time.trial >= self._animate_num_trials + 1):
-                return
+        # if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
+        #     return
 
         # For backward compatibility
         if 'show_model_based_optimizer' in kwargs:
@@ -3835,7 +3826,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     phase_string = 'Processing Phase - '
                     time = self.scheduler_processing.get_clock(execution_id).time
                     time_string = \
-                        f"Time(run: {time.run}, trial: {time.trial}, pass: {time.pass_}, time_step: {time.time_step})"
+                        f"Time(run: {time.run}, trial: {time.trial}, pass: {time.pass_}, time_step: {time.time_step}"
                 # elif execution_phase == ContextFlags.LEARNING:
                 #     time = self.scheduler_learning.get_clock(execution_id).time
                 #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
@@ -3846,7 +3837,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     time_string = ''
                 else:
                     raise CompositionError(
-                        f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
+                        f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase}")
                 label = f'\n{self.name}\n{phase_string}{time_string}\n'
                 G.attr(label=label)
                 G.attr(labelloc='b')
@@ -3970,18 +3961,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         execution_id = self._assign_execution_ids(execution_id)
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        # # MODIFIED 6/12/19 OLD:
-        # if scheduler_processing is None:
-        #     scheduler_processing = self.scheduler_processing
-        # execution_scheduler = scheduler_processing
-        # MODIFIED 6/12/19 NEW: [JDC]
-        execution_scheduler = scheduler_processing or self.scheduler_processing
+        if scheduler_processing is None:
+            scheduler_processing = self.scheduler_processing
+
+        # MODIFIED 6/12/19 NEW: [JDC] MOVED
+        # FIX: 6/12/19: NECESSARY?  WHY NOT JUST USE scheduler_processing below
+        execution_scheduler = scheduler_processing
         # MODIFIED 6/12/19 END
 
         execution_context = self.parameters.context.get(execution_id)
 
+        # MODIFIED 6/12/19 NEW: [JDC] MOVED
         if termination_processing is None:
             termination_processing = self.termination_processing
+        # MODIFIED 6/12/19 END
 
         # Skip initialization if possible (for efficiency):
         # - and(execution_id and context have not changed
@@ -4018,6 +4011,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs = self._adjust_execution_stimuli(inputs)
             self._assign_values_to_input_CIM(inputs, execution_id=execution_id)
 
+        # # MODIFIED 6/12/19 OLD: [MOVED]
+        # if termination_processing is None:
+        #     termination_processing = self.termination_processing
+        # MODIFIED 6/12/19 END
+
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping
         next_pass_before = 1
@@ -4027,6 +4025,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, input_nodes)
             pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, input_nodes)
             no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, input_nodes)
+
+        # # MODIFIED 6/12/19 OLD: [MOVED]
+        # # run scheduler to receive sets of nodes that may be executed at this time step in any order
+        # execution_scheduler = scheduler_processing
+        # MODIFIED 6/12/19 END
 
         # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
 
@@ -4090,16 +4093,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ):
 
             # control phase
-            # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
             execution_phase = self.parameters.context.get(execution_id).execution_phase
             if (
                     execution_phase != ContextFlags.INITIALIZING
                     and execution_phase != ContextFlags.SIMULATION
             ):
                 if self.controller and not bin_execute:
-                    # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
+                    # MODIFIED 6/12/19 OLD:
                     self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-                    # FIX: END REMOVE
+                    # MODIFIED 6/12/19 NEW: [JDC]
                     control_allocation = self.controller.execute(execution_id=execution_id, context=context)
                     self.controller._apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
@@ -4107,26 +4109,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if bin_execute:
                     _comp_ex.execute_node(self.controller)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
-                # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
-                if execution_context:
-                    entry_execution_phase = execution_context.execution_phase
-                    execution_context.execution_phase = ContextFlags.CONTROL
-                # MODIFIED 6/13/19 END
-
-                if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
+                if self._animate != False and SHOW_CONTROL in self._animate and self._animate[SHOW_CONTROL]:
                     self.show_graph(active_items=self.controller,
                                     **self._animate,
                                     output_fmt='gif',
                                     execution_id=execution_id
                                     )
                 self._component_animation_execution_count += 1
-
-                # MODIFIED 6/13/19 NEW: [JDC]
-                # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
-                if execution_context:
-                    execution_context.execution_phase = entry_execution_phase
-                # MODIFIED 6/13/19 END
 
         # EXECUTE (each execution_set) *********************************************************************************
 
@@ -4138,6 +4127,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if bin_execute:
             _comp_ex.execute_node(self.input_CIM, inputs)
+        # FIX: 6/12/19 MOVE non-compiled version from above to here;
         #              WHY DO BOTH?  WHY NOT if-else?
 
         if call_before_pass:
@@ -4209,9 +4199,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
             if not self._animate is False and self._animate_unit is EXECUTION_SET:
-                self.show_graph(active_items=next_execution_set,
-                                **self._animate,
-                                output_fmt='gif',
+                self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif',
                                 execution_id=execution_id)
 
             # EXECUTE (each node) --------------------------------------------------------------------------
@@ -4320,6 +4308,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         ret = node.execute(execution_id=execution_id,
                                            context=ContextFlags.COMPOSITION)
 
+
                     # Get output info from compiled execution
                     if bin_execute:
                         # Update result in binary data structure
@@ -4332,7 +4321,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
                 if not self._animate is False and self._animate_unit is COMPONENT:
-                    self.show_graph(active_items=node, **self._animate, output_fmt='gif', execution_id=execution_id)
+                    self.show_graph(active_items=node, **self._animate, output_fmt='gif',
+                                    execution_id=execution_id)
                 self._component_animation_execution_count += 1
 
 
@@ -4372,7 +4362,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if execution_context:
             execution_context.execution_phase = entry_execution_phase
 
-        # EXECUTE CONTROLLER (if controller_mode == AFTER) ************************************************************
+        # EXECUTE CONTROLLER (if controller_mode == BEFORE) ************************************************************
 
         if (self.enable_controller and
                 self.controller_mode == AFTER and
@@ -4380,17 +4370,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                        execution_context=execution_id)
         ):
             # control phase
-            # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
-            execution_phase = execution_context.execution_phase
+            execution_phase = self.parameters.context.get(execution_id).execution_phase
             if (
                     execution_phase != ContextFlags.INITIALIZING
                     and execution_phase != ContextFlags.SIMULATION
             ):
-
                 if self.controller and not bin_execute:
-                    # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
-                    self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-                    # FIX: END REMOVE
+                    self.controller.parameters.context.get(
+                        execution_id).execution_phase = ContextFlags.PROCESSING
                     control_allocation = self.controller.execute(execution_id=execution_id, context=context)
                     self.controller._apply_control_allocation(control_allocation, execution_id=execution_id,
                                                                     runtime_params=runtime_params, context=context)
@@ -4399,26 +4386,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _comp_ex.freeze_values()
                     _comp_ex.execute_node(self.controller)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
-                # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
-                if execution_context:
-                    entry_execution_phase = execution_context.execution_phase
-                    execution_context.execution_phase = ContextFlags.CONTROL
-                # MODIFIED 6/13/19 END
-
-                if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
-                    self.show_graph(active_items=self.controller,
-                                    **self._animate,
-                                    output_fmt='gif',
+                if self._animate != False and SHOW_CONTROL in self._animate and self._animate[SHOW_CONTROL]:
+                    self.show_graph(active_items=self.controller, **self._animate, output_fmt='gif',
                                     execution_id=execution_id)
                 self._component_animation_execution_count += 1
-
-                # MODIFIED 6/13/19 NEW: [JDC]
-                # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
-                if execution_context:
-                    execution_context.execution_phase = entry_execution_phase
-                # MODIFIED 6/13/19 END
-
 
         # REPORT RESULTS ***********************************************************************************************
 
@@ -4550,14 +4521,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 * *DURATION*: float (default=0.75) -- specifies the duration (in seconds) of each image in the movie.
 
-                * *NUM_RUNS*: int (default=1) -- specifies the number of runs to animate;  by default, this is 1.
-                  If the number specified is less than the total number of runs executed, only the number specified
-                  are animated; if it is greater than the number of runs being executed, only the number being run are
-                  animated.
-
                 * *NUM_TRIALS*: int (default=1) -- specifies the number of trials to animate;  by default, this is 1.
                   If the number specified is less than the total number of trials being run, only the number specified
-                  are animated; if it is greater than the number of trials being run, only the number being run are
+                  are animated; if it is greater than the number of trials being run, only the number being run is
                   animated.
 
                 * *MOVIE_NAME*: str (default=\\ `name <System.name>` + 'movie') -- specifies the name to be used for
@@ -4665,7 +4631,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #     pass
             self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
             self._image_duration = self._animate.pop(DURATION, 0.75)
-            self._animate_num_runs = self._animate.pop(NUM_RUNS, 1)
             self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
             self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
             self._save_images = self._animate.pop(SAVE_IMAGES, False)
@@ -4678,10 +4643,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise SystemError("{} entry of {} argument for {} method of {} ({}) must be an int or a float".
                                   format(repr(DURATION), repr('animate'), repr('run'),
                                          self.name, self._image_duration))
-            if not isinstance(self._animate_num_runs, int):
-                raise SystemError("{} entry of {} argument for {} method of {} must an integer".
-                                  format(repr(NUM_RUNS), repr('animate'),
-                                         self.name, self._animate_num_runs, repr('show_graph')))
             if not isinstance(self._animate_num_trials, int):
                 raise SystemError("{} entry of {} argument for {} method of {} ({}) must an integer".
                                   format(repr(NUM_TRIALS), repr('animate'), repr('run'),
@@ -4698,6 +4659,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
                                   format(repr(SHOW), repr('animate'), repr('run'),
                                          self.name, self._show_animation, repr(True), repr(False)))
+
         elif self._animate:
             # self._animate should now be False or a dict
             raise SystemError("{} argument for {} method of {} ({}) must boolean or "
@@ -5447,9 +5409,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         inputs = self._build_predicted_inputs_dict(predicted_input)
 
         # Run Composition in "SIMULATION" context
-        # MODIFIED 6/12/19 NEW: [JDC]
-        entry_execution_phase = self.parameters.context.get(execution_id).execution_phase
-        # MODIFIED 6/12/19 END
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
         self.run(inputs=inputs,
                  execution_id=execution_id,
@@ -5457,11 +5416,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  num_trials=num_simulation_trials,
                  context=context,
                  bin_execute=execution_mode)
-        # # MODIFIED 6/12/19 OLD:
-        # self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-        # MODIFIED 6/12/19 NEW: [JDC]
-        self.parameters.context.get(execution_id).execution_phase = entry_execution_phase
-        # MODIFIED 6/12/19 END
+        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
 
         # Store simulation results on "base" composition
         if context.initialization_status != ContextFlags.INITIALIZING:
