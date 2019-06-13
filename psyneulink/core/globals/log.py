@@ -1724,7 +1724,8 @@ class Log:
 class CompositionLog(Log):
     @property
     def all_items(self):
-        return super().all_items + [item.name for item in self.owner.nodes + self.owner.projections]
+        return super().all_items + [item.name for item in self.owner.nodes + self.owner.projections] + \
+               [self.owner.controller.name]
 
     def _get_parameter_from_item_string(self, string):
         param = super()._get_parameter_from_item_string(string)
@@ -1737,6 +1738,11 @@ class CompositionLog(Log):
 
             try:
                 return self.owner.projections[string].parameters.value
+            except (AttributeError, TypeError):
+                pass
+
+            try:
+                return self.owner.controller.parameters.value
             except (AttributeError, TypeError):
                 pass
         else:

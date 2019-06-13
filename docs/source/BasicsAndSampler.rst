@@ -439,8 +439,7 @@ used to generate an animation of the Composition's execution, as shown below::
    with ``animate={"show_controller":True}`` in call to the `run <Composition.run>`.
 
 
-Running it for several `trials <TimeScale.TRIAL>` produces the
-following output::
+Running it for several `trials <TimeScale.TRIAL>` produces the following output::
 
     .. _Stroop_model_output:
 
