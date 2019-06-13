@@ -70,13 +70,12 @@ def computeAccuracy(variable):
 
 ##### BEGIN STABILITY FLEXIBILITY MODEL CONSTRUCTION
 
-integrationConstant = 0.1 # time constant
-DRIFT = 1 # Drift Rate
+integrationConstant = 0.8 # time constant
+DRIFT = 0.25 # Drift Rate
 STARTING_POINT = 0.0 # Starting Point
-THRESHOLD = 0.125 # Threshold
-NOISE = 0.1325 # Noise
+THRESHOLD = 0.05 # Threshold
+NOISE = 0.1 # Noise
 T0 = 0.2 # T0
-
 wa = 0.2
 
 
@@ -93,7 +92,7 @@ inputLayer.set_log_conditions([pnl.RESULT])
 # dimensions. Positive self excitation and negative opposite inhibition with an integrator rate = tau
 # Modulated variable in simulations is the GAIN variable of this mechanism
 activation = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0]],
-                                            function=pnl.Logistic(gain=1),
+                                            function=pnl.Logistic(gain=5),
                                             matrix=[[1.0, -1.0],
                                                     [-1.0, 1.0]],
                                             integrator_mode = True,
@@ -132,6 +131,7 @@ ddmCombination = pnl.TransferMechanism(size = 1,
                                        function = pnl.Linear(slope=1, intercept=0),
                                        output_states = [pnl.RESULT],
                                        name = "DDM Integrator")
+
 ddmCombination.set_log_conditions([pnl.RESULT])
 
 decisionMaker = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate = DRIFT,
@@ -169,50 +169,117 @@ stabilityFlexibility.add_projection(sender = congruenceWeighting, receiver = ddm
 stabilityFlexibility.add_projection(sender = controlledElement, receiver = ddmCombination)
 stabilityFlexibility.add_projection(sender = ddmCombination, receiver = decisionMaker)
 
-# testing input
-# taskTrain = [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0],
-#              [0, 1], [0, 1], [0, 1], [0, 1], [0, 1],
-#              [1, 0], [1, 0], [1, 0], [1, 0], [1, 0],
-#              [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]
+# TESTING INPUTS
+
+## NO SWITCHING
+
+# Observe the Effect of Gain on Congruent Trials
+# taskTrain = [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0],
+#              [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0]]
 #
-# stimulusTrain = [[1, -1], [1, -1], [1, -1], [1, -1], [1, -1],
-#                  [1, -1], [1, -1], [1, -1], [1, -1], [1, -1],
-#                  [1, 1], [1, 1], [1, 1], [1, 1], [1, 1],
-#                  [1, 1], [1, 1], [1, 1], [1, 1], [1, 1]]
-
-taskTrain = [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0],
-             [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]
-
-# stimulusTrain = [[1, 1], [-1, -1], [1, 1], [1, 1], [1, 1],
-#                  [-1, -1], [1, -1], [1, 1], [1, 1], [1, 1]]
-
-stimulusTrain = [[1, -1], [1, -1], [1, -1], [1, -1], [1, -1],
-                 [1, -1], [1, -1], [1, -1], [1, -1], [1, -1]]
+# stimulusTrain = [[1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1],
+#                  [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1]]
 
 
-taskTrain = [np.multiply(x, [1, 1]) for x in taskTrain]
-stimulusTrain = [np.multiply(x, [1, 1]) for x in stimulusTrain]
+## Observe the Effect of Gain on Incongruent Trials
+# taskTrain = [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0],
+#              [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0]]
+#
+# stimulusTrain = [[1, -1], [1, -1], [1, -1], [1, -1], [1, -1], [1, -1], [1, -1], [1, -1], [1, -1], [1, -1],
+#                  [1, -1], [1, -1], [1, -1], [1, -1], [1, -1], [1, -1], [1, -1], [1, -1], [1, -1], [1, -1]]
+
+## SWITCHING
+
+# CONGRUENT TRIALS ONLY
+# taskTrain = [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0],
+#              [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]
+#
+# stimulusTrain = [[1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1],
+#                  [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1]]
+
+## INCONGRUENT TRIALS ONLY
+# taskTrain = [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0],
+#              [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]
+#
+# stimulusTrain = [[-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1],
+#                  [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]]
+
+## DIFFERENT AMOUNTS OF SWITCHING
+
+## 100%  Task Switch
+# taskTrain = [[1, 0], [0, 1], [1, 0], [0, 1], [1, 0], [0, 1], [1, 0], [0, 1], [1, 0], [0, 1],
+#              [1, 0], [0, 1], [1, 0], [0, 1], [1, 0], [0, 1], [1, 0], [0, 1], [1, 0], [0, 1]]
+#
+# stimulusTrain = [[-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1],
+#                  [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]]
+
+# ## 50%  Task Switch
+# taskTrain = [[1, 0], [1, 0], [0, 1], [0, 1], [1, 0], [1, 0], [0, 1], [0, 1], [1, 0], [1, 0],
+#              [0, 1], [0, 1], [1, 0], [1, 0], [0, 1], [0, 1], [1, 0], [1, 0], [0, 1], [0, 1]]
+#
+# stimulusTrain = [[-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1],
+#                  [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]]
+
+## 20% Task Switch
+# taskTrain = [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1],
+#               [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]
+#
+# stimulusTrain = [[-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1],
+#                  [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]]
+
+# ## 10% Switch Rate
+taskTrain = [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0], [1, 0],
+             [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]
+
+stimulusTrain = [[-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1],
+                 [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]]
 
 
+
+# taskTrain = [np.multiply(x, [1, 1]) for x in taskTrain1]
+# stimulusTrain = [np.multiply(x, [1, 1]) for x in stimulusTrain1]
+
+runs = len(taskTrain)
 inputs = {inputLayer: taskTrain, stimulusInfo: stimulusTrain}
+
 
 print("Beginning of Run")
 stabilityFlexibility.run(inputs)
+
 #stabilityFlexibility.show_graph()
+#stabilityFlexibility.show_graph(show_node_structure=True, show_headers=True)
 
 decisions = decisionMaker.log.nparray()
 upper, lower = extractValues(decisions)
 
 modelResults = [taskTrain, stimulusTrain, upper, lower]
 
-print("Accuracy: ")
 accuracies = computeAccuracy(modelResults)
-for i in range(0, len(accuracies)):
-    print("Trial", i+1)
-    print("Accuracy:", round(accuracies[i], 5))
-    print()
-decisionMaker.log.print_entries()
-ddmCombination.log.print_entries()
+# activations = activation.log.nparray()
+# sumOfActivities = []
+# for i in range(0, runs):
+#     sumOfActivities.append(activations[1][1][4][i+1][0] - activations[1][1][4][i+1][1])
+
+print("Accuracies")
+print(accuracies)
+print()
+
+
+print(sum(accuracies))
+# print("Act1 + Act2")
+# print(sumOfActivities)
+# print()
+# for i in range(0, len(accuracies)):
+#     #print("Trial", i+1)
+#     print(accuracies[i])
+
+# activation.log.print_entries()
+# decisionMaker.log.print_entries()
+#ddmCombination.log.print_entries()
+
+
+
+
 
 
 
