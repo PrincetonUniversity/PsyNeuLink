@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+189.g8487dd5 documentation</title>
+  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+190.gbd0abed documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+189.g8487dd5',
+              VERSION:'0.5.3.2+190.gbd0abed',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+189
+                0.5.3.2+190
               </div>
             
           
@@ -473,6 +473,7 @@ conflict in the <code class="docutils literal"><span class="pre">output</span></
                                                                   <span class="n">monitor</span><span class="o">=</span><span class="n">output</span>
                                                                   <span class="n">function</span><span class="o">=</span><span class="n">Energy</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                                                                                   <span class="n">matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mf">2.5</span><span class="p">],[</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span><span class="mi">0</span><span class="p">]])),</span>
+                           <span class="n">default_allocation</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">],</span>
                            <span class="n">control_signals</span><span class="o">=</span><span class="p">[(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">task</span><span class="p">)])</span>
 
 <span class="c1"># Construct the Composition using the control Mechanism as its controller:</span>
@@ -572,7 +573,15 @@ following output:</p>
     <span class="n">conflict</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.57</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>The control</p>
+<p>Notice that the activity of the instructed unit (color) in the <code class="docutils literal"><span class="pre">task</span></code> Mechanism starts out being weak (<code class="docutils literal"><span class="pre">[0.67]</span></code>)
+and the model generates the incorrect response to the incongrent stimulus (i.e., green rather than red), and that this
+is associated with a moderate degree of conflict.  This causes it to adapt its beahvior over trials by increasing
+control in response to the conflict, which in turn increases the gain of the <code class="docutils literal"><span class="pre">task</span></code> Mechanism and stengthens the
+activity of the instructed unit, so that it consistently generates the correct response (see XXXX for a more comlete
+description of the model).  A more elaborate example of this model can be found at <a class="reference internal" href="BotvinickConflictMonitoringModel.html"><span class="doc">Conflict Monitoring and Cognitive Control (Botvinick et al., 2001)</span></a>.
+More complicated forms of control are also possible, for example, ones that run internal simulations to optimize the
+amount of control to optimize some criterion (e.g,. maximize the <a class="reference external" href="https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478">expected value of control</a> (see XXX EVC script), or to implement
+<a class="reference external" href="https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478">model-based learning</a> (see XXX LVOC script).</p>
 </div>
 <div class="section" id="logging-and-animation">
 <span id="basicsandsampler-logging-and-animation"></span><h3>Logging and Animation<a class="headerlink" href="#logging-and-animation" title="Permalink to this headline">¶</a></h3>
@@ -585,9 +594,6 @@ arrays, in CSV format, or easy to read formats for console output, as shown belo
 </div>
 <p>ControlMechanisms and ObjectiveMechanisms can also be manually configured, and added as free-standing nodes in
 Composition (i.e., not necessarily as its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.</p>
-<p>A more elaborate example of this model can be found at <a class="reference internal" href="BotvinickConflictMonitoringModel.html"><span class="doc">Conflict Monitoring and Cognitive Control (Botvinick et al., 2001)</span></a>. More complicated forms of
-control are also possible, for example, ones that run internal simulations to optimize the amount of control to
-optimize some criterion (e.g,. maximize the <a class="reference external" href="https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478">expected value of control</a> (see XXX EVC script), or to implement <a class="reference external" href="https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478">model-based learning</a> (see XXX LVOC script).</p>
 </div>
 </div>
 </div>

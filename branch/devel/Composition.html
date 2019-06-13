@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.3.2+189.g8487dd5 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.3.2+190.gbd0abed documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+189.g8487dd5',
+              VERSION:'0.5.3.2+190.gbd0abed',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+189
+                0.5.3.2+190
               </div>
             
           
@@ -557,27 +557,23 @@ situations:</p>
 </ul>
 <table border="1" class="docutils">
 <colgroup>
-<col width="21%" />
+<col width="25%" />
 <col width="16%" />
-<col width="16%" />
-<col width="16%" />
-<col width="16%" />
-<col width="16%" />
+<col width="1%" />
+<col width="15%" />
+<col width="1%" />
+<col width="14%" />
+<col width="1%" />
+<col width="14%" />
+<col width="1%" />
+<col width="14%" />
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Trial #</td>
-<td>0</td>
-<td>1</td>
-<td>2</td>
-<td>3</td>
-<td>4</td>
+<td colspan="9">0               <a href="#id2"><span class="problematic" id="id3">|</span></a>1                <a href="#id4"><span class="problematic" id="id5">|</span></a>2               <a href="#id6"><span class="problematic" id="id7">|</span></a>3               <a href="#id8"><span class="problematic" id="id9">|</span></a>4</td>
 </tr>
 <tr class="row-even"><td>Input to <strong>Mechanism a</strong></td>
-<td>[[1.0], [2.0]]</td>
-<td>[[1.0], [2.0]]</td>
-<td>[[1.0], [2.0]]</td>
-<td>[[1.0], [2.0]]</td>
-<td>[[1.0], [2.0]]</td>
+<td colspan="9">[[1.0], [2.0]] | [[1.0], [2.0]]  | [[1.0], [2.0]] | [[1.0], [2.0]] | [[1.0], [2.0]]</td>
 </tr>
 </tbody>
 </table>
@@ -659,12 +655,11 @@ the input values for each INPUT Node for a single trial.</p>
 </div>
 <div class="section" id="execution-contexts">
 <span id="run-scope-of-execution"></span><h3><em>Execution Contexts</em><a class="headerlink" href="#execution-contexts" title="Permalink to this headline">¶</a></h3>
-<p>An <em>execution context</em> is a scope of execution which has its own set of values for Components and their <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a>.
-This is designed to prevent computations from interfering with each other, when Components are reused, which often occurs
-when using multiple or nested Compositions, or running <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a>. Each execution context is
-or is associated with an <em>execution_id</em>, which is often a user-readable string. An <em>execution_id</em> can be specified in a call to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">Composition.run</span></code></a>,
-or left unspecified, in which case the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.default_execution_id" title="psyneulink.core.compositions.composition.Composition.default_execution_id"><code class="xref any py py-attr docutils literal"><span class="pre">default</span> <span class="pre">execution_id</span></code></a> would be used. When
-looking for values after a run, it’s important to know the execution context you are interested in, as shown below</p>
+<p>An <em>execution context</em> is a scope of execution which has its own set of values for Components and their <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a>. This is designed to prevent computations from interfering with each other, when Components are reused,
+which often occurs when using multiple or nested Compositions, or running <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a>. Each execution context is or is associated with an <em>execution_id</em>,
+which is often a user-readable string. An <em>execution_id</em> can be specified in a call to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">Composition.run</span></code></a>, or left
+unspecified, in which case the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.default_execution_id" title="psyneulink.core.compositions.composition.Composition.default_execution_id"><code class="xref any py py-attr docutils literal"><span class="pre">default</span> <span class="pre">execution_id</span></code></a> would be used.
+When looking for values after a run, it’s important to know the execution context you are interested in, as shown below.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
@@ -751,7 +746,7 @@ with <a class="reference internal" href="Condition.html"><span class="doc">Condi
 </div>
 </div>
 <div class="section" id="visualizing-a-composition">
-<span id="id2"></span><h2>Visualizing a Composition<a class="headerlink" href="#visualizing-a-composition" title="Permalink to this headline">¶</a></h2>
+<span id="id10"></span><h2>Visualizing a Composition<a class="headerlink" href="#visualizing-a-composition" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method generates a display of the graph structure of Nodes (Mechanisms and
 Nested Compositions) and Projections in the Composition (based on the Composition’s <code class="xref any docutils literal"><span class="pre">processing</span> <span class="pre">graph</span></code>).</p>
 <p>By default, Nodes are shown as ovals labeled by their <code class="xref any docutils literal"><span class="pre">names</span></code>, with the Composition’s <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.INPUT" title="psyneulink.core.globals.utilities.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> Mechanisms shown in green, its <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="psyneulink.core.globals.utilities.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Mechanisms shown in red, and Projections
@@ -760,7 +755,7 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 can be shown, along with other information, using options in the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a>
 method.  The figure below shows several examples.</p>
 <p id="system-show-graph-figure"><strong>Output of show_graph using different options</strong></p>
-<div class="figure" id="id5">
+<div class="figure" id="id13">
 <a class="reference internal image-reference" href="_images/show_graph_figure.svg"><img alt="System graph examples" src="_images/show_graph_figure.svg" /></a>
 <p class="caption"><span class="caption-text">Displays of the Composition used in the <a class="reference internal" href="#system-show-graph-basic-figure"><span class="std std-ref">example above</span></a>, generated using various
 options of its <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method. <strong>Panel A</strong> shows the graph with its Projections labeled
@@ -771,7 +766,7 @@ using the <strong>show_node_structure</strong> option, that includes their <a cl
 Composition. <strong>Panel E</strong> show an even more detailed view using <strong>show_node_structure</strong> as well as <strong>show_cim</strong>.</span></p>
 </div>
 <p>If a Composition has one ore more Compositions nested as Nodes within it, then these can be shown using the
-<strong>show_nested</strong> option. For example, if two Compositions identical to <strong>comp</strong> in the <a class="reference internal" href="#system-show-graph-basic-figure"><span class="std std-ref">example above</span></a> are added as the nodes of the linear processing pathway of a third* <strong>comp</strong> <a href="#id3"><span class="problematic" id="id4">*</span></a>,
+<strong>show_nested</strong> option. For example, if two Compositions identical to <strong>comp</strong> in the <a class="reference internal" href="#system-show-graph-basic-figure"><span class="std std-ref">example above</span></a> are added as the nodes of the linear processing pathway of a third* <strong>comp</strong> <a href="#id11"><span class="problematic" id="id12">*</span></a>,
 these can be shown as follows:</p>
 <blockquote>
 <div><table border="1" class="docutils">
@@ -804,7 +799,7 @@ these can be shown as follows:</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller: psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism = None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11cd411d0&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>learning_enabled=False</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller: psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism = None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11635a1d0&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>learning_enabled=False</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -846,7 +841,7 @@ input_CIM and its InputStates serve as proxies for the Composition itself in ter
 <dt id="psyneulink.core.compositions.composition.Composition.output_CIM">
 <code class="descname">output_CIM</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.output_CIM" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="CompositionInterfaceMechanism.html"><span class="doc">CompositionInterfaceMechanism</span></a> – Aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
-output_CIM and its OutputStates serve as proxies for the Composition itself in terms of efferent projections.</p>
+output_CIM and its OutputStates serve as proxies for Composition itself in terms of efferent projections.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1141,10 +1136,11 @@ termination conditions are met.</p>
 <li><strong>inputs</strong> ({ <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="#"><span class="doc">Composition</span></a> : list }) – a dictionary containing a key-value pair for each node in the composition that receives inputs from
 the user. For each pair, the key is the node (Mechanism or Composition) and the value is an input,
 the shape of which must match the node’s default variable.</li>
-<li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the non-learning execution of this Composition.                 If not specified, the Composition will use its automatically generated scheduler</li>
+<li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the non-learning execution of this
+Composition. If not specified, the Composition will use its automatically generated scheduler.</li>
 <li><strong>execution_id</strong> – execution_id will be set to self.default_execution_id if unspecified</li>
-<li><strong>base_execution_id</strong> – the execution_id corresponding to the execution context from which this execution will be initialized, if
-values currently do not exist for <strong>execution_id</strong></li>
+<li><strong>base_execution_id</strong> – the execution_id corresponding to the execution context from which this execution will be initialized,
+if values currently do not exist for <strong>execution_id</strong></li>
 <li><strong>call_before_time_step</strong> (<em>callable</em>) – called before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed
 passed the current <em>execution_id</em> (but it is not necessary for your callable to take)</li>
 <li><strong>call_after_time_step</strong> (<em>callable</em>) – called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed
@@ -1250,71 +1246,113 @@ passed the current <em>execution_id</em> (but it is not necessary for your calla
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>scheduler_processing=None</em>, <em>termination_processing=None</em>, <em>execution_id=None</em>, <em>base_execution_id=None</em>, <em>num_trials=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_pass=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>clamp_input='soft_clamp'</em>, <em>bin_execute=False</em>, <em>log=False</em>, <em>initial_values=None</em>, <em>reinitialize_values=None</em>, <em>runtime_params=None</em>, <em>retain_old_simulation_data=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Passes inputs to compositions, then executes
-to receive and execute sets of nodes that are eligible to run until termination conditions are met.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>inputs</strong> ({ <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> : list } or { <a class="reference internal" href="#"><span class="doc">Composition</span></a> : list }) – a dictionary containing a key-value pair for each Node in the composition that receives inputs from
+<code class="descname">run</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>scheduler_processing=None</em>, <em>termination_processing=None</em>, <em>execution_id=None</em>, <em>base_execution_id=None</em>, <em>num_trials=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_pass=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>clamp_input='soft_clamp'</em>, <em>bin_execute=False</em>, <em>log=False</em>, <em>initial_values=None</em>, <em>reinitialize_values=None</em>, <em>runtime_params=None</em>, <em>retain_old_simulation_data=False</em>, <em>animate=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
+conditions are met.  See <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for details of formatting input specifications. See <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for details of
+formatting input specifications. Use <strong>animate</strong> to generate a gif of the execution sequence.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>inputs: { <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> <span class="classifier-delimiter">:</span> <span class="classifier">list } or { <a class="reference internal" href="#"><span class="doc">Composition</span></a></span> <span class="classifier-delimiter">:</span> <span class="classifier">list }</span></dt>
+<dd>a dictionary containing a key-value pair for each Node in the composition that receives inputs from
 the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
-list corresponds to a certain <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
-<li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the non-learning execution of
-this Composition. If not specified, the Composition will use its automatically generated scheduler.</li>
-<li><strong>execution_id</strong> – execution_id will be set to self.default_execution_id if unspecified</li>
-<li><strong>base_execution_id</strong> – the execution_id corresponding to the execution context from which this execution will be initialized, if
-values currently do not exist for <strong>execution_id</strong></li>
-<li><strong>num_trials</strong> (<em>int</em>) – typically, the composition will infer the number of trials from the length of its input specification.
+list corresponds to a certain <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</dd>
+<dt>scheduler_processing <span class="classifier-delimiter">:</span> <span class="classifier">Scheduler</span></dt>
+<dd>the scheduler object that owns the conditions that will instruct the non-learning execution of
+this Composition. If not specified, the Composition will use its automatically generated scheduler.</dd>
+<dt>execution_id</dt>
+<dd>execution_id will be set to self.default_execution_id if unspecified</dd>
+<dt>base_execution_id</dt>
+<dd>the execution_id corresponding to the execution context from which this execution will be initialized,
+if values currently do not exist for <strong>execution_id</strong></dd>
+<dt>num_trials <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>typically, the composition will infer the number of trials from the length of its input specification.
 To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
-or use default inputs, and select a number of trials with num_trials.</li>
-<li><strong>call_before_time_step</strong> (<em>callable</em>) – will be called before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
-<li><strong>call_after_time_step</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
-<li><strong>call_before_pass</strong> (<em>callable</em>) – will be called before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed.</li>
-<li><strong>call_after_pass</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed.</li>
-<li><strong>call_before_trial</strong> (<em>callable</em>) – will be called before each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
-<li><strong>call_after_trial</strong> (<em>callable</em>) – will be called after each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
-<li><strong>initial_values</strong> (<em>Dict</em><em>[</em><em>Node: Node Value</em><em>]</em>) – sets the values of nodes before the start of the run. This is useful in cases where a node’s value is
-used before that node executes for the first time (usually due to recurrence or control).</li>
-<li><strong>runtime_params</strong> (<em>Dict</em><em>[</em><em>Node: Dict</em><em>[</em><em>Parameter: Tuple</em><em>(</em><em>Value</em><em>, </em><a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><em>Condition</em></a><em>)</em><em>]</em><em>]</em>) – <p>nested dictionary of (value, <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>) tuples for parameters of Nodes (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or
+or use default inputs, and select a number of trials with num_trials.</dd>
+<dt>call_before_time_step <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>will be called before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</dd>
+<dt>call_after_time_step <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>will be called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</dd>
+<dt>call_before_pass <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>will be called before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed.</dd>
+<dt>call_after_pass <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>will be called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed.</dd>
+<dt>call_before_trial <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>will be called before each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</dd>
+<dt>call_after_trial <span class="classifier-delimiter">:</span> <span class="classifier">callable</span></dt>
+<dd>will be called after each <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</dd>
+<dt>initial_values <span class="classifier-delimiter">:</span> <span class="classifier">Dict[Node: Node Value]</span></dt>
+<dd>sets the values of nodes before the start of the run. This is useful in cases where a node’s value is
+used before that node executes for the first time (usually due to recurrence or control).</dd>
+<dt>runtime_params <span class="classifier-delimiter">:</span> <span class="classifier">Dict[Node: Dict[Parameter: Tuple(Value, Condition)]]</span></dt>
+<dd><p class="first">nested dictionary of (value, <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>) tuples for parameters of Nodes (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or
 <a class="reference internal" href="#"><span class="doc">Compositions</span></a> of the Composition; specifies alternate parameter values to be used only
 during this <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> when the specified <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is met.</p>
 <dl class="docutils">
 <dt>Outer dictionary:</dt>
-<dd><ul class="first last">
+<dd><ul class="first last simple">
 <li><em>key</em> - Node</li>
 <li><em>value</em> - Runtime Parameter Specification Dictionary</li>
 </ul>
 </dd>
 <dt>Runtime Parameter Specification Dictionary:</dt>
-<dd><ul class="first last">
+<dd><ul class="first last simple">
 <li><em>key</em> - keyword corresponding to a parameter of the Node</li>
 <li><em>value</em> - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
 a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a></li>
 </ul>
 </dd>
 </dl>
-<p>See <a class="reference internal" href="Run.html#run-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a> for more details and examples of valid dictionaries.</p>
-</li>
-<li><strong>log</strong> (<em>bool</em><em>, </em><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><em>LogCondition</em></a>) – <p>Sets the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.log_condition" title="psyneulink.core.globals.parameters.Parameter.log_condition"><code class="xref any py py-attr docutils literal"><span class="pre">log_condition</span></code></a> for every primary <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.nodes" title="psyneulink.core.compositions.composition.Composition.nodes"><code class="xref any py py-attr docutils literal"><span class="pre">node</span></code></a> and
+<p class="last">See <a class="reference internal" href="Run.html#run-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a> for more details and examples of valid dictionaries.</p>
+</dd>
+<dt>animate <span class="classifier-delimiter">:</span> <span class="classifier">dict or bool</span> <span class="classifier-delimiter">:</span> <span class="classifier">False</span></dt>
+<dd><p class="first">specifies use of the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method to generate a gif movie showing the
+sequence of Components executed in a run.  A dict can be specified containing options to pass to
+the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method;  each key must be an argument of the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method, and its value a specification for that argument.  The entries
+listed below can also be included in the dict to specify parameters of the animation.  If the
+<strong>animate</strong> argument is specified simply as <code class="xref any docutils literal"><span class="pre">True</span></code>, defaults are used for all arguments of
+<a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> and the options below:</p>
+<ul class="last simple">
+<li><em>UNIT</em>: <em>EXECUTION_SET</em> or <em>COMPONENT</em> (default=<em>EXECUTION_SET</em>) – specifies which Components
+to treat as active in each call to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a>. <em>COMPONENT</em> generates an
+image for the execution of each Component.  <em>EXECUTION_SET</em> generates an image for each <code class="xref any docutils literal"><span class="pre">execution_set</span></code>, showing all of the Components in that set as active.</li>
+<li><em>DURATION</em>: float (default=0.75) – specifies the duration (in seconds) of each image in the movie.</li>
+<li><em>NUM_RUNS</em>: int (default=1) – specifies the number of runs to animate;  by default, this is 1.
+If the number specified is less than the total number of runs executed, only the number specified
+are animated; if it is greater than the number of runs being executed, only the number being run are
+animated.</li>
+<li><em>NUM_TRIALS</em>: int (default=1) – specifies the number of trials to animate;  by default, this is 1.
+If the number specified is less than the total number of trials being run, only the number specified
+are animated; if it is greater than the number of trials being run, only the number being run are
+animated.</li>
+<li><em>MOVIE_NAME</em>: str (default=<code class="xref any docutils literal"><span class="pre">name</span></code> + ‘movie’) – specifies the name to be used for
+the movie file; it is automatically appended with ‘.gif’.</li>
+<li><em>SAVE_IMAGES</em>: bool (default=<code class="xref any docutils literal"><span class="pre">False</span></code>) – specifies whether to save each of the images used to
+construct the animation in separate gif files, in addition to the file containing the animation.</li>
+<li><em>SHOW</em>: bool (default=<code class="xref any docutils literal"><span class="pre">False</span></code>) – specifies whether to show the animation after it is
+constructed, using the OS’s default viewer.</li>
+</ul>
+</dd>
+<dt>log <span class="classifier-delimiter">:</span> <span class="classifier">bool, LogCondition</span></dt>
+<dd><p class="first">Sets the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.log_condition" title="psyneulink.core.globals.parameters.Parameter.log_condition"><code class="xref any py py-attr docutils literal"><span class="pre">log_condition</span></code></a> for every primary <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.nodes" title="psyneulink.core.compositions.composition.Composition.nodes"><code class="xref any py py-attr docutils literal"><span class="pre">node</span></code></a> and
 <code class="xref any docutils literal"><span class="pre">projection</span></code> in this Composition, if it is not already set.</p>
-<div class="admonition note">
+<div class="last admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">as when setting the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.log_condition" title="psyneulink.core.globals.parameters.Parameter.log_condition"><code class="xref any py py-attr docutils literal"><span class="pre">log_condition</span></code></a> directly, a value of <code class="xref any docutils literal"><span class="pre">True</span></code> will
 correspond to the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.EXECUTION" title="psyneulink.core.globals.log.LogCondition.EXECUTION"><code class="xref any py py-attr docutils literal"><span class="pre">EXECUTION</span> <span class="pre">LogCondition</span></code></a>.</p>
 </div>
-</li>
-<li><strong>retain_old_simulation_data</strong> (<em>bool</em>) – if True, all Parameter values generated during simulations will be saved for later inspection;
-if False, simulation values will be deleted unless otherwise specified by individual Parameters</li>
-</ul>
-</td>
+</dd>
+<dt>retain_old_simulation_data <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>if True, all Parameter values generated during simulations will be saved for later inspection;
+if False, simulation values will be deleted unless otherwise specified by individual Parameters</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>output value of the final Node executed in the composition</strong></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>output value of the final Node executed in the composition</strong></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">various</p>
-</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">various</td>
 </tr>
 </tbody>
 </table>

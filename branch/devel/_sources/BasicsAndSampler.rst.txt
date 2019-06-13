@@ -362,6 +362,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
                                                                       monitor=output
                                                                       function=Energy(size=2,
                                                                                       matrix=[[0,-2.5],[-2.5,0]])),
+                               default_allocation=[0.5],
                                control_signals=[(GAIN, task)])
 
     # Construct the Composition using the control Mechanism as its controller:
@@ -468,7 +469,17 @@ following output::
         decision:	[ 1.][ 2.95]
         conflict:	  [ 0.57]
 
-The control
+Notice that the activity of the instructed unit (color) in the ``task`` Mechanism starts out being weak (``[0.67]``)
+and the model generates the incorrect response to the incongrent stimulus (i.e., green rather than red), and that this
+is associated with a moderate degree of conflict.  This causes it to adapt its beahvior over trials by increasing
+control in response to the conflict, which in turn increases the gain of the ``task`` Mechanism and stengthens the
+activity of the instructed unit, so that it consistently generates the correct response (see XXXX for a more comlete
+description of the model).  A more elaborate example of this model can be found at `BotvinickConflictMonitoringModel`.
+More complicated forms of control are also possible, for example, ones that run internal simulations to optimize the
+amount of control to optimize some criterion (e.g,. maximize the `expected value of control
+<https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_ (see XXX EVC script), or to implement
+`model-based learning <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_ (see XXX LVOC script).
+
 
 .. _BasicsAndSampler_Logging_and_Animation:
 
@@ -500,11 +511,6 @@ Composition (i.e., not necessarily as its `controller <Composition.controller>`.
 ..   - ``color_hidden`` to ``color``
 ..   - ``word_hidden`` to ``orthography``
 
-A more elaborate example of this model can be found at `BotvinickConflictMonitoringModel`. More complicated forms of
-control are also possible, for example, ones that run internal simulations to optimize the amount of control to
-optimize some criterion (e.g,. maximize the `expected value of control <https://royalsocietypublishing
-.org/doi/full/10.1098/rstb.2013.0478>`_ (see XXX EVC script), or to implement `model-based learning
-<https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_ (see XXX LVOC script).
 
 .. XXX MENTION SPECIFIC EXAMPLE SCRIPTS/MODELS HERE
 
