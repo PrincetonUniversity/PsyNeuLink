@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+191.g4bfc92f documentation</title>
+  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+192.g164ec40 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+191.g4bfc92f',
+              VERSION:'0.5.3.2+192.g164ec40',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+191
+                0.5.3.2+192
               </div>
             
           
@@ -530,18 +530,25 @@ the <code class="docutils literal"><span class="pre">red</span></code> and <code
 reinitialize at the beginning of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>; and,since the <code class="docutils literal"><span class="pre">control</span></code> Mechanism was assigned as
 the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>, it executes at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>
 after all of the other Mechanisms in the Composition have executed, which has its effects on the <code class="docutils literal"><span class="pre">task</span></code> Mechanism
-the next time it executes (i.e., on the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>;  a Composition’s <code class="xref any docutils literal"><span class="pre">controller</span></code> can also be configured to execute at the start of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>). Finally, the
+the next time it executes (i.e., on the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>;  a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> can also be configured to execute at the start of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>). Finally, the
 <strong>call_after_trial</strong> argument of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method is used to print Mechanism values
 at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>.  The <strong>animate</strong> argument of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method can be
 used to generate an animation of the Composition’s execution, as shown below:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">_BasicsAndSampler_Stroop_Movie</span><span class="p">:</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">figure</span><span class="p">::</span> <span class="n">_static</span><span class="o">/</span><span class="n">BasicsAndSampler_Stroop_Model_movie</span><span class="o">.</span><span class="n">gif</span>
 </pre></div>
 </div>
-<div class="figure" id="id5">
-<a class="reference internal image-reference" href="_images/BasicsAndSampler_Stroop_Model_movie.gif"><img alt="_images/BasicsAndSampler_Stroop_Model_movie.gif" src="_images/BasicsAndSampler_Stroop_Model_movie.gif" style="width: 75%;" /></a>
-<p class="caption"><span class="caption-text"><strong>Animationg of Stroop Model with Controller.</strong> Generate by a call to <code class="docutils literal"><span class="pre">Stroop_model.show_graph(show_controller)</span>
-<span class="pre">with</span> <span class="pre">``animate={&quot;show_controller&quot;:True}</span></code> in call to the <code class="xref any docutils literal"><span class="pre">run</span> <span class="pre">&lt;Composition.run&gt;`</span></code>.</span></p>
-</div>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">width:</th><td class="field-body">75%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Animation of Stroop Model with Controller.</strong> Generate by a call to <code class="docutils literal"><span class="pre">Stroop_model.show_graph(show_controller)</span>
+<span class="pre">with</span> <span class="pre">``animate={&quot;show_controller&quot;:True}</span></code> in call to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>.</p>
+</div></blockquote>
 <p>Running it for several <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trials</span></code></a> produces the
 following output:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">_Stroop_model_output</span><span class="p">:</span>
@@ -583,8 +590,8 @@ following output:</p>
     <span class="n">conflict</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.57</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>Notice that initially, because control starts out relatively low (<code class="docutils literal"><span class="pre">default_allocation=[0.5]),</span> <span class="pre">the</span> <span class="pre">representation</span> <span class="pre">of</span>
-<span class="pre">the</span> <span class="pre">instruction</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">``task</span></code> Mechanism (color = <code class="docutils literal"><span class="pre">[1,0]</span></code>) is relatively weak (<code class="docutils literal"><span class="pre">[0.67,</span> <span class="pre">0.51]</span></code>).  As a result,
+<p>Notice that initially, because control starts out relatively low (<code class="docutils literal"><span class="pre">default_allocation=[0.5]</span></code>), the representation of
+the instruction in the <code class="docutils literal"><span class="pre">task</span></code> Mechanism (color = <code class="docutils literal"><span class="pre">[1,0]</span></code>) is relatively weak (<code class="docutils literal"><span class="pre">[0.67,</span> <span class="pre">0.51]</span></code>).  As a result,
 the model generates the incorrect response to the incongrent stimulus([-1] = green, rather than [1] = red), due to
 the stronger weights of the Projections in the <code class="docutils literal"><span class="pre">word_pathway</span></code>.  However, beacuse this is associated with a moderate
 amount of conflict (<code class="docutils literal"><span class="pre">[0.51]</span></code>), control is increased on the next trial, which in turn increases the gain of the
