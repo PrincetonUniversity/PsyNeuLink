@@ -3900,8 +3900,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             skip_initialization=False,
             bin_execute=False,
-            context=None
-    ):
+            context=None):
         '''
             Passes inputs to any Nodes receiving inputs directly from the user (via the "inputs" argument) then
             coordinates with the Scheduler to execute sets of nodes that are eligible to execute until
