@@ -3817,8 +3817,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 G.format = 'gif'
                 execution_phase = self.parameters.context.get(execution_id).execution_phase
                 if INITIAL_FRAME in active_items:
-                    phase_string = '                                            '
-                    time_string = ''
+                    # phase_string = ''
+                    phase_string = 'Processing Phase - '
+                    # time_string = ''
+                    time_string = f"Time(run: _, trial: _, pass: _, time_step: _"
                 elif execution_phase == ContextFlags.PROCESSING:
                     # time_string = repr(self.scheduler_processing.clock.simple_time)
                     phase_string = 'Processing Phase - '
