@@ -517,7 +517,6 @@ shown below::
 
     XXX LOG EXAMPLE HERE
 
-
 .. .. _BasicsAndSampler_Learning:
 ..
 .. Learning
