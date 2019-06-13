@@ -509,10 +509,50 @@ The print statements in the example are generated using the **call_after_trial**
 in the `run <Composition.run>` method that can be used to carry out custom operations at various points during
 execution (before and/or after each `run <TimeScale.RUN>`, `run <TimeScale.TRIAL>` or execution of the Components
 in a trial).  PsyNeuLink also has powerful logging capabilities that can be used to track and report any parameter of
-a model in various standard forms (e.g, as numpy arrays, in CSV format, or easy to read formats for console output, as
-shown below::
+a model.  For example, including the following lines in the script for ``Stroop_model``,  after the ``task`` and
+``control`` Mechanisms are constructed::
 
-    XXX LOG EXAMPLE HERE
+    task.log.set_log_conditions(VALUE)
+    control.log.set_log_conditions(VARIABLE)
+    control.log.set_log_conditions(VALUE)
+    ...
+    # after call to Stroop_model.run:
+    Stroop_model.log.print_entries(display=[TIME, VALUE])
+
+report the value of the ``control`` and ``task`` Mechanims each time they executed for three trials::
+
+    Log for Stroop Model:
+
+    Logged Item:   Time          Value
+
+    'CONTROL'      0:1:0:0      [[0.51]]
+    'CONTROL'      0:2:0:0      [[0.59]]
+
+    'TASK'         0:0:0:1      [[0.57 0.56]]
+    'TASK'         0:0:1:1      [[0.58 0.55]]
+    'TASK'         0:0:2:1      [[0.59 0.55]]
+    'TASK'         0:0:3:1      [[0.6  0.54]]
+    'TASK'         0:0:4:1      [[0.61 0.54]]
+    'TASK'         0:0:5:1      [[0.62 0.53]]
+    'TASK'         0:0:6:1      [[0.63 0.53]]
+    'TASK'         0:0:7:1      [[0.64 0.52]]
+    'TASK'         0:0:8:1      [[0.65 0.51]]
+    'TASK'         0:0:9:1      [[0.67 0.51]]
+    'TASK'         0:1:0:1      [[0.68 0.5 ]]
+    'TASK'         0:1:1:1      [[0.69 0.49]]
+    'TASK'         0:1:2:1      [[0.71 0.48]]
+    'TASK'         0:1:3:1      [[0.72 0.47]]
+    'TASK'         0:1:4:1      [[0.74 0.46]]
+    'TASK'         0:1:5:1      [[0.75 0.45]]
+    'TASK'         0:1:6:1      [[0.77 0.44]]
+    'TASK'         0:1:7:1      [[0.78 0.42]]
+    'TASK'         0:1:8:1      [[0.8  0.41]]
+    'TASK'         0:1:9:1      [[0.81 0.4 ]]
+
+The time is reported as run:trial:pass:time_step.  Note that there is only one entry for the ``control`` Mechanism,
+since it only executed once per trial, but there are ten entries for the ``task`` Mechanism since it executed 10
+times, as specified in the Conditions described above.  The output of the `Log` can also be reported in various other
+formats, including a numpy array, a dictionary of values for each entry, and CSV format.
 
 .. .. _BasicsAndSampler_Learning:
 ..

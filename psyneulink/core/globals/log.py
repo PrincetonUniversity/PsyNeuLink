@@ -1153,8 +1153,10 @@ class Log:
                       format(entry_name, self.owner.name))
             else:
                 import numpy as np
+                multiple_eids = len(datum)>1
                 for eid in datum:
-                    print('{0}:'.format(eid))
+                    if multiple_eids:
+                        print(f'execution_context: {eid}:')
                     for i, item in enumerate(datum[eid]):
 
                         time, context, value = item

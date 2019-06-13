@@ -4102,9 +4102,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                     self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
                     # FIX: END REMOVE
-                    control_allocation = self.controller.execute(execution_id=execution_id, context=context)
-                    self.controller._apply_control_allocation(control_allocation, execution_id=execution_id,
-                                                                    runtime_params=runtime_params, context=context)
+                    self.controller.execute(execution_id=execution_id, context=context)
+                    # self.controller._apply_control_allocation(control_allocation, execution_id=execution_id,
+                    #                                                 runtime_params=runtime_params, context=context)
 
                 if bin_execute:
                     _comp_ex.execute_node(self.controller)
@@ -4393,9 +4393,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                     self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
                     # FIX: END REMOVE
-                    control_allocation = self.controller.execute(execution_id=execution_id, context=context)
-                    self.controller._apply_control_allocation(control_allocation, execution_id=execution_id,
-                                                                    runtime_params=runtime_params, context=context)
+                    self.controller.execute(execution_id=execution_id, context=context)
+                    # self.controller._apply_control_allocation(control_allocation, execution_id=execution_id,
+                    #                                                 runtime_params=runtime_params, context=context)
 
                 if bin_execute:
                     _comp_ex.freeze_values()
@@ -4795,10 +4795,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 print("WARNING: Failed to Run execution `{}': {}".format(
                       self.name, str(e)))
 
-        # --- RESET FOR NEXT TRIAL ---
-        # by looping over the length of the list of inputs - each input represents a TRIAL
+        # Reset gym forager environment for the current trial
         if self.env:
             trial_output = np.atleast_2d(self.env.reset())
+
+        # Loop over the length of the list of inputs - each input represents a TRIAL
         for trial_num in range(num_trials):
 
             # Execute call before trial "hook" (user defined function)
