@@ -362,6 +362,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
                                                                       monitor=output
                                                                       function=Energy(size=2,
                                                                                       matrix=[[0,-2.5],[-2.5,0]])),
+                               default_allocation=[0.5],
                                control_signals=[(GAIN, task)])
 
     # Construct the Composition using the control Mechanism as its controller:
@@ -468,7 +469,14 @@ following output::
         decision:	[ 1.][ 2.95]
         conflict:	  [ 0.57]
 
-The control
+Notice that the activities in the ``task`` Mechanism starts out weak
+
+, on the initial trial, even though the input to the ``task`` Mechanism is ``color`` (``[1,0]``), it
+responds to the word.  This is because the ``control`` Mechanism is given a ``default_allocation=[0.5]``, which limits
+the activation of the color unit in the ``task`` Mechanism (``[0.67]``), so that the stronger weights of the Projections
+in the ``word_pathay`` allow it to dominate the response.  However, this is also associated with a moderate
+degree of conflict (``[0.51]``, which increases the activity of the ``control`` Mechanism so that the gain to the
+``task`` Mechanism is increased on the next trial ([``0.51``]).
 
 .. _BasicsAndSampler_Logging_and_Animation:
 

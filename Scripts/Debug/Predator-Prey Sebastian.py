@@ -263,7 +263,7 @@ def main():
                                                  reward_input_mech:[reward]},
                                          execution_id=execution_id,
                                          bin_execute=BIN_EXECUTE,
-                                         animate={UNIT:COMPONENT}
+                                         animate={'show_controller':True}
                                          )
             agent_action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
 
