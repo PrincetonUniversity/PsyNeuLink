@@ -587,15 +587,15 @@ class BayesGLM(LearningFunction):
             + (mu_prior.T @ Lambda_prior @ mu_prior) \
             - (mu_n.T @ Lambda_n @ mu_n)
 
-        self.parameters.Lambda_prior.set(Lambda_prior, execution_id)
-        self.parameters.mu_prior.set(mu_prior, execution_id)
-        self.parameters.gamma_shape_prior.set(gamma_shape_prior, execution_id)
-        self.parameters.gamma_size_prior.set(gamma_size_prior, execution_id)
+        self.parameters.Lambda_prior._set(Lambda_prior, execution_id)
+        self.parameters.mu_prior._set(mu_prior, execution_id)
+        self.parameters.gamma_shape_prior._set(gamma_shape_prior, execution_id)
+        self.parameters.gamma_size_prior._set(gamma_size_prior, execution_id)
 
-        self.parameters.Lambda_n.set(Lambda_n, execution_id)
-        self.parameters.mu_n.set(mu_n, execution_id)
-        self.parameters.gamma_shape_n.set(gamma_shape_n, execution_id)
-        self.parameters.gamma_size_n.set(gamma_size_n, execution_id)
+        self.parameters.Lambda_n._set(Lambda_n, execution_id)
+        self.parameters.mu_n._set(mu_n, execution_id)
+        self.parameters.gamma_shape_n._set(gamma_shape_n, execution_id)
+        self.parameters.gamma_size_n._set(gamma_size_n, execution_id)
 
         # # TEST PRINT:
         # print(f'MEAN WEIGHTS FOR BayesGLM:\n{mu_n}')
@@ -2082,7 +2082,7 @@ class BackPropagation(LearningFunction):
                 raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
                                     format(self.__class__.__name__, owner_string))
 
-        self.parameters.error_matrix.set(error_matrix, execution_id, override=True)
+        self.parameters.error_matrix._set(error_matrix, execution_id, override=True)
         # self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # Manage learning_rate

@@ -343,7 +343,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         previous_value.append(variable)
 
-        self.parameters.previous_value.set(previous_value, execution_id)
+        self.parameters.previous_value._set(previous_value, execution_id)
         return self.convert_output_type(previous_value)
 
 
@@ -742,8 +742,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         if self.previous_value.size != 0:
-            self.parameters.key_size.set(len(self.previous_value[KEYS][0]))
-            self.parameters.val_size.set(len(self.previous_value[VALS][0]))
+            self.parameters.key_size._set(len(self.previous_value[KEYS][0]))
+            self.parameters.val_size._set(len(self.previous_value[VALS][0]))
 
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
@@ -1134,8 +1134,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         # Set key_size and val_size if this is the first entry
         if len(self.get_previous_value(execution_id)[KEYS]) == 0:
-            self.parameters.key_size.set(len(key), execution_id)
-            self.parameters.val_size.set(len(val), execution_id)
+            self.parameters.key_size._set(len(key), execution_id)
+            self.parameters.val_size._set(len(val), execution_id)
 
         # Retrieve value from current dict with key that best matches key
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
@@ -1296,7 +1296,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         if len(d[KEYS]) > self.max_entries:
             d = np.delete(d, [KEYS], axis=1)
 
-        self.parameters.previous_value.set(d,execution_id)
+        self.parameters.previous_value._set(d,execution_id)
         self._memory = d
 
         return storage_succeeded
@@ -1347,7 +1347,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                         memory_keys = np.delete(self._memory[KEYS],j,axis=0)
                         memory_vals = np.delete(self._memory[VALS],j,axis=0)
                         self._memory = np.array([list(memory_keys), list(memory_vals)])
-                        self.parameters.previous_value.set(self._memory, execution_id)
+                        self.parameters.previous_value._set(self._memory, execution_id)
 
     def _parse_memories(self, memories, method, execution_id=None):
         '''Parse passing of single vs. multiple memories, validate memories, and return ndarray'''

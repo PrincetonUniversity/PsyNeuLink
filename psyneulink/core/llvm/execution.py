@@ -150,7 +150,7 @@ class FuncExecution(CUDAExecution):
             initializer = getattr(self._component, initializer)(execution_id)
             struct_ty = self._bin_func.byref_arg_types[arg]
             struct = struct_ty(*initializer)
-            param.set(struct, execution_context=execution_id)
+            param._set(struct, execution_id=execution_id)
 
         return struct
 
@@ -272,7 +272,7 @@ class CompExecution(CUDAExecution):
             gen = helpers.ConditionGenerator(None, self._composition)
             cond_initializer = gen.get_condition_initializer()
             conds = cond_type(*cond_initializer)
-            self._composition._compilation_data.scheduler_conditions.set(conds, execution_context=self._execution_ids[0])
+            self._composition._compilation_data.scheduler_conditions._set(conds, execution_id=self._execution_ids[0])
         return conds
 
     def _get_compilation_param(self, name, initializer, arg, execution_id):
@@ -282,7 +282,7 @@ class CompExecution(CUDAExecution):
             initializer = getattr(self._composition, initializer)(execution_id)
             struct_ty = self._bin_func.byref_arg_types[arg]
             struct = struct_ty(*initializer)
-            param.set(struct, execution_context=execution_id)
+            param._set(struct, execution_id=execution_id)
 
         return struct
 
@@ -315,7 +315,7 @@ class CompExecution(CUDAExecution):
         if len(self._execution_ids) > 1:
             self.__data_struct = data_struct
         else:
-            self._composition._compilation_data.data_struct.set(data_struct, execution_context = self._execution_ids[0])
+            self._composition._compilation_data.data_struct._set(data_struct, execution_id = self._execution_ids[0])
 
     def _extract_node_struct(self, node, data):
         # context structure consists of a list of node contexts,

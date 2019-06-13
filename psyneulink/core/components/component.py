@@ -626,7 +626,7 @@ def make_parameter_property(name):
             setattr(self, backing_field, value)
         else:
             # stack level 3 instead of normal 2 to properly show source when setting using dot notation
-            getattr(self.parameters, name).set(value, self.most_recent_execution_id, _ro_warning_stacklevel=3)
+            getattr(self.parameters, name)._set(value, self.most_recent_execution_id, _ro_warning_stacklevel=3)
 
     return property(getter).setter(setter)
 
@@ -639,7 +639,7 @@ def _has_initializers_setter(value, owning_component=None, execution_id=None):
         # only update owner's attribute if setting to True, because there may be
         # other children that have initializers
         try:
-            owning_component.owner.parameters.has_initializers.set(value, execution_id)
+            owning_component.owner.parameters.has_initializers._set(value, execution_id)
         except AttributeError:
             # no owner
             pass
@@ -1762,11 +1762,11 @@ class Component(object, metaclass=ComponentsMeta):
                 setattr(self, arg_name, arg_value)
 
     def _set_parameter_value(self, param, val, execution_id=None):
-        getattr(self.parameters, param).set(val, execution_id, override=True)
+        getattr(self.parameters, param)._set(val, execution_id, override=True)
         if hasattr(self, "parameter_states"):
             if param in self.parameter_states:
                 new_state_value = self.parameter_states[param].execute(execution_id=execution_id, context=ContextFlags.EXECUTING)
-                self.parameter_states[param].parameters.value.set(new_state_value, execution_id, override=True)
+                self.parameter_states[param].parameters.value._set(new_state_value, execution_id, override=True)
         elif hasattr(self, "owner"):
             if hasattr(self.owner, "parameter_states"):
                 if param in self.owner.parameter_states:
@@ -1774,7 +1774,7 @@ class Component(object, metaclass=ComponentsMeta):
                         execution_id=execution_id,
                         context=ContextFlags.EXECUTING
                     )
-                    self.owner.parameter_states[param].parameters.value.set(new_state_value, execution_id, override=True)
+                    self.owner.parameter_states[param].parameters.value._set(new_state_value, execution_id, override=True)
 
     def _check_args(self, variable=None, execution_id=None, params=None, target_set=None, context=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params.
@@ -1857,7 +1857,7 @@ class Component(object, metaclass=ComponentsMeta):
         elif runtime_params:    # not None
             raise ComponentError("Invalid specification of runtime parameters for {}".format(self.name))
 
-        self.parameters.variable.set(variable, execution_context=execution_id, override=True)
+        self.parameters.variable._set(variable, execution_id=execution_id, override=True)
         return variable
 
     def _instantiate_defaults(self,
@@ -2120,10 +2120,10 @@ class Component(object, metaclass=ComponentsMeta):
                     if attr_value is None:
                         attr_value = p.default_value
 
-                    p.set(attr_value, override=True, skip_history=True)
+                    p._set(attr_value, override=True, skip_history=True)
                     delattr(self, attr_name)
                 except AttributeError:
-                    p.set(p.default_value, override=True, skip_history=True)
+                    p._set(p.default_value, override=True, skip_history=True)
 
     def assign_params(self, request_set=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
@@ -2297,7 +2297,7 @@ class Component(object, metaclass=ComponentsMeta):
 
             if context_param is None:
                 context_param = Context(owner=self)
-                self.parameters.context.set(context_param, execution_id)
+                self.parameters.context._set(context_param, execution_id)
 
         for context_item, value in kwargs.items():
             setattr(context_param, context_item, value)
@@ -2326,7 +2326,7 @@ class Component(object, metaclass=ComponentsMeta):
             For every kwarg k, v pair, will attempt to set self.parameters.<k> to v for execution_id
         """
         for (k, v) in kwargs.items():
-            getattr(self.parameters, k).set(v, execution_id, _ro_warning_stacklevel=3, override=override)
+            getattr(self.parameters, k)._set(v, execution_id, _ro_warning_stacklevel=3, override=override)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
@@ -2920,7 +2920,7 @@ class Component(object, metaclass=ComponentsMeta):
         if value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
 
-        self.parameters.value.set(value, override=True, skip_history=True)
+        self.parameters.value._set(value, override=True, skip_history=True)
         try:
             # Could be mutable, so assign copy
             self.defaults.value = value.copy()
@@ -2958,13 +2958,13 @@ class Component(object, metaclass=ComponentsMeta):
             self._assign_context_values(execution_id)
 
         value = self._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
-        self.parameters.value.set(value, execution_context=execution_id, override=True)
+        self.parameters.value._set(value, execution_id=execution_id, override=True)
         return value
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None, **kwargs):
         from psyneulink.core.components.functions.function import Function
 
-        self.parameters.variable.set(variable, execution_context=execution_id, override=True)
+        self.parameters.variable._set(variable, execution_id=execution_id, override=True)
 
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
@@ -3007,7 +3007,7 @@ class Component(object, metaclass=ComponentsMeta):
         function_variable = self._parse_function_variable(variable, execution_id=execution_id, context=context)
         value = self.function(variable=function_variable, execution_id=execution_id, params=runtime_params, context=context, **kwargs)
         try:
-            self.function.parameters.value.set(value, execution_id, override=True)
+            self.function.parameters.value._set(value, execution_id, override=True)
         except AttributeError:
             pass
 
@@ -3237,7 +3237,7 @@ class Component(object, metaclass=ComponentsMeta):
     def context(self, context):
         if isinstance(context, Context):
             try:
-                self.parameters.context.set(context, self.most_recent_execution_id)
+                self.parameters.context._set(context, self.most_recent_execution_id)
             except AttributeError:
                 self._context = context
         else:
@@ -3387,7 +3387,7 @@ class Component(object, metaclass=ComponentsMeta):
     @function.setter
     def function(self, value):
         # TODO: currently no validation, should replicate from _instantiate_function
-        self.parameters.function.set(value)
+        self.parameters.function._set(value)
         self._parse_param_state_sources()
 
     @property

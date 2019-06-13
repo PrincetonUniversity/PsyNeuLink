@@ -494,12 +494,12 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     EVC_values = np.concatenate(Comm.allgather(EVC_values), axis=0)
                     EVC_policies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
 
-            controller.parameters.EVC_max.set(EVC_max, execution_id, override=True)
-            controller.parameters.EVC_max_state_values.set(EVC_max_state_values, execution_id, override=True)
-            controller.parameters.EVC_max_policy.set(EVC_max_policy, execution_id, override=True)
+            controller.parameters.EVC_max._set(EVC_max, execution_id, override=True)
+            controller.parameters.EVC_max_state_values._set(EVC_max_state_values, execution_id, override=True)
+            controller.parameters.EVC_max_policy._set(EVC_max_policy, execution_id, override=True)
             if controller.save_all_values_and_policies:
-                controller.parameters.EVC_values.set(EVC_values, execution_id, override=True)
-                controller.parameters.EVC_policies.set(EVC_policies, execution_id, override=True)
+                controller.parameters.EVC_values._set(EVC_values, execution_id, override=True)
+                controller.parameters.EVC_policies._set(EVC_policies, execution_id, override=True)
             # # TEST PRINT:
             # import re
             # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
@@ -526,7 +526,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         # Assign max values for optimal allocation policy to controller.input_states (for reference only)
         for i in range(len(controller.input_states)):
-            controller.input_states[controller.input_states.names[i]].parameters.value.set(np.atleast_1d(next(EVC_maxStateValue)), execution_id, override=True)
+            controller.input_states[controller.input_states.names[i]].parameters.value._set(np.atleast_1d(next(EVC_maxStateValue)), execution_id, override=True)
 
 
         # Report EVC max info
@@ -548,7 +548,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #     assign to controller.control_allocation, and return (where it will be assigned to controller.value).
         #     (note:  the conversion is to be consistent with use of controller.value for assignments to control_signals.value)
         allocation_policy = np.array(EVC_max_policy).reshape(len(EVC_max_policy), -1)
-        controller.parameters.value.set(allocation_policy, execution_id, override=True)
+        controller.parameters.value._set(allocation_policy, execution_id, override=True)
         return allocation_policy
         #endregion
 
@@ -613,7 +613,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
         try:
             ctlr.parameters.simulation_ids._get(execution_id).append(sim_execution_id)
         except AttributeError:
-            ctlr.parameters.simulation_ids.set([sim_execution_id], execution_id)
+            ctlr.parameters.simulation_ids._set([sim_execution_id], execution_id)
 
         ctlr.system._initialize_from_context(sim_execution_id, execution_id)
 

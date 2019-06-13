@@ -293,4 +293,4 @@ class MaskedMappingProjection(MappingProjection):
             elif mask_operation is EXPONENTIATE:
                 matrix **= mask
 
-        self.parameters.matrix.set(matrix, execution_id)
+        self.parameters.matrix._set(matrix, execution_id)

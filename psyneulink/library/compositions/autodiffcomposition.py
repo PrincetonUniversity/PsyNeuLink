@@ -502,7 +502,7 @@ class AutodiffComposition(Composition):
                                         self.execution_sets,
                                         self.device,
                                         execution_id)
-            self.parameters.pytorch_representation.set(model, execution_id)
+            self.parameters.pytorch_representation._set(model, execution_id)
 
         # Set up optimizer function
         old_opt = self.parameters.optimizer._get(execution_id)
@@ -510,7 +510,7 @@ class AutodiffComposition(Composition):
             logger.warning("Overwriting optimizer for AutodiffComposition {}! Old optimizer: {}".format(
                 self, old_opt))
         opt = self._make_optimizer(self.optimizer_type, self.learning_rate, self.weight_decay, execution_id)
-        self.parameters.optimizer.set(opt, execution_id)
+        self.parameters.optimizer._set(opt, execution_id)
 
         # Set up loss function
         if self.loss is not None:
@@ -746,7 +746,7 @@ class AutodiffComposition(Composition):
             ctx = self.output_CIM.parameters.context._get(execution_id)
             # new_ctx = copy.deepcopy(ctx)
             # new_ctx.execution_phase = ContextFlags.PROCESSING
-            # self.output_CIM.parameters.context.set(new_ctx, execution_id=execution_id)
+            # self.output_CIM.parameters.context._set(new_ctx, execution_id=execution_id)
             if ctx is not None:  # HACK: CW 12/18/18 for some reason context isn't set correctly
                 ctx.execution_phase = ContextFlags.PROCESSING
             # note that output[-1] might not be the truly most recent value
@@ -800,7 +800,7 @@ class AutodiffComposition(Composition):
             self._analyze_graph()
 
             if self.refresh_losses or (self.parameters.losses._get(execution_id) is None):
-                self.parameters.losses.set([], execution_id)
+                self.parameters.losses._set([], execution_id)
             adjusted_stimuli = self._adjust_stimulus_dict(inputs)
             if num_trials is None:
                 num_trials = len(adjusted_stimuli)

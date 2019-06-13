@@ -321,7 +321,7 @@ def _network_getter(owning_component=None, execution_id=None):
 
 
 def _network_setter(value, owning_component=None, execution_id=None):
-    owning_component.function.parameters.network.set(value, execution_id)
+    owning_component.function.parameters.network._set(value, execution_id)
     return value
 
 
@@ -617,7 +617,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
         if runtime_params:
             if "training_flag" in runtime_params.keys():
-                self.parameters.training_flag.set(runtime_params["training_flag"], execution_id)
+                self.parameters.training_flag._set(runtime_params["training_flag"], execution_id)
                 del runtime_params["training_flag"]
 
         return super()._execute(

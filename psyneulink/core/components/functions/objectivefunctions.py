@@ -344,7 +344,7 @@ class Stability(ObjectiveFunction):
         else:
             matrix = get_matrix(matrix, size, size)
 
-        self.parameters.matrix.set(matrix)
+        self.parameters.matrix._set(matrix)
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 

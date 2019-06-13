@@ -2038,7 +2038,7 @@ class State_Base(State):
                         continue
                     # Otherwise, for efficiency, assign OVERRIDE value to State here and return
                     else:
-                        self.parameters.value.set(type_match(projection_value, type(self.defaults.value)), execution_id, override=True)
+                        self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), execution_id, override=True)
                         return
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
@@ -2050,7 +2050,7 @@ class State_Base(State):
         # Handle ModulatoryProjection OVERRIDE
         #    if there is one and it wasn't been handled above (i.e., if paramValidation is set)
         if modulatory_override:
-            self.parameters.value.set(type_match(modulatory_override[1], type(self.defaults.value)), execution_id, override=True)
+            self.parameters.value._set(type_match(modulatory_override[1], type(self.defaults.value)), execution_id, override=True)
             return
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
@@ -2063,7 +2063,7 @@ class State_Base(State):
             if value_list:
                 # KDM 12/10/18: below is confusing - why does the mod_param "enum" value refer to a class?
                 aggregated_mod_val = mod_param.value.reduce(value_list)
-                getattr(self.function.parameters, mod_param.value.attrib_name).set(aggregated_mod_val, execution_id)
+                getattr(self.function.parameters, mod_param.value.attrib_name)._set(aggregated_mod_val, execution_id)
                 function_param = self.function.params[mod_param.value.attrib_name]
                 if not FUNCTION_PARAMS in self.stateParams:
                     self.stateParams[FUNCTION_PARAMS] = {function_param: aggregated_mod_val}

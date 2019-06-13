@@ -302,7 +302,7 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, ex
     # KDM 8/7/18: removing the below because it has bad side effects for _instantiate_from_context, and it's not clear
     # that it's the correct behavior. Similar reason for removing/not implementing auto/hetero setters
     # if hasattr(owning_component, "recurrent_projection"):
-    #     owning_component.recurrent_projection.parameter_states["matrix"].function.parameters.previous_value.set(value, execution_id)
+    #     owning_component.recurrent_projection.parameter_states["matrix"].function.parameters.previous_value._set(value, execution_id)
 
     try:
         value = get_matrix(value, owning_component.size[0], owning_component.size[0])
@@ -311,15 +311,15 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, ex
 
     if value is not None:
         temp_matrix = value.copy()
-        owning_component.parameters.auto.set(np.diag(temp_matrix).copy(), execution_id)
+        owning_component.parameters.auto._set(np.diag(temp_matrix).copy(), execution_id)
         np.fill_diagonal(temp_matrix, 0)
-        owning_component.parameters.hetero.set(temp_matrix, execution_id)
+        owning_component.parameters.hetero._set(temp_matrix, execution_id)
 
     return value
 
 def _recurrent_transfer_mechanism_learning_rate_setter(value, owning_component=None, execution_id=None):
     if hasattr(owning_component, "learning_mechanism") and owning_component.learning_mechanism:
-        owning_component.learning_mechanism.parameters.learning_rate.set(value, execution_id)
+        owning_component.learning_mechanism.parameters.learning_rate._set(value, execution_id)
     return value
 
 
@@ -1122,7 +1122,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         hetero were None in the initialization call.
         :param function:
         """
-        self.parameters.previous_value.set(None, override=True)
+        self.parameters.previous_value._set(None, override=True)
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -1282,7 +1282,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         value = self.parameters.value._get(execution_id)
         if value is None:
             value = self.defaults.value
-        self.parameters.previous_value.set(value, execution_id, override=True)
+        self.parameters.previous_value._set(value, execution_id, override=True)
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
@@ -1519,7 +1519,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
         # if self.context.initialization_status != ContextFlags.INITIALIZING:
-        #     self.parameters.previous_value.set(self.value, override=True)
+        #     self.parameters.previous_value._set(self.value, override=True)
         # self._output = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
         # return self._output
         return super()._execute(variable, execution_id, runtime_params, context)

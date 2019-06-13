@@ -1848,7 +1848,7 @@ class Process(Process_Base):
 
         # Assign items in input to value of each process_input_state
         for i in range(len(self.process_input_states)):
-            self.process_input_states[i].parameters.value.set(input[i], execution_id, override=True)
+            self.process_input_states[i].parameters.value._set(input[i], execution_id, override=True)
 
         return input
 
@@ -2256,7 +2256,7 @@ class Process(Process_Base):
         self._check_args(variable, runtime_params)
 
         # Use Process self.input as input to first Mechanism in Pathway
-        self.parameters.input.set(variable, execution_id)
+        self.parameters.input._set(variable, execution_id)
 
         # Generate header and report input
         if report_output:
@@ -2327,7 +2327,7 @@ class Process(Process_Base):
         # Assign items of self.target to target_input_states
         #   (ProcessInputStates that project to corresponding target_nodes for the Process)
         for i, target_input_state in zip(range(len(self.target_input_states)), self.target_input_states):
-            target_input_state.parameters.value.set(target[i], execution_id, override=True)
+            target_input_state.parameters.value._set(target[i], execution_id, override=True)
 
         # # Zero any input from projections to target(s) from any other processes
         for target_mech in self.target_mechanisms:
@@ -2725,7 +2725,7 @@ class ProcessInputState(OutputState):
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
-        self.parameters.value.set(variable, override=True)
+        self.parameters.value._set(variable, override=True)
 
         # self.path_afferents = []
         # self.index = PRIMARY

@@ -116,7 +116,7 @@ def _matrix_getter(owning_component=None, execution_id=None):
 
 
 def _matrix_setter(value, owning_component=None, execution_id=None):
-    owning_component.owner_mech.parameters.matrix.set(value, execution_id)
+    owning_component.owner_mech.parameters.matrix._set(value, execution_id)
     return value
 
 
@@ -125,7 +125,7 @@ def _auto_getter(owning_component=None, execution_id=None):
 
 
 def _auto_setter(value, owning_component=None, execution_id=None):
-    owning_component.owner_mech.parameters.auto.set(value, execution_id)
+    owning_component.owner_mech.parameters.auto._set(value, execution_id)
     return value
 
 
@@ -134,7 +134,7 @@ def _hetero_getter(owning_component=None, execution_id=None):
 
 
 def _hetero_setter(value, owning_component=None, execution_id=None):
-    owning_component.owner_mech.parameters.hetero.set(value, execution_id)
+    owning_component.owner_mech.parameters.hetero._set(value, execution_id)
     return value
 
 

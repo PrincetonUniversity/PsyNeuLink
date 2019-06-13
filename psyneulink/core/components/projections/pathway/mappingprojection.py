@@ -330,10 +330,10 @@ def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
 # # MODIFIED 5/24/19 OLD:
 # def _mapping_projection_matrix_setter(value, owning_component=None, execution_id=None):
 #     value = np.array(value)
-#     owning_component.function.parameters.matrix.set(value, execution_id)
+#     owning_component.function.parameters.matrix._set(value, execution_id)
 #     # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
 #     # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
-#     owning_component.parameter_states["matrix"].function.parameters.previous_value.set(value, execution_id)
+#     owning_component.parameter_states["matrix"].function.parameters.previous_value._set(value, execution_id)
 #     return value
 # MODIFIED 5/24/19 NEW: [JDC]
 def _mapping_projection_matrix_setter(matrix, owning_component=None, execution_id=None, **kwargs):
@@ -369,24 +369,24 @@ def _mapping_projection_matrix_setter(matrix, owning_component=None, execution_i
     if _use_identity_function:
         if not isinstance(current_function, Identity):
             owning_component._original_function = current_function
-            owning_component.parameters.function.set(Identity(default_variable=current_function_variable), execution_id)
+            owning_component.parameters.function._set(Identity(default_variable=current_function_variable), execution_id)
             # 5/24/19: THIS SHOULD SIMPLY ASSIGN THE IDENTITY_MATRIX STRING TO THE CORRECT EXECUTION_ID CONTEXT:
-            # owning_component.parameters.matrix.set(IDENTITY_MATRIX, execution_id)
+            # owning_component.parameters.matrix._set(IDENTITY_MATRIX, execution_id)
             # May be needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models) see below
-            # owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
+            # owning_component.parameter_states["matrix"].function.parameters.previous_value._set(matrix, execution_id)
         return IDENTITY_MATRIX
 
     # Don't use Identity Function
     else:
         # If Identity function is currently in use, restore function to _original_function
         if  isinstance(current_function, Identity):
-            owning_component.parameters.function.set(owning_component._original_function, execution_id)
+            owning_component.parameters.function._set(owning_component._original_function, execution_id)
             owning_component._original_function = None
         # Assign matrix
-        owning_component.function.parameters.matrix.set(matrix, execution_id)
+        owning_component.function.parameters.matrix._set(matrix, execution_id)
         # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
         # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
-        owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
+        owning_component.parameter_states["matrix"].function.parameters.previous_value._set(matrix, execution_id)
         return matrix
 
 def suppress_identity_function_setter(value, owning_component=None, execution_id=None):

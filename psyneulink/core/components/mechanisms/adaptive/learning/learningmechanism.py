@@ -673,7 +673,7 @@ def _error_signal_getter(owning_component=None, execution_id=None):
 def _learning_mechanism_learning_rate_setter(value, owning_component=None, execution_id=None):
     if hasattr(owning_component, "function") and owning_component.function:
         if hasattr(owning_component.function.parameters, "learning_rate"):
-            owning_component.function.parameters.learning_rate.set(value, execution_id)
+            owning_component.function.parameters.learning_rate._set(value, execution_id)
     return value
 
 class LearningMechanism(AdaptiveMechanism_Base):

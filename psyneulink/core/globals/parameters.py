@@ -130,9 +130,9 @@ To create new Parameters, reference this example of a new class *B*
 
                 if value is not None:
                     temp_matrix = value.copy()
-                    owning_component.parameters.auto.set(np.diag(temp_matrix).copy(), execution_id)
+                    owning_component.parameters.auto._set(np.diag(temp_matrix).copy(), execution_id)
                     np.fill_diagonal(temp_matrix, 0)
-                    owning_component.parameters.hetero.set(temp_matrix, execution_id)
+                    owning_component.parameters.hetero._set(temp_matrix, execution_id)
 
                 return value
 
@@ -897,6 +897,9 @@ class Parameter(types.SimpleNamespace):
     def _set(self, value, execution_id=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
         if not override and self.read_only:
             warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=_ro_warning_stacklevel)
+
+        if not self.stateful:
+            execution_id = None
 
         if self.setter is not None:
             kwargs = {

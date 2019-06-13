@@ -842,7 +842,7 @@ class OptimizationControlMechanism(ControlMechanism):
             modulatory_signal._variable_spec = (OWNER_VALUE, i)
             self._modulatory_signals[i] = modulatory_signal
         self.defaults.value = np.tile(modulatory_signal.parameters.variable.default_value, (i+1, 1))
-        self.parameters.control_allocation.set(copy.deepcopy(self.defaults.value))
+        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value))
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Instantiate OptimizationControlMechanism's OptimizatonFunction attributes'''
@@ -894,13 +894,13 @@ class OptimizationControlMechanism(ControlMechanism):
             return [defaultControlAllocation]
 
         # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
-        self.parameters.feature_values.set(_parse_feature_values_from_variable(variable), execution_id)
+        self.parameters.feature_values._set(_parse_feature_values_from_variable(variable), execution_id)
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
         control_allocation = self.parameters.control_allocation._get(execution_id)
         if control_allocation is None:
             control_allocation = [c.defaults.variable for c in self.control_signals]
-            self.parameters.control_allocation.set(control_allocation, execution_id=None, override=True)
+            self.parameters.control_allocation._set(control_allocation, execution_id=None, override=True)
 
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         if hasattr(self.agent_rep, "adapt"):
@@ -951,7 +951,7 @@ class OptimizationControlMechanism(ControlMechanism):
         try:
             self.parameters.simulation_ids._get(base_execution_id).append(sim_execution_id)
         except AttributeError:
-            self.parameters.simulation_ids.set([sim_execution_id], base_execution_id)
+            self.parameters.simulation_ids._set([sim_execution_id], base_execution_id)
 
         self.agent_rep._initialize_from_context(sim_execution_id, self._get_frozen_execution_id(base_execution_id), override=False)
 
@@ -1203,7 +1203,7 @@ class OptimizationControlMechanism(ControlMechanism):
         '''
 
         value = [np.atleast_1d(a) for a in control_allocation]
-        self.parameters.value.set(value, execution_id)
+        self.parameters.value._set(value, execution_id)
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
                                    context=ContextFlags.COMPOSITION)
 

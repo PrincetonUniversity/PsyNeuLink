@@ -445,7 +445,7 @@ def _control_allocation_setter(value, owning_component=None, execution_id=None):
     mod_alloc = owning_component.parameters.modulatory_allocation._get(execution_id)
     for j, i in enumerate(control_signal_indices):
         mod_alloc[i] = value[j]
-    owning_component.parameters.modulatory_allocation.set(np.array(mod_alloc), execution_id)
+    owning_component.parameters.modulatory_allocation._set(np.array(mod_alloc), execution_id)
     return value
 
 def _gating_allocation_getter(owning_component=None, execution_id=None):
@@ -467,7 +467,7 @@ def _gating_allocation_setter(value, owning_component=None, execution_id=None):
     mod_alloc = owning_component.parameters.modulatory_allocation._get(execution_id)
     for j, i in enumerate(gating_signal_indices):
         mod_alloc[i] = value[j]
-    owning_component.parameters.modulatory_allocation.set(np.array(mod_alloc), execution_id)
+    owning_component.parameters.modulatory_allocation._set(np.array(mod_alloc), execution_id)
     return value
 
 def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None):
@@ -1270,7 +1270,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # For DefaultAllocationFunction, set defaults.value to have number of items equal to num modulatory_signals
         if isinstance(self.function, DefaultAllocationFunction):
             self.defaults.value = np.tile(self.function.value, (num_modulatory_signals, 1))
-            self.parameters.modulatory_allocation.set(copy.deepcopy(self.defaults.value))
+            self.parameters.modulatory_allocation._set(copy.deepcopy(self.defaults.value))
             self.function.num_modulatory_signals = num_modulatory_signals
 
         # For other functions, assume that if its value has:
@@ -1281,7 +1281,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         #     leave things alone, and allow any errant indices for modulatory_signals to be caught later.
         else:
             self.defaults.value = np.array(self.function.value)
-            self.parameters.value.set(copy.deepcopy(self.defaults.value))
+            self.parameters.value._set(copy.deepcopy(self.defaults.value))
 
             len_fct_value = len(self.function.value)
 
@@ -1353,7 +1353,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                 control_signal_costs = np.append(control_signal_costs, np.zeros((1, 1)), axis=0)
             except (AttributeError, ValueError):
                 control_signal_costs = np.zeros((1, 1))
-            self.parameters.control_signal_costs.set(control_signal_costs, override=True)
+            self.parameters.control_signal_costs._set(control_signal_costs, override=True)
 
         # UPDATE output_states AND modulatory_projections -------------------------------------------------------------
 
@@ -1584,7 +1584,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         (used by controller of a Composition in simulations)
         '''
         value = [np.atleast_1d(a) for a in modulatory_allocation]
-        self.parameters.value.set(value, execution_id)
+        self.parameters.value._set(value, execution_id)
         self._update_output_states(execution_id=execution_id,
                                    runtime_params=runtime_params,
                                    context=ContextFlags.COMPOSITION)

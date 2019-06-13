@@ -454,7 +454,7 @@ class OptimizationFunction(Function_Base):
             if SEARCH_TERMINATION_FUNCTION in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_TERMINATION_FUNCTION)]
         if SEARCH_SPACE in args[0] and args[0][SEARCH_SPACE] is not None:
-            self.parameters.search_space.set(args[0][SEARCH_SPACE], execution_id)
+            self.parameters.search_space._set(args[0][SEARCH_SPACE], execution_id)
             if SEARCH_SPACE in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_SPACE)]
 
@@ -537,10 +537,10 @@ class OptimizationFunction(Function_Base):
 
             if self.parameters.save_samples._get(execution_id):
                 samples.append(new_sample)
-                self.parameters.saved_samples.set(samples, execution_id, override=True)
+                self.parameters.saved_samples._set(samples, execution_id, override=True)
             if self.parameters.save_values._get(execution_id):
                 values.append(current_value)
-                self.parameters.saved_values.set(values, execution_id, override=True)
+                self.parameters.saved_values._set(values, execution_id, override=True)
 
         return new_sample, new_value, samples, values
 
@@ -1049,10 +1049,10 @@ class GradientOptimization(OptimizationFunction):
         if sample_num == 0:
             # Start from initial value (sepcified by user in step_size arg)
             step_size = self.parameters.step_size.default_value
-            self.parameters.step_size.set(step_size, execution_id)
+            self.parameters.step_size._set(step_size, execution_id)
         if self.annealing_function:
             step_size = call_with_pruned_args(self.annealing_function, step_size, sample_num, execution_id=execution_id)
-            self.parameters.step_size.set(step_size, execution_id)
+            self.parameters.step_size._set(step_size, execution_id)
 
         # Compute gradients with respect to current sample
         _gradients = call_with_pruned_args(self.gradient_function, sample, execution_id=execution_id)
@@ -1073,8 +1073,8 @@ class GradientOptimization(OptimizationFunction):
 
         if iteration is 0:
             # self._convergence_metric = self.convergence_threshold + EPSILON
-            self.parameters.previous_variable.set(variable, execution_id, override=True)
-            self.parameters.previous_value.set(value, execution_id, override=True)
+            self.parameters.previous_variable._set(variable, execution_id, override=True)
+            self.parameters.previous_value._set(value, execution_id, override=True)
             return False
 
         # Evaluate for convergence
@@ -1084,8 +1084,8 @@ class GradientOptimization(OptimizationFunction):
             convergence_metric = np.max(np.abs(np.array(variable) -
                                                np.array(previous_variable)))
 
-        self.parameters.previous_variable.set(variable, execution_id, override=True)
-        self.parameters.previous_value.set(value, execution_id, override=True)
+        self.parameters.previous_variable._set(variable, execution_id, override=True)
+        self.parameters.previous_value._set(value, execution_id, override=True)
 
         return convergence_metric <= self.parameters.convergence_threshold._get(execution_id)
 
