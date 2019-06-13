@@ -2411,13 +2411,18 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         state = parsed_state_spec
 
         # State initialization was deferred (owner or reference_value was missing), so
-        #    assign owner, variable, and/or reference_value
-        #    if they were not specified in call to _instantiate_state
+        #    assign owner, variable, and/or reference_value if they were not already specified
         if state.context.initialization_status == ContextFlags.DEFERRED_INIT:
             if not state.init_args[OWNER]:
                 state.init_args[OWNER] = owner
+            # If variable was not specified by user or State's constructor:
             if not VARIABLE in state.init_args or state.init_args[VARIABLE] is None:
-                state.init_args[VARIABLE] = owner.defaults.variable[0]
+                # If call to _instantiate_state specified variable, use that
+                if variable is not None:
+                    state.init_args[VARIABLE] = variable
+                # Otherwise, use State's owner's default variable as default
+                else:
+                    state.init_args[VARIABLE] = owner.defaults.variable[0]
             if not hasattr(state, REFERENCE_VALUE):
                 if REFERENCE_VALUE in state.init_args and state.init_args[REFERENCE_VALUE] is not None:
                     state.reference_value = state.init_args[REFERENCE_VALUE]
@@ -2426,9 +2431,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                     state.reference_value = state.init_args[VARIABLE]
             state.init_args[CONTEXT]=context
             state._deferred_init()
-
-        if variable:
-                state.defaults.variable = variable
 
         # # FIX: 10/3/17 - CHECK THE FOLLOWING BY CALLING STATE-SPECIFIC METHOD?
         # # FIX: DO THIS IN _parse_connection_specs?
