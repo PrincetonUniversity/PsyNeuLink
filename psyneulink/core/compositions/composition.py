@@ -1641,10 +1641,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         • if the status of **projection** is `deferred_init`:
 
-          - if its `sender <Projection.sender>` and/or `receiver <Projection.receiver>` attributes are not specified,
-            then **sender** and/or **receiver** are used.
+          - if its `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` attributes are not
+            specified, then **sender** and/or **receiver** are used.
 
-          - if `sender <Projection.sender>` and/or `receiver <Projection.receiver>` attributes are specified,
+          - if `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` attributes are specified,
             they must match **sender** and/or **receiver** if those have also been specified.
 
           - if a Projection between the specified sender and receiver does *not* already exist, it is initialized; if
@@ -1652,8 +1652,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             a`feedback` Projection are implemented (in case it has not already been done for the existing Projection).
 
         .. note::
-           If **projection** is an instantiated projection (i.e., not in `deferred_init`) and one already exists
-           between its `sender <Projection.sender>` and `receiver <Projection.receiver>` a warning is generated.
+           If **projection** is an instantiated projection (i.e., not in `deferred_init`) and one already exists between
+           its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` a warning is generated.
 
         COMMENT:
         IMPLEMENTATION NOTE:
@@ -1682,11 +1682,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         feedback : bool
             When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
-            means that each Projections within the cycle actually passes to its `receiver <Projection.receiver>`
-            the `value <Projection.value>` of its `sender <Projection.sender>` from the previous execution.
+            means that each Projections within the cycle actually passes to its `receiver <Projection_Base.receiver>`
+            the `value <Projection.value>` of its `sender <Projection_Base.sender>` from the previous execution.
             When True, this Projection "breaks" the cycle, such that all Nodes execute in sequence, and only the
-            Projection marked as 'feedback' passes to its `receiver <Projection.receiver>` the
-            `value <Projection.value>` of its `sender <Projection.sender>` from the previous execution.
+            Projection marked as 'feedback' passes to its `receiver <Projection_Base.receiver>` the
+            `value <Projection.value>` of its `sender <Projection_Base.sender>` from the previous execution.
     '''
 
         projection = self._parse_projection_spec(projection, name)
@@ -1770,8 +1770,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_projections(self, projections=None):
         '''
             Calls `add_projection <Composition.add_projection>` for each Projection in the *projections* list. Each
-            Projection must have its `sender <Projection.sender>` and `receiver <Projection.receiver>` already
-            specified.
+            Projection must have its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`
+            already specified.
 
             Arguments
             ---------

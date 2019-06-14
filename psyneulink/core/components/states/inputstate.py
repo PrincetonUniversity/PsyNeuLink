@@ -307,12 +307,10 @@ should project to the InputState. Each of these is described below:
         InputStates belonging to any Mechanisms specified, along with Projections to them that parallel those of the
         one(s) specified (see below).
       |
-      For each InputState specified, and all of the InputStates belonging to any Mechanisms specified using the formats
-      above, a new InputState is created along with Projections to it that parallel those received by the
-      corresponding InputState --  that is, that have the same `senders <Projection.sender>` as those that project to
-      the specified InputState, but that project to the one being created.  Thus, for each InputState specified,
-      a new one is created that receives exactly the same inputs; that is, "shadows" it.
-
+      For each InputState specified, and all of the InputStates belonging to any Mechanisms specified, a new InputState
+      is created along with Projections to it that parallel those received by the corresponding InputState in the
+      list.  In other words, for each InputState specified, a new one is created that receives exactly the same inputs
+      from the same `senders  <Projection_Base.sender>` as the ones specified.
 
 .. _InputState_Compatability_and_Constraints:
 
@@ -587,7 +585,7 @@ class InputState(State_Base):
         `mod_afferents <InputState.mod_afferents>` attributes, respectively (see
         `InputState_Compatability_and_Constraints` for additional details).  If **projections** but neither
         **variable** nor **size** are specified, then the `value <Projection.value>` of the Projection(s) or their
-        `senders <Projection.sender>` specified in **projections** argument are used to determine the InputState's
+        `senders <Projection_Base.sender>` specified in **projections** argument are used to determine the InputState's
         `variable <InputState.variable>`.
 
     weight : number : default 1
@@ -634,7 +632,7 @@ class InputState(State_Base):
         each of which must match the format (number and types of elements) of the InputState's
         `variable <InputState.variable>`.  If neither the **variable** or **size** argument is specified, and
         **projections** is specified, then `variable <InputState.variable>` is assigned the `value
-        <Projection.value>` of the Projection(s) or its `sender <Projection.sender>`.
+        <Projection.value>` of the Projection(s) or its `sender <Projection_Base.sender>`.
 
     function : Function
         If it is a `CombinationFunction`, it combines the `values <Projection_Base.value>` of the `PathwayProjections
