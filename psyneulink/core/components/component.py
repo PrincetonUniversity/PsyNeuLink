@@ -2417,8 +2417,8 @@ class Component(object, metaclass=ComponentsMeta):
         """
 
         if inspect.isclass(variable):
-            raise ComponentError("Assignment of class ({}) as a variable (for {}) is not allowed".
-                                 format(variable.__name__, self.name))
+            raise ComponentError(f"Assignment of class ({variable.__name__}) "
+                                 f"as a variable (for {self.name}) is not allowed.")
 
         # If variable is not specified, then:
         #    - assign to (??now np-converted version of) self.class_defaults.variable
@@ -2447,8 +2447,8 @@ class Component(object, metaclass=ComponentsMeta):
         # If self.class_defaults.variable is locked, then check that variable matches it
         if self.variableClassDefault_locked:
             if not variable.dtype is self.class_defaults.variable.dtype:
-                message = "Variable for {0} (in {1}) must be a {2}".\
-                    format(self.componentName, context, self.class_defaults.variable.__class__.__name__)
+                message = f"Variable for {self.componentName} (in {context}) " \
+                    f"must be a {self.class_defaults.variable.__class__.__name__}."
                 raise ComponentError(message)
 
         return variable
@@ -2483,19 +2483,14 @@ class Component(object, metaclass=ComponentsMeta):
                 # these are always allowable since they are attribs of every Component
                 if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES, FUNCTION_PARAMS}:
                     continue
-                # function is a class, so function_params has not yet been implemented
-                # self._function = request_set[FUNCTION]
-                # if param_name is FUNCTION_PARAMS and (self.function is None or is_instance_or_subclass(self.function, Function) or inspect.isfunction(self.function)):
-                #     continue
-                raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
+                raise ComponentError(f"{param_name} is not a valid parameter for {self.__class__.__name__}.")
 
             # The value of the param is None in paramClassDefaults: suppress type checking
             # IMPLEMENTATION NOTE: this can be used for params with multiple possible types,
             #                      until type lists are implemented (see below)
             if self.paramClassDefaults[param_name] is None or self.paramClassDefaults[param_name] is NotImplemented:
                 if self.prefs.verbosePref:
-                    warnings.warn("{0} is specified as None for {1} which suppresses type checking".
-                                  format(param_name, self.name))
+                    warnings.warn(f"{param_name} is specified as None for {self.name} which suppresses type checking.")
                 if target_set is not None:
                     target_set[param_name] = param_value
                 continue
@@ -2823,25 +2818,21 @@ class Component(object, metaclass=ComponentsMeta):
         # Specification is an already implemented Function
         elif isinstance(function, Function):
             if not iscompatible(function_variable, function.defaults.variable):
+                owner_str = ''
+                if hasattr(self, 'owner') and self.owner is not None:
+                    owner_str = f' of {repr(self.owner.name)}'
                 if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
-                    raise ComponentError(
-                            'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
-                            ' of the component {3} to which it is being assigned.  Make sure variable for {1} is 2d'.
-                            format(function.defaults.variable, function, function_variable, self)
-                    )
+                    raise ComponentError(f'Variable format ({function.defaults.variable}) of {function.name} '
+                                         f'is not compatible with the variable format ({function_variable}) '
+                                         f'of {repr(self.name)}{owner_str} to which it is being assigned.  '
+                                         f'Make sure variable for {function.name} is 2d.')
                 elif function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
                     function_increased_dim = np.asarray([function.defaults.variable])
                     if not iscompatible(function_variable, function_increased_dim):
-                        raise ComponentError(
-                            'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
-                            ' of the component {3} to which it is being assigned.  Make sure variable for {1} is 2d'.
-                                format(
-                                function.defaults.variable,
-                                function,
-                                function_variable,
-                                self
-                            )
-                        )
+                        raise ComponentError(f'Variable format ({function.defaults.variable}) of {function.name} '
+                                             f'is not compatible with the variable format ({function_variable})'
+                                             f' of {repr(self.name)}{owner_str} to which it is being assigned.  '
+                                             f'Make sure variable for {function.name} is 2d.')
 
             # class default functions should always be copied, otherwise anything this component
             # does with its function will propagate to anything else that wants to use
@@ -2889,7 +2880,7 @@ class Component(object, metaclass=ComponentsMeta):
             self.function = function(default_variable=function_variable, **kwargs)
 
         else:
-            raise ComponentError('Unsupported function type: {0}, function={1}'.format(type(function), function))
+            raise ComponentError(f'Unsupported function type: {type(function)}, function={function}.')
 
         self.function.owner = self
 
@@ -2918,7 +2909,7 @@ class Component(object, metaclass=ComponentsMeta):
             except TypeError:
                 value = self.execute(context=context)
         if value is None:
-            raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
+            raise ComponentError(f"PROGRAM ERROR: Execute method for {self.name} must return a value.")
 
         self.parameters.value.set(value, override=True, skip_history=True)
         try:
@@ -2943,10 +2934,8 @@ class Component(object, metaclass=ComponentsMeta):
             new_value = self.function.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.atleast_2d(new_value), execution_context, override=True)
         else:
-            raise ComponentError(
-                "Reinitializing {} is not allowed because this Component is not stateful. "
-                "(It does not have an accumulator to reinitialize).".format(self.name)
-            )
+            raise ComponentError(f"Reinitializing {self.name} is not allowed because this Component is not stateful. "
+                                 "(It does not have an accumulator to reinitialize).")
 
     def execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
@@ -3087,8 +3076,7 @@ class Component(object, metaclass=ComponentsMeta):
     @name.setter
     def name(self, value):
         if not isinstance(value, str):
-            raise ComponentError("Name assigned to {} ({}) must be a string constant".
-                                 format(self.__class__.__name__, value))
+            raise ComponentError(f"Name assigned to {self.__class__.__name__} ({value}) must be a string constant.")
 
         self._name = value
 
