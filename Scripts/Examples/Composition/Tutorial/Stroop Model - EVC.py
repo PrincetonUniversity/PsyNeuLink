@@ -130,7 +130,8 @@ stimuli = {color_input:[red]*num_trials,
            word_input:[green]*num_trials,
            task_input:[color]*num_trials}
 Stroop_model.run(inputs=stimuli,
-                 animate=True,
+                 # animate=True,
+                 animate={'show_controller':True},
                  call_after_trial=print_after
                  )
 Stroop_model.log.print_entries()

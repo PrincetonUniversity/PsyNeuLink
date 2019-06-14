@@ -702,7 +702,7 @@ from psyneulink.core.globals.keywords import \
     AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, FUNCTIONS, HARD_CLAMP, \
     IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX_KEYWORD_VALUES, MECHANISMS, \
     NO_CLAMP, OUTPUT, OWNER_VALUE, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES, NAME, \
-    SAMPLE, TARGET, TARGET_MECHANISM, VARIABLE, PROJECTIONS, WEIGHT, OUTCOME
+    SAMPLE, SIMULATIONS, TARGET, TARGET_MECHANISM, VARIABLE, PROJECTIONS, WEIGHT, OUTCOME
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -4227,7 +4227,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not self.learning_enabled:
                 next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
-            if not self._animate is False and self._animate_unit is EXECUTION_SET:
+            if self._animate is not False and self._animate_unit is EXECUTION_SET:
                 self.show_graph(active_items=next_execution_set,
                                 **self._animate,
                                 output_fmt='gif',
@@ -4350,7 +4350,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-                if not self._animate is False and self._animate_unit is COMPONENT:
+                if self._animate is not False and self._animate_unit is COMPONENT:
                     self.show_graph(active_items=node, **self._animate, output_fmt='gif', execution_id=execution_id)
                 self._component_animation_execution_count += 1
 
@@ -4417,7 +4417,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _comp_ex.execute_node(self.controller)
 
                 # MODIFIED 6/13/19 NEW: [JDC]
-                # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
+                # FIX: NEEDED TO ANIMATE CONTROL; REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     entry_execution_phase = execution_context.execution_phase
                     execution_context.execution_phase = ContextFlags.CONTROL
@@ -4684,6 +4684,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._image_duration = self._animate.pop(DURATION, 0.75)
             self._animate_num_runs = self._animate.pop(NUM_RUNS, 1)
             self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
+            self._animate_simulations = self._animate.pop(SIMULATIONS, False)
             self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
             self._save_images = self._animate.pop(SAVE_IMAGES, False)
             self._show_animation = self._animate.pop(SHOW, False)
@@ -4702,6 +4703,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not isinstance(self._animate_num_trials, int):
                 raise SystemError("{} entry of {} argument for {} method of {} ({}) must an integer".
                                   format(repr(NUM_TRIALS), repr('animate'), repr('run'),
+                                         self.name, self._animate_num_trials, repr('show_graph')))
+            if not isinstance(self._animate_simulations, bool):
+                raise SystemError("{} entry of {} argument for {} method of {} ({}) must a boolean".
+                                  format(repr(SIMULATIONS), repr('animate'), repr('run'),
                                          self.name, self._animate_num_trials, repr('show_graph')))
             if not isinstance(self._movie_filename, str):
                 raise SystemError("{} entry of {} argument for {} method of {} ({}) must be a string".
@@ -5426,6 +5431,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Run Composition in "SIMULATION" context
         # MODIFIED 6/12/19 NEW: [JDC]
+        if self._animate_simulations is not False:
+            animate = self._animate
+            buffer_animate_state = None
+        else:
+            animate = False
+            buffer_animate_state = self._animate
         entry_execution_phase = self.parameters.context.get(execution_id).execution_phase
         # MODIFIED 6/12/19 END
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
@@ -5433,12 +5444,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  execution_id=execution_id,
                  runtime_params=runtime_params,
                  num_trials=num_simulation_trials,
+                 animate=animate,
                  context=context,
                  bin_execute=execution_mode)
         # # MODIFIED 6/12/19 OLD:
         # self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         # MODIFIED 6/12/19 NEW: [JDC]
         self.parameters.context.get(execution_id).execution_phase = entry_execution_phase
+        if buffer_animate_state:
+            self._animate = buffer_animate_state
         # MODIFIED 6/12/19 END
 
         # Store simulation results on "base" composition
