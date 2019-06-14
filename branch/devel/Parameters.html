@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.5.3.2+193.g4a76cb9 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.5.3.2+200.g6278d8e documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+193.g4a76cb9',
+              VERSION:'0.5.3.2+200.g6278d8e',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.5.3.2+193
+                0.5.3.2+200
               </div>
             
           
@@ -273,7 +273,7 @@ must become stateful Parameters, or they are at risk of computational errors lik
 <blockquote>
 <div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_modulatory_mechanism_costs_getter</span><span class="p">(</span><span class="n">owning_component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">execution_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">compute_costs</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">variable</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">execution_id</span><span class="p">),</span> <span class="n">execution_id</span><span class="o">=</span><span class="n">execution_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">control_signals</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">compute_costs</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">variable</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">execution_id</span><span class="p">),</span> <span class="n">execution_id</span><span class="o">=</span><span class="n">execution_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">control_signals</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
 </pre></div>
@@ -290,9 +290,9 @@ which updates its <code class="xref any docutils literal"><span class="pre">auto
 
     <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">temp_matrix</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">owning_component</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">temp_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">execution_id</span><span class="p">)</span>
+        <span class="n">owning_component</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">temp_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">execution_id</span><span class="p">)</span>
         <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">temp_matrix</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">owning_component</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">hetero</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">temp_matrix</span><span class="p">,</span> <span class="n">execution_id</span><span class="p">)</span>
+        <span class="n">owning_component</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">hetero</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">temp_matrix</span><span class="p">,</span> <span class="n">execution_id</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">value</span>
 </pre></div>
@@ -835,7 +835,7 @@ inherits from parent <a class="reference internal" href="#"><span class="doc">Pa
 
 <dl class="method">
 <dt id="psyneulink.core.globals.parameters.Parameter.set">
-<code class="descname">set</code><span class="sig-paren">(</span><em>value</em>, <em>execution_context=None</em>, <em>override=False</em>, <em>skip_history=False</em>, <em>skip_log=False</em>, <em>_ro_warning_stacklevel=2</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.set" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set</code><span class="sig-paren">(</span><em>value</em>, <em>execution_context=None</em>, <em>override=False</em>, <em>skip_history=False</em>, <em>skip_log=False</em>, <em>_ro_warning_stacklevel=3</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.set" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets the value of this <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> in the context of <strong>execution_context</strong>
 If no execution_context is specified, attributes on the associated <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> will be used</p>
 <table class="docutils field-list" frame="void" rules="none">

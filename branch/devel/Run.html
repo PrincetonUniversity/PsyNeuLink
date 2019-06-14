@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Run &mdash; PsyNeuLink 0.5.3.2+193.g4a76cb9 documentation</title>
+  <title>Run &mdash; PsyNeuLink 0.5.3.2+200.g6278d8e documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+193.g4a76cb9',
+              VERSION:'0.5.3.2+200.g6278d8e',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+193
+                0.5.3.2+200
               </div>
             
           
@@ -249,7 +249,7 @@ occurs in the <code class="xref any docutils literal"><span class="pre">None</sp
 <div class="section" id="debugging-tips">
 <h4>Debugging Tips<a class="headerlink" href="#debugging-tips" title="Permalink to this headline">¶</a></h4>
 <p>If you receive an error like below, while checking for a context value for example,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">execution_id</span><span class="p">)</span><span class="o">.</span><span class="n">execution_phase</span> <span class="o">==</span> <span class="n">ContextStatus</span><span class="o">.</span><span class="n">PROCESSING</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">execution_id</span><span class="p">)</span><span class="o">.</span><span class="n">execution_phase</span> <span class="o">==</span> <span class="n">ContextStatus</span><span class="o">.</span><span class="n">PROCESSING</span>
 <span class="ne">AttributeError</span><span class="p">:</span> <span class="s1">&#39;NoneType&#39;</span> <span class="nb">object</span> <span class="n">has</span> <span class="n">no</span> <span class="n">attribute</span> <span class="s1">&#39;execution_phase&#39;</span>
 </pre></div>
 </div>
