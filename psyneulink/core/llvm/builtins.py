@@ -147,7 +147,7 @@ def setup_vec_add(ctx):
         u_val = builder.load(u_ptr)
         v_val = builder.load(v_ptr)
         
-        u_v_sum = builder.fsum(u_val,v_val)
+        u_v_sum = builder.fadd(u_val,v_val)
         builder.store(u_v_sum, o_ptr)
 
     builder.ret_void()
