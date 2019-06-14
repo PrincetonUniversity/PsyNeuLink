@@ -64,8 +64,8 @@ control_signal_search_range = SampleSpec(start=1.0, stop=1.8, step=0.2)
 evc = OptimizationControlMechanism(name='EVC',
                                    agent_rep=Stroop_model,
                                    features=[color_input.input_state, word_input.input_state, reward.input_state],
-                                   # feature_function=AdaptiveIntegrator(rate=1.0),
-                                   feature_function=AdaptiveIntegrator,
+                                   feature_function=AdaptiveIntegrator(rate=1.0),
+                                   # feature_function=AdaptiveIntegrator,
                                    objective_mechanism= \
                                        ObjectiveMechanism(
                                                name='EVC Objective Mechanism',

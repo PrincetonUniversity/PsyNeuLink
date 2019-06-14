@@ -2782,7 +2782,6 @@ class Component(object, metaclass=ComponentsMeta):
             - value is value[0] returned by self.execute
 
         """
-        from psyneulink.core.components.functions.function import Function_Base, FunctionRegistry
         from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
         from psyneulink.core.components.shellclasses import Function
 
@@ -2840,9 +2839,7 @@ class Component(object, metaclass=ComponentsMeta):
             if function.owner is None and function is not self.class_defaults.function:
                 self.function = function
             else:
-                self.function = copy.deepcopy(function)
-                # ensure copy does not have identical name
-                register_category(self.function, Function_Base, self.function.name, FunctionRegistry)
+                self.function = self._clone_function(function)
 
             # setting init status because many mechanisms change execution or validation behavior
             # during initialization
@@ -3018,6 +3015,13 @@ class Component(object, metaclass=ComponentsMeta):
                     param_state.source = self.function
         except AttributeError:
             pass
+
+    def _clone_function(self, function):
+        from psyneulink.core.components.functions.function import Function_Base, FunctionRegistry
+        fct = copy.deepcopy(function)
+        # ensure copy does not have identical name
+        register_category(fct, Function_Base, fct.name, FunctionRegistry)
+        return fct
 
     @property
     def current_execution_count(self):

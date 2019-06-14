@@ -1220,7 +1220,11 @@ class OptimizationControlMechanism(ControlMechanism):
             spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=spec)    # returns InputState dict
             spec[PARAMS][INTERNAL_ONLY] = True
             if feature_function:
-                spec.update({FUNCTION: feature_function})
+                if isinstance(feature_function, Function):
+                    feat_fct = copy.deepcopy(feature_function)
+                else:
+                    feat_fct = feature_function
+                spec.update({FUNCTION: feat_fct})
             spec = [spec]   # so that extend works below
 
             parsed_features.extend(spec)
