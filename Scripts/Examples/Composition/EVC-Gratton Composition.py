@@ -60,15 +60,14 @@ flanker_rep_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Flanker_
 
 objective_mech = pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT),
                                         monitor=[reward,
-                                                                 (Decision.output_states[
-                                                                      pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)])
+                                                 (Decision.output_states[
+                                                      pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)])
 # Model Based OCM (formerly controller)
 evc_gratton.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=evc_gratton,
                                                                        features=[target_stim.input_state,
                                                                                  flanker_stim.input_state,
                                                                                  reward.input_state],
-                                                                       feature_function=pnl.AdaptiveIntegrator(
-                                                                               rate=1.0),
+                                                                       feature_function=pnl.AdaptiveIntegrator(rate=1.0),
                                                                        objective_mechanism=objective_mech,
                                                                        function=pnl.GridSearch(),
                                                                        control_signals=[

@@ -2824,15 +2824,15 @@ class Component(object, metaclass=ComponentsMeta):
                 if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
                     raise ComponentError(f'Variable format ({function.defaults.variable}) of {function.name} '
                                          f'is not compatible with the variable format ({function_variable}) '
-                                         f'of {repr(self.name)}{owner_str} to which it is being assigned.  '
-                                         f'Make sure variable for {function.name} is 2d.')
+                                         f'of {repr(self.name)}{owner_str} to which it is being assigned.')
+                                         # f'Make sure variable for {function.name} is 2d.')
                 elif function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
                     function_increased_dim = np.asarray([function.defaults.variable])
                     if not iscompatible(function_variable, function_increased_dim):
                         raise ComponentError(f'Variable format ({function.defaults.variable}) of {function.name} '
                                              f'is not compatible with the variable format ({function_variable})'
-                                             f' of {repr(self.name)}{owner_str} to which it is being assigned.  '
-                                             f'Make sure variable for {function.name} is 2d.')
+                                             f' of {repr(self.name)}{owner_str} to which it is being assigned.')
+                                             # f'Make sure variable for {function.name} is 2d.')
 
             # class default functions should always be copied, otherwise anything this component
             # does with its function will propagate to anything else that wants to use
