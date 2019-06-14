@@ -105,6 +105,8 @@ global t
 t = 0
 def print_after():
     global t
+    if t==0:
+        return
     print(f'\nEnd of trial {t}:')
     print(f'\t\t\t\tcolor  word')
     print(f'\ttask:\t\t{task.value[0]}')
