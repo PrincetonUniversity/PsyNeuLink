@@ -88,7 +88,7 @@ Stroop_model.add_controller(evc)
 # SHOW_GRAPH ***********************************
 
 # Stroop_model.show_graph()
-# Stroop_model.show_graph(show_controller=True)
+Stroop_model.show_graph(show_controller=True)
 # Stroop_model.show_graph(show_node_structure=ALL)
 # Stroop_model.show_graph(show_dimensions=True, show_node_structure=ALL)
 
@@ -130,7 +130,7 @@ stimuli = {color_input:[red]*num_trials,
            word_input:[green]*num_trials,
            task_input:[color]*num_trials}
 Stroop_model.run(inputs=stimuli,
-                 # animate=True
+                 animate=True,
                  call_after_trial=print_after
                  )
 Stroop_model.log.print_entries()

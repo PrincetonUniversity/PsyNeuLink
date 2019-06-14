@@ -3593,7 +3593,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                color=proj_color, penwidth=proj_width)
 
             # If controller has an agent_rep, assign its node and edges (not Projections per se)
-            if controller.agent_rep:
+            if hasattr(controller, 'agent_rep') and controller.agent_rep:
                 # get agent_rep
                 agent_rep = controller.agent_rep
                 if agent_rep in active_items:
@@ -3793,13 +3793,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
 
         # get all Nodes
-        # # # MODIFIED 5/9/19 OLD:
-        # self._analyze_graph()
-        # MODIFIED 5/9/19 NEW: [JDC]
         # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
         if output_fmt != 'gv':
             self._analyze_graph()
-        # MODIFIED 5/9/19 END
         processing_graph = self.scheduler_processing.visual_graph
         rcvrs = list(processing_graph.keys())
 
@@ -3843,29 +3839,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif output_fmt == 'gif':
             if self.active_item_rendered or INITIAL_FRAME in active_items:
                 G.format = 'gif'
+                def create_phase_string(phase):
+                    return f'%16s' % phase + ' - '
+                def create_time_string(spec):
+                    if spec == 'TIME':
+                        time = self.scheduler_processing.get_clock(execution_id).time
+                        r = time.run
+                        t = time.trial
+                        p = time.pass_
+                        ts = time.time_step
+                    else:
+                        r = t = p = ts = '__'
+                    return f"Time(run: %2s, " % r + f"trial: %2s, " % t + f"pass: %2s, " % p + f"time_step: %2s)" % ts
                 execution_phase = self.parameters.context.get(execution_id).execution_phase
                 if INITIAL_FRAME in active_items:
-                    # phase_string = ''
-                    phase_string = f'%16s' % 'Initializing'  + ' - '
-                    # time_string = ''
-                    time_string = f"Time(run: _, trial: _, pass: _, time_step: _)"
+                    phase_string = create_phase_string('Initializing')
+                    time_string = create_time_string('BLANKS')
                 elif execution_phase == ContextFlags.PROCESSING:
-                    # time_string = repr(self.scheduler_processing.clock.simple_time)
-                    phase_string = f'%16s' % 'Processing Phase'  + ' - '
-                    time = self.scheduler_processing.get_clock(execution_id).time
-                    time_string = \
-                        f"Time(run: {time.run}, trial: {time.trial}, pass: {time.pass_}, time_step: {time.time_step})"
+                    phase_string = create_phase_string('Processing Phase')
+                    time_string = create_time_string('TIME')
                 # elif execution_phase == ContextFlags.LEARNING:
                 #     time = self.scheduler_learning.get_clock(execution_id).time
                 #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
                 #         format(time.run, time.trial, time.pass_, time.time_step)
                 #     phase_string = 'Learning Phase - '
                 elif execution_phase == ContextFlags.CONTROL:
-                    phase_string = f'%16s' % 'Control Phase'  + ' - '
-                    # time_string = ''
-                    time = self.scheduler_processing.get_clock(execution_id).time
-                    time_string = \
-                        f"Time(run: {time.run}, trial: {time.trial}, pass: {time.pass_}, time_step: {time.time_step})"
+                    phase_string = create_phase_string('Control Phase')
+                    time_string = create_time_string('TIME')
                 else:
                     raise CompositionError(
                         f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
@@ -4717,7 +4717,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                          self.name, self._show_animation, repr(True), repr(False)))
         elif self._animate:
             # self._animate should now be False or a dict
-            raise SystemError("{} argument for {} method of {} ({}) must boolean or "
+            raise SystemError("{} argument for {} method of {} ({}) must be a boolean or "
                               "a dictionary of argument specifications for its {} method".
                               format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
 
