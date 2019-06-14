@@ -1485,7 +1485,6 @@ class AllHaveRun(_DependencyValidation, Condition):
                     raise ConditionError(
                         f'{type(self).__name__}: execution_context ({scheduler}) must both be specified, and '
                         f'execution_context must be in scheduler.counts_total (scheduler: {execution_context}): {e}.')
-                    )
             return True
         super().__init__(func, *dependencies)
 
