@@ -820,7 +820,7 @@ class OptimizationControlMechanism(ControlMechanism):
             modulatory_signal._variable_spec = (OWNER_VALUE, i)
             self._modulatory_signals[i] = modulatory_signal
         self.defaults.value = np.tile(modulatory_signal.parameters.variable.default_value, (i+1, 1))
-        self.parameters.control_allocation.set(copy.deepcopy(self.defaults.value))
+        self.parameters.control_allocation.set(copy.deepcopy(self.defaults.value), override=True)
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Instantiate OptimizationControlMechanism's OptimizatonFunction attributes'''
