@@ -101,7 +101,7 @@ Condition, it is assigned a Condition that causes it to be executed whenever it 
 and all its structural parents have been executed at least once since the Component's last execution.
 Condition subclasses (`listed below <Condition_Pre-Specified_List>`)
 provide a standard set of Conditions that can be implemented simply by specifying their parameter(s). There are
-five types:
+six types:
 
   * `Generic <Conditions_Generic>` - satisfied when a `user-specified function and set of arguments <Condition_Custom>`
     evaluates to `True`;
@@ -110,6 +110,7 @@ five types:
   * `Time-based <Conditions_Time_Based>` - satisfied based on the current count of units of time at a specified
     `TimeScale`;
   * `Component-based <Conditions_Component_Based>` - based on the execution or state of other Components.
+  * `Convenience <Conditions_Convenience>` - based on other Conditions, condensed for convenience
 
 .. _Condition_Pre-Specified_List:
 
@@ -255,6 +256,14 @@ five types:
     * `WhenFinishedAll` (*Components)
       satisfied when all of the specified Components have set their `is_finished` attributes to `True`.
 
+.. _Conditions_Convenience:
+
+**Convenience Conditions** (based on other Conditions, condensed for convenience)
+
+
+    * `AtTrialStart`
+      satisfied at the beginning of a `TRIAL` (`AtPass(0) <AtPass>`)
+
 
 .. Condition_Execution:
 
@@ -285,7 +294,7 @@ from psyneulink.core.scheduling.time import TimeScale
 __all__ = [
     'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'AfterNPasses', 'AfterNTimeSteps', 'AfterNTrials', 'AfterPass',
     'AtRun', 'AfterRun', 'AfterNRuns', 'AfterTimeStep', 'AfterTrial', 'All', 'AllHaveRun', 'Always', 'Any', 'AtNCalls',
-    'AtPass', 'AtTimeStep', 'AtTrial', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial', 'Condition',
+    'AtPass', 'AtTimeStep', 'AtTrial', 'AtTrialStart', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial', 'Condition',
     'ConditionError', 'ConditionSet', 'EveryNCalls', 'EveryNPasses', 'JustRan', 'Never', 'Not', 'NWhen', 'WhenFinished',
     'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot'
 ]
@@ -1533,3 +1542,26 @@ class WhenFinishedAll(_DependencyValidation, Condition):
             return True
 
         super().__init__(func, *dependencies)
+
+
+######################################################################
+# Convenience Conditions
+######################################################################
+
+
+class AtTrialStart(AtPass):
+    """AtTrialStart
+
+    Satisfied when:
+
+        - at the beginning of a `TRIAL`
+
+    Notes:
+
+        - identical to `AtPass(0) <AtPass>`
+    """
+    def __init__(self):
+        super().__init__(0)
+
+    def __str__(self):
+        return '{0}()'.format(self.__class__.__name__)
