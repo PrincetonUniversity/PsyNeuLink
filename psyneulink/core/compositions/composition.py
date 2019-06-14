@@ -699,11 +699,10 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT,\
-    LABELS, \
-    LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX_KEYWORD_VALUES, MECHANISMS, NO_CLAMP, OUTPUT, OWNER_VALUE, \
-    PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES, NAME, SAMPLE, TARGET, TARGET_MECHANISM, VARIABLE, PROJECTIONS, \
-    WEIGHT, OUTCOME
+    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, FUNCTIONS, HARD_CLAMP, \
+    IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX_KEYWORD_VALUES, MECHANISMS, \
+    NO_CLAMP, OUTPUT, OWNER_VALUE, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES, NAME, \
+    SAMPLE, TARGET, TARGET_MECHANISM, VARIABLE, PROJECTIONS, WEIGHT, OUTCOME
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -1432,6 +1431,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `Composition`'s `evaluate <Composition.evaluate>` method. This allows the OCM to use simulations to determine
         an optimal Control policy.
         """
+
+        if not isinstance(controller, ModulatoryMechanism):
+            raise CompositionError(f"Specification of {repr(CONTROLLER)} arg for {self.name} "
+                                   f"must be a {repr(ModulatoryMechanism.__name__)} ")
 
         self.controller = controller
         self.controller.composition = self
