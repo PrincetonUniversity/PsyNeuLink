@@ -113,7 +113,7 @@ To create new Parameters, reference this example of a new class *B*
 
             def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None):
                 try:
-                    return [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in owning_component.control_signals]
+                    return [c.compute_costs(c.parameters.variable._get(execution_id), execution_id=execution_id) for c in owning_component.control_signals]
                 except TypeError:
                     return None
 
@@ -130,9 +130,9 @@ To create new Parameters, reference this example of a new class *B*
 
                 if value is not None:
                     temp_matrix = value.copy()
-                    owning_component.parameters.auto.set(np.diag(temp_matrix).copy(), execution_id)
+                    owning_component.parameters.auto._set(np.diag(temp_matrix).copy(), execution_id)
                     np.fill_diagonal(temp_matrix, 0)
-                    owning_component.parameters.hetero.set(temp_matrix, execution_id)
+                    owning_component.parameters.hetero._set(temp_matrix, execution_id)
 
                 return value
 
@@ -806,6 +806,12 @@ class Parameter(types.SimpleNamespace):
         else:
             execution_id = parse_execution_context(execution_context)
 
+        return self._get(execution_id, **kwargs)
+
+    def _get(self, execution_id=None, **kwargs):
+        if not self.stateful:
+            execution_id = None
+
         if self.getter is not None:
             kwargs = {**self._default_getter_kwargs, **{'execution_id': execution_id}, **kwargs}
             value = call_with_pruned_args(self.getter, **kwargs)
@@ -862,7 +868,7 @@ class Parameter(types.SimpleNamespace):
                 )
             ) from e
 
-    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
+    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=3, **kwargs):
         """
             Sets the value of this `Parameter` in the context of **execution_context**
             If no execution_context is specified, attributes on the associated `Component` will be used
@@ -881,13 +887,19 @@ class Parameter(types.SimpleNamespace):
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `setter` if it exists
         """
+        if not self.stateful:
+            execution_id = None
+        else:
+            execution_id = parse_execution_context(execution_context)
+
+        self._set(value, execution_id, override, skip_history, skip_log, _ro_warning_stacklevel, **kwargs)
+
+    def _set(self, value, execution_id=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
         if not override and self.read_only:
             warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=_ro_warning_stacklevel)
 
         if not self.stateful:
             execution_id = None
-        else:
-            execution_id = parse_execution_context(execution_context)
 
         if self.setter is not None:
             kwargs = {
@@ -937,7 +949,7 @@ class Parameter(types.SimpleNamespace):
         if context is ContextFlags.COMMAND_LINE:
             try:
                 # attempt to infer the time via this Parameters object's context if it exists
-                owner_context = self._owner.context.get(execution_id)
+                owner_context = self._owner.context._get(execution_id)
                 time = _get_time(self._owner._owner, owner_context.execution_phase, execution_id)
             except AttributeError:
                 time = time_object(None, None, None, None)
@@ -952,7 +964,7 @@ class Parameter(types.SimpleNamespace):
 
             if context is None:
                 try:
-                    context = self._owner.context.get(execution_id)
+                    context = self._owner.context._get(execution_id)
                 except AttributeError:
                     logger.warning('Attempted to log {0} but has no context attribute'.format(self))
 

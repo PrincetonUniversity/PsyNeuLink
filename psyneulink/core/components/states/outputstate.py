@@ -684,9 +684,9 @@ def _parse_output_state_variable(variable, owner, execution_id=None, output_stat
                 owner_param_name = spec[0]
 
             try:
-                return getattr(owner.parameters, owner_param_name).get(execution_id)[spec[1]]
+                return getattr(owner.parameters, owner_param_name)._get(execution_id)[spec[1]]
             except TypeError:
-                if getattr(owner.parameters, owner_param_name).get(execution_id) is None:
+                if getattr(owner.parameters, owner_param_name)._get(execution_id) is None:
                     return None
                 else:
                     # raise OutputStateError("Can't parse variable ({}) for {} of {}".
@@ -707,10 +707,10 @@ def _parse_output_state_variable(variable, owner, execution_id=None, output_stat
                 owner_param_name = spec
 
             try:
-                return getattr(owner.parameters, owner_param_name).get(execution_id)
+                return getattr(owner.parameters, owner_param_name)._get(execution_id)
             except AttributeError:
                 try:
-                    return getattr(owner.function.parameters, owner_param_name).get(execution_id)
+                    return getattr(owner.function.parameters, owner_param_name)._get(execution_id)
                 except AttributeError:
                     raise OutputStateError(
                         "Can't parse variable ({}) for {} of {}".format(
@@ -1239,7 +1239,7 @@ class OutputState(State_Base):
         if variable is None:
             # fall back to specified item(s) of owner's value
             try:
-                variable = self.parameters.variable.get(execution_id)
+                variable = self.parameters.variable._get(execution_id)
             except ComponentError:
                 variable = None
 
@@ -1494,7 +1494,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     for state in owner._output_states:
         # Assign True for owner's primary OutputState and the value has not already been set in OutputState constructor
         if state.require_projection_in_composition is None and owner.output_state == state:
-            state.parameters.require_projection_in_composition.set(True, override=True)
+            state.parameters.require_projection_in_composition._set(True, override=True)
 
     return state_list
 

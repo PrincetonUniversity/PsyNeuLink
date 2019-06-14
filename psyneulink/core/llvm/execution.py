@@ -145,12 +145,12 @@ class FuncExecution(CUDAExecution):
 
     def _get_compilation_param(self, name, initializer, arg, execution_id):
         param = getattr(self._component._compilation_data, name)
-        struct = param.get(execution_id)
+        struct = param._get(execution_id)
         if struct is None:
             initializer = getattr(self._component, initializer)(execution_id)
             struct_ty = self._bin_func.byref_arg_types[arg]
             struct = struct_ty(*initializer)
-            param.set(struct, execution_context=execution_id)
+            param._set(struct, execution_id=execution_id)
 
         return struct
 
@@ -266,23 +266,23 @@ class CompExecution(CUDAExecution):
                 self.__conds = cond_type(*cond_initializer)
             return self.__conds
 
-        conds = self._composition._compilation_data.scheduler_conditions.get(self._execution_ids[0])
+        conds = self._composition._compilation_data.scheduler_conditions._get(self._execution_ids[0])
         if conds is None:
             cond_type = self._bin_func.byref_arg_types[4]
             gen = helpers.ConditionGenerator(None, self._composition)
             cond_initializer = gen.get_condition_initializer()
             conds = cond_type(*cond_initializer)
-            self._composition._compilation_data.scheduler_conditions.set(conds, execution_context=self._execution_ids[0])
+            self._composition._compilation_data.scheduler_conditions._set(conds, execution_id=self._execution_ids[0])
         return conds
 
     def _get_compilation_param(self, name, initializer, arg, execution_id):
         param = getattr(self._composition._compilation_data, name)
-        struct = param.get(execution_id)
+        struct = param._get(execution_id)
         if struct is None:
             initializer = getattr(self._composition, initializer)(execution_id)
             struct_ty = self._bin_func.byref_arg_types[arg]
             struct = struct_ty(*initializer)
-            param.set(struct, execution_context=execution_id)
+            param._set(struct, execution_id=execution_id)
 
         return struct
 
@@ -315,7 +315,7 @@ class CompExecution(CUDAExecution):
         if len(self._execution_ids) > 1:
             self.__data_struct = data_struct
         else:
-            self._composition._compilation_data.data_struct.set(data_struct, execution_context = self._execution_ids[0])
+            self._composition._compilation_data.data_struct._set(data_struct, execution_id = self._execution_ids[0])
 
     def _extract_node_struct(self, node, data):
         # context structure consists of a list of node contexts,
@@ -382,7 +382,7 @@ class CompExecution(CUDAExecution):
             # This assumes origin mechanisms are in the same order as
             # CIM input states
             origins = (n for n in self._composition.get_nodes_by_role(NodeRole.INPUT) for istate in n.input_states)
-            input_data = ([proj.parameters.value.get(execution_id) for proj in state.all_afferents] for state in node.input_states)
+            input_data = ([proj.parameters.value._get(execution_id) for proj in state.all_afferents] for state in node.input_states)
             inputs = defaultdict(list)
             for n, d in zip(origins, input_data):
                 inputs[n].append(d[0])
