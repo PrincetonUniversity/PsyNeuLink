@@ -86,7 +86,7 @@ task.log.set_log_conditions(VALUE)
 control.log.set_log_conditions(VALUE)
 
 task.initial_value = [0.5,0.5]
-task.reinitialize_when=AtPass(n=0)
+task.reinitialize_when=AtTrialStart()
 num_trials = 5
 stimuli = {color_input:[red]*num_trials,
            word_input:[green]*num_trials,

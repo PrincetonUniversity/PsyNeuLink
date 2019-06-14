@@ -284,10 +284,11 @@ from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
     'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'AfterNPasses', 'AfterNTimeSteps', 'AfterNTrials', 'AfterPass',
-    'AtRun', 'AfterRun', 'AfterNRuns', 'AfterTimeStep', 'AfterTrial', 'All', 'AllHaveRun', 'Always', 'Any', 'AtNCalls',
-    'AtPass', 'AtTimeStep', 'AtTrial', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial', 'Condition',
-    'ConditionError', 'ConditionSet', 'EveryNCalls', 'EveryNPasses', 'JustRan', 'Never', 'Not', 'NWhen', 'WhenFinished',
-    'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot'
+    'AtRun', 'AfterRun', 'AfterNRuns', 'AfterTimeStep', 'AfterTrial', 'All', 'AllHaveRun', 'Always', 'Any',
+    'AtNCalls', 'AtTrialStart','AtPass', 'AtTimeStep', 'AtTrial',
+    'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial',
+    'Condition','ConditionError', 'ConditionSet', 'EveryNCalls', 'EveryNPasses',
+    'JustRan', 'Never', 'Not', 'NWhen', 'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot'
 ]
 
 logger = logging.getLogger(__name__)
@@ -963,6 +964,37 @@ class EveryNPasses(Condition):
                 raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
 
         super().__init__(func, n, time_scale)
+
+
+class AtTrialStart(Condition):
+    """AtTrialStart
+
+    Parameters:
+
+        n(int): the `TRIAL` on which the Condition is satisfied, or every trial if n is None.
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\\ s (default: TimeScale.RUN)
+
+    Satisfied when:
+
+        - on `PASS` 0 of the specified trial counted using 'TimeScale` or every trial if n is None
+
+    """
+    def __init__(self, n=None, time_scale=TimeScale.RUN):
+        def func(n, scheduler=None, execution_context=None):
+            try:
+                if n is None:
+                    return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) == 0
+                else:
+                    return \
+                        (scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) == n
+                         and
+                         scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) == 0)
+
+            except AttributeError as e:
+                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+
+        super().__init__(func, n)
 
 
 class BeforeTrial(Condition):
