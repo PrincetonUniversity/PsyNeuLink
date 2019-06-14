@@ -1270,7 +1270,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # For DefaultAllocationFunction, set defaults.value to have number of items equal to num modulatory_signals
         if isinstance(self.function, DefaultAllocationFunction):
             self.defaults.value = np.tile(self.function.value, (num_modulatory_signals, 1))
-            self.parameters.modulatory_allocation.set(copy.deepcopy(self.defaults.value))
+            self.parameters.modulatory_allocation.set(copy.deepcopy(self.defaults.value), override=True)
             self.function.num_modulatory_signals = num_modulatory_signals
 
         # For other functions, assume that if its value has:
