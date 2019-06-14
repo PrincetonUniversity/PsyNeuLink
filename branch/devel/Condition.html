@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.5.3.2+200.g6278d8e documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.5.3.2+201.g94a44a0 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+200.g6278d8e',
+              VERSION:'0.5.3.2+201.g94a44a0',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+200
+                0.5.3.2+201
               </div>
             
           
@@ -256,7 +256,7 @@ Condition, it is assigned a Condition that causes it to be executed whenever it 
 and all its structural parents have been executed at least once since the Component’s last execution.
 Condition subclasses (<a class="reference internal" href="#condition-pre-specified-list"><span class="std std-ref">listed below</span></a>)
 provide a standard set of Conditions that can be implemented simply by specifying their parameter(s). There are
-five types:</p>
+six types:</p>
 <blockquote>
 <div><ul class="simple">
 <li><a class="reference internal" href="#conditions-generic"><span class="std std-ref">Generic</span></a> - satisfied when a <a class="reference internal" href="#condition-custom"><span class="std std-ref">user-specified function and set of arguments</span></a>
@@ -266,6 +266,7 @@ evaluates to <code class="xref any docutils literal"><span class="pre">True</spa
 <li><a class="reference internal" href="#conditions-time-based"><span class="std std-ref">Time-based</span></a> - satisfied based on the current count of units of time at a specified
 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScale</span></code></a>;</li>
 <li><a class="reference internal" href="#conditions-component-based"><span class="std std-ref">Component-based</span></a> - based on the execution or state of other Components.</li>
+<li><a class="reference internal" href="#conditions-convenience"><span class="std std-ref">Convenience</span></a> - based on other Conditions, condensed for convenience</li>
 </ul>
 </div></blockquote>
 <div class="section" id="list-of-pre-specified-conditions">
@@ -373,6 +374,13 @@ satisfied when the specified Component has set its <a class="reference internal"
 satisfied when any of the specified Components has set their <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> attribute to <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.WhenFinishedAll" title="psyneulink.core.scheduling.condition.WhenFinishedAll"><code class="xref any py py-class docutils literal"><span class="pre">WhenFinishedAll</span></code></a> (<a href="#id19"><span class="problematic" id="id20">*</span></a>Components)
 satisfied when all of the specified Components have set their <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> attributes to <code class="xref any docutils literal"><span class="pre">True</span></code>.</li>
+</ul>
+</div></blockquote>
+<p id="conditions-convenience"><strong>Convenience Conditions</strong> (based on other Conditions, condensed for convenience)</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtTrialStart" title="psyneulink.core.scheduling.condition.AtTrialStart"><code class="xref any py py-class docutils literal"><span class="pre">AtTrialStart</span></code></a>
+satisfied at the beginning of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> (<a class="reference internal" href="#psyneulink.core.scheduling.condition.AtPass" title="psyneulink.core.scheduling.condition.AtPass"><code class="xref any py py-class docutils literal"><span class="pre">AtPass(0)</span></code></a>)</li>
 </ul>
 </div></blockquote>
 </div>
@@ -893,6 +901,21 @@ when two <a class="reference internal" href="Time.html#psyneulink.core.schedulin
 <ul class="simple">
 <li>Counts of TimeScales are zero-indexed (that is, the first <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is 0, the second <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is 1, etc.);
 so, <code class="xref any docutils literal"><span class="pre">AtTrial(1)</span></code> is satisfied when one <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> 0) has already occurred.</li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.scheduling.condition.AtTrialStart">
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtTrialStart</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTrialStart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li>at the beginning of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a></li>
+</ul>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>identical to <a class="reference internal" href="#psyneulink.core.scheduling.condition.AtPass" title="psyneulink.core.scheduling.condition.AtPass"><code class="xref any py py-class docutils literal"><span class="pre">AtPass(0)</span></code></a></li>
 </ul>
 </dd></dl>
 
