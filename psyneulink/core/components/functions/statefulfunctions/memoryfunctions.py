@@ -327,7 +327,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
         # Just return current input (for validation).
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable
 
         previous_value = np.array(self.get_previous_value(execution_id))
@@ -343,7 +343,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         previous_value.append(variable)
 
-        self.parameters.previous_value.set(previous_value, execution_id)
+        self.parameters.previous_value._set(previous_value, execution_id)
         return self.convert_output_type(previous_value)
 
 
@@ -742,8 +742,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         if self.previous_value.size != 0:
-            self.parameters.key_size.set(len(self.previous_value[KEYS][0]))
-            self.parameters.val_size.set(len(self.previous_value[VALS][0]))
+            self.parameters.key_size._set(len(self.previous_value[KEYS][0]))
+            self.parameters.val_size._set(len(self.previous_value[VALS][0]))
 
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
@@ -1129,13 +1129,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # and return current value (variable[1]) for validation.
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable
 
         # Set key_size and val_size if this is the first entry
         if len(self.get_previous_value(execution_id)[KEYS]) == 0:
-            self.parameters.key_size.set(len(key), execution_id)
-            self.parameters.val_size.set(len(val), execution_id)
+            self.parameters.key_size._set(len(key), execution_id)
+            self.parameters.val_size._set(len(val), execution_id)
 
         # Retrieve value from current dict with key that best matches key
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
@@ -1144,7 +1144,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_STATE
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
-            memory = [[0]* self.parameters.key_size.get(execution_id), [0]* self.parameters.val_size.get(execution_id)]
+            memory = [[0]* self.parameters.key_size._get(execution_id), [0]* self.parameters.val_size._get(execution_id)]
         # Store variable to dict:
         if noise:
             key += noise
@@ -1171,9 +1171,9 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     @tc.typecheck
     def _validate_key(self, key:tc.any(list, np.ndarray), execution_id):
         # Length of key must be same as that of existing entries (so it can be matched on retrieval)
-        if len(key) != self.parameters.key_size.get(execution_id):
+        if len(key) != self.parameters.key_size._get(execution_id):
             raise FunctionError(f"Length of 'key' ({key}) to store in {self.__class__.__name__} ({len(key)}) "
-                                f"must be same as others in the dict ({self.parameters.key_size.get(execution_id)})")
+                                f"must be same as others in the dict ({self.parameters.key_size._get(execution_id)})")
 
     @tc.typecheck
     def get_memory(self, query_key:tc.any(list, np.ndarray), execution_id=None):
@@ -1225,8 +1225,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                             for other in indices_of_selected_items[1:])):
                 warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of ' \
                                   f'{self.owner.name} even though {repr("duplicate_keys")} is False')
-                return [[0]* self.parameters.key_size.get(execution_id),
-                        [0]* self.parameters.val_size.get(execution_id)]
+                return [[0]* self.parameters.key_size._get(execution_id),
+                        [0]* self.parameters.val_size._get(execution_id)]
             if self.equidistant_keys_select == RANDOM:
                 index_of_selected_item = choice(indices_of_selected_items)
             elif self.equidistant_keys_select == OLDEST:
@@ -1296,7 +1296,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         if len(d[KEYS]) > self.max_entries:
             d = np.delete(d, [KEYS], axis=1)
 
-        self.parameters.previous_value.set(d,execution_id)
+        self.parameters.previous_value._set(d,execution_id)
         self._memory = d
 
         return storage_succeeded
@@ -1347,7 +1347,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                         memory_keys = np.delete(self._memory[KEYS],j,axis=0)
                         memory_vals = np.delete(self._memory[VALS],j,axis=0)
                         self._memory = np.array([list(memory_keys), list(memory_vals)])
-                        self.parameters.previous_value.set(self._memory, execution_id)
+                        self.parameters.previous_value._set(self._memory, execution_id)
 
     def _parse_memories(self, memories, method, execution_id=None):
         '''Parse passing of single vs. multiple memories, validate memories, and return ndarray'''

@@ -1909,10 +1909,10 @@ class State_Base(State):
         # Set context to owner's context:
         self._assign_context_values(
             execution_id,
-            execution_phase=self.owner.parameters.context.get(execution_id).execution_phase,
+            execution_phase=self.owner.parameters.context._get(execution_id).execution_phase,
         )
-        # self.parameters.context.get(execution_id).execution_phase = self.owner.parameters.context.get(execution_id).execution_phase
-        self.parameters.context.get(execution_id).string = self.owner.parameters.context.get(execution_id).string
+        # self.parameters.context._get(execution_id).execution_phase = self.owner.parameters.context._get(execution_id).execution_phase
+        self.parameters.context._get(execution_id).string = self.owner.parameters.context._get(execution_id).string
 
         # SET UP ------------------------------------------------------------------------------------------------
 
@@ -1973,10 +1973,10 @@ class State_Base(State):
                                                                                      self.owner.name))
                 continue
 
-            if not self.afferents_info[projection].is_active_in_composition(self.parameters.context.get(execution_id).composition):
+            if not self.afferents_info[projection].is_active_in_composition(self.parameters.context._get(execution_id).composition):
                 continue
 
-            projection._assign_context_values(execution_id, composition=self.parameters.context.get(execution_id).composition)
+            projection._assign_context_values(execution_id, composition=self.parameters.context._get(execution_id).composition)
             # Only accept projections from a Process to which the owner Mechanism belongs
             if isinstance(sender, ProcessInputState):
                 if not sender.owner in self.owner.processes.keys():
@@ -1996,17 +1996,17 @@ class State_Base(State):
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
-            if isinstance(projection, LearningProjection) and self.parameters.context.get(execution_id).execution_phase != ContextFlags.LEARNING:
+            if isinstance(projection, LearningProjection) and self.parameters.context._get(execution_id).execution_phase != ContextFlags.LEARNING:
                 projection_value = projection.defaults.value * 0.0
             else:
-                projection_value = projection.execute(variable=projection.sender.parameters.value.get(execution_id),
+                projection_value = projection.execute(variable=projection.sender.parameters.value._get(execution_id),
                                                       execution_id=execution_id,
                                                       runtime_params=projection_params,
                                                       context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
             try:
-                if projection.parameters.context.get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
+                if projection.parameters.context._get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
                     continue
             except AttributeError:
                 pass
@@ -2038,7 +2038,7 @@ class State_Base(State):
                         continue
                     # Otherwise, for efficiency, assign OVERRIDE value to State here and return
                     else:
-                        self.parameters.value.set(type_match(projection_value, type(self.defaults.value)), execution_id, override=True)
+                        self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), execution_id, override=True)
                         return
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
@@ -2050,7 +2050,7 @@ class State_Base(State):
         # Handle ModulatoryProjection OVERRIDE
         #    if there is one and it wasn't been handled above (i.e., if paramValidation is set)
         if modulatory_override:
-            self.parameters.value.set(type_match(modulatory_override[1], type(self.defaults.value)), execution_id, override=True)
+            self.parameters.value._set(type_match(modulatory_override[1], type(self.defaults.value)), execution_id, override=True)
             return
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
@@ -2063,7 +2063,7 @@ class State_Base(State):
             if value_list:
                 # KDM 12/10/18: below is confusing - why does the mod_param "enum" value refer to a class?
                 aggregated_mod_val = mod_param.value.reduce(value_list)
-                getattr(self.function.parameters, mod_param.value.attrib_name).set(aggregated_mod_val, execution_id)
+                getattr(self.function.parameters, mod_param.value.attrib_name)._set(aggregated_mod_val, execution_id)
                 function_param = self.function.params[mod_param.value.attrib_name]
                 if not FUNCTION_PARAMS in self.stateParams:
                     self.stateParams[FUNCTION_PARAMS] = {function_param: aggregated_mod_val}

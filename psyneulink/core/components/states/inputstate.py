@@ -988,9 +988,10 @@ class InputState(State_Base):
             path_proj_values = []
             # Check for Projections that are active in the Composition being run
             for proj in self.path_afferents:
-                if self.afferents_info[proj].is_active_in_composition(self.parameters.context.get(
-                        execution_id).composition):
-                    path_proj_values.append(proj.parameters.value.get(execution_id))
+                if self.afferents_info[proj].is_active_in_composition(
+                        self.parameters.context._get(execution_id).composition
+                ):
+                    path_proj_values.append(proj.parameters.value._get(execution_id))
             # If there are any active PathwayProjections
             if len(path_proj_values) > 0:
                 # Combine Projection values
@@ -1414,7 +1415,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     for state in owner._input_states:
         # Assign True for owner's primary InputState and the value has not already been set in InputState constructor
         if state.require_projection_in_composition is None and owner.input_state == state:
-            state.parameters.require_projection_in_composition.set(True, override=True)
+            state.parameters.require_projection_in_composition._set(True, override=True)
 
     # Check that number of input_states and their variables are consistent with owner.defaults.variable,
     #    and adjust the latter if not

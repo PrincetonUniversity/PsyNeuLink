@@ -393,7 +393,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
                 with np.errstate(divide='raise'):
                     try:
                         variable = variable ** exponents
@@ -825,7 +825,7 @@ class LinearCombination(
 
         weights = self.get_current_function_param(WEIGHTS, execution_id)
         exponents = self.get_current_function_param(EXPONENTS, execution_id)
-        # if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZED:
+        # if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZED:
         #     if weights is not None and weights.shape != variable.shape:
         #         weights = weights.reshape(variable.shape)
         #     if exponents is not None and exponents.shape != variable.shape:
@@ -856,7 +856,7 @@ class LinearCombination(
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
                 with np.errstate(divide='raise'):
                     try:
                         variable = variable ** exponents
@@ -1435,7 +1435,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         if exponents is not None:
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
-            if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING and
+            if (self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING and
                     any(not any(i) and j < 0 for i, j in zip(variable, exponents))):
                 means = np.ones_like(means)
             else:
