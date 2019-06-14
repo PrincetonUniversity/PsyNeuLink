@@ -16,7 +16,7 @@ from llvmlite import ir
 import numpy as np
 import os, re
 import weakref
-
+import torch
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.keywords import AFTER, BEFORE
 
@@ -545,7 +545,8 @@ class LLVMBuilderContext:
             return ir.LiteralStructType([])
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
-
+        elif isinstance(t,torch.Tensor):
+            return self.convert_python_struct_to_llvm_ir(t.numpy())
         assert False, "Don't know how to convert {}".format(type(t))
 
 
