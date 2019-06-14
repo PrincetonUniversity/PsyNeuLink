@@ -238,11 +238,9 @@ class Stability(ObjectiveFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        # MODIFIED 6/8/19 NEW: [JDC]
+        # MODIFIED 6/12/19 NEW: [JDC]
         self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
-        # MODIFIED 6/8/19 END
-
-
+        # MODIFIED 6/12/19 END
 
     def _validate_variable(self, variable, context=None):
         """Validates that variable is 1d array
@@ -428,9 +426,11 @@ class Stability(ObjectiveFunction):
         # Validate variable and validate params
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
+        # MODIFIED 6/12/19 NEW: [JDC]
         variable = np.array(variable)
         if variable.ndim > 1:
             variable = np.squeeze(variable)
+        # MODIFIED 6/12/19 END
 
         matrix = self.get_current_function_param(MATRIX, execution_id)
 

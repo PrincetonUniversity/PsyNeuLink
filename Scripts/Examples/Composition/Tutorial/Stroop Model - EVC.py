@@ -51,6 +51,7 @@ Stroop_model.add_linear_processing_pathway(word_pathway)
 Stroop_model.add_linear_processing_pathway(task_color_pathway)
 Stroop_model.add_linear_processing_pathway(task_word_pathway)
 Stroop_model.add_linear_processing_pathway(decision_pathway)
+Stroop_model.add_node(reward)
 
 # Assign Scheduler Conditions:
 settling_time = 10
@@ -64,7 +65,7 @@ evc = OptimizationControlMechanism(name='EVC',
                                    agent_rep=Stroop_model,
                                    features=[color_input.input_state, word_input.input_state, reward.input_state],
                                    # feature_function=AdaptiveIntegrator(rate=1.0),
-                                   feature_function=AdaptiveIntegrator(rate=1.0),
+                                   feature_function=AdaptiveIntegrator,
                                    objective_mechanism= \
                                        ObjectiveMechanism(
                                                name='EVC Objective Mechanism',
@@ -115,8 +116,8 @@ def print_after():
     t += 1
 
 task.log.set_log_conditions(VALUE)
-control.log.set_log_conditions(VARIABLE)
-control.log.set_log_conditions(VALUE)
+evc.log.set_log_conditions(VARIABLE)
+evc.log.set_log_conditions(VALUE)
 
 task.initial_value = [0.5,0.5]
 task.reinitialize_when=AtPass(n=0)
