@@ -54,7 +54,7 @@ Stroop_model.add_linear_processing_pathway(decision_pathway)
 Stroop_model.add_node(reward)
 
 # Assign Scheduler Conditions:
-settling_time = 10
+settling_time = 1
 # scheduler = Scheduler(composition=Stroop_model)
 Stroop_model.scheduler_processing.add_condition(color_hidden, EveryNCalls(task, settling_time))
 Stroop_model.scheduler_processing.add_condition(word_hidden, EveryNCalls(task, settling_time))
@@ -123,7 +123,7 @@ evc.log.set_log_conditions(VALUE)
 
 task.initial_value = [0.5,0.5]
 task.reinitialize_when=AtPass(n=0)
-num_trials = 5
+num_trials = 2
 stimuli = {color_input:[red]*num_trials,
            word_input:[green]*num_trials,
            task_input:[color]*num_trials}
