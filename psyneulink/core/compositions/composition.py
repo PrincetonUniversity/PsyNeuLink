@@ -3182,11 +3182,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # If recvr is ObjectiveMechanism for Composition's controller,
             #    break and handle in _assign_control_components()
-            # # MODIFIED 5/9/19 OLD:
-            # elif (isinstance(rcvr, ObjectiveMechanism)
-            # MODIFIED 5/9/19 NEW: [JDC] [ALLOW NESTED TO STAND ON ITS OWN ABOVE]
             if (isinstance(rcvr, ObjectiveMechanism)
-            # MODIFIED 5/9/19 END
                     and self.controller
                     and rcvr is self.controller.objective_mechanism):
                 return
@@ -3449,6 +3445,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             '''Assign control nodes and edges to graph '''
 
             controller = self.controller
+            if controller is None:
+                warnings.warn(f"{self.name} has not been assigned a \'controller\', "
+                              f"so \'show_controller\' option in call to its show_graph() method will be ignored.")
+                return
+
             if controller in active_items:
                 if active_color is BOLD:
                     ctlr_color = controller_color
@@ -3460,15 +3461,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctlr_color = controller_color
                 ctlr_width = str(default_width)
 
-            if controller is None:
-                warnings.warn(f"{self.name} has not been assigned a \'controller\', "
-                              f"so \'show_controller\' option in call to its show_graph() method will be ignored.")
-                return
-
             # Assign controller node
-            # MODIFIED 5/29/19 NEW:
             node_shape = mechanism_shape
-            # MODIFIED 5/29/19 END
             ctlr_label = self._get_graph_node_label(controller, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
@@ -3515,7 +3509,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            penwidth=ctl_proj_width
                            )
 
-            # If controller has objective_mechanism, assign its node and projetions
+            # If controller has objective_mechanism, assign its node and Projections
             if controller.objective_mechanism:
                 # get projection from ObjectiveMechanism to ControlMechanism
                 objmech_ctlr_proj = controller.input_state.path_afferents[0]
@@ -3598,16 +3592,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
                                color=proj_color, penwidth=proj_width)
 
-            # MODIFIED 5/29/19 NEW: [JDC]
+            # If controller has an agent_rep, assign its node and edges (not Projections per se)
+            if controller.agent_rep:
+                # get agent_rep
+                agent_rep = controller.agent_rep
+                if agent_rep in active_items:
+                    if active_color is BOLD:
+                        agent_rep_color = controller_color
+                    else:
+                        agent_rep_color = active_color
+                    agent_rep_width = str(default_width + active_thicker_by)
+                    self.active_item_rendered = True
+                else:
+                    agent_rep_color = controller_color
+                    agent_rep_width = str(default_width)
+
+                # agent_rep node
+                agent_rep_label = self._get_graph_node_label(agent_rep, show_dimensions)
+                g.node(agent_rep_label,
+                        color=agent_rep_color, penwidth=agent_rep_width, shape=agent_rep_shape,
+                        rank=control_rank)
+
+                # agent_rep <-> controller edges
+                g.edge(agent_rep_label, ctlr_label, color=agent_rep_color, penwidth=agent_rep_width)
+                g.edge(ctlr_label, agent_rep_label, color=agent_rep_color, penwidth=agent_rep_width)
+
             # get any other incoming edges to controller (i.e., other than from ObjectiveMechanism)
             senders = set()
             for i in controller.input_states[1:]:
                 for p in i.path_afferents:
                     senders.add(p.sender.owner)
             _assign_incoming_edges(g, controller, ctlr_label, senders, proj_color=ctl_proj_color)
-            # MODIFIED 5/29/19 END
 
-        # MODIFIED 5/29/19 NEW: [JDC]
         @tc.typecheck
         def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None):
             proj_color = proj_color or default_node_color
@@ -3667,7 +3683,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 label = ''
                             g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
                                    color=proj_color, penwidth=proj_width)
-        # MODIFIED 5/29/19 END
 
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
@@ -3740,9 +3755,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         default_node_color = 'black'
         mechanism_shape = 'oval'
+        struct_shape = 'plaintext' # assumes use of html
         cim_shape = 'rectangle'
         composition_shape = 'rectangle'
-        struct_shape = 'plaintext' # assumes use of html
+        agent_rep_shape = 'egg'
 
         bold_width = 3
         default_width = 1
