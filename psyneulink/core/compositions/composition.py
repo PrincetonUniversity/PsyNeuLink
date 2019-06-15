@@ -2710,6 +2710,134 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.input_CIM.execute(build_CIM_input, execution_id=execution_id)
 
+    def _assign_execution_ids(self, execution_id=None):
+        '''
+            assigns the same execution id to each Node in the composition's processing graph as well as the CIMs.
+            The execution id is either specified in the user's call to run(), or from the Composition's
+            **default_execution_id**
+        '''
+
+        # Traverse processing graph and assign one uuid to all of its nodes
+        if execution_id is None:
+            execution_id = self.default_execution_id
+
+        if execution_id not in self.execution_ids:
+            self.execution_ids.add(execution_id)
+
+        self._assign_context_values(execution_id=None, composition=self)
+        return execution_id
+
+    def _identify_clamp_inputs(self, list_type, input_type, origins):
+        # clamp type of this list is same as the one the user set for the whole composition; return all nodes
+        if list_type == input_type:
+            return origins
+        # the user specified different types of clamps for each origin node; generate a list accordingly
+        elif isinstance(input_type, dict):
+            return [k for k, v in input_type.items() if list_type == v]
+        # clamp type of this list is NOT same as the one the user set for the whole composition; return empty list
+        else:
+            return []
+
+    def _parse_runtime_params(self, runtime_params):
+        if runtime_params is None:
+            return {}
+        for node in runtime_params:
+            for param in runtime_params[node]:
+                if isinstance(runtime_params[node][param], tuple):
+                    if len(runtime_params[node][param]) == 1:
+                        runtime_params[node][param] = (runtime_params[node][param], Always())
+                    elif len(runtime_params[node][param]) != 2:
+                        raise CompositionError(
+                            "Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
+                            "Must be a tuple of the form (parameter value, condition), or simply the "
+                            "parameter value. ".format(runtime_params[node][param],
+                                                       node.name,
+                                                       param,
+                                                       self.name))
+                else:
+                    runtime_params[node][param] = (runtime_params[node][param], Always())
+        return runtime_params
+
+    def _get_graph_node_label(self, item, show_dimensions=None):
+        if not isinstance(item, (Mechanism, Composition, Projection)):
+            raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
+        # TBI Show Dimensions
+        name = item.name
+
+        if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
+            input_str = "in ({})".format(",".join(str(input_state.socket_width)
+                                                  for input_state in item.input_states))
+            output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
+                                                    for output_state in item.output_states))
+            return "{}\n{}\n{}".format(output_str, name, input_str)
+        if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
+            # MappingProjections use matrix
+            if isinstance(item, MappingProjection):
+                value = np.array(item.matrix)
+                dim_string = "({})".format("x".join([str(i) for i in value.shape]))
+                return "{}\n{}".format(item.name, dim_string)
+            # ModulatoryProjections use value
+            else:
+                value = np.array(item.value)
+                dim_string = "({})".format(len(value))
+                return "{}\n{}".format(item.name, dim_string)
+
+        return name
+
+    def _set_up_animation(self, animate):
+
+        self._component_animation_execution_count=0
+        if animate is True:
+            animate = {}
+        self._animate = animate
+
+        if isinstance(self._animate, dict):
+            # Assign directory for animation files
+            here = path.abspath(path.dirname(__file__))
+            self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " gifs")
+            # try:
+            #     rmtree(self._animate_directory)
+            # except:
+            #     pass
+            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
+            self._image_duration = self._animate.pop(DURATION, 0.75)
+            self._animate_num_runs = self._animate.pop(NUM_RUNS, 1)
+            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
+            self._animate_simulations = self._animate.pop(SIMULATIONS, False)
+            self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
+            self._save_images = self._animate.pop(SAVE_IMAGES, False)
+            self._show_animation = self._animate.pop(SHOW, False)
+            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
+                raise SystemError(f"{repr(UNIT)} entry of {repr('animate')} argument for {self.name} method "
+                                  f"of {repr('run')} ({self._animate_unit}) "
+                                  f"must be {repr(COMPONENT)} or {repr(EXECUTION_SET)}.")
+            if not isinstance(self._image_duration, (int, float)):
+                raise SystemError(f"{repr(DURATION)} entry of {repr('animate')} argument for {repr('run')} method of "
+                                  f"{self.name} ({self._image_duration}) must be an int or a float.")
+            if not isinstance(self._animate_num_runs, int):
+                raise SystemError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                  f"method of {self.name} ({self._animate_num_runs}) must an integer.")
+            if not isinstance(self._animate_num_runs, int):
+                raise SystemError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                  f"method of {self.name} ({self._animate_num_runs}) must an integer.")
+            if not isinstance(self._animate_simulations, bool):
+                raise SystemError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                  f"method of {self.name} ({self._animate_num_trials}) must a boolean.")
+            if not isinstance(self._movie_filename, str):
+                raise SystemError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
+                                  f"method of {self.name} ({self._movie_filename}) must be a string.")
+            if not isinstance(self._save_images, bool):
+                raise SystemError(f"{repr(SAVE_IMAGES)} entry of {repr('animate')} argument for {repr('run')} method "
+                                  f"of {self.name} ({self._save_images}) must be a boolean")
+            if not isinstance(self._show_animation, bool):
+                raise SystemError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
+                                  f"method of {self.name} ({self._show_animation}) must be a boolean.")
+        elif self._animate:
+            # self._animate should now be False or a dict
+            raise SystemError("{} argument for {} method of {} ({}) must be a boolean or "
+                              "a dictionary of argument specifications for its {} method".
+                              format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
+
     @tc.typecheck
     def show_structure(self,
                        # direction = 'BT',
@@ -2914,80 +3042,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         elif output_fmt == 'jupyter':
             return m
-
-    def _assign_execution_ids(self, execution_id=None):
-        '''
-            assigns the same execution id to each Node in the composition's processing graph as well as the CIMs.
-            The execution id is either specified in the user's call to run(), or from the Composition's
-            **default_execution_id**
-        '''
-
-        # Traverse processing graph and assign one uuid to all of its nodes
-        if execution_id is None:
-            execution_id = self.default_execution_id
-
-        if execution_id not in self.execution_ids:
-            self.execution_ids.add(execution_id)
-
-        self._assign_context_values(execution_id=None, composition=self)
-        return execution_id
-
-    def _identify_clamp_inputs(self, list_type, input_type, origins):
-        # clamp type of this list is same as the one the user set for the whole composition; return all nodes
-        if list_type == input_type:
-            return origins
-        # the user specified different types of clamps for each origin node; generate a list accordingly
-        elif isinstance(input_type, dict):
-            return [k for k, v in input_type.items() if list_type == v]
-        # clamp type of this list is NOT same as the one the user set for the whole composition; return empty list
-        else:
-            return []
-
-    def _parse_runtime_params(self, runtime_params):
-        if runtime_params is None:
-            return {}
-        for node in runtime_params:
-            for param in runtime_params[node]:
-                if isinstance(runtime_params[node][param], tuple):
-                    if len(runtime_params[node][param]) == 1:
-                        runtime_params[node][param] = (runtime_params[node][param], Always())
-                    elif len(runtime_params[node][param]) != 2:
-                        raise CompositionError(
-                            "Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
-                            "Must be a tuple of the form (parameter value, condition), or simply the "
-                            "parameter value. ".format(runtime_params[node][param],
-                                                       node.name,
-                                                       param,
-                                                       self.name))
-                else:
-                    runtime_params[node][param] = (runtime_params[node][param], Always())
-        return runtime_params
-
-    def _get_graph_node_label(self, item, show_dimensions=None):
-        if not isinstance(item, (Mechanism, Composition, Projection)):
-            raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
-        # TBI Show Dimensions
-        name = item.name
-
-        if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
-            input_str = "in ({})".format(",".join(str(input_state.socket_width)
-                                                  for input_state in item.input_states))
-            output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
-                                                    for output_state in item.output_states))
-            return "{}\n{}\n{}".format(output_str, name, input_str)
-        if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
-            # MappingProjections use matrix
-            if isinstance(item, MappingProjection):
-                value = np.array(item.matrix)
-                dim_string = "({})".format("x".join([str(i) for i in value.shape]))
-                return "{}\n{}".format(item.name, dim_string)
-            # ModulatoryProjections use value
-            else:
-                value = np.array(item.value)
-                dim_string = "({})".format(len(value))
-                return "{}\n{}".format(item.name, dim_string)
-
-        return name
 
     @tc.typecheck
     def show_graph(self,
@@ -3902,7 +3956,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif output_fmt == 'gv':
             return G
 
-
     def execute(
             self,
             inputs=None,
@@ -4668,64 +4721,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     item.parameters.value.log_condition = LogCondition.EXECUTION
 
         # Set animation attributes
-        self._component_animation_execution_count=0
-        if animate is True:
-            animate = {}
-        self._animate = animate
-        if isinstance(self._animate, dict):
-            # Assign directory for animation files
-            here = path.abspath(path.dirname(__file__))
-            self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " gifs")
-            # try:
-            #     rmtree(self._animate_directory)
-            # except:
-            #     pass
-            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
-            self._image_duration = self._animate.pop(DURATION, 0.75)
-            self._animate_num_runs = self._animate.pop(NUM_RUNS, 1)
-            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
-            self._animate_simulations = self._animate.pop(SIMULATIONS, False)
-            self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
-            self._save_images = self._animate.pop(SAVE_IMAGES, False)
-            self._show_animation = self._animate.pop(SHOW, False)
-            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
-                                  format(repr(UNIT), repr('animate'), repr('run'),
-                                         self.name, self._animate_unit, repr(COMPONENT), repr(EXECUTION_SET)))
-            if not isinstance(self._image_duration, (int, float)):
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be an int or a float".
-                                  format(repr(DURATION), repr('animate'), repr('run'),
-                                         self.name, self._image_duration))
-            if not isinstance(self._animate_num_runs, int):
-                raise SystemError("{} entry of {} argument for {} method of {} must an integer".
-                                  format(repr(NUM_RUNS), repr('animate'),
-                                         self.name, self._animate_num_runs, repr('show_graph')))
-            if not isinstance(self._animate_num_trials, int):
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must an integer".
-                                  format(repr(NUM_TRIALS), repr('animate'), repr('run'),
-                                         self.name, self._animate_num_trials, repr('show_graph')))
-            if not isinstance(self._animate_simulations, bool):
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must a boolean".
-                                  format(repr(SIMULATIONS), repr('animate'), repr('run'),
-                                         self.name, self._animate_num_trials, repr('show_graph')))
-            if not isinstance(self._movie_filename, str):
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be a string".
-                                  format(repr(MOVIE_NAME), repr('animate'), repr('run'),
-                                         self.name, self._movie_filename))
-            if not isinstance(self._save_images, bool):
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
-                                  format(repr(MOVIE_NAME), repr('animate'), repr('run'),
-                                         self.name, self._save_images, repr(True), repr(False)))
-            if not isinstance(self._save_images, bool):
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
-                                  format(repr(SHOW), repr('animate'), repr('run'),
-                                         self.name, self._show_animation, repr(True), repr(False)))
-        elif self._animate:
-            # self._animate should now be False or a dict
-            raise SystemError("{} argument for {} method of {} ({}) must be a boolean or "
-                              "a dictionary of argument specifications for its {} method".
-                              format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
-
+        self._set_up_animation(animate)
 
         # SET UP EXECUTION -----------------------------------------------
 
