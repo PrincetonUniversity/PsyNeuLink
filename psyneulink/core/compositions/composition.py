@@ -3045,74 +3045,79 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return m
 
     def _generate_gifs(self, G, active_items, execution_id):
-            if self.active_item_rendered or INITIAL_FRAME in active_items:
-                G.format = 'gif'
-                def create_phase_string(phase):
-                    return f'%16s' % phase + ' - '
-                def create_time_string(time, spec):
-                    if spec == 'TIME':
-                        r = time.run
-                        t = time.trial
-                        p = time.pass_
-                        ts = time.time_step
-                    else:
-                        r = t = p = ts = '__'
-                    return f"Time(run: %2s, " % r + f"trial: %2s, " % t + f"pass: %2s, " % p + f"time_step: %2s)" % ts
-                execution_phase = self.parameters.context.get(execution_id).execution_phase
-                time = self.scheduler_processing.get_clock(execution_id).time
-                if INITIAL_FRAME in active_items:
-                    phase_string = create_phase_string('Initializing')
-                    time_string = create_time_string(time, 'BLANKS')
-                elif execution_phase == ContextFlags.PROCESSING:
-                    phase_string = create_phase_string('Processing Phase')
-                    time_string = create_time_string(time, 'TIME')
-                # elif execution_phase == ContextFlags.LEARNING:
-                #     time = self.scheduler_learning.get_clock(execution_id).time
-                #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
-                #         format(time.run, time.trial, time.pass_, time.time_step)
-                #     phase_string = 'Learning Phase - '
-                elif execution_phase == ContextFlags.CONTROL:
-                    phase_string = create_phase_string('Control Phase')
-                    time_string = create_time_string(time, 'TIME')
-                else:
-                    raise CompositionError(
-                        f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
-                label = f'\n{self.name}\n{phase_string}{time_string}\n'
-                G.attr(label=label)
-                G.attr(labelloc='b')
-                G.attr(fontname='Monaco')
-                G.attr(fontsize='14')
-                # if INITIAL_FRAME in active_items:
-                #     index = '0'
-                # else:
-                index = repr(self._component_animation_execution_count)
-                image_filename = '-'.join([
-                    # repr(self.scheduler_processing.clock.simple_time.run),
-                    # # MODIFIED 6/15/19 OLD:
-                    # repr(self.scheduler_processing.clock.simple_time.run),
-                    # MODIFIED 6/15/19 NEW: [JDC]
-                    # FIX: REVER TO OLD WHEN self.scheduler_processing.clock.simple_time.run PROPERLY INCREMENTS BY RUN
-                    repr(len(self.parameters.results.get(execution_id))),
-                    # MODIFIED 6/15/19 END
-                    repr(self.scheduler_processing.clock.simple_time.trial),
-                    index])
-                # image_filename = '-'.join([repr(time.run), repr(time.trial), repr(time.pass_)])
-                image_file = self._animate_directory + '/' + image_filename + '.gif'
-                G.render(filename=image_filename,
-                         directory=self._animate_directory,
-                         cleanup=True,
-                         # view=True
-                         )
-                # Append gif to self._animation
-                image = Image.open(image_file)
-                # TBI?
-                # if not self._save_images:
-                #     remove(image_file)
-                if not hasattr(self, '_animation'):
-                    self._animation = [image]
-                else:
-                    self._animation.append(image)
-                assert True
+
+        def create_phase_string(phase):
+            return f'%16s' % phase + ' - '
+
+        def create_time_string(time, spec):
+            if spec == 'TIME':
+                r = time.run
+                t = time.trial
+                p = time.pass_
+                ts = time.time_step
+            else:
+                r = t = p = ts = '__'
+            return f"Time(run: %2s, " % r + f"trial: %2s, " % t + f"pass: %2s, " % p + f"time_step: %2s)" % ts
+
+        G.format = 'gif'
+        execution_phase = self.parameters.context.get(execution_id).execution_phase
+        time = self.scheduler_processing.get_clock(execution_id).time
+
+        if INITIAL_FRAME in active_items:
+            phase_string = create_phase_string('Initializing')
+            time_string = create_time_string(time, 'BLANKS')
+
+        elif execution_phase == ContextFlags.PROCESSING:
+            phase_string = create_phase_string('Processing Phase')
+            time_string = create_time_string(time, 'TIME')
+        # elif execution_phase == ContextFlags.LEARNING:
+        #     time = self.scheduler_learning.get_clock(execution_id).time
+        #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
+        #         format(time.run, time.trial, time.pass_, time.time_step)
+        #     phase_string = 'Learning Phase - '
+
+        elif execution_phase == ContextFlags.CONTROL:
+            phase_string = create_phase_string('Control Phase')
+            time_string = create_time_string(time, 'TIME')
+
+        else:
+            raise CompositionError(
+                f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
+
+        label = f'\n{self.name}\n{phase_string}{time_string}\n'
+        G.attr(label=label)
+        G.attr(labelloc='b')
+        G.attr(fontname='Monaco')
+        G.attr(fontsize='14')
+        # if INITIAL_FRAME in active_items:
+        #     index = '0'
+        # else:
+        index = repr(self._component_animation_execution_count)
+        image_filename = '-'.join([
+            # # MODIFIED 6/15/19 OLD:
+            # repr(time.run),
+            # MODIFIED 6/15/19 NEW: [JDC]
+            # FIX: REVERT TO OLD WHEN self.scheduler_processing.clock.simple_time.run PROPERLY INCREMENTS BY RUN
+            repr(len(self.parameters.results.get(execution_id))),
+            # MODIFIED 6/15/19 END
+            repr(time.trial),
+            index])
+        # image_filename = '-'.join([repr(time.run), repr(time.trial), repr(time.pass_)])
+        image_file = self._animate_directory + '/' + image_filename + '.gif'
+        G.render(filename=image_filename,
+                 directory=self._animate_directory,
+                 cleanup=True,
+                 # view=True
+                 )
+        # Append gif to self._animation
+        image = Image.open(image_file)
+        # TBI?
+        # if not self._save_images:
+        #     remove(image_file)
+        if not hasattr(self, '_animation'):
+            self._animation = [image]
+        else:
+            self._animation.append(image)
 
     @tc.typecheck
     def show_graph(self,
@@ -3818,7 +3823,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_id = self.default_execution_id
 
         if active_items:
-            if self.scheduler_processing.clock.time.run >= self._animate_num_runs:
+            # # MODIFIED 6/15/19 OLD:
+            # if self.scheduler_processing.clock.time.run >= self._animate_num_runs:
+            # MODIFIED 6/15/19 NEW: [JDC]
+            # FIX: REVERT TO OLD WHEN self.scheduler_processing.clock.simple_time.run PROPERLY INCREMENTS BY RUN
+            if len(self.parameters.results.get(execution_id))>= self._animate_num_runs:
+            # MODIFIED 6/15/19 END
                 return
             if not show_controller and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
                 return
@@ -3963,7 +3973,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Generate images for animation
         elif output_fmt == 'gif':
-            self._generate_gifs(G, active_items, execution_id)
+            if self.active_item_rendered or INITIAL_FRAME in active_items:
+                self._generate_gifs(G, active_items, execution_id)
 
         # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
