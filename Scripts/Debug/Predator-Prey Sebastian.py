@@ -215,8 +215,11 @@ if SHOW_GRAPH:
 # ******************************************   RUN SIMULATION  ********************************************************
 # *********************************************************************************************************************
 
+# # MODIFIED 6/15/19 OLD:
 # num_episodes = 100
+# MODIFIED 6/15/19 NEW: [JDC]
 num_episodes = 1
+# MODIFIED 6/15/19 END
 
 
 def main():
@@ -323,8 +326,11 @@ def main():
 
             new_episode_flag = False
             steps += 1
+            # # MODIFIED 6/15/19 OLD:
             # if done:
-            if steps > 1:
+            # MODIFIED 6/15/19 NEW: [JDC]
+            if steps >1:
+            # MODIFIED 6/15/19 END
                 break
     stop_time = timeit.default_timer()
     print(f'{steps / (stop_time - start_time):.1f} steps/second, {steps} total steps in '

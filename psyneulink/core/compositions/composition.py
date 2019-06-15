@@ -2784,9 +2784,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return name
 
-    def _set_up_animation(self, animate):
+    def _set_up_animation(self, animate, execution_id):
 
-        self._component_animation_execution_count=0
+        self._component_animation_execution_count = 0
+
         if animate is True:
             animate = {}
         self._animate = animate
@@ -2817,9 +2818,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not isinstance(self._animate_num_runs, int):
                 raise SystemError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
                                   f"method of {self.name} ({self._animate_num_runs}) must an integer.")
-            if not isinstance(self._animate_num_runs, int):
+            if not isinstance(self._animate_num_trials, int):
                 raise SystemError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                  f"method of {self.name} ({self._animate_num_runs}) must an integer.")
+                                  f"method of {self.name} ({self._animate_num_trials}) must an integer.")
             if not isinstance(self._animate_simulations, bool):
                 raise SystemError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for {repr('show_graph')} "
                                   f"method of {self.name} ({self._animate_num_trials}) must a boolean.")
@@ -3042,6 +3043,76 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         elif output_fmt == 'jupyter':
             return m
+
+    def _generate_gifs(self, G, active_items, execution_id):
+            if self.active_item_rendered or INITIAL_FRAME in active_items:
+                G.format = 'gif'
+                def create_phase_string(phase):
+                    return f'%16s' % phase + ' - '
+                def create_time_string(time, spec):
+                    if spec == 'TIME':
+                        r = time.run
+                        t = time.trial
+                        p = time.pass_
+                        ts = time.time_step
+                    else:
+                        r = t = p = ts = '__'
+                    return f"Time(run: %2s, " % r + f"trial: %2s, " % t + f"pass: %2s, " % p + f"time_step: %2s)" % ts
+                execution_phase = self.parameters.context.get(execution_id).execution_phase
+                time = self.scheduler_processing.get_clock(execution_id).time
+                if INITIAL_FRAME in active_items:
+                    phase_string = create_phase_string('Initializing')
+                    time_string = create_time_string(time, 'BLANKS')
+                elif execution_phase == ContextFlags.PROCESSING:
+                    phase_string = create_phase_string('Processing Phase')
+                    time_string = create_time_string(time, 'TIME')
+                # elif execution_phase == ContextFlags.LEARNING:
+                #     time = self.scheduler_learning.get_clock(execution_id).time
+                #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
+                #         format(time.run, time.trial, time.pass_, time.time_step)
+                #     phase_string = 'Learning Phase - '
+                elif execution_phase == ContextFlags.CONTROL:
+                    phase_string = create_phase_string('Control Phase')
+                    time_string = create_time_string(time, 'TIME')
+                else:
+                    raise CompositionError(
+                        f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
+                label = f'\n{self.name}\n{phase_string}{time_string}\n'
+                G.attr(label=label)
+                G.attr(labelloc='b')
+                G.attr(fontname='Monaco')
+                G.attr(fontsize='14')
+                # if INITIAL_FRAME in active_items:
+                #     index = '0'
+                # else:
+                index = repr(self._component_animation_execution_count)
+                image_filename = '-'.join([
+                    # repr(self.scheduler_processing.clock.simple_time.run),
+                    # # MODIFIED 6/15/19 OLD:
+                    # repr(self.scheduler_processing.clock.simple_time.run),
+                    # MODIFIED 6/15/19 NEW: [JDC]
+                    # FIX: REVER TO OLD WHEN self.scheduler_processing.clock.simple_time.run PROPERLY INCREMENTS BY RUN
+                    repr(len(self.parameters.results.get(execution_id))),
+                    # MODIFIED 6/15/19 END
+                    repr(self.scheduler_processing.clock.simple_time.trial),
+                    index])
+                # image_filename = '-'.join([repr(time.run), repr(time.trial), repr(time.pass_)])
+                image_file = self._animate_directory + '/' + image_filename + '.gif'
+                G.render(filename=image_filename,
+                         directory=self._animate_directory,
+                         cleanup=True,
+                         # view=True
+                         )
+                # Append gif to self._animation
+                image = Image.open(image_file)
+                # TBI?
+                # if not self._save_images:
+                #     remove(image_file)
+                if not hasattr(self, '_animation'):
+                    self._animation = [image]
+                else:
+                    self._animation.append(image)
+                assert True
 
     @tc.typecheck
     def show_graph(self,
@@ -3650,7 +3721,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if hasattr(controller, 'agent_rep') and controller.agent_rep:
                 # get agent_rep
                 agent_rep = controller.agent_rep
-                if agent_rep in active_items:
+                # controller is active, treat
+                if controller in active_items:
                     if active_color is BOLD:
                         agent_rep_color = controller_color
                     else:
@@ -3891,63 +3963,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Generate images for animation
         elif output_fmt == 'gif':
-            if self.active_item_rendered or INITIAL_FRAME in active_items:
-                G.format = 'gif'
-                def create_phase_string(phase):
-                    return f'%16s' % phase + ' - '
-                def create_time_string(spec):
-                    if spec == 'TIME':
-                        time = self.scheduler_processing.get_clock(execution_id).time
-                        r = time.run
-                        t = time.trial
-                        p = time.pass_
-                        ts = time.time_step
-                    else:
-                        r = t = p = ts = '__'
-                    return f"Time(run: %2s, " % r + f"trial: %2s, " % t + f"pass: %2s, " % p + f"time_step: %2s)" % ts
-                execution_phase = self.parameters.context.get(execution_id).execution_phase
-                if INITIAL_FRAME in active_items:
-                    phase_string = create_phase_string('Initializing')
-                    time_string = create_time_string('BLANKS')
-                elif execution_phase == ContextFlags.PROCESSING:
-                    phase_string = create_phase_string('Processing Phase')
-                    time_string = create_time_string('TIME')
-                # elif execution_phase == ContextFlags.LEARNING:
-                #     time = self.scheduler_learning.get_clock(execution_id).time
-                #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
-                #         format(time.run, time.trial, time.pass_, time.time_step)
-                #     phase_string = 'Learning Phase - '
-                elif execution_phase == ContextFlags.CONTROL:
-                    phase_string = create_phase_string('Control Phase')
-                    time_string = create_time_string('TIME')
-                else:
-                    raise CompositionError(
-                        f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
-                label = f'\n{self.name}\n{phase_string}{time_string}\n'
-                G.attr(label=label)
-                G.attr(labelloc='b')
-                G.attr(fontname='Monaco')
-                G.attr(fontsize='14')
-                if INITIAL_FRAME in active_items:
-                    index = '-'
-                else:
-                    index = repr(self._component_animation_execution_count)
-                image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + index + '-'
-                image_file = self._animate_directory + '/' + image_filename + '.gif'
-                G.render(filename=image_filename,
-                         directory=self._animate_directory,
-                         cleanup=True,
-                         # view=True
-                         )
-                # Append gif to self._animation
-                image = Image.open(image_file)
-                # TBI?
-                # if not self._save_images:
-                #     remove(image_file)
-                if not hasattr(self, '_animation'):
-                    self._animation = [image]
-                else:
-                    self._animation.append(image)
+            self._generate_gifs(G, active_items, execution_id)
 
         # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
@@ -4044,13 +4060,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         execution_id = self._assign_execution_ids(execution_id)
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        # # MODIFIED 6/12/19 OLD:
-        # if scheduler_processing is None:
-        #     scheduler_processing = self.scheduler_processing
-        # execution_scheduler = scheduler_processing
-        # MODIFIED 6/12/19 NEW: [JDC]
         execution_scheduler = scheduler_processing or self.scheduler_processing
-        # MODIFIED 6/12/19 END
 
         execution_context = self.parameters.context.get(execution_id)
 
@@ -4101,6 +4111,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, input_nodes)
             pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, input_nodes)
             no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, input_nodes)
+
+        # Generate first frame of animation without any active_items
+        if self._animate is not False:
+            # If this fails, the scheduler has no data for execution_id yet.
+            # It also may be the first, so fall back to default execution_id
+            try:
+                self.show_graph(active_items=INITIAL_FRAME,
+                                **self._animate, output_fmt='gif',
+                                execution_id=execution_id)
+            except KeyError:
+                self.show_graph(active_items=INITIAL_FRAME,
+                                **self._animate, output_fmt='gif',
+                                execution_id=self.default_execution_id)
 
         # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
 
@@ -4160,8 +4183,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if (self.enable_controller and
             self.controller_mode is BEFORE and
             self.controller_condition.is_satisfied(scheduler=execution_scheduler,
-                                                   execution_context=execution_id)
-        ):
+                                                   execution_context=execution_id)):
 
             # control phase
             # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
@@ -4186,13 +4208,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_context.execution_phase = ContextFlags.CONTROL
                 # MODIFIED 6/13/19 END
 
+                self._component_animation_execution_count += 1
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self.show_graph(active_items=self.controller,
                                     **self._animate,
                                     output_fmt='gif',
                                     execution_id=execution_id
                                     )
-                self._component_animation_execution_count += 1
 
                 # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
@@ -4215,18 +4237,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if call_before_pass:
             call_with_pruned_args(call_before_pass, execution_context=execution_id)
 
-        # Generate first frame of animation without any active_items
-        if self._animate is not False:
-            # If this fails, the scheduler has no data for execution_id yet.
-            # It also may be the first, so fall back to default execution_id
-            try:
-                self.show_graph(active_items=INITIAL_FRAME,
-                                **self._animate, output_fmt='gif',
-                                execution_id=execution_id)
-            except KeyError:
-                self.show_graph(active_items=INITIAL_FRAME,
-                                **self._animate, output_fmt='gif',
-                                execution_id=self.default_execution_id)
 
         # GET execution_set -------------------------------------------------------------------------
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
@@ -4281,6 +4291,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
             if self._animate is not False and self._animate_unit is EXECUTION_SET:
+                self._component_animation_execution_count += 1
                 self.show_graph(active_items=next_execution_set,
                                 **self._animate,
                                 output_fmt='gif',
@@ -4402,10 +4413,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                   skip_log=True, override=True)
 
                 # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
                 if self._animate is not False and self._animate_unit is COMPONENT:
+                    self._component_animation_execution_count += 1
                     self.show_graph(active_items=node, **self._animate, output_fmt='gif', execution_id=execution_id)
-                self._component_animation_execution_count += 1
 
 
                 # MANAGE INPUTS (for next # execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4449,8 +4459,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if (self.enable_controller and
                 self.controller_mode == AFTER and
                 self.controller_condition.is_satisfied(scheduler=execution_scheduler,
-                                                       execution_context=execution_id)
-        ):
+                                                       execution_context=execution_id)):
             # control phase
             # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
             execution_phase = execution_context.execution_phase
@@ -4476,12 +4485,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_context.execution_phase = ContextFlags.CONTROL
                 # MODIFIED 6/13/19 END
 
+                self._component_animation_execution_count += 1
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self.show_graph(active_items=self.controller,
                                     **self._animate,
                                     output_fmt='gif',
                                     execution_id=execution_id)
-                self._component_animation_execution_count += 1
 
                 # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
@@ -4519,8 +4528,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs=None,
             scheduler_processing=None,
             termination_processing=None,
-            execution_id=None,
-            base_execution_id=None,
             num_trials=None,
             call_before_time_step=None,
             call_after_time_step=None,
@@ -4536,6 +4543,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             retain_old_simulation_data=False,
             animate=False,
+            execution_id=None,
+            base_execution_id=None,
             context=None):
 
         '''Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
@@ -4721,7 +4730,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     item.parameters.value.log_condition = LogCondition.EXECUTION
 
         # Set animation attributes
-        self._set_up_animation(animate)
+        self._set_up_animation(animate, execution_id)
 
         # SET UP EXECUTION -----------------------------------------------
 
