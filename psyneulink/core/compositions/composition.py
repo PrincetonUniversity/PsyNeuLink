@@ -4159,7 +4159,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # GET execution_set -------------------------------------------------------------------------
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         for next_execution_set in execution_scheduler.run(termination_conds=termination_processing,
-                                                          execution_id=execution_id):
+                                                          execution_id=execution_id,
+                                                          skip_trial_time_increment=True,
+                                                          ):
 
             # SETUP EXECUTION ----------------------------------------------------------------------------
 
@@ -4417,6 +4419,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_context.execution_phase = entry_execution_phase
                 # MODIFIED 6/13/19 END
 
+        execution_scheduler.clocks[execution_id]._increment_time(TimeScale.TRIAL)
 
         # REPORT RESULTS ***********************************************************************************************
 

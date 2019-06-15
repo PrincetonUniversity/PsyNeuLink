@@ -722,7 +722,7 @@ class Scheduler(object):
     # Run methods
     ################################################################################
 
-    def run(self, termination_conds=None, execution_id=None, base_execution_id=None):
+    def run(self, termination_conds=None, execution_id=None, base_execution_id=None, skip_trial_time_increment=False):
         '''
         run is a python generator, that when iterated over provides the next `TIME_STEP` of
         executions at each iteration
@@ -812,7 +812,8 @@ class Scheduler(object):
 
             self.clocks[execution_id]._increment_time(TimeScale.PASS)
 
-        self.clocks[execution_id]._increment_time(TimeScale.TRIAL)
+        if not skip_trial_time_increment:
+            self.clocks[execution_id]._increment_time(TimeScale.TRIAL)
 
         if termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_context=execution_id):
             self.date_last_run_end = datetime.datetime.now()
