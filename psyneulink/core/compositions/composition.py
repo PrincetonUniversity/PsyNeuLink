@@ -2840,6 +2840,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               "a dictionary of argument specifications for its {} method".
                               format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
 
+    def _animate_execution(self, active_items, execution_id):
+        if self._component_animation_execution_count is None:
+            self._component_animation_execution_count = 0
+        else:
+            self._component_animation_execution_count += 1
+        self.show_graph(active_items=active_items,
+                        **self._animate,
+                        output_fmt='gif',
+                        execution_id=execution_id
+                        )
+
     @tc.typecheck
     def show_structure(self,
                        # direction = 'BT',
@@ -4122,22 +4133,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Generate first frame of animation without any active_items
         if self._animate is not False:
 
-            if self._component_animation_execution_count is None:
-                self._component_animation_execution_count = 0
-            else:
-                self._component_animation_execution_count += 1
-
-
             # If this fails, the scheduler has no data for execution_id yet.
             # It also may be the first, shoo fall back to default execution_id
             try:
-                self.show_graph(active_items=INITIAL_FRAME,
-                                **self._animate, output_fmt='gif',
-                                execution_id=execution_id)
+                self._animate_execution(INITIAL_FRAME, execution_id)
             except KeyError:
-                self.show_graph(active_items=INITIAL_FRAME,
-                                **self._animate, output_fmt='gif',
-                                execution_id=self.default_execution_id)
+                self._animate_execution(INITIAL_FRAME, self.default_execution_id)
 
         # EXECUTE INPUT CIM ********************************************************************************************
 
@@ -4166,10 +4167,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         execution_phase_buffer = self.parameters.context.get(execution_id).execution_phase
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
-            self._component_animation_execution_count += 1
-            self.show_graph(active_items=self.input_CIM,
-                            **self._animate, output_fmt='gif',
-                            execution_id=execution_id)
+            self._animate_execution(self.input_CIM, execution_id)
         self.parameters.context.get(execution_id).execution_phase = execution_phase_buffer
         # FIX: END
 
@@ -4257,12 +4255,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # MODIFIED 6/13/19 END
 
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
-                    self._component_animation_execution_count += 1
-                    self.show_graph(active_items=self.controller,
-                                    **self._animate,
-                                    output_fmt='gif',
-                                    execution_id=execution_id
-                                    )
+                    self._animate_execution(self.controller, execution_id)
 
                 # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
@@ -4340,11 +4333,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if self._animate is not False and self._animate_unit is EXECUTION_SET:
-                self._component_animation_execution_count += 1
-                self.show_graph(active_items=next_execution_set,
-                                **self._animate,
-                                output_fmt='gif',
-                                execution_id=execution_id)
+                self._animate_execution(next_execution_set, execution_id)
 
             # EXECUTE (each node) --------------------------------------------------------------------------
 
@@ -4463,8 +4452,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 if self._animate is not False and self._animate_unit is COMPONENT:
-                    self._component_animation_execution_count += 1
-                    self.show_graph(active_items=node, **self._animate, output_fmt='gif', execution_id=execution_id)
+                    self._animate_execution(node, execution_id)
 
 
                 # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4506,13 +4494,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # execution_phase_buffer = self.parameters.context.get(execution_id).execution_phase
         # self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
-            self._component_animation_execution_count += 1
-            self.show_graph(active_items=self.output_CIM,
-                            **self._animate, output_fmt='gif',
-                            execution_id=execution_id)
+            self._animate_execution(self.output_CIM, execution_id)
         # self.parameters.context.get(execution_id).execution_phase = execution_phase_buffer
         # FIX: END
-
 
         # Restore execution_context to state entry of execute method
         if execution_context:
@@ -4550,11 +4534,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # MODIFIED 6/13/19 END
 
                 if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
-                    self._component_animation_execution_count += 1
-                    self.show_graph(active_items=self.controller,
-                                    **self._animate,
-                                    output_fmt='gif',
-                                    execution_id=execution_id)
+                    self._animate_execution(self.controller, execution_id)
 
                 # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
