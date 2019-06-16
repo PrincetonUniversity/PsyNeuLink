@@ -3061,7 +3061,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         run_num = time.run
         trial_num = time.trial
         # MODIFIED 6/15/19 NEW: [JDC]
-        # FIX: REVERT TO OLD WHEN TRIAL_NUM FOR controller RUN AFTER IS SAME AS THAT TRIAL RATHER THAN NEXT TRIAL
+        # FIX: REMOVE WHEN TRIAL_NUM FOR controller RUN AFTER IS SAME AS THAT TRIAL RATHER THAN NEXT TRIAL
         if any(item is self.controller for item in active_items):
             trial_num -= 1
         # MODIFIED 6/15/19 END
