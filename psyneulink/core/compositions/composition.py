@@ -3385,11 +3385,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Implement rcvr node
                 rcvr_label = self._get_graph_node_label(rcvr, show_dimensions)
 
-                # # MODIFIED 5/29/19 OLD:
-                # if show_node_structure:
-                # MODIFIED 5/29/19 NEW: [JDC]
                 if show_node_structure and isinstance(rcvr, Mechanism):
-                # MODIFIED 5/29/19 END
                     g.node(rcvr_label,
                            rcvr.show_structure(**node_struct_args, node_border=rcvr_penwidth),
                            shape=struct_shape,
@@ -3770,11 +3766,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
                                 or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
 
-                            # # MODIFIED 5/29/19 OLD:
-                            # if show_node_structure:
-                            # MODIFIED 5/29/19 NEW: [JDC]
                             if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
-                            # MODIFIED 5/29/19 END
                                 sndr_proj_label = '{}:{}'. \
                                     format(sndr_label, sndr._get_port_name(proj.sender))
                                 proc_mech_rcvr_label = '{}:{}'. \
