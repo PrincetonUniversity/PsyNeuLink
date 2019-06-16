@@ -3078,7 +3078,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         trial_num = time.trial
         # MODIFIED 6/15/19 NEW: [JDC]
         # FIX: REMOVE WHEN TRIAL_NUM FOR output_CIM & controller RUN AFTER IS SAME AS THAT TRIAL RATHER THAN NEXT TRIAL
-        if any(item in {self.controller, self.output_CIM} for item in active_items):
+        # if any(item in {self.controller, self.output_CIM} for item in active_items):
+        if any(item is self.output_CIM or (item is self.controller and self.controller_mode==AFTER)
+               for item in active_items):
             trial_num -= 1
         # MODIFIED 6/15/19 END
 
@@ -3582,11 +3584,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proc_mech_sndr_label = output_mech_label
 
                             # Render Projection
-                            # # MODIFIED 6/15/19 OLD:
-                            # if any(item in active_items for item in {proj, proj.sender.owner}):
-                            # MODIFIED 6/15/19 NEW: [JDC]
                             if any(item in active_items for item in {proj, proj.receiver.owner}):
-                            # MODIFIED 6/15/19 END
                                 if active_color is BOLD:
                                     proj_color = default_node_color
                                 else:
@@ -3874,9 +3872,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if self.scheduler_processing.get_clock(execution_id).time.run >= self._animate_num_runs:
                 return
             # If controller is run at end of trial, trial number has already been incremented, so add 1
-            if (show_controller and
-                    self.controller_mode==AFTER and
-                    any(item in {self.controller, self.output_CIM} for item in active_items)):
+            # if (show_controller and
+            #         self.controller_mode==AFTER and
+            #         any(item in {self.controller, self.output_CIM} for item in active_items)):
+            if any(item is self.output_CIM or (item is self.controller and self.controller_mode==AFTER)
+                   for item in active_items):
                 trial_thresh = self._animate_num_trials + 1
             else:
                 trial_thresh = self._animate_num_trials
@@ -4132,9 +4132,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Generate first frame of animation without any active_items
         if self._animate is not False:
-
-            # If this fails, the scheduler has no data for execution_id yet.
-            # It also may be the first, shoo fall back to default execution_id
+            # If execution_id fails, the scheduler has no data for it yet.
+            # It also may be the first, so fall back to default execution_id
             try:
                 self._animate_execution(INITIAL_FRAME, execution_id)
             except KeyError:
@@ -4254,6 +4253,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_context.execution_phase = ContextFlags.CONTROL
                 # MODIFIED 6/13/19 END
 
+                # Animate controller (before execution)
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, execution_id)
 
@@ -4533,6 +4533,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_context.execution_phase = ContextFlags.CONTROL
                 # MODIFIED 6/13/19 END
 
+                # Animate controller (after execution)
                 if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, execution_id)
 
