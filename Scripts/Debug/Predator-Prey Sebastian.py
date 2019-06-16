@@ -326,11 +326,8 @@ def main():
 
             new_episode_flag = False
             steps += 1
-            # # MODIFIED 6/15/19 OLD:
             # if done:
-            # MODIFIED 6/15/19 NEW: [JDC]
-            if steps >1:
-            # MODIFIED 6/15/19 END
+            if steps > 1:
                 break
     stop_time = timeit.default_timer()
     print(f'{steps / (stop_time - start_time):.1f} steps/second, {steps} total steps in '

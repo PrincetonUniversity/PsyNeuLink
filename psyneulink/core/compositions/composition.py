@@ -2784,13 +2784,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return name
 
-    def _set_up_animation(self, animate, execution_id):
+    def _set_up_animation(self, execution_id):
 
-        self._component_animation_execution_count = 0
-
-        if animate is True:
-            animate = {}
-        self._animate = animate
+        self._component_animation_execution_count = None
 
         if isinstance(self._animate, dict):
             # Assign directory for animation files
@@ -3062,6 +3058,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         G.format = 'gif'
         execution_phase = self.parameters.context.get(execution_id).execution_phase
         time = self.scheduler_processing.get_clock(execution_id).time
+        run_num = time.run
+        trial_num = time.trial
+        # MODIFIED 6/15/19 NEW: [JDC]
+        # FIX: REVERT TO OLD WHEN TRIAL_NUM FOR controller RUN AFTER IS SAME AS THAT TRIAL RATHER THAN NEXT TRIAL
+        if any(item is self.controller for item in active_items):
+            trial_num -= 1
+        # MODIFIED 6/15/19 END
 
         if INITIAL_FRAME in active_items:
             phase_string = create_phase_string('Initializing')
@@ -3073,7 +3076,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # elif execution_phase == ContextFlags.LEARNING:
         #     time = self.scheduler_learning.get_clock(execution_id).time
         #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
-        #         format(time.run, time.trial, time.pass_, time.time_step)
+        #         format(run_num, time.trial, time.pass_, time.time_step)
         #     phase_string = 'Learning Phase - '
 
         elif execution_phase == ContextFlags.CONTROL:
@@ -3089,20 +3092,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         G.attr(labelloc='b')
         G.attr(fontname='Monaco')
         G.attr(fontsize='14')
-        # if INITIAL_FRAME in active_items:
-        #     index = '0'
-        # else:
         index = repr(self._component_animation_execution_count)
-        image_filename = '-'.join([
-            # # MODIFIED 6/15/19 OLD:
-            # repr(time.run),
-            # MODIFIED 6/15/19 NEW: [JDC]
-            # FIX: REVERT TO OLD WHEN self.scheduler_processing.clock.simple_time.run PROPERLY INCREMENTS BY RUN
-            repr(len(self.parameters.results.get(execution_id))),
-            # MODIFIED 6/15/19 END
-            repr(time.trial),
-            index])
-        # image_filename = '-'.join([repr(time.run), repr(time.trial), repr(time.pass_)])
+        image_filename = '-'.join([repr(run_num), repr(trial_num), index])
         image_file = self._animate_directory + '/' + image_filename + '.gif'
         G.render(filename=image_filename,
                  directory=self._animate_directory,
@@ -3118,6 +3109,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._animation = [image]
         else:
             self._animation.append(image)
+        assert True
 
     @tc.typecheck
     def show_graph(self,
@@ -3824,19 +3816,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if active_items:
             # # MODIFIED 6/15/19 OLD:
-            # if self.scheduler_processing.clock.time.run >= self._animate_num_runs:
+            # if (self.scheduler_processing.get_clock(execution_id).time.run >= self._animate_num_runs or
+            #         self.scheduler_processing.get_clock(execution_id).time.trial >=self._animate_num_trials):
+            #     return
             # MODIFIED 6/15/19 NEW: [JDC]
-            # FIX: REVERT TO OLD WHEN self.scheduler_processing.clock.simple_time.run PROPERLY INCREMENTS BY RUN
-            if len(self.parameters.results.get(execution_id))>= self._animate_num_runs:
-            # MODIFIED 6/15/19 END
-                return
-            if not show_controller and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
+            # FIX: REVERT TO OLD WHEN TRIAL_NUM FOR controller RUN AFTER IS SAME AS THAT TRIAL RATHER THAN NEXT TRIAL
+            if self.scheduler_processing.get_clock(execution_id).time.run >= self._animate_num_runs:
                 return
             # If controller is run at end of trial, trial number has already been incremented, so add 1
-            if (show_controller and
-                    self.controller_mode==AFTER and
-                    self.scheduler_processing.clock.time.trial >= self._animate_num_trials + 1):
+            if (show_controller and self.controller_mode==AFTER):
+                trial_thresh = self._animate_num_trials + 1
+            else:
+                trial_thresh = self._animate_num_trials
+            if self.scheduler_processing.get_clock(execution_id).time.trial >= trial_thresh:
                 return
+            # MODIFIED 6/15/19 END
 
         # For backward compatibility
         if 'show_model_based_optimizer' in kwargs:
@@ -4054,7 +4048,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not hasattr(self, '_animate'):
             # These are meant to be assigned in run method;  needed here for direct call to execute method
             self._animate = False
-            self._component_animation_execution_count = 0
 
         # KAM Note 4/29/19
         # The nested var is set to True if this Composition is nested in another Composition, otherwise False
@@ -4125,6 +4118,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Generate first frame of animation without any active_items
         if self._animate is not False:
+
+            if self._component_animation_execution_count is None:
+                self._component_animation_execution_count = 0
+            else:
+                self._component_animation_execution_count += 1
+
+
             # If this fails, the scheduler has no data for execution_id yet.
             # It also may be the first, so fall back to default execution_id
             try:
@@ -4135,6 +4135,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.show_graph(active_items=INITIAL_FRAME,
                                 **self._animate, output_fmt='gif',
                                 execution_id=self.default_execution_id)
+
 
         # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
 
@@ -4219,8 +4220,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_context.execution_phase = ContextFlags.CONTROL
                 # MODIFIED 6/13/19 END
 
-                self._component_animation_execution_count += 1
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
+                    self._component_animation_execution_count += 1
                     self.show_graph(active_items=self.controller,
                                     **self._animate,
                                     output_fmt='gif',
@@ -4301,6 +4302,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not self.learning_enabled:
                 next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
+            # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if self._animate is not False and self._animate_unit is EXECUTION_SET:
                 self._component_animation_execution_count += 1
                 self.show_graph(active_items=next_execution_set,
@@ -4496,8 +4498,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_context.execution_phase = ContextFlags.CONTROL
                 # MODIFIED 6/13/19 END
 
-                self._component_animation_execution_count += 1
-                if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
+                if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
+                    self._component_animation_execution_count += 1
                     self.show_graph(active_items=self.controller,
                                     **self._animate,
                                     output_fmt='gif',
@@ -4741,7 +4743,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     item.parameters.value.log_condition = LogCondition.EXECUTION
 
         # Set animation attributes
-        self._set_up_animation(animate, execution_id)
+        if animate is True:
+            animate = {}
+        self._animate = animate
+        if self._animate is not False:
+            self._set_up_animation(execution_id)
 
         # SET UP EXECUTION -----------------------------------------------
 
