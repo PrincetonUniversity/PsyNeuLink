@@ -2783,6 +2783,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 dim_string = "({})".format(len(value))
                 return "{}\n{}".format(item.name, dim_string)
 
+        if isinstance(item, CompositionInterfaceMechanism):
+            name = name.replace('Input_CIM','INPUT')
+            name = name.replace('Output_CIM', 'OUTPUT')
+
         return name
 
     def _set_up_animation(self, execution_id):
@@ -3442,20 +3446,37 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             for cim in cims:
 
-                # Assign color for CIM node
+                # ASSIGN CIM NODE ****************************************************************
+
+                # Assign color
                 # Also take opportunity to verify that cim is either input_CIM or output_CIM
                 if cim is self.input_CIM:
-                    cim_color = input_color
+                    if cim in active_items:
+                        if active_color is BOLD:
+                            cim_color = input_color
+                        else:
+                            cim_color = active_color
+                        cim_penwidth = str(default_width + active_thicker_by)
+                        self.active_item_rendered = True
+                    else:
+                        cim_color = input_color
+
                 elif cim is self.output_CIM:
-                    cim_color = output_color
+                    if cim in active_items:
+                        if active_color is BOLD:
+                            cim_color = output_color
+                        else:
+                            cim_color = active_color
+                        cim_penwidth = str(default_width + active_thicker_by)
+                        self.active_item_rendered = True
+                    else:
+                        cim_color = output_color
+
                 else:
                     assert False, '_assignm_cim_components called with node that is not input_CIM or output_CIM'
 
-                # Assign lablel for CIM node
+                # Assign lablel
                 cim_label = self._get_graph_node_label(cim, show_dimensions)
-
-                cim_label = cim_label.replace('Input_CIM','INPUT')
-                cim_label = cim_label.replace('Output_CIM', 'OUTPUT')
 
                 if show_node_structure:
                     g.node(cim_label,
@@ -3472,14 +3493,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            rank=cim_rank,
                            penwidth=cim_penwidth)
 
+                # ASSIGN CIM PROJECTIONS ****************************************************************
+
                 # Projections from input_CIM to INPUT nodes
                 if cim is self.input_CIM:
 
                     for output_state in self.input_CIM.output_states:
                         projs = output_state.efferents
                         for proj in projs:
-                            # Validate the Projection is to an INPUT node or a node that is shadowing one
                             input_mech = proj.receiver.owner
+                            if input_mech is self.controller:
+                                # Projections to contoller are handled under _assign_controller_components
+                                continue
+                            # Validate the Projection is to an INPUT node or a node that is shadowing one
                             if ((input_mech in self.nodes_to_roles and
                                  not NodeRole.INPUT in self.nodes_to_roles[input_mech])
                                     and (proj.receiver.shadow_inputs in self.nodes_to_roles and
@@ -3560,7 +3586,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             g.edge(proc_mech_sndr_label, cim_proj_label, label=label,
                                    color=proj_color, penwidth=proj_width)
 
-        def _assign_control_components(g):
+        def _assign_controller_components(g):
             '''Assign control nodes and edges to graph '''
 
             controller = self.controller
@@ -3926,7 +3952,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Add controller-related Components to graph if show_controller
         if show_controller:
-            _assign_control_components(G)
+            _assign_controller_components(G)
 
         # Sort to put ORIGIN nodes first and controller and its objective_mechanism last
         def get_index_of_node_in_G_body(node):
@@ -4127,11 +4153,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, input_nodes)
             no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, input_nodes)
 
-        # Animate input_CIM
-        if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
-            self.show_graph(active_items=self.input_CIM,
-                            **self._animate, output_fmt='gif',
-                            execution_id=execution_id)
+        # # Animate input_CIM
+        # # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
+        # #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
+        # execution_phase_buffer = self.parameters.context.get(execution_id).execution_phase
+        # self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        # if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
+        #     self.show_graph(active_items=self.input_CIM,
+        #                     **self._animate, output_fmt='gif',
+        #                     execution_id=execution_id)
+        # self.parameters.context.get(execution_id).execution_phase = execution_phase_buffer
+        # # FIX: END
 
         # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
 
@@ -4427,7 +4459,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.show_graph(active_items=node, **self._animate, output_fmt='gif', execution_id=execution_id)
 
 
-                # MANAGE INPUTS (for next # execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
                 # FIX: 6/12/19 Deprecate?
                 # Handle input clamping
@@ -4458,6 +4490,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if call_after_pass:
             call_with_pruned_args(call_after_pass, execution_context=execution_id)
+
+
+        # # Animate output_CIM
+        # # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
+        # #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
+        # # execution_phase_buffer = self.parameters.context.get(execution_id).execution_phase
+        # # self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        # if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
+        #     self.show_graph(active_items=self.output_CIM,
+        #                     **self._animate, output_fmt='gif',
+        #                     execution_id=execution_id)
+        # # self.parameters.context.get(execution_id).execution_phase = execution_phase_buffer
+        # # FIX: END
+
 
         # Restore execution_context to state entry of execute method
         if execution_context:
@@ -5449,7 +5495,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Run Composition in "SIMULATION" context
         # MODIFIED 6/12/19 NEW: [JDC]
-        if self._animate_simulations is not False:
+        if self._animate is not False and self._animate_simulations is not False:
             animate = self._animate
             buffer_animate_state = None
         else:
