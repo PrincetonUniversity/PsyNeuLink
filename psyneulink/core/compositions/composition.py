@@ -3825,6 +3825,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if show_dimensions == True:
             show_dimensions = ALL
 
+        active_items = active_items or []
         if active_items:
             active_items = convert_to_list(active_items)
             # # MODIFIED 6/15/19 OLD:
