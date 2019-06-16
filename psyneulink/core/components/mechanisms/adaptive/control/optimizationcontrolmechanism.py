@@ -1108,11 +1108,11 @@ class OptimizationControlMechanism(ControlMechanism):
             sim_f = ctx.get_llvm_function(self.agent_rep._llvm_sim_run.name)
 
             # Create a simulation copy of composition state
-            comp_state = builder.alloca(base_comp_state.type.pointee)
+            comp_state = builder.alloca(base_comp_state.type.pointee, name="state_copy")
             builder.store(builder.load(base_comp_state), comp_state)
 
             # Create a simulation copy of composition data
-            comp_data = builder.alloca(base_comp_data.type.pointee)
+            comp_data = builder.alloca(base_comp_data.type.pointee, name="data_copy")
             if "clear_run_data" in pnlvm.debug.debug_env:
                 builder.store(comp_data.type.pointee(None), comp_data)
             else:
@@ -1129,32 +1129,32 @@ class OptimizationControlMechanism(ControlMechanism):
                 sample_dst = builder.gep(ocm_out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
                 builder.store(builder.load(sample_ptr), sample_dst)
 
-            # construct input
+            # Construct input
             num_features = len(arg_in.type.pointee) - 1
-            comp_input = builder.alloca(sim_f.args[3].type.pointee)
+            comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
 
             for i in range(num_features):
                 src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
-                # destination is a struct of 2d arrays
+                # Destination is a struct of 2d arrays
                 dst = builder.gep(comp_input, [ctx.int32_ty(0), ctx.int32_ty(i), ctx.int32_ty(0)])
                 builder.store(builder.load(src), dst)
 
 
-            # determine simulation counts
+            # Determine simulation counts
             num_estimates_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            num_estimates = builder.load(num_estimates_ptr)
+            num_estimates = builder.load(num_estimates_ptr, "num_estimates")
 
             # if num_estimates is 0, run 1 trial
             param_is_zero = builder.icmp_unsigned("==", num_estimates,
                                                         ctx.int32_ty(0))
             num_sims = builder.select(param_is_zero, ctx.int32_ty(1),
-                                                     num_estimates)
+                                      num_estimates, "corrected_estimates")
 
-            num_runs = builder.alloca(ctx.int32_ty)
+            num_runs = builder.alloca(ctx.int32_ty, name="num_runs")
             builder.store(num_sims, num_runs)
 
             # We only provide one input
-            num_inputs = builder.alloca(ctx.int32_ty)
+            num_inputs = builder.alloca(ctx.int32_ty, name="num_inputs")
             builder.store(num_inputs.type.pointee(1), num_inputs)
 
             # Simulations don't store output
@@ -1164,13 +1164,18 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # Extract objective mech value
             idx = self.agent_rep._get_node_index(self.objective_mechanism)
-            objective_os_ptr = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+            # Mechanisms' results are store in the first substructure
+            objective_os_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(0),
+                                                       ctx.int32_ty(idx)])
+            # Objective mech output shape should be 1 single element 2d array
             objective_val_ptr = builder.gep(objective_os_ptr,
                                             [ctx.int32_ty(0), ctx.int32_ty(0),
-                                             ctx.int32_ty(0)])
+                                             ctx.int32_ty(0)], "obj_val_ptr")
 
             net_outcome_f = self._gen_llvm_net_outcome_function(ctx);
-            builder.call(net_outcome_f, [params, state, allocation_sample, objective_val_ptr, arg_out]);
+            builder.call(net_outcome_f, [params, state, allocation_sample,
+                                         objective_val_ptr, arg_out]);
 
             builder.ret_void()
 
