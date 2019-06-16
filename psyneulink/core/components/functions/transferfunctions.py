@@ -2592,8 +2592,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         When LinearMatrix is the `function <Projection.function>` of a projection:
 
-            - the matrix specification must be compatible with the variables of the `sender <Projection.sender>` and
-              `receiver <Projection.receiver>`
+            - the matrix specification must be compatible with the variables of the `sender <Projection_Base.sender>`
+              and `receiver <Projection_Base.receiver>`
 
             - a matrix keyword specification generates a matrix based on the sender and receiver shapes
 

@@ -770,7 +770,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         Inserts InputState specification for Projection from ObjectiveMechanism as first item in list of
         InputState specifications generated in _parse_feature_specs from the **features** and
-        **feature_function** arguments of the ModelFreeOptimizationControlMechanism constructor.
+        **feature_function** arguments of the OptimizationControlMechanism constructor.
         """
 
         # Specify *OUTCOME* InputState;  receives Projection from *OUTCOME* OutputState of objective_mechanism
@@ -779,10 +779,6 @@ class OptimizationControlMechanism(ControlMechanism):
         # If any features were specified (assigned to self.input_states in __init__):
         if self.input_states:
             self.input_states = _parse_shadow_inputs(self, self.input_states)
-            # for i, state in enumerate(self.input_states):
-            #     self.input_states[i] = _parse_state_spec(state_type=InputState,
-            #                                              owner=self,
-            #                                              state_spec=state)
             self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
             # Insert primary InputState for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
@@ -790,35 +786,17 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             self.input_states = [outcome_input_state]
 
-        # super()._instantiate_input_states(context=context)
-        #
-        # # GO THROUGH AND REASSIGN AS FEATURE INPUT STATE AND ASSIGN FUNCTION
-        # self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
-
         # Configure default_variable to comport with full set of input_states
         self.defaults.variable, _ = self._handle_arg_input_states(self.input_states)
 
-        # self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
         super()._instantiate_input_states(context=context)
 
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
             if len(state.path_afferents) > 1:
-                raise OptimizationControlMechanismError("Invalid {} on {}. {} should receive exactly one"
-                                                        " projection, but it receives {} projections."
-                                                        .format(InputState.__name__, self.name, state.name,
-                                                                len(state.path_afferents)))
-
-        # KAM Removed the exception below 11/6/2018 because it was rejecting valid
-        # monitored_output_state spec on ObjectiveMechanism
-
-        # if (OBJECTIVE_MECHANISM in request_set and
-        #         isinstance(request_set[OBJECTIVE_MECHANISM], ObjectiveMechanism)
-        #         and not request_set[OBJECTIVE_MECHANISM].path_afferents):
-        #     raise OptimizationControlMechanismError("{} specified for {} ({}) must be assigned one or more {}".
-        #                                             format(ObjectiveMechanism.__name__, self.name,
-        #                                                    request_set[OBJECTIVE_MECHANISM],
-        #                                                    repr(MONITORED_OUTPUT_STATES)))
+                raise OptimizationControlMechanismError(f"Invalid {InputState.__name__} on {self.name}. "
+                                                        f"{state.name} should receive exactly one projection, "
+                                                        f"but it receives {len(state.path_afferents)} projections.")
 
     def _instantiate_output_states(self, context=None):
         '''Assign ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals.
@@ -842,7 +820,7 @@ class OptimizationControlMechanism(ControlMechanism):
             modulatory_signal._variable_spec = (OWNER_VALUE, i)
             self._modulatory_signals[i] = modulatory_signal
         self.defaults.value = np.tile(modulatory_signal.parameters.variable.default_value, (i+1, 1))
-        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value))
+        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), override=True)
 
     def _instantiate_attributes_after_function(self, context=None):
         '''Instantiate OptimizationControlMechanism's OptimizatonFunction attributes'''
@@ -855,12 +833,6 @@ class OptimizationControlMechanism(ControlMechanism):
                                     # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
                                     SEARCH_SPACE: self.control_allocation_search_space
                                     })
-
-        # test_local_search_space = self._get_control_allocation_grid_space
-
-        # self.search_function = self.function.search_function
-        # self.search_termination_function = self.function.search_termination_function
-        # self.search_space = self.function.search_space
 
         if isinstance(self.agent_rep, type):
             self.agent_rep = self.agent_rep()
@@ -883,9 +855,24 @@ class OptimizationControlMechanism(ControlMechanism):
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
             state.update(execution_id=execution_id, params=runtime_params, context=context)
-            state_values.append(state.parameters.value._get(execution_id))
+            # # MODIFIED 6/14/19 OLD:
+            # state_values.append(state.parameters.value._get(execution_id))
+            # MODIFIED 6/14/19 NEW: [JDC] - TO DEAL WITH AdaptiveIntegrator that returns 2d value
+            # FIX: REVERT TO OLD IF/WHEN AdaptiveIntegrators is modified to return 1d value
+            state_values.append(np.atleast_1d(np.squeeze(state.parameters.value.get(execution_id))))
+            # MODIFIED 6/14/19 END
 
         return np.array(state_values)
+
+    # MODIFIED 6/14/19 NEW: [JDC] - TO DEAL WITH AdaptiveIntegrator that returns 2d value
+    # FIX: REMOVE IF/WHEN AdaptiveIntegrators is modified to return 1d value
+    def _validate_variable(self, variable, context=None):
+        for i, var in enumerate(variable):
+            # variable[i] = np.atleast_2d(var)
+            variable[i] = np.atleast_1d(np.squeeze(var))
+            assert True
+        super()._validate_variable(variable,context)
+    # MODIFIED 6/14/19 END
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
@@ -1219,7 +1206,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def add_features(self, features):
-        '''Add InputStates and Projections to ModelFreeOptimizationControlMechanism for features used to
+        '''Add InputStates and Projections to OptimizationControlMechanism for features used to
         predict `net_outcome <ControlMechanism.net_outcome>`
 
         **features** argument can use any of the forms of specification allowed for InputState(s)
@@ -1248,7 +1235,11 @@ class OptimizationControlMechanism(ControlMechanism):
             spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=spec)    # returns InputState dict
             spec[PARAMS][INTERNAL_ONLY] = True
             if feature_function:
-                spec.update({FUNCTION: feature_function})
+                if isinstance(feature_function, Function):
+                    feat_fct = copy.deepcopy(feature_function)
+                else:
+                    feat_fct = feature_function
+                spec.update({FUNCTION: feat_fct})
             spec = [spec]   # so that extend works below
 
             parsed_features.extend(spec)

@@ -727,7 +727,7 @@ class Scheduler(object):
         run is a python generator, that when iterated over provides the next `TIME_STEP` of
         executions at each iteration
 
-        :param termination_conds: (dict) - a mapping from `TimeScale`s to `Condition`s that when met
+        :param termination_conds: (dict) - a mapping from `TimeScale`\\s to `Condition`\\s that when met
                terminate the execution of the specified `TimeScale`
         '''
         self._validate_run_state()

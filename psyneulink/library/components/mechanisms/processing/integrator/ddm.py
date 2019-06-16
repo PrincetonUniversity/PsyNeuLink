@@ -828,8 +828,6 @@ class DDM(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 # function:tc.enum(type(DriftDiffusionAnalytical))=DriftDiffusionAnalytical(drift_rate=1.0,
-                 # input_states:tc.optional(tc.any(list, dict))=None,
                  input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=SCALAR,
                  function=DriftDiffusionAnalytical(drift_rate=1.0,
                                                    starting_point=0.0,
@@ -839,7 +837,6 @@ class DDM(ProcessingMechanism_Base):
                  output_states:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
                  params=None,
                  name=None,
-                 # prefs:tc.optional(ComponentPreferenceSet)=None,
                  prefs: is_pref_set = None):
 
         self.standard_output_states = StandardOutputStates(self,

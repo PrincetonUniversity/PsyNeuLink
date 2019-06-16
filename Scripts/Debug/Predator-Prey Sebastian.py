@@ -11,8 +11,8 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-RUN = False
-SHOW_GRAPH = True
+RUN = True
+SHOW_GRAPH = False
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
@@ -168,6 +168,7 @@ ocm = OptimizationControlMechanism(name='EVC',
                                    features=[trial_type_input_mech],
                                    # feature_function=FEATURE_FUNCTION,
                                    agent_rep=RegressionCFA(
+                                           name='RegressionCFA',
                                            update_weights=BayesGLM(mu_0=0.5, sigma_0=0.1),
                                            prediction_terms=[PV.F, PV.C, PV.COST]
                                    ),
@@ -214,7 +215,12 @@ if SHOW_GRAPH:
 # ******************************************   RUN SIMULATION  ********************************************************
 # *********************************************************************************************************************
 
-num_episodes = 100
+# # MODIFIED 6/15/19 OLD:
+# num_episodes = 100
+# MODIFIED 6/15/19 NEW: [JDC]
+num_episodes = 1
+# MODIFIED 6/15/19 END
+
 
 def main():
 
@@ -263,7 +269,8 @@ def main():
                                                  reward_input_mech:[reward]},
                                          execution_id=execution_id,
                                          bin_execute=BIN_EXECUTE,
-                                         animate={'show_controller':True}
+                                         animate={'show_controller':True,
+                                                  'show_cim':True}
                                          )
             agent_action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
 
@@ -320,7 +327,8 @@ def main():
 
             new_episode_flag = False
             steps += 1
-            if done:
+            # if done:
+            if steps > 1:
                 break
     stop_time = timeit.default_timer()
     print(f'{steps / (stop_time - start_time):.1f} steps/second, {steps} total steps in '

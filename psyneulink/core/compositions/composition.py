@@ -699,11 +699,10 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT,\
-    LABELS, \
-    LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX_KEYWORD_VALUES, MECHANISMS, NO_CLAMP, OUTPUT, OWNER_VALUE, \
-    PROJECTIONS, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES, NAME, SAMPLE, TARGET, TARGET_MECHANISM, VARIABLE, PROJECTIONS, \
-    WEIGHT, OUTCOME
+    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, FUNCTIONS, HARD_CLAMP, \
+    IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX_KEYWORD_VALUES, MECHANISMS, \
+    NO_CLAMP, OUTPUT, OWNER_VALUE, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES, NAME, \
+    SAMPLE, SIMULATIONS, TARGET, TARGET_MECHANISM, VARIABLE, PROJECTIONS, WEIGHT, OUTCOME
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -730,6 +729,7 @@ SAVE_IMAGES = 'save_images'
 SHOW = 'show'
 INITIAL_FRAME = 'INITIAL_FRAME'
 EXECUTION_SET = 'EXECUTION_SET'
+SHOW_CIM = 'show_cim'
 SHOW_CONTROLLER = 'show_controller'
 SHOW_LEARNING = 'show_learning'
 
@@ -1433,6 +1433,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         an optimal Control policy.
         """
 
+        if not isinstance(controller, ModulatoryMechanism):
+            raise CompositionError(f"Specification of {repr(CONTROLLER)} arg for {self.name} "
+                                   f"must be a {repr(ModulatoryMechanism.__name__)} ")
+
         self.controller = controller
         self.controller.composition = self
 
@@ -1641,10 +1645,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         • if the status of **projection** is `deferred_init`:
 
-          - if its `sender <Projection.sender>` and/or `receiver <Projection.receiver>` attributes are not specified,
-            then **sender** and/or **receiver** are used.
+          - if its `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` attributes are not
+            specified, then **sender** and/or **receiver** are used.
 
-          - if `sender <Projection.sender>` and/or `receiver <Projection.receiver>` attributes are specified,
+          - if `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` attributes are specified,
             they must match **sender** and/or **receiver** if those have also been specified.
 
           - if a Projection between the specified sender and receiver does *not* already exist, it is initialized; if
@@ -1652,8 +1656,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             a`feedback` Projection are implemented (in case it has not already been done for the existing Projection).
 
         .. note::
-           If **projection** is an instantiated projection (i.e., not in `deferred_init`) and one already exists
-           between its `sender <Projection.sender>` and `receiver <Projection.receiver>` a warning is generated.
+           If **projection** is an instantiated projection (i.e., not in `deferred_init`) and one already exists between
+           its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` a warning is generated.
 
         COMMENT:
         IMPLEMENTATION NOTE:
@@ -1682,11 +1686,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         feedback : bool
             When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
-            means that each Projections within the cycle actually passes to its `receiver <Projection.receiver>`
-            the `value <Projection.value>` of its `sender <Projection.sender>` from the previous execution.
+            means that each Projections within the cycle actually passes to its `receiver <Projection_Base.receiver>`
+            the `value <Projection.value>` of its `sender <Projection_Base.sender>` from the previous execution.
             When True, this Projection "breaks" the cycle, such that all Nodes execute in sequence, and only the
-            Projection marked as 'feedback' passes to its `receiver <Projection.receiver>` the
-            `value <Projection.value>` of its `sender <Projection.sender>` from the previous execution.
+            Projection marked as 'feedback' passes to its `receiver <Projection_Base.receiver>` the
+            `value <Projection.value>` of its `sender <Projection_Base.sender>` from the previous execution.
     '''
 
         projection = self._parse_projection_spec(projection, name)
@@ -1770,8 +1774,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_projections(self, projections=None):
         '''
             Calls `add_projection <Composition.add_projection>` for each Projection in the *projections* list. Each
-            Projection must have its `sender <Projection.sender>` and `receiver <Projection.receiver>` already
-            specified.
+            Projection must have its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`
+            already specified.
 
             Arguments
             ---------
@@ -2707,6 +2711,146 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.input_CIM.execute(build_CIM_input, execution_id=execution_id)
 
+    def _assign_execution_ids(self, execution_id=None):
+        '''
+            assigns the same execution id to each Node in the composition's processing graph as well as the CIMs.
+            The execution id is either specified in the user's call to run(), or from the Composition's
+            **default_execution_id**
+        '''
+
+        # Traverse processing graph and assign one uuid to all of its nodes
+        if execution_id is None:
+            execution_id = self.default_execution_id
+
+        if execution_id not in self.execution_ids:
+            self.execution_ids.add(execution_id)
+
+        self._assign_context_values(execution_id=None, composition=self)
+        return execution_id
+
+    def _identify_clamp_inputs(self, list_type, input_type, origins):
+        # clamp type of this list is same as the one the user set for the whole composition; return all nodes
+        if list_type == input_type:
+            return origins
+        # the user specified different types of clamps for each origin node; generate a list accordingly
+        elif isinstance(input_type, dict):
+            return [k for k, v in input_type.items() if list_type == v]
+        # clamp type of this list is NOT same as the one the user set for the whole composition; return empty list
+        else:
+            return []
+
+    def _parse_runtime_params(self, runtime_params):
+        if runtime_params is None:
+            return {}
+        for node in runtime_params:
+            for param in runtime_params[node]:
+                if isinstance(runtime_params[node][param], tuple):
+                    if len(runtime_params[node][param]) == 1:
+                        runtime_params[node][param] = (runtime_params[node][param], Always())
+                    elif len(runtime_params[node][param]) != 2:
+                        raise CompositionError(
+                            "Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
+                            "Must be a tuple of the form (parameter value, condition), or simply the "
+                            "parameter value. ".format(runtime_params[node][param],
+                                                       node.name,
+                                                       param,
+                                                       self.name))
+                else:
+                    runtime_params[node][param] = (runtime_params[node][param], Always())
+        return runtime_params
+
+    def _get_graph_node_label(self, item, show_dimensions=None):
+        if not isinstance(item, (Mechanism, Composition, Projection)):
+            raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
+        # TBI Show Dimensions
+        name = item.name
+
+        if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
+            input_str = "in ({})".format(",".join(str(input_state.socket_width)
+                                                  for input_state in item.input_states))
+            output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
+                                                    for output_state in item.output_states))
+            return "{}\n{}\n{}".format(output_str, name, input_str)
+        if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
+            # MappingProjections use matrix
+            if isinstance(item, MappingProjection):
+                value = np.array(item.matrix)
+                dim_string = "({})".format("x".join([str(i) for i in value.shape]))
+                return "{}\n{}".format(item.name, dim_string)
+            # ModulatoryProjections use value
+            else:
+                value = np.array(item.value)
+                dim_string = "({})".format(len(value))
+                return "{}\n{}".format(item.name, dim_string)
+
+        if isinstance(item, CompositionInterfaceMechanism):
+            name = name.replace('Input_CIM','INPUT')
+            name = name.replace('Output_CIM', 'OUTPUT')
+
+        return name
+
+    def _set_up_animation(self, execution_id):
+
+        self._component_animation_execution_count = None
+
+        if isinstance(self._animate, dict):
+            # Assign directory for animation files
+            here = path.abspath(path.dirname(__file__))
+            self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " gifs")
+            # try:
+            #     rmtree(self._animate_directory)
+            # except:
+            #     pass
+            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
+            self._image_duration = self._animate.pop(DURATION, 0.75)
+            self._animate_num_runs = self._animate.pop(NUM_RUNS, 1)
+            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
+            self._animate_simulations = self._animate.pop(SIMULATIONS, False)
+            self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
+            self._save_images = self._animate.pop(SAVE_IMAGES, False)
+            self._show_animation = self._animate.pop(SHOW, False)
+            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
+                raise SystemError(f"{repr(UNIT)} entry of {repr('animate')} argument for {self.name} method "
+                                  f"of {repr('run')} ({self._animate_unit}) "
+                                  f"must be {repr(COMPONENT)} or {repr(EXECUTION_SET)}.")
+            if not isinstance(self._image_duration, (int, float)):
+                raise SystemError(f"{repr(DURATION)} entry of {repr('animate')} argument for {repr('run')} method of "
+                                  f"{self.name} ({self._image_duration}) must be an int or a float.")
+            if not isinstance(self._animate_num_runs, int):
+                raise SystemError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                  f"method of {self.name} ({self._animate_num_runs}) must an integer.")
+            if not isinstance(self._animate_num_trials, int):
+                raise SystemError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                  f"method of {self.name} ({self._animate_num_trials}) must an integer.")
+            if not isinstance(self._animate_simulations, bool):
+                raise SystemError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                  f"method of {self.name} ({self._animate_num_trials}) must a boolean.")
+            if not isinstance(self._movie_filename, str):
+                raise SystemError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
+                                  f"method of {self.name} ({self._movie_filename}) must be a string.")
+            if not isinstance(self._save_images, bool):
+                raise SystemError(f"{repr(SAVE_IMAGES)} entry of {repr('animate')} argument for {repr('run')} method "
+                                  f"of {self.name} ({self._save_images}) must be a boolean")
+            if not isinstance(self._show_animation, bool):
+                raise SystemError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
+                                  f"method of {self.name} ({self._show_animation}) must be a boolean.")
+        elif self._animate:
+            # self._animate should now be False or a dict
+            raise SystemError("{} argument for {} method of {} ({}) must be a boolean or "
+                              "a dictionary of argument specifications for its {} method".
+                              format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
+
+    def _animate_execution(self, active_items, execution_id):
+        if self._component_animation_execution_count is None:
+            self._component_animation_execution_count = 0
+        else:
+            self._component_animation_execution_count += 1
+        self.show_graph(active_items=active_items,
+                        **self._animate,
+                        output_fmt='gif',
+                        execution_id=execution_id
+                        )
+
     @tc.typecheck
     def show_structure(self,
                        # direction = 'BT',
@@ -2912,79 +3056,71 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif output_fmt == 'jupyter':
             return m
 
-    def _assign_execution_ids(self, execution_id=None):
-        '''
-            assigns the same execution id to each Node in the composition's processing graph as well as the CIMs.
-            The execution id is either specified in the user's call to run(), or from the Composition's
-            **default_execution_id**
-        '''
+    def _generate_gifs(self, G, active_items, execution_id):
 
-        # Traverse processing graph and assign one uuid to all of its nodes
-        if execution_id is None:
-            execution_id = self.default_execution_id
+        def create_phase_string(phase):
+            return f'%16s' % phase + ' - '
 
-        if execution_id not in self.execution_ids:
-            self.execution_ids.add(execution_id)
-
-        self._assign_context_values(execution_id=None, composition=self)
-        return execution_id
-
-    def _identify_clamp_inputs(self, list_type, input_type, origins):
-        # clamp type of this list is same as the one the user set for the whole composition; return all nodes
-        if list_type == input_type:
-            return origins
-        # the user specified different types of clamps for each origin node; generate a list accordingly
-        elif isinstance(input_type, dict):
-            return [k for k, v in input_type.items() if list_type == v]
-        # clamp type of this list is NOT same as the one the user set for the whole composition; return empty list
-        else:
-            return []
-
-    def _parse_runtime_params(self, runtime_params):
-        if runtime_params is None:
-            return {}
-        for node in runtime_params:
-            for param in runtime_params[node]:
-                if isinstance(runtime_params[node][param], tuple):
-                    if len(runtime_params[node][param]) == 1:
-                        runtime_params[node][param] = (runtime_params[node][param], Always())
-                    elif len(runtime_params[node][param]) != 2:
-                        raise CompositionError(
-                            "Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
-                            "Must be a tuple of the form (parameter value, condition), or simply the "
-                            "parameter value. ".format(runtime_params[node][param],
-                                                       node.name,
-                                                       param,
-                                                       self.name))
-                else:
-                    runtime_params[node][param] = (runtime_params[node][param], Always())
-        return runtime_params
-
-    def _get_graph_node_label(self, item, show_dimensions=None):
-        if not isinstance(item, (Mechanism, Composition, Projection)):
-            raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
-        # TBI Show Dimensions
-        name = item.name
-
-        if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
-            input_str = "in ({})".format(",".join(str(input_state.socket_width)
-                                                  for input_state in item.input_states))
-            output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
-                                                    for output_state in item.output_states))
-            return "{}\n{}\n{}".format(output_str, name, input_str)
-        if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
-            # MappingProjections use matrix
-            if isinstance(item, MappingProjection):
-                value = np.array(item.matrix)
-                dim_string = "({})".format("x".join([str(i) for i in value.shape]))
-                return "{}\n{}".format(item.name, dim_string)
-            # ModulatoryProjections use value
+        def create_time_string(time, spec):
+            if spec == 'TIME':
+                r = time.run
+                t = time.trial
+                p = time.pass_
+                ts = time.time_step
             else:
-                value = np.array(item.value)
-                dim_string = "({})".format(len(value))
-                return "{}\n{}".format(item.name, dim_string)
+                r = t = p = ts = '__'
+            return f"Time(run: %2s, " % r + f"trial: %2s, " % t + f"pass: %2s, " % p + f"time_step: %2s)" % ts
 
-        return name
+        G.format = 'gif'
+        execution_phase = self.parameters.context.get(execution_id).execution_phase
+        time = self.scheduler_processing.get_clock(execution_id).time
+        run_num = time.run
+        trial_num = time.trial
+
+        if INITIAL_FRAME in active_items:
+            phase_string = create_phase_string('Initializing')
+            time_string = create_time_string(time, 'BLANKS')
+
+        elif execution_phase == ContextFlags.PROCESSING:
+            phase_string = create_phase_string('Processing Phase')
+            time_string = create_time_string(time, 'TIME')
+        # elif execution_phase == ContextFlags.LEARNING:
+        #     time = self.scheduler_learning.get_clock(execution_id).time
+        #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
+        #         format(run_num, time.trial, time.pass_, time.time_step)
+        #     phase_string = 'Learning Phase - '
+
+        elif execution_phase == ContextFlags.CONTROL:
+            phase_string = create_phase_string('Control Phase')
+            time_string = create_time_string(time, 'TIME')
+
+        else:
+            raise CompositionError(
+                f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
+
+        label = f'\n{self.name}\n{phase_string}{time_string}\n'
+        G.attr(label=label)
+        G.attr(labelloc='b')
+        G.attr(fontname='Monaco')
+        G.attr(fontsize='14')
+        index = repr(self._component_animation_execution_count)
+        image_filename = '-'.join([repr(run_num), repr(trial_num), index])
+        image_file = self._animate_directory + '/' + image_filename + '.gif'
+        G.render(filename=image_filename,
+                 directory=self._animate_directory,
+                 cleanup=True,
+                 # view=True
+                 )
+        # Append gif to self._animation
+        image = Image.open(image_file)
+        # TBI?
+        # if not self._save_images:
+        #     remove(image_file)
+        if not hasattr(self, '_animation'):
+            self._animation = [image]
+        else:
+            self._animation.append(image)
+        assert True
 
     @tc.typecheck
     def show_graph(self,
@@ -3179,15 +3315,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # If recvr is ObjectiveMechanism for Composition's controller,
             #    break and handle in _assign_control_components()
-            # # MODIFIED 5/9/19 OLD:
-            # elif (isinstance(rcvr, ObjectiveMechanism)
-            # MODIFIED 5/9/19 NEW: [JDC] [ALLOW NESTED TO STAND ON ITS OWN ABOVE]
             if (isinstance(rcvr, ObjectiveMechanism)
-            # MODIFIED 5/9/19 END
                     and self.controller
                     and rcvr is self.controller.objective_mechanism):
                 return
 
+            # Implement rcvr node
             else:
                 # Set rcvr color and penwidth based on node type
                 rcvr_rank = 'same'
@@ -3264,11 +3397,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Implement rcvr node
                 rcvr_label = self._get_graph_node_label(rcvr, show_dimensions)
 
-                # # MODIFIED 5/29/19 OLD:
-                # if show_node_structure:
-                # MODIFIED 5/29/19 NEW: [JDC]
                 if show_node_structure and isinstance(rcvr, Mechanism):
-                # MODIFIED 5/29/19 END
                     g.node(rcvr_label,
                            rcvr.show_structure(**node_struct_args, node_border=rcvr_penwidth),
                            shape=struct_shape,
@@ -3313,31 +3442,49 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                color=proj_color, penwidth=proj_width)
                 # # MODIFIED 5/29/19 END
 
-            # loop through senders to implement edges
+            # Implement sender edges
             sndrs = processing_graph[rcvr]
             _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
 
         def _assign_cim_components(g, cims):
 
-            cim_penwidth = str(default_width)
             cim_rank = 'same'
 
             for cim in cims:
 
-                # Assign color for CIM node
+                cim_penwidth = str(default_width)
+
+                # ASSIGN CIM NODE ****************************************************************
+
+                # Assign color
                 # Also take opportunity to verify that cim is either input_CIM or output_CIM
                 if cim is self.input_CIM:
-                    cim_color = input_color
+                    if cim in active_items:
+                        if active_color is BOLD:
+                            cim_color = input_color
+                        else:
+                            cim_color = active_color
+                        cim_penwidth = str(default_width + active_thicker_by)
+                        self.active_item_rendered = True
+                    else:
+                        cim_color = input_color
+
                 elif cim is self.output_CIM:
-                    cim_color = output_color
+                    if cim in active_items:
+                        if active_color is BOLD:
+                            cim_color = output_color
+                        else:
+                            cim_color = active_color
+                        cim_penwidth = str(default_width + active_thicker_by)
+                        self.active_item_rendered = True
+                    else:
+                        cim_color = output_color
+
                 else:
                     assert False, '_assignm_cim_components called with node that is not input_CIM or output_CIM'
 
-                # Assign lablel for CIM node
+                # Assign lablel
                 cim_label = self._get_graph_node_label(cim, show_dimensions)
-
-                cim_label = cim_label.replace('Input_CIM','INPUT')
-                cim_label = cim_label.replace('Output_CIM', 'OUTPUT')
 
                 if show_node_structure:
                     g.node(cim_label,
@@ -3354,14 +3501,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            rank=cim_rank,
                            penwidth=cim_penwidth)
 
+                # ASSIGN CIM PROJECTIONS ****************************************************************
+
                 # Projections from input_CIM to INPUT nodes
                 if cim is self.input_CIM:
 
                     for output_state in self.input_CIM.output_states:
                         projs = output_state.efferents
                         for proj in projs:
-                            # Validate the Projection is to an INPUT node or a node that is shadowing one
                             input_mech = proj.receiver.owner
+                            if input_mech is self.controller:
+                                # Projections to contoller are handled under _assign_controller_components
+                                continue
+                            # Validate the Projection is to an INPUT node or a node that is shadowing one
                             if ((input_mech in self.nodes_to_roles and
                                  not NodeRole.INPUT in self.nodes_to_roles[input_mech])
                                     and (proj.receiver.shadow_inputs in self.nodes_to_roles and
@@ -3399,7 +3551,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             g.edge(cim_proj_label, proc_mech_rcvr_label, label=label,
                                    color=proj_color, penwidth=proj_width)
 
-                # Projections from OUTPUT nodes to input_CIM
+                # Projections from OUTPUT nodes to output_CIM
                 if cim is self.output_CIM:
                     # Construct edge name
                     for input_state in self.output_CIM.input_states:
@@ -3425,7 +3577,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proc_mech_sndr_label = output_mech_label
 
                             # Render Projection
-                            if any(item in active_items for item in {proj, proj.sender.owner}):
+                            if any(item in active_items for item in {proj, proj.receiver.owner}):
                                 if active_color is BOLD:
                                     proj_color = default_node_color
                                 else:
@@ -3442,10 +3594,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             g.edge(proc_mech_sndr_label, cim_proj_label, label=label,
                                    color=proj_color, penwidth=proj_width)
 
-        def _assign_control_components(g):
+        def _assign_controller_components(g):
             '''Assign control nodes and edges to graph '''
 
             controller = self.controller
+            if controller is None:
+                warnings.warn(f"{self.name} has not been assigned a \'controller\', "
+                              f"so \'show_controller\' option in call to its show_graph() method will be ignored.")
+                return
+
             if controller in active_items:
                 if active_color is BOLD:
                     ctlr_color = controller_color
@@ -3457,15 +3614,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctlr_color = controller_color
                 ctlr_width = str(default_width)
 
-            if controller is None:
-                warnings.warn(f"{self.name} has not been assigned a \'controller\', "
-                              f"so \'show_controller\' option in call to its show_graph() method will be ignored.")
-                return
-
             # Assign controller node
-            # MODIFIED 5/29/19 NEW:
             node_shape = mechanism_shape
-            # MODIFIED 5/29/19 END
             ctlr_label = self._get_graph_node_label(controller, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
@@ -3512,7 +3662,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            penwidth=ctl_proj_width
                            )
 
-            # If controller has objective_mechanism, assign its node and projetions
+            # If controller has objective_mechanism, assign its node and Projections
             if controller.objective_mechanism:
                 # get projection from ObjectiveMechanism to ControlMechanism
                 objmech_ctlr_proj = controller.input_state.path_afferents[0]
@@ -3595,16 +3745,39 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
                                color=proj_color, penwidth=proj_width)
 
-            # MODIFIED 5/29/19 NEW: [JDC]
+            # If controller has an agent_rep, assign its node and edges (not Projections per se)
+            if hasattr(controller, 'agent_rep') and controller.agent_rep:
+                # get agent_rep
+                agent_rep = controller.agent_rep
+                # controller is active, treat
+                if controller in active_items:
+                    if active_color is BOLD:
+                        agent_rep_color = controller_color
+                    else:
+                        agent_rep_color = active_color
+                    agent_rep_width = str(default_width + active_thicker_by)
+                    self.active_item_rendered = True
+                else:
+                    agent_rep_color = controller_color
+                    agent_rep_width = str(default_width)
+
+                # agent_rep node
+                agent_rep_label = self._get_graph_node_label(agent_rep, show_dimensions)
+                g.node(agent_rep_label,
+                        color=agent_rep_color, penwidth=agent_rep_width, shape=agent_rep_shape,
+                        rank=control_rank)
+
+                # agent_rep <-> controller edges
+                g.edge(agent_rep_label, ctlr_label, color=agent_rep_color, penwidth=agent_rep_width)
+                g.edge(ctlr_label, agent_rep_label, color=agent_rep_color, penwidth=agent_rep_width)
+
             # get any other incoming edges to controller (i.e., other than from ObjectiveMechanism)
             senders = set()
             for i in controller.input_states[1:]:
                 for p in i.path_afferents:
                     senders.add(p.sender.owner)
             _assign_incoming_edges(g, controller, ctlr_label, senders, proj_color=ctl_proj_color)
-            # MODIFIED 5/29/19 END
 
-        # MODIFIED 5/29/19 NEW: [JDC]
         @tc.typecheck
         def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None):
             proj_color = proj_color or default_node_color
@@ -3628,11 +3801,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
                                 or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
 
-                            # # MODIFIED 5/29/19 OLD:
-                            # if show_node_structure:
-                            # MODIFIED 5/29/19 NEW: [JDC]
                             if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
-                            # MODIFIED 5/29/19 END
                                 sndr_proj_label = '{}:{}'. \
                                     format(sndr_label, sndr._get_port_name(proj.sender))
                                 proc_mech_rcvr_label = '{}:{}'. \
@@ -3664,7 +3833,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 label = ''
                             g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
                                    color=proj_color, penwidth=proj_width)
-        # MODIFIED 5/29/19 END
 
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
@@ -3672,17 +3840,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if execution_id is NotImplemented:
             execution_id = self.default_execution_id
-
-        if active_items:
-            if self.scheduler_processing.clock.time.run >= self._animate_num_runs:
-                return
-            if not show_controller and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
-                return
-            # If controller is run at end of trial, trial number has already been incremented, so add 1
-            if (show_controller and
-                    self.controller_mode==AFTER and
-                    self.scheduler_processing.clock.time.trial >= self._animate_num_trials + 1):
-                return
 
         # For backward compatibility
         if 'show_model_based_optimizer' in kwargs:
@@ -3695,19 +3852,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if show_dimensions == True:
             show_dimensions = ALL
 
-        if not active_items:
-            active_items = []
-        elif active_items is INITIAL_FRAME:
-            active_items = [INITIAL_FRAME]
-        elif not isinstance(active_items, collections.abc.Iterable):
-            active_items = [active_items]
-        elif not isinstance(active_items, list):
-            active_items = list(active_items)
-        for item in active_items:
-            if not isinstance(item, Component) and item is not INITIAL_FRAME:
-                raise CompositionError(
-                    "PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
-                    format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
+        active_items = active_items or []
+        if active_items:
+            active_items = convert_to_list(active_items)
+            if (self.scheduler_processing.get_clock(execution_id).time.run >= self._animate_num_runs or
+                    self.scheduler_processing.get_clock(execution_id).time.trial >= self._animate_num_trials):
+                return
+
+            for item in active_items:
+                if not isinstance(item, Component) and item is not INITIAL_FRAME:
+                    raise CompositionError(
+                        "PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
+                        format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
 
         self.active_item_rendered = False
 
@@ -3737,9 +3893,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         default_node_color = 'black'
         mechanism_shape = 'oval'
+        struct_shape = 'plaintext' # assumes use of html
         cim_shape = 'rectangle'
         composition_shape = 'rectangle'
-        struct_shape = 'plaintext' # assumes use of html
+        agent_rep_shape = 'egg'
 
         bold_width = 3
         default_width = 1
@@ -3774,13 +3931,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
 
         # get all Nodes
-        # # # MODIFIED 5/9/19 OLD:
-        # self._analyze_graph()
-        # MODIFIED 5/9/19 NEW: [JDC]
         # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
         if output_fmt != 'gv':
             self._analyze_graph()
-        # MODIFIED 5/9/19 END
         processing_graph = self.scheduler_processing.visual_graph
         rcvrs = list(processing_graph.keys())
 
@@ -3792,7 +3945,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Add controller-related Components to graph if show_controller
         if show_controller:
-            _assign_control_components(G)
+            _assign_controller_components(G)
 
         # Sort to put ORIGIN nodes first and controller and its objective_mechanism last
         def get_index_of_node_in_G_body(node):
@@ -3823,58 +3976,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Generate images for animation
         elif output_fmt == 'gif':
             if self.active_item_rendered or INITIAL_FRAME in active_items:
-                G.format = 'gif'
-                execution_phase = self.parameters.context._get(execution_id).execution_phase
-                if INITIAL_FRAME in active_items:
-                    # phase_string = ''
-                    phase_string = f'%16s' % 'Initializing'  + ' - '
-                    # time_string = ''
-                    time_string = f"Time(run: _, trial: _, pass: _, time_step: _)"
-                elif execution_phase == ContextFlags.PROCESSING:
-                    # time_string = repr(self.scheduler_processing.clock.simple_time)
-                    phase_string = f'%16s' % 'Processing Phase'  + ' - '
-                    time = self.scheduler_processing.get_clock(execution_id).time
-                    time_string = \
-                        f"Time(run: {time.run}, trial: {time.trial}, pass: {time.pass_}, time_step: {time.time_step})"
-                # elif execution_phase == ContextFlags.LEARNING:
-                #     time = self.scheduler_learning.get_clock(execution_id).time
-                #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
-                #         format(time.run, time.trial, time.pass_, time.time_step)
-                #     phase_string = 'Learning Phase - '
-                elif execution_phase == ContextFlags.CONTROL:
-                    phase_string = f'%16s' % 'Control Phase'  + ' - '
-                    # time_string = ''
-                    time = self.scheduler_processing.get_clock(execution_id).time
-                    time_string = \
-                        f"Time(run: {time.run}, trial: {time.trial}, pass: {time.pass_}, time_step: {time.time_step})"
-                else:
-                    raise CompositionError(
-                        f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
-                label = f'\n{self.name}\n{phase_string}{time_string}\n'
-                G.attr(label=label)
-                G.attr(labelloc='b')
-                G.attr(fontname='Monaco')
-                G.attr(fontsize='14')
-                if INITIAL_FRAME in active_items:
-                    index = '-'
-                else:
-                    index = repr(self._component_animation_execution_count)
-                image_filename = repr(self.scheduler_processing.clock.simple_time.trial) + '-' + index + '-'
-                image_file = self._animate_directory + '/' + image_filename + '.gif'
-                G.render(filename=image_filename,
-                         directory=self._animate_directory,
-                         cleanup=True,
-                         # view=True
-                         )
-                # Append gif to self._animation
-                image = Image.open(image_file)
-                # TBI?
-                # if not self._save_images:
-                #     remove(image_file)
-                if not hasattr(self, '_animation'):
-                    self._animation = [image]
-                else:
-                    self._animation.append(image)
+                self._generate_gifs(G, active_items, execution_id)
 
         # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
@@ -3882,7 +3984,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         elif output_fmt == 'gv':
             return G
-
 
     def execute(
             self,
@@ -3955,7 +4056,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not hasattr(self, '_animate'):
             # These are meant to be assigned in run method;  needed here for direct call to execute method
             self._animate = False
-            self._component_animation_execution_count = 0
 
         # KAM Note 4/29/19
         # The nested var is set to True if this Composition is nested in another Composition, otherwise False
@@ -3972,13 +4072,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         execution_id = self._assign_execution_ids(execution_id)
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        # # MODIFIED 6/12/19 OLD:
-        # if scheduler_processing is None:
-        #     scheduler_processing = self.scheduler_processing
-        # execution_scheduler = scheduler_processing
-        # MODIFIED 6/12/19 NEW: [JDC]
         execution_scheduler = scheduler_processing or self.scheduler_processing
-        # MODIFIED 6/12/19 END
 
         execution_context = self.parameters.context._get(execution_id)
 
@@ -4011,6 +4105,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             self._assign_context_values(execution_id, composition=self)
 
+        # Generate first frame of animation without any active_items
+        if self._animate is not False:
+            # If execution_id fails, the scheduler has no data for it yet.
+            # It also may be the first, so fall back to default execution_id
+            try:
+                self._animate_execution(INITIAL_FRAME, execution_id)
+            except KeyError:
+                self._animate_execution(INITIAL_FRAME, self.default_execution_id)
+
+        # EXECUTE INPUT CIM ********************************************************************************************
+
         # FIX: 6/12/19 MOVE TO EXECUTE BELOW? (i.e., with bin_execute / _comp_ex.execute_node(self.input_CIM, inputs))
         # Execute input_CIMs
         if nested:
@@ -4029,6 +4134,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, input_nodes)
             pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, input_nodes)
             no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, input_nodes)
+
+        # Animate input_CIM
+        # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
+        #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
+        execution_phase_buffer = self.parameters.context.get(execution_id).execution_phase
+        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
+            self._animate_execution(self.input_CIM, execution_id)
+        self.parameters.context.get(execution_id).execution_phase = execution_phase_buffer
+        # FIX: END
 
         # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
 
@@ -4088,8 +4203,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if (self.enable_controller and
             self.controller_mode is BEFORE and
             self.controller_condition.is_satisfied(scheduler=execution_scheduler,
-                                                   execution_context=execution_id)
-        ):
+                                                   execution_context=execution_id)):
 
             # control phase
             # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
@@ -4114,13 +4228,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_context.execution_phase = ContextFlags.CONTROL
                 # MODIFIED 6/13/19 END
 
+                # Animate controller (before execution)
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
-                    self.show_graph(active_items=self.controller,
-                                    **self._animate,
-                                    output_fmt='gif',
-                                    execution_id=execution_id
-                                    )
-                self._component_animation_execution_count += 1
+                    self._animate_execution(self.controller, execution_id)
 
                 # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
@@ -4143,18 +4253,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if call_before_pass:
             call_with_pruned_args(call_before_pass, execution_context=execution_id)
 
-        # Generate first frame of animation without any active_items
-        if self._animate is not False:
-            # If this fails, the scheduler has no data for execution_id yet.
-            # It also may be the first, so fall back to default execution_id
-            try:
-                self.show_graph(active_items=INITIAL_FRAME,
-                                **self._animate, output_fmt='gif',
-                                execution_id=execution_id)
-            except KeyError:
-                self.show_graph(active_items=INITIAL_FRAME,
-                                **self._animate, output_fmt='gif',
-                                execution_id=self.default_execution_id)
 
         # GET execution_set -------------------------------------------------------------------------
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
@@ -4210,11 +4308,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not self.learning_enabled:
                 next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
-            if not self._animate is False and self._animate_unit is EXECUTION_SET:
-                self.show_graph(active_items=next_execution_set,
-                                **self._animate,
-                                output_fmt='gif',
-                                execution_id=execution_id)
+            # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            if self._animate is not False and self._animate_unit is EXECUTION_SET:
+                self._animate_execution(next_execution_set, execution_id)
 
             # EXECUTE (each node) --------------------------------------------------------------------------
 
@@ -4332,13 +4428,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                   skip_log=True, override=True)
 
                 # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-                if not self._animate is False and self._animate_unit is COMPONENT:
-                    self.show_graph(active_items=node, **self._animate, output_fmt='gif', execution_id=execution_id)
-                self._component_animation_execution_count += 1
+                if self._animate is not False and self._animate_unit is COMPONENT:
+                    self._animate_execution(node, execution_id)
 
 
-                # MANAGE INPUTS (for next # execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
                 # FIX: 6/12/19 Deprecate?
                 # Handle input clamping
@@ -4370,6 +4464,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if call_after_pass:
             call_with_pruned_args(call_after_pass, execution_context=execution_id)
 
+
+        # Animate output_CIM
+        # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
+        #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
+        # execution_phase_buffer = self.parameters.context.get(execution_id).execution_phase
+        # self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
+            self._animate_execution(self.output_CIM, execution_id)
+        # self.parameters.context.get(execution_id).execution_phase = execution_phase_buffer
+        # FIX: END
+
         # Restore execution_context to state entry of execute method
         if execution_context:
             execution_context.execution_phase = entry_execution_phase
@@ -4379,8 +4484,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if (self.enable_controller and
                 self.controller_mode == AFTER and
                 self.controller_condition.is_satisfied(scheduler=execution_scheduler,
-                                                       execution_context=execution_id)
-        ):
+                                                       execution_context=execution_id)):
             # control phase
             # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
             execution_phase = execution_context.execution_phase
@@ -4400,18 +4504,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _comp_ex.execute_node(self.controller)
 
                 # MODIFIED 6/13/19 NEW: [JDC]
-                # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
+                # FIX: NEEDED TO ANIMATE CONTROL; REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     entry_execution_phase = execution_context.execution_phase
                     execution_context.execution_phase = ContextFlags.CONTROL
                 # MODIFIED 6/13/19 END
 
-                if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
-                    self.show_graph(active_items=self.controller,
-                                    **self._animate,
-                                    output_fmt='gif',
-                                    execution_id=execution_id)
-                self._component_animation_execution_count += 1
+                # Animate controller (after execution)
+                if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
+                    self._animate_execution(self.controller, execution_id)
 
                 # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
@@ -4450,8 +4551,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs=None,
             scheduler_processing=None,
             termination_processing=None,
-            execution_id=None,
-            base_execution_id=None,
             num_trials=None,
             call_before_time_step=None,
             call_after_time_step=None,
@@ -4467,6 +4566,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             retain_old_simulation_data=False,
             animate=False,
+            execution_id=None,
+            base_execution_id=None,
             context=None):
 
         '''Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
@@ -4652,59 +4753,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     item.parameters.value.log_condition = LogCondition.EXECUTION
 
         # Set animation attributes
-        self._component_animation_execution_count=0
         if animate is True:
             animate = {}
         self._animate = animate
-        if isinstance(self._animate, dict):
-            # Assign directory for animation files
-            here = path.abspath(path.dirname(__file__))
-            self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " gifs")
-            # try:
-            #     rmtree(self._animate_directory)
-            # except:
-            #     pass
-            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
-            self._image_duration = self._animate.pop(DURATION, 0.75)
-            self._animate_num_runs = self._animate.pop(NUM_RUNS, 1)
-            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
-            self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
-            self._save_images = self._animate.pop(SAVE_IMAGES, False)
-            self._show_animation = self._animate.pop(SHOW, False)
-            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
-                                  format(repr(UNIT), repr('animate'), repr('run'),
-                                         self.name, self._animate_unit, repr(COMPONENT), repr(EXECUTION_SET)))
-            if not isinstance(self._image_duration, (int, float)):
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be an int or a float".
-                                  format(repr(DURATION), repr('animate'), repr('run'),
-                                         self.name, self._image_duration))
-            if not isinstance(self._animate_num_runs, int):
-                raise SystemError("{} entry of {} argument for {} method of {} must an integer".
-                                  format(repr(NUM_RUNS), repr('animate'),
-                                         self.name, self._animate_num_runs, repr('show_graph')))
-            if not isinstance(self._animate_num_trials, int):
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must an integer".
-                                  format(repr(NUM_TRIALS), repr('animate'), repr('run'),
-                                         self.name, self._animate_num_trials, repr('show_graph')))
-            if not isinstance(self._movie_filename, str):
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be a string".
-                                  format(repr(MOVIE_NAME), repr('animate'), repr('run'),
-                                         self.name, self._movie_filename))
-            if not isinstance(self._save_images, bool):
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
-                                  format(repr(MOVIE_NAME), repr('animate'), repr('run'),
-                                         self.name, self._save_images, repr(True), repr(False)))
-            if not isinstance(self._save_images, bool):
-                raise SystemError("{} entry of {} argument for {} method of {} ({}) must be {} or {}".
-                                  format(repr(SHOW), repr('animate'), repr('run'),
-                                         self.name, self._show_animation, repr(True), repr(False)))
-        elif self._animate:
-            # self._animate should now be False or a dict
-            raise SystemError("{} argument for {} method of {} ({}) must boolean or "
-                              "a dictionary of argument specifications for its {} method".
-                              format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
-
+        if self._animate is not False:
+            self._set_up_animation(execution_id)
 
         # SET UP EXECUTION -----------------------------------------------
 
@@ -4905,46 +4958,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 movie.show()
 
         return trial_output
-
-    # def save_state(self):
-    #     saved_state = {}
-    #     for node in self.stateful_nodes:
-    #         # "save" the current state of each stateful mechanism by storing the values of each of its stateful
-    #         # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
-    #         # the reinitialize method on each stateful mechanism.
-    #         reinitialization_value = []
-    #
-    #         if isinstance(node, Composition):
-    #             # TBI: Store state for a Composition, Reinitialize Composition
-    #             pass
-    #         elif isinstance(node, Mechanism):
-    #             if isinstance(node.function, IntegratorFunction):
-    #                 for attr in node.function.stateful_attributes:
-    #                     reinitialization_value.append(getattr(node.function, attr))
-    #             elif hasattr(node, "integrator_function"):
-    #                 if isinstance(node.integrator_function, IntegratorFunction):
-    #                     for attr in node.integrator_function.stateful_attributes:
-    #                         reinitialization_value.append(getattr(node.integrator_function, attr))
-    #
-    #         saved_state[node] = reinitialization_value
-    #
-    #     node_values = {}
-    #     for node in self.nodes:
-    #         node_values[node] = (node.value, node.output_values)
-    #
-    #     self.sim_reinitialize_values, self.sim_node_values = saved_state, node_values
-    #     return saved_state, node_values
-
-    # def _get_predicted_input(self, execution_id=None, context=None):
-    #     """
-    #     Called by the `controller <Composition.controller>` of the `Composition` before any
-    #     simulations are run in order to (1) generate predicted inputs, (2) store current values that must be
-    #     reinstated after all simulations are complete, and (3) set the number of trials of simulations.
-    #     """
-    #
-    #     predicted_input = self._update_predicted_input(execution_id=execution_id)
-    #
-    #     return predicted_input
 
     def _after_agent_rep_execution(self, context=None):
         pass
@@ -5449,6 +5462,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Run Composition in "SIMULATION" context
         # MODIFIED 6/12/19 NEW: [JDC]
+        if self._animate is not False and self._animate_simulations is not False:
+            animate = self._animate
+            buffer_animate_state = None
+        else:
+            animate = False
+            buffer_animate_state = self._animate
         entry_execution_phase = self.parameters.context._get(execution_id).execution_phase
         # MODIFIED 6/12/19 END
         self.parameters.context._get(execution_id).execution_phase = ContextFlags.SIMULATION
@@ -5456,12 +5475,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  execution_id=execution_id,
                  runtime_params=runtime_params,
                  num_trials=num_simulation_trials,
+                 animate=animate,
                  context=context,
                  bin_execute=execution_mode)
         # # MODIFIED 6/12/19 OLD:
         # self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
         # MODIFIED 6/12/19 NEW: [JDC]
         self.parameters.context._get(execution_id).execution_phase = entry_execution_phase
+        if buffer_animate_state:
+            self._animate = buffer_animate_state
         # MODIFIED 6/12/19 END
 
         # Store simulation results on "base" composition

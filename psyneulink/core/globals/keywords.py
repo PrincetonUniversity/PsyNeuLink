@@ -790,6 +790,7 @@ LEARNED_PARAM = 'learned_param'
 LEARNED_PROJECTION = 'learned_projection'
 
 # ControlMechanism / EVCControlMechanism / ObjectiveMechanism
+SIMULATIONS = 'simulations'
 OBJECTIVE_MECHANISM = "objective_mechanism"
 OUTCOME = 'OUTCOME'
 MONITOR_FOR_CONTROL = "monitor_for_control"
