@@ -1205,7 +1205,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         fun = ctx.get_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
-        fun_out = builder.alloca(fun.args[3].type.pointee, 1)
+        fun_out = builder.alloca(fun.args[3].type.pointee)
 
         args = [params, context, fun_in, fun_out]
         if is_comp:

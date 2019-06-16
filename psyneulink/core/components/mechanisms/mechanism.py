@@ -2669,7 +2669,7 @@ class Mechanism_Base(Mechanism):
             is_output_type = pnlvm.ir.ArrayType(is_output_list[0], len(is_output_list))
         else:
             is_output_type = pnlvm.ir.LiteralStructType(is_output_list)
-        is_output = builder.alloca(is_output_type, 1)
+        is_output = builder.alloca(is_output_type)
 
         for i, state in enumerate(self.input_states):
             is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -2683,7 +2683,7 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_param_states(self, func, f_params_ptr, ctx, builder, params, context, si):
         # Allocate a shadow structure to overload user supplied parameters
-        f_params = builder.alloca(f_params_ptr.type.pointee, 1)
+        f_params = builder.alloca(f_params_ptr.type.pointee)
 
         # Call parameter states for function
         for idx, f_param in enumerate(func._get_param_ids()):
@@ -2711,7 +2711,7 @@ class Mechanism_Base(Mechanism):
             ps_context = builder.gep(context, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
 
             # Construct the input out of the user value and incoming projection
-            ps_input = builder.alloca(ps_function.args[2].type.pointee, 1)
+            ps_input = builder.alloca(ps_function.args[2].type.pointee)
             raw_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
             builder.store(raw_param_val, raw_ptr)
@@ -2756,7 +2756,7 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
         fun = ctx.get_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
-        fun_out = builder.alloca(fun.args[3].type.pointee, 1)
+        fun_out = builder.alloca(fun.args[3].type.pointee)
 
         builder.call(fun, [params, context, fun_in, fun_out])
 
