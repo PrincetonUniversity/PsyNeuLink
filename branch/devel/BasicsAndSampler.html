@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+202.g088e1fc documentation</title>
+  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+203.gd378aa6 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+202.g088e1fc',
+              VERSION:'0.5.3.2+203.gd378aa6',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+202
+                0.5.3.2+203
               </div>
             
           
@@ -495,8 +495,8 @@ conflict in the <code class="docutils literal"><span class="pre">output</span></
     <span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span>
 
 <span class="c1"># Set up run and then execute it</span>
-<span class="n">task</span><span class="o">.</span><span class="n">initial_value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">]</span>      <span class="c1"># Assign &quot;neutral&quot; starting point for task units on each trial</span>
-<span class="n">task</span><span class="o">.</span><span class="n">reinitialize_when</span><span class="o">=</span><span class="n">AtPass</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Reinitialize task units at beginning of each trial</span>
+<span class="n">task</span><span class="o">.</span><span class="n">initial_value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">]</span>         <span class="c1"># Assign &quot;neutral&quot; starting point for task units on each trial</span>
+<span class="n">task</span><span class="o">.</span><span class="n">reinitialize_when</span><span class="o">=</span><span class="n">AtTrialStart</span><span class="p">()</span>  <span class="c1"># Reinitialize task units at beginning of each trial</span>
 <span class="n">num_trials</span> <span class="o">=</span> <span class="mi">5</span>
 <span class="n">stimuli</span> <span class="o">=</span> <span class="p">{</span><span class="n">color_input</span><span class="p">:[</span><span class="n">red</span><span class="p">]</span><span class="o">*</span><span class="n">num_trials</span><span class="p">,</span>
            <span class="n">word_input</span><span class="p">:[</span><span class="n">green</span><span class="p">]</span><span class="o">*</span><span class="n">num_trials</span><span class="p">,</span>

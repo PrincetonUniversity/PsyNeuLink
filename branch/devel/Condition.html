@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.5.3.2+202.g088e1fc documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.5.3.2+203.gd378aa6 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+202.g088e1fc',
+              VERSION:'0.5.3.2+203.gd378aa6',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+202
+                0.5.3.2+203
               </div>
             
           
@@ -819,6 +819,21 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="class">
+<dt id="psyneulink.core.scheduling.condition.AtTrialStart">
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtTrialStart</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTrialStart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li>at the beginning of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a></li>
+</ul>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>identical to <a class="reference internal" href="#psyneulink.core.scheduling.condition.AtPass" title="psyneulink.core.scheduling.condition.AtPass"><code class="xref any py py-class docutils literal"><span class="pre">AtPass(0)</span></code></a></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
 <dt id="psyneulink.core.scheduling.condition.AtPass">
 <em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtPass</code><span class="sig-paren">(</span><em>n</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtPass" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -905,8 +920,8 @@ so, <code class="xref any docutils literal"><span class="pre">AtTrial(1)</span><
 </dd></dl>
 
 <dl class="class">
-<dt id="psyneulink.core.scheduling.condition.AtTrialStart">
-<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtTrialStart</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTrialStart" title="Permalink to this definition">¶</a></dt>
+<dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtTrialStart</code></dt>
 <dd><p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">

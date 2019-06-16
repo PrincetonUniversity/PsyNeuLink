@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputState &mdash; PsyNeuLink 0.5.3.2+202.g088e1fc documentation</title>
+  <title>InputState &mdash; PsyNeuLink 0.5.3.2+203.gd378aa6 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+202.g088e1fc',
+              VERSION:'0.5.3.2+203.gd378aa6',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+202
+                0.5.3.2+203
               </div>
             
           
@@ -458,11 +458,10 @@ one(s) specified (see below).</li>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
-<p>For each InputState specified, and all of the InputStates belonging to any Mechanisms specified using the formats
-above, a new InputState is created along with Projections to it that parallel those received by the
-corresponding InputState –  that is, that have the same <code class="xref any docutils literal"><span class="pre">senders</span></code> as those that project to
-the specified InputState, but that project to the one being created.  Thus, for each InputState specified,
-a new one is created that receives exactly the same inputs; that is, “shadows” it.</p>
+<p>For each InputState specified, and all of the InputStates belonging to any Mechanisms specified, a new InputState
+is created along with Projections to it that parallel those received by the corresponding InputState in the
+list.  In other words, for each InputState specified, a new one is created that receives exactly the same inputs
+from the same <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">senders</span></code></a> as the ones specified.</p>
 </li>
 </ul>
 </div></blockquote>
@@ -656,7 +655,7 @@ received by the InputState, and that are listed in its <a class="reference inter
 <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.mod_afferents" title="psyneulink.core.components.states.inputstate.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attributes, respectively (see
 <a class="reference internal" href="#inputstate-compatability-and-constraints"><span class="std std-ref">InputState variable: Compatibility and Constraints</span></a> for additional details).  If <strong>projections</strong> but neither
 <strong>variable</strong> nor <strong>size</strong> are specified, then the <code class="xref any docutils literal"><span class="pre">value</span></code> of the Projection(s) or their
-<code class="xref any docutils literal"><span class="pre">senders</span></code> specified in <strong>projections</strong> argument are used to determine the InputState’s
+<a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">senders</span></code></a> specified in <strong>projections</strong> argument are used to determine the InputState’s
 <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.variable" title="psyneulink.core.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>weight</strong> (<em>number : default 1</em>) – specifies the value of the <code class="xref any docutils literal"><span class="pre">weight</span></code> attribute of the InputState.</li>
 <li><strong>exponent</strong> (<em>number : default 1</em>) – specifies the value of the <code class="xref any docutils literal"><span class="pre">exponent</span></code> attribute of the InputState.</li>
@@ -703,7 +702,7 @@ the dictionary override any assigned to those parameters in arguments of the con
 <dd><p><em>value, list or np.ndarray</em> – the template for the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each Projection that the InputState receives,
 each of which must match the format (number and types of elements) of the InputState’s
 <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.variable" title="psyneulink.core.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  If neither the <strong>variable</strong> or <strong>size</strong> argument is specified, and
-<strong>projections</strong> is specified, then <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.variable" title="psyneulink.core.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is assigned the <code class="xref any docutils literal"><span class="pre">value</span></code> of the Projection(s) or its <code class="xref any docutils literal"><span class="pre">sender</span></code>.</p>
+<strong>projections</strong> is specified, then <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.variable" title="psyneulink.core.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is assigned the <code class="xref any docutils literal"><span class="pre">value</span></code> of the Projection(s) or its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">

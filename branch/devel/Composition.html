@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.3.2+202.g088e1fc documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.3.2+203.gd378aa6 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+202.g088e1fc',
+              VERSION:'0.5.3.2+203.gd378aa6',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+202
+                0.5.3.2+203
               </div>
             
           
@@ -803,7 +803,7 @@ these can be shown as follows:</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller: psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism = None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11c862208&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>learning_enabled=False</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller: psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism = None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x111e71278&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>learning_enabled=False</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1022,9 +1022,9 @@ in any role-specification tuples in the <strong>nodes</strong> argument.</li>
 they must match the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>
 of <strong>projection</strong>.</li>
 <li>if the status of <strong>projection</strong> is <code class="xref any docutils literal"><span class="pre">deferred_init</span></code>:<ul>
-<li>if its <code class="xref any docutils literal"><span class="pre">sender</span></code> and/or <code class="xref any docutils literal"><span class="pre">receiver</span></code> attributes are not specified,
-then <strong>sender</strong> and/or <strong>receiver</strong> are used.</li>
-<li>if <code class="xref any docutils literal"><span class="pre">sender</span></code> and/or <code class="xref any docutils literal"><span class="pre">receiver</span></code> attributes are specified,
+<li>if its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> attributes are not
+specified, then <strong>sender</strong> and/or <strong>receiver</strong> are used.</li>
+<li>if <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> attributes are specified,
 they must match <strong>sender</strong> and/or <strong>receiver</strong> if those have also been specified.</li>
 <li>if a Projection between the specified sender and receiver does <em>not</em> already exist, it is initialized; if
 it <em>does</em> already exist, the request to add it is ignored, however requests to shadow it and/or mark it as
@@ -1034,8 +1034,8 @@ a`feedback` Projection are implemented (in case it has not already been done for
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">If <strong>projection</strong> is an instantiated projection (i.e., not in <code class="xref any docutils literal"><span class="pre">deferred_init</span></code>) and one already exists
-between its <code class="xref any docutils literal"><span class="pre">sender</span></code> and <code class="xref any docutils literal"><span class="pre">receiver</span></code> a warning is generated.</p>
+<p class="last">If <strong>projection</strong> is an instantiated projection (i.e., not in <code class="xref any docutils literal"><span class="pre">deferred_init</span></code>) and one already exists between
+its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> a warning is generated.</p>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1046,11 +1046,11 @@ between its <code class="xref any docutils literal"><span class="pre">sender</sp
 <li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><em>matrix</em></a>) – the projection to add</li>
 <li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState" title="psyneulink.core.components.states.inputstate.InputState"><em>InputState</em></a>) – the receiver of <strong>projection</strong></li>
 <li><strong>feedback</strong> (<em>bool</em>) – When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
-means that each Projections within the cycle actually passes to its <code class="xref any docutils literal"><span class="pre">receiver</span></code>
-the <code class="xref any docutils literal"><span class="pre">value</span></code> of its <code class="xref any docutils literal"><span class="pre">sender</span></code> from the previous execution.
+means that each Projections within the cycle actually passes to its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>
+the <code class="xref any docutils literal"><span class="pre">value</span></code> of its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> from the previous execution.
 When True, this Projection “breaks” the cycle, such that all Nodes execute in sequence, and only the
-Projection marked as ‘feedback’ passes to its <code class="xref any docutils literal"><span class="pre">receiver</span></code> the
-<code class="xref any docutils literal"><span class="pre">value</span></code> of its <code class="xref any docutils literal"><span class="pre">sender</span></code> from the previous execution.</li>
+Projection marked as ‘feedback’ passes to its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> the
+<code class="xref any docutils literal"><span class="pre">value</span></code> of its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> from the previous execution.</li>
 </ul>
 </td>
 </tr>
@@ -1062,8 +1062,8 @@ Projection marked as ‘feedback’ passes to its <code class="xref any docutils
 <dt id="psyneulink.core.compositions.composition.Composition.add_projections">
 <code class="descname">add_projections</code><span class="sig-paren">(</span><em>projections=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_projections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calls <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_projection" title="psyneulink.core.compositions.composition.Composition.add_projection"><code class="xref any py py-meth docutils literal"><span class="pre">add_projection</span></code></a> for each Projection in the <em>projections</em> list. Each
-Projection must have its <code class="xref any docutils literal"><span class="pre">sender</span></code> and <code class="xref any docutils literal"><span class="pre">receiver</span></code> already
-specified.</p>
+Projection must have its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>
+already specified.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1250,7 +1250,7 @@ passed the current <em>execution_id</em> (but it is not necessary for your calla
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>scheduler_processing=None</em>, <em>termination_processing=None</em>, <em>execution_id=None</em>, <em>base_execution_id=None</em>, <em>num_trials=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_pass=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>clamp_input='soft_clamp'</em>, <em>bin_execute=False</em>, <em>log=False</em>, <em>initial_values=None</em>, <em>reinitialize_values=None</em>, <em>runtime_params=None</em>, <em>retain_old_simulation_data=False</em>, <em>animate=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.run" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>scheduler_processing=None</em>, <em>termination_processing=None</em>, <em>num_trials=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_pass=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>clamp_input='soft_clamp'</em>, <em>bin_execute=False</em>, <em>log=False</em>, <em>initial_values=None</em>, <em>reinitialize_values=None</em>, <em>runtime_params=None</em>, <em>retain_old_simulation_data=False</em>, <em>animate=False</em>, <em>execution_id=None</em>, <em>base_execution_id=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
 conditions are met.  See <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for details of formatting input specifications. See <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for details of
 formatting input specifications. Use <strong>animate</strong> to generate a gif of the execution sequence.</p>
