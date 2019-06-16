@@ -835,8 +835,8 @@ class AfterNTimeSteps(Condition):
         super().__init__(func, n, time_scale)
 
 
-class AtPassStart(Condition):
-    """AtPassStart
+class AtStartPassN(Condition):
+    """AtStartPassN
 
     Parameters:
 
@@ -1006,8 +1006,8 @@ class EveryNPasses(Condition):
         super().__init__(func, n, time_scale)
 
 
-class AtTrialStart(Condition):
-    """AtTrialStart
+class AtStartTrialN(Condition):
+    """AtStartTrialN
 
     Parameters:
 
@@ -1149,8 +1149,8 @@ class AfterNTrials(Condition):
         super().__init__(func, n, time_scale)
 
 
-class AtRunStart(Condition):
-    """AtRunStart
+class AtStartRunN(Condition):
+    """AtStartRunN
 
     Parameters:
 
