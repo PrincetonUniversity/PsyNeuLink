@@ -83,7 +83,19 @@ RAND1_S = np.random.rand()
 RAND2_S = np.random.rand()
 RAND3_S = np.random.rand()
 
-def linear_combination_function(variable, operation, exponents, weights, scale, offset, bin_execute, benchmark):
+@pytest.mark.benchmark
+@pytest.mark.function
+@pytest.mark.combination_function
+@pytest.mark.parametrize("variable", [test_var, test_var2], ids=["VAR1D", "VAR2D"])
+@pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
+@pytest.mark.parametrize("exponents", [None, 2.0], ids=["E_NONE", "E_SCALAR"])
+@pytest.mark.parametrize("weights", [None, 0.5, [[-1],[1]]], ids=["W_NONE", "W_SCALAR", "W_VECTOR"])
+@pytest.mark.parametrize("scale", [None, RAND1_S, RAND1_V], ids=["S_NONE", "S_SCALAR", "S_VECTOR"])
+@pytest.mark.parametrize("offset", [None, RAND2_S, RAND2_V], ids=["O_NONE", "O_SCALAR", "O_VECTOR"])
+@pytest.mark.parametrize("bin_execute", ["Python",
+                                        pytest.param("LLVM", marks=pytest.mark.llvm),
+                                        pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_linear_combination_function(variable, operation, exponents, weights, scale, offset, bin_execute, benchmark):
     if weights is not None and not np.isscalar(weights) and len(variable) != len(weights):
         pytest.skip("variable/weights mismatch")
 
@@ -116,111 +128,32 @@ def linear_combination_function(variable, operation, exponents, weights, scale, 
 
     assert np.allclose(res, expected)
 
-@pytest.mark.function
-@pytest.mark.combination_function
-@pytest.mark.parametrize("variable", [test_var, test_var2])
-@pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
-@pytest.mark.parametrize("exponents", [None, 2.0])
-@pytest.mark.parametrize("weights", [None, 0.5, [[-1],[1]]])
-@pytest.mark.parametrize("scale", [None, RAND1_S, RAND1_V])
-@pytest.mark.parametrize("offset", [None, RAND2_S, RAND2_V])
-@pytest.mark.benchmark
-def test_linear_combination_function(variable, operation, exponents, weights, scale, offset, benchmark):
-    linear_combination_function(variable, operation, exponents, weights, scale, offset, 'Python', benchmark)
-
-@pytest.mark.function
-@pytest.mark.llvm
-@pytest.mark.combination_function
-@pytest.mark.parametrize("variable", [test_var, test_var2])
-@pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
-@pytest.mark.parametrize("exponents", [None, 2.0])
-@pytest.mark.parametrize("weights", [None, 0.5, [[-1],[1]]])
-@pytest.mark.parametrize("scale", [None, RAND1_S, RAND1_V])
-@pytest.mark.parametrize("offset", [None, RAND2_S, RAND2_V])
-@pytest.mark.benchmark
-def test_linear_combination_function_llvm(variable, operation, exponents, weights, scale, offset, benchmark):
-    linear_combination_function(variable, operation, exponents, weights, scale, offset, 'LLVM', benchmark)
-
-@pytest.mark.function
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.combination_function
-@pytest.mark.parametrize("variable", [test_var, test_var2])
-@pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
-@pytest.mark.parametrize("exponents", [None, 2.0])
-@pytest.mark.parametrize("weights", [None, 0.5, [[-1],[1]]])
-@pytest.mark.parametrize("scale", [None, RAND1_S, RAND1_V])
-@pytest.mark.parametrize("offset", [None, RAND2_S, RAND2_V])
-@pytest.mark.benchmark
-def test_linear_combination_function_ptx(variable, operation, exponents, weights, scale, offset, benchmark):
-    linear_combination_function(variable, operation, exponents, weights, scale, offset, 'PTX', benchmark)
-
 # ------------------------------------
 
+@pytest.mark.benchmark
 @pytest.mark.function
 @pytest.mark.combination_function
 @pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
-@pytest.mark.parametrize("input, input_states", [ ([[1,2,3,4]], ["hi"]), ([[1,2,3,4], [5,6,7,8], [9,10,11,12]], ['1','2','3']), ([[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], ['1','2','3']) ])
-@pytest.mark.parametrize("scale", [None, 2.5, [1,2.5,0,0]])
-@pytest.mark.parametrize("offset", [None, 1.5, [1,2.5,0,0]])
-@pytest.mark.benchmark
-def test_linear_combination_function_in_mechanism(operation, input, input_states, scale, offset, benchmark):
+@pytest.mark.parametrize("input, input_states", [ ([[1,2,3,4]], ["hi"]), ([[1,2,3,4], [5,6,7,8], [9,10,11,12]], ['1','2','3']), ([[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], ['1','2','3']) ], ids=["1S", "2S", "3S"])
+@pytest.mark.parametrize("scale", [None, 2.5, [1,2.5,0,0]], ids=["S_NONE", "S_SCALAR", "S_VECTOR"])
+@pytest.mark.parametrize("offset", [None, 1.5, [1,2.5,0,0]], ids=["O_NONE", "O_SCALAR", "O_VECTOR"])
+@pytest.mark.parametrize("mode", ["Python",
+                                  pytest.param("LLVM", marks=pytest.mark.llvm),
+                                  pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_linear_combination_function_in_mechanism(operation, input, input_states, scale, offset, benchmark, mode):
     f = pnl.core.components.functions.combinationfunctions.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
     p = pnl.ProcessingMechanism(size=[len(input[0])] * len(input), function=f, input_states=input_states)
     benchmark.group = "CombinationFunction " + pnl.core.components.functions.combinationfunctions.LinearCombination.componentName + "in Mechanism"
 
-    res = benchmark(f.execute, input)
+    if mode == "Python":
+        res = benchmark(f.execute, input)
+    elif mode == "LLVM":
+        e = pnlvm.execution.FuncExecution(f)
+        res = benchmark(e.execute, input)
+    elif mode == "PTX":
+        e = pnlvm.execution.FuncExecution(f)
+        res = benchmark(e.cuda_execute, input)
 
-    scale = 1.0 if scale is None else scale
-    offset = 0.0 if offset is None else offset
-    if operation == pnl.SUM:
-        expected = np.sum(input, axis=0) * scale + offset
-    if operation == pnl.PRODUCT:
-        expected = np.product(input, axis=0) * scale + offset
-
-    assert np.allclose(res, expected)
-
-@pytest.mark.llvm
-@pytest.mark.function
-@pytest.mark.combination_function
-@pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
-@pytest.mark.parametrize("input, input_states", [ ([[1,2,3,4]], ["hi"]), ([[1,2,3,4], [5,6,7,8], [9,10,11,12]], ['1','2','3']), ([[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], ['1','2','3']) ])
-@pytest.mark.parametrize("scale", [None, 2.5, [1,2.5,0,0]])
-@pytest.mark.parametrize("offset", [None, 1.5, [1,2.5,0,0]])
-@pytest.mark.benchmark
-def test_linear_combination_function_in_mechanism_llvm(operation, input, input_states, scale, offset, benchmark):
-    f = pnl.core.components.functions.combinationfunctions.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
-    p = pnl.ProcessingMechanism(size=[len(input[0])] * len(input), function=f, input_states=input_states)
-    benchmark.group = "CombinationFunction " + pnl.core.components.functions.combinationfunctions.LinearCombination.componentName + "in Mechanism"
-
-    e = pnlvm.execution.FuncExecution(f)
-    res = benchmark(e.execute, input)
-
-    scale = 1.0 if scale is None else scale
-    offset = 0.0 if offset is None else offset
-    if operation == pnl.SUM:
-        expected = np.sum(input, axis=0) * scale + offset
-    if operation == pnl.PRODUCT:
-        expected = np.product(input, axis=0) * scale + offset
-
-    assert np.allclose(res, expected)
-
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.function
-@pytest.mark.combination_function
-@pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
-@pytest.mark.parametrize("input, input_states", [ ([[1,2,3,4]], ["hi"]), ([[1,2,3,4], [5,6,7,8], [9,10,11,12]], ['1','2','3']), ([[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], ['1','2','3']) ])
-@pytest.mark.parametrize("scale", [None, 2.5, [1,2.5,0,0]])
-@pytest.mark.parametrize("offset", [None, 1.5, [1,2.5,0,0]])
-@pytest.mark.benchmark
-def test_linear_combination_function_in_mechanism_ptx(operation, input, input_states, scale, offset, benchmark):
-    f = pnl.core.components.functions.combinationfunctions.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
-    p = pnl.ProcessingMechanism(size=[len(input[0])] * len(input), function=f, input_states=input_states)
-    benchmark.group = "CombinationFunction " + pnl.core.components.functions.combinationfunctions.LinearCombination.componentName + "in Mechanism"
-
-    e = pnlvm.execution.FuncExecution(f)
-    res = benchmark(e.cuda_execute, input)
 
     scale = 1.0 if scale is None else scale
     offset = 0.0 if offset is None else offset
