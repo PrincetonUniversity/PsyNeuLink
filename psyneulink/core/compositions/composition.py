@@ -729,6 +729,7 @@ SAVE_IMAGES = 'save_images'
 SHOW = 'show'
 INITIAL_FRAME = 'INITIAL_FRAME'
 EXECUTION_SET = 'EXECUTION_SET'
+SHOW_CIM = 'show_cim'
 SHOW_CONTROLLER = 'show_controller'
 SHOW_LEARNING = 'show_learning'
 
@@ -4085,6 +4086,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             self._assign_context_values(execution_id, composition=self)
 
+        # Generate first frame of animation without any active_items
+        if self._animate is not False:
+
+            if self._component_animation_execution_count is None:
+                self._component_animation_execution_count = 0
+            else:
+                self._component_animation_execution_count += 1
+
+
+            # If this fails, the scheduler has no data for execution_id yet.
+            # It also may be the first, shoo fall back to default execution_id
+            try:
+                self.show_graph(active_items=INITIAL_FRAME,
+                                **self._animate, output_fmt='gif',
+                                execution_id=execution_id)
+            except KeyError:
+                self.show_graph(active_items=INITIAL_FRAME,
+                                **self._animate, output_fmt='gif',
+                                execution_id=self.default_execution_id)
+
+        # EXECUTE INPUT CIM ********************************************************************************************
+
         # FIX: 6/12/19 MOVE TO EXECUTE BELOW? (i.e., with bin_execute / _comp_ex.execute_node(self.input_CIM, inputs))
         # Execute input_CIMs
         if nested:
@@ -4104,26 +4127,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, input_nodes)
             no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, input_nodes)
 
-        # Generate first frame of animation without any active_items
-        if self._animate is not False:
-
-            if self._component_animation_execution_count is None:
-                self._component_animation_execution_count = 0
-            else:
-                self._component_animation_execution_count += 1
-
-
-            # If this fails, the scheduler has no data for execution_id yet.
-            # It also may be the first, so fall back to default execution_id
-            try:
-                self.show_graph(active_items=INITIAL_FRAME,
-                                **self._animate, output_fmt='gif',
-                                execution_id=execution_id)
-            except KeyError:
-                self.show_graph(active_items=INITIAL_FRAME,
-                                **self._animate, output_fmt='gif',
-                                execution_id=self.default_execution_id)
-
+        # Animate input_CIM
+        if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
+            self.show_graph(active_items=self.input_CIM,
+                            **self._animate, output_fmt='gif',
+                            execution_id=execution_id)
 
         # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
 

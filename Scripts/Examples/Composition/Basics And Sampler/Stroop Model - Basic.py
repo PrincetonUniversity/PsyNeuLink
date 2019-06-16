@@ -46,7 +46,8 @@ color = [1,0]
 
 Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color},
                  num_trials=2,
-                 termination_processing={TimeScale.TRIAL: WhenFinished(decision)}
+                 termination_processing={TimeScale.TRIAL: WhenFinished(decision)},
+                 animate={'show_cim':True}
                  )
 
 print (Stroop_model.results)
