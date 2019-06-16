@@ -3066,8 +3066,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         run_num = time.run
         trial_num = time.trial
         # MODIFIED 6/15/19 NEW: [JDC]
-        # FIX: REMOVE WHEN TRIAL_NUM FOR controller RUN AFTER IS SAME AS THAT TRIAL RATHER THAN NEXT TRIAL
-        if any(item is self.controller for item in active_items):
+        # FIX: REMOVE WHEN TRIAL_NUM FOR output_CIM & controller RUN AFTER IS SAME AS THAT TRIAL RATHER THAN NEXT TRIAL
+        if any(item in {self.controller, self.output_CIM} for item in active_items):
             trial_num -= 1
         # MODIFIED 6/15/19 END
 
@@ -3314,6 +3314,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     and rcvr is self.controller.objective_mechanism):
                 return
 
+            # Implement rcvr node
             else:
                 # Set rcvr color and penwidth based on node type
                 rcvr_rank = 'same'
@@ -3435,16 +3436,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                color=proj_color, penwidth=proj_width)
                 # # MODIFIED 5/29/19 END
 
-            # loop through senders to implement edges
+            # Implement sender edges
             sndrs = processing_graph[rcvr]
             _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
 
         def _assign_cim_components(g, cims):
 
-            cim_penwidth = str(default_width)
             cim_rank = 'same'
 
             for cim in cims:
+
+                cim_penwidth = str(default_width)
 
                 # ASSIGN CIM NODE ****************************************************************
 
@@ -3543,7 +3545,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             g.edge(cim_proj_label, proc_mech_rcvr_label, label=label,
                                    color=proj_color, penwidth=proj_width)
 
-                # Projections from OUTPUT nodes to input_CIM
+                # Projections from OUTPUT nodes to output_CIM
                 if cim is self.output_CIM:
                     # Construct edge name
                     for input_state in self.output_CIM.input_states:
@@ -3569,7 +3571,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proc_mech_sndr_label = output_mech_label
 
                             # Render Projection
-                            if any(item in active_items for item in {proj, proj.sender.owner}):
+                            # # MODIFIED 6/15/19 OLD:
+                            # if any(item in active_items for item in {proj, proj.sender.owner}):
+                            # MODIFIED 6/15/19 NEW: [JDC]
+                            if any(item in active_items for item in {proj, proj.receiver.owner}):
+                            # MODIFIED 6/15/19 END
                                 if active_color is BOLD:
                                     proj_color = default_node_color
                                 else:
@@ -3852,13 +3858,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #         self.scheduler_processing.get_clock(execution_id).time.trial >=self._animate_num_trials):
             #     return
             # MODIFIED 6/15/19 NEW: [JDC]
-            # FIX: REVERT TO OLD WHEN TRIAL_NUM FOR controller RUN AFTER IS SAME AS THAT TRIAL RATHER THAN NEXT TRIAL
+            # FIX: REVERT TO OLD WHEN TRIAL_NUM FOR output_CIM and controller RUN AFTER IS SAME AS THAT TRIAL RATHER
+            #  THAN NEXT TRIAL
             if self.scheduler_processing.get_clock(execution_id).time.run >= self._animate_num_runs:
                 return
             # If controller is run at end of trial, trial number has already been incremented, so add 1
             if (show_controller and
                     self.controller_mode==AFTER and
-                    any(item is self.controller for item in active_items)):
+                    any(item in {self.controller, self.output_CIM} for item in active_items)):
                 trial_thresh = self._animate_num_trials + 1
             else:
                 trial_thresh = self._animate_num_trials
@@ -4153,17 +4160,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, input_nodes)
             no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, input_nodes)
 
-        # # Animate input_CIM
-        # # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
-        # #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
-        # execution_phase_buffer = self.parameters.context.get(execution_id).execution_phase
-        # self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-        # if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
-        #     self.show_graph(active_items=self.input_CIM,
-        #                     **self._animate, output_fmt='gif',
-        #                     execution_id=execution_id)
-        # self.parameters.context.get(execution_id).execution_phase = execution_phase_buffer
-        # # FIX: END
+        # Animate input_CIM
+        # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
+        #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
+        execution_phase_buffer = self.parameters.context.get(execution_id).execution_phase
+        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
+            self._component_animation_execution_count += 1
+            self.show_graph(active_items=self.input_CIM,
+                            **self._animate, output_fmt='gif',
+                            execution_id=execution_id)
+        self.parameters.context.get(execution_id).execution_phase = execution_phase_buffer
+        # FIX: END
 
         # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
 
@@ -4492,17 +4500,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_with_pruned_args(call_after_pass, execution_context=execution_id)
 
 
-        # # Animate output_CIM
-        # # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
-        # #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
-        # # execution_phase_buffer = self.parameters.context.get(execution_id).execution_phase
-        # # self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-        # if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
-        #     self.show_graph(active_items=self.output_CIM,
-        #                     **self._animate, output_fmt='gif',
-        #                     execution_id=execution_id)
-        # # self.parameters.context.get(execution_id).execution_phase = execution_phase_buffer
-        # # FIX: END
+        # Animate output_CIM
+        # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
+        #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
+        # execution_phase_buffer = self.parameters.context.get(execution_id).execution_phase
+        # self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
+            self._component_animation_execution_count += 1
+            self.show_graph(active_items=self.output_CIM,
+                            **self._animate, output_fmt='gif',
+                            execution_id=execution_id)
+        # self.parameters.context.get(execution_id).execution_phase = execution_phase_buffer
+        # FIX: END
 
 
         # Restore execution_context to state entry of execute method
