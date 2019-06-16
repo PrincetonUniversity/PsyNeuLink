@@ -427,6 +427,7 @@ class LLVMBuilderContext:
 
         if "force_runs" in debug_env:
             num = int(debug_env["force_runs"]) if debug_env["force_runs"] else 1
+            runs_ptr = builder.alloca(runs_ptr.type.pointee)
             builder.store(runs_ptr.type.pointee(num), runs_ptr)
 
         # Allocate and initialize condition structure
@@ -485,8 +486,7 @@ class LLVMBuilderContext:
         builder.position_at_end(exit_block)
 
         # Store the number of executed iterations
-        if "restrict_runs" not in debug_env:
-            builder.store(builder.load(iter_ptr), runs_ptr)
+        builder.store(builder.load(iter_ptr), runs_ptr)
 
         builder.ret_void()
 
