@@ -400,7 +400,7 @@ class KohonenLearningMechanism(LearningMechanism):
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         variable = variable.tolist()
-        variable.append(self.matrix.parameters.value.get(execution_id).tolist())
+        variable.append(self.matrix.parameters.value._get(execution_id).tolist())
         return variable
 
     def _execute(self,
@@ -440,9 +440,9 @@ class KohonenLearningMechanism(LearningMechanism):
 
         super()._update_output_states(execution_id, runtime_params, context)
 
-        if self.parameters.context.get(execution_id).composition is not None:
+        if self.parameters.context._get(execution_id).composition is not None:
             self.learned_projection.execute(execution_id=execution_id, context=ContextFlags.LEARNING)
-            self.learned_projection.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
+            self.learned_projection.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
     @property
     def learned_projection(self):

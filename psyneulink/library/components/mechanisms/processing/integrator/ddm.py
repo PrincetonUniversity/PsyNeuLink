@@ -1124,7 +1124,7 @@ class DDM(ProcessingMechanism_Base):
 
             result = super()._execute(variable, execution_id=execution_id, context=context)
 
-            if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
             return np.array([result[0], [result[1]]])
@@ -1167,11 +1167,13 @@ class DDM(ProcessingMechanism_Base):
     def reinitialize(self, *args, execution_context=None):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
+        execution_id = parse_execution_context(execution_context)
+
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
         if isinstance(self.function, IntegratorFunction):
             new_values = self.function.reinitialize(*args, execution_context=execution_context)
-            self.parameters.value.set(np.array(new_values), execution_context, override=True)
-            self._update_output_states(execution_id=parse_execution_context(execution_context),
+            self.parameters.value._set(np.array(new_values), execution_id, override=True)
+            self._update_output_states(execution_id=execution_id,
                                        context="REINITIALIZING")
 
     def is_finished(self, execution_context=None):

@@ -659,21 +659,21 @@ class LearningMechanismError(Exception):
 
 def _learning_signal_getter(owning_component=None, execution_id=None):
     try:
-        return owning_component.parameters.value.get(execution_id)[0]
+        return owning_component.parameters.value._get(execution_id)[0]
     except (TypeError, IndexError):
         return None
 
 
 def _error_signal_getter(owning_component=None, execution_id=None):
     try:
-        return owning_component.parameters.value.get(execution_id)[1]
+        return owning_component.parameters.value._get(execution_id)[1]
     except (TypeError, IndexError):
         return None
 
 def _learning_mechanism_learning_rate_setter(value, owning_component=None, execution_id=None):
     if hasattr(owning_component, "function") and owning_component.function:
         if hasattr(owning_component.function.parameters, "learning_rate"):
-            owning_component.function.parameters.learning_rate.set(value, execution_id)
+            owning_component.function.parameters.learning_rate._set(value, execution_id)
     return value
 
 class LearningMechanism(AdaptiveMechanism_Base):
@@ -1033,7 +1033,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # delete self.init_args[ERROR_SOURCES]
 
         # # Flag for deferred initialization
-        # self.parameters.context.get(execution_id).initialization_status = ContextFlags.DEFERRED_INIT
+        # self.parameters.context._get(execution_id).initialization_status = ContextFlags.DEFERRED_INIT
         # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         self._learning_rate = learning_rate
@@ -1227,7 +1227,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                  owner=self,
                                                  variable=(OWNER_VALUE,0),
                                                  params=params,
-                                                 reference_value=self.parameters.learning_signal.get(),
+                                                 reference_value=self.parameters.learning_signal._get(),
                                                  modulation=self.modulation,
                                                  # state_spec=self.learning_signal)
                                                  state_spec=learning_signal,
@@ -1296,7 +1296,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterState):
-                error_matrices[i] = error_matrices[i].parameters.value.get(execution_id)
+                error_matrices[i] = error_matrices[i].parameters.value._get(execution_id)
 
         summed_learning_signal = 0
         summed_error_signal = 0
@@ -1315,7 +1315,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             summed_learning_signal += learning_signal
             summed_error_signal += error_signal
 
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
 
         return [summed_learning_signal, summed_error_signal]
