@@ -3814,24 +3814,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if execution_id is NotImplemented:
             execution_id = self.default_execution_id
 
-        if active_items:
-            # # MODIFIED 6/15/19 OLD:
-            # if (self.scheduler_processing.get_clock(execution_id).time.run >= self._animate_num_runs or
-            #         self.scheduler_processing.get_clock(execution_id).time.trial >=self._animate_num_trials):
-            #     return
-            # MODIFIED 6/15/19 NEW: [JDC]
-            # FIX: REVERT TO OLD WHEN TRIAL_NUM FOR controller RUN AFTER IS SAME AS THAT TRIAL RATHER THAN NEXT TRIAL
-            if self.scheduler_processing.get_clock(execution_id).time.run >= self._animate_num_runs:
-                return
-            # If controller is run at end of trial, trial number has already been incremented, so add 1
-            if (show_controller and self.controller_mode==AFTER):
-                trial_thresh = self._animate_num_trials + 1
-            else:
-                trial_thresh = self._animate_num_trials
-            if self.scheduler_processing.get_clock(execution_id).time.trial >= trial_thresh:
-                return
-            # MODIFIED 6/15/19 END
-
         # For backward compatibility
         if 'show_model_based_optimizer' in kwargs:
             show_controller = kwargs['show_model_based_optimizer']
@@ -3843,19 +3825,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if show_dimensions == True:
             show_dimensions = ALL
 
-        if not active_items:
-            active_items = []
-        elif active_items is INITIAL_FRAME:
-            active_items = [INITIAL_FRAME]
-        elif not isinstance(active_items, collections.abc.Iterable):
-            active_items = [active_items]
-        elif not isinstance(active_items, list):
-            active_items = list(active_items)
-        for item in active_items:
-            if not isinstance(item, Component) and item is not INITIAL_FRAME:
-                raise CompositionError(
-                    "PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
-                    format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
+        if active_items:
+            active_items = convert_to_list(active_items)
+            # # MODIFIED 6/15/19 OLD:
+            # if (self.scheduler_processing.get_clock(execution_id).time.run >= self._animate_num_runs or
+            #         self.scheduler_processing.get_clock(execution_id).time.trial >=self._animate_num_trials):
+            #     return
+            # MODIFIED 6/15/19 NEW: [JDC]
+            # FIX: REVERT TO OLD WHEN TRIAL_NUM FOR controller RUN AFTER IS SAME AS THAT TRIAL RATHER THAN NEXT TRIAL
+            if self.scheduler_processing.get_clock(execution_id).time.run >= self._animate_num_runs:
+                return
+            # If controller is run at end of trial, trial number has already been incremented, so add 1
+            if (show_controller and
+                    self.controller_mode==AFTER and
+                    any(item is self.controller for item in active_items)):
+                trial_thresh = self._animate_num_trials + 1
+            else:
+                trial_thresh = self._animate_num_trials
+            if self.scheduler_processing.get_clock(execution_id).time.trial >= trial_thresh:
+                return
+            # MODIFIED 6/15/19 END
+
+            for item in active_items:
+                if not isinstance(item, Component) and item is not INITIAL_FRAME:
+                    raise CompositionError(
+                        "PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
+                        format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
 
         self.active_item_rendered = False
 

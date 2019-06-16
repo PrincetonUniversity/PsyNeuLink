@@ -83,7 +83,7 @@ stim_list_dict = {target_stim: targetFeatures,
                   flanker_stim: flankerFeatures,
                   reward: rewardValues}
 
-# evc_gratton.show_graph(show_controller=True)
+evc_gratton.show_graph(show_controller=True)
 
 evc_gratton.run(inputs=stim_list_dict,
                 animate={'show_controller':True})
