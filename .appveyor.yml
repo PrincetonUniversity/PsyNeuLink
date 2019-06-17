@@ -12,7 +12,7 @@ branches:
 
 environment:
   PYTHONWARNINGS: ignore::DeprecationWarning
-  PATH: '%APPDATA%\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;%PATH%'
+  PATH: '%APPDATA%\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;C:\Program Files (x86)\Graphviz2.38\bin;%PATH%'
   matrix:
   - PYTHON: Python36
     EXTRA_ARGS: -m llvm
@@ -26,7 +26,8 @@ environment:
     PYTORCH: 1.0.1-cp37-cp37m
 
 install:
-  - appveyor-retry choco upgrade graphviz.portable -y
+  - if not exist graphviz-2.38.msi appveyor-retry curl https://graphviz.gitlab.io/_pages/Download/windows/graphviz-2.38.msi -o graphviz-2.38.msi
+  - msiexec.exe /i graphviz-2.38.msi /passive
   - pip --version
   - pip install --user -U pip
   - pip --version
@@ -45,9 +46,8 @@ install:
   - pip install --user -e .[dev]
 
 cache:
-    - '%LOCALAPPDATA%\pip\Cache -> .appveyor.yml'
-    - 'C:\ProgramData\chocolatey\lib -> .appveyor.yml'
-    - 'C:\ProgramData\chocolatey\bin -> .appveyor.yml'
+    - '%LOCALAPPDATA%\pip\Cache'
+    - 'graphviz-2.38.msi'
 
 build: off
 
