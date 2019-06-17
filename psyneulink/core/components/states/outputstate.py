@@ -385,10 +385,12 @@ constructor, the corresponding entries (*VARIABLE* and *FUNCTION*) of an `Output
 dictionary <OutputState_Specification_Dictionary>`, or in the variable spec (2nd) item of a `3-item tuple
 <OutputState_Tuple_Specification>` for the OutputState.
 
+.. _OutputState_Variable:
+
 *OutputState* `variable <OutputState.variable>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, an OutputState uses the first (and usually only) item of the owner Mechanism's `value
+By default, an OutputState uses the first (and often only) item of the owner Mechanism's `value
 <Mechanism_Base.value>` as its `variable <OutputState.variable>`.  However, this can be customized by specifying
 any other item of its `owner <OutputState.owner>`\\s `value <Mechanism_Base.value>`, the full `value
 <Mechanism_Base.value>` itself, other attributes of the `owner <OutputState.owner>`, or any combination of these
@@ -682,9 +684,9 @@ def _parse_output_state_variable(variable, owner, execution_id=None, output_stat
                 owner_param_name = spec[0]
 
             try:
-                return getattr(owner.parameters, owner_param_name).get(execution_id)[spec[1]]
+                return getattr(owner.parameters, owner_param_name)._get(execution_id)[spec[1]]
             except TypeError:
-                if getattr(owner.parameters, owner_param_name).get(execution_id) is None:
+                if getattr(owner.parameters, owner_param_name)._get(execution_id) is None:
                     return None
                 else:
                     # raise OutputStateError("Can't parse variable ({}) for {} of {}".
@@ -705,10 +707,10 @@ def _parse_output_state_variable(variable, owner, execution_id=None, output_stat
                 owner_param_name = spec
 
             try:
-                return getattr(owner.parameters, owner_param_name).get(execution_id)
+                return getattr(owner.parameters, owner_param_name)._get(execution_id)
             except AttributeError:
                 try:
-                    return getattr(owner.function.parameters, owner_param_name).get(execution_id)
+                    return getattr(owner.function.parameters, owner_param_name)._get(execution_id)
                 except AttributeError:
                     raise OutputStateError(
                         "Can't parse variable ({}) for {} of {}".format(
@@ -1237,7 +1239,7 @@ class OutputState(State_Base):
         if variable is None:
             # fall back to specified item(s) of owner's value
             try:
-                variable = self.parameters.variable.get(execution_id)
+                variable = self.parameters.variable._get(execution_id)
             except ComponentError:
                 variable = None
 
@@ -1492,7 +1494,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     for state in owner._output_states:
         # Assign True for owner's primary OutputState and the value has not already been set in OutputState constructor
         if state.require_projection_in_composition is None and owner.output_state == state:
-            state.parameters.require_projection_in_composition.set(True, override=True)
+            state.parameters.require_projection_in_composition._set(True, override=True)
 
     return state_list
 
@@ -1521,8 +1523,7 @@ class StandardOutputStates():
     output_state_dicts : list of dicts
         list of dictionaries specifying OutputStates for the Component specified by `owner`
 
-    indices : PRIMARY,
-    SEQUENTIAL, list of ints
+    indices : PRIMARY, SEQUENTIAL, list of ints
         specifies how to assign the (OWNER_VALUE, int) entry for each dict listed in `output_state_dicts`;
 
         The effects of each value of indices are as follows:

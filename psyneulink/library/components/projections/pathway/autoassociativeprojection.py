@@ -112,29 +112,29 @@ class AutoAssociativeError(Exception):
 
 
 def _matrix_getter(owning_component=None, execution_id=None):
-    return owning_component.owner_mech.parameters.matrix.get(execution_id)
+    return owning_component.owner_mech.parameters.matrix._get(execution_id)
 
 
 def _matrix_setter(value, owning_component=None, execution_id=None):
-    owning_component.owner_mech.parameters.matrix.set(value, execution_id)
+    owning_component.owner_mech.parameters.matrix._set(value, execution_id)
     return value
 
 
 def _auto_getter(owning_component=None, execution_id=None):
-    return owning_component.owner_mech.parameters.auto.get(execution_id)
+    return owning_component.owner_mech.parameters.auto._get(execution_id)
 
 
 def _auto_setter(value, owning_component=None, execution_id=None):
-    owning_component.owner_mech.parameters.auto.set(value, execution_id)
+    owning_component.owner_mech.parameters.auto._set(value, execution_id)
     return value
 
 
 def _hetero_getter(owning_component=None, execution_id=None):
-    return owning_component.owner_mech.parameters.hetero.get(execution_id)
+    return owning_component.owner_mech.parameters.hetero._get(execution_id)
 
 
 def _hetero_setter(value, owning_component=None, execution_id=None):
-    owning_component.owner_mech.parameters.hetero.set(value, execution_id)
+    owning_component.owner_mech.parameters.hetero._set(value, execution_id)
     return value
 
 
@@ -329,7 +329,7 @@ class AutoAssociativeProjection(MappingProjection):
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
 
         if context==ContextFlags.LEARNING:
-            self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
+            self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
         super()._update_parameter_states(execution_id, runtime_params, context)
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech

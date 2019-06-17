@@ -547,7 +547,7 @@ class BayesGLM(LearningFunction):
 
         '''
 
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             self.initialize_priors()
 
         # # MODIFIED 10/26/18 OLD:
@@ -577,7 +577,7 @@ class BayesGLM(LearningFunction):
             context
         )
         predictors = variable[0]
-        dependent_vars = variable[1]
+        dependent_vars = variable[1].astype(float)
 
         # online update rules as per the given reference
         Lambda_n = (predictors.T @ predictors) + Lambda_prior
@@ -587,15 +587,15 @@ class BayesGLM(LearningFunction):
             + (mu_prior.T @ Lambda_prior @ mu_prior) \
             - (mu_n.T @ Lambda_n @ mu_n)
 
-        self.parameters.Lambda_prior.set(Lambda_prior, execution_id)
-        self.parameters.mu_prior.set(mu_prior, execution_id)
-        self.parameters.gamma_shape_prior.set(gamma_shape_prior, execution_id)
-        self.parameters.gamma_size_prior.set(gamma_size_prior, execution_id)
+        self.parameters.Lambda_prior._set(Lambda_prior, execution_id)
+        self.parameters.mu_prior._set(mu_prior, execution_id)
+        self.parameters.gamma_shape_prior._set(gamma_shape_prior, execution_id)
+        self.parameters.gamma_size_prior._set(gamma_size_prior, execution_id)
 
-        self.parameters.Lambda_n.set(Lambda_n, execution_id)
-        self.parameters.mu_n.set(mu_n, execution_id)
-        self.parameters.gamma_shape_n.set(gamma_shape_n, execution_id)
-        self.parameters.gamma_size_n.set(gamma_size_n, execution_id)
+        self.parameters.Lambda_n._set(Lambda_n, execution_id)
+        self.parameters.mu_n._set(mu_n, execution_id)
+        self.parameters.gamma_shape_n._set(gamma_shape_n, execution_id)
+        self.parameters.gamma_size_n._set(gamma_size_n, execution_id)
 
         # # TEST PRINT:
         # print(f'MEAN WEIGHTS FOR BayesGLM:\n{mu_n}')
@@ -1370,15 +1370,15 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
 
 def _activation_input_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.variable.get(execution_id)[LEARNING_ACTIVATION_INPUT]
+    return owning_component.parameters.variable._get(execution_id)[LEARNING_ACTIVATION_INPUT]
 
 
 def _activation_output_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.variable.get(execution_id)[LEARNING_ACTIVATION_OUTPUT]
+    return owning_component.parameters.variable._get(execution_id)[LEARNING_ACTIVATION_OUTPUT]
 
 
 def _error_signal_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.variable.get(execution_id)[LEARNING_ERROR_OUTPUT]
+    return owning_component.parameters.variable._get(execution_id)[LEARNING_ERROR_OUTPUT]
 
 
 
@@ -2070,7 +2070,7 @@ class BackPropagation(LearningFunction):
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
         if error_matrix is None:
-            if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
                 error_matrix = np.zeros(
                     (len(variable[LEARNING_ACTIVATION_OUTPUT]), len(variable[LEARNING_ERROR_OUTPUT]))
                 )
@@ -2082,7 +2082,7 @@ class BackPropagation(LearningFunction):
                 raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
                                     format(self.__class__.__name__, owner_string))
 
-        self.parameters.error_matrix.set(error_matrix, execution_id, override=True)
+        self.parameters.error_matrix._set(error_matrix, execution_id, override=True)
         # self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # Manage learning_rate

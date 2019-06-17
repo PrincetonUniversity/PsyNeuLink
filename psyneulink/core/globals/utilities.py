@@ -933,11 +933,7 @@ def type_match(value, value_type):
     if value_type is None:
         return None
     if value_type is type(None):
-        # # MODIFIED 6/9/17 OLD:
-        # raise UtilitiesError("PROGRAM ERROR: template provided to type_match for {} is \'None\'".format(value))
-        # MODIFIED 6/9/17 NEW:
         return value
-        # MODIFIED 6/9/17 END
     raise UtilitiesError("Type of {} not recognized".format(value_type))
 
 def get_value_from_array(array):
@@ -1424,6 +1420,8 @@ def insert_list(list1, position, list2):
 def convert_to_list(l):
     if isinstance(l, list):
         return l
+    elif isinstance(l, set):
+        return list(l)
     else:
         return [l]
 
@@ -1484,7 +1482,7 @@ def _get_arg_from_stack(arg_name:str):
     return arg_val
 
 
-_unused_args_sig_cache = {}
+_unused_args_sig_cache = weakref.WeakKeyDictionary()
 
 
 def prune_unused_args(func, args=None, kwargs=None):

@@ -327,7 +327,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
         # Just return current input (for validation).
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable
 
         previous_value = np.array(self.get_previous_value(execution_id))
@@ -343,7 +343,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         previous_value.append(variable)
 
-        self.parameters.previous_value.set(previous_value, execution_id)
+        self.parameters.previous_value._set(previous_value, execution_id)
         return self.convert_output_type(previous_value)
 
 
@@ -376,14 +376,15 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
     .. _ContentAddressableMemory:
 
-    Implement a configurable, dictionary-style storage and retrieval of key-value pairs, in which storage is determined
-    by `storage_prob <ContentAddressableMemory.storage_prob>`, and retrieval of items is determined by
-    `distance_function <ContentAddressableMemory.distance_function>`, `selection_function
+    Implement a configurable, dictionary-style storage and retrieval of key-value pairs, in which storage
+    is determined by `storage_prob <ContentAddressableMemory.storage_prob>`, and retrieval of items is
+    determined by `distance_function <ContentAddressableMemory.distance_function>`, `selection_function
     <ContentAddressableMemory.selection_function>`, and `retrieval_prob <ContentAddressableMemory.retrieval_prob>`.
-    Keys and values may have different lengths, but all keys must be the same length. Duplicate keys can be allowed,
-    disallowed, or overwritten using `duplicate_keys <ContentAddressableMemory.duplicate_keys>`), and selection among
-    duplicate keys or ones indistinguishable by the `distance_function <ContentAddressableMemory.distance_function>`
-    can be specified using `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`.
+    Keys and values may have different lengths, and values may vary in length from entry to entry, but all keys
+    must be the same length. Duplicate keys can be allowed, disallowed, or overwritten using `duplicate_keys
+    <ContentAddressableMemory.duplicate_keys>`), and how selection is made among duplicate keys or ones
+    indistinguishable by the `distance_function <ContentAddressableMemory.distance_function>` can be specified
+    using `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`.
 
     The class also provides methods for directly retrieving an entry (`get_memory
     <ContentAddressableMemory.get_memory>`), and adding (`add_to_memory <ContentAddressableMemory.add_to_memory>`)
@@ -395,10 +396,10 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     ---------
 
     An item is stored and retrieved as a 2d array containing a key-value pair ([[key][value]]).  A 3d array of such
-    pairs can be assigned to the **initialzer** argument of the ContentAddressableMemory's constructor, or in
-    a call to its `reinitialize <ContentAddressableMemory.reinitialize>` method.  The current contents of the memory
-    can be inspected using the `memory <ContentAddressableMemory.memory>` attribute, which returns a list containing
-    the current entries, each as a 2 item list containing a key-value pair.
+    pairs can be used to initialize the contents of memory by providing it in the **initialzer** argument of the
+    ContentAddressableMemory's constructor, or in a call to its `reinitialize  <ContentAddressableMemory.reinitialize>`
+    method.  The current contents of the memory can be inspected using the `memory <ContentAddressableMemory.memory>`
+    attribute, which returns a list containing the current entries, each as a 2 item list containing a key-value pair.
 
     .. _ContentAddressableMemory_Execution:
 
@@ -418,8 +419,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
       <ContentAddressableMemory.distance_function>` and `selection_function
       <ContentAddressableMemory.selection_function>`.  The `distance_function
       <ContentAddressableMemory.distance_function>` generates a list of distances of each key in memory from the
-      one in the call;  the `selection_function <ContentAddressableMemory.selection_function>` then determines which to
-      select ones for consideration.  If more than one entry from memory is identified, `equidistant_keys_select
+      one in the call;  the `selection_function <ContentAddressableMemory.selection_function>` then determines which
+      to select ones for consideration.  If more than one entry from memory is identified, `equidistant_keys_select
       <ContentAddressableMemory.equidistant_keys_select>` is used to determine which to retrieve.  If no retrieval
       occurs, an appropriately shaped zero-valued array is assigned as the retrieved memory (and returned by the
       `function <ContentAddressableMemory.function>`.
@@ -518,21 +519,23 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         probability of retrieiving a value from `memory <ContentAddressableMemory.memory>`.
 
     storage_prob : float in interval [0,1]
-        probability of adding `variable <ContentAddressableMemory.variable>` to `memory <ContentAddressableMemory.memory>`.
+        probability of adding `variable <ContentAddressableMemory.variable>` to `memory
+        <ContentAddressableMemory.memory>`.
 
     rate : float or 1d array
-        value applied multiplicatively to key (first item of `variable <ContentAddressableMemory.variable>`) before storing in `memory
-        <ContentAddressableMemory.memory>` (see `rate <Stateful_Rate>` for additional details).
+        value applied multiplicatively to key (first item of `variable <ContentAddressableMemory.variable>`) before
+        storing in `memory <ContentAddressableMemory.memory>` (see `rate <Stateful_Rate>` for additional details).
 
     noise : float, 1d array or Function
-        value added to key (first item of `variable <ContentAddressableMemory.variable>`) before storing in `memory <ContentAddressableMemory.memory>`
-        (see `noise <Stateful_Noise>` for additional details).
+        value added to key (first item of `variable <ContentAddressableMemory.variable>`) before storing in
+        `memory <ContentAddressableMemory.memory>` (see `noise <Stateful_Noise>` for additional details).
 
     initializer : 3d array
-        initial set of entries for `memory <ContentAddressableMemory.memory>`;  each entry is a 2d array with a key-value pair.
+        initial set of entries for `memory <ContentAddressableMemory.memory>`; each is a 2d array with a key-value pair.
 
     memory : list
-        list of key-value pairs containing entries in ContentAddressableMemory:  [[[key 1], [value 1]], [[key 2], value 2]]...]
+        list of key-value pairs containing entries in ContentAddressableMemory:
+        [[[key 1], [value 1]], [[key 2], value 2]]...]
 
     distance_function : Distance or function : default Distance(metric=COSINE)
         function used during retrieval to compare the first item in `variable <ContentAddressableMemory.variable>`
@@ -543,7 +546,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         <ContentAddressableMemory.distance_function>` and select the item(s) to return.
 
     previous_value : 1d array
-        state of the `memory <ContentAddressableMemory.memory>` prior to storing `variable <ContentAddressableMemory.variable>` in the current call.
+        state of the `memory <ContentAddressableMemory.memory>` prior to storing `variable
+        <ContentAddressableMemory.variable>` in the current call.
 
     duplicate_keys : bool | OVERWRITE
         determines whether entries with duplicate keys are allowed in `memory <ContentAddressableMemory.memory>`.
@@ -738,8 +742,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         if self.previous_value.size != 0:
-            self.parameters.key_size.set(len(self.previous_value[KEYS][0]))
-            self.parameters.val_size.set(len(self.previous_value[VALS][0]))
+            self.parameters.key_size._set(len(self.previous_value[KEYS][0]))
+            self.parameters.val_size._set(len(self.previous_value[VALS][0]))
 
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
@@ -1047,11 +1051,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         Clears the memory in `previous_value <ContentAddressableMemory.previous_value>`.
 
-        If an argument is passed into reinitialize or if the `initializer <ContentAddressableMemory.initializer>` attribute contains a
-        value besides [], then that value is used to start the new memory in `previous_value <ContentAddressableMemory.previous_value>`.
-        Otherwise, the new `previous_value <ContentAddressableMemory.previous_value>` memory starts out empty.
+        If an argument is passed into reinitialize or if the `initializer <ContentAddressableMemory.initializer>`
+        attribute contains a value besides [], then that value is used to start the new memory in `previous_value
+        <ContentAddressableMemory.previous_value>`. Otherwise, the new `previous_value
+        <ContentAddressableMemory.previous_value>` memory starts out empty.
 
-        `value <ContentAddressableMemory.value>` takes on the same value as  `previous_value <ContentAddressableMemory.previous_value>`.
+        `value <ContentAddressableMemory.value>` takes on the same value as
+        `previous_value <ContentAddressableMemory.previous_value>`.
         """
 
         # no arguments were passed in -- use current values of initializer attributes
@@ -1123,13 +1129,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # and return current value (variable[1]) for validation.
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return variable
 
         # Set key_size and val_size if this is the first entry
         if len(self.get_previous_value(execution_id)[KEYS]) == 0:
-            self.parameters.key_size.set(len(key), execution_id)
-            self.parameters.val_size.set(len(val), execution_id)
+            self.parameters.key_size._set(len(key), execution_id)
+            self.parameters.val_size._set(len(val), execution_id)
 
         # Retrieve value from current dict with key that best matches key
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
@@ -1138,7 +1144,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_STATE
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
-            memory = [[0]* self.parameters.key_size.get(execution_id), [0]* self.parameters.val_size.get(execution_id)]
+            memory = [[0]* self.parameters.key_size._get(execution_id), [0]* self.parameters.val_size._get(execution_id)]
         # Store variable to dict:
         if noise:
             key += noise
@@ -1165,16 +1171,17 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     @tc.typecheck
     def _validate_key(self, key:tc.any(list, np.ndarray), execution_id):
         # Length of key must be same as that of existing entries (so it can be matched on retrieval)
-        if len(key) != self.parameters.key_size.get(execution_id):
+        if len(key) != self.parameters.key_size._get(execution_id):
             raise FunctionError(f"Length of 'key' ({key}) to store in {self.__class__.__name__} ({len(key)}) "
-                                f"must be same as others in the dict ({self.parameters.key_size.get(execution_id)})")
+                                f"must be same as others in the dict ({self.parameters.key_size._get(execution_id)})")
 
     @tc.typecheck
     def get_memory(self, query_key:tc.any(list, np.ndarray), execution_id=None):
         """get_memory(query_key, execution_id=None)
 
-        Retrieve memory from `memory <ContentAddressableMemory.memory>` based on `distance_function <ContentAddressableMemory.distance_function>` and
-        `selection_function <ContentAddressableMemory.selection_function>`.
+        Retrieve memory from `memory <ContentAddressableMemory.memory>` based on `distance_function
+        <ContentAddressableMemory.distance_function>` and `selection_function
+        <ContentAddressableMemory.selection_function>`.
 
         Arguments
         ---------
@@ -1218,7 +1225,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                             for other in indices_of_selected_items[1:])):
                 warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of ' \
                                   f'{self.owner.name} even though {repr("duplicate_keys")} is False')
-                return [[0]* self.parameters.key_size.get(execution_id), [0]* self.parameters.val_size.get(execution_id)]
+                return [[0]* self.parameters.key_size._get(execution_id),
+                        [0]* self.parameters.val_size._get(execution_id)]
             if self.equidistant_keys_select == RANDOM:
                 index_of_selected_item = choice(indices_of_selected_items)
             elif self.equidistant_keys_select == OLDEST:
@@ -1288,7 +1296,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         if len(d[KEYS]) > self.max_entries:
             d = np.delete(d, [KEYS], axis=1)
 
-        self.parameters.previous_value.set(d,execution_id)
+        self.parameters.previous_value._set(d,execution_id)
         self._memory = d
 
         return storage_succeeded
@@ -1339,7 +1347,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                         memory_keys = np.delete(self._memory[KEYS],j,axis=0)
                         memory_vals = np.delete(self._memory[VALS],j,axis=0)
                         self._memory = np.array([list(memory_keys), list(memory_vals)])
-                        self.parameters.previous_value.set(self._memory, execution_id)
+                        self.parameters.previous_value._set(self._memory, execution_id)
 
     def _parse_memories(self, memories, method, execution_id=None):
         '''Parse passing of single vs. multiple memories, validate memories, and return ndarray'''
