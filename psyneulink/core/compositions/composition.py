@@ -724,6 +724,7 @@ NUM_TRIALS = 'num_trials'
 NUM_RUNS = 'num_Runs'
 UNIT = 'unit'
 DURATION = 'duration'
+MOVIE_DIR = 'movie_dir'
 MOVIE_NAME = 'movie_name'
 SAVE_IMAGES = 'save_images'
 SHOW = 'show'
@@ -2799,7 +2800,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # here = path.abspath(path.dirname(__file__))
             # self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " gifs")
             # here = path.abspath(root_dir)
-            self._animate_directory = root_dir + '/../show_graph output/GIFs/' + self.name # + " gifs"
+            default_dir = root_dir + '/../show_graph output/GIFs/' + self.name # + " gifs"
             # try:
             #     rmtree(self._animate_directory)
             # except:
@@ -2810,6 +2811,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
             self._animate_simulations = self._animate.pop(SIMULATIONS, False)
             self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
+            self._animation_directory = self._animate.pop(MOVIE_DIR, default_dir)
             self._save_images = self._animate.pop(SAVE_IMAGES, False)
             self._show_animation = self._animate.pop(SHOW, False)
             if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
@@ -2828,6 +2830,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not isinstance(self._animate_simulations, bool):
                 raise SystemError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for {repr('show_graph')} "
                                   f"method of {self.name} ({self._animate_num_trials}) must a boolean.")
+            if not isinstance(self._animation_directory, str):
+                raise SystemError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
+                                  f"method of {self.name} ({self._animation_directory}) must be a string.")
             if not isinstance(self._movie_filename, str):
                 raise SystemError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
                                   f"method of {self.name} ({self._movie_filename}) must be a string.")
@@ -3108,9 +3113,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         G.attr(fontsize='14')
         index = repr(self._component_animation_execution_count)
         image_filename = '-'.join([repr(run_num), repr(trial_num), index])
-        image_file = self._animate_directory + '/' + image_filename + '.gif'
+        image_file = self._animation_directory + '/' + image_filename + '.gif'
         G.render(filename=image_filename,
-                 directory=self._animate_directory,
+                 directory=self._animation_directory,
                  cleanup=True,
                  # view=True
                  )
@@ -4665,6 +4670,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                   are animated; if it is greater than the number of trials being run, only the number being run are
                   animated.
 
+                * *MOVIE_DIR*: str (default=project root dir) -- specifies the directdory to be used for the movie file.
+
                 * *MOVIE_NAME*: str (default=\\ `name <System.name>` + 'movie') -- specifies the name to be used for
                   the movie file; it is automatically appended with '.gif'.
 
@@ -4948,7 +4955,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if self._animate is not False:
             # Save list of gifs in self._animation as movie file
-            movie_path = self._animate_directory + '/' + self._movie_filename
+            movie_path = self._animation_directory + '/' + self._movie_filename
             self._animation[0].save(fp=movie_path,
                                     format='GIF',
                                     save_all=True,
