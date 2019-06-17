@@ -37,7 +37,7 @@ pathways = [target_control_pathway, flanker_control_pathway, target_automatic_pa
             flanker_automatic_pathway]
 
 # Composition
-evc_gratton = Composition(name="EVCGratton")
+evc_gratton = Composition(name="EVC Gratton")
 evc_gratton.add_node(Decision, required_roles=NodeRole.OUTPUT)
 for path in pathways:
     evc_gratton.add_linear_processing_pathway(path)

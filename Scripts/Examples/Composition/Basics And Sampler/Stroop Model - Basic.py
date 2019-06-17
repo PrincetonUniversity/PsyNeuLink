@@ -31,7 +31,7 @@ decision = DDM(name='DECISION',
 decision_pathway = [output, decision]
 
 # Construct the Composition:
-Stroop_model = Composition(name='Stroop Model')
+Stroop_model = Composition(name='Stroop Model - Basic')
 Stroop_model.add_linear_processing_pathway(color_pathway)
 Stroop_model.add_linear_processing_pathway(word_pathway)
 Stroop_model.add_linear_processing_pathway(task_color_pathway)

@@ -2794,9 +2794,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._component_animation_execution_count = None
 
         if isinstance(self._animate, dict):
+            from psyneulink._version import root_dir
             # Assign directory for animation files
-            here = path.abspath(path.dirname(__file__))
-            self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " gifs")
+            # here = path.abspath(path.dirname(__file__))
+            # self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " gifs")
+            # here = path.abspath(root_dir)
+            self._animate_directory = root_dir + '/../show_graph output/GIFs/' + self.name # + " gifs"
             # try:
             #     rmtree(self._animate_directory)
             # except:

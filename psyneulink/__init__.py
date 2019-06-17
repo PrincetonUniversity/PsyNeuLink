@@ -35,6 +35,10 @@ _pnl_global_names = [
     'primary_registries',
 ]
 
+# from os import path
+# global root_dir
+# root_dir = path.abspath(path.dirname(__file__))
+
 __all__ = list(_pnl_global_names)
 __all__.extend(core.__all__)
 __all__.extend(library.__all__)
