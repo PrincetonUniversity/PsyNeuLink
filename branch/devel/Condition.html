@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.5.3.2+203.gd378aa6 documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.5.3.2+204.gdd44135 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+203.gd378aa6',
+              VERSION:'0.5.3.2+204.gdd44135',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+203
+                0.5.3.2+204
               </div>
             
           
@@ -381,6 +381,12 @@ satisfied when all of the specified Components have set their <a class="referenc
 <div><ul class="simple">
 <li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtTrialStart" title="psyneulink.core.scheduling.condition.AtTrialStart"><code class="xref any py py-class docutils literal"><span class="pre">AtTrialStart</span></code></a>
 satisfied at the beginning of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> (<a class="reference internal" href="#psyneulink.core.scheduling.condition.AtPass" title="psyneulink.core.scheduling.condition.AtPass"><code class="xref any py py-class docutils literal"><span class="pre">AtPass(0)</span></code></a>)</li>
+<li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtTrialNStart" title="psyneulink.core.scheduling.condition.AtTrialNStart"><code class="xref any py py-class docutils literal"><span class="pre">AtTrialNStart</span></code></a>
+satisfied on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> 0 of the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> counted using ‘TimeScale`</li>
+<li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtRunStart" title="psyneulink.core.scheduling.condition.AtRunStart"><code class="xref any py py-class docutils literal"><span class="pre">AtRunStart</span></code></a>
+satisfied at the beginning of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtRunNStart" title="psyneulink.core.scheduling.condition.AtRunNStart"><code class="xref any py py-class docutils literal"><span class="pre">AtRunNStart</span></code></a>
+satisfied on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> 0 of the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> counted using ‘TimeScale`</li>
 </ul>
 </div></blockquote>
 </div>
@@ -819,21 +825,6 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="class">
-<dt id="psyneulink.core.scheduling.condition.AtTrialStart">
-<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtTrialStart</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTrialStart" title="Permalink to this definition">¶</a></dt>
-<dd><p>Satisfied when:</p>
-<blockquote>
-<div><ul class="simple">
-<li>at the beginning of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a></li>
-</ul>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li>identical to <a class="reference internal" href="#psyneulink.core.scheduling.condition.AtPass" title="psyneulink.core.scheduling.condition.AtPass"><code class="xref any py py-class docutils literal"><span class="pre">AtPass(0)</span></code></a></li>
-</ul>
-</dd></dl>
-
-<dl class="class">
 <dt id="psyneulink.core.scheduling.condition.AtPass">
 <em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtPass</code><span class="sig-paren">(</span><em>n</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtPass" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -859,6 +850,44 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 <li>Counts of TimeScales are zero-indexed (that is, the first ‘PASS’ is pass 0, the second ‘PASS’ is 1, etc.);
 so, <code class="xref any docutils literal"><span class="pre">AtPass(1)</span></code> is satisfied when a single <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> 0) has occurred, and <code class="xref any docutils literal"><span class="pre">AtPass(2)</span></code> is satisfied
 when two <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es have occurred (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> 0 and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> 1), etc..</li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.scheduling.condition.AtRunStart">
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtRunStart</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRunStart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li>at the beginning of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a></li>
+</ul>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>identical to <a class="reference internal" href="#psyneulink.core.scheduling.condition.AtTrial" title="psyneulink.core.scheduling.condition.AtTrial"><code class="xref any py py-class docutils literal"><span class="pre">AtTrial(0)</span></code></a></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.scheduling.condition.AtRunNStart">
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtRunNStart</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRunNStart" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> on which the Condition is satisfied</td>
+</tr>
+</tbody>
+</table>
+<p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li>on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> 0 of the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> counted using ‘TimeScale`</li>
+</ul>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>identical to <code class="xref any docutils literal"><span class="pre">All(AtTrial(0),</span> <span class="pre">AtRun(n))</span></code></li>
 </ul>
 </dd></dl>
 
@@ -920,8 +949,8 @@ so, <code class="xref any docutils literal"><span class="pre">AtTrial(1)</span><
 </dd></dl>
 
 <dl class="class">
-<dt>
-<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtTrialStart</code></dt>
+<dt id="psyneulink.core.scheduling.condition.AtTrialStart">
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtTrialStart</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTrialStart" title="Permalink to this definition">¶</a></dt>
 <dd><p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
@@ -931,6 +960,33 @@ so, <code class="xref any docutils literal"><span class="pre">AtTrial(1)</span><
 <p class="rubric">Notes</p>
 <ul class="simple">
 <li>identical to <a class="reference internal" href="#psyneulink.core.scheduling.condition.AtPass" title="psyneulink.core.scheduling.condition.AtPass"><code class="xref any py py-class docutils literal"><span class="pre">AtPass(0)</span></code></a></li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.scheduling.condition.AtTrialNStart">
+<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.condition.</code><code class="descname">AtTrialNStart</code><span class="sig-paren">(</span><em>n</em>, <em>time_scale=&lt;TimeScale.RUN: 3&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTrialNStart" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> on which the Condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (default: TimeScale.RUN)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Satisfied when:</p>
+<blockquote>
+<div><ul class="simple">
+<li>on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> 0 of the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> counted using ‘TimeScale`</li>
+</ul>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>identical to All(AtPass(0), AtTrial(n, time_scale))</li>
 </ul>
 </dd></dl>
 
