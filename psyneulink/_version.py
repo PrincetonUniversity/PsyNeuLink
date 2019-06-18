@@ -16,6 +16,7 @@ import re
 import subprocess
 import sys
 
+root_dir = os.path.abspath(os.path.dirname(__file__))
 
 def get_keywords():
     """Get the keywords needed to look up the version information."""

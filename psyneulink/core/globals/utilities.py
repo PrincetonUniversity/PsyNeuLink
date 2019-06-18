@@ -1420,6 +1420,8 @@ def insert_list(list1, position, list2):
 def convert_to_list(l):
     if isinstance(l, list):
         return l
+    elif isinstance(l, set):
+        return list(l)
     else:
         return [l]
 

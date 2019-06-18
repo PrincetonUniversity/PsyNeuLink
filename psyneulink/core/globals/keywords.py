@@ -32,7 +32,7 @@ __all__ = [
     'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION', 'COMBINE_OUTCOME_AND_COST_FUNCTION',
     'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT', 'COMPONENT_INIT',
     'COMPOSITION', 'COMPOSITION_INTERFACE_MECHANISM',
-    'CONDITION', 'CONSTANT', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM',
+    'CONDITION', 'CONDITIONS', 'CONSTANT', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM',
     'CONTROL_PROJECTION', 'CONTROL_PROJECTION_PARAMS', 'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL',
     'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION',
     'COSINE', 'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY',
@@ -654,7 +654,7 @@ DISTANCE_FUNCTION = 'Distance Function'
 
 #endregion
 
-#region ----------------------------------------------    SYSTEM   ----------------------------------------------------
+#region ---------------------------------------    SYSTEM / COMPOSITION   ----------------------------------------------
 
 SYSTEM = "System"
 SCHEDULER = "scheduler"
@@ -667,6 +667,7 @@ RUN = 'run'
 TRIAL = 'trial'
 
 ROLES = 'roles'
+CONDITIONS = 'conditions'
 VALUES = 'values'
 FUNCTIONS = 'functions'
 
@@ -790,6 +791,7 @@ LEARNED_PARAM = 'learned_param'
 LEARNED_PROJECTION = 'learned_projection'
 
 # ControlMechanism / EVCControlMechanism / ObjectiveMechanism
+SIMULATIONS = 'simulations'
 OBJECTIVE_MECHANISM = "objective_mechanism"
 OUTCOME = 'OUTCOME'
 MONITOR_FOR_CONTROL = "monitor_for_control"

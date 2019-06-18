@@ -238,11 +238,9 @@ class Stability(ObjectiveFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        # MODIFIED 6/8/19 NEW: [JDC]
+        # MODIFIED 6/12/19 NEW: [JDC]
         self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
-        # MODIFIED 6/8/19 END
-
-
+        # MODIFIED 6/12/19 END
 
     def _validate_variable(self, variable, context=None):
         """Validates that variable is 1d array
@@ -335,7 +333,7 @@ class Stability(ObjectiveFunction):
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.states.parameterstate import ParameterState
 
-        matrix = self.parameters.matrix.get()
+        matrix = self.parameters.matrix._get()
 
         if isinstance(matrix, MappingProjection):
             matrix = matrix._parameter_states[MATRIX]
@@ -344,7 +342,7 @@ class Stability(ObjectiveFunction):
         else:
             matrix = get_matrix(matrix, size, size)
 
-        self.parameters.matrix.set(matrix)
+        self.parameters.matrix._set(matrix)
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 
@@ -428,9 +426,11 @@ class Stability(ObjectiveFunction):
         # Validate variable and validate params
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
+        # MODIFIED 6/12/19 NEW: [JDC]
         variable = np.array(variable)
         if variable.ndim > 1:
             variable = np.squeeze(variable)
+        # MODIFIED 6/12/19 END
 
         matrix = self.get_current_function_param(MATRIX, execution_id)
 
@@ -1160,7 +1160,7 @@ class Distance(ObjectiveFunction):
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
             # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
-            if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
                 v1 = np.where(v1 == 0, EPSILON, v1)
                 v2 = np.where(v2 == 0, EPSILON, v2)
             # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros

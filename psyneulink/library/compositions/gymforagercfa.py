@@ -127,8 +127,8 @@ class GymForagerCFA(CompositionFunctionApproximator):
     def adapt(self, feature_values, control_allocation, net_outcome, execution_id=None):
         '''Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
         **net_outcome** from **feature_values** and **control_allocation**.'''
-        prediction_vector = self.parameters.prediction_vector.get(execution_id)
-        previous_state = self.parameters.previous_state.get(execution_id)
+        prediction_vector = self.parameters.prediction_vector._get(execution_id)
+        previous_state = self.parameters.previous_state._get(execution_id)
 
         if previous_state is not None:
             # Update regression_weights
@@ -168,7 +168,7 @@ class GymForagerCFA(CompositionFunctionApproximator):
         '''
         predicted_outcome=0
 
-        prediction_vector = self.parameters.prediction_vector.get(execution_id)
+        prediction_vector = self.parameters.prediction_vector._get(execution_id)
 
         count = num_estimates if num_estimates else 1
         for i in range(count):
@@ -178,7 +178,7 @@ class GymForagerCFA(CompositionFunctionApproximator):
             #      OR SHOULD MULTIPLE SAMPLES BE DRAWN AND AVERAGED AT END OF ADAPT METHOD?
             #      I.E., AVERAGE WEIGHTS AND THEN OPTIMIZE OR OTPIMZE FOR EACH SAMPLE OF WEIGHTS AND THEN AVERAGE?
 
-            weights = self.parameters.regression_weights.get(execution_id)
+            weights = self.parameters.regression_weights._get(execution_id)
             net_outcome = 0
 
             for term_label, term_value in vector.items():

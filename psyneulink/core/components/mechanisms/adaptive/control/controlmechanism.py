@@ -407,7 +407,7 @@ def _control_allocation_getter(owning_component=None, execution_id=None):
     return owning_component.modulatory_allocation
 
 def _control_allocation_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.modulatory_allocation.set(np.array(value), execution_id)
+    owning_component.parameters.modulatory_allocation._set(np.array(value), execution_id)
     return value
 
 def _gating_allocation_getter(owning_component=None, execution_id=None):

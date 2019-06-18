@@ -878,8 +878,8 @@ class Log:
                 # IMPLEMENTATION NOTE:  Functions not supported for logging at this time.
                 if isinstance(self.owner, Function):
                     return
-                elif self.owner.parameters.context.get(execution_id).flags:
-                    condition = self.owner.parameters.context.get(execution_id).flags
+                elif self.owner.parameters.context._get(execution_id).flags:
+                    condition = self.owner.parameters.context._get(execution_id).flags
                 else:
                     raise LogError("PROGRAM ERROR: No condition or context specified in call to _log_value for "
                                    "{} and it has not context.flags".format(self.owner.name))
@@ -923,7 +923,7 @@ class Log:
         for entry in entries:
             param = self._get_parameter_from_item_string(entry)
             execution_id = parse_execution_context(execution_context)
-            param._log_value(param.get(execution_id), execution_id, ContextFlags.COMMAND_LINE)
+            param._log_value(param._get(execution_id), execution_id, ContextFlags.COMMAND_LINE)
 
     def get_logged_entries(self, entries=ALL, execution_contexts=NotImplemented, exclude_sims=False):
         from psyneulink.core.globals.parameters import parse_execution_context
@@ -1726,8 +1726,11 @@ class Log:
 class CompositionLog(Log):
     @property
     def all_items(self):
-        return super().all_items + [item.name for item in self.owner.nodes + self.owner.projections] + \
-               [self.owner.controller.name]
+        return (
+            super().all_items
+            + [item.name for item in self.owner.nodes + self.owner.projections]
+            + ([self.owner.controller.name] if self.owner.controller is not None else [])
+        )
 
     def _get_parameter_from_item_string(self, string):
         param = super()._get_parameter_from_item_string(string)
@@ -1764,7 +1767,7 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
                 #                  curr_condition,
                 #                  component.value)
                 # component.log._log_value(value=value, context=context)
-                component.log._log_value(value=component.parameters.value.get(execution_id), condition=curr_condition.name)
+                component.log._log_value(value=component.parameters.value._get(execution_id), condition=curr_condition.name)
 
         for proj in mech.afferents:
             for component in proj.log.loggable_components:
@@ -1775,7 +1778,7 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
                     #                  context,
                     #                  component.value)
                     # component.log._log_value(value, context)
-                    component.log._log_value(value=component.parameters.value.get(execution_id), condition=curr_condition.name)
+                    component.log._log_value(value=component.parameters.value._get(execution_id), condition=curr_condition.name)
 
     # FIX: IMPLEMENT ONCE projections IS ADDED AS ATTRIBUTE OF Composition
     # for proj in composition.projections:
