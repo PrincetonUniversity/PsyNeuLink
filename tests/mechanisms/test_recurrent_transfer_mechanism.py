@@ -505,17 +505,6 @@ class TestRecurrentTransferMechanismMatrix:
             )
         assert "more than 2d" in str(error_text.value)
 
-    def test_recurrent_mech_matrix_none_auto_none(self):
-        for a in [None, 1, [1, 2, 5]]:
-            with pytest.raises(RecurrentTransferError) as error_text:
-                R = RecurrentTransferMechanism(
-                    name='R',
-                    size=3,
-                    matrix=None,
-                    auto=a
-                )
-            assert "failed to produce a suitable matrix" in str(error_text.value)
-
 
 class TestRecurrentTransferMechanismFunction:
 

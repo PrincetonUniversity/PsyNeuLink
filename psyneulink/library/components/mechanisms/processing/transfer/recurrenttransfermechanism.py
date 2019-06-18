@@ -209,6 +209,7 @@ from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.core.scheduling.condition import Condition, TimeScale, WhenFinished
 from psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
+from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
 
 __all__ = [
     'CONVERGENCE', 'EXTERNAL', 'EXTERNAL_INDEX',
@@ -296,6 +297,16 @@ def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, execution
         return None
 
 
+def _get_auto_hetero_from_matrix(matrix):
+    matrix = matrix.copy()
+    auto = np.diag(matrix).copy()
+
+    np.fill_diagonal(matrix, 0)
+    hetero = matrix
+
+    return auto, hetero
+
+
 def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, execution_id=None):
     # KDM 8/3/18: This was attributed to a hack in how auto/hetero were implemented, but this behavior matches
     # the existing behavior. Unsure if this is actually correct though
@@ -310,12 +321,12 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, ex
         pass
 
     if value is not None:
-        temp_matrix = value.copy()
-        owning_component.parameters.auto._set(np.diag(temp_matrix).copy(), execution_id)
-        np.fill_diagonal(temp_matrix, 0)
-        owning_component.parameters.hetero._set(temp_matrix, execution_id)
+        auto, hetero = _get_auto_hetero_from_matrix(value)
+        owning_component.parameters.auto._set(auto, execution_id)
+        owning_component.parameters.hetero._set(hetero, execution_id)
 
     return value
+
 
 def _recurrent_transfer_mechanism_learning_rate_setter(value, owning_component=None, execution_id=None):
     if hasattr(owning_component, "learning_mechanism") and owning_component.learning_mechanism:
@@ -919,7 +930,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  has_recurrent_input_state=False,
                  combination_function:is_function_type=LinearCombination,
                  function=Linear,
-                 matrix=HOLLOW_MATRIX,
+                 matrix=None,
                  auto=None,
                  hetero=None,
                  integrator_mode=False,
@@ -949,14 +960,17 @@ class RecurrentTransferMechanism(TransferMechanism):
         if output_states is None or output_states is RESULT:
             output_states = [RESULT]
 
-        try:
-            self.recurrent_size
-        except:
-            # Defer determination until Component has parsed size of Mechanism's variable
-            self.recurrent_size = None
-
         if isinstance(hetero, (list, np.matrix)):
             hetero = np.array(hetero)
+
+        if isinstance(auto, list):
+            auto = np.array(auto)
+
+        # since removing the default argument matrix=HOLLOW_MATRIX to detect a user setting,
+        # some hidden steps in validate_params that set this case to HOLLOW_MATRIX did not
+        # happen
+        if matrix is AutoAssociativeProjection:
+            matrix = HOLLOW_MATRIX
 
         self._learning_enabled = enable_learning
 
@@ -973,25 +987,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   output_states=output_states,
                                                   params=params,
                                                   )
-
-        # KDM 10/24/18: below is here because of the complex properties that set matrix and auto/hetero
-        # after assignment, auto and hetero would sometimes be None when the matrix is set and valid, and
-        # these values are needed to get the stateful value for matrix
-        # If we can simplify the non-stateful properties of matrix, auto, hetero, we should try to remove this
-        # piece as well
-        try:
-            if auto is None and hetero is None:
-                if isinstance(self.matrix, list):
-                    self.matrix = np.asarray(self.matrix)
-                temp_matrix = self.matrix.copy()
-                self._auto = np.diag(temp_matrix).copy()
-                np.fill_diagonal(temp_matrix, 0)
-                self._hetero = temp_matrix
-
-                params['auto'] = self._auto
-                params['hetero'] = self._hetero
-        except (AttributeError, ValueError):
-            pass
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -1025,7 +1020,10 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _instantiate_defaults(
             self,variable=None,request_set=None,assign_missing=True,target_set=None,default_set=None,context=None):
         """Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item of variable"""
-        self.recurrent_size = self.recurrent_size or len(variable[0])
+        try:
+            self.recurrent_size
+        except AttributeError:
+            self.recurrent_size = len(variable[0])
         super()._instantiate_defaults(variable,request_set,assign_missing,target_set,default_set,context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -1059,6 +1057,12 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 rows = np.array(matrix).shape[0]
                 cols = np.array(matrix).shape[1]
+
+            try:
+                if 'U' in repr(matrix.dtype):
+                    raise RecurrentTransferMechanism("{0} has non-numeric entries".format(matrix))
+            except AttributeError:
+                pass
 
             # Shape of matrix must be square
             if rows != cols:
@@ -1128,18 +1132,48 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         param_keys = self._parameter_states.key_values
 
-        specified_matrix = get_matrix(self.params[MATRIX], rows=self.recurrent_size, cols=self.recurrent_size)
+        matrix = get_matrix(self.defaults.matrix, rows=self.recurrent_size, cols=self.recurrent_size)
+
+        # below implements the rules provided by KAM:
+        # - If auto and hetero but not matrix are specified, the diagonal terms of the matrix are determined by auto and the off-diagonal terms are determined by hetero.
+        # - If auto, hetero, and matrix are all specified, matrix is ignored in favor of auto and hetero.
+        # - If auto and matrix are both specified, the diagonal terms are determined by auto and the off-diagonal terms are determined by matrix. ​
+        # - If hetero and matrix are both specified, the diagonal terms are determined by matrix and the off-diagonal terms are determined by hetero.
+        auto = get_auto_matrix(self.defaults.auto, self.recurrent_size)
+        hetero = get_hetero_matrix(self.defaults.hetero, self.recurrent_size)
+        auto_specified = self.parameters.auto._user_specified
+        hetero_specified = self.parameters.hetero._user_specified
+
+        if auto_specified and hetero_specified:
+            matrix = auto + hetero
+        elif auto_specified:
+            np.fill_diagonal(matrix, 0)
+            matrix = matrix + auto
+        elif hetero_specified:
+            diag = np.diag(matrix)
+            matrix = hetero.copy()
+            np.fill_diagonal(matrix, diag)
+
+        self.parameters.matrix._set(matrix)
 
         # 9/23/17 JDC: DOESN'T matrix arg default to something?
         # If no matrix was specified, then both AUTO and HETERO must be specified
-        if specified_matrix is None and (AUTO not in param_keys or HETERO not in param_keys):
+        if (
+            matrix is None
+            and (
+                AUTO not in param_keys
+                or HETERO not in param_keys
+                or not auto_specified
+                or not hetero_specified
+            )
+        ):
             raise RecurrentTransferError("Matrix parameter ({}) for {} failed to produce a suitable matrix: "
                                          "if the matrix parameter does not produce a suitable matrix, the "
                                          "'auto' and 'hetero' parameters must be specified; currently, either"
                                          "auto or hetero parameter is missing.".format(self.params[MATRIX], self))
 
         if AUTO not in param_keys and HETERO in param_keys:
-            d = np.diagonal(specified_matrix).copy()
+            d = np.diagonal(matrix).copy()
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
                                        name=AUTO,
@@ -1156,7 +1190,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                            format(self.__class__.__name__, self.name))
         if HETERO not in param_keys and AUTO in param_keys:
 
-            m = specified_matrix.copy()
+            m = matrix.copy()
             np.fill_diagonal(m, 0.0)
             self._hetero = m
             state = _instantiate_state(owner=self,
@@ -1227,7 +1261,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.combination_function = None
 
         if self.auto is None and self.hetero is None:
-            self.matrix = specified_matrix
+            self.matrix = matrix
             if self.matrix is None:
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
