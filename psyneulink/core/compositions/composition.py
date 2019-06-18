@@ -2796,8 +2796,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if isinstance(self._animate, dict):
             # Assign directory for animation files
-            here = path.abspath(path.dirname(__file__))
-            self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " gifs")
+            from psyneulink._version import root_dir
+            default_dir = root_dir + '/../show_graph output/GIFs/' + self.name # + " gifs"
             # try:
             #     rmtree(self._animate_directory)
             # except:
@@ -2808,6 +2808,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
             self._animate_simulations = self._animate.pop(SIMULATIONS, False)
             self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
+            self._animation_directory = self._animate.pop(MOVIE_DIR, default_dir)
             self._save_images = self._animate.pop(SAVE_IMAGES, False)
             self._show_animation = self._animate.pop(SHOW, False)
             if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
@@ -2826,6 +2827,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not isinstance(self._animate_simulations, bool):
                 raise SystemError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for {repr('show_graph')} "
                                   f"method of {self.name} ({self._animate_num_trials}) must a boolean.")
+            if not isinstance(self._animation_directory, str):
+                raise SystemError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
+                                  f"method of {self.name} ({self._animation_directory}) must be a string.")
             if not isinstance(self._movie_filename, str):
                 raise SystemError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
                                   f"method of {self.name} ({self._movie_filename}) must be a string.")
@@ -2860,8 +2864,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        use_labels:bool=False,
                        show_headers:bool=False,
                        show_roles:bool=False,
+                       show_conditions:bool=False,
                        system=None,
                        composition=None,
+                       condition:tc.optional(Condition)=None,
                        compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
                        output_fmt:tc.enum('pdf','struct')='pdf'
                        ):
@@ -3106,9 +3112,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         G.attr(fontsize='14')
         index = repr(self._component_animation_execution_count)
         image_filename = '-'.join([repr(run_num), repr(trial_num), index])
-        image_file = self._animate_directory + '/' + image_filename + '.gif'
+        image_file = self._animation_directory + '/' + image_filename + '.gif'
         G.render(filename=image_filename,
-                 directory=self._animate_directory,
+                 directory=self._animation_directory,
                  cleanup=True,
                  # view=True
                  )
@@ -3323,9 +3329,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Implement rcvr node
             else:
+
                 # Set rcvr color and penwidth based on node type
                 rcvr_rank = 'same'
                 node_shape = mechanism_shape
+
+                # Get condition if any associated with rcvr
+                if rcvr in self.scheduler_processing.conditions:
+                    condition = self.scheduler_processing.conditions[rcvr]
+                else:
+                    condition = None
 
                 # Input and Output Node
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
@@ -3400,7 +3413,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if show_node_structure and isinstance(rcvr, Mechanism):
                     g.node(rcvr_label,
-                           rcvr.show_structure(**node_struct_args, node_border=rcvr_penwidth),
+                           rcvr.show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
                            shape=struct_shape,
                            color=rcvr_color,
                            rank=rcvr_rank,
@@ -3620,7 +3633,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             ctlr_label = self._get_graph_node_label(controller, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
-                       controller.show_structure(**node_struct_args, node_border=ctlr_width),
+                       controller.show_structure(**node_struct_args, node_border=ctlr_width,
+                                                 condition=self.controller_condition),
                        shape=struct_shape,
                        color=ctlr_color,
                        penwidth=ctlr_width,
