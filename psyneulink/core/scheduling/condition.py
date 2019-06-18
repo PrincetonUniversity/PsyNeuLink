@@ -264,6 +264,15 @@ six types:
     * `AtTrialStart`
       satisfied at the beginning of a `TRIAL` (`AtPass(0) <AtPass>`)
 
+    * `AtTrialNStart`
+      satisfied on `PASS` 0 of the specified `TRIAL` counted using 'TimeScale`
+
+    * `AtRunStart`
+      satisfied at the beginning of a `RUN`
+
+    * `AtRunNStart`
+      satisfied on `TRIAL` 0 of the specified `RUN` counted using 'TimeScale`
+
 
 .. Condition_Execution:
 
@@ -294,8 +303,8 @@ from psyneulink.core.scheduling.time import TimeScale
 __all__ = [
     'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'AfterNPasses', 'AfterNTimeSteps', 'AfterNTrials', 'AfterPass',
     'AtRun', 'AfterRun', 'AfterNRuns', 'AfterTimeStep', 'AfterTrial', 'All', 'AllHaveRun', 'Always', 'Any',
-    'AtNCalls', 'AtTrialStart','AtPass', 'AtTimeStep', 'AtTrial',
-    'AtTrialStart', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial',
+    'AtNCalls','AtPass', 'AtRunStart', 'AtRunNStart', 'AtTimeStep', 'AtTrial',
+    'AtTrialStart', 'AtTrialNStart', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial',
     'Condition','ConditionError', 'ConditionSet', 'EveryNCalls', 'EveryNPasses',
     'JustRan', 'Never', 'Not', 'NWhen', 'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot'
 ]
@@ -835,37 +844,6 @@ class AfterNTimeSteps(Condition):
         super().__init__(func, n, time_scale)
 
 
-class AtStartPassN(Condition):
-    """AtStartPassN
-
-    Parameters:
-
-        n(int): the `TRIAL` on which the Condition is satisfied, or every trial if n is None.
-
-        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\\ s (default: TimeScale.RUN)
-
-    Satisfied when:
-
-        - on `PASS` 0 of the specified trial counted using 'TimeScale` or every trial if n is None
-
-    """
-    def __init__(self, n=None, time_scale=TimeScale.RUN):
-        def func(n, scheduler=None, execution_context=None):
-            try:
-                if n is None:
-                    return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) == 0
-                else:
-                    return \
-                        (scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) == n
-                         and
-                         scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) == 0)
-
-            except AttributeError as e:
-                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
-
-        super().__init__(func, n)
-
-
 class BeforePass(Condition):
     """BeforePass
 
@@ -1006,37 +984,6 @@ class EveryNPasses(Condition):
         super().__init__(func, n, time_scale)
 
 
-class AtStartTrialN(Condition):
-    """AtStartTrialN
-
-    Parameters:
-
-        n(int): the `TRIAL` on which the Condition is satisfied, or every trial if n is None.
-
-        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\\ s (default: TimeScale.RUN)
-
-    Satisfied when:
-
-        - on `PASS` 0 of the specified trial counted using 'TimeScale` or every trial if n is None
-
-    """
-    def __init__(self, n=None, time_scale=TimeScale.RUN):
-        def func(n, scheduler=None, execution_context=None):
-            try:
-                if n is None:
-                    return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) == 0
-                else:
-                    return \
-                        (scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) == n
-                         and
-                         scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) == 0)
-
-            except AttributeError as e:
-                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
-
-        super().__init__(func, n)
-
-
 class BeforeTrial(Condition):
     """BeforeTrial
 
@@ -1147,37 +1094,6 @@ class AfterNTrials(Condition):
                 raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n, time_scale)
-
-
-class AtStartRunN(Condition):
-    """AtStartRunN
-
-    Parameters:
-
-        n(int): the `RUN` on which the Condition is satisfied, or every `RUN` if n is None.
-
-        time_scale(TimeScale): the TimeScale used as basis for counting `RUN`\\ s (default: TimeScale.RUN)
-
-    Satisfied when:
-
-        - on `TRIAL` 0 of the specified `RUN` counted using 'TimeScale`, or every `RUN` if n is None
-
-    """
-    def __init__(self, n=None, time_scale=TimeScale.RUN):
-        def func(n, scheduler=None, execution_context=None):
-            try:
-                if n is None:
-                    return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale)==0
-                else:
-                    return \
-                        (scheduler.clocks[execution_context].get_total_times_relative(TimeScale.RUN, time_scale) == n
-                         and
-                         scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) == 0)
-
-            except AttributeError as e:
-                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
-
-        super().__init__(func, n)
 
 
 class AtRun(Condition):
@@ -1652,3 +1568,63 @@ class AtTrialStart(AtPass):
 
     def __str__(self):
         return '{0}()'.format(self.__class__.__name__)
+
+
+class AtTrialNStart(All):
+    """AtTrialNStart
+
+    Parameters:
+
+        n(int): the `TRIAL` on which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\\ s (default: TimeScale.RUN)
+
+    Satisfied when:
+
+        - on `PASS` 0 of the specified `TRIAL` counted using 'TimeScale`
+
+    Notes:
+
+        - identical to All(AtPass(0), AtTrial(n, time_scale))
+
+    """
+    def __init__(self, n, time_scale=TimeScale.RUN):
+        return super.__init__(AtPass(0), AtTrial(n, time_scale))
+
+
+class AtRunStart(AtTrial):
+    """AtRunStart
+
+    Satisfied when:
+
+        - at the beginning of a `RUN`
+
+    Notes:
+
+        - identical to `AtTrial(0) <AtTrial>`
+    """
+    def __init__(self):
+        super().__init__(0, time_scale=TimeScale.RUN)
+
+    def __str__(self):
+        return '{0}()'.format(self.__class__.__name__)
+
+
+class AtRunNStart(All):
+    """AtRunNStart
+
+    Parameters:
+
+        n(int): the `RUN` on which the Condition is satisfied
+
+    Satisfied when:
+
+        - on `TRIAL` 0 of the specified `RUN` counted using 'TimeScale`
+
+    Notes:
+
+        - identical to `All(AtTrial(0), AtRun(n))`
+
+    """
+    def __init__(self, n):
+        return super.__init__(AtTrial(0), AtRun(n))
