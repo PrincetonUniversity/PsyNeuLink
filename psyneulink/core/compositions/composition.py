@@ -2908,6 +2908,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show_roles : bool : default False
             show the `roles <Composition.NodeRoles>` of each Mechanism in the `Composition`.
 
+        show_conditions : bool : default False
+            show the `conditions <Condition>` used by `Composition` to determine whether/when to execute each Mechanism.
+
         system : System : default None
             specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
             if this is not specified, the **show_roles** argument is ignored.
@@ -3707,8 +3710,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 objmech_label = self._get_graph_node_label(objmech, show_dimensions)
                 if show_node_structure:
+                    if objmech in self.scheduler_processing.conditions:
+                        condition = self.scheduler_processing.conditions[obj_mech]
+                    else:
+                        condition = None
                     g.node(objmech_label,
-                           objmech.show_structure(**node_struct_args, node_border=ctlr_width),
+                           objmech.show_structure(**node_struct_args, node_border=ctlr_width, condition=condition),
                            shape=struct_shape,
                            color=objmech_color,
                            penwidth=ctlr_width,
@@ -3886,6 +3893,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(show_node_structure, (list, tuple, set)):
             node_struct_args = {'composition': self,
                                 'show_roles': any(key in show_node_structure for key in {ROLES, ALL}),
+                                'show_conditions': any(key in show_node_structure for key in {CONDITIONS, ALL}),
                                 'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
                                 'show_mech_function_params': any(key in show_node_structure
                                                                  for key in {MECH_FUNCTION_PARAMS, ALL}),
@@ -3898,6 +3906,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             node_struct_args = {'composition': self,
                                 'show_roles': show_node_structure in {ROLES, ALL},
+                                'show_conditions': show_node_structure in {CONDITIONS, ALL},
                                 'show_functions': show_node_structure in {FUNCTIONS, ALL},
                                 'show_mech_function_params': show_node_structure in {MECH_FUNCTION_PARAMS, ALL},
                                 'show_state_function_params': show_node_structure in {STATE_FUNCTION_PARAMS, ALL},
@@ -4654,11 +4663,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             animate : dict or bool : False
                 specifies use of the `show_graph <Composition.show_graph>` method to generate a gif movie showing the
                 sequence of Components executed in a run.  A dict can be specified containing options to pass to
-                the `show_graph <Composition.show_graph>` method;  each key must be an argument of the `show_graph
-                <Composition.show_graph>` method, and its value a specification for that argument.  The entries
-                listed below can also be included in the dict to specify parameters of the animation.  If the
-                **animate** argument is specified simply as `True`, defaults are used for all arguments of
-                `show_graph <Composition.show_graph>` and the options below:
+                the `show_graph <Composition.show_graph>` method;  each key must be a legal argument for the `show_graph
+                <Composition.show_graph>` method, and its value a specification for that argument.  The entries listed
+                below can also be included in the dict to specify parameters of the animation.  If the **animate**
+                argument is specified simply as `True`, defaults are used for all arguments of `show_graph
+                <Composition.show_graph>` and the options below:
 
                 * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components
                   to treat as active in each call to `show_graph <Composition.show_graph>`. *COMPONENT* generates an
@@ -4676,6 +4685,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                   If the number specified is less than the total number of trials being run, only the number specified
                   are animated; if it is greater than the number of trials being run, only the number being run are
                   animated.
+
+                * *MOVIE_DIR*: str (default=project root dir) -- specifies the directdory to be used for the movie file;
+                  by default a subdirectory of <root_dir>/show_graph_OUTPUT/GIFS is created using the `name
+                  <Composition.name>` of the  `Composition`, and the gif files are stored there.
 
                 * *MOVIE_NAME*: str (default=\\ `name <System.name>` + 'movie') -- specifies the name to be used for
                   the movie file; it is automatically appended with '.gif'.
@@ -4959,7 +4972,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if self._animate is not False:
             # Save list of gifs in self._animation as movie file
-            movie_path = self._animate_directory + '/' + self._movie_filename
+            movie_path = self._animation_directory + '/' + self._movie_filename
             self._animation[0].save(fp=movie_path,
                                     format='GIF',
                                     save_all=True,
