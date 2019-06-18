@@ -4746,11 +4746,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # set auto logging if it's not already set, and if log argument is True
         if log:
             for item in self.nodes + self.projections:
-                if (
-                    not isinstance(item, CompositionInterfaceMechanism)
-                    and item.parameters.value.log_condition is LogCondition.OFF
-                ):
-                    item.parameters.value.log_condition = LogCondition.EXECUTION
+                if not isinstance(item, CompositionInterfaceMechanism):
+                    for param in item.parameters:
+                        if param.loggable and param.log_condition is LogCondition.OFF:
+                            param.log_condition = LogCondition.EXECUTION
 
         # Set animation attributes
         if animate is True:
