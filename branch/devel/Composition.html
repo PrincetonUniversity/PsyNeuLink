@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.3.2+207.g269dbdc documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.3.2+208.gdc36ac1 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+207.g269dbdc',
+              VERSION:'0.5.3.2+208.gdc36ac1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+207
+                0.5.3.2+208
               </div>
             
           
@@ -803,7 +803,7 @@ these can be shown as follows:</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller: psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism = None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11f750240&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>learning_enabled=False</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller: psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism = None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11f920208&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>learning_enabled=False</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1311,10 +1311,9 @@ a <a class="reference internal" href="Condition.html"><span class="doc">Conditio
 <dt>animate <span class="classifier-delimiter">:</span> <span class="classifier">dict or bool</span> <span class="classifier-delimiter">:</span> <span class="classifier">False</span></dt>
 <dd><p class="first">specifies use of the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method to generate a gif movie showing the
 sequence of Components executed in a run.  A dict can be specified containing options to pass to
-the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method;  each key must be an argument of the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method, and its value a specification for that argument.  The entries
-listed below can also be included in the dict to specify parameters of the animation.  If the
-<strong>animate</strong> argument is specified simply as <code class="xref any docutils literal"><span class="pre">True</span></code>, defaults are used for all arguments of
-<a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> and the options below:</p>
+the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method;  each key must be a legal argument for the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method, and its value a specification for that argument.  The entries listed
+below can also be included in the dict to specify parameters of the animation.  If the <strong>animate</strong>
+argument is specified simply as <code class="xref any docutils literal"><span class="pre">True</span></code>, defaults are used for all arguments of <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> and the options below:</p>
 <ul class="last simple">
 <li><em>UNIT</em>: <em>EXECUTION_SET</em> or <em>COMPONENT</em> (default=<em>EXECUTION_SET</em>) – specifies which Components
 to treat as active in each call to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a>. <em>COMPONENT</em> generates an
@@ -1328,6 +1327,8 @@ animated.</li>
 If the number specified is less than the total number of trials being run, only the number specified
 are animated; if it is greater than the number of trials being run, only the number being run are
 animated.</li>
+<li><em>MOVIE_DIR</em>: str (default=project root dir) – specifies the directdory to be used for the movie file;
+by default a subdirectory of &lt;root_dir&gt;/show_graph_OUTPUT/GIFS is created using the <code class="xref any docutils literal"><span class="pre">name</span></code> of the  <a class="reference internal" href="#"><span class="doc">Composition</span></a>, and the gif files are stored there.</li>
 <li><em>MOVIE_NAME</em>: str (default=<code class="xref any docutils literal"><span class="pre">name</span></code> + ‘movie’) – specifies the name to be used for
 the movie file; it is automatically appended with ‘.gif’.</li>
 <li><em>SAVE_IMAGES</em>: bool (default=<code class="xref any docutils literal"><span class="pre">False</span></code>) – specifies whether to save each of the images used to

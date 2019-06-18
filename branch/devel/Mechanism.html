@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+207.g269dbdc documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+208.gdc36ac1 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+207.g269dbdc',
+              VERSION:'0.5.3.2+208.gdc36ac1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+207
+                0.5.3.2+208
               </div>
             
           
@@ -1460,7 +1460,7 @@ description of formatting requirements and options).</li>
 
 <dl class="method">
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.show_structure">
-<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions: bool = False</em>, <em>show_mech_function_params: bool = False</em>, <em>show_state_function_params: bool = False</em>, <em>show_values: bool = False</em>, <em>use_labels: bool = False</em>, <em>show_headers: bool = False</em>, <em>show_roles: bool = False</em>, <em>composition=None</em>, <em>compact_cim: bool = False</em>, <em>node_border: str = '1'</em>, <em>output_fmt: &lt;typecheck.tc_predicates.enum object at 0x11a201588&gt; = 'pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.show_structure" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions: bool = False</em>, <em>show_mech_function_params: bool = False</em>, <em>show_state_function_params: bool = False</em>, <em>show_values: bool = False</em>, <em>use_labels: bool = False</em>, <em>show_headers: bool = False</em>, <em>show_roles: bool = False</em>, <em>show_conditions: bool = False</em>, <em>composition=None</em>, <em>compact_cim: bool = False</em>, <em>condition: &lt;typecheck.framework.optional object at 0x11a3c7588&gt; = None</em>, <em>node_border: str = '1'</em>, <em>output_fmt: &lt;typecheck.tc_predicates.enum object at 0x11a3c7550&gt; = 'pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.show_structure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a detailed display of a the structure of a Mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -1481,9 +1481,11 @@ This method is called by <a class="reference internal" href="Composition.html#ps
 True).</li>
 <li><strong>show_values</strong> (<em>bool : default False</em>) – show the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and each of its States (prefixed by “=”).</li>
 <li><strong>use_labels</strong> (<em>bool : default False</em>) – use labels for values if <strong>show_values</strong> is <code class="xref any docutils literal"><span class="pre">True</span></code>; labels must be specified in the <code class="xref any docutils literal"><span class="pre">input_labels_dict</span></code> (for InputState values) and <code class="xref any docutils literal"><span class="pre">output_labels_dict</span></code> (for OutputState values), otherwise the value is used.</li>
-<li><strong>show_headers</strong> (<em>bool : default False</em>) – show the Mechanism, InputState, ParameterState and OutputState headers.</li>
-<li><strong>show_roles</strong> (<em>bool : default False</em>) – show the <code class="xref any docutils literal"><span class="pre">roles</span></code> of the Mechanism in the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> specified in the
-<strong>composition</strong> argument (<strong>composition</strong> is not specified, show_roles is ignored).</li>
+<li><strong>show_headers</strong> (<em>bool : default False</em>) – <p>show the Mechanism, InputState, ParameterState and OutputState headers.</p>
+<p><strong>composition</strong> argument (if <strong>composition</strong> is not specified, show_roles is ignored).</p>
+</li>
+<li><strong>show_conditions</strong> (<em>bool : default False</em>) – show the <a class="reference internal" href="Condition.html"><span class="doc">conditions</span></a> used by <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to determine whether/when to execute each Mechanism
+(if <strong>composition</strong> is not specified, show_conditions is ignored).</li>
 <li><strong>composition</strong> (<em>Composition : default None</em>) – specifies the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> (to which the Mechanism must belong) for which to show its role (see <strong>roles</strong>);
 if this is not specified, the <strong>show_roles</strong> argument is ignored.</li>
 <li><strong>compact_cim</strong> (<em>bool : default False</em>) – specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM</li>
