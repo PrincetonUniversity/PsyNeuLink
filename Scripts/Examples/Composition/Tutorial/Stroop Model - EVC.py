@@ -45,7 +45,7 @@ reward = TransferMechanism(name='reward')
 
 # Construct the Composition:
 # Stroop_model = Composition(name='Stroop Model', controller=control)
-Stroop_model = Composition(name='Stroop Model')
+Stroop_model = Composition(name='Stroop Model - EVC')
 Stroop_model.add_linear_processing_pathway(color_pathway)
 Stroop_model.add_linear_processing_pathway(word_pathway)
 Stroop_model.add_linear_processing_pathway(task_color_pathway)

@@ -40,7 +40,7 @@ control = ControlMechanism(name='CONTROL',
                            control_signals=[(GAIN, task)])
 
 # Construct the Composition:
-Stroop_model = Composition(name='Stroop Model')
+Stroop_model = Composition(name='Stroop Model - Conflict Monitoring')
 Stroop_model.add_linear_processing_pathway(color_pathway)
 Stroop_model.add_linear_processing_pathway(word_pathway)
 Stroop_model.add_linear_processing_pathway(task_color_pathway)
@@ -57,7 +57,8 @@ Stroop_model.scheduler_processing.add_condition(output,All(EveryNCalls(color_hid
 Stroop_model.scheduler_processing.add_condition(decision, EveryNCalls(output, 1))
 
 # SHOW_GRAPH ***********************************
-Stroop_model.show_graph(show_controller=True)
+Stroop_model.show_graph(show_controller=True,
+                        show_node_structure=ALL)
 
 # RUN THE MODEL *********************************
 
@@ -92,7 +93,9 @@ stimuli = {color_input:[red]*num_trials,
            word_input:[green]*num_trials,
            task_input:[color]*num_trials}
 Stroop_model.run(inputs=stimuli,
-                 animate={'show_controller':True},
+                 animate={'show_controller':True,
+                          # 'show_cim':True
+                          },
                  call_after_trial=print_after)
 
 Stroop_model.log.print_entries(display=[TIME, VALUE])
