@@ -699,7 +699,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, FUNCTIONS, HARD_CLAMP, \
+    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONDITIONS, CONTROLLER, FUNCTIONS, HARD_CLAMP, \
     IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX_KEYWORD_VALUES, MECHANISMS, \
     NO_CLAMP, OUTPUT, OWNER_VALUE, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES, NAME, \
     SAMPLE, SIMULATIONS, TARGET, TARGET_MECHANISM, VARIABLE, PROJECTIONS, WEIGHT, OUTCOME
@@ -2867,8 +2867,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        use_labels:bool=False,
                        show_headers:bool=False,
                        show_roles:bool=False,
+                       show_conditions:bool=False,
                        system=None,
                        composition=None,
+                       condition:tc.optional(Condition)=None,
                        compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
                        output_fmt:tc.enum('pdf','struct')='pdf'
                        ):
@@ -3330,9 +3332,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Implement rcvr node
             else:
+
                 # Set rcvr color and penwidth based on node type
                 rcvr_rank = 'same'
                 node_shape = mechanism_shape
+
+                # Get condition if any associated with rcvr
+                if rcvr in self.scheduler_processing.conditions:
+                    condition = self.scheduler_processing.conditions[rcvr]
+                else:
+                    condition = None
 
                 # Input and Output Node
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
@@ -3407,7 +3416,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if show_node_structure and isinstance(rcvr, Mechanism):
                     g.node(rcvr_label,
-                           rcvr.show_structure(**node_struct_args, node_border=rcvr_penwidth),
+                           rcvr.show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
                            shape=struct_shape,
                            color=rcvr_color,
                            rank=rcvr_rank,
@@ -3627,7 +3636,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             ctlr_label = self._get_graph_node_label(controller, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
-                       controller.show_structure(**node_struct_args, node_border=ctlr_width),
+                       controller.show_structure(**node_struct_args, node_border=ctlr_width,
+                                                 condition=self.controller_condition),
                        shape=struct_shape,
                        color=ctlr_color,
                        penwidth=ctlr_width,
@@ -3700,8 +3710,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 objmech_label = self._get_graph_node_label(objmech, show_dimensions)
                 if show_node_structure:
+                    if objmech in self.scheduler_processing.conditions:
+                        condition = self.scheduler_processing.conditions[obj_mech]
+                    else:
+                        condition = None
                     g.node(objmech_label,
-                           objmech.show_structure(**node_struct_args, node_border=ctlr_width),
+                           objmech.show_structure(**node_struct_args, node_border=ctlr_width, condition=condition),
                            shape=struct_shape,
                            color=objmech_color,
                            penwidth=ctlr_width,
@@ -3879,6 +3893,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(show_node_structure, (list, tuple, set)):
             node_struct_args = {'composition': self,
                                 'show_roles': any(key in show_node_structure for key in {ROLES, ALL}),
+                                'show_conditions': any(key in show_node_structure for key in {CONDITIONS, ALL}),
                                 'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
                                 'show_mech_function_params': any(key in show_node_structure
                                                                  for key in {MECH_FUNCTION_PARAMS, ALL}),
@@ -3891,6 +3906,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             node_struct_args = {'composition': self,
                                 'show_roles': show_node_structure in {ROLES, ALL},
+                                'show_conditions': show_node_structure in {CONDITIONS, ALL},
                                 'show_functions': show_node_structure in {FUNCTIONS, ALL},
                                 'show_mech_function_params': show_node_structure in {MECH_FUNCTION_PARAMS, ALL},
                                 'show_state_function_params': show_node_structure in {STATE_FUNCTION_PARAMS, ALL},

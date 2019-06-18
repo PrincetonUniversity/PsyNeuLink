@@ -57,7 +57,8 @@ Stroop_model.scheduler_processing.add_condition(output,All(EveryNCalls(color_hid
 Stroop_model.scheduler_processing.add_condition(decision, EveryNCalls(output, 1))
 
 # SHOW_GRAPH ***********************************
-Stroop_model.show_graph(show_controller=True)
+Stroop_model.show_graph(show_controller=True,
+                        show_node_structure=ALL)
 
 # RUN THE MODEL *********************************
 
