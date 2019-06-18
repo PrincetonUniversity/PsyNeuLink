@@ -838,37 +838,6 @@ class AfterNTimeSteps(Condition):
         super().__init__(func, n, time_scale)
 
 
-class AtStartPassN(Condition):
-    """AtStartPassN
-
-    Parameters:
-
-        n(int): the `TRIAL` on which the Condition is satisfied, or every trial if n is None.
-
-        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\\ s (default: TimeScale.RUN)
-
-    Satisfied when:
-
-        - on `PASS` 0 of the specified trial counted using 'TimeScale` or every trial if n is None
-
-    """
-    def __init__(self, n=None, time_scale=TimeScale.RUN):
-        def func(n, scheduler=None, execution_context=None):
-            try:
-                if n is None:
-                    return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) == 0
-                else:
-                    return \
-                        (scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) == n
-                         and
-                         scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) == 0)
-
-            except AttributeError as e:
-                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
-
-        super().__init__(func, n)
-
-
 class BeforePass(Condition):
     """BeforePass
 
@@ -1009,37 +978,6 @@ class EveryNPasses(Condition):
         super().__init__(func, n, time_scale)
 
 
-class AtStartTrialN(Condition):
-    """AtStartTrialN
-
-    Parameters:
-
-        n(int): the `TRIAL` on which the Condition is satisfied, or every trial if n is None.
-
-        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\\ s (default: TimeScale.RUN)
-
-    Satisfied when:
-
-        - on `PASS` 0 of the specified trial counted using 'TimeScale` or every trial if n is None
-
-    """
-    def __init__(self, n=None, time_scale=TimeScale.RUN):
-        def func(n, scheduler=None, execution_context=None):
-            try:
-                if n is None:
-                    return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) == 0
-                else:
-                    return \
-                        (scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) == n
-                         and
-                         scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) == 0)
-
-            except AttributeError as e:
-                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
-
-        super().__init__(func, n)
-
-
 class BeforeTrial(Condition):
     """BeforeTrial
 
@@ -1150,37 +1088,6 @@ class AfterNTrials(Condition):
                 raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n, time_scale)
-
-
-class AtStartRunN(Condition):
-    """AtStartRunN
-
-    Parameters:
-
-        n(int): the `RUN` on which the Condition is satisfied, or every `RUN` if n is None.
-
-        time_scale(TimeScale): the TimeScale used as basis for counting `RUN`\\ s (default: TimeScale.RUN)
-
-    Satisfied when:
-
-        - on `TRIAL` 0 of the specified `RUN` counted using 'TimeScale`, or every `RUN` if n is None
-
-    """
-    def __init__(self, n=None, time_scale=TimeScale.RUN):
-        def func(n, scheduler=None, execution_context=None):
-            try:
-                if n is None:
-                    return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale)==0
-                else:
-                    return \
-                        (scheduler.clocks[execution_context].get_total_times_relative(TimeScale.RUN, time_scale) == n
-                         and
-                         scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) == 0)
-
-            except AttributeError as e:
-                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
-
-        super().__init__(func, n)
 
 
 class AtRun(Condition):
