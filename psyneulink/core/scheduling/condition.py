@@ -524,9 +524,11 @@ class WhileNot(Condition):
 
     """
     def __init__(self, func, *args, **kwargs):
+        self.func_name = func.__name__
         def inner_func(*args, **kwargs):
             return not call_with_pruned_args(func, *args, **kwargs)
         super().__init__(inner_func, *args, **kwargs)
+
 
 ######################################################################
 # Static Conditions
@@ -563,6 +565,7 @@ class Never(Condition):
     """
     def __init__(self):
         super().__init__(lambda: False)
+
 
 ######################################################################
 # Composite Conditions

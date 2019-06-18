@@ -3033,8 +3033,9 @@ class Mechanism_Base(Mechanism):
                         mech_roles = f'<br/><i>{",".join(roles)}</i>'
                     assert True
 
+            mech_condition = ''
             if composition and show_conditions and condition:
-                mech_value = f'<br/>={repr(condition)}'
+                mech_condition = f'<br/><i>{str(condition)}</i>'
 
             mech_function = ''
             fct_params = ''
@@ -3054,7 +3055,7 @@ class Mechanism_Base(Mechanism):
             if not len(self.parameter_states):
                 cols = 2
             return f'<td port="{self.name}" colspan="{cols}">' + \
-                   mech_name + mech_roles + mech_function + mech_value + '</td>'
+                   mech_name + mech_roles + mech_condition + mech_function + mech_value + '</td>'
 
         @tc.typecheck
         def state_table(state_list:ContentAddressableList,
