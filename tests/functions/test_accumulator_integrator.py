@@ -162,10 +162,9 @@ class TestAccumulator():
         A()
         A()
         val = A()
-        expected_val = [[40.0, 0.16006288334688934, 80.0]]
+        expected_val = [40.0, 0.16006288334688934, 80.0]
         for i in range(len(val)):
-            for j in range(len(val[i])):
-                assert np.allclose(expected_val[i][j], val[i][j])
+            assert np.allclose(expected_val[i], val[i])
 
     def test_accumulator_as_function_of_processing_mech(self):
 

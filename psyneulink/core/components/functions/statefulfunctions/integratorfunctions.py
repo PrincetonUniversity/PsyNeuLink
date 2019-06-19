@@ -2471,28 +2471,17 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = self.get_current_function_param(TIME_STEP_SIZE, execution_id)
 
 
-        # # MODIFIED 6/18/19 OLD:
-        # previous_value = np.atleast_2d(self.get_previous_value(execution_id))
-        # MODIFIED 6/18/19 NEW: [JDC]
-        previous_value = self.get_previous_value(execution_id)
-        # MODIFIED 6/18/19 END
+        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
 
         value = previous_value + rate * variable * time_step_size \
                 + np.sqrt(time_step_size * noise) * np.random.normal()
 
         if np.all(abs(value) < threshold):
             adjusted_value = value + offset
-        # # MODIFIED 6/18/19 OLD:
-        # elif np.all(value >= threshold):
-        #     adjusted_value = np.atleast_2d(threshold)
-        # elif np.all(value <= -threshold):
-        #     adjusted_value = np.atleast_2d(-threshold)
-        # MODIFIED 6/18/19 NEW: [JDC]
         elif np.all(value >= threshold):
-            adjusted_value = threshold
+            adjusted_value = np.atleast_2d(threshold)
         elif np.all(value <= -threshold):
-            adjusted_value = -threshold
-        # MODIFIED 6/18/19 END
+            adjusted_value = np.atleast_2d(-threshold)
 
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
