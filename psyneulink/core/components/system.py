@@ -3932,10 +3932,10 @@ class System(System_Base):
             show_mechanism_structure
 
         COMMENT:
-             and, optionally, the `function <Component.function>` and `value <Component.value>` of each
-            (these can be specified using the **show_functions** and **show_values** arguments.  If this option
-            is specified, Projections are connected to and from the State that is the `sender <Projection.sender>` or
-            `receiver <Projection.receiver>` of each.
+            and, optionally, the `function <Component.function>` and `value <Component.value>` of each (these
+            can be specified using the **show_functions** and **show_values** arguments.  If this option is
+            specified, Projections are connected to and from the State that is the `sender <Projection_Base.sender>`
+            or `receiver <Projection_Base.receiver>` of each.
         COMMENT
 
         show_headers : bool : default False

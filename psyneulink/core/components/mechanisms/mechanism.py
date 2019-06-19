@@ -482,7 +482,7 @@ attribute, as well as the number of InputStates it has and their `variable <Inpu
   `specified using an OutputState <InputState_Projection_Source_Specification>` to project to it;).  If
   **default_variable** is not specified, a default value is specified by the Mechanism.  InputStates can also be
   specifed that `shadow the inputs <InputState_Shadow_Inputs>` of other InputStates and/or Mechanisms; that is, receive
-  Projections from all of the same `senders <Projection.sender>` as those specified.
+  Projections from all of the same `senders <Projection_Base.sender>` as those specified.
 
 COMMENT:
 *** ADD SOME EXAMPLES HERE (see `examples <XXX>`)
@@ -960,9 +960,11 @@ from psyneulink.core.globals.keywords import \
     OUTPUT_LABELS_DICT, OUTPUT_STATES, OWNER_VALUE, PARAMETER_STATES, PREVIOUS_VALUE, REFERENCE_VALUE, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
 from psyneulink.core.globals.parameters import Parameter, parse_execution_context
+from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
+from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, \
+    convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
@@ -2853,7 +2855,6 @@ class Mechanism_Base(Mechanism):
 
     @tc.typecheck
     def show_structure(self,
-                       # direction = 'BT',
                        show_functions:bool=False,
                        show_mech_function_params:bool=False,
                        show_state_function_params:bool=False,
@@ -2861,8 +2862,10 @@ class Mechanism_Base(Mechanism):
                        use_labels:bool=False,
                        show_headers:bool=False,
                        show_roles:bool=False,
+                       show_conditions:bool=False,
                        composition=None,
                        compact_cim:bool=False,
+                       condition:tc.optional(Condition)=None,
                        node_border:str="1",
                        output_fmt:tc.enum('pdf','struct')='pdf'
                        ):
@@ -2900,9 +2903,11 @@ class Mechanism_Base(Mechanism):
         show_headers : bool : default False
             show the Mechanism, InputState, ParameterState and OutputState headers.
 
-        show_roles : bool : default False
-            show the `roles <Composition.NodeRoles>` of the Mechanism in the `Composition` specified in the
-            **composition** argument (**composition** is not specified, show_roles is ignored).
+            **composition** argument (if **composition** is not specified, show_roles is ignored).
+
+        show_conditions : bool : default False
+            show the `conditions <Condition>` used by `Composition` to determine whether/when to execute each Mechanism
+            (if **composition** is not specified, show_conditions is ignored).
 
         composition : Composition : default None
             specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
@@ -2985,11 +2990,7 @@ class Mechanism_Base(Mechanism):
 
         # Header cell of outer State table:
         input_states_header =     f'<tr><td colspan="1" valign="middle"><b><i>{InputState.__name__}s</i></b></td></tr>'
-        # # MODIFIED 3/21/19 OLD:
-        # parameter_states_header = f'<tr><td><b><i>{ParameterState.__name__}s</i></b></td></tr>'
-        # MODIFIED 3/21/19 NEW: [JDC]
         parameter_states_header = f'<tr><td rowspan="1" valign="middle"><b><i>{ParameterState.__name__}s</i></b></td>'
-        # MODIFIED 3/21/19 END
         output_states_header =    f'<tr><td colspan="1" valign="middle"><b><i>{OutputState.__name__}s</i></b></td></tr>'
 
         # Inner State table (i.e., that contains individual states in each cell):
@@ -3027,14 +3028,12 @@ class Mechanism_Base(Mechanism):
                         mech_roles = f'<br/><i>CONTROLLER</i>'
                     elif not isinstance(self, CompositionInterfaceMechanism):
                         roles = [role.name for role in list(composition.nodes_to_roles[self])]
-                        # MODIFIED 3/19/18 NEW [JDC]:
-                        # FIX: TEMPORARY FIX UNTIL THIS ROLE IS ASSIGNED DIRECTLY BY COMPOSITION;
-                        #      REPLACE WITH ASSERTION WHEN THAT IS DONE
-                        if not len(roles):
-                            roles = ['INTERNAL']
-                        # MODIFIED 3/19/18 END
                         mech_roles = f'<br/><i>{",".join(roles)}</i>'
                     assert True
+
+            mech_condition = ''
+            if composition and show_conditions and condition:
+                mech_condition = f'<br/><i>{str(condition)}</i>'
 
             mech_function = ''
             fct_params = ''
@@ -3054,7 +3053,7 @@ class Mechanism_Base(Mechanism):
             if not len(self.parameter_states):
                 cols = 2
             return f'<td port="{self.name}" colspan="{cols}">' + \
-                   mech_name + mech_roles + mech_function + mech_value + '</td>'
+                   mech_name + mech_roles + mech_condition + mech_function + mech_value + '</td>'
 
         @tc.typecheck
         def state_table(state_list:ContentAddressableList,
