@@ -2470,7 +2470,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold = self.get_current_function_param(THRESHOLD, execution_id)
         time_step_size = self.get_current_function_param(TIME_STEP_SIZE, execution_id)
 
-
         previous_value = np.atleast_2d(self.get_previous_value(execution_id))
 
         value = previous_value + rate * variable * time_step_size \
