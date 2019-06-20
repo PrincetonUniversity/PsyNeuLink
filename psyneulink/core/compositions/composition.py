@@ -699,7 +699,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, FUNCTIONS, HARD_CLAMP, \
+    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, CONDITIONS, FUNCTIONS, HARD_CLAMP, \
     IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX_KEYWORD_VALUES, MECHANISMS, \
     NO_CLAMP, OUTPUT, OWNER_VALUE, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES, NAME, \
     SAMPLE, SIMULATIONS, TARGET, TARGET_MECHANISM, VARIABLE, PROJECTIONS, WEIGHT, OUTCOME
@@ -724,6 +724,7 @@ NUM_TRIALS = 'num_trials'
 NUM_RUNS = 'num_Runs'
 UNIT = 'unit'
 DURATION = 'duration'
+MOVIE_DIR = 'movie_dir'
 MOVIE_NAME = 'movie_name'
 SAVE_IMAGES = 'save_images'
 SHOW = 'show'
@@ -2795,8 +2796,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if isinstance(self._animate, dict):
             # Assign directory for animation files
-            here = path.abspath(path.dirname(__file__))
-            self._animate_directory = path.join(here, '../../show_graph output/' + self.name + " gifs")
+            from psyneulink._version import root_dir
+            default_dir = root_dir + '/../show_graph output/GIFs/' + self.name # + " gifs"
             # try:
             #     rmtree(self._animate_directory)
             # except:
@@ -2807,6 +2808,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
             self._animate_simulations = self._animate.pop(SIMULATIONS, False)
             self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
+            self._animation_directory = self._animate.pop(MOVIE_DIR, default_dir)
             self._save_images = self._animate.pop(SAVE_IMAGES, False)
             self._show_animation = self._animate.pop(SHOW, False)
             if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
@@ -2825,6 +2827,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not isinstance(self._animate_simulations, bool):
                 raise SystemError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for {repr('show_graph')} "
                                   f"method of {self.name} ({self._animate_num_trials}) must a boolean.")
+            if not isinstance(self._animation_directory, str):
+                raise SystemError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
+                                  f"method of {self.name} ({self._animation_directory}) must be a string.")
             if not isinstance(self._movie_filename, str):
                 raise SystemError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
                                   f"method of {self.name} ({self._movie_filename}) must be a string.")
@@ -2859,8 +2864,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        use_labels:bool=False,
                        show_headers:bool=False,
                        show_roles:bool=False,
+                       show_conditions:bool=False,
                        system=None,
                        composition=None,
+                       condition:tc.optional(Condition)=None,
                        compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
                        output_fmt:tc.enum('pdf','struct')='pdf'
                        ):
@@ -2900,6 +2907,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         show_roles : bool : default False
             show the `roles <Composition.NodeRoles>` of each Mechanism in the `Composition`.
+
+        show_conditions : bool : default False
+            show the `conditions <Condition>` used by `Composition` to determine whether/when to execute each Mechanism.
 
         system : System : default None
             specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
@@ -3105,9 +3115,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         G.attr(fontsize='14')
         index = repr(self._component_animation_execution_count)
         image_filename = '-'.join([repr(run_num), repr(trial_num), index])
-        image_file = self._animate_directory + '/' + image_filename + '.gif'
+        image_file = self._animation_directory + '/' + image_filename + '.gif'
         G.render(filename=image_filename,
-                 directory=self._animate_directory,
+                 directory=self._animation_directory,
                  cleanup=True,
                  # view=True
                  )
@@ -3322,9 +3332,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Implement rcvr node
             else:
+
                 # Set rcvr color and penwidth based on node type
                 rcvr_rank = 'same'
                 node_shape = mechanism_shape
+
+                # Get condition if any associated with rcvr
+                if rcvr in self.scheduler_processing.conditions:
+                    condition = self.scheduler_processing.conditions[rcvr]
+                else:
+                    condition = None
 
                 # Input and Output Node
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
@@ -3399,7 +3416,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if show_node_structure and isinstance(rcvr, Mechanism):
                     g.node(rcvr_label,
-                           rcvr.show_structure(**node_struct_args, node_border=rcvr_penwidth),
+                           rcvr.show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
                            shape=struct_shape,
                            color=rcvr_color,
                            rank=rcvr_rank,
@@ -3619,7 +3636,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             ctlr_label = self._get_graph_node_label(controller, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
-                       controller.show_structure(**node_struct_args, node_border=ctlr_width),
+                       controller.show_structure(**node_struct_args, node_border=ctlr_width,
+                                                 condition=self.controller_condition),
                        shape=struct_shape,
                        color=ctlr_color,
                        penwidth=ctlr_width,
@@ -3692,8 +3710,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 objmech_label = self._get_graph_node_label(objmech, show_dimensions)
                 if show_node_structure:
+                    if objmech in self.scheduler_processing.conditions:
+                        condition = self.scheduler_processing.conditions[obj_mech]
+                    else:
+                        condition = None
                     g.node(objmech_label,
-                           objmech.show_structure(**node_struct_args, node_border=ctlr_width),
+                           objmech.show_structure(**node_struct_args, node_border=ctlr_width, condition=condition),
                            shape=struct_shape,
                            color=objmech_color,
                            penwidth=ctlr_width,
@@ -3871,6 +3893,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(show_node_structure, (list, tuple, set)):
             node_struct_args = {'composition': self,
                                 'show_roles': any(key in show_node_structure for key in {ROLES, ALL}),
+                                'show_conditions': any(key in show_node_structure for key in {CONDITIONS, ALL}),
                                 'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
                                 'show_mech_function_params': any(key in show_node_structure
                                                                  for key in {MECH_FUNCTION_PARAMS, ALL}),
@@ -3883,6 +3906,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             node_struct_args = {'composition': self,
                                 'show_roles': show_node_structure in {ROLES, ALL},
+                                'show_conditions': show_node_structure in {CONDITIONS, ALL},
                                 'show_functions': show_node_structure in {FUNCTIONS, ALL},
                                 'show_mech_function_params': show_node_structure in {MECH_FUNCTION_PARAMS, ALL},
                                 'show_state_function_params': show_node_structure in {STATE_FUNCTION_PARAMS, ALL},
@@ -4639,11 +4663,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             animate : dict or bool : False
                 specifies use of the `show_graph <Composition.show_graph>` method to generate a gif movie showing the
                 sequence of Components executed in a run.  A dict can be specified containing options to pass to
-                the `show_graph <Composition.show_graph>` method;  each key must be an argument of the `show_graph
-                <Composition.show_graph>` method, and its value a specification for that argument.  The entries
-                listed below can also be included in the dict to specify parameters of the animation.  If the
-                **animate** argument is specified simply as `True`, defaults are used for all arguments of
-                `show_graph <Composition.show_graph>` and the options below:
+                the `show_graph <Composition.show_graph>` method;  each key must be a legal argument for the `show_graph
+                <Composition.show_graph>` method, and its value a specification for that argument.  The entries listed
+                below can also be included in the dict to specify parameters of the animation.  If the **animate**
+                argument is specified simply as `True`, defaults are used for all arguments of `show_graph
+                <Composition.show_graph>` and the options below:
 
                 * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components
                   to treat as active in each call to `show_graph <Composition.show_graph>`. *COMPONENT* generates an
@@ -4661,6 +4685,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                   If the number specified is less than the total number of trials being run, only the number specified
                   are animated; if it is greater than the number of trials being run, only the number being run are
                   animated.
+
+                * *MOVIE_DIR*: str (default=project root dir) -- specifies the directdory to be used for the movie file;
+                  by default a subdirectory of <root_dir>/show_graph_OUTPUT/GIFS is created using the `name
+                  <Composition.name>` of the  `Composition`, and the gif files are stored there.
 
                 * *MOVIE_NAME*: str (default=\\ `name <System.name>` + 'movie') -- specifies the name to be used for
                   the movie file; it is automatically appended with '.gif'.
@@ -4746,11 +4774,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # set auto logging if it's not already set, and if log argument is True
         if log:
             for item in self.nodes + self.projections:
-                if (
-                    not isinstance(item, CompositionInterfaceMechanism)
-                    and item.parameters.value.log_condition is LogCondition.OFF
-                ):
-                    item.parameters.value.log_condition = LogCondition.EXECUTION
+                if not isinstance(item, CompositionInterfaceMechanism):
+                    for param in item.parameters:
+                        if param.loggable and param.log_condition is LogCondition.OFF:
+                            param.log_condition = LogCondition.EXECUTION
 
         # Set animation attributes
         if animate is True:
@@ -4945,7 +4972,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if self._animate is not False:
             # Save list of gifs in self._animation as movie file
-            movie_path = self._animate_directory + '/' + self._movie_filename
+            movie_path = self._animation_directory + '/' + self._movie_filename
             self._animation[0].save(fp=movie_path,
                                     format='GIF',
                                     save_all=True,
