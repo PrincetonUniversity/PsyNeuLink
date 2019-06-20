@@ -1225,8 +1225,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 if not np.array_equal(mech_init_val, fct_intlzr):
                     # If function's initializer was not specified, assign Mechanism's initial_value to it
                     if not fct_specified:
-                        self.integrator_function.parameters.initializer._set(initializer, execution_id)
-                        self.integrator_function._initialize_previous_value(initializer, execution_id)
+                        self.integrator_function.parameters.initializer._set(initializer[0], execution_id)
+                        self.integrator_function._initialize_previous_value(initializer[0], execution_id)
                     # Otherwise, give precedence to function's value
                     else:
                         if mech_specified:
@@ -1495,15 +1495,17 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update according to time-scale of integration
         if integrator_mode:
             initial_value = self.get_current_mechanism_param(INITIAL_VALUE, execution_id)
-
-            value = self._get_integrated_function_input(variable,
-                                                        initial_value,
-                                                        noise,
-                                                        context,
-                                                        execution_id=execution_id)
-
-            self.parameters.integrator_function_value._set(value, execution_id, override=True)
-            return value
+            integrated_variable = []
+            for i in range(len(variable)):
+                integrated_variable_item = self._get_integrated_function_input(variable[i],
+                                                                               initial_value[i],
+                                                                               noise,
+                                                                               context,
+                                                                               execution_id=execution_id)
+                integrated_variable.append(integrated_variable_item)
+            integrated_variable = np.array(integrated_variable)
+            self.parameters.integrator_function_value._set(integrated_variable, execution_id, override=True)
+            return integrated_variable
 
         else:
             return self._get_instantaneous_function_input(variable, noise)
