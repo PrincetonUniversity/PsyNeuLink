@@ -2707,7 +2707,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if execution_id not in self.execution_ids:
             self.execution_ids.add(execution_id)
 
-        self._assign_context_values(execution_id=execution_id, composition=self)
         return execution_id
 
     def _identify_clamp_inputs(self, list_type, input_type, origins):
@@ -4075,6 +4074,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Assign the same execution_ids to all nodes in the Composition and get it (if it was None)
         execution_id = self._assign_execution_ids(execution_id)
+
+        if not skip_initialization:
+            self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
+
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
         execution_scheduler = scheduler_processing or self.scheduler_processing
@@ -4107,8 +4110,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and execution_context.execution_phase is not ContextFlags.SIMULATION
             ):
                 self._initialize_from_context(execution_id, base_execution_id, override=False)
-
-            self._assign_context_values(execution_id, composition=self)
+                self._assign_context_values(execution_id, composition=self)
 
         # Generate first frame of animation without any active_items
         if self._animate is not False:
@@ -4404,7 +4406,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                              skip_log=True, override=True)
 
                     # Pass outer execution_id to nested Composition
-                    node._assign_context_values(execution_id, composition=node)
+                    node._assign_context_values(execution_id, composition=node, propagate=True)
 
                     # Execute Composition
                     # FIX: 6/12/19 WHERE IS COMPILED EXECUTION OF NESTED NODE?
@@ -4818,7 +4820,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             and (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION)
         ):
             self._initialize_from_context(execution_id, base_execution_id, override=False)
-            self._assign_context_values(execution_id, composition=self)
+            self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
 
         is_simulation = (execution_context is not None and
                          execution_context.execution_phase == ContextFlags.SIMULATION)

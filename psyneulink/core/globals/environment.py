@@ -922,7 +922,7 @@ def run(obj,
 
             # if context == ContextFlags.COMMAND_LINE and not obj.context.execution_phase == ContextFlags.SIMULATION:
             if context == ContextFlags.COMMAND_LINE or not obj.parameters.context._get(execution_id).execution_phase == ContextFlags.SIMULATION:
-                obj._assign_context_values(execution_id, execution_phase=ContextFlags.PROCESSING)
+                obj._assign_context_values(execution_id, execution_phase=ContextFlags.PROCESSING, composition=obj, propagate=True)
                 obj.parameters.context._get(execution_id).string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
 
             result = obj.execute(

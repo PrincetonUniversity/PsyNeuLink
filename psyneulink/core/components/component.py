@@ -2276,7 +2276,7 @@ class Component(object, metaclass=ComponentsMeta):
                 for execution_context in execution_contexts:
                     param.delete(execution_context)
 
-    def _assign_context_values(self, execution_id, base_execution_id=None, propagate=True, **kwargs):
+    def _assign_context_values(self, execution_id, base_execution_id=None, propagate=False, **kwargs):
         context_param = self.parameters.context._get(execution_id)
         if context_param is None:
             self.parameters.context._initialize_from_context(execution_id, base_execution_id)
@@ -2291,7 +2291,7 @@ class Component(object, metaclass=ComponentsMeta):
 
         if propagate:
             for comp in self._dependent_components:
-                comp._assign_context_values(execution_id, base_execution_id, **kwargs)
+                comp._assign_context_values(execution_id, base_execution_id, propagate=propagate, **kwargs)
 
     def _set_all_parameter_properties_recursively(self, **kwargs):
         # sets a property of all parameters for this component and all its dependent components
@@ -2927,8 +2927,8 @@ class Component(object, metaclass=ComponentsMeta):
             execution_id = self.most_recent_execution_id
 
         # initialize context for this execution_id if not done already
-        if execution_id is not None:
-            self._assign_context_values(execution_id)
+        if self.parameters.context._get(execution_id) is None:
+            self._assign_context_values(execution_id, propagate=True)
 
         value = self._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
         self.parameters.value._set(value, execution_id=execution_id, override=True)

@@ -2243,7 +2243,7 @@ class Mechanism_Base(Mechanism):
         context = context or ContextFlags.COMMAND_LINE
 
         # initialize context for this execution_id if not done already
-        if execution_id is not None:
+        if self.parameters.context._get(execution_id) is None:
             self._assign_context_values(execution_id)
 
         if not self.parameters.context._get(execution_id).source or context & ContextFlags.COMMAND_LINE:
