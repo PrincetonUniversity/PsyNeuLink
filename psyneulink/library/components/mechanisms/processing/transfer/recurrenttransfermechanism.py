@@ -1323,10 +1323,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         else:
             name = 'matrix'
             backing_field = '_matrix'
-            if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-                self._assign_params(request_set={name: val}, context=ContextFlags.PROPERTY)
-            else:
-                setattr(self, backing_field, val)
+            setattr(self, backing_field, val)
             self.user_params.__additem__(name, val)
 
             if hasattr(self, '_parameter_states') and name in self._parameter_states:
@@ -1342,10 +1339,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     @auto.setter
     def auto(self, val):
 
-        if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-            self._assign_params(request_set={"auto": val}, context=ContextFlags.PROPERTY)
-        else:
-            setattr(self, "_auto", val)
+        setattr(self, "_auto", val)
 
         if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_states:
             self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix
@@ -1360,10 +1354,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     @hetero.setter
     def hetero(self, val):
 
-        if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-            self._assign_params(request_set={"hetero": val}, context=ContextFlags.PROPERTY)
-        else:
-            setattr(self, "_hetero", val)
+        setattr(self, "_hetero", val)
 
         if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_states:
             self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix
