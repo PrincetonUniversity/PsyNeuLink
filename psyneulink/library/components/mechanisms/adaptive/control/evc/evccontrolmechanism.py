@@ -1248,14 +1248,7 @@ class EVCControlMechanism(ControlMechanism):
         # Implement the current control_allocation over ControlSignals (OutputStates),
         #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states
         for i in range(len(self.control_signals)):
-            # MODIFIED 6/6/19 OLD:
             self.parameters.value._get(execution_id)[i] = np.atleast_1d(allocation_vector[i])
-            # # MODIFIED 6/6/19 NEW: [JDC]
-            # self._apply_control_allocation(control_allocation=allocation_vector,
-            #                                runtime_params=runtime_params,
-            #                                context=context,
-            #                                execution_id=execution_id)
-            # MODIFIED 6/6/19 END
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         # RUN SIMULATION

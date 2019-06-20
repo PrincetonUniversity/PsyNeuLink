@@ -579,11 +579,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         if increment is None:
             increment = 0.0
 
-        # # MODIFIED 6/18/19 OLD:
-        # previous_value = np.atleast_2d(self.get_previous_value(execution_id))
-        # MODIFIED 6/18/19 NEW: [JDC]
         previous_value = self.get_previous_value(execution_id)
-        # MODIFIED 6/18/19 END
 
         value = previous_value * rate + noise + increment
 
@@ -1158,11 +1154,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
 
-        # # MODIFIED 6/18/19 OLD:
-        # previous_value = np.atleast_2d(self.get_previous_value(execution_id))
-        # MODIFIED 6/18/19 NEW: [JDC]
         previous_value = self.get_previous_value(execution_id)
-        # MODIFIED 6/18/19 END
 
         value = self._EWMA_filter(previous_value, rate, variable) + noise
 
@@ -2110,13 +2102,8 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
                                     format(repr(REST), self.__class__.__name__, rest, len(variable)))
         previous_value = self.get_previous_value(execution_id)
 
-        # # MODIFIED 6/18/19 OLD:
-        # current_input = np.atleast_2d(variable)
-        # prev_val = np.atleast_2d(previous_value)
-        # MODIFIED 6/18/19 NEW: [JDC]
         current_input = variable
         prev_val = previous_value
-        # MODIFIED 6/18/19 END
 
         dist_from_asymptote = np.zeros_like(current_input, dtype=float)
         for i in range(len(current_input)):
@@ -2825,11 +2812,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         offset = self.get_current_function_param(OFFSET, execution_id)
         time_step_size = self.get_current_function_param(TIME_STEP_SIZE, execution_id)
 
-        # # MODIFIED 6/18/19 OLD:
-        # previous_value = np.atleast_2d(self.get_previous_value(execution_id))
-        # MODIFIED 6/18/19 NEW: [JDC]
         previous_value = self.get_previous_value(execution_id)
-        # MODIFIED 6/18/19 END
 
         # dx = (lambda*x + A)dt + c*dW
         value = previous_value + (decay * previous_value - rate * variable) * time_step_size + np.sqrt(
