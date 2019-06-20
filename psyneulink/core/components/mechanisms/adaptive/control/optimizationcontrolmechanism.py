@@ -1194,13 +1194,6 @@ class OptimizationControlMechanism(ControlMechanism):
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
                                    context=ContextFlags.COMPOSITION)
 
-    # @property
-    # def feature_values(self):
-    #     if hasattr(self.agent_rep, 'model_based_optimizer') and self.agent_rep.model_based_optimizer is self:
-    #         return self.agent_rep._get_predicted_input()
-    #     else:
-    #         return np.array(np.array(self.variable[1:]).tolist())
-
     # FIX: THE FOLLOWING SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
     # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values
 
