@@ -43,7 +43,6 @@ def w_fct(stim, color_control):
 
 w_fct_UDF = pnl.UserDefinedFunction(custom_function=w_fct, color_control=1)
 
-
 reward_value_word = 1
 reward_value_color = 10
 
