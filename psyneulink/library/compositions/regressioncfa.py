@@ -22,14 +22,14 @@ Its `adapt <CompositionFunctionApproximator.adapt>` method updates its `regressi
 a `control_allocation <ControlMechanism.control_allocation>`, and the `net_outcome <ControlMechanism.net_outcome>`
 they produced, passed to it from an `OptimizationControlMechanism`.
 
-Its `evaluate <CompositionFunctionApproximator.evaluate>` method calls its `update_weights
+Its `evaluate <CompositionFunctionApproximator.evaluate>` method calls its `update_weights_function
 <RegressionCFA.regresssion_function>` to generate and return a predicted `net_outcome
 <ControlMechanism.net_outcome>` for a given set of `feature_values <OptimizationControlMechanism.feature_values>`
 and a `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimizationControlMechanism`.
 
 COMMENT:
 .. note::
-  The RegressionCFA's `update_weights <RegressionCFA.update_weights>` is provided the `feature_values
+  The RegressionCFA's `update_weights_function <RegressionCFA.update_weights_function>` is provided the `feature_values
   <OptimizationControlMechanism.feature_values>` and `net_outcome <ControlMechanism.net_outcome>` from the
   *previous* trial to update its parameters.  Those are then used to determine the `control_allocation
   <ControlMechanism.control_allocation>` predicted to yield the greatest `EVC <OptimizationControlMechanism_EVC>`
@@ -118,16 +118,16 @@ class RegressionCFAError(Exception):
 
 
 class RegressionCFA(CompositionFunctionApproximator):
-    '''Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
+    '''Parameterizes weights of a `update_weights_function <RegressorCFA.update_weights_function>` used by its `evaluate
     <CompositionFunctionApproximator.evaluate>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
     for a `Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, from a set of `feature_values
     <OptimizationControlMechanism.feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
     provided by the OptimiziationControlMechanism.
 
     The `feature_values <OptimiziationControlMechanism.feature_values>` and `control_allocation
-    <ControlMechanism.control_allocation>` passed to the RegressorCFA's `adapt <RegressorCFA.adapt>` method,
-    and provided as the input to its `update_weights <RegressorCFA.update_weights>`, are represented in the
-    `vector <PredictionVector.vector>` attribute of a `PredictionVector` assigned to the RegressorCFA`s
+    <ControlMechanism.control_allocation>` passed to the RegressorCFA's `adapt <RegressorCFA.adapt>` method, and
+    provided as the input to its `update_weights_function <RegressorCFA.update_weights_function>`, are represented
+    in the `vector <PredictionVector.vector>` attribute of a `PredictionVector` assigned to the RegressorCFA`s
     `prediction_vector <RegressorCFA.prediction_vector>` attribute.  The  `feature_values
     <OptimizationControlMechanism.feature_values>` are assigned to the features field of the
     `prediction_vector <RegressorCFA.prediction_vector>`, and the `control_allocation
@@ -136,8 +136,8 @@ class RegressionCFA(CompositionFunctionApproximator):
     fields for the `costs ControlMechanism.costs` associated with the `control_allocation
     <ControlMechanism.control_allocation>` and for interactions among those terms.
 
-    The `regression_weights <RegressorCFA.regression_weights>` returned by the `update_weights
-    <RegressorCFA.update_weights>` are used by the RegressorCFA's `evaluate <RegressorCFA.evaluate>` method to
+    The `regression_weights <RegressorCFA.regression_weights>` returned by the `update_weights_function
+    <RegressorCFA.update_weights_function>` are used by the RegressorCFA's `evaluate <RegressorCFA.evaluate>` method to
     predict the `net_outcome <ControlMechanism.net_outcome>` from the
     `prediction_vector <RegressorCFA.prediction_vector>`.
 
@@ -166,8 +166,8 @@ class RegressionCFA(CompositionFunctionApproximator):
                     :default value: None
                     :type:
 
-                update_weights
-                    see `update_weights <RegressionCFA.update_weights>`
+                update_weights_function
+                    see `update_weights_function <RegressionCFA.update_weights_function>`
 
                     :default value: `BayesGLM`
                     :type: `Function`
@@ -187,7 +187,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         Arguments
         ---------
 
-        update_weights : LearningFunction, function or method : default BayesGLM
+        update_weights_function : LearningFunction, function or method : default BayesGLM
             parameterizes the `regression_weights <RegressionCFA.regression_weights>` used by the `evaluate
             <RegressionCFA.evaluate>` method to improve its prediction of `net_outcome <ControlMechanism.net_outcome>`
             from a given set of `feature_values <OptimiziationControlMechanism.feature_values>` and a
@@ -206,7 +206,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         Attributes
         ----------
 
-        update_weights : LearningFunction, function or method
+        update_weights_function : LearningFunction, function or method
             parameterizes the `regression_weights <RegressionCFA.regression_weights>` used by the `evaluate
             <RegressionCFA.evaluate>` method to improve prediction of `net_outcome <ControlMechanism.net_outcome>`
             from a given set of `feature_values <OptimiziationControlMechanism.feature_values>` and a
@@ -225,7 +225,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             determined by `prediction_terms <RegressorCFA.prediction_terms>`.
 
         regression_weights : 1d array
-            result returned by `update_weights <RegressorCFA.update_weights>, and used by
+            result returned by `update_weights_function <RegressorCFA.update_weights_function>, and used by
             `evaluate <RegressorCFA.evaluate>` method together with `prediction_vector <RegressorCFA.prediction_vector>`
             to generate predicted `net_outcome <OptimiziationControlMechanism.net_outcome>`.
         '''
@@ -273,7 +273,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         prediction_terms = self.prediction_terms
         self.prediction_vector = self.PredictionVector(features_array, control_signals, prediction_terms)
 
-        # Assign parameters to update_weights
+        # Assign parameters to update_weights_function
         update_weights_default_variable = [self.prediction_vector.vector, np.zeros(1)]
         if isinstance(self.update_weights_function, type):
             self.update_weights_function = \

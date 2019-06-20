@@ -170,13 +170,14 @@ class LearningFunction(Function_Base):
 
 class BayesGLM(LearningFunction):
     """
-    BayesGLM(                   \
-        default_variable=None,  \
-        mu_0=0,                 \
-        sigma_0=1,              \
-        gamma_shape_0=1,        \
-        gamma_size_0=1,         \
-        params=None,            \
+    BayesGLM(                     \
+        default_variable=None,    \
+        mu_0=0,                   \
+        sigma_0=1,                \
+        gamma_shape_0=1,          \
+        gamma_size_0=1,           \
+        update_gamma_priors=True, \
+        params=None,              \
         prefs=None)
 
     Use Bayesian linear regression to find means and distributions of weights that predict dependent variable(s).
@@ -234,6 +235,11 @@ class BayesGLM(LearningFunction):
     gamma_size_0 : int or float : default 1
         specifies the size of the gamma distribution from which samples of the weights are drawn (see documentation for
         `numpy.random.gamma <https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.gamma.html>`_.
+
+    update_gamma_priors : bool : default True
+        specifies whether or not to update `gamma_size_prior <BayesGLM.gamma_size_prior>` and `gamma_shape_prior
+        <BayesGLM.gamma_shape_prior>` on each execution (see `update_gamma_priors <BayesGLM.update_gamma_priors>`
+        for additional details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -296,6 +302,11 @@ class BayesGLM(LearningFunction):
 
     gamma_size_n : 2d array with single scalar value
         current value of the size parameter of the gamma distribution used to sample the prediction weights.
+
+    update_gamma_priors : bool
+        determines whether `gamma_size_prior <BayesGLM.gamma_size_prior>` and `gamma_shape_prior
+        <BayesGLM.gamma_shape_prior>` are updated on each execution (default is True;  setting it to False
+        allows function to be consistent with version implemented in Falk Lieder's BayesianGLM.m).
 
     weights_sample : 1d array
         last sample of prediction weights drawn in call to `sample_weights <BayesGLM.sample_weights>` and returned by
@@ -380,6 +391,12 @@ class BayesGLM(LearningFunction):
                     :default value: 1
                     :type: int
 
+                update_gamma_priors
+                    see `update_gamma_priors <BayesGLM.update_gamma_priors>`
+
+                    :default value: True
+                    :type: bool
+
                 mu_0
                     see `mu_0 <BayesGLM.mu_0>`
 
@@ -421,6 +438,7 @@ class BayesGLM(LearningFunction):
         gamma_shape_0 = 1
         gamma_shape_n = 1
         gamma_shape_prior = 1
+        update_gamma_priors = True
 
         gamma_size_0 = 1
         gamma_size_n = 1
@@ -432,6 +450,7 @@ class BayesGLM(LearningFunction):
                  sigma_0=1,
                  gamma_shape_0=1,
                  gamma_size_0=1,
+                 update_gamma_priors=True,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -443,6 +462,7 @@ class BayesGLM(LearningFunction):
                                                   sigma_0=sigma_0,
                                                   gamma_shape_0=gamma_shape_0,
                                                   gamma_size_0=gamma_size_0,
+                                                  update_gamma_priors=update_gamma_priors,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -561,13 +581,15 @@ class BayesGLM(LearningFunction):
         # Today's prior is yesterday's posterior
         Lambda_prior = self.get_current_function_param('Lambda_n', execution_id)
         mu_prior = self.get_current_function_param('mu_n', execution_id)
-        # # MODIFIED 6/3/19 OLD: [JDC]: THE FOLLOWING ARE YOTAM'S ADDITION (NOT in FALK's CODE)
-        # gamma_shape_prior = self.get_current_function_param('gamma_shape_n', execution_id)
-        # gamma_size_prior = self.get_current_function_param('gamma_size_n', execution_id)
-        # MODIFIED 6/3/19 NEW:
-        gamma_shape_prior = self.parameters.gamma_shape_n.default_value
-        gamma_size_prior = self.parameters.gamma_size_n.default_value
-        # MODIFIED 6/3/19 END
+        if self.parameters.update_gamma_priors.get(execution_id):
+            # MODIFIED 6/3/19 OLD: [JDC]: THE FOLLOWING ARE YOTAM'S ADDITION (NOT in FALK's CODE)
+            gamma_shape_prior = self.get_current_function_param('gamma_shape_n', execution_id)
+            gamma_size_prior = self.get_current_function_param('gamma_size_n', execution_id)
+        else:
+            # MODIFIED 6/3/19 NEW:
+            gamma_shape_prior = self.parameters.gamma_shape_n.default_value
+            gamma_size_prior = self.parameters.gamma_size_n.default_value
+            # MODIFIED 6/3/19 END
 
 
         variable = self._check_args(

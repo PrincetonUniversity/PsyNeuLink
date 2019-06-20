@@ -140,10 +140,13 @@ lvoc = pnl.OptimizationControlMechanism(
     ),
     # posterior weight distribution
     agent_rep=pnl.RegressionCFA(
-        # update_weights=pnl.BayesGLM(mu_0=-0.17, sigma_0=0.11), #sigma_0=math.sqrt(0.11))
-        update_weights_function=pnl.BayesGLM(mu_0=-0.17, sigma_0=0.0000000000000001), #sigma_0=math.sqrt(0.11))
-        # update_weights=pnl.BayesGLM(mu_0=+0.17, sigma_0=0.11), #sigma_0=math.sqrt(0.11))
-        prediction_terms=[pnl.PV.C, pnl.PV.FC, pnl.PV.FF, pnl.PV.COST]
+        # update_weights_function=pnl.BayesGLM(mu_0=-0.17, sigma_0=0.11), #sigma_0=math.sqrt(0.11))
+        update_weights_function=pnl.BayesGLM(mu_0=-0.17,
+                                             sigma_0=0.0000000000000001,
+                                             update_gamma_priors=False
+                                             ), #sigma_0=math.sqrt(0.11))
+        # update_weights_function=pnl.BayesGLM(mu_0=+0.17, sigma_0=0.11), #sigma_0=math.sqrt(0.11))
+        prediction_terms=[pnl.PV.C, pnl.PV.FC, pnl.PV.FF, pnl.PV.COST],
     ),
     # sample control allocs, and return best
     # evaluate() computes outcome (obj mech) - costs given state (features) and sample ctrl alloc

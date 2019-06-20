@@ -30,7 +30,7 @@ It is assumed that the action
 
 COMMENT:
 .. note::
-  The RegressionCFA's `update_weights <RegressionCFA.update_weights>` is provided the `feature_values
+  The RegressionCFA's `update_weights_function <RegressionCFA.update_weights_function>` is provided the `feature_values
   <OptimizationControlMechanism.feature_values>` and `net_outcome <ControlMechanism.net_outcome>` from the
   *previous* trial to update its parameters.  Those are then used to determine the `control_allocation
   <ControlMechanism.control_allocation>` predicted to yield the greatest `EVC <OptimizationControlMechanism_EVC>`
@@ -61,7 +61,7 @@ class GymForagerCFAError(Exception):
 
 
 class GymForagerCFA(CompositionFunctionApproximator):
-    '''Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
+    '''Parameterizes weights of a `update_weights_function <RegressorCFA.update_weights_function>` used by its `evaluate
     <CompositionFunctionApproximator.evaluate>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
     for a `Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, from a set of `feature_values
     <OptimizationControlMechanism.feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
@@ -69,7 +69,7 @@ class GymForagerCFA(CompositionFunctionApproximator):
 
     The `feature_values <OptimiziationControlMechanism.feature_values>` and `control_allocation
     <ControlMechanism.control_allocation>` passed to the RegressorCFA's `adapt <RegressorCFA.adapt>` method,
-    and provided as the input to its `update_weights <RegressorCFA.update_weights>`, are represented in the
+    and provided as the input to its `update_weights_function <RegressorCFA.update_weights_function>`, are represented in the
     `vector <PredictionVector.vector>` attribute of a `PredictionVector` assigned to the RegressorCFA`s
     `prediction_vector <RegressorCFA.prediction_vector>` attribute.  The  `feature_values
     <OptimizationControlMechanism.feature_values>` are assigned to the features field of the
@@ -79,8 +79,8 @@ class GymForagerCFA(CompositionFunctionApproximator):
     fields for the `costs ControlMechanism.costs` associated with the `control_allocation
     <ControlMechanism.control_allocation>` and for interactions among those terms.
 
-    The `regression_weights <RegressorCFA.regression_weights>` returned by the `update_weights
-    <RegressorCFA.update_weights>` are used by the RegressorCFA's `evaluate <RegressorCFA.evaluate>` method to
+    The `regression_weights <RegressorCFA.regression_weights>` returned by the `update_weights_function
+    <RegressorCFA.update_weights_function>` are used by the RegressorCFA's `evaluate <RegressorCFA.evaluate>` method to
     predict the `net_outcome <ControlMechanism.net_outcome>` from the
     `prediction_vector <RegressorCFA.prediction_vector>`.
 
@@ -116,7 +116,7 @@ class GymForagerCFA(CompositionFunctionApproximator):
         prediction_terms = self.prediction_terms
         self.prediction_vector = self.PredictionVector(features_array, control_signals, prediction_terms)
 
-        # Assign parameters to update_weights
+        # Assign parameters to update_weights_function
         update_weights_default_variable = [self.prediction_vector.vector, np.zeros(1)]
         if isinstance(self.update_weights_function, type):
             self.update_weights_function = \
