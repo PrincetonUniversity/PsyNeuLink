@@ -169,7 +169,7 @@ ocm = OptimizationControlMechanism(name='EVC',
                                    # feature_function=FEATURE_FUNCTION,
                                    agent_rep=RegressionCFA(
                                            name='RegressionCFA',
-                                           update_weights=BayesGLM(mu_0=0.5, sigma_0=0.1),
+                                           update_weights_function=BayesGLM(mu_0=0.5, sigma_0=0.1),
                                            prediction_terms=[PV.F, PV.C, PV.COST]
                                    ),
                                    function=GridSearch(direction=MAXIMIZE, save_values=True),

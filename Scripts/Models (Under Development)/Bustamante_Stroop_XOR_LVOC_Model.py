@@ -103,7 +103,7 @@ lvoc = pnl.OptimizationControlMechanism(
         function=objective_function
     ),
     agent_rep=pnl.RegressionCFA(
-        update_weights=pnl.BayesGLM(mu_0=-0.17, sigma_0=9.0909), # -0.17, 9.0909 precision = 0.11; 1/p = v
+        update_weights_function=pnl.BayesGLM(mu_0=-0.17, sigma_0=9.0909), # -0.17, 9.0909 precision = 0.11; 1/p = v
         prediction_terms=[pnl.PV.FC, pnl.PV.COST]
     ),
     function=pnl.GradientOptimization(

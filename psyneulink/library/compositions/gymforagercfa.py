@@ -88,7 +88,7 @@ class GymForagerCFA(CompositionFunctionApproximator):
 
     def __init__(self,
                  name=None,
-                 update_weights=BayesGLM,
+                 update_weights_function=BayesGLM,
                  prediction_terms:tc.optional(list)=None):
         '''
 
@@ -101,10 +101,10 @@ class GymForagerCFA(CompositionFunctionApproximator):
 
         '''
 
-        self.update_weights = update_weights
+        self.update_weights_function = update_weights_function
         self._instantiate_prediction_terms(prediction_terms)
 
-        super().__init__(name=name, update_weights=update_weights)
+        super().__init__(name=name, update_weights_function=update_weights_function)
 
 
     def initialize(self, features_array, control_signals):
@@ -118,11 +118,11 @@ class GymForagerCFA(CompositionFunctionApproximator):
 
         # Assign parameters to update_weights
         update_weights_default_variable = [self.prediction_vector.vector, np.zeros(1)]
-        if isinstance(self.update_weights, type):
-            self.update_weights = \
-                self.update_weights(default_variable=update_weights_default_variable)
+        if isinstance(self.update_weights_function, type):
+            self.update_weights_function = \
+                self.update_weights_function(default_variable=update_weights_default_variable)
         else:
-            self.update_weights.reinitialize({DEFAULT_VARIABLE: update_weights_default_variable})
+            self.update_weights_function.reinitialize({DEFAULT_VARIABLE: update_weights_default_variable})
 
     def adapt(self, feature_values, control_allocation, net_outcome, execution_id=None):
         '''Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
@@ -132,7 +132,7 @@ class GymForagerCFA(CompositionFunctionApproximator):
 
         if previous_state is not None:
             # Update regression_weights
-            regression_weights = self.update_weights([previous_state, net_outcome], execution_id=execution_id)
+            regression_weights = self.update_weights_function([previous_state, net_outcome], execution_id=execution_id)
             # Update vector with current feature_values and control_allocation and store for next trial
             prediction_vector.update_vector(control_allocation, feature_values, execution_id)
             previous_state = prediction_vector.vector
@@ -142,7 +142,7 @@ class GymForagerCFA(CompositionFunctionApproximator):
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
             # prediction_vector.reference_variable = control_allocation
             previous_state = np.full_like(prediction_vector.vector, 0)
-            regression_weights = self.update_weights([previous_state, 0], execution_id=execution_id)
+            regression_weights = self.update_weights_function([previous_state, 0], execution_id=execution_id)
 
         self._set_multiple_parameter_values(
             execution_id,
@@ -193,6 +193,6 @@ class GymForagerCFA(CompositionFunctionApproximator):
     @property
     def _dependent_components(self):
         return list(itertools.chain(
-            [self.update_weights]
+            [self.update_weights_function]
         ))
 
