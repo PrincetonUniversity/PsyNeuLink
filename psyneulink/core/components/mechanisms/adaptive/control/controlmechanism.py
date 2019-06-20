@@ -613,6 +613,17 @@ class ControlMechanism(ModulatoryMechanism):
         ControlMechanism's current and last `control_alloction <ControlMechanism.control_allocation>`, that can be
         accessed by `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` attribute.
 
+    reconfiguration_cost : scalar
+        result of `compute_reconfiguration_cost <ControlMechanism.compute_reconfiguration_cost>` function, that
+        computes the difference between the values of the ControlMechanism's current and last `control_alloction
+        <ControlMechanism.control_allocation>`; value is None and is ignored if `compute_reconfiguration_cost
+        <ControlMechanism.compute_reconfiguration_cost>` has not been specified.
+
+        .. note::
+        A ControlMechanism's reconfiguration_cost is not the same as the `adjustment_cost
+        <ControlSignal.adjustment_cost>` of its ControlSignals (see `ModulatoryMechanism Reconfiguration Cost
+        <ModulatoryMechanism_Reconfiguration_Cost>` for additional detals).
+
     costs : list
         current costs for the ControlMechanism's `control_signals <ControlMechanism.control_signals>`, computed
         for each using its `compute_costs <ControlSignals.compute_costs>` method.

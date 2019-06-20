@@ -5441,7 +5441,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             reconfiguration_cost = 0.
             if callable(self.controller.compute_reconfiguration_cost):
                 reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
-                                                                                                base_control_allocation])
+                                                                                     base_control_allocation])
+                self.controller.reconfiguration_cost.set(reconfiguration_cost, execution_id)
+
             # Apply candidate control signal
             self.controller._apply_control_allocation(candidate_control_allocation,
                                                                 execution_id=execution_id,
@@ -5453,6 +5455,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Compute a total for the candidate control signal(s)
             total_cost = self.controller.combine_costs(all_costs)
         return total_cost
+
     def _build_predicted_inputs_dict(self, predicted_input):
         inputs = {}
         # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
