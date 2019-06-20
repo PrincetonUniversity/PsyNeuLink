@@ -4948,8 +4948,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if not self.parameters.retain_old_simulation_data._get():
                     if self.controller is not None:
-                        self._delete_contexts(*self.controller.parameters.simulation_ids._get(execution_id), check_simulation_storage=True)
-
                         # if any other special parameters store simulation info that needs to be cleaned up
                         # consider dedicating a function to it here
                         # this will not be caught above because it resides in the base context (execution_id)
