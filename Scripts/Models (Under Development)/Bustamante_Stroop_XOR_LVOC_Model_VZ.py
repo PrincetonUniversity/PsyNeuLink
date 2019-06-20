@@ -44,6 +44,9 @@ def w_fct(stim, color_control):
 w_fct_UDF = pnl.UserDefinedFunction(custom_function=w_fct, color_control=1)
 
 
+reward_value_word = 1
+reward_value_color = 10
+
 def objective_function(v):
     '''function used for ObjectiveMechanism of lvoc
      v[0] = probability of color naming (DDM output)
@@ -51,11 +54,13 @@ def objective_function(v):
      v[2] = reward: [word reading rewarded, color naming rewarded]
      v[3] = reaction time
      '''
+    global reward_value_word
+    global reward_value_color
 
     prob_upper = v[0]
     prob_lower = v[1]
-    reward_upper = v[2][0]
-    reward_lower = v[2][1]
+    reward_upper = v[2][0] * reward_value_word
+    reward_lower = v[2][1] * reward_value_color
     # print('prob upper: ', prob_upper)
     # print('prob lower: ', prob_lower)
     # print("reward: ", prob_upper * reward_upper + prob_lower * reward_lower)
@@ -64,9 +69,11 @@ def objective_function(v):
         reward = reward_upper
     else:
         reward = reward_lower
-    # return reward
     reward -= (.44*v[3])
+
+    # TEST PRINT:
     print(v, reward)
+
     return reward
 
 def adj_cost_fct(v):
@@ -134,7 +141,8 @@ lvoc = pnl.OptimizationControlMechanism(
     ),
     # posterior weight distribution
     agent_rep=pnl.RegressionCFA(
-        update_weights=pnl.BayesGLM(mu_0=-0.17, sigma_0=0.11), #sigma_0=math.sqrt(0.11))
+        # update_weights=pnl.BayesGLM(mu_0=-0.17, sigma_0=0.11), #sigma_0=math.sqrt(0.11))
+        update_weights=pnl.BayesGLM(mu_0=-0.17, sigma_0=0.0000000000000001), #sigma_0=math.sqrt(0.11))
         # update_weights=pnl.BayesGLM(mu_0=+0.17, sigma_0=0.11), #sigma_0=math.sqrt(0.11))
         prediction_terms=[pnl.PV.C, pnl.PV.FC, pnl.PV.FF, pnl.PV.COST]
     ),
@@ -183,9 +191,31 @@ c.add_node(lvoc)
 
 # c.show_graph(show_node_structure=pnl.ALL, show_cim=True)
 
+trial_num = 0
+
+def adjust_reward():
+    global trial_num
+    global reward_value_word
+    global reward_value_color
+    if trial_num==0:
+        reward_value_word = 5
+        reward_value_color = 5
+    elif trial_num==320:
+        reward_value_word = 10
+        reward_value_color = 10
+
+def print_weights():
+    global trial_num
+    print(trial_num)
+    print(lvoc.agent_rep.parameters.regression_weights.get())
+    trial_num += 1
+    # print("----------------ENDED TRIAL-------------------")
+
 # for i in range(len(xor_dict)): # 30 subjects, 520 trials
 num_subj = 1
 for i in range(num_subj):
+
+    global trial
     input_dict = {color_stim: xor_dict[i][0],
               word_stim: xor_dict[i][1],
               color_task: xor_dict[i][2],
@@ -193,18 +223,15 @@ for i in range(num_subj):
               reward:    xor_dict[i][4]}
 
     # start_time = time.time()
-    t = 0
-    def print_weights():
-        global t
-        print(t)
-        t += 1
-        # print("----------------ENDED TRIAL-------------------")
+    trial_num = 0
 
     # duration = timeit.timeit(c.run(inputs=input_dict, execution_id=i), number=1) #number=2
     c.run(inputs=input_dict,
           execution_id=i,
-          call_after_trial=print_weights) #num_trials
-    # duration = time.time() - start_time
+          call_before_trial=adjust_reward,
+          call_after_trial=print_weights #num_trials
+          # duration = time.time() - start_time
+          )
 
     print('\n')
     print('Subject: ', i+1)
