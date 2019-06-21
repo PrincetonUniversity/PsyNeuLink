@@ -946,20 +946,13 @@ class Component(object, metaclass=ComponentsMeta):
 
         """
 
-        # # MODIFIED 8/14/16 NEW:
-        # # PROBLEM: variable has different name for different classes;  need to standardize name across classes
-        # try:
-        #     if self.initialization_status is ContextFlags.DEFERRED_INITIALIZATION:
-        #         defer_init = True
-        # except AttributeError:
-        #     pass
-        # else:
-        #     if defer_init:
-        #         self.init_args = locals().copy()
-        #         del self.init_args['self']
-        #         # del self.init_args['__class__']
-        #         return
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
+
+        # # MODIFIED 6/21/19 NEW: [JDC]
+        # FIX: NEED TO DEAL WITH SITUATIONS IN WHICH A SUBCLASS RATHER THAN THE USER SPECIFIED DEFAULT_VARIABLE
+        # if default_variable is not None:
+        #     self.parameters.variable._user_specified = True
+        # # MODIFIED 6/21/19 END
 
         context = ContextFlags.COMPONENT
 

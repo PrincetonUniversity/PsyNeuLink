@@ -39,7 +39,7 @@ from psyneulink.core.components.functions.function import \
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction, THRESHOLD
 from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
 from psyneulink.core.globals.keywords import \
-    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, DECAY, \
+    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, DECAY, DEFAULT_VARIABLE,\
     DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, INCREMENT, \
     INITIALIZER, INPUT_STATES, INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, NOISE, \
     OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, PRODUCT, RATE, REST, \
@@ -210,8 +210,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                     :type: float
 
         """
-        rate = Parameter(1.0, modulable=True)
-        noise = Parameter(0.0, modulable=True)
+        rate = Parameter(1.0, modulable=True, function_arg=True)
+        noise = Parameter(0.0, modulable=True, function_arg=True)
         previous_value = np.array([0])
         initializer = np.array([0])
 
@@ -228,7 +228,14 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  prefs: is_pref_set = None,
                  context=None):
 
-      # Assign args to params and functionParams dicts
+        # MODIFIED 6/21/19 NEW: [JDC]
+        # FIX: MOVE TO EITHER FUNCTION_BASE OR COMPONENT FOR FULL GENERALITY
+        if default_variable is not None:
+            self.parameters.variable._user_specified = True
+        # MODIFIED 6/21/19 END
+
+
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
 
         # # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
@@ -244,6 +251,60 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                          context=context)
 
         self.has_initializers = True
+
+    # MODIFIED 6/21/19 NEW: [JDC]
+    # FIX CONSIDER MOVING THIS TO THE LEVEL OF Function_Base OR EVEN Component
+    def _validate_params(self, request_set, target_set=None, context=None):
+        '''Check that for all parameters used for the function specified with length>1  have equal length
+
+        Insure that for any parameters that are:
+            - in the Paramaters class
+            - designated as function_arg,
+            - specified by the user with length>1
+        then:
+            1) those all have the same length
+            2) if default_variable:
+               - was specified by the user, the parameters all have the same length as that
+               - was NOT specified by the user, they all have the same length as each other;
+                 note:  in this case, default_variable will be set to the length of those parameters in XXX
+        '''
+
+        # Use dict to be able to report names of params that are in violating set
+        params_to_check = {}
+
+        for param in request_set:
+            value = request_set[param]
+            # If param is in Parameter class for function and it is a function_arg:
+            if param in self.parameters.names() and getattr(self.parameters, param).function_arg:
+                if value is not None and isinstance(value, (list, np.ndarray)) and len(value)>1:
+                    # Store ones with length > 1 in dict for evaluation below
+                    params_to_check.update({param:value})
+
+        values = list(params_to_check.values())
+
+        # If default_variable was specified by user, check that all function_arg params have same length as that
+        if self.parameters.variable._user_specified:
+            default_variable_len = len(self.parameters.variable.default_value)
+            violators = [k for k,v in params_to_check.items() if len(v)!=default_variable_len]
+            if violators:
+                raise FunctionError(f"The following parameters specified for {self.name} with len>1 "
+                                    f"don't have the same length as its {repr(DEFAULT_VARIABLE)} "
+                                    f"({default_variable_len}): {violators}.")
+
+        # Check that all function_arg params with length > 1 have the same length
+        elif any(len(v)!=len(values[0]) for v in values):
+            raise FunctionError(f"The parameters specified for {self.name} with len>1 ({list(params_to_check.keys())}) "
+                                f"don't all have the same length")
+
+        super()._validate_params(request_set=request_set,
+                         target_set=target_set,
+                         context=context)
+    # MODIFIED 6/21/19 END
+
+    # MODIFIED 6/21/19 NEW: [JDC]
+    def _handle_default_variable(self, default_variable=None, size=None):
+    # MODIFIED 6/21/19 END
+
 
     def _EWMA_filter(self, previous_value, rate, variable):
         '''Return `exponentially weighted moving average (EWMA)
@@ -286,16 +347,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
     def function(self, *args, **kwargs):
         raise FunctionError("IntegratorFunction is not meant to be called explicitly")
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        # FIX: 6/21/19 [JDC]
-        # INSURE THAT:
-        # - FOR ANY PARAMS THAT ARE > LENGTH 1:
-        #   - THOSE ALL HAVE THE SAME LENGTH
-        #   - IF default_variable IS SPECIFIED, THEY ALL HAVE THE SAME LENGTH AS THAT
-        #   - IF default_variable IS NOT SPECIFIED, IT GETS SPECIFIED WITH THE LENGTH OF THE PARAM(S)
-        #     (USE user_assigned ON PARAMETER TO DETERMINE WHETHER default_varialbe WAS ASSIGNED WITH A LENGTH
-
 
 # *********************************************** INTEGRATOR FUNCTIONS *************************************************
 
@@ -445,8 +496,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                     :type:
 
         """
-        rate = Parameter(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        increment = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM])
+        rate = Parameter(None, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
+        increment = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -746,8 +797,8 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                     :type: float
 
         """
-        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
     @tc.typecheck
     def __init__(self,
@@ -972,8 +1023,8 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                     :type: float
 
         """
-        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
 
     @tc.typecheck
     def __init__(self,
@@ -1502,17 +1553,17 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                     :type: float
 
         """
-        rate = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        rate = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
         initial_short_term_avg = 0.0
         initial_long_term_avg = 0.0
-        short_term_gain = Parameter(1.0, modulable=True)
-        long_term_gain = Parameter(1.0, modulable=True)
-        short_term_bias = Parameter(0.0, modulable=True)
-        long_term_bias = Parameter(0.0, modulable=True)
-        short_term_rate = Parameter(0.9, modulable=True)
-        long_term_rate = Parameter(0.1, modulable=True)
+        short_term_gain = Parameter(1.0, modulable=True, function_arg=True)
+        long_term_gain = Parameter(1.0, modulable=True, function_arg=True)
+        short_term_bias = Parameter(0.0, modulable=True, function_arg=True)
+        long_term_bias = Parameter(0.0, modulable=True, function_arg=True)
+        short_term_rate = Parameter(0.9, modulable=True, function_arg=True)
+        long_term_rate = Parameter(0.1, modulable=True, function_arg=True)
         operation = PRODUCT
-        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
         previous_short_term_avg = None
         previous_long_term_avg = None
         short_term_logistic = None
@@ -1995,11 +2046,11 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
                     :type: float
 
         """
-        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        decay = Parameter(1.0, modulable=True)
-        rest = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        max_val = Parameter(1.0)
-        min_val = Parameter(1.0)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
+        decay = Parameter(1.0, modulable=True, function_arg=True)
+        rest = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
+        max_val = Parameter(1.0, function_arg=True)
+        min_val = Parameter(1.0, function_arg=True)
 
     @tc.typecheck
     def __init__(self,
@@ -2375,6 +2426,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
+        # FIX 6/21/19 [JDC]: MAKE ALL OF THESE PARAMETERS AND ADD function_arg TO THEM TO "PARALLELIZE" INTEGRATION
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         starting_point = 0.0
@@ -2726,6 +2778,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                     :type: float
 
         """
+        # FIX 6/21/19 [JDC]: MAKE ALL OF THESE PARAMETERS AND ADD function_arg TO THEM TO "PARALLELIZE" INTEGRATION
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         decay = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -3009,9 +3062,9 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
-        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        offset = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM])
-        time_step_size = Parameter(0.1, modulable=True)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
+        offset = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
+        time_step_size = Parameter(0.1, modulable=True, function_arg=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
