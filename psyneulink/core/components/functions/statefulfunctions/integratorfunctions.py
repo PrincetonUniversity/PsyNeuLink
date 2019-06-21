@@ -88,8 +88,12 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         If `variable <IntegratorFunction.variable>` is an array, for any parameter that is specified as a float its
         value is applied uniformly to all elements of the relevant term of the integral (e.g., `variable
         <IntegratorFunction.variable>` or `previous_value <IntegratorFunction.previous_value>`, depending on the
-        subclass);  for any paramter specified as an array, it must be the same length as `variable
+        subclass);  for any parameter specified as an array, it must be the same length as `variable
         <IntegratorFunction.variable>`, and it is applied elementwise (Hadarmard) to the relevant term of the integral.
+        COMMENT:
+        6/21/19
+        If, on initialization, the default_variable was not specified, any parameters specified as an array must be
+        the same length, and the default_variable is assumed to have the same length as those parameters.
 
     Arguments
     ---------
@@ -282,6 +286,15 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
     def function(self, *args, **kwargs):
         raise FunctionError("IntegratorFunction is not meant to be called explicitly")
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        # FIX: 6/21/19 [JDC]
+        # INSURE THAT:
+        # - FOR ANY PARAMS THAT ARE > LENGTH 1:
+        #   - THOSE ALL HAVE THE SAME LENGTH
+        #   - IF default_variable IS SPECIFIED, THEY ALL HAVE THE SAME LENGTH AS THAT
+        #   - IF default_variable IS NOT SPECIFIED, IT GETS SPECIFIED WITH THE LENGTH OF THE PARAM(S)
+        #     (USE user_assigned ON PARAMETER TO DETERMINE WHETHER default_varialbe WAS ASSIGNED WITH A LENGTH
 
 
 # *********************************************** INTEGRATOR FUNCTIONS *************************************************
@@ -1170,7 +1183,11 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
             self.parameters.previous_value._set(adjusted_value, execution_id)
 
-        return self.convert_output_type(adjusted_value)
+        # # MODIFIED 6/21/19 OLD:
+        # return self.convert_output_type(adjusted_value)
+        # MODIFIED 6/21/19 NEW: [JDC]
+        return self.convert_output_type(adjusted_value, variable)
+        # MODIFIED 6/21/19 END
 
 S_MINUS_L = 's-l'
 L_MINUS_S = 'l-s'
