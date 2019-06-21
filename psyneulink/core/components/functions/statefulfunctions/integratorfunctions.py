@@ -228,13 +228,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  prefs: is_pref_set = None,
                  context=None):
 
-        # MODIFIED 6/21/19 NEW: [JDC]
-        # FIX: MOVE TO EITHER FUNCTION_BASE OR COMPONENT FOR FULL GENERALITY
-        if default_variable is not None:
-            self.parameters.variable._user_specified = True
-        # MODIFIED 6/21/19 END
-
-
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params)
 
@@ -255,18 +248,16 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     # MODIFIED 6/21/19 NEW: [JDC]
     # FIX CONSIDER MOVING THIS TO THE LEVEL OF Function_Base OR EVEN Component
     def _validate_params(self, request_set, target_set=None, context=None):
-        '''Check that for all parameters used for the function specified with length>1  have equal length
+        '''Check inner dimension (length) of all parameters used for the function
 
-        Insure that for any parameters that are:
-            - in the Paramaters class
-            - designated as function_arg,
-            - specified by the user with length>1
-        then:
-            1) those all have the same length
+        Insure that for any parameters that are in the Paramaters class, designated as function_arg, and
+            specified by the user with length>1:
+            1) they all have the same length;
             2) if default_variable:
                - was specified by the user, the parameters all have the same length as that
                - was NOT specified by the user, they all have the same length as each other;
-                 note:  in this case, default_variable will be set to the length of those parameters in XXX
+                 note:  in this case, default_variable will be set to the length of those parameters in
+                        _instantiate_attributes_before_function below
         '''
 
         # Use dict to be able to report names of params that are in violating set
@@ -282,9 +273,10 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
         values = list(params_to_check.values())
 
-        # If default_variable was specified by user, check that all function_arg params have same length as that
+        # If default_variable was specified by user, check that all function_arg params have same length 
+        #    as the length of items in the inner-most dimension (axis) of default_variable
         if self.parameters.variable._user_specified:
-            default_variable_len = len(self.parameters.variable.default_value)
+            default_variable_len = self.parameters.variable.default_value.shape[-1]
             violators = [k for k,v in params_to_check.items() if len(v)!=default_variable_len]
             if violators:
                 raise FunctionError(f"The following parameters specified for {self.name} with len>1 "
@@ -302,9 +294,27 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     # MODIFIED 6/21/19 END
 
     # MODIFIED 6/21/19 NEW: [JDC]
-    def _handle_default_variable(self, default_variable=None, size=None):
-    # MODIFIED 6/21/19 END
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+        '''Insure inner dimension of default_variable matches the same for parameters used for function'''
 
+        # Note:  if default_variable was user specfied, then parameters were validated above in _validate_params
+        if not self.parameters.variable._user_specified:
+            values_with_a_len = [param.default_value for param in self.parameters if
+                                 param.function_arg and
+                                 isinstance(param.default_value, (list, np.ndarray)) and
+                                 len(param.default_value)>1]
+            # One or more parameters are specified with length > 1 in the inner dimension
+            if values_with_a_len:
+                variable_shape = list(self.parameters.variable.default_value.shape)
+                # If shape already matches,
+                #    leave alone in case default_variable was specified by class with values other than zero
+                #    (since reshaping below is done with zeros)
+                if variable_shape[-1] != np.array(values_with_a_len[0]).shape[-1]:
+                    variable_shape[-1] = np.array(values_with_a_len[0]).shape[-1]
+                    self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
+
+        super()._instantiate_attributes_before_function(function=function, context=context)
+    # MODIFIED 6/21/19 END
 
     def _EWMA_filter(self, previous_value, rate, variable):
         '''Return `exponentially weighted moving average (EWMA)
