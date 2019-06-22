@@ -243,21 +243,34 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         '''If any parameters with len>1 have been specified for the Mechanism's function, and Mechanism's
         default_variable has not been specified, assign the shape of the function's variable as the Mechanism's'''
 
-        variable = self.parameters.variable
+        user_specified = False
+        if default_variable is not None:
+            variable = np.array(default_variable)
+            user_specified = True
+        else:
+            variable = self.parameters.variable.default_value
+            user_specified = self.parameters.variable._user_specified
         # FIX: 6/21/19 CHECK THAT FUNCTION IS AN INSTNATIATED FUNCTION
         if isinstance(function, Function):
-            function_variable = function.parameters.variable
-
-            if variable.default_value.shape[-1] != function_variable.default_value.shape[-1]:
-                if variable._user_specified or default_variable: # Testing for default_variable here may be redundant
-                    raise IntegratorMechanismError(f"Shape of {repr(VARIABLE)} for function specified for {self.name} "
-                                                   f"({self.function.name}: {function.variable.shape}) does not match "
-                                                   f"the shape of the {repr(DEFAULT_VARIABLE)} specified for the "
-                                                   f"{repr(Mechanism.__name__)}.")
-                else:
-                    variable_shape = list(variable.default_value.shape)
-                    variable_shape[-1] = function_variable.default_value.shape[-1]
-                    self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
+            function_variable = function.parameters.variable.default_value
+            function_variable_len = function_variable.shape[-1]
+            variable_len = variable.shape[-1]
+            # If the length of both variable and function_variable is greater than 1 and they don't match,
+            #    or variable is length 1 but user specified, raise an error
+            if ((variable_len>1 and function_variable_len>1 and variable_len!=function_variable_len) or
+                variable_len==1 and user_specified):
+                raise IntegratorMechanismError(f"Shape of {repr(VARIABLE)} for function specified for {self.name} "
+                                               f"({self.function.name}: {function.variable.shape}) does not match "
+                                               f"the shape of the {repr(DEFAULT_VARIABLE)} specified for the "
+                                               f"{repr(Mechanism.__name__)}.")
+            # If variable is length one but the function_variable is longer, reshape variable to match function's
+            elif variable_len==1 and function_variable_len>1:
+                variable_shape = list(variable.default_value.shape)
+                variable_shape[-1] = function_variable.default_value.shape[-1]
+                self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
+            # IMPLEMENTATON NOTE:
+            #    Don't bother with function_variable_len==1 and variable_len>1
+            #    as the reshaping of the function's variable will be managed in _instantiate_function
 
 
             # # FIX: MOVE/COMBINE THIS TO/WITH Integrator Function
@@ -279,7 +292,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             #                 f"that have lengths that are inconsistent with the shape of the "
             #                 f"{repr(Mechanism.__name__)}'s variable {variable.shape}: {params_and_lengths}.")
 
-        super()._handle_default_variable(variable, size, input_states, function, params)
+        return variable
 
    # def _instantiate_function(self, function, function_params=None, context=None):
    #      '''If any parameters with len>1 have been specified for the Mechanism's function, and Mechanism's

@@ -308,23 +308,16 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                 # If shape already matches,
                 #    leave alone in case default_variable was specified by class with values other than zero
                 #    (since reshaping below is done with zeros)
-                # MODIFIED 6/21 OLD:
                 variable_shape = list(self.parameters.variable.default_value.shape)
+                # IMPLEMENTATION NOTE:
+                #    Don't want to just test here with np.broadcast_to since default_variable could be len=1
+                #    in which case a parameter with len>1 applied to it will generate a variable of len>1;
+                #    need default_variable to be cast to have same length as parameters
                 if variable_shape[-1] != np.array(values_with_a_len[0]).shape[-1]:
                     variable_shape[-1] = np.array(values_with_a_len[0]).shape[-1]
                     self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
                     # Since default_variable is being determined by user specification of parameter:
                     self.parameters.variable._user_specified = True
-                # MODIFIED 6/21 NEW: [JDC]
-                # try:
-                #     np.broadcast_to(self.parameters.variable.default_value, values_with_a_len[0])
-                # except (ValueError, TypeError):
-                #     variable_shape = list(self.parameters.variable.default_value.shape)
-                #     variable_shape[-1] = np.array(values_with_a_len[0]).shape[-1]
-                #     self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
-                #     # Since default_variable is being determined by user specification of parameter:
-                #     self.parameters.variable._user_specified = True
-                # MODIFIED 6/21 END
 
         super()._instantiate_attributes_before_function(function=function, context=context)
     # MODIFIED 6/21/19 END
@@ -561,18 +554,20 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
         self.has_initializers = True
 
-    def _validate_params(self, request_set, target_set=None, context=None):
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-        if all((param in request_set
-                and request_set[param] is not None
-               and isinstance(request_set[param], (list, np.ndarray)))
-               for param in {RATE, INCREMENT}):
-            r_len = len(request_set[RATE])
-            i_len = len(request_set[INCREMENT])
-            if r_len != i_len:
-                raise FunctionError("If {} and {} args are both specified as lists or arrays for {}, "
-                                    "their lengths ({} and {}, respectively) must be the same".
-                                    format(repr(RATE), repr(INCREMENT), self.__class__.__name__, r_len, i_len))
+    # # MODIFIED 6/21/19 OLD:
+    # def _validate_params(self, request_set, target_set=None, context=None):
+    #     super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+    #     if all((param in request_set
+    #             and request_set[param] is not None
+    #            and isinstance(request_set[param], (list, np.ndarray)))
+    #            for param in {RATE, INCREMENT}):
+    #         r_len = len(request_set[RATE])
+    #         i_len = len(request_set[INCREMENT])
+    #         if r_len != i_len:
+    #             raise FunctionError("If {} and {} args are both specified as lists or arrays for {}, "
+    #                                 "their lengths ({} and {}, respectively) must be the same".
+    #                                 format(repr(RATE), repr(INCREMENT), self.__class__.__name__, r_len, i_len))
+    # MODIFIED 6/21/19 END
 
     def _accumulator_check_args(self, variable=None, execution_id=None, params=None, target_set=None, context=None):
         """validate params and assign any runtime params.

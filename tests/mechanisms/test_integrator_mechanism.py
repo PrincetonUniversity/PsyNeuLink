@@ -1013,10 +1013,9 @@ class TestIntegratorRate:
                     rate=[1.0, 2.0],
                     increment=[3.0, 4.0, 5.0]
                 ))
-        assert (
-            "args are both specified as lists or arrays for" in str(error_text)
-            and "respectively) must be the same" in str(error_text)
-        )
+        error_msg_a = "The parameters specified for AccumulatorIntegrator Function-0 with len>1 "
+        error_msg_b = "(['rate', 'increment']) don't all have the same length"
+        assert all(error_msg in str(error_text) for error_msg in {error_msg_a, error_msg_b})
 
 
     # @pytest.mark.mechanism
