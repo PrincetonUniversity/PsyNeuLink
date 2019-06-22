@@ -993,8 +993,8 @@ class TestIntegratorRate:
                     rate=[5.0, 5.0, 5.0]
                 )
             )
-            # P = Process(pathway=[I])
-            float(I.execute(10.0))
+            result = I.execute(10.0)
+            float(result)
         error_msg_a = \
             "SimpleIntegrator Function-0 is specified as the function of IntegratorMechanism with parameters that have "
         error_msg_b = \

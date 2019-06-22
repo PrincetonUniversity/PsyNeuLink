@@ -72,6 +72,7 @@ from collections.abc import Iterable
 import typecheck as tc
 import numpy as np
 
+from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -238,45 +239,25 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     # def _parse_function_variable(self, variable, execution_id=None, context=None):
     #     super()._parse_function_variable(variable, execution_id, context)
 
-    # def _instantiate_function(self, function, function_params=None, context=None):
-    #     variable = self.parameters.variable.default_value
-    #     function_variable = self.function.parameters.variable.default_value
-    #     if variable.shape != function_variable.shape:
-    #         try:
-    #             np.broadcast_to(variable, function_variable)
-    #         except (ValueError, TypeError):
-    #             mismatches = [(param.name, param.default_value) for param in self.function.parameters if
-    #                           param.function_arg and
-    #                           param._user_specified and
-    #                           isinstance(param.default_value, (list, np.ndarray)) and
-    #                           not hasattr(param, 'source') and
-    #                           not param.name is VARIABLE and
-    #                           param.default_value.shape[-1] != variable.shape[-1]]
-    #             if mismatches:
-    #                 params_and_lengths = ', '.join([repr(param[0]) + ':'+ repr(np.array(param[1]).tolist())
-    #                                                 for param in mismatches])
-    #                 raise IntegratorMechanismError(
-    #                         f"{self.function.name} is specified as the function of {self.name} with parameters "
-    #                         f"that have lengths that are inconsistent with the shape of the "
-    #                         f"{repr(Mechanism.__name__)}'s variable {variable.shape}: {params_and_lengths}.")
-    #
-    #     super()._instantiate_function(function, function_params, context)
-
-    def _instantiate_function(self, function, function_params=None, context=None):
+    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
         '''If any parameters with len>1 have been specified for the Mechanism's function, and Mechanism's
         default_variable has not been specified, assign the shape of the function's variable as the Mechanism's'''
 
         variable = self.parameters.variable
-        function_variable = self.function.parameters.variable
+        # FIX: 6/21/19 CHECK THAT FUNCTION IS AN INSTNATIATED FUNCTION
+        if isinstance(function, Function):
+            function_variable = function.parameters.variable
 
-        if variable.default_value.shape != function_variable.default_value.shape:
-            if variable._user_specified:
-                raise IntegratorMechanismError(f"Shape of {repr(VARIABLE)} for function specified for {self.name} "
-                                               f"({self.function.name}: {function.variable.shape}) does not match the "
-                                               f"shape of the {repr(DEFAULT_VARIABLE)} specified for the "
-                                               f"{repr(Mechanism.__name__)}.")
-            else:
-                variable.default_value = function_variable.default_value
+            if variable.default_value.shape[-1] != function_variable.default_value.shape[-1]:
+                if variable._user_specified or default_variable: # Testing for default_variable here may be redundant
+                    raise IntegratorMechanismError(f"Shape of {repr(VARIABLE)} for function specified for {self.name} "
+                                                   f"({self.function.name}: {function.variable.shape}) does not match "
+                                                   f"the shape of the {repr(DEFAULT_VARIABLE)} specified for the "
+                                                   f"{repr(Mechanism.__name__)}.")
+                else:
+                    variable_shape = list(variable.default_value.shape)
+                    variable_shape[-1] = function_variable.default_value.shape[-1]
+                    self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
 
 
             # # FIX: MOVE/COMBINE THIS TO/WITH Integrator Function
@@ -298,4 +279,44 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             #                 f"that have lengths that are inconsistent with the shape of the "
             #                 f"{repr(Mechanism.__name__)}'s variable {variable.shape}: {params_and_lengths}.")
 
-        super()._instantiate_function(function, function_params, context)
+        super()._handle_default_variable(variable, size, input_states, function, params)
+
+   # def _instantiate_function(self, function, function_params=None, context=None):
+   #      '''If any parameters with len>1 have been specified for the Mechanism's function, and Mechanism's
+   #      default_variable has not been specified, assign the shape of the function's variable as the Mechanism's'''
+   #
+   #      variable = self.parameters.variable
+   #      function_variable = self.function.parameters.variable
+   #
+   #      if variable.default_value.shape[-1] != function_variable.default_value.shape[-1]:
+   #          if variable._user_specified:
+   #              raise IntegratorMechanismError(f"Shape of {repr(VARIABLE)} for function specified for {self.name} "
+   #                                             f"({self.function.name}: {function.variable.shape}) does not match the "
+   #                                             f"shape of the {repr(DEFAULT_VARIABLE)} specified for the "
+   #                                             f"{repr(Mechanism.__name__)}.")
+   #          else:
+   #              variable_shape = list(variable.default_value.shape)
+   #              variable_shape[-1] = function_variable.default_value.shape[-1]
+   #              self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
+   #
+   #
+   #          # # FIX: MOVE/COMBINE THIS TO/WITH Integrator Function
+   #          # try:
+   #          #     np.broadcast_to(variable, function_variable)
+   #          # except (ValueError, TypeError):
+   #          #     mismatches = [(param.name, param.default_value) for param in self.function.parameters if
+   #          #                   param.function_arg and
+   #          #                   param._user_specified and
+   #          #                   isinstance(param.default_value, (list, np.ndarray)) and
+   #          #                   not hasattr(param, 'source') and
+   #          #                   not param.name is VARIABLE and
+   #          #                   param.default_value.shape[-1] != variable.shape[-1]]
+   #          #     if mismatches:
+   #          #         params_and_lengths = ', '.join([repr(param[0]) + ':'+ repr(np.array(param[1]).tolist())
+   #          #                                         for param in mismatches])
+   #          #         raise IntegratorMechanismError(
+   #          #                 f"{self.function.name} is specified as the function of {self.name} with parameters "
+   #          #                 f"that have lengths that are inconsistent with the shape of the "
+   #          #                 f"{repr(Mechanism.__name__)}'s variable {variable.shape}: {params_and_lengths}.")
+   #
+   #      super()._instantiate_function(function, function_params, context)

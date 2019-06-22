@@ -1416,12 +1416,12 @@ class Mechanism_Base(Mechanism):
                  default_variable=None,
                  size=None,
                  input_states=None,
+                 function=None,
                  output_states=None,
                  params=None,
                  name=None,
                  prefs=None,
                  context=None,
-                 function=None,
                  ):
         """Assign name, category-level preferences, and variable; register Mechanism; and enforce category methods
 
@@ -1465,12 +1465,14 @@ class Mechanism_Base(Mechanism):
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
+
         # ParameterState
         from psyneulink.core.components.states.parameterstate import ParameterState
         register_category(entry=ParameterState,
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
+
         # OutputState
         from psyneulink.core.components.states.outputstate import OutputState
         register_category(entry=OutputState,
@@ -1478,7 +1480,7 @@ class Mechanism_Base(Mechanism):
                           registry=self._stateRegistry,
                           context=context)
 
-        default_variable = self._handle_default_variable(default_variable, size, input_states, params)
+        default_variable = self._handle_default_variable(default_variable, size, input_states, function, params)
 
         super(Mechanism_Base, self).__init__(default_variable=default_variable,
                                              size=size,
@@ -1509,7 +1511,7 @@ class Mechanism_Base(Mechanism):
     # Handlers
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
+    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
         '''
             Finds whether default_variable can be determined using **default_variable** and **size**
             arguments.
