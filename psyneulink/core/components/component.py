@@ -948,12 +948,6 @@ class Component(object, metaclass=ComponentsMeta):
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
 
-        # # MODIFIED 6/21/19 NEW: [JDC]
-        # FIX: NEED TO DEAL WITH SITUATIONS IN WHICH A SUBCLASS RATHER THAN THE USER SPECIFIED DEFAULT_VARIABLE
-        # if default_variable is not None:
-        #     self.parameters.variable._user_specified = True
-        # # MODIFIED 6/21/19 END
-
         context = ContextFlags.COMPONENT
 
         # assign defaults based on pass in params and class defaults

@@ -1372,25 +1372,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for proj in input_state.shadow_inputs.path_afferents:
                     sender = proj.sender
                     if sender.owner != self.input_CIM:
-                        # MODIFIED 5/9/19 OLD:
                         self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_state),
                                             sender=proj.sender.owner,
                                             receiver=node)
-                        # # MODIFIED 5/9/19 NEW: [JDC]
-                        # self.add_projection(sender=proj.sender.owner,
-                        #                     receiver=node)
-                        # MODIFIED 5/9/19 END
 
-    # MODIFIED 5/29/19 OLD:
-    # def add_nodes(self, nodes, required_roles=None):
-    # # # MODIFIED 5/29/19 NEW: [JDC]
-    # # def add_nodes(self, nodes=None, *args):
-    #     if not isinstance(nodes, list):
-    #         raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
-    #                                f"must be a list of nodes")
-    #     for node in nodes:
-    #         self.add_node(node=node, required_roles=required_roles)
-    # # MODIFIED 5/29/19 NEWER: [JDC]
     def add_nodes(self, nodes, required_roles=None):
         """
             Add a list of Composition Nodes (`Mechanism` or `Composition`) to the Composition,
@@ -1424,7 +1409,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError(f"Node specified in 'add_nodes' method of '{self.name}' {Composition.__name__} "
                                        f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
                                        f"or a tuple containing one of those and a {NodeRole.__name__} or list of them")
-    # MODIFIED 5/29/19 END
 
     def add_controller(self, controller:ModulatoryMechanism):
         """
@@ -1538,12 +1522,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError(f"A {Projection.__name__} specified to {receiver_name} in {self.name} "
                                        f"has a sender ({repr(sender_name)}) that is not (yet) in it "
                                        f"or any of its nested {Composition.__name__}s.")
-            #
-            # # MODIFIED 5/29/19 NEW:
-            # # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below
-            # if isinstance(sender.owner, CompositionInterfaceMechanism):
-            #     sender_mechanism = sender.owner
-            # # MODIFIED 5/29/19 NEW:
 
         if hasattr(projection, "sender"):
             if projection.sender.owner != sender and \
@@ -1616,11 +1594,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
                                        format(repr(receiver), self.name, Composition.__name__, ))
-            # MODIFIED 5/29/19 NEW:
-            # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below
-            # if isinstance(receiver.owner, CompositionInterfaceMechanism):
-            #     receiver_mechanism = receiver.owner
-            # MODIFIED 5/29/19 END
 
         return receiver, receiver_mechanism, graph_receiver, receiver_input_state, \
                nested_compositions, learning_projection
@@ -1928,12 +1901,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 error_sources=comparator_mechanism,
                                 in_composition=True,
                                 name="Learning Mechanism for " + learned_projection.name)
-        # MODIFIED 5/29/19 NEW:
+
         # FIX 5/29/19 [JDC]:  MIGHT WANT TO TEST HERE WHETHER IT IS IN A BP CHAIN AND, IF SO, AND NOT LAST, THEN
         #  REQUIRE IT
         learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
                                                                                                         override=True)
-        # MODIFIED 5/29/19 END
         self.learning_enabled = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 

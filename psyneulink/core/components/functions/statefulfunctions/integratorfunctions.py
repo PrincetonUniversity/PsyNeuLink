@@ -90,9 +90,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         <IntegratorFunction.variable>` or `previous_value <IntegratorFunction.previous_value>`, depending on the
         subclass);  for any parameter specified as an array, it must be the same length as `variable
         <IntegratorFunction.variable>`, and it is applied elementwise (Hadarmard) to the relevant term of the integral.
-        COMMENT:
-        6/21/19
-        If, on initialization, the default_variable was not specified, any parameters specified as an array must be
+        If, on initialization, the default_variable is not specified, any parameters specified as an array must be
         the same length, and the default_variable is assumed to have the same length as those parameters.
 
     Arguments
@@ -553,21 +551,6 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         self.has_initializers = True
-
-    # # MODIFIED 6/21/19 OLD:
-    # def _validate_params(self, request_set, target_set=None, context=None):
-    #     super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-    #     if all((param in request_set
-    #             and request_set[param] is not None
-    #            and isinstance(request_set[param], (list, np.ndarray)))
-    #            for param in {RATE, INCREMENT}):
-    #         r_len = len(request_set[RATE])
-    #         i_len = len(request_set[INCREMENT])
-    #         if r_len != i_len:
-    #             raise FunctionError("If {} and {} args are both specified as lists or arrays for {}, "
-    #                                 "their lengths ({} and {}, respectively) must be the same".
-    #                                 format(repr(RATE), repr(INCREMENT), self.__class__.__name__, r_len, i_len))
-    # MODIFIED 6/21/19 END
 
     def _accumulator_check_args(self, variable=None, execution_id=None, params=None, target_set=None, context=None):
         """validate params and assign any runtime params.
