@@ -4,6 +4,8 @@ import pytest
 
 import psyneulink.core.components.functions.statefulfunctions.integratorfunctions as Functions
 import psyneulink.core.llvm as pnlvm
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.function import FunctionError
 
 SIZE=1000
 test_var = np.random.rand(SIZE)
@@ -84,3 +86,21 @@ def test_ptx_cuda(func, variable, params, expected, benchmark):
     # This is rather hacky. it might break with pytest benchmark update
     iterations = 3 if benchmark.disabled else benchmark.stats.stats.rounds + 2
     assert np.allclose(res, expected(f.initializer, variable, iterations, **params))
+
+def test_integrator_function_no_default_variable_and_params_len_more_than_1():
+    I = AdaptiveIntegrator(rate=[.1, .2, .3])
+    I.defaults.variable = np.array([0,0,0])
+
+def test_integrator_function_default_variable_len_1_but_user_specified_and_params_len_more_than_1():
+    with pytest.raises(FunctionError) as error_text:
+        AdaptiveIntegrator(default_variable=[1], rate=[.1, .2, .3])
+    error_msg_a = 'The length (3) of the array specified for the rate parameter ([0.1 0.2 0.3])'
+    error_msg_b = 'of AdaptiveIntegrator Function-1 must match the length (1) of the default input ([1])'
+    assert all(err_msg in str(error_text) for err_msg in {error_msg_a, error_msg_b})
+
+def test_integrator_function_default_variable_and_params_len_more_than_1_error():
+    with pytest.raises(FunctionError) as error_text:
+        AdaptiveIntegrator(default_variable=[0,0], rate=[.1, .2, .3])
+    error_msg_a = 'The length (3) of the array specified for the rate parameter ([0.1 0.2 0.3])'
+    error_msg_b = 'of AdaptiveIntegrator Function-1 must match the length (2) of the default input ([0 0])'
+    assert all(err_msg in str(error_text) for err_msg in {error_msg_a, error_msg_b})

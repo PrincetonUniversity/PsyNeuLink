@@ -1081,20 +1081,9 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                                     np.array(self.defaults.variable).size, self.defaults.variable))
                     else:
                         raise FunctionError(
-                            "The length ({}) of the array specified for the rate parameter ({}) of {} "
-                            "must match the length ({}) of the default input ({})".format(
-                                len(rate),
-                                rate,
-                                self.name,
-                                np.array(self.defaults.variable).size,
-                                self.defaults.variable,
-                            )
-                        )
-                        # OLD:
-                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
-
-                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator
-                        # function to have a rate parameter of type ndarray/list
+                            f"The length ({len(rate)}) of the array specified for the rate parameter ({rate}) "
+                            f"of {self.name} must match the length ({np.array(self.defaults.variable).size}) "
+                            f"of the default input ({self.defaults.variable}).")
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
