@@ -76,7 +76,8 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import INTEGRATOR_MECHANISM, RESULTS, VARIABLE, kwPreferenceSetName
+from psyneulink.core.globals.keywords import \
+    DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, RESULTS, VARIABLE, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -238,7 +239,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     #     super()._parse_function_variable(variable, execution_id, context)
 
     # def _instantiate_function(self, function, function_params=None, context=None):
-    # #     variable = self.parameters.variable.default_value
+    #     variable = self.parameters.variable.default_value
     #     function_variable = self.function.parameters.variable.default_value
     #     if variable.shape != function_variable.shape:
     #         try:
@@ -260,3 +261,41 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     #                         f"{repr(Mechanism.__name__)}'s variable {variable.shape}: {params_and_lengths}.")
     #
     #     super()._instantiate_function(function, function_params, context)
+
+    def _instantiate_function(self, function, function_params=None, context=None):
+        '''If any parameters with len>1 have been specified for the Mechanism's function, and Mechanism's
+        default_variable has not been specified, assign the shape of the function's variable as the Mechanism's'''
+
+        variable = self.parameters.variable
+        function_variable = self.function.parameters.variable
+
+        if variable.default_value.shape != function_variable.default_value.shape:
+            if variable._user_specified:
+                raise IntegratorMechanismError(f"Shape of {repr(VARIABLE)} for function specified for {self.name} "
+                                               f"({self.function.name}: {function.variable.shape}) does not match the "
+                                               f"shape of the {repr(DEFAULT_VARIABLE)} specified for the "
+                                               f"{repr(Mechanism.__name__)}.")
+            else:
+                variable.default_value = function_variable.default_value
+
+
+            # # FIX: MOVE/COMBINE THIS TO/WITH Integrator Function
+            # try:
+            #     np.broadcast_to(variable, function_variable)
+            # except (ValueError, TypeError):
+            #     mismatches = [(param.name, param.default_value) for param in self.function.parameters if
+            #                   param.function_arg and
+            #                   param._user_specified and
+            #                   isinstance(param.default_value, (list, np.ndarray)) and
+            #                   not hasattr(param, 'source') and
+            #                   not param.name is VARIABLE and
+            #                   param.default_value.shape[-1] != variable.shape[-1]]
+            #     if mismatches:
+            #         params_and_lengths = ', '.join([repr(param[0]) + ':'+ repr(np.array(param[1]).tolist())
+            #                                         for param in mismatches])
+            #         raise IntegratorMechanismError(
+            #                 f"{self.function.name} is specified as the function of {self.name} with parameters "
+            #                 f"that have lengths that are inconsistent with the shape of the "
+            #                 f"{repr(Mechanism.__name__)}'s variable {variable.shape}: {params_and_lengths}.")
+
+        super()._instantiate_function(function, function_params, context)
