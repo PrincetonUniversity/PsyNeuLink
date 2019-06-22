@@ -265,9 +265,10 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                                f"{repr(Mechanism.__name__)}.")
             # If variable is length one but the function_variable is longer, reshape variable to match function's
             elif variable_len==1 and function_variable_len>1:
-                variable_shape = list(variable.default_value.shape)
-                variable_shape[-1] = function_variable.default_value.shape[-1]
-                self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
+                variable_shape = list(variable.shape)
+                variable_shape[-1] = function_variable.shape[-1]
+                # self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
+                variable = np.zeros(tuple(variable_shape))
             # IMPLEMENTATON NOTE:
             #    Don't bother with function_variable_len==1 and variable_len>1
             #    as the reshaping of the function's variable will be managed in _instantiate_function
