@@ -986,7 +986,7 @@ class TestIntegratorRate:
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     def test_integrator_type_simple_rate_list_input_float(self):
-        with pytest.raises(IntegratorMechanismError) as error_text:
+        with pytest.raises(MechanismError) as error_text:
             I = IntegratorMechanism(
                 name='IntegratorMechanism',
                 function=SimpleIntegrator(
@@ -995,10 +995,8 @@ class TestIntegratorRate:
             )
             result = I.execute(10.0)
             float(result)
-        error_msg_a = \
-            "SimpleIntegrator Function-0 is specified as the function of IntegratorMechanism with parameters that have "
-        error_msg_b = \
-            "lengths that are inconsistent with the shape of the 'Mechanism''s variable (1, 1): 'rate':[5.0, 5.0, 5.0]."
+        error_msg_a = 'Length (1) of input ([10.]) does not match required length (3) for input to '
+        error_msg_b = 'InputState-0 InputState of IntegratorMechanism'
         assert (
             error_msg_a in str(error_text) and error_msg_b in str(error_text)
         )
