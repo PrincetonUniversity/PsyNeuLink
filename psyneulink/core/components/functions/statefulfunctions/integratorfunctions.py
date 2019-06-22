@@ -297,7 +297,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     def _instantiate_attributes_before_function(self, function=None, context=None):
         '''Insure inner dimension of default_variable matches the same for parameters used for function'''
 
-        # Note:  if default_variable was user specfied, then parameters were validated above in _validate_params
+        # Note:  if default_variable was user specfied, equal length of parameters was validated in _validate_params
         if not self.parameters.variable._user_specified:
             values_with_a_len = [param.default_value for param in self.parameters if
                                  param.function_arg and
@@ -305,13 +305,26 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                                  len(param.default_value)>1]
             # One or more parameters are specified with length > 1 in the inner dimension
             if values_with_a_len:
-                variable_shape = list(self.parameters.variable.default_value.shape)
                 # If shape already matches,
                 #    leave alone in case default_variable was specified by class with values other than zero
                 #    (since reshaping below is done with zeros)
+                # MODIFIED 6/21 OLD:
+                variable_shape = list(self.parameters.variable.default_value.shape)
                 if variable_shape[-1] != np.array(values_with_a_len[0]).shape[-1]:
                     variable_shape[-1] = np.array(values_with_a_len[0]).shape[-1]
                     self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
+                    # Since default_variable is being determined by user specification of parameter:
+                    self.parameters.variable._user_specified = True
+                # MODIFIED 6/21 NEW: [JDC]
+                # try:
+                #     np.broadcast_to(self.parameters.variable.default_value, values_with_a_len[0])
+                # except (ValueError, TypeError):
+                #     variable_shape = list(self.parameters.variable.default_value.shape)
+                #     variable_shape[-1] = np.array(values_with_a_len[0]).shape[-1]
+                #     self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
+                #     # Since default_variable is being determined by user specification of parameter:
+                #     self.parameters.variable._user_specified = True
+                # MODIFIED 6/21 END
 
         super()._instantiate_attributes_before_function(function=function, context=context)
     # MODIFIED 6/21/19 END

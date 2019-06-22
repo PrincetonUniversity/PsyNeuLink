@@ -70,11 +70,13 @@ Class Reference
 from collections.abc import Iterable
 
 import typecheck as tc
+import numpy as np
 
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import INTEGRATOR_MECHANISM, RESULTS, kwPreferenceSetName
+from psyneulink.core.globals.keywords import INTEGRATOR_MECHANISM, RESULTS, VARIABLE, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -232,6 +234,29 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 
+    # def _parse_function_variable(self, variable, execution_id=None, context=None):
+    #     super()._parse_function_variable(variable, execution_id, context)
 
-
-
+    # def _instantiate_function(self, function, function_params=None, context=None):
+    # #     variable = self.parameters.variable.default_value
+    #     function_variable = self.function.parameters.variable.default_value
+    #     if variable.shape != function_variable.shape:
+    #         try:
+    #             np.broadcast_to(variable, function_variable)
+    #         except (ValueError, TypeError):
+    #             mismatches = [(param.name, param.default_value) for param in self.function.parameters if
+    #                           param.function_arg and
+    #                           param._user_specified and
+    #                           isinstance(param.default_value, (list, np.ndarray)) and
+    #                           not hasattr(param, 'source') and
+    #                           not param.name is VARIABLE and
+    #                           param.default_value.shape[-1] != variable.shape[-1]]
+    #             if mismatches:
+    #                 params_and_lengths = ', '.join([repr(param[0]) + ':'+ repr(np.array(param[1]).tolist())
+    #                                                 for param in mismatches])
+    #                 raise IntegratorMechanismError(
+    #                         f"{self.function.name} is specified as the function of {self.name} with parameters "
+    #                         f"that have lengths that are inconsistent with the shape of the "
+    #                         f"{repr(Mechanism.__name__)}'s variable {variable.shape}: {params_and_lengths}.")
+    #
+    #     super()._instantiate_function(function, function_params, context)

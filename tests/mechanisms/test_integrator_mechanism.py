@@ -12,7 +12,8 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
     FitzHughNagumoIntegrator, AccumulatorIntegrator, LeakyCompetingIntegrator, DualAdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
-from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.core.components.mechanisms.processing.integratormechanism import \
+    IntegratorMechanism, IntegratorMechanismError
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
 from psyneulink.core.scheduling.condition import AtTrial
@@ -985,7 +986,7 @@ class TestIntegratorRate:
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     def test_integrator_type_simple_rate_list_input_float(self):
-        with pytest.raises(ComponentError) as error_text:
+        with pytest.raises(IntegratorMechanismError) as error_text:
             I = IntegratorMechanism(
                 name='IntegratorMechanism',
                 function=SimpleIntegrator(
@@ -994,9 +995,12 @@ class TestIntegratorRate:
             )
             # P = Process(pathway=[I])
             float(I.execute(10.0))
+        error_msg_a = \
+            "SimpleIntegrator Function-0 is specified as the function of IntegratorMechanism with parameters that have "
+        error_msg_b = \
+            "lengths that are inconsistent with the shape of the 'Mechanism''s variable (1, 1): 'rate':[5.0, 5.0, 5.0]."
         assert (
-            "is not compatible with the variable format" in str(error_text)
-            and "to which it is being assigned" in str(error_text)
+            error_msg_a in str(error_text) and error_msg_b in str(error_text)
         )
 
     # rate = list len 2, incrment = list len 3, integration_type = accumulator
