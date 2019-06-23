@@ -265,7 +265,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             if ((variable_len>1 and function_variable_len>1 and variable_len!=function_variable_len) or
                 (function_variable_len>1 and variable_len==1 and user_specified)):
                 raise IntegratorMechanismError(f"Shape of {repr(VARIABLE)} for function specified for {self.name} "
-                                               f"({self.function.name}: {function.variable.shape}) does not match "
+                                               f"({function.name}: {function.variable.shape}) does not match "
                                                f"the shape of the {repr(DEFAULT_VARIABLE)} specified for the "
                                                f"{repr(Mechanism.__name__)}.")
 
