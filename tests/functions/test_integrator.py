@@ -104,3 +104,17 @@ def test_integrator_function_default_variable_and_params_len_more_than_1_error()
     error_msg_a = 'The length (3) of the array specified for the rate parameter ([0.1 0.2 0.3])'
     error_msg_b = 'of AdaptiveIntegrator Function-1 must match the length (2) of the default input ([0 0])'
     assert all(err_msg in str(error_text) for err_msg in {error_msg_a, error_msg_b})
+
+def test_integrator_function_with_params_of_different_lengths():
+    with pytest.raises(FunctionError) as error_text:
+        AdaptiveIntegrator(rate=[.1, .2, .3], offset=[.4,.5])
+    error_msg_a = "The parameters with len>1 specified for AdaptiveIntegrator Function-1 (['rate', 'offset']) "
+    error_msg_b = "don't all have the same length"
+    assert all(err_msg in str(error_text) for err_msg in {error_msg_a, error_msg_b})
+
+def test_integrator_function_with_default_variable_and_params_of_different_lengths():
+    with pytest.raises(FunctionError) as error_text:
+        AdaptiveIntegrator(default_variable=[0,0,0], rate=[.1, .2, .3], offset=[.4,.5])
+    error_msg_a = "The following parameters with len>1 specified for AdaptiveIntegrator Function-1 "
+    error_msg_b = "don't have the same length as its 'default_variable' (3): ['offset']."
+    assert all(err_msg in str(error_text) for err_msg in {error_msg_a, error_msg_b})

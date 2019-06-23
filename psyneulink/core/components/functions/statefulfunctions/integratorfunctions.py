@@ -244,6 +244,11 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         self.has_initializers = True
 
     # MODIFIED 6/21/19 NEW: [JDC]
+    def _handle_default_variable(self, default_variable=None, size=None):
+        if default_variable is not None:
+            self.parameters.variable._user_specified = True
+        return super()._handle_default_variable(default_variable, size)
+
     # FIX CONSIDER MOVING THIS TO THE LEVEL OF Function_Base OR EVEN Component
     def _validate_params(self, request_set, target_set=None, context=None):
         '''Check inner dimension (length) of all parameters used for the function
@@ -277,14 +282,14 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
             default_variable_len = self.parameters.variable.default_value.shape[-1]
             violators = [k for k,v in params_to_check.items() if len(v)!=default_variable_len]
             if violators:
-                raise FunctionError(f"The following parameters specified for {self.name} with len>1 "
+                raise FunctionError(f"The following parameters with len>1 specified for {self.name} "
                                     f"don't have the same length as its {repr(DEFAULT_VARIABLE)} "
                                     f"({default_variable_len}): {violators}.")
 
         # Check that all function_arg params with length > 1 have the same length
         elif any(len(v)!=len(values[0]) for v in values):
-            raise FunctionError(f"The parameters specified for {self.name} with len>1 ({list(params_to_check.keys())}) "
-                                f"don't all have the same length")
+            raise FunctionError(f"The parameters with len>1 specified for {self.name} "
+                                f"({list(params_to_check.keys())}) don't all have the same length")
 
         super()._validate_params(request_set=request_set,
                          target_set=target_set,
