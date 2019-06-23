@@ -993,7 +993,7 @@ class TestIntegratorRate:
                     function=AdaptiveIntegrator(rate=[0.5, 0.6])
             )
         error_msg_a = "Shape of 'variable' for function specified for IntegratorMechanism (AdaptiveIntegrator Function"
-        error_msg_b = "-1: (2,)) does not match the shape of the 'default_variable' specified for the 'Mechanism'."
+        error_msg_b = "(2,)) does not match the shape of the 'default_variable' specified for the 'Mechanism'."
         assert all(error_msg in str(error_text) for error_msg in {error_msg_a, error_msg_b})
 
     @pytest.mark.mechanism
@@ -1026,7 +1026,8 @@ class TestIntegratorRate:
                     rate=[1.0, 2.0],
                     increment=[3.0, 4.0, 5.0]
                 ))
-        error_msg_a = "The parameters specified for AccumulatorIntegrator Function-0 with len>1 "
+
+        error_msg_a = "The parameters with len>1 specified for AccumulatorIntegrator Function-0 "
         error_msg_b = "(['rate', 'increment']) don't all have the same length"
         assert all(error_msg in str(error_text) for error_msg in {error_msg_a, error_msg_b})
 
