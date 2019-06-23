@@ -988,10 +988,10 @@ class TestIntegratorRate:
     def test_integrator_type_adaptive_variable_and_rate_conflict(self):
         with pytest.raises(IntegratorMechanismError) as error_text:
             I = IntegratorMechanism(
-                name='IntegratorMechanism',
-                default_variable=[0],
-                    function=AdaptiveIntegrator(rate=[0.5, 0.6],
-                ))
+                    name='IntegratorMechanism',
+                    default_variable=[0],
+                    function=AdaptiveIntegrator(rate=[0.5, 0.6])
+            )
         error_msg_a = "Shape of 'variable' for function specified for IntegratorMechanism (AdaptiveIntegrator Function"
         error_msg_b = "-1: (2,)) does not match the shape of the 'default_variable' specified for the 'Mechanism'."
         assert all(error_msg in str(error_text) for error_msg in {error_msg_a, error_msg_b})
