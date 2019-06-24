@@ -1267,6 +1267,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                             context=context
                         )
 
+        # MODIFIED 6/24/19 NEW:
         integrator_fct_variable = self.integrator_function.parameters.variable.default_value
         if integrator_fct_variable.shape != variable.shape:
             if integrator_fct_variable.shape[-1] != variable.shape[-1]:
@@ -1274,6 +1275,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             integrator_fct_variable.default_value = variable
 
         self.has_integrated = True
+        # MODIFIED 6/24/19 END
 
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
