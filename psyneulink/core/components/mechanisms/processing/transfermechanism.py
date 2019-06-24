@@ -1268,14 +1268,21 @@ class TransferMechanism(ProcessingMechanism_Base):
                         )
 
         # MODIFIED 6/24/19 NEW:
+        # Insure that integrator_function's variable and value have same shape as TransferMechanism's variable
         integrator_fct_variable = self.integrator_function.parameters.variable.default_value
         if integrator_fct_variable.shape != variable.shape:
-            if integrator_fct_variable.shape[-1] != variable.shape[-1]:
-                assert False, f"PROGRAM ERROR: {repr(INTEGRATOR_FUNCTION)} should already have same inner dim as owner"
+            fct_var_inner_dim = integrator_fct_variable.shape[-1]
+            # If inner dimension of function's variable is not same as variable and has been user_specified, raise error
+            if not any(fct_var_inner_dim == dim for dim in {1, variable.shape[-1]}):
+                raise TransferError(f"The length ({fct_var_inner_dim}) of the {repr(VARIABLE)} or one of the parameters"
+                                    f" specified for the {repr(INTEGRATOR_FUNCTION)} of {self.name} doesn't match the "
+                                    f"size ({variable.shape[-1]}) of the innermost dimension (axis 0) of its "
+                                    f"{repr(VARIABLE)} (i.e., the length of its items .")
             self.integrator_function.parameters.variable.default_value = variable
+            function_context_buffer = self.integrator_function.context.initialization_status
             self.integrator_function.context.initialization_status = ContextFlags.INITIALIZING
             self.integrator_function.parameters.value.default_value = self.integrator_function(variable)
-            self.integrator_function.context.initialization_status = ContextFlags.INITIALIZED
+            self.integrator_function.context.initialization_status = function_context_buffer
         # MODIFIED 6/24/19 END
 
         self.has_integrated = True

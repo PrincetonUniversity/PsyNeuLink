@@ -298,7 +298,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
     # MODIFIED 6/21/19 NEW: [JDC]
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        '''Insure inner dimension of default_variable matches the same for parameters used for function'''
+        '''Insure inner dimension of default_variable matches the length of any parameters that have len>1'''
 
         # Note:  if default_variable was user specfied, equal length of parameters was validated in _validate_params
         if not self.parameters.variable._user_specified:
