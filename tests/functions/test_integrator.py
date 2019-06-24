@@ -94,8 +94,8 @@ def test_integrator_function_no_default_variable_and_params_len_more_than_1():
 def test_integrator_function_default_variable_len_1_but_user_specified_and_params_len_more_than_1():
     with pytest.raises(FunctionError) as error_text:
         AdaptiveIntegrator(default_variable=[1], rate=[.1, .2, .3])
-    error_msg_a = 'The length (3) of the array specified for the rate parameter ([0.1 0.2 0.3])'
-    error_msg_b = 'of AdaptiveIntegrator Function-0 must match the length (1) of the default input ([1])'
+    error_msg_a = 'The length (3) of the array specified for the rate parameter ([0.1 0.2 0.3]) of AdaptiveIntegrator'
+    error_msg_b = 'must match the length (1) of the default input ([1])'
     assert all(err_msg in str(error_text) for err_msg in {error_msg_a, error_msg_b})
 
 def test_integrator_function_default_variable_and_params_len_more_than_1_error():
