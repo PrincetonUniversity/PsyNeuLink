@@ -1267,6 +1267,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                             context=context
                         )
 
+        integrator_fct_variable = self.integrator_function.parameters.variable.default_value
+        if integrator_fct_variable.shape != variable.shape:
+            if integrator_fct_variable.shape[-1] != variable.shape[-1]:
+                assert False, f"PROGRAM ERROR: {repr(INTEGRATOR_FUNCTION)} should already have same inner dim as owner"
+            integrator_fct_variable.default_value = variable
+
         self.has_integrated = True
 
     def _instantiate_output_states(self, context=None):

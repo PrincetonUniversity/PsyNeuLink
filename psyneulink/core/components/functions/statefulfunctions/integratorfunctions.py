@@ -323,6 +323,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                     self.parameters.variable._user_specified = True
 
         super()._instantiate_attributes_before_function(function=function, context=context)
+        assert True
     # MODIFIED 6/21/19 END
 
     def _EWMA_filter(self, previous_value, rate, variable):

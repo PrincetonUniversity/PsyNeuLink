@@ -241,7 +241,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
     def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
         '''If any parameters with len>1 have been specified for the Mechanism's function, and Mechanism's
-        default_variable has not been specified, assign the shape of the function's variable as the Mechanism's'''
+        default_variable has not been specified, reshape Mechanism's variable to match function's,
+        but make sure function's has the same outer dimensionality as the Mechanism's'''
 
         # Get variable for Mechanism
         user_specified = False
@@ -269,7 +270,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                                f"the shape of the {repr(DEFAULT_VARIABLE)} specified for the "
                                                f"{repr(Mechanism.__name__)}.")
 
-            # If length of Mechanism's variable is 1 but the function's is longer, reshape Mechanism's to match function
+            # If length of Mechanism's variable is 1 but the function's is longer,
+            #     reshape Mechanism's inner dimension to match function
             elif variable_len==1 and function_variable_len>1:
                 variable_shape = list(variable.shape)
                 variable_shape[-1] = function_variable.shape[-1]
