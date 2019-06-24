@@ -1029,8 +1029,8 @@ class Parameter(types.SimpleNamespace):
                 if new_history is None:
                     raise ParameterError('history should always be a collections.deque if it exists')
                 elif new_history is not NotImplemented:
-                    new_history = copy_dict_or_list_with_shared(new_history, shared_types)
-                    self.history[execution_context] = new_history
+                    # shallow copy is OK because history should not change
+                    self.history[execution_context] = copy.copy(new_history)
 
         except ParameterError as e:
             raise ParameterError('Error when attempting to initialize from {0}: {1}'.format(base_execution_context, e))
