@@ -1203,7 +1203,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         Returns
         -------
 
-        updated value of integral : 2d array
+        updated value of integral : ndarray (dimension equal to variable)
 
         """
         variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
@@ -1213,10 +1213,10 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
 
-        # MODIFIED 6/14/19 OLD:
-        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
+        # # MODIFIED 6/14/19 OLD:
+        # previous_value = np.atleast_2d(self.get_previous_value(execution_id))
         # # MODIFIED 6/14/19 NEW: [JDC]
-        # previous_value = self.get_previous_value(execution_id)
+        previous_value = self.get_previous_value(execution_id)
         # MODIFIED 6/14/19 END
 
         value = self._EWMA_filter(previous_value, rate, variable) + noise

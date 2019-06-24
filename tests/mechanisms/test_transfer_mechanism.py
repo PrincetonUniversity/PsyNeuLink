@@ -784,6 +784,7 @@ class TestTransferMechanismIntegratorFunctionParams:
         )
         if mode == 'Python':
             EX = T.execute
+            assert True
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T)
             EX = e.execute
