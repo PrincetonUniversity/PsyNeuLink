@@ -1272,10 +1272,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         if integrator_fct_variable.shape != variable.shape:
             if integrator_fct_variable.shape[-1] != variable.shape[-1]:
                 assert False, f"PROGRAM ERROR: {repr(INTEGRATOR_FUNCTION)} should already have same inner dim as owner"
-            integrator_fct_variable.default_value = variable
+            self.integrator_function.parameters.variable.default_value = variable
+            self.integrator_function.context.initialization_status = ContextFlags.INITIALIZING
+            self.integrator_function.parameters.value.default_value = self.integrator_function(variable)
+            self.integrator_function.context.initialization_status = ContextFlags.INITIALIZED
+        # MODIFIED 6/24/19 END
 
         self.has_integrated = True
-        # MODIFIED 6/24/19 END
 
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
