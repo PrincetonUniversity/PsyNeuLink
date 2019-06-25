@@ -846,6 +846,47 @@ class TestTransferMechanismIntegratorFunctionParams:
             and "must match its variable" in str(error_text.value)
         )
 
+    def test_transfer_mech_array_assignment_matches_size_integrator_fct_param_def(self):
+
+        T = TransferMechanism(
+                name='T',
+                default_variable=[0 for i in range(VECTOR_SIZE)],
+                integrator_mode=True,
+                integrator_function=AdaptiveIntegrator(rate=[.1 + i/10 for i in range(VECTOR_SIZE)])
+        )
+        result1 = T.execute([range(VECTOR_SIZE)])
+        result2 = T.execute([range(VECTOR_SIZE)])
+        assert np.allclose(result1, [[0., 0.2, 0.6, 1.2]])
+        assert np.allclose(result2, [[0., 0.36, 1.02, 1.92]])
+
+    def test_transfer_mech_array_assignment_wrong_size_integrator_fct_default_variable(self):
+
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    integrator_function=AdaptiveIntegrator(default_variable=[0 for i in range(VECTOR_SIZE+1)])
+            )
+        error_msg_a = 'The length (5) of the \'variable\' or one of the parameters specified for '
+        error_msg_b = 'the integrator_function of T doesn\'t match the size (4) of the '
+        error_msg_c = 'innermost dimension (axis 0) of its \'variable\' (i.e., the length of its items .'
+        assert (error_msg in str(error_text.value) for error_msg in {error_msg_a, error_msg_b, error_msg_c})
+
+    def test_transfer_mech_array_assignment_wrong_size_integrator_fct_param(self):
+
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    integrator_function=AdaptiveIntegrator(rate=[0 for i in range(VECTOR_SIZE+1)])
+            )
+        error_msg_a = 'The length (5) of the \'variable\' or one of the parameters specified for '
+        error_msg_b = 'the integrator_function of T doesn\'t match the size (4) of the '
+        error_msg_c = 'innermost dimension (axis 0) of its \'variable\' (i.e., the length of its items .'
+        assert (error_msg in str(error_text.value) for error_msg in {error_msg_a, error_msg_b, error_msg_c})
+
     # FIX: CAN'T RUN THIS YET:  CRASHES W/O ERROR MESSAGE SINCE DEFAULT_VARIABLE OF FCT DOESN'T MATCH ITS INITIALIZER
     # # def test_transfer_mech_array_assignments_wrong_size_fct_initlzr(self, benchmark, mode):
     # def test_transfer_mech_array_assignments_wrong_size_fct_initlzr(self):
