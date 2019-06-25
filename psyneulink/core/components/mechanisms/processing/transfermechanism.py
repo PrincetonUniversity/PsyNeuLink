@@ -1291,7 +1291,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE, execution_id)
 
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             self._instantiate_integrator_function(variable=function_variable,
                                                   noise=noise,
                                                   initializer=initial_value,

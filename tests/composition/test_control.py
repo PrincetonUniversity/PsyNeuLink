@@ -219,7 +219,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                         pnl.PROBABILITY_UPPER_THRESHOLD],
                            name='Decision')
 
-        comp = pnl.Composition(name="evc")
+        comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
         comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
@@ -250,7 +250,7 @@ class TestModelBasedOptimizationControlMechanisms:
             reward: [20, 20]
         }
 
-        comp.run(inputs=stim_list_dict, retain_old_simulation_data=True)
+        comp.run(inputs=stim_list_dict)
 
         # Note: Removed decision variable OutputState from simulation results because sign is chosen randomly
         expected_sim_results_array = [
@@ -567,7 +567,9 @@ class TestModelBasedOptimizationControlMechanisms:
         B = pnl.ProcessingMechanism(name='B')
 
         comp = pnl.Composition(name='comp',
-                               controller_mode=pnl.BEFORE)
+                               controller_mode=pnl.BEFORE,
+                               retain_old_simulation_data=True,
+                               )
         comp.add_linear_processing_pathway([A, B])
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
@@ -592,7 +594,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         for i in range(1, len(ocm.input_states)):
             ocm.input_states[i].function.reinitialize()
-        comp.run(inputs=inputs, retain_old_simulation_data=True)
+        comp.run(inputs=inputs)
 
         log = objective_mech.log.nparray_dictionary()
 

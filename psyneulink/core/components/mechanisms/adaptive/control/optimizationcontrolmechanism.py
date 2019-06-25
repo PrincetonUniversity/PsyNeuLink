@@ -944,6 +944,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return sim_execution_id
 
+    def _tear_down_simulation(self, sim_execution_id=None):
+        if not self.agent_rep.parameters.retain_old_simulation_data._get():
+            self.agent_rep._delete_contexts(sim_execution_id, check_simulation_storage=True)
+
     def evaluation_function(self, control_allocation, execution_id=None):
         '''Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
@@ -977,6 +981,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                              context=self.function.parameters.context._get(execution_id),
                                              execution_mode=self.parameters.comp_execution_mode._get(execution_id)
             )
+            if self.defaults.search_statefulness:
+                self._tear_down_simulation(new_execution_id)
         # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
             result = self.agent_rep.evaluate(self.parameters.feature_values._get(execution_id),

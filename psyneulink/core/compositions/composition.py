@@ -1094,6 +1094,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Stores the `results <Composition.results>` for executions of the Composition when it is executed using
             its `evaluate <Composition.evaluate>` method.
 
+        retain_old_simulation_data : bool
+            if True, all Parameter values generated during simulations will be saved for later inspection;
+            if False, simulation values will be deleted unless otherwise specified by individual Parameters
+
         COMMENT:
         name : str
             see `name <Composition_Name>`
@@ -1126,6 +1130,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         results = Parameter([], loggable=False)
         simulation_results = Parameter([], loggable=False)
+        retain_old_simulation_data = Parameter(False, stateful=False, loggable=False)
 
     class _CompilationData(ParametersBase):
         ptx_execution = None
@@ -1142,6 +1147,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
             controller_condition:Condition=Always(),
             learning_enabled=False,
+            retain_old_simulation_data=None,
             **param_defaults
     ):
         # also sets name
@@ -1198,8 +1204,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.feedback_receivers = set()
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
-        self.defaults = Defaults(owner=self,
-                                 **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)})
+        self.defaults = Defaults(
+            owner=self,
+            retain_old_simulation_data=retain_old_simulation_data,
+            **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)}
+        )
         self._initialize_parameters()
 
         # Compiled resources
@@ -4588,7 +4597,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             initial_values=None,
             reinitialize_values=None,
             runtime_params=None,
-            retain_old_simulation_data=False,
             animate=False,
             execution_id=None,
             base_execution_id=None,
@@ -4706,10 +4714,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 .. note::
                    as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
                    correspond to the `EXECUTION LogCondition <LogCondition.EXECUTION>`.
-
-            retain_old_simulation_data : bool
-                if True, all Parameter values generated during simulations will be saved for later inspection;
-                if False, simulation values will be deleted unless otherwise specified by individual Parameters
 
         COMMENT:
         REPLACE WITH EVC/OCM EXAMPLE
@@ -4942,10 +4946,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if self.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
                 results.append(result_copy)
 
-                if not retain_old_simulation_data:
+                if not self.parameters.retain_old_simulation_data._get():
                     if self.controller is not None:
-                        self._delete_contexts(*self.controller.parameters.simulation_ids._get(execution_id), check_simulation_storage=True)
-
                         # if any other special parameters store simulation info that needs to be cleaned up
                         # consider dedicating a function to it here
                         # this will not be caught above because it resides in the base context (execution_id)
@@ -5441,7 +5443,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             reconfiguration_cost = 0.
             if callable(self.controller.compute_reconfiguration_cost):
                 reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
-                                                                                                base_control_allocation])
+                                                                                     base_control_allocation])
+                self.controller.reconfiguration_cost.set(reconfiguration_cost, execution_id)
+
             # Apply candidate control signal
             self.controller._apply_control_allocation(candidate_control_allocation,
                                                                 execution_id=execution_id,
@@ -5453,6 +5457,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Compute a total for the candidate control signal(s)
             total_cost = self.controller.combine_costs(all_costs)
         return total_cost
+
     def _build_predicted_inputs_dict(self, predicted_input):
         inputs = {}
         # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features

@@ -584,6 +584,14 @@ class ControlSignal(ModulatorySignal):
     adjustment_cost : float
         cost associated with last change to `intensity`.
 
+        .. note::
+
+        A ControlSignal's `adjustment_cost`, and its `adjustment_cost_function` are distinct from the
+        `reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>` and `compute_reconfiguration_cost
+        <ModulatoryMechanism.compute_reconfiguration_cost` function of the `ModulatoryMechanism` to which the
+        ControlSignal belongs (see `ModulatoryMechanism Reconfiguration Cost <ModulatoryMechanism_Reconfiguration_Cost>`
+        for additional details).
+
     duration_cost_function : IntegratorFunction : default Linear
         calculates an integral of the ControlSignal's `cost`.  It can be any `IntegratorFunction`, or any other
         function that takes a list or array of two values and returns a scalar value. It can be disabled permanently
