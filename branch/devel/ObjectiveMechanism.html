@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.5.3.2+218.gb029438 documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.5.3.2+219.gabb2916 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+218.gb029438',
+              VERSION:'0.5.3.2+219.gabb2916',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+218
+                0.5.3.2+219
               </div>
             
           
@@ -292,7 +292,7 @@ an action and represent its reward prediction.  This generates a vector with a s
 the predicted reward for the selected action.  Because the output is a vector, by default the InputState of the
 ObjectiveMechanism created to monitor it will also be a vector.  However, the ObjectiveMechanism requires this to be
 a single value, that it can compare with the value of the reward Mechanism (monitoring the feedback provided by the
-environment).  In the example below, this is accomplished by using <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Reduce.default_variable" title="psyneulink.core.components.functions.combinationfunctions.Reduce.default_variable"><code class="xref any py py-attr docutils literal"><span class="pre">default_variable</span></code></a> in the constructor of the
+environment).  In the example below, this is accomplished by using <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Concatenate.default_variable" title="psyneulink.core.components.functions.combinationfunctions.Concatenate.default_variable"><code class="xref any py py-attr docutils literal"><span class="pre">default_variable</span></code></a> in the constructor of the
 ObjectiveMechanism to force the InputState for the ObjectiveMechanism to have a single value:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_action_select_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
@@ -308,7 +308,7 @@ ObjectiveMechanism to force the InputState for the ObjectiveMechanism to have a 
 </div>
 <p>Note that the OutputStates for the <code class="docutils literal"><span class="pre">my_action_selection</span></code> and <code class="docutils literal"><span class="pre">my_reward_mech</span></code> are specified
 in <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a>.  If that were the only specification, the InputState created for <code class="docutils literal"><span class="pre">my_action_select_mech</span></code>
-would be a vector of length 3.  This is overridden by specifying <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Reduce.default_variable" title="psyneulink.core.components.functions.combinationfunctions.Reduce.default_variable"><code class="xref any py py-attr docutils literal"><span class="pre">default_variable</span></code></a> as an array with two
+would be a vector of length 3.  This is overridden by specifying <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Concatenate.default_variable" title="psyneulink.core.components.functions.combinationfunctions.Concatenate.default_variable"><code class="xref any py py-attr docutils literal"><span class="pre">default_variable</span></code></a> as an array with two
 single-value arrays (one corresponding to <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> and the other to <code class="docutils literal"><span class="pre">my_reward_mech</span></code>).  This forces
 the InputState for <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> to have only a single element which, in turn, will cause a
 MappingProjection to be created from  <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> to the ObjectiveMechanism’s InputState using a
@@ -388,7 +388,7 @@ specifying the relevant parameter(s) of the function itself, as in the following
 </pre></div>
 </div>
 <p>Here, the <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination.weights" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.weights"><code class="xref any py py-attr docutils literal"><span class="pre">weights</span></code></a> parameter of the <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function is specified directly,
-with two values [-1] and [1] corresponding to the two items in <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> (and <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Reduce.default_variable" title="psyneulink.core.components.functions.combinationfunctions.Reduce.default_variable"><code class="xref any py py-attr docutils literal"><span class="pre">default_variable</span></code></a>).
+with two values [-1] and [1] corresponding to the two items in <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> (and <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Concatenate.default_variable" title="psyneulink.core.components.functions.combinationfunctions.Concatenate.default_variable"><code class="xref any py py-attr docutils literal"><span class="pre">default_variable</span></code></a>).
 This will multiply the value from <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> by -1 before adding it to (and thus subtracting it from)
 the value of <code class="docutils literal"><span class="pre">my_reward_mech</span></code>.  Notice that the weight for <code class="docutils literal"><span class="pre">my_reward_mech</span></code> had to be specified, even though it
 is using the default value (1);  whenever a weight and/or exponent parameter is specified, there must be an entry for
