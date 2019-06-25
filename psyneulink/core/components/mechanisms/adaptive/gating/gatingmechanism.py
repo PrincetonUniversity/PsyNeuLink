@@ -206,7 +206,6 @@ class GatingMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-# MODIFIED 5/18/19 NEW: [JDC]
 def _gating_allocation_getter(owning_component=None, execution_id=None):
     return owning_component.modulatory_allocation
 
@@ -229,7 +228,6 @@ def _control_allocation_setter(value, owning_component=None, execution_id=None, 
                                 f"consider using a {ControlMechanism.__name__} instead, "
                                 f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
                                 f"{GatingSignal.__name__}s are needed.")
-# MODIFIED 5/18/19 END
 
 
 class GatingMechanism(ModulatoryMechanism):

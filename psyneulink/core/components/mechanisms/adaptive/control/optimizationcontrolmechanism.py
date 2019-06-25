@@ -855,24 +855,8 @@ class OptimizationControlMechanism(ControlMechanism):
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
             state.update(execution_id=execution_id, params=runtime_params, context=context)
-            # # MODIFIED 6/14/19 OLD:
-            # state_values.append(state.parameters.value._get(execution_id))
-            # MODIFIED 6/14/19 NEW: [JDC] - TO DEAL WITH AdaptiveIntegrator that returns 2d value
-            # FIX: REVERT TO OLD IF/WHEN AdaptiveIntegrators is modified to return 1d value
-            state_values.append(np.atleast_1d(np.squeeze(state.parameters.value.get(execution_id))))
-            # MODIFIED 6/14/19 END
-
+            state_values.append(state.parameters.value._get(execution_id))
         return np.array(state_values)
-
-    # MODIFIED 6/14/19 NEW: [JDC] - TO DEAL WITH AdaptiveIntegrator that returns 2d value
-    # FIX: REMOVE IF/WHEN AdaptiveIntegrators is modified to return 1d value
-    def _validate_variable(self, variable, context=None):
-        for i, var in enumerate(variable):
-            # variable[i] = np.atleast_2d(var)
-            variable[i] = np.atleast_1d(np.squeeze(var))
-            assert True
-        super()._validate_variable(variable,context)
-    # MODIFIED 6/14/19 END
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
