@@ -1272,8 +1272,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         integrator_fct_variable = self.integrator_function.parameters.variable.default_value
         if integrator_fct_variable.shape != variable.shape:
             fct_var_inner_dim = integrator_fct_variable.shape[-1]
-            # If inner dimension of function's variable is not same as variable and has been user_specified, raise error
-            if not any(fct_var_inner_dim == dim for dim in {1, variable.shape[-1]}):
+            # If inner dimension of function's variable is not same as Mechanism's and is user_specified, raise error
+            if integrator_fct_variable.shape[-1] != variable.shape[-1] and\
+                    self.integrator_function.parameters.variable._user_specified:
                 raise TransferError(f"The length ({fct_var_inner_dim}) of the {repr(VARIABLE)} or one of the parameters"
                                     f" specified for the {repr(INTEGRATOR_FUNCTION)} of {self.name} doesn't match the "
                                     f"size ({variable.shape[-1]}) of the innermost dimension (axis 0) of its "
