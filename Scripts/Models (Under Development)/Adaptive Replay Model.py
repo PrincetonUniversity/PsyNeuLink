@@ -7,9 +7,6 @@ context_size = 2
 num_actions = 4
 rpe_size = 1
 
-def Concatenate(variable):
-    return np.append(variable[0],variable[1])
-
 # def ExepctedValueCalc(variable):
 #     variable[]
 
