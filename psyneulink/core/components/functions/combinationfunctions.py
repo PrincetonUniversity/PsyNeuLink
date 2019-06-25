@@ -130,8 +130,8 @@ class Concatenate(CombinationFunction):  # -------------------------------------
 
     .. _Concatenate:
 
-    Concatenates values in each item (outer dimension / axis 0) of `variable <Concatenate.variable>` into a single
-    array, optinally scaling and/or adding an offset to the result after concatenating.
+    Concatenates items in outer dimension (axis 0) of of `variable <Concatenate.variable>` into a single array,
+    optionally scaling and/or adding an offset to the result after concatenating.
 
     `function <Concatenate.function>` returns a 1d array with lenght equal to the sum of the lengths of the items
     in `variable <Concatenate.variable>`.
@@ -280,7 +280,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
                  execution_id=None,
                  params=None,
                  context=None):
-        """
+        """Use numpy hstack to concatenate items in outer dimension (axis 0) of variable.
 
         Arguments
         ---------
