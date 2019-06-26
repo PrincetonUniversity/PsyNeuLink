@@ -56,21 +56,3 @@ class TestModulatoryMechanism:
         assert Tz.parameter_states[SLOPE].mod_afferents[0].sender.owner == C
         assert np.allclose(comp.results,[[[1.], [4.]], [[4.], [4.]]])
 
-    def test_alias_equivalence_for_modulates_and_projections_control(self):
-        inputs = [1,9,4,3,2]
-        comp1 = Composition()
-        Tx1 = TransferMechanism()
-        Tx2 = TransferMechanism()
-        C1 = ControlMechanism(control_signals=ControlSignal(modulates=(SLOPE,Tx2)))
-        comp1.add_nodes([Tx1,Tx2,C1])
-        comp1.add_linear_processing_pathway([C1,Tx1,Tx2])
-        comp1.run(inputs=inputs)
-        comp2 = Composition()
-        Tx3 = TransferMechanism()
-        Tx4 = TransferMechanism()
-        C2 = ControlMechanism(control_signals=ControlSignal(projections=(SLOPE,Tx4)))
-        comp2.add_nodes([Tx3,Tx4,C2])
-        comp2.add_linear_processing_pathway([C2,Tx3,Tx4])
-        comp2.run(inputs=inputs)
-        assert comp1.results == comp2.results
-
