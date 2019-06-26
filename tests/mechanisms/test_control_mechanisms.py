@@ -140,7 +140,7 @@ class TestLCControlMechanism:
                 monitor_for_control=Ty,
                 objective_mechanism=True,
                 control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
-                                                  projections=(pnl.SLOPE,Tz)))
+                                                  modulates=(pnl.SLOPE, Tz)))
         P1=pnl.Process(pathway=[Tx,Tz])
         P2=pnl.Process(pathway=[Ty, C])
         S=pnl.System(processes=[P1, P2])
@@ -162,11 +162,11 @@ class TestLCControlMechanism:
         c1 = pnl.ControlMechanism(
                 name='C1',
                 default_variable=[10],
-                control_signals=[pnl.ControlSignal(projections=(pnl.SLOPE, m1)), # test for assignment to defaultControlAllocation
-                                 pnl.ControlSignal(default_allocation=2,    # test for scalar assignment
-                                                   projections=(pnl.SLOPE, m2)),
+                control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE, m1)),  # test for assignment to defaultControlAllocation
+                                 pnl.ControlSignal(default_allocation=2,  # test for scalar assignment
+                                                   modulates=(pnl.SLOPE, m2)),
                                  pnl.ControlSignal(default_allocation=[3],  # test for array assignment
-                                                   projections=(pnl.SLOPE, m3))])
+                                                   modulates=(pnl.SLOPE, m3))])
         comp = pnl.Composition()
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c1)
@@ -199,11 +199,11 @@ class TestLCControlMechanism:
                 name='C3',
                 default_variable=[10],
                 default_allocation=[4],
-                control_signals=[pnl.ControlSignal(projections=(pnl.SLOPE, m1)), # tests for assignment to default_allocation
-                                 pnl.ControlSignal(default_allocation=5,    # tests for override of default_allocation
-                                                   projections=(pnl.SLOPE, m2)),
+                control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE, m1)),  # tests for assignment to default_allocation
+                                 pnl.ControlSignal(default_allocation=5,  # tests for override of default_allocation
+                                                   modulates=(pnl.SLOPE, m2)),
                                  pnl.ControlSignal(default_allocation=[6],  # as above same but with array
-                                                   projections=(pnl.SLOPE, m3))])
+                                                   modulates=(pnl.SLOPE, m3))])
         comp = pnl.Composition()
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c2)
