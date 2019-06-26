@@ -2906,7 +2906,7 @@ class Component(object, metaclass=ComponentsMeta):
     def initialize(self, execution_context=None):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         """
             If the component's execute method involves execution of an `IntegratorFunction` Function, this method
             effectively begins the function's accumulation over again at the specified value, and may update related
@@ -2915,6 +2915,8 @@ class Component(object, metaclass=ComponentsMeta):
         """
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
         if isinstance(self.function, IntegratorFunction):
+            if execution_context is NotImplemented:
+                execution_context = self.most_recent_execution_id
             new_value = self.function.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.atleast_2d(new_value), execution_context, override=True)
         else:
@@ -2922,9 +2924,16 @@ class Component(object, metaclass=ComponentsMeta):
                                  "(It does not have an accumulator to reinitialize).")
 
     def execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-
         if execution_id is None:
-            execution_id = self.most_recent_execution_id
+            try:
+                owner = self.owner
+                owner_parameters = self.owner.parameters.context._get(self.most_recent_execution_id)
+                if owner is not None and owner_parameters is None:
+                    execution_id = owner.context.execution_id
+                else:
+                    raise Exception
+            except:
+                execution_id = self.most_recent_execution_id
 
         # initialize context for this execution_id if not done already
         if execution_id is not None:
@@ -2966,7 +2975,6 @@ class Component(object, metaclass=ComponentsMeta):
 
             if owner is not None:
                 flags = owner.parameters.context._get(execution_id).flags
-
                 self._assign_context_values(
                     execution_id,
                     flags=flags,

@@ -46,13 +46,13 @@ evc_gratton.add_node(reward, required_roles=NodeRole.OUTPUT)
 # Control Signals
 signalSearchRange = SampleSpec(start=1.0, stop=1.8, step=0.2)
 
-target_rep_control_signal = ControlSignal(projections=[(SLOPE, Target_Rep)],
+target_rep_control_signal = ControlSignal(modulates=[(SLOPE, Target_Rep)],
                                           function=Linear,
                                           variable=1.0,
                                           intensity_cost_function=Exponential(rate=0.8046),
                                           allocation_samples=signalSearchRange)
 
-flanker_rep_control_signal = ControlSignal(projections=[(SLOPE, Flanker_Rep)],
+flanker_rep_control_signal = ControlSignal(modulates=[(SLOPE, Flanker_Rep)],
                                            function=Linear,
                                            variable=1.0,
                                            intensity_cost_function=Exponential(rate=0.8046),

@@ -476,7 +476,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         return val
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         """
             Resets `value <StatefulFunction.previous_value>`  and `previous_value <StatefulFunction.previous_value>`
             to the specified value(s).
@@ -501,6 +501,9 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             reinitialization steps.
 
         """
+
+        if execution_context is NotImplemented:
+            execution_context = self.most_recent_execution_id
 
         reinitialization_values = []
 

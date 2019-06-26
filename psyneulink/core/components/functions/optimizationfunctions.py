@@ -424,7 +424,7 @@ class OptimizationFunction(Function_Base):
                                                        repr(SEARCH_TERMINATION_FUNCTION),
                                                        self.__class__.__name__))
 
-    def reinitialize(self, *args, execution_id=None):
+    def reinitialize(self, *args, execution_id=NotImplemented):
         """Reinitialize parameters of the OptimizationFunction
 
         Parameters to be reinitialized should be specified in a parameter specification dictionary, in which they key
@@ -436,7 +436,8 @@ class OptimizationFunction(Function_Base):
             * `search_function <OptimizationFunction.search_function>`
             * `search_termination_function <OptimizationFunction.search_termination_function>`
         """
-
+        if execution_id is NotImplemented:
+            execution_id = self.most_recent_execution_id
         self._validate_params(request_set=args[0])
 
         if DEFAULT_VARIABLE in args[0]:
@@ -1317,8 +1318,10 @@ class GridSearch(OptimizationFunction):
             #                                            ))
 
 
-    def reinitialize(self, *args, execution_id=None):
+    def reinitialize(self, *args, execution_id=NotImplemented):
         """Assign size of `search_space <GridSearch.search_space>"""
+        if execution_id is NotImplemented:
+            execution_id = self.most_recent_execution_id
         super(GridSearch, self).reinitialize(*args, execution_id=execution_id)
         sample_iterators = args[0]['search_space']
         owner_str = ''

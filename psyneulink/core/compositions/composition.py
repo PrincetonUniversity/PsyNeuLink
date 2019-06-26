@@ -4546,7 +4546,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def reinitialize(self, values, execution_context=NotImplemented):
         if execution_context is NotImplemented:
-            execution_context = self.default_execution_id
+            execution_context = self.most_recent_execution_id
 
         for i in range(self.stateful_nodes):
             self.stateful_nodes[i].reinitialize(values[i], execution_context=execution_context)
@@ -5079,7 +5079,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def reinitialize(self, execution_context=NotImplemented):
         if execution_context is NotImplemented:
-            execution_context = self.default_execution_id
+            execution_context = self.most_recent_execution_id
 
         self._compilation_data.ptx_execution.set(None, execution_context)
         self._compilation_data.parameter_struct.set(None, execution_context)

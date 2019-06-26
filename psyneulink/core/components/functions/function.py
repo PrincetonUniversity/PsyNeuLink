@@ -672,7 +672,11 @@ class Function_Base(Function):
                          prefs=prefs)
 
     def __call__(self, *args, **kwargs):
-        return self.function(*args, **kwargs)
+        execution_id=kwargs.get('execution_id')
+        self.most_recent_execution_id=execution_id
+        value = self.function(*args, **kwargs)
+        self.parameters.value.set(value,execution_context=execution_id,override=True)
+        return value
 
     def _parse_arg_generic(self, arg_val):
         if isinstance(arg_val, list):
