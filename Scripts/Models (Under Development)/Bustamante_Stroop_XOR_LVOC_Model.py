@@ -114,7 +114,7 @@ lvoc = pnl.OptimizationControlMechanism(
         # direction=pnl.ASCENT
     ),
     control_signals=pnl.ControlSignal(
-        projections=[(pnl.SLOPE, color_task), ('color_control', word_task)],
+        modulates=[(pnl.SLOPE, color_task), ('color_control', word_task)],
         # function=pnl.ReLU,
         function=pnl.Logistic,
         cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],

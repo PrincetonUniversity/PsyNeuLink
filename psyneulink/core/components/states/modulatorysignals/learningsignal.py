@@ -261,7 +261,7 @@ class LearningSignal(ModulatorySignal):
         parameters for the LearningSignal and/or a custom function and its parameters. Values specified for
         parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    projections : list of Projection specifications
+    modulates : list of Projection specifications
         specifies the `LearningProjection(s) <GatingProjection>` to be assigned to the LearningSignal, and that will be
         listed in its `efferents <LearningSignal.efferents>` attribute (see `LearningSignal_Projections` for additional
         details).
@@ -387,11 +387,12 @@ class LearningSignal(ModulatorySignal):
                  function=Linear(),
                  learning_rate: tc.optional(parameter_spec) = None,
                  modulation:tc.optional(_is_modulation_param)=None,
-                 projections=None,
+                 modulates=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
 
         if context is None:
             context = ContextFlags.COMMAND_LINE
@@ -418,13 +419,13 @@ class LearningSignal(ModulatorySignal):
                          modulation=modulation,
                          index=index,
                          assign=None,
-                         projections=projections,
+                         modulates=modulates,
                          params=params,
                          name=name,
                          prefs=prefs,
                          context=context,
                          function=function,
-                         )
+                         **kwargs)
 
     def _get_primary_state(self, projection):
         return projection.parameter_state

@@ -104,7 +104,7 @@ def test_prediction_mechanism_assignment():
                                                    objective_mechanism=[T2]
                                                    ),
                 control_signals=pnl.ControlSignal(allocation_samples=[1, 5, 10],
-                                                  projections=(pnl.SLOPE, T1)),
+                                                  modulates=(pnl.SLOPE, T1)),
                 monitor_for_control=T3,
                 enable_controller=True
                 )
@@ -137,7 +137,7 @@ def test_prediction_mechanism_filter_function():
                                                    objective_mechanism=[T]
                                                    ),
                 control_signals=pnl.ControlSignal(allocation_samples=[1, 5, 10],
-                                                  projections=(pnl.SLOPE, T)),
+                                                  modulates=(pnl.SLOPE, T)),
                 enable_controller=True
                 )
 

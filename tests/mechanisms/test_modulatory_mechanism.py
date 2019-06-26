@@ -27,9 +27,9 @@ class TestModulatoryMechanism:
         m = ProcessingMechanism(function=Logistic)
         c = ModulatoryMechanism(
                 modulatory_signals=[
-                    ControlSignal(name="CS1", projections=(GAIN,m)),
-                    GatingSignal(name="GS", projections=m),
-                    ControlSignal(name="CS2", projections=(BIAS,m)),
+                    ControlSignal(name="CS1", modulates=(GAIN, m)),
+                    GatingSignal(name="GS", modulates=m),
+                    ControlSignal(name="CS2", modulates=(BIAS, m)),
                 ]
         )
         assert  c.output_states.names == ['CS1', 'GS', 'CS2']
@@ -46,7 +46,7 @@ class TestModulatoryMechanism:
                 default_variable=[1],
                 monitor_for_modulation=Ty,
                 modulatory_signals=ControlSignal(modulation=OVERRIDE,
-                                                  projections=(SLOPE,Tz)))
+                                                 modulates=(SLOPE, Tz)))
 
         comp = Composition(enable_controller=True)
         comp.add_linear_processing_pathway(pathway=[Tx,Tz])
@@ -55,4 +55,22 @@ class TestModulatoryMechanism:
 
         assert Tz.parameter_states[SLOPE].mod_afferents[0].sender.owner == C
         assert np.allclose(comp.results,[[[1.], [4.]], [[4.], [4.]]])
+
+    def test_alias_equivalence_for_modulates_and_projections_control(self):
+        inputs = [1,9,4,3,2]
+        comp1 = Composition()
+        Tx1 = TransferMechanism()
+        Tx2 = TransferMechanism()
+        C1 = ControlMechanism(control_signals=ControlSignal(modulates=(SLOPE,Tx2)))
+        comp1.add_nodes([Tx1,Tx2,C1])
+        comp1.add_linear_processing_pathway([C1,Tx1,Tx2])
+        comp1.run(inputs=inputs)
+        comp2 = Composition()
+        Tx3 = TransferMechanism()
+        Tx4 = TransferMechanism()
+        C2 = ControlMechanism(control_signals=ControlSignal(projections=(SLOPE,Tx4)))
+        comp2.add_nodes([Tx3,Tx4,C2])
+        comp2.add_linear_processing_pathway([C2,Tx3,Tx4])
+        comp2.run(inputs=inputs)
+        assert comp1.results == comp2.results
 
