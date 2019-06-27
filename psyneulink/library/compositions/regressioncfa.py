@@ -329,32 +329,32 @@ class RegressionCFA(CompositionFunctionApproximator):
         predicted_outcome=0
 
         prediction_vector = self.parameters.prediction_vector._get(execution_id)
-        count = num_estimates if num_estimates else 1
-        for i in range(count):
+        num_estimates = num_estimates or 1
+
+        for i in range(num_estimates):
+
+            # Get values (subvectors) for prediction terms and their corresponding regression weights
             terms = self.prediction_terms
-            vector = prediction_vector.compute_terms(control_allocation, execution_id=execution_id)
+            term_values_dict = prediction_vector.compute_terms(control_allocation, execution_id=execution_id)
             # FIX: THIS SHOULD GET A SAMPLE RATHER THAN JUST USE THE ONE RETURNED FROM ADAPT METHOD
             #      OR SHOULD MULTIPLE SAMPLES BE DRAWN AND AVERAGED AT END OF ADAPT METHOD?
             #      I.E., AVERAGE WEIGHTS AND THEN OPTIMIZE OR OTPIMZE FOR EACH SAMPLE OF WEIGHTS AND THEN AVERAGE?
-
             weights = self.parameters.regression_weights._get(execution_id)
-            net_outcome = 0
 
-            for term_label, term_value in vector.items():
+            v = np.array([])
+            w = np.array([])
+            # Concatenate values for each prediction term, and same for corresponding weights
+            for term_label, term_value in term_values_dict.items():
                 if term_label in terms:
-                    pv_enum_val = term_label.value
+                    pv_enum_val =  term_label.value
                     item_idx = prediction_vector.idx[pv_enum_val]
-                    net_outcome += np.sum(term_value.reshape(-1) * weights[item_idx])
-                    # # TEST PRINT 5/30/19:
-                    # print (f"CFA term label: {term_label}")
-                    # # print (f"CFA term_value: {term_value}")
-                    # print (f"CFA weight: {weights}")
-                    # print (f"CFA add to outcome: {np.sum(term_value.reshape(-1) * weights[item_idx])}")
-            predicted_outcome+=net_outcome
-        predicted_outcome/=count
+                    v = np.append(v, term_value.reshape(-1))
+                    w = np.append(w, weights[item_idx])
+            # Get predicted outcome for this esimtate and add to sum over estimates
+            predicted_outcome += np.dot(v,w)
 
-        # # TEST PRINT 5/30/19:
-        # print (f"predicted_outcome: {predicted_outcome}")
+        # Compute average over estimates
+        predicted_outcome/=num_estimates
 
         return predicted_outcome
 

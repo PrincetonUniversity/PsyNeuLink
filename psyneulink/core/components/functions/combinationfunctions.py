@@ -10,6 +10,7 @@
 # *****************************************  COMBINATION FUNCTIONS  ****************************************************
 
 '''
+* `Concatenate`
 * `Reduce`
 * `LinearCombination`
 * `CombineMeans`
@@ -38,16 +39,18 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import \
     Function_Base, FunctionError, ADDITIVE_PARAM, MULTIPLICATIVE_PARAM
-from psyneulink.core.globals.keywords import PREDICTION_ERROR_DELTA_FUNCTION, COMBINATION_FUNCTION_TYPE, \
-    REDUCE_FUNCTION, SCALE, OFFSET, SUM, PRODUCT, WEIGHTS, EXPONENTS, OPERATION, LINEAR_COMBINATION_FUNCTION, \
-    COMBINE_MEANS_FUNCTION, kwPreferenceSetName
+from psyneulink.core.globals.keywords import \
+    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION, EXPONENTS, LINEAR_COMBINATION_FUNCTION, \
+    OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
+    kwPreferenceSetName
 from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d, parameter_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, is_pref_set, PreferenceEntry, PreferenceLevel
 
-__all__ = ['CombinationFunction', 'Reduce', 'LinearCombination', 'CombineMeans', 'PredictionErrorDeltaFunction']
+__all__ = ['CombinationFunction', 'Concatenate', 'CombineMeans', 'Reduce', 'LinearCombination',
+           'PredictionErrorDeltaFunction']
 
 class CombinationFunction(Function_Base):
     """Function that combines multiple items, yielding a result with the same shape as its operands
@@ -112,6 +115,202 @@ class CombinationFunction(Function_Base):
     @additive.setter
     def additive(self, val):
         setattr(self, self.additive_param, val)
+
+
+class Concatenate(CombinationFunction):  # ------------------------------------------------------------------------
+    """
+    Concatenate(                                   \
+         default_variable=class_defaults.variable, \
+         scale=1.0,                                \
+         offset=0.0,                               \
+         params=None,                              \
+         owner=None,                               \
+         prefs=None,                               \
+    )
+
+    .. _Concatenate:
+
+    Concatenates items in outer dimension (axis 0) of of `variable <Concatenate.variable>` into a single array,
+    optionally scaling and/or adding an offset to the result after concatenating.
+
+    `function <Concatenate.function>` returns a 1d array with lenght equal to the sum of the lengths of the items
+    in `variable <Concatenate.variable>`.
+
+    COMMENT:
+        IMPLEMENTATION NOTE: EXTEND TO MULTIDIMENSIONAL ARRAY ALONG ARBITRARY AXIS
+    COMMENT
+
+    Arguments
+    ---------
+
+    default_variable : list or np.array : default class_defaults.variable
+        specifies a template for the value to be transformed and its default value;  all entries must be numeric.
+
+    scale : float
+        specifies a value by which to multiply each element of the output of `function <Concatenate.function>`
+        (see `scale <Concatenate.scale>` for details)
+
+    offset : float
+        specifies a value to add to each element of the output of `function <Concatenate.function>`
+        (see `offset <Concatenate.offset>` for details)
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    default_variable : list or np.array
+        contains template of array(s) to be concatenated.
+
+    scale : float
+        value is applied multiplicatively to each element of the concatenated, before  applying the `offset
+        <Concatenate.offset>` (if it is specified).
+
+    offset : float
+        value is added to each element of the concatentated array, after `scale <Concatenate.scale>` has been
+        applied (if it is specified).
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+    componentName = CONCATENATE_FUNCTION
+
+    multiplicative_param = SCALE
+    additive_param = OFFSET
+
+    class Parameters(CombinationFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                offset
+                    see `offset <Concatenate.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                scale
+                    see `scale <Concatenate.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
+        scale = Parameter(1.0, modulable=True)
+        offset = Parameter(0.0, modulable=True)
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 scale: parameter_spec = 1.0,
+                 offset: parameter_spec = 0.0,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts
+        params = self._assign_args_to_param_dicts(scale=scale,
+                                                  offset=offset,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def _validate_variable(self, variable, context=None):
+        """Insure that list or array is 1d and that all elements are numeric
+
+        Args:
+            variable:
+            context:
+        """
+        variable = super()._validate_variable(variable=variable, context=context)
+        if not is_numeric(variable):
+            raise FunctionError("All elements of {} must be scalar values".
+                                format(self.__class__.__name__))
+        return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate scale and offset parameters
+
+        Check that SCALE and OFFSET are scalars.
+        """
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        if SCALE in target_set and target_set[SCALE] is not None:
+            scale = target_set[SCALE]
+            if not isinstance(scale, numbers.Number):
+                raise FunctionError("{} param of {} ({}) must be a scalar".format(SCALE, self.name, scale))
+
+        if OFFSET in target_set and target_set[OFFSET] is not None:
+            offset = target_set[OFFSET]
+            if not isinstance(offset, numbers.Number):
+                raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
+
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 context=None):
+        """Use numpy hstack to concatenate items in outer dimension (axis 0) of variable.
+
+        Arguments
+        ---------
+
+        variable : list or np.array : default class_defaults.variable
+           a list or np.array of numeric values.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        Concatenated array of items in variable : array
+            in an array that is one dimension less than `variable <Concatenate.variable>`.
+
+        """
+
+        # Validate variable and assign to variable, and validate params
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+
+        scale = self.get_current_function_param(SCALE, execution_id)
+        offset = self.get_current_function_param(OFFSET, execution_id)
+
+        result = np.hstack(variable) * scale + offset
+
+        return self.convert_output_type(result)
 
 
 class Reduce(CombinationFunction):  # ------------------------------------------------------------------------

@@ -1094,6 +1094,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Stores the `results <Composition.results>` for executions of the Composition when it is executed using
             its `evaluate <Composition.evaluate>` method.
 
+        retain_old_simulation_data : bool
+            if True, all Parameter values generated during simulations will be saved for later inspection;
+            if False, simulation values will be deleted unless otherwise specified by individual Parameters
+
         COMMENT:
         name : str
             see `name <Composition_Name>`
@@ -1126,6 +1130,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         results = Parameter([], loggable=False)
         simulation_results = Parameter([], loggable=False)
+        retain_old_simulation_data = Parameter(False, stateful=False, loggable=False)
 
     class _CompilationData(ParametersBase):
         ptx_execution = None
@@ -1142,6 +1147,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
             controller_condition:Condition=Always(),
             learning_enabled=False,
+            retain_old_simulation_data=None,
             **param_defaults
     ):
         # also sets name
@@ -1198,8 +1204,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.feedback_receivers = set()
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
-        self.defaults = Defaults(owner=self,
-                                 **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)})
+        self.defaults = Defaults(
+            owner=self,
+            retain_old_simulation_data=retain_old_simulation_data,
+            **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)}
+        )
         self._initialize_parameters()
 
         # Compiled resources
@@ -1372,25 +1381,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for proj in input_state.shadow_inputs.path_afferents:
                     sender = proj.sender
                     if sender.owner != self.input_CIM:
-                        # MODIFIED 5/9/19 OLD:
                         self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_state),
                                             sender=proj.sender.owner,
                                             receiver=node)
-                        # # MODIFIED 5/9/19 NEW: [JDC]
-                        # self.add_projection(sender=proj.sender.owner,
-                        #                     receiver=node)
-                        # MODIFIED 5/9/19 END
 
-    # MODIFIED 5/29/19 OLD:
-    # def add_nodes(self, nodes, required_roles=None):
-    # # # MODIFIED 5/29/19 NEW: [JDC]
-    # # def add_nodes(self, nodes=None, *args):
-    #     if not isinstance(nodes, list):
-    #         raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
-    #                                f"must be a list of nodes")
-    #     for node in nodes:
-    #         self.add_node(node=node, required_roles=required_roles)
-    # # MODIFIED 5/29/19 NEWER: [JDC]
     def add_nodes(self, nodes, required_roles=None):
         """
             Add a list of Composition Nodes (`Mechanism` or `Composition`) to the Composition,
@@ -1424,7 +1418,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError(f"Node specified in 'add_nodes' method of '{self.name}' {Composition.__name__} "
                                        f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
                                        f"or a tuple containing one of those and a {NodeRole.__name__} or list of them")
-    # MODIFIED 5/29/19 END
 
     def add_controller(self, controller:ModulatoryMechanism):
         """
@@ -1538,12 +1531,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError(f"A {Projection.__name__} specified to {receiver_name} in {self.name} "
                                        f"has a sender ({repr(sender_name)}) that is not (yet) in it "
                                        f"or any of its nested {Composition.__name__}s.")
-            #
-            # # MODIFIED 5/29/19 NEW:
-            # # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below
-            # if isinstance(sender.owner, CompositionInterfaceMechanism):
-            #     sender_mechanism = sender.owner
-            # # MODIFIED 5/29/19 NEW:
 
         if hasattr(projection, "sender"):
             if projection.sender.owner != sender and \
@@ -1616,11 +1603,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
                                        "is not in it or any of its nested {}s ".
                                        format(repr(receiver), self.name, Composition.__name__, ))
-            # MODIFIED 5/29/19 NEW:
-            # Reassign receiver_mechanism to nested Composition's input_CIM (to pass _validate_projection() below
-            # if isinstance(receiver.owner, CompositionInterfaceMechanism):
-            #     receiver_mechanism = receiver.owner
-            # MODIFIED 5/29/19 END
 
         return receiver, receiver_mechanism, graph_receiver, receiver_input_state, \
                nested_compositions, learning_projection
@@ -1944,12 +1926,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 error_sources=comparator_mechanism,
                                 in_composition=True,
                                 name="Learning Mechanism for " + learned_projection.name)
-        # MODIFIED 5/29/19 NEW:
+
         # FIX 5/29/19 [JDC]:  MIGHT WANT TO TEST HERE WHETHER IT IS IN A BP CHAIN AND, IF SO, AND NOT LAST, THEN
         #  REQUIRE IT
         learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
                                                                                                         override=True)
-        # MODIFIED 5/29/19 END
         self.learning_enabled = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
@@ -4660,7 +4641,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             initial_values=None,
             reinitialize_values=None,
             runtime_params=None,
-            retain_old_simulation_data=False,
             animate=False,
             execution_id=None,
             base_execution_id=None,
@@ -4778,10 +4758,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 .. note::
                    as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
                    correspond to the `EXECUTION LogCondition <LogCondition.EXECUTION>`.
-
-            retain_old_simulation_data : bool
-                if True, all Parameter values generated during simulations will be saved for later inspection;
-                if False, simulation values will be deleted unless otherwise specified by individual Parameters
 
         COMMENT:
         REPLACE WITH EVC/OCM EXAMPLE
@@ -5014,10 +4990,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if self.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
                 results.append(result_copy)
 
-                if not retain_old_simulation_data:
+                if not self.parameters.retain_old_simulation_data._get():
                     if self.controller is not None:
-                        self._delete_contexts(*self.controller.parameters.simulation_ids._get(execution_id), check_simulation_storage=True)
-
                         # if any other special parameters store simulation info that needs to be cleaned up
                         # consider dedicating a function to it here
                         # this will not be caught above because it resides in the base context (execution_id)
@@ -5513,7 +5487,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             reconfiguration_cost = 0.
             if callable(self.controller.compute_reconfiguration_cost):
                 reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
-                                                                                                base_control_allocation])
+                                                                                     base_control_allocation])
+                self.controller.reconfiguration_cost.set(reconfiguration_cost, execution_id)
+
             # Apply candidate control signal
             self.controller._apply_control_allocation(candidate_control_allocation,
                                                                 execution_id=execution_id,
@@ -5525,6 +5501,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Compute a total for the candidate control signal(s)
             total_cost = self.controller.combine_costs(all_costs)
         return total_cost
+
     def _build_predicted_inputs_dict(self, predicted_input):
         inputs = {}
         # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features

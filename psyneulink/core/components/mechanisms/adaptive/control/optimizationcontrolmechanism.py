@@ -855,24 +855,8 @@ class OptimizationControlMechanism(ControlMechanism):
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
             state.update(execution_id=execution_id, params=runtime_params, context=context)
-            # # MODIFIED 6/14/19 OLD:
-            # state_values.append(state.parameters.value._get(execution_id))
-            # MODIFIED 6/14/19 NEW: [JDC] - TO DEAL WITH AdaptiveIntegrator that returns 2d value
-            # FIX: REVERT TO OLD IF/WHEN AdaptiveIntegrators is modified to return 1d value
-            state_values.append(np.atleast_1d(np.squeeze(state.parameters.value.get(execution_id))))
-            # MODIFIED 6/14/19 END
-
+            state_values.append(state.parameters.value._get(execution_id))
         return np.array(state_values)
-
-    # MODIFIED 6/14/19 NEW: [JDC] - TO DEAL WITH AdaptiveIntegrator that returns 2d value
-    # FIX: REMOVE IF/WHEN AdaptiveIntegrators is modified to return 1d value
-    def _validate_variable(self, variable, context=None):
-        for i, var in enumerate(variable):
-            # variable[i] = np.atleast_2d(var)
-            variable[i] = np.atleast_1d(np.squeeze(var))
-            assert True
-        super()._validate_variable(variable,context)
-    # MODIFIED 6/14/19 END
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
@@ -944,6 +928,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return sim_execution_id
 
+    def _tear_down_simulation(self, sim_execution_id=None):
+        if not self.agent_rep.parameters.retain_old_simulation_data._get():
+            self.agent_rep._delete_contexts(sim_execution_id, check_simulation_storage=True)
+
     def evaluation_function(self, control_allocation, execution_id=None):
         '''Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
@@ -977,6 +965,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                              context=self.function.parameters.context._get(execution_id),
                                              execution_mode=self.parameters.comp_execution_mode._get(execution_id)
             )
+            if self.defaults.search_statefulness:
+                self._tear_down_simulation(new_execution_id)
         # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
             result = self.agent_rep.evaluate(self.parameters.feature_values._get(execution_id),

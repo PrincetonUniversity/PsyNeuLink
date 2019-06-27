@@ -678,6 +678,11 @@ class MappingProjection(PathwayProjection_Base):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+        try:
+            self._parameter_states[MATRIX].function.reinitialize()
+        except AttributeError:
+            pass
+
     def _instantiate_parameter_states(self, function=None, context=None):
 
         super()._instantiate_parameter_states(function=function, context=context)
