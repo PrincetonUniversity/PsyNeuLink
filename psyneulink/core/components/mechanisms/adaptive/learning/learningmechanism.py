@@ -1291,12 +1291,25 @@ class LearningMechanism(AdaptiveMechanism_Base):
         error_signal_inputs = variable[curr_indices]
         if self.error_matrices is None:
             if self.function is BackPropagation or isinstance(self.function, BackPropagation):
-                # self.error_matrices = np.zeros_like(error_signal_inputs)
-                self.error_matrices = np.ones_like(error_signal_inputs)
+                mat = []
+                for i in range(len(error_signal_inputs[0])):
+                    row = []
+                    for j in range(len(error_signal_inputs[0])):
+                        if i == j:
+                            row.append(1.)
+                        else:
+                            row.append(0.)
+                    mat.append(row)
+                self.error_matrices = mat
+                error_matrices = mat
+
+
             else:
                 self.error_matrices = [[0.]]
 
-        error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
+                error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
+        else:
+            error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
 
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterState):
@@ -1321,6 +1334,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
+
+        # KAM added 6/27/19 - hack to get backprop working
+        # If this was an initialization run, return zeros so that the first "real" trial does not start
+        # with the error computed during initialization
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            return [0*summed_learning_signal, 0*summed_error_signal]
 
         return [summed_learning_signal, summed_error_signal]
 

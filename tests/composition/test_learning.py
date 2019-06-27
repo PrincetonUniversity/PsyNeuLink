@@ -344,34 +344,37 @@ class TestBackProp:
                                              function=pnl.Logistic())
 
         comp = pnl.Composition(name="backprop-composition")
+        print("add linear processing pathway")
         comp.add_linear_processing_pathway(pathway=[input_layer, hidden_layer])
+        print("add backprop pathway")
         learning_components = comp.add_back_propagation_pathway(pathway=[hidden_layer, output_layer])
-        learned_projection = learning_components[pnl.LEARNED_PROJECTION]
-        learned_projection.log.set_log_conditions(pnl.MATRIX)
-        learning_mechanism = learning_components[pnl.LEARNING_MECHANISM]
-        target_mechanism = learning_components[pnl.TARGET_MECHANISM]
-        comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
+        # learned_projection = learning_components[pnl.LEARNED_PROJECTION]
+        # learned_projection.log.set_log_conditions(pnl.MATRIX)
+        # learning_mechanism = learning_components[pnl.LEARNING_MECHANISM]
+        # target_mechanism = learning_components[pnl.TARGET_MECHANISM]
+        # comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
+        print("create logs")
         for node in comp.nodes:
             node.log.set_log_conditions(pnl.VALUE)
         comp.show_graph()
-        eid="eid"
-        comp.run(inputs={input_layer: [[1.0, 1.0]],
-                         target_mechanism: [[1.0, 1.0]]},
-                 execution_id=eid)
-        print("\n\n\n")
-        for node in comp.nodes:
-            try:
-                log = node.log.nparray_dictionary()
-            except ValueError:
-                continue
-            if eid in log:
-                print(node.name, " values:")
-                values = log[eid][pnl.VALUE]
-                for i, val in enumerate(values):
-                    print("     Trial ", i, ":  ", val)
-                print("\n - - - - - - - - - - - - - - - - - - \n")
-            else:
-                print(node.name, " EMPTY LOG!")
+        # eid="eid"
+        # comp.run(inputs={input_layer: [[1.0, 1.0]],
+        #                  target_mechanism: [[1.0, 1.0]]},
+        #          execution_id=eid)
+        # print("\n\n\n")
+        # for node in comp.nodes:
+        #     try:
+        #         log = node.log.nparray_dictionary()
+        #     except ValueError:
+        #         continue
+        #     if eid in log:
+        #         print(node.name, " values:")
+        #         values = log[eid][pnl.VALUE]
+        #         for i, val in enumerate(values):
+        #             print("     Trial ", i, ":  ", val)
+        #         print("\n - - - - - - - - - - - - - - - - - - \n")
+        #     else:
+        #         print(node.name, " EMPTY LOG!")
 
     def test_stroop_with_backprop(self):
         # Mechanisms
@@ -397,10 +400,10 @@ class TestBackProp:
 
         # Assemble Composition
         comp = pnl.Composition(name='stroop-with-learning')
-        comp.add_linear_processing_pathway(pathway=[color, ch_weights, hidden])
+        comp.add_back_propagation_pathway(pathway=[color, ch_weights, hidden, ho_weights, output, response])
         comp.add_linear_processing_pathway(pathway=[word, wh_weights, hidden])
-        comp.add_linear_processing_pathway(pathway=[hidden, ho_weights, output, response])
-
+        # comp.add_back_propagation_pathway(pathway=[hidden, ho_weights, output, response])
+        comp.show_graph()
         # color_naming_process = Process(
         #     default_variable=[1, 2.5],
         #     pathway=[colors, CH_Weights, hidden, HO_Weights, response],

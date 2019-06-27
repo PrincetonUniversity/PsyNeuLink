@@ -1986,33 +1986,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.learning_enabled = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
-    def _create_backprop_related_mechanisms(self,
-                                            input_source,
-                                            output_source,
-                                            error_function,
-                                            learned_projection,
-                                            learning_rate):
-        # Create learning components
+
+    def _create_output_layer_backprop_components(self, input_source, output_source, error_function, learned_projection, learning_rate):
+
         target_mechanism = ProcessingMechanism(name='Target',
                                                default_variable=output_source.output_states[0].value)
 
-    def _create_backprop_related_mechanisms(self, target_mechanism, comparator_mechanism, input_source, output_source, error_function, learned_projection, learning_rate):
-        # Create learning components
-        last_layer = False
-        if target_mechanism is None and comparator_mechanism is None:
-            last_layer = True
-            target_mechanism = ProcessingMechanism(name='Target',
-                                                   default_variable=output_source.output_states[0].value)
-
-            comparator_mechanism = ComparatorMechanism(name='Comparator',
-                                                       target={NAME: TARGET,
-                                                               VARIABLE: target_mechanism.output_states[0].value},
-                                                       sample={NAME: SAMPLE,
-                                                               VARIABLE: output_source.output_states[0].value,
-                                                               WEIGHT: -1},
-                                                       function=error_function,
-                                                       output_states=[OUTCOME, MSE]
-                                                       )
+        comparator_mechanism = ComparatorMechanism(name='Comparator',
+                                                   target={NAME: TARGET,
+                                                           VARIABLE: target_mechanism.output_states[0].value},
+                                                   sample={NAME: SAMPLE,
+                                                           VARIABLE: output_source.output_states[0].value,
+                                                           WEIGHT: -1},
+                                                   function=error_function,
+                                                   output_states=[OUTCOME, MSE]
+                                                   )
 
         learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
                                                               output_source.output_states[0].value,
@@ -2027,8 +2015,52 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                error_sources=comparator_mechanism,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
+
         self.learning_enabled = True
+        self.add_nodes(nodes=[target_mechanism, comparator_mechanism, learning_mechanism],
+                       required_roles=NodeRole.LEARNING)
+        learning_related_projections = self._create_learning_related_projections(input_source,
+                                                                                 output_source,
+                                                                                 target_mechanism,
+                                                                                 comparator_mechanism,
+                                                                                 learning_mechanism)
+        self.add_projections(learning_related_projections)
+
+        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        self.add_projection(learning_projection, feedback=True)
+
         return target_mechanism, comparator_mechanism, learning_mechanism
+
+    def _create_multiplayer_backprop_components(self, input_source, output_source, learned_projection, learning_rate, previous_learning_mechanism):
+
+        learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
+                                                              output_source.output_states[0].value,
+                                                              previous_learning_mechanism.output_states[0].value],
+                                            activation_derivative_fct=output_source.function.derivative,
+                                            learning_rate=learning_rate)
+
+        learning_mechanism = LearningMechanism(function=learning_function,
+                                               default_variable=[input_source.output_states[0].value,
+                                                                 output_source.output_states[0].value,
+                                                                 previous_learning_mechanism.output_states[0].value],
+                                               error_sources=previous_learning_mechanism,
+                                               in_composition=True,
+                                               name="Learning Mechanism for " + learned_projection.name)
+
+        self.add_node(learning_mechanism)
+
+        proj = MappingProjection(sender=previous_learning_mechanism.output_states[0],
+                                 receiver=learning_mechanism.input_states[2])
+        act_out_projection = MappingProjection(sender=output_source.output_states[0],
+                                               receiver=learning_mechanism.input_states[1])
+        act_in_projection = MappingProjection(sender=input_source.output_states[0],
+                                              receiver=learning_mechanism.input_states[0])
+
+        self.add_projections([proj, act_out_projection, act_in_projection])
+        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        self.add_projection(learning_projection, feedback=True)
+
+        return learning_mechanism
 
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
         # construct learning related mapping projections
@@ -2045,23 +2077,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               receiver=learning_mechanism.input_states[0])
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
 
-    def _create_backprop_final_layer_projections(self, input_source, output_source, target, comparator, learning_mechanism):
-        # construct learning related mapping projections
-        # FIX 5/29/19 [JDC]:  REPLACE INDICES BELOW WITH RELEVANT KEYWORDS
-        target_projection = MappingProjection(sender=target,
-                                              receiver=comparator.input_states[1])
-        sample_projection = MappingProjection(sender=output_source,
-                                              receiver=comparator.input_states[0])
-        error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
-                                                    receiver=learning_mechanism.input_states[2])
-        return [target_projection, sample_projection, error_signal_projection]
-
-    def _create_backprop_projections(self, input_source, output_source, learning_mechanism):
-        act_out_projection = MappingProjection(sender=output_source.output_states[0],
-                                               receiver=learning_mechanism.input_states[1])
-        act_in_projection = MappingProjection(sender=input_source.output_states[0],
-                                              receiver=learning_mechanism.input_states[0])
-        return [act_in_projection, act_out_projection]
 
     def _create_learning_projection(self, learning_mechanism, learned_projection):
 
@@ -2187,37 +2202,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Processing Components
         processing_pathway = self.add_linear_processing_pathway(pathway)
+        path_length = len(processing_pathway)
 
-        target = comparator = None
-        ind = len(processing_pathway) - 1
+        if path_length >= 3:
+            # final 3 components: Input Node, Learned Projection, Output Node
+            output_layer = processing_pathway[path_length - 3: path_length]
+        else:
+            raise CompositionError("Backpropagation pathway specification does not contain enough components. ")
 
-        while ind > 1:
+        # Process output_layer:
+        input_source, learned_projection, output_source = output_layer
+        target, comparator, learning_mechanism = self._create_output_layer_backprop_components(input_source,
+                                                                                               output_source,
+                                                                                               error_function,
+                                                                                               learned_projection,
+                                                                                               learning_rate)
+
+        learning_mechanisms = [learning_mechanism]
+        learned_projections = [learned_projection]
+        for ind in range(path_length - 3, 1, -2):
+            # set variables for this iteration
             input_source = processing_pathway[ind-2]
             learned_projection = processing_pathway[ind-1]
             output_source = processing_pathway[ind]
+            previous_learning_mechanism = learning_mechanisms[-1]
 
-            # Learning Components
-            target, comparator, learning_mechanism = self._create_backprop_related_mechanisms(target,
-                                                                                              comparator,
-                                                                                              input_source,
-                                                                                              output_source,
-                                                                                              error_function,
-                                                                                              learned_projection,
-                                                                                              learning_rate)
+            new_learning_mechanism = self._create_multiplayer_backprop_components(input_source,
+                                                                                  output_source,
+                                                                                  learned_projection,
+                                                                                  learning_rate,
+                                                                                  previous_learning_mechanism)
 
-            self.add_nodes([target, comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
+            learning_mechanisms.append(new_learning_mechanism)
+            learned_projections.append(learned_projection)
 
-            learning_related_projections = self._create_learning_related_projections(input_source,
-                                                                                     output_source,
-                                                                                     target,
-                                                                                     comparator,
-                                                                                     learning_mechanism)
-            self.add_projections(learning_related_projections)
-
-            learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-            self.add_projection(learning_projection, feedback=True)
-
-        learning_related_components = {LEARNING_MECHANISM: [learning_mechanism],
+        learning_related_components = {LEARNING_MECHANISM: learning_mechanisms,
                                        COMPARATOR_MECHANISM: comparator,
                                        TARGET_MECHANISM: target,
                                        LEARNED_PROJECTION: [learned_projection]}
