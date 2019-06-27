@@ -24,7 +24,7 @@ class TestRearrange:
 
     @pytest.mark.function
     @pytest.mark.combination_function
-    def arrangement_has_out_of_bounds_index(self):
+    def test_arrangement_has_out_of_bounds_index(self):
         with pytest.raises(pnl.FunctionError) as error_text:
             pnl.Rearrange(default_variable=[0,0], arrangement=[(1,2),0])
         error_msg = "'default_variable' for Rearrange must be at least 2d."
@@ -41,17 +41,19 @@ class TestRearrange:
 
     @pytest.mark.function
     @pytest.mark.combination_function
-    def default_variable_has_non_numeric_index(self):
-        with pytest.raises(pnl.FunctionError) as error_text:
+    def test_default_variable_has_non_numeric_index(self):
+        # with pytest.raises(pnl.FunctionError) as error_text:
+        with pytest.raises(pnl.UtilitiesError) as error_text:
             pnl.Rearrange(default_variable=[[0],['a']], arrangement=[(1,2),0])
-        error_msg = "All elements of 'default_variable' for Rearrange must be scalar vlues."
+        # error_msg = "All elements of 'default_variable' for Rearrange must be scalar values."
+        error_msg = "[['0']\\n ['a']] has non-numeric entries"
         assert error_msg in str(error_text)
 
     @pytest.mark.function
     @pytest.mark.combination_function
-    def arrangement_has_non_numeric_index(self):
+    def test_arrangement_has_non_numeric_index(self):
         with pytest.raises(pnl.FunctionError) as error_text:
-            pnl.Rearrange(default_variable=[[0],[0]], arrangement=[(1,2),'a'])
+            pnl.Rearrange(default_variable=[[0],[0],[0]], arrangement=[(1,2),'a'])
         error_msg_a = "Index specified in 'arrangement' arg"
         error_msg_b = "('a') is not an int."
         assert all(error_msg in str(error_text) for error_msg in {error_msg_a, error_msg_b})
