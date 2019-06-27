@@ -7,6 +7,47 @@ import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
 import psyneulink.core.globals.keywords as kw
 
+# class TestRearrange:
+#
+#     @pytest.mark.function
+#     @pytest.mark.combination_function
+#     def test_single_array(self):
+#         R_function = pnl.core.components.functions.combinationfunctions.Rearrange(default_variable=[0,1],
+#                                                                                   arrangement=[(1,2),0])
+#
+#         assert np.allclose(R_function.execute([1, 2, 3, 4, 5]), [15.0])
+#         assert np.allclose(R_function.execute([[1, 2, 3, 4, 5]]), [15.0])
+#         assert np.allclose(R_function.execute([[[1, 2, 3, 4, 5]]]), [1, 2, 3, 4, 5])
+#
+#     @pytest.mark.function
+#     @pytest.mark.combination_function
+#     def test_column_vector(self):
+#         R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
+#         R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+#                                               default_variable=[[1], [2], [3], [4], [5]],
+#                                               name="R_mechanism")
+#
+#         assert np.allclose(R_function.execute([[1], [2], [3], [4], [5]]), [1, 2, 3, 4, 5])
+#         # assert np.allclose(R_function.execute([[1], [2], [3], [4], [5]]), [15.0])
+#         assert np.allclose(R_function.execute([[[1], [2], [3], [4], [5]]]), [15.0])
+#
+#         assert np.allclose(R_mechanism.execute([[1], [2], [3], [4], [5]]), [1, 2, 3, 4, 5])
+#         # assert np.allclose(R_mechanism.execute([[1], [2], [3], [4], [5]]), [15.0])
+#
+#     @pytest.mark.function
+#     @pytest.mark.combination_function
+#     def test_matrix(self):
+#         R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
+#         R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+#                                               default_variable=[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+#                                               name="R_mechanism")
+#
+#         assert np.allclose(R_function.execute([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), [6, 15, 24])
+#         assert np.allclose(R_function.execute([[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]), [12, 15, 18])
+#
+#         assert np.allclose(R_mechanism.execute([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), [6, 15, 24])
+
+
 class TestReduce:
 
     @pytest.mark.function
@@ -67,7 +108,6 @@ class TestReduce:
     #     # print("mech = ", R_mechanism.execute([[[1, 2], [3, 4, 5], [6, 7, 8, 9]]]))
     #     # print("mech = ", R_mechanism.execute([[[1, 2], [3, 4, 5], [6, 7, 8, 9]]]))
     #
-
 
 SIZE=5
 np.random.seed(0)
