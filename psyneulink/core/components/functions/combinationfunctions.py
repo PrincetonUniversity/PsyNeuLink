@@ -475,37 +475,36 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         return default_variable
 
     def _validate_variable(self, variable, context=None):
-        """Insure that list or array is 1d and that all elements are numeric
-
-        Args:
-            variable:
-            context:
+        """Insure that all elements are numeric and that list or array is at least 2d
         """
         variable = super()._validate_variable(variable=variable, context=context)
         if not is_numeric(variable):
-            raise FunctionError("All elements of {} must be scalar values".
-                                format(self.__class__.__name__))
+            raise FunctionError(
+                    f"All elements of {repr(DEFAULT_VARIABLE)} for {self.__class__.__name__} must be scalar values.")
+
+        if self.parameters.variable._user_specified and np.array(variable).ndim<2:
+            raise FunctionError(f"{repr(DEFAULT_VARIABLE)} for {self.__class__.__name__} must be at least 2d.")
+
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate arrangement, scale and offset parameters
-
-        """
+        """Validate arrangement, scale and offset parameters"""
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
 
         if ARRANGEMENT in target_set and target_set[ARRANGEMENT] is not None:
+
             # If default_varilable was specified by user, validate indices in arrangement
-            if self.parameters.variable._user_specified:
-                owner_str = ''
-                if self.owner:
-                    owner_str = f' of {self.owner.name}'
-                for i in self._indices:
-                    if not isinstance(i, int):
-                        raise FunctionError(f"Index ({i}) specified in {repr(ARRANGEMENT)} arg for "
-                                            f"{self.name}{owner_str} is not an int.")
+            owner_str = ''
+            if self.owner:
+                owner_str = f' of {self.owner.name}'
+            for i in self._indices:
+                if not isinstance(i, int):
+                    raise FunctionError(f"Index specified in {repr(ARRANGEMENT)} arg for "
+                                        f"{self.name}{owner_str} ({repr(i)}) is not an int.")
+                if self.parameters.variable._user_specified:
                     try:
                         self.parameters.variable.default_value[i]
                     except IndexError:
@@ -525,16 +524,18 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        '''If arrangement is specified, insure all its items are tuples, and reshape variable if not user_specified'''
+        '''Insure all items of arrangement are tuples and compatibility with default_variable
+
+        If arrangement is specified, convert all items to tuples
+        If default_variable is NOT specified, assign with length in outer dimension = max index in arragnement
+        If default_variable IS _user_specified, compatiblility with arrangement is checked in _validate_params
+        '''
 
         arrangement = self.parameters.arrangement.get()
 
         if arrangement is not None:
             # Insure that all items are tuples
             self.parameters.arrangement.set([item if isinstance(item,tuple) else tuple([item]) for item in arrangement])
-
-        # IMPLEMENTATION NOTE:
-        #  if default_variable is _user_specified, compatiblility with arrangement is checked in _validate_params
 
         if not self.parameters.variable._user_specified:
             # Reshape variable.default_value to match maximum index specified in arrangement
