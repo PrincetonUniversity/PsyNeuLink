@@ -1926,14 +1926,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       learning_rate):
         # Create learning components
         target_mechanism = ProcessingMechanism(name='Target',
-                                               default_variable=output_source.value)
+                                               default_variable=output_source.defaults.value)
 
         comparator_mechanism = PredictionErrorMechanism(
             sample={NAME: SAMPLE,
-                    VARIABLE: output_source.value,
+                    VARIABLE: output_source.defaults.value,
                     },
             target={NAME: TARGET,
-                    VARIABLE: output_source.value
+                    VARIABLE: output_source.defaults.value
                     },
             function=PredictionErrorDeltaFunction(gamma=1.0),
             # name="{} {}".format(output_source.name
@@ -1942,9 +1942,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
 
         learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
-                                               default_variable=[input_source.output_states[0].value,
-                                                                 output_source.output_states[0].value,
-                                                                 comparator_mechanism.output_states[0].value],
+                                               default_variable=[input_source.output_states[0].defaults.value,
+                                                                 output_source.output_states[0].defaults.value,
+                                                                 comparator_mechanism.output_states[0].defaults.value],
                                                error_sources=comparator_mechanism,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
