@@ -344,24 +344,23 @@ class TestBackProp:
                                              function=pnl.Logistic())
 
         comp = pnl.Composition(name="backprop-composition")
-        print("add linear processing pathway")
-        comp.add_linear_processing_pathway(pathway=[input_layer, hidden_layer])
-        print("add backprop pathway")
-        learning_components = comp.add_back_propagation_pathway(pathway=[hidden_layer, output_layer])
+        learning_components = comp.add_back_propagation_pathway(pathway=[input_layer, hidden_layer, output_layer],
+                                                                learning_rate=0.5)
         # learned_projection = learning_components[pnl.LEARNED_PROJECTION]
         # learned_projection.log.set_log_conditions(pnl.MATRIX)
-        # learning_mechanism = learning_components[pnl.LEARNING_MECHANISM]
-        # target_mechanism = learning_components[pnl.TARGET_MECHANISM]
+        learning_mechanism = learning_components[pnl.LEARNING_MECHANISM]
+        target_mechanism = learning_components[pnl.TARGET_MECHANISM]
         # comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
-        print("create logs")
         for node in comp.nodes:
             node.log.set_log_conditions(pnl.VALUE)
-        comp.show_graph()
-        # eid="eid"
-        # comp.run(inputs={input_layer: [[1.0, 1.0]],
-        #                  target_mechanism: [[1.0, 1.0]]},
-        #          execution_id=eid)
-        # print("\n\n\n")
+        # comp.show_graph(show_node_structure=True)
+        eid="eid"
+
+        comp.run(inputs={input_layer: [[1.0, 1.0]],
+                         target_mechanism: [[1.0, 1.0]]},
+                 num_trials=5,
+                 execution_id=eid)
+
         # for node in comp.nodes:
         #     try:
         #         log = node.log.nparray_dictionary()
@@ -404,105 +403,43 @@ class TestBackProp:
         comp.add_linear_processing_pathway(pathway=[word, wh_weights, hidden])
         # comp.add_back_propagation_pathway(pathway=[hidden, ho_weights, output, response])
         comp.show_graph()
-        # color_naming_process = Process(
-        #     default_variable=[1, 2.5],
-        #     pathway=[colors, CH_Weights, hidden, HO_Weights, response],
-        #     learning=LEARNING,
-        #     target=[2, 2],
-        #     name='Color Naming',
-        #     prefs=process_prefs,
-        # )
 
-        # word_reading_process = Process(
-        #     default_variable=[.5, 3],
-        #     pathway=[words, WH_Weights, hidden],
-        #     name='Word Reading',
-        #     learning=LEARNING,
-        #     target=[3, 3],
-        #     prefs=process_prefs,
-        # )
-        #
-        # s = System(
-        #     processes=[color_naming_process, word_reading_process],
-        #     targets=[20, 20],
-        #     name='Stroop Model',
-        #     prefs=system_prefs,
-        # )
+    def test_multilayer(self):
 
-        # def show_target():
-        #     print('\nColor Naming\n\tInput: {}\n\tTarget: {}'.format(
-        #         [np.ndarray.tolist(item.parameters.value.get(s)) for item in colors.input_states], s.targets))
-        #     print('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.format(
-        #         [np.ndarray.tolist(item.parameters.value.get(s)) for item in words.input_states], s.targets))
-        #     print('Response: \n', response.output_state.parameters.value.get(s))
-        #     print('Hidden-Output:')
-        #     print(HO_Weights.get_mod_matrix(s))
-        #     print('Color-Hidden:')
-        #     print(CH_Weights.get_mod_matrix(s))
-        #     print('Word-Hidden:')
-        #     print(WH_Weights.get_mod_matrix(s))
+        input_layer = pnl.TransferMechanism(name='input_layer',
+                                            function=pnl.Logistic,
+                                            size=2)
 
-        # stim_list_dict = {
-        #     colors: [[1, 1]],
-        #     words: [[-2, -2]]
-        # }
-        #
-        # target_list_dict = {response: [[1, 1]]}
-        #
-        # results = s.run(
-        #     num_trials=2,
-        #     inputs=stim_list_dict,
-        #     targets=target_list_dict,
-        #     call_after_trial=show_target,
-        # )
-        #
-        # results_list = []
-        # for elem in s.results:
-        #     for nested_elem in elem:
-        #         nested_elem = nested_elem.tolist()
-        #         try:
-        #             iter(nested_elem)
-        #         except TypeError:
-        #             nested_elem = [nested_elem]
-        #         results_list.extend(nested_elem)
-        #
-        # objective_response = s.mechanisms[3]
-        # objective_hidden = s.mechanisms[7]
-        # from pprint import pprint
-        # pprint(CH_Weights.__dict__)
-        # print(CH_Weights._parameter_states["matrix"].value)
-        # print(CH_Weights.get_mod_matrix(s))
-        # expected_output = [
-        #     (colors.output_states[0].parameters.value.get(s), np.array([1., 1.])),
-        #     (words.output_states[0].parameters.value.get(s), np.array([-2., -2.])),
-        #     (hidden.output_states[0].parameters.value.get(s), np.array([0.13227553, 0.01990677])),
-        #     (response.output_states[0].parameters.value.get(s), np.array([0.51044657, 0.5483048])),
-        #     (objective_response.output_states[0].parameters.value.get(s), np.array([0.48955343, 0.4516952])),
-        #     (objective_response.output_states[MSE].parameters.value.get(s), np.array(0.22184555903789838)),
-        #     (CH_Weights.get_mod_matrix(s), np.array([
-        #         [0.02512045, 1.02167245],
-        #         [2.02512045, 3.02167245],
-        #     ])),
-        #     (WH_Weights.get_mod_matrix(s), np.array([
-        #         [-0.05024091, 0.9566551],
-        #         [1.94975909, 2.9566551],
-        #     ])),
-        #     (HO_Weights.get_mod_matrix(s), np.array([
-        #         [0.03080958, 1.02830959],
-        #         [2.00464242, 3.00426575],
-        #     ])),
-        #     (results, [[np.array([0.50899214, 0.54318254])], [np.array([0.51044657, 0.5483048])]]),
-        # ]
-        #
-        # for i in range(len(expected_output)):
-        #     val, expected = expected_output[i]
-        #     # setting absolute tolerance to be in accordance with reference_output precision
-        #     # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
-        #     # which WILL FAIL unless you gather higher precision values to use as reference
-        #     np.testing.assert_allclose(val, expected, atol=1e-08,
-        #                                err_msg='Failed on expected_output[{0}]'.format(i))
-        #
-        # # KDM 10/16/18: Comparator Mechanism for Hidden is not executed by the system, because it's not associated with
-        # # an output mechanism. So it actually should be None instead of previously [0, 0] which was likely
-        # # a side effect with of conflation of different execution contexts
-        # assert objective_hidden.output_states[0].parameters.value.get(s) is None
+        hidden_layer_1 = pnl.TransferMechanism(name='hidden_layer_1',
+                                               function=pnl.Logistic,
+                                               size=5)
+
+        hidden_layer_2 = pnl.TransferMechanism(name='hidden_layer_2',
+                                               function=pnl.Logistic,
+                                               size=4)
+
+        output_layer = pnl.TransferMechanism(name='output_layer',
+                                             function=pnl.Logistic,
+                                             size=3)
+
+        input_weights = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
+        middle_weights = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
+        output_weights = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
+
+        comp = pnl.Composition(name='multilayer')
+
+        p = [input_layer, input_weights, hidden_layer_1, middle_weights, hidden_layer_2, output_weights, output_layer]
+        learning_components = comp.add_back_propagation_pathway(pathway=p,
+                                                                learning_rate=1.)
+
+        target_node = learning_components[pnl.TARGET]
+
+        input_dictionary = {target_node: [[0., 0., 1.]],
+                            input_layer: [[-1., 30.]]}
+
+        comp.show_graph()
+
+        comp.run(inputs=input_dictionary,
+                 num_trials=10)
+
+
