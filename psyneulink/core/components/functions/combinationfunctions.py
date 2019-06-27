@@ -344,11 +344,11 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
     Examples
     --------
 
-    >>> r = Rearrange(default_variable=np.array([[0],[0],[0]]) , arrangement=[(1,2),(0)])
+    >>> r = Rearrange(arrangement=[(1,2),(0)])
     >>> print(r(np.array([[0,0],[1,1],[2,2]])))
     [array([1., 1., 2., 2.]) array([0., 0.])]
 
-    >>> r = Rearrange(default_variable=np.array([[0],[0],[0]]))
+    >>> r = Rearrange()
     >>> print(r(np.array([[0,0],[1,1],[2,2]])))
     [0. 0. 1. 1. 2. 2.]
 
