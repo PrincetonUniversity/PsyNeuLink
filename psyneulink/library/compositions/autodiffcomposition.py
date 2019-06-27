@@ -237,9 +237,10 @@ from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.scheduling.time import TimeScale
 
-import numpy as np
 import copy
+import numpy as np
 
 from collections.abc import Iterable
 from toposort import toposort
@@ -571,11 +572,11 @@ class AutodiffComposition(Composition):
         return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
 
     # performs forward computation for one input
-    def autodiff_processing(self, inputs, execution_id=None, do_logging=False):
+    def autodiff_processing(self, inputs, execution_id=None, do_logging=False, scheduler=None):
         pytorch_representation = self.parameters.pytorch_representation._get(execution_id)
         # run the model on inputs - switch autograd off for this (we don't need it)
         with torch.no_grad():
-            tensor_outputs = pytorch_representation.forward(inputs, execution_id=execution_id, do_logging=do_logging)
+            tensor_outputs = pytorch_representation.forward(inputs, execution_id=execution_id, do_logging=do_logging, scheduler=scheduler)
 
         # get outputs back into numpy
         outputs = []
@@ -585,7 +586,7 @@ class AutodiffComposition(Composition):
         return outputs
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
-    def autodiff_training(self, inputs, targets, epochs, execution_id=None, do_logging=False):
+    def autodiff_training(self, inputs, targets, epochs, execution_id=None, do_logging=False, scheduler=None):
 
         # FIX CW 11/1/18: this value of num_inputs assumes all inputs have same length, and that the length of
         # the input for an origin component equals the number of desired trials. We could clean this up
@@ -647,7 +648,8 @@ class AutodiffComposition(Composition):
                 curr_tensor_outputs = self.parameters.pytorch_representation._get(execution_id).forward(
                     curr_tensor_inputs,
                     execution_id,
-                    do_logging
+                    do_logging,
+                    scheduler=scheduler
                 )
 
                 # compute total loss across output neurons for current trial
@@ -681,6 +683,8 @@ class AutodiffComposition(Composition):
                 # for component in curr_tensor_outputs.keys():
                 #     curr_output_list.append(curr_tensor_outputs[component].detach().numpy().copy())
                 outputs.append(curr_output_list)
+
+                scheduler.get_clock(execution_id)._increment_time(TimeScale.TRIAL)
 
             # save average loss on the current epoch
             average_loss = np.mean(curr_losses)
@@ -727,6 +731,12 @@ class AutodiffComposition(Composition):
                 context=None
                 ):
         execution_id = self._assign_execution_ids(execution_id)
+
+        if scheduler_processing is None:
+            scheduler_processing = self.scheduler_processing
+
+        scheduler_processing._init_clock(execution_id, base_execution_id)
+
         if self.learning_enabled:
             # TBI: How are we supposed to use base_execution_id and statefulness here?
             # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
@@ -742,7 +752,7 @@ class AutodiffComposition(Composition):
             if "epochs" in inputs:
                 autodiff_epochs = inputs["epochs"]
 
-            output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id, do_logging)
+            output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id, do_logging, scheduler_processing)
             ctx = self.output_CIM.parameters.context._get(execution_id)
             # new_ctx = copy.deepcopy(ctx)
             # new_ctx.execution_phase = ContextFlags.PROCESSING
@@ -795,6 +805,12 @@ class AutodiffComposition(Composition):
         context=None):
         # TBI: Handle trials, timesteps, etc
         execution_id = self._assign_execution_ids(execution_id)
+
+        if scheduler_processing is None:
+            scheduler_processing = self.scheduler_processing
+
+        scheduler_processing._init_clock(execution_id)
+
         if self.learning_enabled:
 
             self._analyze_graph()
@@ -814,10 +830,9 @@ class AutodiffComposition(Composition):
                     do_logging=do_logging,
                 )
                 results.append(trial_output)
-            return results
 
         else:
-            return super(AutodiffComposition, self).run(inputs=inputs,
+            results = super(AutodiffComposition, self).run(inputs=inputs,
                                                     scheduler_processing=scheduler_processing,
                                                     termination_processing=termination_processing,
                                                     execution_id=execution_id,
@@ -834,6 +849,9 @@ class AutodiffComposition(Composition):
                                                     reinitialize_values=reinitialize_values,
                                                     runtime_params=runtime_params,
                                                     context=context)
+
+        scheduler_processing.get_clock(execution_id)._increment_time(TimeScale.RUN)
+        return results
 
     # validates properties of the autodiff composition, and arguments to run, when run is called
     def _validate_params(self, targets, epochs):

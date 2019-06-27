@@ -1,5 +1,6 @@
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.scheduling.time import TimeScale
 
 try:
     import torch
@@ -98,7 +99,7 @@ class PytorchModelCreator(torch.nn.Module):
         self.copy_weights_to_psyneulink(execution_id)
 
     # performs forward computation for the model
-    def forward(self, inputs, execution_id=None, do_logging=True):
+    def forward(self, inputs, execution_id=None, do_logging=True, scheduler=None):
 
         outputs = {}  # dict for storing values of terminal (output) nodes
 
@@ -140,6 +141,9 @@ class PytorchModelCreator(torch.nn.Module):
                 # save value in output list if we're at a node in the last execution set
                 if i == len(self.execution_sets) - 1:
                     outputs[component] = value
+
+            if scheduler is not None:
+                scheduler.get_clock(execution_id)._increment_time(TimeScale.TIME_STEP)
 
         self.copy_outputs_to_psyneulink(outputs, execution_id)
         if do_logging:
