@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CombinationFunctions &mdash; PsyNeuLink 0.5.3.2+219.gabb2916 documentation</title>
+  <title>CombinationFunctions &mdash; PsyNeuLink 0.5.3.2+220.gbf1ca23 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+219.gabb2916',
+              VERSION:'0.5.3.2+220.gbf1ca23',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+219
+                0.5.3.2+220
               </div>
             
           
@@ -177,6 +177,7 @@
 </div>
 <span class="target" id="module-psyneulink.core.components.functions.combinationfunctions"></span><ul class="simple">
 <li><a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate" title="psyneulink.core.components.functions.combinationfunctions.Concatenate"><code class="xref any py py-class docutils literal"><span class="pre">Concatenate</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange" title="psyneulink.core.components.functions.combinationfunctions.Rearrange"><code class="xref any py py-class docutils literal"><span class="pre">Rearrange</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Reduce" title="psyneulink.core.components.functions.combinationfunctions.Reduce"><code class="xref any py py-class docutils literal"><span class="pre">Reduce</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans" title="psyneulink.core.components.functions.combinationfunctions.CombineMeans"><code class="xref any py py-class docutils literal"><span class="pre">CombineMeans</span></code></a></li>
@@ -274,6 +275,128 @@ arguments of the constructor.</li>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Concatenated array of items in variable</strong> – in an array that is one dimension less than <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">Rearrange</code><span class="sig-paren">(</span><em>default_variable=class_defaults.variable</em>, <em>arrangement=None</em>, <em>scale=1.0</em>, <em>offset=0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange" title="Permalink to this definition">¶</a></dt>
+<dd><p id="rearrange">Rearranges items in outer dimension (axis 0) of <code class="xref any docutils literal"><span class="pre">variable</span></code>, as specified by <strong>arrangement</strong>,
+optionally scaling and/or adding an offset to the result after concatenating.</p>
+<p id="rearrange-arrangement">The <strong>arrangement</strong> argument specifies how to rearrange the items of <code class="xref any docutils literal"><span class="pre">variable</span></code>, possibly
+concatenating subsets of them into single 1d arrays.  The specification must be an integer, a tuple of integers,
+or a list containing either or both.  Each integer must be an index of an item in the outer dimension (axis 0) of
+<code class="xref any docutils literal"><span class="pre">variable</span></code>.  Items referenced in a tuple are concatenated in the order specified into a single
+1d array, and that 1d array is included in the resulting 2d array in the order it appears in <strong>arrangement</strong>.
+If <strong>arrangement</strong> is specified, then only the items of <code class="xref any docutils literal"><span class="pre">variable</span></code> referenced in the
+specification are included in the result; if <strong>arrangement</strong> is not specified, all of the items of <code class="xref any docutils literal"><span class="pre">variable</span></code> are concatenated into a single 1d array (i.e., it functions identically to <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate" title="psyneulink.core.components.functions.combinationfunctions.Concatenate"><code class="xref any py py-class docutils literal"><span class="pre">Concatenate</span></code></a>).</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.function" title="psyneulink.core.components.functions.combinationfunctions.Rearrange.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> returns a 2d array with the items of <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> rearranged
+(and possibly concatenated) as specified by <strong>arrangement</strong>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">Rearrange</span><span class="p">(</span><span class="n">arrangement</span><span class="o">=</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="mi">0</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]])))</span>
+<span class="go">[array([1., 1., 2., 2.]) array([0., 0.])]</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">Rearrange</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]])))</span>
+<span class="go">[0. 0. 1. 1. 2. 2.]</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_variable</strong> (<em>list</em><em> or </em><em>np.array : default class_defaults.variable</em>) – specifies a template for the value to be transformed and its default value;  all entries must be numeric.</li>
+<li><strong>arrangement</strong> (<em>int</em><em>, </em><em>tuple</em><em>, or </em><em>list : default None</em>) – specifies ordering of items in <code class="xref any docutils literal"><span class="pre">variable</span></code> and/or ones to concatenate.
+(see <a class="reference internal" href="#rearrange-arrangement"><span class="std std-ref">above</span></a> for details).</li>
+<li><strong>scale</strong> (<em>float</em>) – specifies a value by which to multiply each element of the output of <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.function" title="psyneulink.core.components.functions.combinationfunctions.Rearrange.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+(see <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.scale" title="psyneulink.core.components.functions.combinationfunctions.Rearrange.scale"><code class="xref any py py-attr docutils literal"><span class="pre">scale</span></code></a> for details).</li>
+<li><strong>offset</strong> (<em>float</em>) – specifies a value to add to each element of the output of <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.function" title="psyneulink.core.components.functions.combinationfunctions.Rearrange.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+(see <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.offset" title="psyneulink.core.components.functions.combinationfunctions.Rearrange.offset"><code class="xref any py py-attr docutils literal"><span class="pre">offset</span></code></a> for details).</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange.default_variable">
+<code class="descname">default_variable</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.default_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list or np.array</em> – contains template of array(s) to be concatenated.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange.arrangement">
+<code class="descname">arrangement</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.arrangement" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list of one or more tuples</em> – determines ordering of items in <code class="xref any docutils literal"><span class="pre">variable</span></code> and/or ones to concatenate
+(see <a class="reference internal" href="#rearrange-arrangement"><span class="std std-ref">above</span></a> for additional details).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange.scale">
+<code class="descname">scale</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – value is applied multiplicatively to each element of the concatenated, before  applying the <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.offset" title="psyneulink.core.components.functions.combinationfunctions.Rearrange.offset"><code class="xref any py py-attr docutils literal"><span class="pre">offset</span></code></a> (if it is specified).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange.offset">
+<code class="descname">offset</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – value is added to each element of the concatentated array, after <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.scale" title="psyneulink.core.components.functions.combinationfunctions.Rearrange.scale"><code class="xref any py py-attr docutils literal"><span class="pre">scale</span></code></a> has been
+applied (if it is specified).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange.name">
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a
+default is assigned by FunctionRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rearrange items in outer dimension (axis 0) of variable according to <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.arrangement" title="psyneulink.core.components.functions.combinationfunctions.Rearrange.arrangement"><code class="xref any py py-attr docutils literal"><span class="pre">arrangement</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>list</em><em> or </em><em>np.array : default class_defaults.variable</em>) – a list or np.array of numeric values.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Rearranged items of outer dimension (axis 0) of **variable**</strong> – in a 2d array.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array</p>
@@ -674,7 +797,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">PredictionErrorDeltaFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gamma: &lt;typecheck.framework.optional object at 0x10a8cb978&gt; = 1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10a8d40d0&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">PredictionErrorDeltaFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gamma: &lt;typecheck.framework.optional object at 0x10dcd8470&gt; = 1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10dcd40d0&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate temporal difference prediction error.</p>
 <p><a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.function" title="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> returns the prediction error using arrays in <code class="xref any docutils literal"><span class="pre">variable</span></code>:</p>
 <div class="math">
