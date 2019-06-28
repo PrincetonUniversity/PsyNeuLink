@@ -1220,6 +1220,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._compilation_data = self._CompilationData(owner=self)
 
         self.log = CompositionLog(owner=self)
+        self._terminal_backprop_sequences = {}
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -1967,8 +1968,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.learning_enabled = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
-
-    def _create_output_layer_backprop_components(self, input_source, output_source, error_function, learned_projection, learning_rate):
+    def _create_terminal_backprop_sequence_components(self,
+                                                    input_source,
+                                                    output_source,
+                                                    error_function,
+                                                    learned_projection,
+                                                    learning_rate):
 
         target_mechanism = ProcessingMechanism(name='Target',
                                                default_variable=output_source.output_states[0].value)
@@ -2181,24 +2186,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not error_function:
             error_function = LinearCombination()
 
-        # Processing Components
+        # add_linear_processing_pathway returns the pathway in its most explicit form
+        # e.g. if the user specified
         processing_pathway = self.add_linear_processing_pathway(pathway)
+        print("\nprocessing_pathway = ")
+        for component in processing_pathway:
+            print(component)
         path_length = len(processing_pathway)
 
         if path_length >= 3:
-            # final 3 components: Input Node, Learned Projection, Output Node
-            output_layer = processing_pathway[path_length - 3: path_length]
+            # get the "terminal_sequence" --
+            # the last 2 nodes in the back prop pathway and the projection between them
+            # these components are are processed separately because
+            # they inform the construction of the Target and Comparator mechs
+            terminal_sequence = processing_pathway[path_length - 3: path_length]
         else:
             raise CompositionError("Backpropagation pathway specification does not contain enough components. ")
 
-        # Process output_layer:
-        input_source, learned_projection, output_source = output_layer
-        target, comparator, learning_mechanism = self._create_output_layer_backprop_components(input_source,
-                                                                                               output_source,
-                                                                                               error_function,
-                                                                                               learned_projection,
-                                                                                               learning_rate)
+        # Unpack and process terminal_sequence:
+        input_source, learned_projection, output_source = terminal_sequence
 
+        if output_source in self._terminal_backprop_sequences:
+            target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
+            comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
+            learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
+        else:
+            target, comparator, learning_mechanism = self._create_terminal_backprop_sequence_components(input_source,
+                                                                                                        output_source,
+                                                                                                        error_function,
+                                                                                                        learned_projection,
+                                                                                                        learning_rate)
+            self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
+                                                                TARGET_MECHANISM: target,
+                                                                COMPARATOR_MECHANISM: comparator}
+
+        # loop backwards through the rest of the pathway to create and connect
+        # the remaining learning mechanisms
         learning_mechanisms = [learning_mechanism]
         learned_projections = [learned_projection]
         for ind in range(path_length - 3, 1, -2):
@@ -2220,7 +2243,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_related_components = {LEARNING_MECHANISM: learning_mechanisms,
                                        COMPARATOR_MECHANISM: comparator,
                                        TARGET_MECHANISM: target,
-                                       LEARNED_PROJECTION: [learned_projection]}
+                                       LEARNED_PROJECTION: learned_projections}
 
         return learning_related_components
 

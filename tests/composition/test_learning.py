@@ -389,9 +389,6 @@ class TestBackProp:
         response = pnl.TransferMechanism(size=2,
                                          function=pnl.Logistic(),
                                          name='response')
-        output = pnl.TransferMechanism(size=2,
-                                       function=pnl.Logistic(),
-                                       name='output')
         # Weights
         ch_weights = np.arange(4).reshape((2, 2))
         wh_weights = np.arange(4).reshape((2, 2))
@@ -399,10 +396,17 @@ class TestBackProp:
 
         # Assemble Composition
         comp = pnl.Composition(name='stroop-with-learning')
-        comp.add_back_propagation_pathway(pathway=[color, ch_weights, hidden, ho_weights, output, response])
-        comp.add_linear_processing_pathway(pathway=[word, wh_weights, hidden])
-        # comp.add_back_propagation_pathway(pathway=[hidden, ho_weights, output, response])
+        comp.add_back_propagation_pathway(pathway=[color, ch_weights, hidden, ho_weights, response])
+        learning_components = comp.add_back_propagation_pathway(pathway=[word, wh_weights, hidden, ho_weights, response
+                                                   ])
+        target = learning_components[pnl.TARGET_MECHANISM]
+        # comp.add_back_propagation_pathway(pathway=[hidden, ho_weights, response])
         comp.show_graph()
+        comp.run(inputs={color: [[1, 1]],
+                         word: [[-2, -2]],
+                         target: [[1, 1]]},
+                 num_trials=2)
+        print(response.value)
 
     def test_multilayer(self):
 
