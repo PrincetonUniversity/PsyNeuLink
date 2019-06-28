@@ -2189,9 +2189,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # add_linear_processing_pathway returns the pathway in its most explicit form
         # e.g. if the user specified
         processing_pathway = self.add_linear_processing_pathway(pathway)
-        print("\nprocessing_pathway = ")
-        for component in processing_pathway:
-            print(component)
+
         path_length = len(processing_pathway)
 
         if path_length >= 3:
