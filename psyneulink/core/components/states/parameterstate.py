@@ -839,7 +839,7 @@ class ParameterState(State_Base):
 
 
         # Create a local copy of the function parameters
-        f_params = builder.alloca(state_f.args[0].type.pointee, 1)
+        f_params = builder.alloca(state_f.args[0].type.pointee)
         builder.store(builder.load(params), f_params)
 
         # FIXME: is this always true, by design?

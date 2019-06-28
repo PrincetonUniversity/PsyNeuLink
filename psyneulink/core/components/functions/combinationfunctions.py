@@ -31,7 +31,6 @@ when the CombinationFunction is used as the function of an InputState or OutputS
 
 '''
 
-import functools
 import numbers
 
 import numpy as np
@@ -1431,15 +1430,20 @@ class LinearCombination(
         operation = self.get_current_function_param(OPERATION)
         if operation is SUM:
             val = ctx.float_ty(-0.0)
-        else:
+        elif operation is PRODUCT:
             val = ctx.float_ty(1.0)
+        else:
+            assert False, "Unknown operation: " + operation
 
         pow_f = ctx.get_builtin("pow", [ctx.float_ty])
 
         for i in range(vi.type.pointee.count):
+            ptri = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(i), index])
+            in_val = builder.load(ptri)
+
             # No exponent
             if isinstance(exponent_type, pnlvm.ir.LiteralStructType):
-                exponent = ctx.float_ty(1.0)
+                pass
             # Vector exponent
             elif isinstance(exponent_type, pnlvm.ir.ArrayType):
                 assert len(exponent_type) > 1
@@ -1448,13 +1452,11 @@ class LinearCombination(
                 exponent_index = builder.add(exponent_index, index)
                 exponent_ptr = builder.gep(exponent_param_ptr, [ctx.int32_ty(0), exponent_index])
                 exponent = builder.load(exponent_ptr)
+                in_val = builder.call(pow_f, [in_val, exponent])
             # Scalar exponent
             else:
                 exponent = builder.load(exponent_param_ptr)
-
-            ptri = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(i), index])
-            in_val = builder.load(ptri)
-            in_val = builder.call(pow_f, [in_val, exponent])
+                in_val = builder.call(pow_f, [in_val, exponent])
 
             # No weights
             if isinstance(weights_type, pnlvm.ir.LiteralStructType):
@@ -1477,8 +1479,10 @@ class LinearCombination(
 
             if operation is SUM:
                 val = builder.fadd(val, in_val)
-            else:
+            elif operation is PRODUCT:
                 val = builder.fmul(val, in_val)
+            else:
+                assert False, "Unknown operation: " + operation
 
         val = builder.fmul(val, scale)
         val = builder.fadd(val, offset)
@@ -1488,16 +1492,10 @@ class LinearCombination(
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Sometimes we arg_out to 2d array
-        out_t = arg_out.type.pointee
-        if isinstance(out_t, pnlvm.ir.ArrayType) and isinstance(out_t.element, pnlvm.ir.ArrayType):
-            assert len(out_t) == 1
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}
-        inner = functools.partial(self.__gen_llvm_combine, **kwargs)
+        arg_out = ctx.unwrap_2d_array(builder, arg_out)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_out, "linear") as args:
-            inner(*args)
+            self.__gen_llvm_combine(ctx=ctx, vi=arg_in, vo=arg_out, params=params, *args)
         return builder
 
     @property

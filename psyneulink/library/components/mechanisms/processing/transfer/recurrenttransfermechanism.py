@@ -1595,7 +1595,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         real_input_type = super()._get_input_struct_type(ctx)
-        real_in = builder.alloca(real_input_type, 1)
+        real_in = builder.alloca(real_input_type)
         old_val = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
         # FIXME: What if we have more than one state? Does the autoprojection

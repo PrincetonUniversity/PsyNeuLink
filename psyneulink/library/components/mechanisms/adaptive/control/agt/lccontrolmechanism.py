@@ -870,7 +870,7 @@ class LCControlMechanism(ControlMechanism):
         elements_ty = pnlvm.ir.LiteralStructType(elements)
 
         # allocate new output type
-        new_out = builder.alloca(elements_ty, 1)
+        new_out = builder.alloca(elements_ty)
 
         # Load mechanism parameters
         params, _, _, _ = builder.function.args

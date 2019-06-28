@@ -110,6 +110,7 @@ def setup_vxm(ctx):
     with builder.goto_block(outer_out_block):
         builder.ret_void()
 
+
 def setup_pnl_intrinsics(ctx):
     # Setup types
     single_intr_ty = ir.FunctionType(ctx.float_ty, [ctx.float_ty])
@@ -119,6 +120,7 @@ def setup_pnl_intrinsics(ctx):
     ir.Function(ctx.module, single_intr_ty, name="__pnl_builtin_exp")
     ir.Function(ctx.module, single_intr_ty, name="__pnl_builtin_log")
     ir.Function(ctx.module, double_intr_ty, name="__pnl_builtin_pow")
+
 
 def _generate_intrinsic_wrapper(module, name, ret, args):
     intrinsic = module.declare_intrinsic("llvm." + name, list(set(args)))
@@ -131,6 +133,7 @@ def _generate_intrinsic_wrapper(module, name, ret, args):
     builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
     builder.ret(builder.call(intrinsic, function.args))
 
+
 def _generate_cpu_builtins_module(_float_ty):
     """ Generate function wrappers for log, exp, and pow intrinsics. """
     module = ir.Module(name="cpu_builtins")
@@ -140,8 +143,10 @@ def _generate_cpu_builtins_module(_float_ty):
     _generate_intrinsic_wrapper(module, "pow", _float_ty, [_float_ty, _float_ty])
     return module
 
+
 _MERSENNE_N = 624
 _MERSENNE_M = 397
+
 
 def _setup_mt_rand_init_scalar(ctx, state_ty):
     seed_ty = state_ty.elements[0].element
@@ -149,7 +154,6 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
     # Create init function
     init_scalar = ir.Function(ctx.module, init_ty, name="__pnl_builtin_mt_rand_init_scalar")
     init_scalar.attributes.add('argmemonly')
-    init_scalar.attributes.add('alwaysinline')
 
     block = init_scalar.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
@@ -197,13 +201,13 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
     builder.ret_void()
     return init_scalar
 
+
 def _setup_mt_rand_init(ctx, state_ty, init_scalar):
     seed_ty = state_ty.elements[0].element
     init_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), seed_ty))
     # Create init_array function
     init = ir.Function(ctx.module, init_ty, name="__pnl_builtin_mt_rand_init")
     init.attributes.add('argmemonly')
-    init.attributes.add('alwaysinline')
 
     block = init.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
@@ -267,7 +271,6 @@ def _setup_mt_rand_init(ctx, state_ty, init_scalar):
             b.store(ctx.int32_ty(1), pi)
             b.store(val, a_0)
 
-
     with helpers.for_loop_zero_inc(builder,
                                    ctx.int32_ty(_MERSENNE_N - 1),
                                    "second_shuffle") as (b, _):
@@ -297,13 +300,14 @@ def _setup_mt_rand_init(ctx, state_ty, init_scalar):
     builder.ret_void()
     return init
 
+
 def _setup_mt_rand_integer(ctx, state_ty):
     int64_ty = ir.IntType(64)
-    # Generate random number generator function. It produces random 32bit numberin a 64bit word
+    # Generate random number generator function.
+    # It produces random 32bit numberin a 64bit word
     gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), int64_ty.as_pointer()))
     gen_int = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_int32")
     gen_int.attributes.add('argmemonly')
-    gen_int.attributes.add('alwaysinline')
 
     block = gen_int.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
@@ -355,7 +359,7 @@ def _setup_mt_rand_integer(ctx, state_ty):
                               ctx.int32_ty(_MERSENNE_N),
                               ctx.int32_ty(1), "second_half") as (b, kk):
             pkk = b.gep(array, [ctx.int32_ty(0), kk])
-            is_last = b.icmp_unsigned( "==", kk, ctx.int32_ty(_MERSENNE_N - 1))
+            is_last = b.icmp_unsigned("==", kk, ctx.int32_ty(_MERSENNE_N - 1))
             idx_1 = b.select(is_last, ctx.int32_ty(0), b.add(kk, ctx.int32_ty(1)))
             pkk_1 = b.gep(array, [ctx.int32_ty(0), idx_1])
 
@@ -408,12 +412,12 @@ def _setup_mt_rand_integer(ctx, state_ty):
     builder.ret_void()
     return gen_int
 
+
 def _setup_mt_rand_float(ctx, state_ty, gen_int):
     # Generate random float number generator function
     gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
     gen_float = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_double")
     gen_float.attributes.add('argmemonly')
-    gen_float.attributes.add('alwaysinline')
 
     block = gen_float.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
@@ -448,12 +452,13 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     builder.ret_void()
     return gen_float
 
+
 def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     # Generate random float from Normal distribution generator
     gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
     gen_normal = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_normal")
     gen_normal.attributes.add('argmemonly')
-    gen_normal.attributes.add('alwaysinline')
+    gen_normal.attributes.add('noinline')
 
     block = gen_normal.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
@@ -522,12 +527,14 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
 
     builder.ret_void()
 
+
 def get_mersenne_twister_state_struct(ctx):
     return ir.LiteralStructType([
-        ir.ArrayType(ctx.int32_ty, _MERSENNE_N), # array
-        ctx.int32_ty, #index
-        ctx.int32_ty, #last_gauss available
-        ctx.float_ty]) #last_gauss
+        ir.ArrayType(ctx.int32_ty, _MERSENNE_N),  # array
+        ctx.int32_ty,   # index
+        ctx.int32_ty,   # last_gauss available
+        ctx.float_ty])  # last_gauss
+
 
 def setup_mersenne_twister(ctx):
     state_ty = get_mersenne_twister_state_struct(ctx)
