@@ -364,6 +364,9 @@ def setup(app):
 # Ordering of members:
 autodoc_member_order = 'bysource'
 
+#skip typehints
+autodoc_typehints = 'none'
+
 default_role = 'any'
 
 epub_tocdepth = 5
