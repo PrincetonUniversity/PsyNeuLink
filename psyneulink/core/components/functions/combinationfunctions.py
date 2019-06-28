@@ -31,7 +31,6 @@ when the CombinationFunction is used as the function of an InputState or OutputS
 
 '''
 
-import functools
 import numbers
 
 import numpy as np
@@ -1489,16 +1488,10 @@ class LinearCombination(
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Sometimes we arg_out to 2d array
-        out_t = arg_out.type.pointee
-        if isinstance(out_t, pnlvm.ir.ArrayType) and isinstance(out_t.element, pnlvm.ir.ArrayType):
-            assert len(out_t) == 1
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}
-        inner = functools.partial(self.__gen_llvm_combine, **kwargs)
+        arg_out = ctx.unwrap_2d_array(builder, arg_out)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_out, "linear") as args:
-            inner(*args)
+            self.__gen_llvm_combine(ctx=ctx, vi=arg_in, vo=arg_out, params=params, *args)
         return builder
 
     @property
