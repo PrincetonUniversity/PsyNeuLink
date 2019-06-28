@@ -688,24 +688,24 @@ class Function_Base(Function):
             raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
                                 format(param, param_name, self.__class__.__name__, owner_name))
 
-    def get_current_function_param(self, param_name, execution_context=None):
+    def get_current_function_param(self, param_name, execution_id=None):
         if param_name == "variable":
             raise FunctionError("The method 'get_current_function_param' is intended for retrieving the current value "
                                 "of a function parameter. 'variable' is not a function parameter. If looking for {}'s "
                                 "default variable, try {}.defaults.variable.".format(self.name, self.name))
         try:
-            return self.owner._parameter_states[param_name].parameters.value.get(execution_context)
+            return self.owner._parameter_states[param_name].parameters.value._get(execution_id)
         except (AttributeError, TypeError):
             try:
-                return getattr(self.parameters, param_name).get(execution_context)
+                return getattr(self.parameters, param_name)._get(execution_id)
             except AttributeError:
                 raise FunctionError("{0} has no parameter '{1}'".format(self, param_name))
 
-    def get_previous_value(self, execution_context=None):
+    def get_previous_value(self, execution_id=None):
         # temporary method until previous values are integrated for all parameters
-        value = self.parameters.previous_value.get(execution_context)
+        value = self.parameters.previous_value._get(execution_id)
         if value is None:
-            value = self.parameters.previous_value.get()
+            value = self.parameters.previous_value._get()
 
         return value
 
@@ -718,7 +718,15 @@ class Function_Base(Function):
 
         value = np.asarray(value)
 
-        # region Type conversion (specified by output_type):
+        # Type conversion (specified by output_type):
+
+        # MODIFIED 6/21/19 NEW: [JDC]
+        # Convert to same format as variable
+        if isinstance(output_type, (list, np.ndarray)):
+            shape = np.array(output_type).shape
+            return np.array(value).reshape(shape)
+        # MODIFIED 6/21/19 END
+
         # Convert to 2D array, irrespective of value type:
         if output_type is FunctionOutputType.NP_2D_ARRAY:
             # KDM 8/10/18: mimicking the conversion that Mechanism does to its values, because
@@ -743,8 +751,8 @@ class Function_Base(Function):
                 if len(value) == 1:
                     value = value[0]
                 else:
-                    raise FunctionError("Can't convert value ({0}: 2D np.ndarray object with more than one array)"
-                                        " to 1D array".format(value))
+                    raise FunctionError(f"Can't convert value ({value}: 2D np.ndarray object with more than one array)"
+                                        " to 1D array.")
             elif value.ndim == 1:
                 value = value
             elif value.ndim == 0:
@@ -815,7 +823,7 @@ class Function_Base(Function):
 
     def _get_context_initializer(self, execution_id):
         try:
-            stateful = (getattr(self.parameters, sa).get(execution_id) for sa in self.stateful_attributes)
+            stateful = (getattr(self.parameters, sa)._get(execution_id) for sa in self.stateful_attributes)
             # Skip first element of random state (id string)
             lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
 
@@ -833,7 +841,7 @@ class Function_Base(Function):
             pass
         def _is_compilation_param(p):
             if p.name not in black_list and not isinstance(p, ParameterAlias):
-                val = p.get(execution_id)
+                val = p._get(execution_id)
                 # Check if the value is string (like integration_method)
                 return not isinstance(val, str)
             return False
@@ -846,7 +854,7 @@ class Function_Base(Function):
     def _get_param_values(self, execution_id=None):
         param_init = []
         for p in self._get_compilation_params(execution_id):
-            param = p.get(execution_id)
+            param = p._get(execution_id)
             try:
                 # Existence of parameter state changes the shape to array
                 # the base value should remain the same though

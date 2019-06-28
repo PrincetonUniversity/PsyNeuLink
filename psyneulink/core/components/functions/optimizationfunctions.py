@@ -454,7 +454,7 @@ class OptimizationFunction(Function_Base):
             if SEARCH_TERMINATION_FUNCTION in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_TERMINATION_FUNCTION)]
         if SEARCH_SPACE in args[0] and args[0][SEARCH_SPACE] is not None:
-            self.parameters.search_space.set(args[0][SEARCH_SPACE], execution_id)
+            self.parameters.search_space._set(args[0][SEARCH_SPACE], execution_id)
             if SEARCH_SPACE in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_SPACE)]
 
@@ -482,13 +482,13 @@ class OptimizationFunction(Function_Base):
             for all the samples in the order they were evaluated; otherwise it is empty.
         '''
 
-        if self._unspecified_args and self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZED:
+        if self._unspecified_args and self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZED:
             warnings.warn("The following arg(s) were not specified for {}: {} -- using default(s)".
                           format(self.name, ', '.join(self._unspecified_args)))
             self._unspecified_args = []
 
         current_sample = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-        current_value = self.owner.objective_mechanism.parameters.value.get(execution_id) if self.owner else 0.
+        current_value = self.owner.objective_mechanism.parameters.value._get(execution_id) if self.owner else 0.
 
         samples = []
         values = []
@@ -527,7 +527,7 @@ class OptimizationFunction(Function_Base):
             new_value = call_with_pruned_args(self.objective_function, new_sample, execution_id=execution_id)
             self._report_value(new_value)
             iteration += 1
-            max_iterations = self.parameters.max_iterations.get(execution_id)
+            max_iterations = self.parameters.max_iterations._get(execution_id)
             if max_iterations and iteration > max_iterations:
                 warnings.warn("{} failed to converge after {} iterations".format(self.name, max_iterations))
                 break
@@ -535,12 +535,12 @@ class OptimizationFunction(Function_Base):
             current_sample = new_sample
             current_value = new_value
 
-            if self.parameters.save_samples.get(execution_id):
+            if self.parameters.save_samples._get(execution_id):
                 samples.append(new_sample)
-                self.parameters.saved_samples.set(samples, execution_id, override=True)
-            if self.parameters.save_values.get(execution_id):
+                self.parameters.saved_samples._set(samples, execution_id, override=True)
+            if self.parameters.save_values._get(execution_id):
                 values.append(current_value)
-                self.parameters.saved_values.set(values, execution_id, override=True)
+                self.parameters.saved_values._set(values, execution_id, override=True)
 
         return new_sample, new_value, samples, values
 
@@ -1031,9 +1031,9 @@ class GradientOptimization(OptimizationFunction):
         # print(f'optimal_value: {optimal_value}')
 
         return_all_samples = return_all_values = []
-        if self.parameters.save_samples.get(execution_id):
+        if self.parameters.save_samples._get(execution_id):
             return_all_samples = all_samples
-        if self.parameters.save_values.get(execution_id):
+        if self.parameters.save_values._get(execution_id):
             return_all_values = all_values
         # return last_variable
         return optimal_sample, optimal_value, return_all_samples, return_all_values
@@ -1045,20 +1045,20 @@ class GradientOptimization(OptimizationFunction):
 
         # Index from 1 rather than 0
         # Update step_size
-        step_size = self.parameters.step_size.get(execution_id)
+        step_size = self.parameters.step_size._get(execution_id)
         if sample_num == 0:
             # Start from initial value (sepcified by user in step_size arg)
             step_size = self.parameters.step_size.default_value
-            self.parameters.step_size.set(step_size, execution_id)
+            self.parameters.step_size._set(step_size, execution_id)
         if self.annealing_function:
             step_size = call_with_pruned_args(self.annealing_function, step_size, sample_num, execution_id=execution_id)
-            self.parameters.step_size.set(step_size, execution_id)
+            self.parameters.step_size._set(step_size, execution_id)
 
         # Compute gradients with respect to current sample
         _gradients = call_with_pruned_args(self.gradient_function, sample, execution_id=execution_id)
 
         # Get new sample based on new gradients
-        new_sample = sample + self.parameters.direction.get(execution_id) * step_size * np.array(_gradients)
+        new_sample = sample + self.parameters.direction._get(execution_id) * step_size * np.array(_gradients)
 
         # Constrain new sample to be within bounds
         if self.bounds:
@@ -1068,13 +1068,13 @@ class GradientOptimization(OptimizationFunction):
         return new_sample
 
     def _convergence_condition(self, variable, value, iteration, execution_id=None):
-        previous_variable = self.parameters.previous_variable.get(execution_id)
-        previous_value = self.parameters.previous_value.get(execution_id)
+        previous_variable = self.parameters.previous_variable._get(execution_id)
+        previous_value = self.parameters.previous_value._get(execution_id)
 
         if iteration is 0:
             # self._convergence_metric = self.convergence_threshold + EPSILON
-            self.parameters.previous_variable.set(variable, execution_id, override=True)
-            self.parameters.previous_value.set(value, execution_id, override=True)
+            self.parameters.previous_variable._set(variable, execution_id, override=True)
+            self.parameters.previous_value._set(value, execution_id, override=True)
             return False
 
         # Evaluate for convergence
@@ -1084,10 +1084,10 @@ class GradientOptimization(OptimizationFunction):
             convergence_metric = np.max(np.abs(np.array(variable) -
                                                np.array(previous_variable)))
 
-        self.parameters.previous_variable.set(variable, execution_id, override=True)
-        self.parameters.previous_value.set(value, execution_id, override=True)
+        self.parameters.previous_variable._set(variable, execution_id, override=True)
+        self.parameters.previous_value._set(value, execution_id, override=True)
 
-        return convergence_metric <= self.parameters.convergence_threshold.get(execution_id)
+        return convergence_metric <= self.parameters.convergence_threshold._get(execution_id)
 
 
 MAXIMIZE = 'maximize'
@@ -2031,7 +2031,7 @@ class GaussianProcess(OptimizationFunction):
         #   You have accessible:
         #     variable arg:  the last sample evaluated
         #     sample_num:  number of current iteration in the search/sampling process
-        #     self.search_space:  self.parameters.search_space.get(execution_id), which you can assume will be a
+        #     self.search_space:  self.parameters.search_space._get(execution_id), which you can assume will be a
         #                         list of tuples, each of which contains the sampling bounds for each dimension;
         #                         so its length = length of a sample
         #     (the extra stuff in getting the search space is to support statefulness in parallelization of sims)

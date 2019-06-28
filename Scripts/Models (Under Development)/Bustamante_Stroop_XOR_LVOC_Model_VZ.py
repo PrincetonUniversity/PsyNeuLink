@@ -19,7 +19,7 @@ using a version of the `Learned Value of Control Model
 '''
 import importlib
 
-import numpy as np
+import autograd.numpy as np
 import psyneulink as pnl
 import timeit
 
@@ -27,7 +27,8 @@ import psyneulink.core.components.functions.learningfunctions
 import psyneulink.core.components.functions.optimizationfunctions
 import psyneulink.core.components.functions.transferfunctions
 
-from build_stimuli_VZ import xor_dict
+# from build_stimuli_VZ import xor_dict
+from build_input import xor_dict
 import csv
 import math
 
@@ -42,21 +43,41 @@ def w_fct(stim, color_control):
 
 w_fct_UDF = pnl.UserDefinedFunction(custom_function=w_fct, color_control=1)
 
+reward_value_word = 1
+reward_value_color = 10
 
 def objective_function(v):
     '''function used for ObjectiveMechanism of lvoc
      v[0] = probability of color naming (DDM output)
      v[1] = probability of word reading (DDM output)
-     v[2] = reward: [color naming rewarded, word reading rewarded]'''
+     v[2] = reward: [word reading rewarded, color naming rewarded]
+     v[3] = reaction time
+     '''
+    global reward_value_word
+    global reward_value_color
+
     prob_upper = v[0]
     prob_lower = v[1]
-    reward_upper = v[2][0]
-    reward_lower = v[2][1]
+    reward_upper = v[2][0] * reward_value_word
+    reward_lower = v[2][1] * reward_value_color
     # print('prob upper: ', prob_upper)
     # print('prob lower: ', prob_lower)
     # print("reward: ", prob_upper * reward_upper + prob_lower * reward_lower)
-    return prob_upper * reward_upper + prob_lower * reward_lower
+    # return prob_upper * reward_upper + prob_lower * reward_lower
+    if np.random.uniform() < prob_upper:
+        reward = reward_upper
+    else:
+        reward = reward_lower
+    reward -= (.44*v[3])
 
+    # TEST PRINT:
+    print(v, reward)
+
+    return reward
+
+def adj_cost_fct(v):
+    from math import e
+    return e**(.25 * np.abs(v) - 1)
 
 color_stim = pnl.TransferMechanism(name='Color Stimulus', size=8)
 word_stim = pnl.TransferMechanism(name='Word Stimulus', size=8)
@@ -67,12 +88,18 @@ word_task = pnl.ProcessingMechanism(name='Word Task', function=w_fct_UDF)
 reward = pnl.TransferMechanism(name='Reward', size=2)
 
 task_decision = pnl.DDM(
-    name='Task Decision',
-    # function=pnl.NavarroAndFuss,
-    output_states=[
-        pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
-        pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD
-    ]
+        name='Task Decision',
+        # function=pnl.NavarroAndFuss,
+        function=pnl.DriftDiffusionAnalytical(
+                threshold=2.27,
+                noise=0.4,
+                t0=.4
+        ),
+        output_states=[
+            pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
+            pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD,
+            pnl.DDM_OUTPUT.RESPONSE_TIME
+        ]
 )
 
 # print("Task decision loggable: ", task_decision.loggable_items)
@@ -107,13 +134,16 @@ lvoc = pnl.OptimizationControlMechanism(
         name='LVOC ObjectiveMechanism',
         monitor=[task_decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
                  task_decision.output_states[pnl.PROBABILITY_LOWER_THRESHOLD],
-                 reward],
+                 reward,
+                 task_decision.output_states[pnl.RESPONSE_TIME]],
         function=objective_function
     ),
     # posterior weight distribution
     agent_rep=pnl.RegressionCFA(
-        update_weights=pnl.BayesGLM(mu_0=-0.17, sigma_0=0.11), #sigma_0=math.sqrt(0.11))
-        prediction_terms=[pnl.PV.FC, pnl.PV.COST]
+        # update_weights=pnl.BayesGLM(mu_0=-0.17, sigma_0=0.11), #sigma_0=math.sqrt(0.11))
+        update_weights=pnl.BayesGLM(mu_0=-0.17, sigma_0=0.0000000000000001), #sigma_0=math.sqrt(0.11))
+        # update_weights=pnl.BayesGLM(mu_0=+0.17, sigma_0=0.11), #sigma_0=math.sqrt(0.11))
+        prediction_terms=[pnl.PV.C, pnl.PV.FC, pnl.PV.FF, pnl.PV.COST]
     ),
     # sample control allocs, and return best
     # evaluate() computes outcome (obj mech) - costs given state (features) and sample ctrl alloc
@@ -136,10 +166,12 @@ lvoc = pnl.OptimizationControlMechanism(
             # function=pnl.ReLU,
             # function=pnl.Logistic,
             cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
-            # intensity_cost_function=pnl.Exponential(rate=0.25, bias=-3), # 0.25, -3
-            # adjustment_cost_function=pnl.Exponential(rate=.25, bias=-3), # 0.25, -3
-            intensity_cost_function=pnl.Linear(slope=0, intercept=0), # 0.25, -3
-            adjustment_cost_function=pnl.Linear(slope=0, intercept=0), # 0.25, -3
+            intensity_cost_function=pnl.Exponential(rate=0.25, bias=-1), # 0.25, -3
+            # adjustment_cost_function=pnl.Exponential(rate=.25, bias=-1), # 0.25, -3
+            # adjustment_cost_function=lambda x: np.exp(.25 * np.abs(x) - 1),
+            adjustment_cost_function=adj_cost_fct,
+            # intensity_cost_function=pnl.Linear(slope=0, intercept=0), # 0.25, -3
+            # adjustment_cost_function=pnl.Linear(slope=0, intercept=0), # 0.25, -3
             allocation_samples=control_signal_range
             # allocation_samples = np.arange(0.1, 1.01, 0.3)
             # allocation_samples=[i / 2 for i in list(range(0, 50, 1))]
@@ -152,15 +184,37 @@ lvoc.set_log_conditions('value')
 # lvoc.set_log_conditions('variable')     
 # lvoc.agent_rep.set_log_conditions('regression_weights')
 
-lvoc.reportOutputPref=True
+# lvoc.reportOutputPref=True
 
 c.add_node(lvoc)
 
-# c.show_graph(show_node_structure=pnl.ALL)
+# c.show_graph(show_node_structure=pnl.ALL, show_cim=True)
 
+trial_num = 0
 
-for i in range(len(xor_dict)): # 30 subjects, 520 trials
-# for i in range(2):
+def adjust_reward():
+    global trial_num
+    global reward_value_word
+    global reward_value_color
+    if trial_num==0:
+        reward_value_word = 5
+        reward_value_color = 5
+    elif trial_num==320:
+        reward_value_word = 10
+        reward_value_color = 10
+
+def print_weights():
+    global trial_num
+    print(trial_num)
+    print(lvoc.agent_rep.parameters.regression_weights.get())
+    trial_num += 1
+    # print("----------------ENDED TRIAL-------------------")
+
+# for i in range(len(xor_dict)): # 30 subjects, 520 trials
+num_subj = 1
+for i in range(num_subj):
+
+    global trial
     input_dict = {color_stim: xor_dict[i][0],
               word_stim: xor_dict[i][1],
               color_task: xor_dict[i][2],
@@ -168,15 +222,15 @@ for i in range(len(xor_dict)): # 30 subjects, 520 trials
               reward:    xor_dict[i][4]}
 
     # start_time = time.time()
-    def print_weights():
-        print()
-        # print("----------------ENDED TRIAL-------------------")
+    trial_num = 0
 
     # duration = timeit.timeit(c.run(inputs=input_dict, execution_id=i), number=1) #number=2
     c.run(inputs=input_dict,
           execution_id=i,
-          call_after_trial=print_weights) #num_trials
-    # duration = time.time() - start_time
+          call_before_trial=adjust_reward,
+          call_after_trial=print_weights #num_trials
+          # duration = time.time() - start_time
+          )
 
     print('\n')
     print('Subject: ', i+1)

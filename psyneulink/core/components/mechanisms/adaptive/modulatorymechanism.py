@@ -253,16 +253,30 @@ attribute; and the  allocations to GatingSignals are listed in the  `gating_allo
 
 *Costs and Net Outcome*
 
-If a ModulatoryMechanism has any `ControlSignals <ControlSignal>` in its `modulatory_signals
-<ModulatoryMechanism.modulatory_signals>`, then it also computes the combined `costs <ModulatoryMechanism.costs>` of
-those, and a `net_outcome <ModulatoryMechanism.net_outcome>` based on them (see `below
-<ModulatoryMechanism_Costs_Computation>`). This is used by some subclasses of ModulatoryMechanism (e.g.,
-`OptimizationControlMechanism`) to compute the `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`.
-These are computed using the ModulatoryMechanism's default `compute_reconfiguration_cost
-<ModulatoryMechanism.compute_reconfiguration_cost>`, `combine_costs <ModulatoryMechanism.combine_costs>`,
-and `compute_net_outcome <ModulatoryMechanism.compute_net_outcome>` functions, but these can also be assigned custom
-functions (see links to attributes for details).
+If a ModulatoryMechanism has any `control_signals <ModulatoryMechanism.control_signals>`, then it also computes
+the combined `costs <ModulatoryMechanism.costs>` of those, and a `net_outcome <ModulatoryMechanism.net_outcome>`
+based on them (see `below <ModulatoryMechanism_Costs_Computation>`). This is used by some subclasses of
+ModulatoryMechanism (e.g., `OptimizationControlMechanism`) to compute the `modulatory_allocation
+<ModulatoryMechanism.modulatory_allocation>`. These are computed using the ModulatoryMechanism's default
+`compute_reconfiguration_cost <ModulatoryMechanism.compute_reconfiguration_cost>`, `combine_costs
+<ModulatoryMechanism.combine_costs>`, and `compute_net_outcome <ModulatoryMechanism.compute_net_outcome>` functions,
+but these can also be assigned custom functions (see links to attributes for details).
 
+FIX: XXX MOVE THIS TO ABOVE:
+
+.. _ModulatoryMechanism_Reconfiguration_Cost:
+
+*Reconfiguration Cost*
+
+This cost is distinct from the costs of the ModulatoryMechanism's ControlSignals, and in particular it is not the same
+as their `adjustment_cost <ControlSignal.adjustment_cost>`.  The latter, if specified by a ControlSignal, is computed
+individually by that ControlSignal using its `adjustment_cost_function <ControlSignal.adjustment_cost_function>` based
+on the change in its `intensity <ControlSignal.intensity>` from its last execution. In contrast, a ModulatoryMechanism's
+`reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>` is computed by its `compute_reconfiguration_cost
+<ModulatoryMechanism.compute_reconfiguration_cost>` function, based on the change in its `modulatory_allocation
+ModulatoryMechanism.modulatory_allocation>` from the last execution, that will be applied to *all* of its
+`modulatory_signals <ModulatoryMechanism.modulatory_signals>` (including any `gating_signals
+<ModulatoryMechanism.gating_signals>` it has). By default, it uses the `Distance` function with the `EUCLIDEAN` metric).
 
 .. _ModulatoryMechanism_Execution:
 
@@ -291,13 +305,14 @@ executed in a `TRIAL`, although this can be customized (see `Composition Control
 
 *Computation of Costs and Net_Outcome*
 
-When a ModulatoryMechanism updates the `intensity <ControlSignal.intensity>` of any ControlSignals in its
-`modulatory_signals <ModulatoryMechanism.modulatory_signals>`, each of those ControlSignals calculates a `cost
-<ControlSignal.cost>`, based on its `intensity  <ControlSignal/intensity>`.  The ModulatoryMechanism computes a
-`reconfiguration_cost  <ModulatoryMechanism.reconfiguration_cost>` based on these,  using its
-`compute_reconfiguration_cost <ModulatoryMechanism.compute_reconfiguration_cost>` function.  It then  combines this
-with the `cost  <ControlSignal.cost>` of its individual ControlSignals, using its `combine_costs
-<ModulatoryMechanism.combine_costs>` function, and assigns the result to its `costs <ModulatoryMechanism.costs>`
+If `compute_reconfiguration_cost <ModulatoryMechanism.compute_reconfiguration_cost>` has been specified, then it is
+used to compute the `reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>` for its `modulatory_allocation
+<ModulatoryMechanism.modulatory_allocation>` (see `above <ModulatoryMechanism_Reconfiguration_Cost>`.  Then, if the
+ModulatoryMechanism has any `control_signals <ModulatoryMechanism.contro._signals>`, it updates their `intensity
+<ControlSignal.intensity>`, at which point each of the ControlSignals calculates its `cost <ControlSignal.cost>`,
+based on its `intensity  <ControlSignal/intensity>`.  These are then combined with the ModulatoryMechanism's
+`reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>` using its `combine_costs
+<ModulatoryMechanism.combine_costs>` function, and the result is assigned to its `costs <ModulatoryMechanism.costs>`
 attribute.  The ModulatoryMechanism uses this, together with its `outcome <ModulatoryMechanism.outcome>` attribute,
 to compute a  `net_outcome <ModulatoryMechanism.net_outcome>` using its `compute_net_outcome
 <ModulatoryMechanism.compute_net_outcome>` function.  This is used by some subclasses of ModulatoryMechanism
@@ -442,10 +457,10 @@ def _control_allocation_setter(value, owning_component=None, execution_id=None):
         raise ModulatoryMechanismError(f"Attempt to set '{CONTROL_ALLOCATION}' parameter of {owning_component.name} "
                                        f"with value ({value} that has a different length ({len(value)}) "
                                        f"than the number of its {CONTROL_SIGNALS} ({len(control_signal_indices)})")
-    mod_alloc = owning_component.parameters.modulatory_allocation.get(execution_id)
+    mod_alloc = owning_component.parameters.modulatory_allocation._get(execution_id)
     for j, i in enumerate(control_signal_indices):
         mod_alloc[i] = value[j]
-    owning_component.parameters.modulatory_allocation.set(np.array(mod_alloc), execution_id)
+    owning_component.parameters.modulatory_allocation._set(np.array(mod_alloc), execution_id)
     return value
 
 def _gating_allocation_getter(owning_component=None, execution_id=None):
@@ -464,16 +479,16 @@ def _gating_allocation_setter(value, owning_component=None, execution_id=None):
         raise ModulatoryMechanismError(f"Attempt to set {GATING_ALLOCATION} parameter of {owning_component.name} "
                                        f"with value ({value} that has a different length than the number of its"
                                        f"{GATING_SIGNALS} ({len(gating_signal_indices)})")
-    mod_alloc = owning_component.parameters.modulatory_allocation.get(execution_id)
+    mod_alloc = owning_component.parameters.modulatory_allocation._get(execution_id)
     for j, i in enumerate(gating_signal_indices):
         mod_alloc[i] = value[j]
-    owning_component.parameters.modulatory_allocation.set(np.array(mod_alloc), execution_id)
+    owning_component.parameters.modulatory_allocation._set(np.array(mod_alloc), execution_id)
     return value
 
 def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
-        costs = [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id)
+        costs = [c.compute_costs(c.parameters.variable._get(execution_id), execution_id=execution_id)
                  for c in owning_component.control_signals]
         return costs
 
@@ -482,7 +497,7 @@ def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None)
 
 def _outcome_getter(owning_component=None, execution_id=None):
     try:
-        return owning_component.parameters.variable.get(execution_id)[0]
+        return owning_component.parameters.variable._get(execution_id)[0]
     except TypeError:
         return None
 
@@ -492,8 +507,8 @@ def _net_outcome_getter(owning_component=None, execution_id=None):
 
     try:
         c = owning_component
-        return c.compute_net_outcome(c.parameters.outcome.get(execution_id),
-                                     c.combine_costs(c.parameters.costs.get(execution_id)))
+        return c.compute_net_outcome(c.parameters.outcome._get(execution_id),
+                                     c.combine_costs(c.parameters.costs._get(execution_id)))
     except TypeError:
         return [0]
 
@@ -729,11 +744,20 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         each item is the value assigned as the `allocation <GatingSignal.allocation>` for the corresponding
         GatingSignal listed in the `gating_signals` attribute <ModulatoryMechanism.gating_signals>`.
 
+    reconfiguration_cost : scalar
+        result of `compute_reconfiguration_cost <ModulatoryMechanism.compute_reconfiguration_cost>` function, that
+        computes the difference between the values of the ModulatoryMechanism's current and last `modulatory_alloction
+        <ModulatoryMechanism.modulatory_allocation>`; its value is None and is ignored if `compute_reconfiguration_cost
+        <ModulatoryMechanism.compute_reconfiguration_cost>` has not been specified.
+
+        .. note::
+        A ModulatoryMechanism's reconfiguration_cost is not the same as the `adjustment_cost
+        <ControlSignal.adjustment_cost>` of its ControlSignals (see `ModulatoryMechanism Reconfiguration Cost
+        <ModulatoryMechanism_Reconfiguration_Cost>` for additional detals).
+
     compute_reconfiguration_cost : Function, function or method
-        function used to compute the ModulatoryMechanism's `reconfiguration_cost  <ModulatoryMechanism.reconfiguration_cost>`;
-        result is a scalar value representing the difference — defined by the function — between the values of the
-        ModulatoryMechanism's current and last `control_alloction <ModulatoryMechanism.control_allocation>`, that can be
-        accessed by `reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>` attribute.
+        function used to compute the ModulatoryMechanism's `reconfiguration_cost
+        <ModulatoryMechanism.reconfiguration_cost>`.
 
     costs : list
         current costs for the ModulatoryMechanism's `control_signals <ModulatoryMechanism.control_signals>`, computed
@@ -903,8 +927,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                       read_only=True)
         outcome = Parameter(None, read_only=True, getter=_outcome_getter)
 
+        reconfiguration_cost = Parameter(None, read_only=True)
         compute_reconfiguration_cost = Parameter(None, stateful=False, loggable=False)
-        # reconfiguration_cost = Parameter(None, read_only=True, getter=_reconfiguration_cost_getter)
 
         combine_costs = Parameter(np.sum, stateful=False, loggable=False)
         costs = Parameter(None, read_only=True, getter=_modulatory_mechanism_costs_getter)
@@ -964,15 +988,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self.combine_costs = combine_costs
         self.compute_net_outcome = compute_net_outcome
         self.compute_reconfiguration_cost = compute_reconfiguration_cost
-
-        # MODIFIED 5/20/19 NEW: [DM/JDC] - commented out to allow True to designate construction of default ObjMech
-        # # If the user passed in True for objective_mechanism, means one needs to be created automatically.
-        # # Set it to None to signal this downstream (vs. False which means *don't* create one),
-        # #    while still causing tests to indicate that one does NOT yet exist
-        # #    (since actual assignment of one registers as True).
-        # if objective_mechanism is True:
-        #     objective_mechanism = None
-        # MODIFIED 5/20/19 END
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
@@ -1270,7 +1285,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # For DefaultAllocationFunction, set defaults.value to have number of items equal to num modulatory_signals
         if isinstance(self.function, DefaultAllocationFunction):
             self.defaults.value = np.tile(self.function.value, (num_modulatory_signals, 1))
-            self.parameters.modulatory_allocation.set(copy.deepcopy(self.defaults.value))
+            self.parameters.modulatory_allocation._set(copy.deepcopy(self.defaults.value), override=True)
             self.function.num_modulatory_signals = num_modulatory_signals
 
         # For other functions, assume that if its value has:
@@ -1281,7 +1296,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         #     leave things alone, and allow any errant indices for modulatory_signals to be caught later.
         else:
             self.defaults.value = np.array(self.function.value)
-            self.parameters.value.set(copy.deepcopy(self.defaults.value))
+            self.parameters.value._set(copy.deepcopy(self.defaults.value))
 
             len_fct_value = len(self.function.value)
 
@@ -1348,12 +1363,12 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         if isinstance(modulatory_signal, ControlSignal):
             # Update control_signal_costs to accommodate instantiated Projection
-            control_signal_costs = self.parameters.control_signal_costs.get()
+            control_signal_costs = self.parameters.control_signal_costs._get()
             try:
                 control_signal_costs = np.append(control_signal_costs, np.zeros((1, 1)), axis=0)
             except (AttributeError, ValueError):
                 control_signal_costs = np.zeros((1, 1))
-            self.parameters.control_signal_costs.set(control_signal_costs, override=True)
+            self.parameters.control_signal_costs._set(control_signal_costs, override=True)
 
         # UPDATE output_states AND modulatory_projections -------------------------------------------------------------
 
@@ -1584,7 +1599,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         (used by controller of a Composition in simulations)
         '''
         value = [np.atleast_1d(a) for a in modulatory_allocation]
-        self.parameters.value.set(value, execution_id)
+        self.parameters.value._set(value, execution_id)
         self._update_output_states(execution_id=execution_id,
                                    runtime_params=runtime_params,
                                    context=ContextFlags.COMPOSITION)

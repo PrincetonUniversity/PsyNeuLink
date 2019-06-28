@@ -838,8 +838,8 @@ NON_DECISION_TIME = 't0'
 
 
 def _DriftDiffusionAnalytical_bias_getter(owning_component=None, execution_id=None):
-    starting_point = owning_component.parameters.starting_point.get(execution_id)
-    threshold = owning_component.parameters.threshold.get(execution_id)
+    starting_point = owning_component.parameters.starting_point._get(execution_id)
+    threshold = owning_component.parameters.threshold._get(execution_id)
     try:
         return (starting_point + threshold) / (2 * threshold)
     except TypeError:

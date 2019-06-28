@@ -896,48 +896,27 @@ class Projection_Base(Projection):
             state_name = state.name
             state.update(execution_id=execution_id, params=runtime_params, context=context)
 
-            # # Assign ParameterState's value to parameter value in runtime_params
-            # if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
-            #     param = param_template = runtime_params
-            # # Otherwise use paramsCurrent
-            # else:
-            #     param = param_template = self.paramsCurrent
-
-            param = param_template = self.paramsCurrent
-
-            # Determine whether template (param to type-match) is at top level or in a function_params dictionary
-            try:
-                param_template[state_name]
-            except KeyError:
-                param_template = self.function_params
-
-            # Get its type
-            param_type = type(param_template[state_name])
-            # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or Modulation)
-            if param_type is tuple:
-                param_type = type(param_template[state_name][0])
-
             # Assign version of ParameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
             # FYI (7/18/17 CW) : in addition to the params and attribute being set, the state's variable is ALSO being
             # set by the statement below. For example, if state_name is 'matrix', the statement below sets
             # params['matrix'] to state.value, calls setattr(state.owner, 'matrix', state.value), which sets the
             # 'matrix' parameter state's variable to ALSO be equal to state.value! If this is unintended, please change.
-            value = state.parameters.value.get(execution_id)
-            param[state_name] = type_match(value, param_type)
+            value = state.parameters.value._get(execution_id)
+            getattr(self.parameters, state_name)._set(value, execution_id)
             # manual setting of previous value to matrix value (happens in above param['matrix'] setting
             if state_name == MATRIX:
-                state.function.parameters.previous_value.set(value, execution_id, override=True)
+                state.function.parameters.previous_value._set(value, execution_id, override=True)
 
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         if variable is None:
-            variable = self.sender.parameters.value.get(execution_id)
+            variable = self.sender.parameters.value._get(execution_id)
 
-        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-        self.parameters.context.get(execution_id).string = context
+        self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+        self.parameters.context._get(execution_id).string = context
 
         value = super()._execute(
             variable=variable,
@@ -945,7 +924,7 @@ class Projection_Base(Projection):
             runtime_params=runtime_params,
             context=context
         )
-        self.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
+        self.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
         return value
 
     def _activate_for_compositions(self, composition):

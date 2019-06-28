@@ -12,7 +12,8 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
     FitzHughNagumoIntegrator, AccumulatorIntegrator, LeakyCompetingIntegrator, DualAdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
-from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.core.components.mechanisms.processing.integratormechanism import \
+    IntegratorMechanism, IntegratorMechanismError
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
 from psyneulink.core.scheduling.condition import AtTrial
@@ -984,19 +985,33 @@ class TestIntegratorRate:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
+    def test_integrator_type_adaptive_variable_and_rate_conflict(self):
+        with pytest.raises(IntegratorMechanismError) as error_text:
+            I = IntegratorMechanism(
+                    name='IntegratorMechanism',
+                    default_variable=[0],
+                    function=AdaptiveIntegrator(rate=[0.5, 0.6])
+            )
+        error_msg_a = "Shape of 'variable' for function specified for IntegratorMechanism (AdaptiveIntegrator Function"
+        error_msg_b = "(2,)) does not match the shape of the 'default_variable' specified for the 'Mechanism'."
+        assert all(error_msg in str(error_text) for error_msg in {error_msg_a, error_msg_b})
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
     def test_integrator_type_simple_rate_list_input_float(self):
-        with pytest.raises(ComponentError) as error_text:
+        with pytest.raises(MechanismError) as error_text:
             I = IntegratorMechanism(
                 name='IntegratorMechanism',
                 function=SimpleIntegrator(
                     rate=[5.0, 5.0, 5.0]
                 )
             )
-            # P = Process(pathway=[I])
-            float(I.execute(10.0))
+            result = I.execute(10.0)
+            float(result)
+        error_msg_a = 'Length (1) of input ([10.]) does not match required length (3) for input to '
+        error_msg_b = 'InputState-0 InputState of IntegratorMechanism'
         assert (
-            "is not compatible with the variable format" in str(error_text)
-            and "to which it is being assigned" in str(error_text)
+            error_msg_a in str(error_text) and error_msg_b in str(error_text)
         )
 
     # rate = list len 2, incrment = list len 3, integration_type = accumulator
@@ -1011,10 +1026,10 @@ class TestIntegratorRate:
                     rate=[1.0, 2.0],
                     increment=[3.0, 4.0, 5.0]
                 ))
-        assert (
-            "args are both specified as lists or arrays for" in str(error_text)
-            and "respectively) must be the same" in str(error_text)
-        )
+
+        error_msg_a = "The parameters with len>1 specified for AccumulatorIntegrator Function-0 "
+        error_msg_b = "(['rate', 'increment']) don't all have the same length"
+        assert all(error_msg in str(error_text) for error_msg in {error_msg_a, error_msg_b})
 
 
     # @pytest.mark.mechanism

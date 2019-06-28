@@ -102,7 +102,7 @@ If you receive an error like below, while checking for a context value for examp
 
 ::
 
-    self.parameters.context.get(execution_id).execution_phase == ContextStatus.PROCESSING
+    self.parameters.context._get(execution_id).execution_phase == ContextStatus.PROCESSING
     AttributeError: 'NoneType' object has no attribute 'execution_phase'
 
 this means that there was no context value found for execution_id, and can be indicative that execution_id
@@ -467,8 +467,8 @@ COMMENT:
 *Initial Values*
 ================
 
-Any Mechanism that is the `sender <Projection.Projection.sender>` of a Projection that closes a loop in a Process or
-System, and that is not an `ORIGIN` Mechanism, is designated as `INITIALIZE_CYCLE`. An initial value can be assigned
+Any Mechanism that is the `sender <Projection.Projection_Base.sender>` of a Projection that closes a loop in a Process
+or System, and that is not an `ORIGIN` Mechanism, is designated as `INITIALIZE_CYCLE`. An initial value can be assigned
 to such Mechanisms, that will be used to initialize them when the Process or System is first run.  These values are
 specified in the **initial_values** argument of :keyword:`run`, as a dictionary. The key for each entry must
 be a Mechanism designated as `INITIALIZE_CYCLE`, and its value an input for the Mechanism to be used as its initial
@@ -863,9 +863,9 @@ def run(obj,
                     projection.function_obj.learning_rate = obj.learning_rate
 
     # Class-specific validation:
-    if not obj.parameters.context.get(execution_id).flags:
-        obj.parameters.context.get(execution_id).initialization_status = ContextFlags.VALIDATING
-        obj.parameters.context.get(execution_id).string = RUN + "validating " + obj.name
+    if not obj.parameters.context._get(execution_id).flags:
+        obj.parameters.context._get(execution_id).initialization_status = ContextFlags.VALIDATING
+        obj.parameters.context._get(execution_id).string = RUN + "validating " + obj.name
 
     # INITIALIZATION
     if initialize:
@@ -894,7 +894,7 @@ def run(obj,
 
             # Reset any mechanisms whose 'reinitialize_when' conditions are satisfied
             for mechanism in obj.mechanisms:
-                if hasattr(mechanism, "reinitialize_when") and mechanism.parameters.has_initializers.get(execution_id):
+                if hasattr(mechanism, "reinitialize_when") and mechanism.parameters.has_initializers._get(execution_id):
                     if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing, execution_context=execution_id):
                         mechanism.reinitialize(None, execution_context=execution_id)
 
@@ -921,9 +921,9 @@ def run(obj,
                         obj.current_targets = execution_targets
 
             # if context == ContextFlags.COMMAND_LINE and not obj.context.execution_phase == ContextFlags.SIMULATION:
-            if context == ContextFlags.COMMAND_LINE or not obj.parameters.context.get(execution_id).execution_phase == ContextFlags.SIMULATION:
+            if context == ContextFlags.COMMAND_LINE or not obj.parameters.context._get(execution_id).execution_phase == ContextFlags.SIMULATION:
                 obj._assign_context_values(execution_id, execution_phase=ContextFlags.PROCESSING)
-                obj.parameters.context.get(execution_id).string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
+                obj.parameters.context._get(execution_id).string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
 
             result = obj.execute(
                 input=execution_inputs,
@@ -938,7 +938,7 @@ def run(obj,
             if call_after_time_step:
                 call_with_pruned_args(call_after_time_step, execution_context=execution_id)
 
-        if obj.parameters.context.get(execution_id).execution_phase != ContextFlags.SIMULATION:
+        if obj.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
             if isinstance(result, Iterable):
                 result_copy = result.copy()
             else:

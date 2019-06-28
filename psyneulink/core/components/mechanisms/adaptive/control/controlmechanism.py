@@ -402,12 +402,11 @@ class ControlMechanismError(Exception):
         self.error_value = error_value
 
 
-# MODIFIED 5/18/19 NEW: [JDC]
 def _control_allocation_getter(owning_component=None, execution_id=None):
     return owning_component.modulatory_allocation
 
 def _control_allocation_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.modulatory_allocation.set(np.array(value), execution_id)
+    owning_component.parameters.modulatory_allocation._set(np.array(value), execution_id)
     return value
 
 def _gating_allocation_getter(owning_component=None, execution_id=None):
@@ -426,7 +425,6 @@ def _gating_allocation_setter(value, owning_component=None, execution_id=None, *
                                 f"consider using a {GatingMechanism.__name__} instead, "
                                 f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
                                 f"{GatingSignal.__name__}s are needed.")
-# MODIFIED 5/18/19 END
 
 
 class ControlMechanism(ModulatoryMechanism):
@@ -613,6 +611,17 @@ class ControlMechanism(ModulatoryMechanism):
         ControlMechanism's current and last `control_alloction <ControlMechanism.control_allocation>`, that can be
         accessed by `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` attribute.
 
+    reconfiguration_cost : scalar
+        result of `compute_reconfiguration_cost <ControlMechanism.compute_reconfiguration_cost>` function, that
+        computes the difference between the values of the ControlMechanism's current and last `control_alloction
+        <ControlMechanism.control_allocation>`; value is None and is ignored if `compute_reconfiguration_cost
+        <ControlMechanism.compute_reconfiguration_cost>` has not been specified.
+
+        .. note::
+        A ControlMechanism's reconfiguration_cost is not the same as the `adjustment_cost
+        <ControlSignal.adjustment_cost>` of its ControlSignals (see `ModulatoryMechanism Reconfiguration Cost
+        <ModulatoryMechanism_Reconfiguration_Cost>` for additional detals).
+
     costs : list
         current costs for the ControlMechanism's `control_signals <ControlMechanism.control_signals>`, computed
         for each using its `compute_costs <ControlSignals.compute_costs>` method.
@@ -672,7 +681,6 @@ class ControlMechanism(ModulatoryMechanism):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # # MODIFIED 5/18/19 NEW: [JDC]
     # Override control_allocation and suppress gating_allocation
     class Parameters(ModulatoryMechanism.Parameters):
         """
@@ -698,7 +706,6 @@ class ControlMechanism(ModulatoryMechanism):
                                       getter=_gating_allocation_getter,
                                       setter=_gating_allocation_setter,
                                       read_only=True)
-    # MODIFIED 5/18/19 END
 
     @tc.typecheck
     def __init__(self,

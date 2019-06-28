@@ -1,11 +1,91 @@
 import numpy as np
 import pytest
 
-from itertools import product
-
 import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
-import psyneulink.core.globals.keywords as kw
+
+class TestRearrange:
+
+    @pytest.mark.function
+    @pytest.mark.combination_function
+    def test_no_default_variable(self):
+        R_function = pnl.Rearrange(arrangement=[(1,2),0])
+        result = R_function.execute([[0,0],[1,1],[2,2]])
+        for exp,act in zip(result, [[ 1.,  1.,  2.,  2.],[ 0.,  0.]]):
+            assert np.allclose(exp,act)
+
+    @pytest.mark.function
+    @pytest.mark.combination_function
+    def test_with_default_variable(self):
+        R_function = pnl.Rearrange(default_variable=[[0],[0],[0]], arrangement=[(1,2),0])
+        result = R_function.execute([[0,0],[1,1],[2,2]])
+        for exp,act in zip(result, [[ 1.,  1.,  2.,  2.],[ 0.,  0.]]):
+            assert np.allclose(exp,act)
+
+    @pytest.mark.function
+    @pytest.mark.combination_function
+    def test_arrangement_has_out_of_bounds_index(self):
+        with pytest.raises(pnl.FunctionError) as error_text:
+            pnl.Rearrange(default_variable=[0,0], arrangement=[(1,2),0])
+        error_msg = "'default_variable' for Rearrange must be at least 2d."
+        assert error_msg in str(error_text)
+
+    @pytest.mark.function
+    @pytest.mark.combination_function
+    def test_default_variable_mismatches_arrangement(self):
+        with pytest.raises(pnl.FunctionError) as error_text:
+            pnl.Rearrange(default_variable=[[0],[0]], arrangement=[(1,2),0])
+        error_msg_a = "'arrangement' arg for Rearrange"
+        error_msg_b = "is out of bounds for its 'default_variable' arg (max index = 1)."
+        assert all(error_msg in str(error_text) for error_msg in {error_msg_a, error_msg_b})
+
+    @pytest.mark.function
+    @pytest.mark.combination_function
+    def test_default_variable_has_non_numeric_index(self):
+        # with pytest.raises(pnl.FunctionError) as error_text:
+        with pytest.raises(pnl.UtilitiesError) as error_text:
+            pnl.Rearrange(default_variable=[[0],['a']], arrangement=[(1,2),0])
+        # error_msg = "All elements of 'default_variable' for Rearrange must be scalar values."
+        error_msg = "[['0']\\n ['a']] has non-numeric entries"
+        assert error_msg in str(error_text)
+
+    @pytest.mark.function
+    @pytest.mark.combination_function
+    def test_arrangement_has_non_numeric_index(self):
+        with pytest.raises(pnl.FunctionError) as error_text:
+            pnl.Rearrange(default_variable=[[0],[0],[0]], arrangement=[(1,2),'a'])
+        error_msg_a = "Index specified in 'arrangement' arg"
+        error_msg_b = "('a') is not an int."
+        assert all(error_msg in str(error_text) for error_msg in {error_msg_a, error_msg_b})
+
+    # @pytest.mark.function
+    # @pytest.mark.combination_function
+    # def test_column_vector(self):
+    #     R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
+    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+    #                                           default_variable=[[1], [2], [3], [4], [5]],
+    #                                           name="R_mechanism")
+    #
+    #     assert np.allclose(R_function.execute([[1], [2], [3], [4], [5]]), [1, 2, 3, 4, 5])
+    #     # assert np.allclose(R_function.execute([[1], [2], [3], [4], [5]]), [15.0])
+    #     assert np.allclose(R_function.execute([[[1], [2], [3], [4], [5]]]), [15.0])
+    #
+    #     assert np.allclose(R_mechanism.execute([[1], [2], [3], [4], [5]]), [1, 2, 3, 4, 5])
+    #     # assert np.allclose(R_mechanism.execute([[1], [2], [3], [4], [5]]), [15.0])
+    #
+    # @pytest.mark.function
+    # @pytest.mark.combination_function
+    # def test_matrix(self):
+    #     R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
+    #     R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+    #                                           default_variable=[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+    #                                           name="R_mechanism")
+    #
+    #     assert np.allclose(R_function.execute([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), [6, 15, 24])
+    #     assert np.allclose(R_function.execute([[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]), [12, 15, 18])
+    #
+    #     assert np.allclose(R_mechanism.execute([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), [6, 15, 24])
+
 
 class TestReduce:
 
@@ -67,7 +147,6 @@ class TestReduce:
     #     # print("mech = ", R_mechanism.execute([[[1, 2], [3, 4, 5], [6, 7, 8, 9]]]))
     #     # print("mech = ", R_mechanism.execute([[[1, 2], [3, 4, 5], [6, 7, 8, 9]]]))
     #
-
 
 SIZE=5
 np.random.seed(0)

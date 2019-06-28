@@ -101,7 +101,7 @@ Condition, it is assigned a Condition that causes it to be executed whenever it 
 and all its structural parents have been executed at least once since the Component's last execution.
 Condition subclasses (`listed below <Condition_Pre-Specified_List>`)
 provide a standard set of Conditions that can be implemented simply by specifying their parameter(s). There are
-five types:
+six types:
 
   * `Generic <Conditions_Generic>` - satisfied when a `user-specified function and set of arguments <Condition_Custom>`
     evaluates to `True`;
@@ -110,6 +110,7 @@ five types:
   * `Time-based <Conditions_Time_Based>` - satisfied based on the current count of units of time at a specified
     `TimeScale`;
   * `Component-based <Conditions_Component_Based>` - based on the execution or state of other Components.
+  * `Convenience <Conditions_Convenience>` - based on other Conditions, condensed for convenience
 
 .. _Condition_Pre-Specified_List:
 
@@ -255,6 +256,23 @@ five types:
     * `WhenFinishedAll` (*Components)
       satisfied when all of the specified Components have set their `is_finished` attributes to `True`.
 
+.. _Conditions_Convenience:
+
+**Convenience Conditions** (based on other Conditions, condensed for convenience)
+
+
+    * `AtTrialStart`
+      satisfied at the beginning of a `TRIAL` (`AtPass(0) <AtPass>`)
+
+    * `AtTrialNStart`
+      satisfied on `PASS` 0 of the specified `TRIAL` counted using 'TimeScale`
+
+    * `AtRunStart`
+      satisfied at the beginning of a `RUN`
+
+    * `AtRunNStart`
+      satisfied on `TRIAL` 0 of the specified `RUN` counted using 'TimeScale`
+
 
 .. Condition_Execution:
 
@@ -284,10 +302,11 @@ from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
     'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'AfterNPasses', 'AfterNTimeSteps', 'AfterNTrials', 'AfterPass',
-    'AtRun', 'AfterRun', 'AfterNRuns', 'AfterTimeStep', 'AfterTrial', 'All', 'AllHaveRun', 'Always', 'Any', 'AtNCalls',
-    'AtPass', 'AtTimeStep', 'AtTrial', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial', 'Condition',
-    'ConditionError', 'ConditionSet', 'EveryNCalls', 'EveryNPasses', 'JustRan', 'Never', 'Not', 'NWhen', 'WhenFinished',
-    'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot'
+    'AtRun', 'AfterRun', 'AfterNRuns', 'AfterTimeStep', 'AfterTrial', 'All', 'AllHaveRun', 'Always', 'Any',
+    'AtNCalls','AtPass', 'AtRunStart', 'AtRunNStart', 'AtTimeStep', 'AtTrial',
+    'AtTrialStart', 'AtTrialNStart', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial',
+    'Condition','ConditionError', 'ConditionSet', 'EveryNCalls', 'EveryNPasses',
+    'JustRan', 'Never', 'Not', 'NWhen', 'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot'
 ]
 
 logger = logging.getLogger(__name__)
@@ -736,7 +755,7 @@ class BeforeTimeStep(Condition):
             try:
                 return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TIME_STEP, time_scale) < n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n, time_scale)
 
@@ -766,7 +785,7 @@ class AtTimeStep(Condition):
             try:
                 return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TIME_STEP, time_scale) == n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n)
 
@@ -795,7 +814,7 @@ class AfterTimeStep(Condition):
             try:
                 return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TIME_STEP, time_scale) > n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n, time_scale)
 
@@ -820,7 +839,7 @@ class AfterNTimeSteps(Condition):
             try:
                 return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TIME_STEP, time_scale) >= n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n, time_scale)
 
@@ -849,7 +868,7 @@ class BeforePass(Condition):
             try:
                 return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) < n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n, time_scale)
 
@@ -879,7 +898,7 @@ class AtPass(Condition):
             try:
                 return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) == n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n)
 
@@ -908,7 +927,7 @@ class AfterPass(Condition):
             try:
                 return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) > n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n, time_scale)
 
@@ -933,7 +952,7 @@ class AfterNPasses(Condition):
             try:
                 return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) >= n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n, time_scale)
 
@@ -960,7 +979,7 @@ class EveryNPasses(Condition):
             try:
                 return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.PASS, time_scale) % n == 0
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n, time_scale)
 
@@ -989,7 +1008,7 @@ class BeforeTrial(Condition):
             try:
                 return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) < n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n)
 
@@ -1018,7 +1037,7 @@ class AtTrial(Condition):
             try:
                 return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) == n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n)
 
@@ -1048,7 +1067,7 @@ class AfterTrial(Condition):
             try:
                 return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) > n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n)
 
@@ -1072,10 +1091,9 @@ class AfterNTrials(Condition):
             try:
                 return scheduler.clocks[execution_context].get_total_times_relative(TimeScale.TRIAL, time_scale) >= n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n, time_scale)
-
 
 
 class AtRun(Condition):
@@ -1095,7 +1113,7 @@ class AtRun(Condition):
             try:
                 return scheduler.clocks[execution_context].time.run == n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n)
 
@@ -1117,7 +1135,7 @@ class AfterRun(Condition):
             try:
                 return scheduler.clocks[execution_context].time.run > n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n)
 
@@ -1140,7 +1158,7 @@ class AfterNRuns(Condition):
             try:
                 return scheduler.clocks[execution_context].time.run >= n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n)
 
@@ -1177,7 +1195,7 @@ class BeforeNCalls(_DependencyValidation, Condition):
                 logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
                 return num_calls < n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, dependency, n)
 
@@ -1213,7 +1231,7 @@ class AtNCalls(_DependencyValidation, Condition):
                 logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
                 return num_calls == n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, dependency, n)
 
@@ -1243,7 +1261,7 @@ class AfterCall(_DependencyValidation, Condition):
                 logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
                 return num_calls > n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, dependency, n)
 
@@ -1273,7 +1291,7 @@ class AfterNCalls(_DependencyValidation, Condition):
                 logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
                 return num_calls >= n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, dependency, n)
 
@@ -1303,7 +1321,7 @@ class AfterNCallsCombined(_DependencyValidation, Condition):
 
         def func(*dependencies, n=None, scheduler=None, execution_context=None):
             if n is None:
-                raise ConditionError('{0}: required keyword argument n is None'.format(type(self).__name__))
+                raise ConditionError(f'{type(self).__name__}: required keyword argument n is None.')
             count_sum = 0
             for d in dependencies:
                 try:
@@ -1311,7 +1329,7 @@ class AfterNCallsCombined(_DependencyValidation, Condition):
                     logger.debug('{0} has reached {1} num_calls in {2}'.
                                  format(d, scheduler.counts_total[execution_context][time_scale][d], time_scale.name))
                 except AttributeError as e:
-                    raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                    raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
             return count_sum >= n
         super().__init__(func, *dependencies, n=n)
@@ -1360,7 +1378,7 @@ class EveryNCalls(_DependencyValidation, Condition):
                 logger.debug('{0} has reached {1} num_calls'.format(dependency, num_calls))
                 return num_calls >= n
             except AttributeError as e:
-                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, dependency, n)
 
@@ -1385,7 +1403,7 @@ class JustRan(_DependencyValidation, Condition):
     """
     def __init__(self, dependency):
         def func(dependency, scheduler=None, execution_context=None):
-            logger.debug('checking if {0} in previous execution step set'.format(dependency))
+            logger.debug(f'checking if {dependency} in previous execution step set')
             try:
                 return dependency in scheduler.execution_list[execution_context][-1]
             except TypeError:
@@ -1418,16 +1436,11 @@ class AllHaveRun(_DependencyValidation, Condition):
                     if scheduler.counts_total[execution_context][time_scale][d] < 1:
                         return False
                 except AttributeError as e:
-                    raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+                    raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
                 except KeyError as e:
                     raise ConditionError(
-                        '{0}: execution_context ({1}) must both be specified, and execution_context must be in scheduler.counts_total (scheduler: {2}): {3}'.format(
-                            type(self).__name__,
-                            scheduler,
-                            execution_context,
-                            e,
-                        )
-                    )
+                        f'{type(self).__name__}: execution_context ({scheduler}) must both be specified, and '
+                        f'execution_context must be in scheduler.counts_total (scheduler: {execution_context}): {e}.')
             return True
         super().__init__(func, *dependencies)
 
@@ -1455,8 +1468,7 @@ class WhenFinished(_DependencyValidation, Condition):
             try:
                 return dependency.is_finished(execution_context)
             except AttributeError as e:
-                raise ConditionError('WhenFinished: Unsupported dependency type: {0}; ({1})'.
-                                     format(type(dependency), e))
+                raise ConditionError(f'WhenFinished: Unsupported dependency type: {type(dependency)}; ({e}).')
 
         super().__init__(func, dependency)
 
@@ -1492,7 +1504,7 @@ class WhenFinishedAny(_DependencyValidation, Condition):
                     if d.is_finished(execution_context):
                         return True
                 except AttributeError as e:
-                    raise ConditionError('WhenFinishedAny: Unsupported dependency type: {0}; ({1})'.format(type(d), e))
+                    raise ConditionError(f'WhenFinishedAny: Unsupported dependency type: {type(d)}; ({e}).')
             return False
 
         super().__init__(func, *dependencies)
@@ -1529,7 +1541,90 @@ class WhenFinishedAll(_DependencyValidation, Condition):
                     if not d.is_finished(execution_context):
                         return False
                 except AttributeError as e:
-                    raise ConditionError('WhenFinishedAll: Unsupported dependency type: {0}; ({1})'.format(type(d), e))
+                    raise ConditionError(f'WhenFinishedAll: Unsupported dependency type: {type(d)}; ({e})')
             return True
 
         super().__init__(func, *dependencies)
+
+
+######################################################################
+# Convenience Conditions
+######################################################################
+
+
+class AtTrialStart(AtPass):
+    """AtTrialStart
+
+    Satisfied when:
+
+        - at the beginning of a `TRIAL`
+
+    Notes:
+
+        - identical to `AtPass(0) <AtPass>`
+    """
+    def __init__(self):
+        super().__init__(0)
+
+    def __str__(self):
+        return '{0}()'.format(self.__class__.__name__)
+
+
+class AtTrialNStart(All):
+    """AtTrialNStart
+
+    Parameters:
+
+        n(int): the `TRIAL` on which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\\ s (default: TimeScale.RUN)
+
+    Satisfied when:
+
+        - on `PASS` 0 of the specified `TRIAL` counted using 'TimeScale`
+
+    Notes:
+
+        - identical to All(AtPass(0), AtTrial(n, time_scale))
+
+    """
+    def __init__(self, n, time_scale=TimeScale.RUN):
+        return super.__init__(AtPass(0), AtTrial(n, time_scale))
+
+
+class AtRunStart(AtTrial):
+    """AtRunStart
+
+    Satisfied when:
+
+        - at the beginning of a `RUN`
+
+    Notes:
+
+        - identical to `AtTrial(0) <AtTrial>`
+    """
+    def __init__(self):
+        super().__init__(0, time_scale=TimeScale.RUN)
+
+    def __str__(self):
+        return '{0}()'.format(self.__class__.__name__)
+
+
+class AtRunNStart(All):
+    """AtRunNStart
+
+    Parameters:
+
+        n(int): the `RUN` on which the Condition is satisfied
+
+    Satisfied when:
+
+        - on `TRIAL` 0 of the specified `RUN` counted using 'TimeScale`
+
+    Notes:
+
+        - identical to `All(AtTrial(0), AtRun(n))`
+
+    """
+    def __init__(self, n):
+        return super.__init__(AtTrial(0), AtRun(n))

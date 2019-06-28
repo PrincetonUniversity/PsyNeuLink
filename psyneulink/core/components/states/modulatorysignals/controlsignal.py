@@ -584,6 +584,14 @@ class ControlSignal(ModulatorySignal):
     adjustment_cost : float
         cost associated with last change to `intensity`.
 
+        .. note::
+
+        A ControlSignal's `adjustment_cost`, and its `adjustment_cost_function` are distinct from the
+        `reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>` and `compute_reconfiguration_cost
+        <ModulatoryMechanism.compute_reconfiguration_cost` function of the `ModulatoryMechanism` to which the
+        ControlSignal belongs (see `ModulatoryMechanism Reconfiguration Cost <ModulatoryMechanism_Reconfiguration_Cost>`
+        for additional details).
+
     duration_cost_function : IntegratorFunction : default Linear
         calculates an integral of the ControlSignal's `cost`.  It can be any `IntegratorFunction`, or any other
         function that takes a list or array of two values and returns a scalar value. It can be disabled permanently
@@ -951,7 +959,7 @@ class ControlSignal(ModulatorySignal):
 
         if isinstance(a, (range, np.ndarray)):
             a = list(a)
-        self.parameters.allocation_samples.set(SampleIterator(specification=a))
+        self.parameters.allocation_samples._set(SampleIterator(specification=a))
 
     def _instantiate_cost_attributes(self, context=None):
         if self.cost_options:
@@ -1049,14 +1057,14 @@ class ControlSignal(ModulatorySignal):
         '''
         super().update(execution_id=execution_id, params=params, context=context)
 
-        if self.parameters.cost_options.get(execution_id):
-            intensity = self.parameters.value.get(execution_id)
-            self.parameters.cost.set(self.compute_costs(intensity, execution_id), execution_id)
+        if self.parameters.cost_options._get(execution_id):
+            intensity = self.parameters.value._get(execution_id)
+            self.parameters.cost._set(self.compute_costs(intensity, execution_id), execution_id)
 
     def compute_costs(self, intensity, execution_id=None):
         """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
 
-        cost_options = self.parameters.cost_options.get(execution_id)
+        cost_options = self.parameters.cost_options._get(execution_id)
 
         try:
             intensity_change = intensity - self.parameters.intensity.get_previous(execution_id)
@@ -1068,15 +1076,15 @@ class ControlSignal(ModulatorySignal):
 
         if ControlSignalCosts.INTENSITY & cost_options:
             intensity_cost = self.intensity_cost_function(intensity)
-            self.parameters.intensity_cost.set(intensity_cost, execution_id)
+            self.parameters.intensity_cost._set(intensity_cost, execution_id)
 
         if ControlSignalCosts.ADJUSTMENT & cost_options:
             adjustment_cost = self.adjustment_cost_function(intensity_change)
-            self.parameters.adjustment_cost.set(adjustment_cost, execution_id)
+            self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
 
         if ControlSignalCosts.DURATION & cost_options:
-            duration_cost = self.duration_cost_function(self.parameters.cost.get(execution_id))
-            self.parameters.duration_cost.set(duration_cost, execution_id)
+            duration_cost = self.duration_cost_function(self.parameters.cost._get(execution_id))
+            self.parameters.duration_cost._set(duration_cost, execution_id)
 
         return max(
             0.0,
