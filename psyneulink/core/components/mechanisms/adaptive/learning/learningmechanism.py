@@ -1290,6 +1290,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
         error_signal_inputs = variable[curr_indices]
         if self.error_matrices is None:
+            # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
             if self.function is BackPropagation or isinstance(self.function, BackPropagation):
                 mat = []
                 for i in range(len(error_signal_inputs[0])):
