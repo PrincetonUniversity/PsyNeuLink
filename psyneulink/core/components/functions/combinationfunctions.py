@@ -1430,8 +1430,10 @@ class LinearCombination(
         operation = self.get_current_function_param(OPERATION)
         if operation is SUM:
             val = ctx.float_ty(-0.0)
-        else:
+        elif operation is PRODUCT:
             val = ctx.float_ty(1.0)
+        else:
+            assert False, "Unknown operation: " + operation
 
         pow_f = ctx.get_builtin("pow", [ctx.float_ty])
 
@@ -1477,8 +1479,10 @@ class LinearCombination(
 
             if operation is SUM:
                 val = builder.fadd(val, in_val)
-            else:
+            elif operation is PRODUCT:
                 val = builder.fmul(val, in_val)
+            else:
+                assert False, "Unknown operation: " + operation
 
         val = builder.fmul(val, scale)
         val = builder.fadd(val, offset)
