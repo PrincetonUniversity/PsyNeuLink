@@ -2,8 +2,10 @@ from psyneulink.core.components.functions.transferfunctions import Linear, Logis
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core import llvm as pnlvm
 from llvmlite import ir
+import numpy
 import ctypes
 import functools
+import timeit
 try:
     import torch
     from torch import nn
@@ -13,6 +15,7 @@ except ImportError:
 
 import numpy as np
 
+totaltime = 0
 __all__ = ['PytorchModelCreator']
 # Class that is called to create pytorch representations of autodiff compositions based on their processing graphs.
 # Called to do so when the composition is run for the first time.
@@ -47,7 +50,6 @@ class PytorchModelCreator(torch.nn.Module):
         # Get any mechanism
         inp_mech = min(inp_comp)
 
-        
         # Get last component in network
         out_comp = self.execution_sets[len(self.execution_sets)-1]
         # Get any mechanism
@@ -59,17 +61,21 @@ class PytorchModelCreator(torch.nn.Module):
             # Assign output shape
             'value':out_mech.value
         }
-        print("INPMECH",inp_mech.variable,"OUTMECH",out_mech.value)
+        self._id_map = {}
+        #print("INPMECH",inp_mech.variable,"OUTMECH",out_mech.value)
         for i in range(len(self.execution_sets)):
+            # SKG: We have to add a counter to map components to an internal id (for bin execute purposes, since there is no concept of a 'dict' in llvm)
+            comp_counter = 0
+            self._id_map[i] = {}
             for component in self.execution_sets[i]:
+                self._id_map[i][component] = comp_counter
+                comp_counter += 1
 
                 value = None  # the node's (its mechanism's) value
                 biases = None  # the node's bias parameters
                 function = self.function_creator(component, execution_id)  # the node's function
                 afferents = {}  # dict for keeping track of afferent nodes and their connecting weights
-                with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    bin_func = self.bin_function_creator(ctx,component, execution_id)
-
+                
                 if param_init_from_pnl:
                     if component.parameters.value._get(execution_id) is None:
                         value = torch.tensor(component.parameters.value._get(None)[0])
@@ -111,15 +117,16 @@ class PytorchModelCreator(torch.nn.Module):
                         self.params.append(weights)
                         self.projections_to_pytorch_weights[mapping_proj] = weights
 
-                node_forward_info = [value, biases, function, afferents,bin_func]
+                node_forward_info = [value, biases, function, afferents,component]
                 # node_forward_info = [value, biases, function, afferents, value]
 
                 self.component_to_forward_info[component] = node_forward_info
 
+
         # CW 12/3/18: this copies by reference so it only needs to be called during init, rather than
         # every time the weights are updated
         self.copy_weights_to_psyneulink(execution_id)
-
+        self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self)
 
     # defines input type
     def _get_input_struct_type(self,ctx): # Test case: {[1 x [2 x double]]}
@@ -129,20 +136,34 @@ class PytorchModelCreator(torch.nn.Module):
         #print("INP TYPE",struct_ty)
         return struct_ty
     
-    def _get_input_struct(self,input):
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            vals = None
-            for k,v in input.items():
-                vals = v
-            return self._get_input_struct_type(ctx)([ctx.convert_python_struct_to_llvm_ir(vals)])
+    # Converts tensor input to ctype
+    def _get_input_struct(self,input,bin_func):
+        inp_cty = bin_func.byref_arg_types[2]
+        vals = None
+        #TODO: allow multiple inputs at once
+        for k,v in input.items():
+            vals = v.numpy()
+        vals = pnlvm.execution._tupleize([vals])
+        #print("GOT INPUT STRUCT:",vals)
+        return inp_cty(vals)
 
     def _get_output_struct_type(self,ctx): # Test case: {[1 x [1 x double]]}
         struct_ty = ir.types.LiteralStructType([
-            ctx.convert_python_struct_to_llvm_ir(self.defaults['value'])
+            ctx.convert_python_struct_to_llvm_ir(node.value) for node in self.execution_sets[len(self.execution_sets)-1]
         ])
-        #print("OUT TYPE",struct_ty)
+        print("OUT TYPE",struct_ty)
         return struct_ty
-
+    
+    # Creates an output struct to be passed into forward computation
+    def _get_output_struct(self,bin_func):
+        outp_cty = bin_func.byref_arg_types[3]
+        output = []
+        for node in self.execution_sets[len(self.execution_sets) - 1]:
+            output.append(node.value)
+        output = pnlvm.execution._tupleize(output)
+        #print("GET OUTPUT STRUCT",output,outp_cty)
+        return outp_cty(output[0])
+        
     def _get_param_struct_type(self,ctx):
         struct_ty = ir.types.LiteralStructType([
             ctx.convert_python_struct_to_llvm_ir(self.defaults['value'])
@@ -161,76 +182,183 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_llvm_function(self):
         llvm_func = None
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            args = [ctx.get_param_struct_type(self).as_pointer(),
-                    ctx.get_context_struct_type(self).as_pointer(),
+            args = [ctx.get_input_struct_type(self).as_pointer(),
                     ctx.get_input_struct_type(self).as_pointer(),
-                    ctx.get_output_struct_type(self).as_pointer()]
-            print("LLVM_FUNC ARGS:",args)
+                    ctx.get_input_struct_type(self).as_pointer(),
+                    ctx.get_output_struct_type(self).as_pointer()
+                        ]
+            #print("LLVM_FUNC ARGS:",args)
             builder = ctx.create_llvm_function(args,self) #NEED TO GET INPUT VECTOR SIZE (maybe just pass as ir.VectorType?)
             #print("BUILDER:",builder)
+            llvm_func = builder.function
+            #llvm_func.attributes.add('alwaysinline')
             
-            
-            #params, context, arg_in, arg_out = llvm_func.args[:len(args)]
-            #lvm_func.attributes.add('alwaysinline')
-
-            #params, context, arg_in, arg_out = llvm_func.args[:len(args)]
-            #self._gen_llvm_forward_function_body(ctx,builder,params,context,arg_in,arg_out)
+            params, context, arg_in, arg_out = llvm_func.args[:len(args)]
+            self._gen_llvm_forward_function_body(ctx,builder,params,context,arg_in,arg_out)
             builder.ret_void()
             llvm_func = builder.function
-            print("LLVM_FUNC:\n",llvm_func,"\nDONE")
+            #print("LLVM_FUNC:\n",llvm_func,"\nDONE")
         self._forward_llvm_func = llvm_func
         return llvm_func
 
+    # Injects matrix multiplication of m1 and m2 into builder (and returns allocated output)
+    # m1 is x by y, m2 is y by z 
+    def _gen_inject_matmul(self,ctx,builder,m1,m2,x,y,z):
+        #print("m1:",m1,"m2:",m2)
+        #create output mat
+        output_mat = builder.alloca(ir.types.ArrayType(ir.types.ArrayType(ir.types.DoubleType(),z),x))
+        # do computation
+        for _x in range(0,x):
+            #this is the current row we are making in the output
+            for _z in range(0,z):
+                curr_val = ir.types.DoubleType()(0)#
+                for _y in range(0,y):
+                    v1 = builder.load(builder.gep(m1,[ctx.int32_ty(0),ctx.int32_ty(_x),ctx.int32_ty(_y)]))
+                    v2 = builder.load(builder.gep(m2,[ctx.int32_ty(0),ctx.int32_ty(_y),ctx.int32_ty(_z)]))
+                    curr_val = builder.fadd(curr_val, builder.fmul(v1,v2))
+                builder.store(curr_val,builder.gep(output_mat,[ctx.int32_ty(0),ctx.int32_ty(_x),ctx.int32_ty(_z)]))
+                #builder.insert_value(builder.extract_value(builder.load(output_mat),_x),curr_val,_z)
+        return output_mat
+
     # figure out type of arg_in
     def _gen_llvm_forward_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+        #print("ARGIN:",arg_in,"\nARGOUT:",arg_out)
+        
         # Sometimes we arg_out to 2d array
         out_t = arg_out.type.pointee
         if isinstance(out_t, pnlvm.ir.ArrayType) and isinstance(out_t.element, pnlvm.ir.ArrayType):
             assert len(out_t) == 1
             # arg_out is a pointer to the beginning of the output array (TODO: add support for > 1 state)
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        #allocate stack values for frozen values (organized in array for ease of use)
-        frozen_values = [ [ [c,builder.alloca(ctx.convert_python_struct_to_llvm_ir(c.variable))] for c in s] for s in self.execution_sets]
-        for i in range(len(frozen_values)): 
-            current_exec_set = frozen_values[i]
-            for component,value in current_exec_set:
+            #arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+        #allocate stack values for frozen values (organized in dict for ease of use)
+        frozen_values = {}
+        for i in range(len(self.execution_sets)):
+            current_exec_set = self.execution_sets[i]
+            
+            for component in current_exec_set:
+                frozen_values[component] = builder.alloca(ctx.convert_python_struct_to_llvm_ir(component.variable))
+                print("alloca ",component.variable,"frozen val:",frozen_values[component],"\n component",component)
+            for component in current_exec_set:
                 biases = self.component_to_forward_info[component][1]
-                bin_func = self.component_to_forward_info[component][4]
+                value = frozen_values[component]
                 afferents = self.component_to_forward_info[component][3] #TODO: Pass in afferents as input to func
                 dim_x,dim_y = component.variable.shape
                 if i == 0:
                     for _x in range(0,dim_x):
                         for _y in range(0,dim_y):
-                            cmp_arg = builder.gep(arg_in,[ctx.int32_ty(0),ctx.int32_ty(0),ctx.int32_ty(_x),ctx.int32_ty(_y)]) # get input vector
-                            res = builder.call(bin_func,[cmp_arg])
+                            cmp_arg = builder.gep(arg_in,[ctx.int32_ty(0),ctx.int32_ty(0),ctx.int32_ty(_x),ctx.int32_ty(_y)]) # get input
+                            res = self.bin_function_creator(ctx,builder,component,builder.load(cmp_arg),execution_id=None)
                             builder.store(res,builder.gep(value,[ctx.int32_ty(0),ctx.int32_ty(_x),ctx.int32_ty(_y)]))
                 else:
-                    pass
-                # store the current value of the node
-                
+                    # is_set keeps track of if we already have valid (i.e. non-garbage) values inside the alloc'd value
+                    is_set = False
+                    for input_node, weights in afferents.items():
+                        if input_node.component in frozen_values:
+                            input_value = frozen_values[input_node.component]
+                        else:
+                            # Does this actually extract the value i want?
+                            input_value = self.component_to_forward_info[input_node.component][0].numpy().ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+                        matmul = ctx.get_llvm_function("__pnl_builtin_vxm")
+                        #TODO: Make sure weights are dynamically updated every run of forward (so backpropagation works as intended)
+                        # To do ^, we have to make sure that the weights reference stays the same (i.e. the np is mutable, instead of reinstantiated every time it is updated)
+                        #Also TODO: Figure out what exactly detach does (how does autograd actually work internally)
+                        weights_np = weights.detach().numpy()
+                        x,y = weights_np.shape
+                        # convert weights np array to ct
+                        weights_ct = weights_np.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+                        weights_pt = ctypes.cast(weights_ct, ctypes.c_void_p).value
+                        #We cast the ctype weights array to llvmlite pointer (TODO: make sure this reference doesn't disappear due to GC!)
+                        weights_llvmlite = ir.types.IntType(64)(weights_pt)
+                        weights_llvmlite = builder.inttoptr(weights_llvmlite,ir.types.ArrayType(ir.types.ArrayType(ir.types.DoubleType(),y),x).as_pointer())
+                        weighted_inp = self._gen_inject_matmul(ctx,builder,input_value,weights_llvmlite,1,x,y)
+                        #print(weighted_inp)
+                        if (i == 1):
+                            #self._output_forward_computation(ctx,builder,arg_out,0,0,0,(builder.load(
+                            #    builder.gep(weighted_inp,[ctx.int32_ty(0),ctx.int32_ty(0),ctx.int32_ty(0)])
+                            #    )))
+                            pass
+                        if is_set == False:
+                            # copy weighted_inp to value
+                            for _x in range(0,1):
+                                for _y in range(0,y):
+                                    loc = builder.gep(value,[ctx.int32_ty(0),ctx.int32_ty(_x),ctx.int32_ty(_y)])
+                                    val_ptr = builder.gep(weighted_inp,[ctx.int32_ty(0),ctx.int32_ty(_x),ctx.int32_ty(_y)])
+                                    builder.store(builder.load(val_ptr),loc)
+                            is_set = True
+                        else:
+                            # add to value
+                            for _x in range(0,1):
+                                for _y in range(0,y):
+                                    loc = builder.gep(value,[ctx.int32_ty(0),ctx.int32_ty(_x),ctx.int32_ty(_y)])
+                                    val_ptr = builder.gep(weighted_inp,[ctx.int32_ty(0),ctx.int32_ty(_x),ctx.int32_ty(_y)])
+                                    builder.store(builder.fadd(builder.load(loc),builder.load(val_ptr)),loc)
+                        #value += torch.matmul(input_value, weights)
+                    for _x in range(0,dim_x):
+                        for _y in range(0,dim_y):
+                            cmp_arg = builder.gep(value,[ctx.int32_ty(0),ctx.int32_ty(_x),ctx.int32_ty(_y)]) # get input vector
+                            res = self.bin_function_creator(ctx,builder,component,builder.load(cmp_arg),execution_id=None)
+                            builder.store(res,builder.gep(value,[ctx.int32_ty(0),ctx.int32_ty(_x),ctx.int32_ty(_y)]))
+                    #TODO: Add bias to value
+                    #if biases is not None:
+                    #   value = value + biases
 
                 # save value in output list if we're at a node in the last execution set
                 if i == len(self.execution_sets) - 1:
-                    pass
-        
+                    # We first grab which index we should insert into:
+                    # Here, arr should be an array of arrays; each index correlates to self._id_map[i][component]
+                    output_index = self._id_map[i][component]
+
+                    # get ptr to first thing in struct (should be arr)
+                    outer_arr_ptr = builder.gep(arg_out,[ctx.int32_ty(0), ctx.int32_ty(0)]) 
+                   # print("OUTER ARR",outer_arr)
+                    for _x in range(0,1):
+                        for _y in range(0,1):
+                            val_ptr = builder.gep(value,[ctx.int32_ty(0), ctx.int32_ty(_x), ctx.int32_ty(_y)])
+                            self._output_forward_computation(ctx,builder,arg_out,0,_x,_y,builder.load(val_ptr))
+                            
+
+    # inserts a value into the forward computation output array struct
+    def _output_forward_computation(self,ctx,builder,arg_out,index,x,y,value):
+        loc = builder.gep(arg_out,[ctx.int32_ty(0), ctx.int32_ty(index),ctx.int32_ty(x), ctx.int32_ty(y)]) 
+        builder.store(value,loc)
+    
     @property
-    def _bin_exec_func(self):
-        #print('GET PROPERTY',self.__bin_exec_func)
+    def _bin_exec_func(self):        
         if self.__bin_exec_func is None:
             self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self)
-        #print('GET PROPERTY',self.__bin_exec_func)
         return self.__bin_exec_func
-        
+    
+    # Creates a set that maps each component to its output (from llvm execution)
+    # Uses self.id_map
+    def _remap_output_struct(self,outputs):
+        output_dict = {}
+        for component in self.execution_sets[len(self.execution_sets)-1]:
+            id = self._id_map[len(self.execution_sets)-1][component]
+            output_dict[component] = torch.from_numpy(numpy.asarray(outputs[id]))
+        return output_dict
     # performs forward computation for the model
-    def forward(self, inputs, execution_id=None, do_logging=True):
-        #print("GET_BIN_EXEC_FUN")
-        bin_fun = self._bin_exec_func
-        #print("BIN_FUN:\n",bin_fun,"\nNAME:\n",bin_fun.name)
-        bin_fun.wrap_call(self._get_input_struct(inputs),
-                          self._get_input_struct(inputs),
-                          self._get_input_struct(inputs),
-                          self._get_input_struct(inputs))
+    def forward(self, inputs, execution_id=None, do_logging=True,bin_execute=True):
+
+        if bin_execute is True:
+            print("INPUT:",inputs)
+            for component in self.execution_sets[1]:
+                afferents = self.component_to_forward_info[component][3]
+                for input_node, weights in afferents.items():
+                    print("TESTWEIGHT",weights.detach().numpy())
+            global totaltime
+            start_time = timeit.default_timer()
+            bin_fun = self._bin_exec_func
+            
+            outputs = self._get_output_struct(bin_fun)
+            bin_fun.wrap_call(self._get_input_struct(inputs,bin_fun),
+                                self._get_input_struct(inputs,bin_fun),
+                                self._get_input_struct(inputs,bin_fun),
+                                outputs)
+            totaltime += timeit.default_timer() - start_time
+            outputs = pnlvm.execution._convert_ctype_to_python(outputs)
+            print(totaltime,outputs)
+            #print(self._remap_output_struct(outputs))
+            #return self._remap_output_struct(outputs)
         outputs = {}  # dict for storing values of terminal (output) nodes
 
         for i in range(len(self.execution_sets)):
@@ -248,6 +376,7 @@ class PytorchModelCreator(torch.nn.Module):
                 # forward computation if we have origin node
                 if i == 0:
                     value = function(inputs[component])
+                    #print("INIT",value,inputs)
 
                 # forward computation if we do not have origin node
                 else:
@@ -257,6 +386,7 @@ class PytorchModelCreator(torch.nn.Module):
                             input_value = frozen_values[input_node.component]
                         else:
                             input_value = self.component_to_forward_info[input_node.component][0]
+                        print("i:",i,"VAL:",value,"INP:",input_value.detach().numpy(),"MULT:",torch.matmul(input_value, weights),"BIASES:",biases)
                         value += torch.matmul(input_value, weights)
                     if biases is not None:
                         value = value + biases
@@ -275,6 +405,7 @@ class PytorchModelCreator(torch.nn.Module):
         self.copy_outputs_to_psyneulink(outputs, execution_id)
         if do_logging:
             self.log_weights(execution_id)
+        print("\tACTUAL:",outputs,"\n")
         return outputs
 
     def detach_all(self):
@@ -300,17 +431,10 @@ class PytorchModelCreator(torch.nn.Module):
     def log_weights(self, execution_id=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
             projection.parameters.matrix._log_value(weights.detach().numpy(), execution_id, ContextFlags.COMMAND_LINE)
+    # helper method that functions the same as function_creator, but instead injects the computation to the builder
 
-    # helper method that functions the same as function_creator, but returns a llvm function instead
-    def bin_function_creator(self,ctx,node,execution_id=None):
-
+    def bin_function_creator(self,ctx,builder,node,x,execution_id=None):
         ir_dbl = ir.types.DoubleType()
-        builder = ctx.create_llvm_function([ir_dbl.as_pointer()],self,return_type=ir.types.DoubleType()) #NEED TO GET INPUT VECTOR SIZE (maybe just pass as ir.VectorType?)
-        llvm_func = builder.function
-        
-        #llvm_func.attributes.add('alwaysinline')
-        
-        x = builder.load(llvm_func.args[0])
         
         def get_fct_param_value(param_name):
             val = node.function.get_current_function_param(param_name, execution_id)
@@ -323,7 +447,8 @@ class PytorchModelCreator(torch.nn.Module):
             intercept = get_fct_param_value('intercept')
             
             ret = builder.fadd(builder.fmul(x,slope),intercept)
-            builder.ret(ret)
+            return ret
+            #builder.ret(ret)
 
         elif isinstance(node.function, Logistic):
             neg_one = ir_dbl(-1)
@@ -338,7 +463,8 @@ class PytorchModelCreator(torch.nn.Module):
                 ),offset)
             
             ret = builder.fdiv(one,builder.fadd(one,builder.call(exp,[arg])))
-            builder.ret(ret)
+            return ret
+            #builder.ret(ret)
             #return lambda x: 1 / (1 + torch.exp(-gain * (x - bias) + offset))
 
         else:  # if we have relu function (the only other kind of function allowed by the autodiff composition)
@@ -360,8 +486,9 @@ class PytorchModelCreator(torch.nn.Module):
             ret = builder.fadd(
                 builder.fmul(max,gain),
                 builder.fmul(min,leak))
-            builder.ret(ret)
-        return builder.function
+            return ret
+            #builder.ret(ret)
+        #return builder.function
 
     # helper method that identifies the type of function used by a node, gets the function
     # parameters and uses them to create a function object representing the function, then returns it

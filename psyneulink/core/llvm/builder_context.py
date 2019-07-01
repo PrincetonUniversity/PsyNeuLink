@@ -112,6 +112,7 @@ class LLVMBuilderContext:
 
     def gen_llvm_function(self, obj):
         if obj not in self._cache:
+            #print("GRAB",obj,"LLVMFUN TO CACHE")
             self._cache[obj] = obj._gen_llvm_function()
         return self._cache[obj]
 

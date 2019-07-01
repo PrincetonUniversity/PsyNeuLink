@@ -73,12 +73,14 @@ class LLVMBinaryFunction:
 
             self.__byref_arg_types.append(byref_type)
             params.append(param_type)
+            print("INIT HOST FUNC",a,byref_type)
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
 
     def __call__(self, *args, **kwargs):
         return self.c_func(*args, **kwargs)
 
     def wrap_call(self, *pargs):
+        #print(pargs)
         cpargs = (ctypes.byref(p) if p is not None else None for p in pargs)
         args = zip(cpargs, self.byref_arg_types)
         cargs = (ctypes.cast(p, ctypes.POINTER(t)) for p, t in args)
