@@ -88,7 +88,7 @@ Stroop_model.add_controller(evc)
 # SHOW_GRAPH ***********************************
 
 # Stroop_model.show_graph()
-Stroop_model.show_graph(show_controller=True)
+# Stroop_model.show_graph(show_controller=True)
 # Stroop_model.show_graph(show_node_structure=ALL)
 # Stroop_model.show_graph(show_dimensions=True, show_node_structure=ALL)
 
@@ -105,8 +105,6 @@ global t
 t = 0
 def print_after():
     global t
-    if t==0:
-        return
     print(f'\nEnd of trial {t}:')
     print(f'\t\t\t\tcolor  word')
     print(f'\ttask:\t\t{task.value[0]}')
@@ -114,15 +112,13 @@ def print_after():
     print(f'\t\t\t\tred   green')
     print(f'\toutput:\t\t{output.value[0]}')
     print(f'\tdecision:\t{decision.value[0]}{decision.value[1]}')
-    print(f'\tconflict:\t  {control._objective_mechanism.value[0]}')
+    print(f'\tconflict:\t  {evc._objective_mechanism.value[0]}')
     t += 1
 
 task.log.set_log_conditions(VALUE)
-evc.log.set_log_conditions(VARIABLE)
 evc.log.set_log_conditions(VALUE)
 
 task.initial_value = [0.5,0.5]
-task.reinitialize_when=AtPass(n=0)
 # task.reinitialize_when=AtTrialStart()
 
 num_trials = 2
@@ -130,9 +126,9 @@ stimuli = {color_input:[red]*num_trials,
            word_input:[green]*num_trials,
            task_input:[color]*num_trials}
 Stroop_model.run(inputs=stimuli,
-                 # animate=True,
-                 animate={'show_controller':True,
-                          'show_cim':True},
+                 animate=True,
+                 # animate={'show_controller':True,
+                 #          'show_cim':True},
                  call_after_trial=print_after
                  )
 Stroop_model.log.print_entries()

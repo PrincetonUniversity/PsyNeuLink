@@ -2771,72 +2771,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return name
 
-    def _set_up_animation(self, execution_id):
-
-        self._component_animation_execution_count = None
-
-        if isinstance(self._animate, dict):
-            # Assign directory for animation files
-            from psyneulink._version import root_dir
-            default_dir = root_dir + '/../show_graph output/GIFs/' + self.name # + " gifs"
-            # try:
-            #     rmtree(self._animate_directory)
-            # except:
-            #     pass
-            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
-            self._image_duration = self._animate.pop(DURATION, 0.75)
-            self._animate_num_runs = self._animate.pop(NUM_RUNS, 1)
-            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
-            self._animate_simulations = self._animate.pop(SIMULATIONS, False)
-            self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
-            self._animation_directory = self._animate.pop(MOVIE_DIR, default_dir)
-            self._save_images = self._animate.pop(SAVE_IMAGES, False)
-            self._show_animation = self._animate.pop(SHOW, False)
-            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
-                raise SystemError(f"{repr(UNIT)} entry of {repr('animate')} argument for {self.name} method "
-                                  f"of {repr('run')} ({self._animate_unit}) "
-                                  f"must be {repr(COMPONENT)} or {repr(EXECUTION_SET)}.")
-            if not isinstance(self._image_duration, (int, float)):
-                raise SystemError(f"{repr(DURATION)} entry of {repr('animate')} argument for {repr('run')} method of "
-                                  f"{self.name} ({self._image_duration}) must be an int or a float.")
-            if not isinstance(self._animate_num_runs, int):
-                raise SystemError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                  f"method of {self.name} ({self._animate_num_runs}) must an integer.")
-            if not isinstance(self._animate_num_trials, int):
-                raise SystemError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                  f"method of {self.name} ({self._animate_num_trials}) must an integer.")
-            if not isinstance(self._animate_simulations, bool):
-                raise SystemError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                  f"method of {self.name} ({self._animate_num_trials}) must a boolean.")
-            if not isinstance(self._animation_directory, str):
-                raise SystemError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
-                                  f"method of {self.name} ({self._animation_directory}) must be a string.")
-            if not isinstance(self._movie_filename, str):
-                raise SystemError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
-                                  f"method of {self.name} ({self._movie_filename}) must be a string.")
-            if not isinstance(self._save_images, bool):
-                raise SystemError(f"{repr(SAVE_IMAGES)} entry of {repr('animate')} argument for {repr('run')} method "
-                                  f"of {self.name} ({self._save_images}) must be a boolean")
-            if not isinstance(self._show_animation, bool):
-                raise SystemError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
-                                  f"method of {self.name} ({self._show_animation}) must be a boolean.")
-        elif self._animate:
-            # self._animate should now be False or a dict
-            raise SystemError("{} argument for {} method of {} ({}) must be a boolean or "
-                              "a dictionary of argument specifications for its {} method".
-                              format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
-
-    def _animate_execution(self, active_items, execution_id):
-        if self._component_animation_execution_count is None:
-            self._component_animation_execution_count = 0
-        else:
-            self._component_animation_execution_count += 1
-        self.show_graph(active_items=active_items,
-                        **self._animate,
-                        output_fmt='gif',
-                        execution_id=execution_id
-                        )
-
     @tc.typecheck
     def show_structure(self,
                        # direction = 'BT',
@@ -3047,71 +2981,149 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif output_fmt == 'jupyter':
             return m
 
-    def _generate_gifs(self, G, active_items, execution_id):
+    def _set_up_animation(self, animate, execution_id):
 
-        def create_phase_string(phase):
-            return f'%16s' % phase + ' - '
+        self._component_animation_execution_count = None
 
-        def create_time_string(time, spec):
-            if spec == 'TIME':
-                r = time.run
-                t = time.trial
-                p = time.pass_
-                ts = time.time_step
+        if animate is True:
+            self._animate = {}
+
+        if isinstance(self._animate, dict):
+            # Assign directory for animation files
+            from psyneulink._version import root_dir
+            default_dir = root_dir + '/../show_graph output/GIFs/' + self.name # + " gifs"
+            # try:
+            #     rmtree(self._animate_directory)
+            # except:
+            #     pass
+            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
+            self._image_duration = self._animate.pop(DURATION, 0.75)
+            self._animate_num_runs = self._animate.pop(NUM_RUNS, 1)
+            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
+            self._animate_simulations = self._animate.pop(SIMULATIONS, False)
+            self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
+            self._animation_directory = self._animate.pop(MOVIE_DIR, default_dir)
+            self._save_images = self._animate.pop(SAVE_IMAGES, False)
+            self._show_animation = self._animate.pop(SHOW, False)
+            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
+                raise SystemError(f"{repr(UNIT)} entry of {repr('animate')} argument for {self.name} method "
+                                  f"of {repr('run')} ({self._animate_unit}) "
+                                  f"must be {repr(COMPONENT)} or {repr(EXECUTION_SET)}.")
+            if not isinstance(self._image_duration, (int, float)):
+                raise SystemError(f"{repr(DURATION)} entry of {repr('animate')} argument for {repr('run')} method of "
+                                  f"{self.name} ({self._image_duration}) must be an int or a float.")
+            if not isinstance(self._animate_num_runs, int):
+                raise SystemError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                  f"method of {self.name} ({self._animate_num_runs}) must an integer.")
+            if not isinstance(self._animate_num_trials, int):
+                raise SystemError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                  f"method of {self.name} ({self._animate_num_trials}) must an integer.")
+            if not isinstance(self._animate_simulations, bool):
+                raise SystemError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                  f"method of {self.name} ({self._animate_num_trials}) must a boolean.")
+            if not isinstance(self._animation_directory, str):
+                raise SystemError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
+                                  f"method of {self.name} ({self._animation_directory}) must be a string.")
+            if not isinstance(self._movie_filename, str):
+                raise SystemError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
+                                  f"method of {self.name} ({self._movie_filename}) must be a string.")
+            if not isinstance(self._save_images, bool):
+                raise SystemError(f"{repr(SAVE_IMAGES)} entry of {repr('animate')} argument for {repr('run')} method "
+                                  f"of {self.name} ({self._save_images}) must be a boolean")
+            if not isinstance(self._show_animation, bool):
+                raise SystemError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
+                                  f"method of {self.name} ({self._show_animation}) must be a boolean.")
+        elif self._animate:
+            # self._animate should now be False or a dict
+            raise SystemError(f"{repr('animate')} argument for {repr('run')} method of {self.name} ({self._animate}) "
+                              f"must be a boolean or a dictionary of argument specifications "
+                              f"for its {repr('show_graph')} method.")
+
+    def _animate_execution(self, active_items, execution_id):
+        if self._component_animation_execution_count is None:
+            self._component_animation_execution_count = 0
+        else:
+            self._component_animation_execution_count += 1
+        self.show_graph(active_items=active_items,
+                        **self._animate,
+                        output_fmt='gif',
+                        execution_id=execution_id
+                        )
+
+    def _generate_animation_frame(active_items=None,
+                                  output_fmt='gif',
+                                  execution_id=NotImplemented,
+                                  **kwargs):
+        pass
+
+    def _generate_gifs(self, active_items, execution_id):
+            """Generate gif for each frame of animation"""
+
+            def create_phase_string(phase):
+                return f'%16s' % phase + ' - '
+
+            def create_time_string(time, spec):
+                if spec == 'TIME':
+                    r = time.run
+                    t = time.trial
+                    p = time.pass_
+                    ts = time.time_step
+                else:
+                    r = t = p = ts = '__'
+                return f"Time(run: %2s, " % r + f"trial: %2s, " % t + f"pass: %2s, " % p + f"time_step: %2s)" % ts
+
+            G = self._graphviz
+
+            G.format = 'gif'
+            execution_phase = self.parameters.context.get(execution_id).execution_phase
+            time = self.scheduler_processing.get_clock(execution_id).time
+            run_num = time.run
+            trial_num = time.trial
+
+            if INITIAL_FRAME in active_items:
+                phase_string = create_phase_string('Initializing')
+                time_string = create_time_string(time, 'BLANKS')
+
+            elif execution_phase == ContextFlags.PROCESSING:
+                phase_string = create_phase_string('Processing Phase')
+                time_string = create_time_string(time, 'TIME')
+            # elif execution_phase == ContextFlags.LEARNING:
+            #     time = self.scheduler_learning.get_clock(execution_id).time
+            #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
+            #         format(run_num, time.trial, time.pass_, time.time_step)
+            #     phase_string = 'Learning Phase - '
+
+            elif execution_phase == ContextFlags.CONTROL:
+                phase_string = create_phase_string('Control Phase')
+                time_string = create_time_string(time, 'TIME')
+
             else:
-                r = t = p = ts = '__'
-            return f"Time(run: %2s, " % r + f"trial: %2s, " % t + f"pass: %2s, " % p + f"time_step: %2s)" % ts
+                raise CompositionError(
+                    f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
 
-        G.format = 'gif'
-        execution_phase = self.parameters.context.get(execution_id).execution_phase
-        time = self.scheduler_processing.get_clock(execution_id).time
-        run_num = time.run
-        trial_num = time.trial
-
-        if INITIAL_FRAME in active_items:
-            phase_string = create_phase_string('Initializing')
-            time_string = create_time_string(time, 'BLANKS')
-
-        elif execution_phase == ContextFlags.PROCESSING:
-            phase_string = create_phase_string('Processing Phase')
-            time_string = create_time_string(time, 'TIME')
-        # elif execution_phase == ContextFlags.LEARNING:
-        #     time = self.scheduler_learning.get_clock(execution_id).time
-        #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
-        #         format(run_num, time.trial, time.pass_, time.time_step)
-        #     phase_string = 'Learning Phase - '
-
-        elif execution_phase == ContextFlags.CONTROL:
-            phase_string = create_phase_string('Control Phase')
-            time_string = create_time_string(time, 'TIME')
-
-        else:
-            raise CompositionError(
-                f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
-
-        label = f'\n{self.name}\n{phase_string}{time_string}\n'
-        G.attr(label=label)
-        G.attr(labelloc='b')
-        G.attr(fontname='Monaco')
-        G.attr(fontsize='14')
-        index = repr(self._component_animation_execution_count)
-        image_filename = '-'.join([repr(run_num), repr(trial_num), index])
-        image_file = self._animation_directory + '/' + image_filename + '.gif'
-        G.render(filename=image_filename,
-                 directory=self._animation_directory,
-                 cleanup=True,
-                 # view=True
-                 )
-        # Append gif to self._animation
-        image = Image.open(image_file)
-        # TBI?
-        # if not self._save_images:
-        #     remove(image_file)
-        if not hasattr(self, '_animation'):
-            self._animation = [image]
-        else:
-            self._animation.append(image)
-        assert True
+            label = f'\n{self.name}\n{phase_string}{time_string}\n'
+            G.attr(label=label)
+            G.attr(labelloc='b')
+            G.attr(fontname='Monaco')
+            G.attr(fontsize='14')
+            index = repr(self._component_animation_execution_count)
+            image_filename = '-'.join([repr(run_num), repr(trial_num), index])
+            image_file = self._animation_directory + '/' + image_filename + '.gif'
+            G.render(filename=image_filename,
+                     directory=self._animation_directory,
+                     cleanup=True,
+                     # view=True
+                     )
+            # Append gif to self._animation
+            image = Image.open(image_file)
+            # TBI?
+            # if not self._save_images:
+            #     remove(image_file)
+            if not hasattr(self, '_animation'):
+                self._animation = [image]
+            else:
+                self._animation.append(image)
+            assert True
 
     @tc.typecheck
     def show_graph(self,
@@ -3865,8 +3877,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for item in active_items:
                 if not isinstance(item, Component) and item is not INITIAL_FRAME:
                     raise CompositionError(
-                        "PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
-                        format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
+                        f"PROGRAM ERROR: Item ({item}) specified in {repr('active_items')} argument for "
+                        f"{repr('show_graph')} method of {self.name} is not a {Component.__name__}.")
 
         self.active_item_rendered = False
 
@@ -3971,7 +3983,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             i = get_index_of_node_in_G_body(self.controller)
             G.body.insert(len(G.body),G.body.pop(i))
 
-        # GENERATE OUTPUT ---------------------------------------------------------------------
+        # STORE GRAPHVIZ OBJECT AND GENERATE OUTPUT -------------------------------------------------------------------
+
+        # Store graphviz on Composition
+        self._graphviz = G
 
         # Show as pdf
         if output_fmt == 'pdf':
@@ -3981,7 +3996,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Generate images for animation
         elif output_fmt == 'gif':
             if self.active_item_rendered or INITIAL_FRAME in active_items:
-                self._generate_gifs(G, active_items, execution_id)
+                self._generate_gifs(active_items, execution_id)
 
         # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
@@ -4226,22 +4241,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if bin_execute:
                     _comp_ex.execute_node(self.controller)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     entry_execution_phase = execution_context.execution_phase
                     execution_context.execution_phase = ContextFlags.CONTROL
-                # MODIFIED 6/13/19 END
 
                 # Animate controller (before execution)
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, execution_id)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     execution_context.execution_phase = entry_execution_phase
-                # MODIFIED 6/13/19 END
 
         # EXECUTE (each execution_set) *********************************************************************************
 
@@ -4508,22 +4519,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _comp_ex.freeze_values()
                     _comp_ex.execute_node(self.controller)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: NEEDED TO ANIMATE CONTROL; REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     entry_execution_phase = execution_context.execution_phase
                     execution_context.execution_phase = ContextFlags.CONTROL
-                # MODIFIED 6/13/19 END
 
                 # Animate controller (after execution)
                 if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, execution_id)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     execution_context.execution_phase = entry_execution_phase
-                # MODIFIED 6/13/19 END
 
         execution_scheduler.clocks[execution_id]._increment_time(TimeScale.TRIAL)
 
@@ -4756,11 +4763,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             param.log_condition = LogCondition.EXECUTION
 
         # Set animation attributes
-        if animate is True:
-            animate = {}
-        self._animate = animate
-        if self._animate is not False:
-            self._set_up_animation(execution_id)
+        self._set_up_animation(animate, execution_id)
 
         # SET UP EXECUTION -----------------------------------------------
 
