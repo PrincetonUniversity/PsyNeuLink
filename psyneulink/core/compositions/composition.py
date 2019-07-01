@@ -4763,7 +4763,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             param.log_condition = LogCondition.EXECUTION
 
         # Set animation attributes
-        self._set_up_animation(animate, execution_id)
+        if animate is not False:
+            self._set_up_animation(animate, execution_id)
 
         # SET UP EXECUTION -----------------------------------------------
 
