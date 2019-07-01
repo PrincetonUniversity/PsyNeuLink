@@ -2985,10 +2985,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._component_animation_execution_count = None
 
-        if animate is False:
-            self._animate = False
-
-        elif animate is True:
+        if animate is True:
             self._animate = {}
 
         if isinstance(self._animate, dict):
@@ -4766,7 +4763,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             param.log_condition = LogCondition.EXECUTION
 
         # Set animation attributes
-        self._set_up_animation(animate, execution_id)
+        if animate:
+            self._set_up_animation(animate, execution_id)
+        else:
+            self._animate = False
 
         # SET UP EXECUTION -----------------------------------------------
 
