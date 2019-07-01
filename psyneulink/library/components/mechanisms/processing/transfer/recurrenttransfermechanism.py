@@ -1288,79 +1288,47 @@ class RecurrentTransferMechanism(TransferMechanism):
     # single flag to check whether to get matrix from auto and hetero?
     @property
     def matrix(self):
-        from psyneulink.library.components.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
-
-        if hasattr(self, '_parameter_states') \
-                and 'auto' in self._parameter_states and 'hetero' in self._parameter_states:
-            if not hasattr(self, 'size'):
-                raise Exception('Error in retrieving matrix parameter for {}: `size` is not instantiated.'.format(self))
-            a = get_auto_matrix(self.auto, self.size[0])
-            c = get_hetero_matrix(self.hetero, self.size[0])
-            return a + c
-        else:
-            # if auto and hetero are not yet instantiated, then just use the standard method of attribute retrieval
-            backing_field = '_matrix'
-            # try:
-            #     return self.recurrent_projection.matrix
-            # except (AttributeError, TypeError):
-            # KAM MODIFIED 1/9/18 -- removed parameter state value look up (now reserved for 'mod_' params)
-            return getattr(self, backing_field)
+        return self.parameters.matrix._get()
 
     @matrix.setter
     def matrix(self, val): # simplified version of standard setter (in Component.py)
         # KDM 10/12/18: removing below because it doesn't seem to be correct, and also causes
         # unexpected values to be set to previous_value
-        # if hasattr(self, "recurrent_projection"):
-        #     self.recurrent_projection.parameter_states["matrix"].function.previous_value = val
-        if hasattr(self, '_parameter_states')\
-                and 'auto' in self._parameter_states and 'hetero' in self._parameter_states:
-            if hasattr(self, 'size'):
-                val = get_matrix(val, self.size[0], self.size[0])
-            temp_matrix = val.copy()
-            self.auto = np.diag(temp_matrix).copy()
-            np.fill_diagonal(temp_matrix, 0)
-            self.hetero = temp_matrix
-        else:
-            name = 'matrix'
-            backing_field = '_matrix'
-            setattr(self, backing_field, val)
-            self.user_params.__additem__(name, val)
+        # KDM 7/1/19: reinstating below
+        if hasattr(self, "recurrent_projection"):
+            self.recurrent_projection.parameter_states["matrix"].function.previous_value = val
 
-            if hasattr(self, '_parameter_states') and name in self._parameter_states:
-                param_state = self._parameter_states[name]
+        self.parameters.matrix._set(val)
 
-                if hasattr(param_state.function, 'initializer'):
-                    param_state.function.reinitialize = val
+        if hasattr(self, '_parameter_states') and 'matrix' in self._parameter_states:
+            param_state = self._parameter_states['matrix']
+
+            if hasattr(param_state.function, 'initializer'):
+                param_state.function.reinitialize = val
 
     @property
     def auto(self):
-        return getattr(self, "_auto")
+        return self.parameters.auto._get()
 
     @auto.setter
     def auto(self, val):
-
-        setattr(self, "_auto", val)
+        self.parameters.auto._set(val)
 
         if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_states:
             self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix
 
-        # Update user_params dict with new value
-        self.user_params.__additem__("auto", val)
 
     @property
     def hetero(self):
-        return getattr(self, "_hetero")
+        return self.parameters.hetero._get()
 
     @hetero.setter
     def hetero(self, val):
-
-        setattr(self, "_hetero", val)
+        self.parameters.hetero._set(val)
 
         if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_states:
-            self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix
+            self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix_param
 
-        # Update user_params dict with new value
-        self.user_params.__additem__("hetero", val)
     @property
     def learning_enabled(self):
         return self._learning_enabled
