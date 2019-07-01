@@ -17,7 +17,8 @@ install:
   - pip install git+https://github.com/benureau/leabra.git@master
   # Travis bundles pytest 4.3.1 in Linux Xenial, new pytest-xdist
   # requires pytest>=4.4.0, and the dependencies are broken
-  - pip install -U pytest
+  # Pytest>=5 crashes several tests
+  - pip install -U 'pytest<5'
   - pip install -e .[dev]
 
 os: linux
@@ -42,6 +43,7 @@ matrix:
     language: minimal
     env:
         - PYTHON=3.6.8
+        - PYTHONWARNINGS="ignore::DeprecationWarning"
     # Cache installed python virtual env and homebrew downloads
     cache:
         directories:

@@ -11,6 +11,7 @@
 from llvmlite import ir
 from contextlib import contextmanager
 
+
 @contextmanager
 def for_loop(builder, start, stop, inc, id):
     # Initialize index variable
@@ -48,6 +49,7 @@ def for_loop_zero_inc(builder, stop, id):
     inc = stop.type(1)
     return for_loop(builder, start, stop, inc, id)
 
+
 def array_ptr_loop(builder, array, id):
     # Assume we'll never have more than 4GB arrays
     stop = ir.IntType(32)(array.type.pointee.count)
@@ -63,11 +65,13 @@ def fclamp(builder, val, min_val, max_val):
     cond = builder.fcmp_unordered(">", tmp, max_val)
     return builder.select(cond, max_val, tmp)
 
+
 def uint_min(builder, val, other):
     other = other if isinstance(other, ir.Value) else val.type(other)
 
     cond = builder.icmp_unsigned("<=", val, other)
     return builder.select(cond, val, other)
+
 
 def load_extract_scalar_array_one(builder, ptr):
     val = builder.load(ptr)
@@ -75,8 +79,10 @@ def load_extract_scalar_array_one(builder, ptr):
         val = builder.extract_value(val, [0])
     return val
 
+
 def fneg(builder, val, name=""):
     return builder.fsub(val.type(-0.0), val, name)
+
 
 def is_close(builder, val1, val2, rtol=1e-05, atol=1e-08):
     diff = builder.fsub(val1, val2, "is_close_diff")
@@ -109,6 +115,7 @@ def all_close(builder, arr1, arr2, rtol=1e-05, atol=1e-08):
 
     return builder.load(all_ptr)
 
+
 class ConditionGenerator:
     def __init__(self, ctx, composition):
         self.ctx = ctx
@@ -121,11 +128,11 @@ class ConditionGenerator:
                                                   self.ctx.int32_ty])
 
         structure = ir.LiteralStructType([
-            time_stamp_struct, # current time stamp
-            ir.ArrayType( # for each node
+            time_stamp_struct,  # current time stamp
+            ir.ArrayType(       # for each node
                 ir.LiteralStructType([
-                    self.ctx.int32_ty, # number of executions
-                    time_stamp_struct # time stamp of last execution
+                    self.ctx.int32_ty,  # number of executions
+                    time_stamp_struct   # time stamp of last execution
                 ]), len(composition.nodes)
             )
         ])
@@ -133,23 +140,23 @@ class ConditionGenerator:
 
     def get_private_condition_initializer(self, composition):
         return ((0, 0, 0),
-                tuple((0,(-1, -1, -1)) for _ in composition.nodes))
+                tuple((0, (-1, -1, -1)) for _ in composition.nodes))
 
-    def get_condition_struct_type(self, composition = None):
+    def get_condition_struct_type(self, composition=None):
         composition = self.composition if composition is None else composition
         structs = [self.get_private_condition_struct_type(composition)]
         for node in composition.nodes:
             structs.append(self.get_condition_struct_type(node) if isinstance(node, type(self.composition)) else ir.LiteralStructType([]))
         return ir.LiteralStructType(structs)
 
-    def get_condition_initializer(self, composition = None):
+    def get_condition_initializer(self, composition=None):
         composition = self.composition if composition is None else composition
         data = [self.get_private_condition_initializer(composition)]
         for node in composition.nodes:
             data.append(self.get_condition_initializer(node) if isinstance(node, type(self.composition)) else tuple())
         return tuple(data)
 
-    def bump_ts(self, builder, cond_ptr, count=(0,0,1)):
+    def bump_ts(self, builder, cond_ptr, count=(0, 0, 1)):
         ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
         ts = builder.load(ts_ptr)
 

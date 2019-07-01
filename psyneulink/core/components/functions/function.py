@@ -718,7 +718,15 @@ class Function_Base(Function):
 
         value = np.asarray(value)
 
-        # region Type conversion (specified by output_type):
+        # Type conversion (specified by output_type):
+
+        # MODIFIED 6/21/19 NEW: [JDC]
+        # Convert to same format as variable
+        if isinstance(output_type, (list, np.ndarray)):
+            shape = np.array(output_type).shape
+            return np.array(value).reshape(shape)
+        # MODIFIED 6/21/19 END
+
         # Convert to 2D array, irrespective of value type:
         if output_type is FunctionOutputType.NP_2D_ARRAY:
             # KDM 8/10/18: mimicking the conversion that Mechanism does to its values, because
@@ -743,8 +751,8 @@ class Function_Base(Function):
                 if len(value) == 1:
                     value = value[0]
                 else:
-                    raise FunctionError("Can't convert value ({0}: 2D np.ndarray object with more than one array)"
-                                        " to 1D array".format(value))
+                    raise FunctionError(f"Can't convert value ({value}: 2D np.ndarray object with more than one array)"
+                                        " to 1D array.")
             elif value.ndim == 1:
                 value = value
             elif value.ndim == 0:

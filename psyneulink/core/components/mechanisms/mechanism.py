@@ -1416,12 +1416,12 @@ class Mechanism_Base(Mechanism):
                  default_variable=None,
                  size=None,
                  input_states=None,
+                 function=None,
                  output_states=None,
                  params=None,
                  name=None,
                  prefs=None,
                  context=None,
-                 function=None,
                  ):
         """Assign name, category-level preferences, and variable; register Mechanism; and enforce category methods
 
@@ -1465,12 +1465,14 @@ class Mechanism_Base(Mechanism):
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
+
         # ParameterState
         from psyneulink.core.components.states.parameterstate import ParameterState
         register_category(entry=ParameterState,
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
+
         # OutputState
         from psyneulink.core.components.states.outputstate import OutputState
         register_category(entry=OutputState,
@@ -1478,7 +1480,7 @@ class Mechanism_Base(Mechanism):
                           registry=self._stateRegistry,
                           context=context)
 
-        default_variable = self._handle_default_variable(default_variable, size, input_states, params)
+        default_variable = self._handle_default_variable(default_variable, size, input_states, function, params)
 
         super(Mechanism_Base, self).__init__(default_variable=default_variable,
                                              size=size,
@@ -1509,7 +1511,7 @@ class Mechanism_Base(Mechanism):
     # Handlers
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
+    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
         '''
             Finds whether default_variable can be determined using **default_variable** and **size**
             arguments.
@@ -2673,7 +2675,7 @@ class Mechanism_Base(Mechanism):
             is_output_type = pnlvm.ir.ArrayType(is_output_list[0], len(is_output_list))
         else:
             is_output_type = pnlvm.ir.LiteralStructType(is_output_list)
-        is_output = builder.alloca(is_output_type, 1)
+        is_output = builder.alloca(is_output_type)
 
         for i, state in enumerate(self.input_states):
             is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -2687,12 +2689,13 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_param_states(self, func, f_params_ptr, ctx, builder, params, context, si):
         # Allocate a shadow structure to overload user supplied parameters
-        f_params = builder.alloca(f_params_ptr.type.pointee, 1)
+        f_params = builder.alloca(f_params_ptr.type.pointee)
 
         # Call parameter states for function
         for idx, f_param in enumerate(func._get_param_ids()):
-            param_in_ptr = builder.gep(f_params_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-            raw_param_val = builder.load(param_in_ptr)
+            p_name = f_param + "_" + str(func)
+            param_in_ptr = builder.gep(f_params_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx)], name="ptr_raw_" + p_name)
+            raw_param_val = builder.load(param_in_ptr, name="raw_" + p_name)
             param_out_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             # If there is no param state, provide a copy of the user param value
             # FIXME: why wouldn't it be there?
@@ -2714,7 +2717,7 @@ class Mechanism_Base(Mechanism):
             ps_context = builder.gep(context, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
 
             # Construct the input out of the user value and incoming projection
-            ps_input = builder.alloca(ps_function.args[2].type.pointee, 1)
+            ps_input = builder.alloca(ps_function.args[2].type.pointee)
             raw_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
             builder.store(raw_param_val, raw_ptr)
@@ -2759,7 +2762,7 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
         fun = ctx.get_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
-        fun_out = builder.alloca(fun.args[3].type.pointee, 1)
+        fun_out = builder.alloca(fun.args[3].type.pointee)
 
         builder.call(fun, [params, context, fun_in, fun_out])
 

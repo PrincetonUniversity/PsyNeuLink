@@ -1009,9 +1009,9 @@ class InputState(State_Base):
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         variable = super()._parse_function_variable(variable, execution_id, context)
         try:
-            if self._use_1d_variable:
+            if self._use_1d_variable and variable.ndim > 1:
                 return np.array(variable[0])
-        except:
+        except AttributeError:
             pass
         return variable
 

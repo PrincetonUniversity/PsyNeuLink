@@ -808,9 +808,9 @@ class MappingProjection(PathwayProjection_Base):
         # If function is Identity Function, no need to update ParameterStates, as matrix is not used
         if not isinstance(self.function, Identity):
 
-            if (hasattr(self.context, "composition") and
-                    hasattr(self.context.composition, "learning_enabled") and
-                    self.context.composition.learning_enabled):
+            if (hasattr(self.parameters.context._get(execution_id), "composition") and
+                    hasattr(self.parameters.context._get(execution_id).composition, "learning_enabled") and
+                    self.parameters.context._get(execution_id).composition.learning_enabled):
                 self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
                 self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
                 self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
