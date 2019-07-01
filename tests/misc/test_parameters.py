@@ -139,7 +139,7 @@ def test_delta_fail():
     with pytest.raises(TypeError) as error:
         t.parameters.value.get_delta()
 
-    assert "Parameter 'value' value mismatch between current" in str(error)
+    assert "Parameter 'value' value mismatch between current" in str(error.value)
 
 
 def test_validation():
