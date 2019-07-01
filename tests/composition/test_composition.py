@@ -1292,12 +1292,10 @@ class TestGetMechanismsByRole:
             else:
                 assert comp.get_nodes_by_role(role) == []
 
+    @pytest.mark.xfail(raises=CompositionError)
     def test_nonexistent_role(self):
-
         comp = Composition()
-
-        with pytest.raises(CompositionError):
-            comp.get_nodes_by_role(None)
+        comp.get_nodes_by_role(None)
 
 
 class TestGraph:
