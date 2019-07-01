@@ -129,6 +129,6 @@ Stroop_model.run(inputs=stimuli,
                  animate=True,
                  # animate={'show_controller':True,
                  #          'show_cim':True},
-                 call_after_trial=print_after
+                 # call_after_trial=print_after
                  )
 Stroop_model.log.print_entries()
