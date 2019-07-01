@@ -33,8 +33,7 @@ install:
   - pip --version
   # certifi upgrade is needed by pytest-profiling (it does not set the dependencies right)
   # numpy 1.16 gets pulled by leabra below and pnl downgrades it to <1.16 later
-  # pytest>=5 crashes several tests
-  - pip install --user -U certifi "numpy<1.16" "pytest<5"
+  - pip install --user -U certifi "numpy<1.16"
   - pip install --user git+https://github.com/benureau/leabra.git@master
 
   # pytorch does not distribute windows packages over pypi.
