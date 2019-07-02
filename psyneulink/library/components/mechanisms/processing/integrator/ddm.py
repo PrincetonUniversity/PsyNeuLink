@@ -818,7 +818,7 @@ class DDM(ProcessingMechanism_Base):
         )
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
 
-        initDDMializer = np.array([[0]])
+        initializer = np.array([[0]])
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
