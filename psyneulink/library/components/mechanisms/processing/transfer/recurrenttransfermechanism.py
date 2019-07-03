@@ -290,8 +290,8 @@ def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, execution
     from psyneulink.library.components.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
 
     try:
-        a = get_auto_matrix(owning_component.parameters.auto._get(execution_id), owning_component.size[0])
-        c = get_hetero_matrix(owning_component.parameters.hetero._get(execution_id), owning_component.size[0])
+        a = get_auto_matrix(owning_component.parameters.auto._get(execution_id), owning_component.recurrent_size)
+        c = get_hetero_matrix(owning_component.parameters.hetero._get(execution_id), owning_component.recurrent_size)
         return a + c
     except TypeError:
         return None
@@ -316,7 +316,7 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, ex
     #     owning_component.recurrent_projection.parameter_states["matrix"].function.parameters.previous_value._set(value, execution_id)
 
     try:
-        value = get_matrix(value, owning_component.size[0], owning_component.size[0])
+        value = get_matrix(value, owning_component.recurrent_size, owning_component.recurrent_size)
     except AttributeError:
         pass
 
