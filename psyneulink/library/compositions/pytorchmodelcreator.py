@@ -96,7 +96,7 @@ class PytorchModelCreator(torch.nn.Module):
                     # iterate over incoming projections and set up pytorch weights for them
                     for k in range(len(component.path_afferents)):
 
-                        # get projection, sender node for projection
+                        # get projection, sender node--pdb for projection
                         mapping_proj = component.path_afferents[k]
                         input_component = mapping_proj.sender.owner
                         input_node = processing_graph.comp_to_vertex[input_component]
@@ -130,14 +130,14 @@ class PytorchModelCreator(torch.nn.Module):
         # CW 12/3/18: this copies by reference so it only needs to be called during init, rather than
         # every time the weights are updated
         self.copy_weights_to_psyneulink(execution_id)
-        self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self)
+        #self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self)
 
     # defines input type
     def _get_input_struct_type(self, ctx):  # Test case: {[1 x [2 x double]]}
         input_ty = [None]*len(self.execution_sets[0])
         for component in self.execution_sets[0]:
             component_id = self._id_map[0][component]
-            input_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(component.variable)
+            input_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(component.variable[0])
         struct_ty = ir.types.LiteralStructType(input_ty)
         return struct_ty
 
@@ -149,22 +149,27 @@ class PytorchModelCreator(torch.nn.Module):
             component_id = self._id_map[0][component]
             vals[component_id] = value.numpy()
         vals = pnlvm.execution._tupleize(vals)
-        return inp_cty(vals)
+        return inp_cty(*vals)
 
     def _get_output_struct_type(self, ctx):
-        struct_ty = ir.types.LiteralStructType([
-            ctx.convert_python_struct_to_llvm_ir(node.value) for node in self.execution_sets[len(self.execution_sets)-1]
-        ])
+        num_outp = len(self.execution_sets)-1
+        outp_ty = [None]*len(self.execution_sets[num_outp])
+        for component in self.execution_sets[num_outp]:
+            component_id = self._id_map[num_outp][component]
+            outp_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(component.value[0])
+        struct_ty = ir.types.LiteralStructType(outp_ty)
         return struct_ty
 
     # Creates an output struct to be passed into forward computation
     def _get_output_struct(self, bin_func):
         outp_cty = bin_func.byref_arg_types[3]
-        output = []
-        for node in self.execution_sets[len(self.execution_sets) - 1]:
-            output.append(node.value)
-        output = pnlvm.execution._tupleize(output)
-        return outp_cty(output[0])
+        num_outp = len(self.execution_sets)-1
+        vals = [None]*len(self.execution_sets[num_outp])
+        for component in self.execution_sets[num_outp]:
+            component_id = self._id_map[num_outp][component]
+            vals[component_id] = [0]*len(component.value[0])
+        vals = pnlvm.execution._tupleize(vals)
+        return outp_cty(*vals)
 
     def _get_param_struct_type(self, ctx):
         param_list = [None]*(len(self.execution_sets)-1)
@@ -270,13 +275,12 @@ class PytorchModelCreator(torch.nn.Module):
                 afferents = self.component_to_forward_info[component][3]
                 dim_x, dim_y = component.variable.shape
                 if i == 0:
-                    for _x in range(0, dim_x):
-                        for _y in range(0, dim_y):
-                            cmp_arg = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(component_id), ctx.int32_ty(_x), ctx.int32_ty(_y)])  # get input
-                            res = self.bin_function_creator(
-                                ctx, builder, component, builder.load(cmp_arg), execution_id=None)
-                            builder.store(res, builder.gep(
-                                value, [ctx.int32_ty(0), ctx.int32_ty(_x), ctx.int32_ty(_y)]))
+                    for _y in range(0, dim_y):
+                        cmp_arg = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(component_id), ctx.int32_ty(_y)])  # get input
+                        res = self.bin_function_creator(
+                            ctx, builder, component, builder.load(cmp_arg), execution_id=None)
+                        builder.store(res, builder.gep(
+                            value, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(_y)]))
                 else:
                     # is_set keeps track of if we already have valid (i.e. non-garbage) values inside the alloc'd value
                     is_set = False
@@ -342,18 +346,17 @@ class PytorchModelCreator(torch.nn.Module):
 
                     # get ptr to first thing in struct (should be arr)
                     outer_arr_ptr = builder.gep(
-                        arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-                    for _x in range(0, 1):
-                        for _y in range(0, 1):
-                            val_ptr = builder.gep(value, [ctx.int32_ty(
-                                0), ctx.int32_ty(_x), ctx.int32_ty(_y)])
-                            self._output_forward_computation(
-                                ctx, builder, arg_out, 0, _x, _y, builder.load(val_ptr))
+                        arg_out, [ctx.int32_ty(0)])
+                    for _y in range(0, 1):
+                        val_ptr = builder.gep(value, [ctx.int32_ty(
+                            0),  ctx.int32_ty(0),ctx.int32_ty(_y)])
+                        self._output_forward_computation(
+                            ctx, builder, arg_out, output_index, _y, builder.load(val_ptr))
 
     # inserts a value into the forward computation output array struct
-    def _output_forward_computation(self, ctx, builder, arg_out, index, x, y, value):
+    def _output_forward_computation(self, ctx, builder, arg_out, index, y, value):
         loc = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(
-            index), ctx.int32_ty(x), ctx.int32_ty(y)])
+            index), ctx.int32_ty(y)])
         builder.store(value, loc)
 
     @property
