@@ -137,7 +137,7 @@ class PytorchModelCreator(torch.nn.Module):
         input_ty = [None]*len(self.execution_sets[0])
         for component in self.execution_sets[0]:
             component_id = self._id_map[0][component]
-            input_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(component.variable[0])
+            input_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(component.defaults.variable[0])
         struct_ty = ir.types.LiteralStructType(input_ty)
         return struct_ty
 
@@ -156,7 +156,7 @@ class PytorchModelCreator(torch.nn.Module):
         outp_ty = [None]*len(self.execution_sets[num_outp])
         for component in self.execution_sets[num_outp]:
             component_id = self._id_map[num_outp][component]
-            outp_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(component.value[0])
+            outp_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(component.defaults.value[0])
         struct_ty = ir.types.LiteralStructType(outp_ty)
         return struct_ty
 
@@ -167,7 +167,7 @@ class PytorchModelCreator(torch.nn.Module):
         vals = [None]*len(self.execution_sets[num_outp])
         for component in self.execution_sets[num_outp]:
             component_id = self._id_map[num_outp][component]
-            vals[component_id] = [0]*len(component.value[0])
+            vals[component_id] = [0]*len(component.defaults.value[0])
         vals = pnlvm.execution._tupleize(vals)
         return outp_cty(*vals)
 
@@ -206,7 +206,7 @@ class PytorchModelCreator(torch.nn.Module):
                         param_list[i-1][component_id][input_component_id] = weights.detach().numpy()
             self._cached_param_list = param_list
         params = pnlvm.execution._tupleize(self._cached_param_list)
-        return param_cty(params[0])
+        return param_cty(*params)
         
     def _get_context_struct_type(self, ctx):
         struct_ty = ir.types.LiteralStructType([
@@ -256,6 +256,21 @@ class PytorchModelCreator(torch.nn.Module):
                     output_mat, [ctx.int32_ty(0), ctx.int32_ty(_x), ctx.int32_ty(_z)]))
         return output_mat
 
+    # TODO: Swap to using Jan's vxm func
+    def _gen_inject_vxm(self, ctx, builder, m1, m2, y, z):
+        # create output vec
+        output_vec = builder.alloca(ir.types.ArrayType(ir.types.DoubleType(), z))
+        for _z in range(0, z):
+            curr_val = ir.types.DoubleType()(0)
+            for _y in range(0, y):
+                v1 = builder.load(builder.gep(
+                    m1, [ctx.int32_ty(0), ctx.int32_ty(_y)]))
+                v2 = builder.load(builder.gep(
+                    m2, [ctx.int32_ty(0), ctx.int32_ty(_y), ctx.int32_ty(_z)]))
+                curr_val = builder.fadd(curr_val, builder.fmul(v1, v2))
+            builder.store(curr_val, builder.gep(
+                output_vec, [ctx.int32_ty(0), ctx.int32_ty(_z)]))
+        return output_vec
     # figure out type of arg_in
     def _gen_llvm_forward_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         out_t = arg_out.type.pointee
@@ -267,20 +282,20 @@ class PytorchModelCreator(torch.nn.Module):
 
             for component in current_exec_set:
                 frozen_values[component] = builder.alloca(
-                    ctx.convert_python_struct_to_llvm_ir(component.variable))
+                    ctx.convert_python_struct_to_llvm_ir(component.defaults.variable[0]))
             for component in current_exec_set:
                 component_id = self._id_map[i][component]
                 biases = self.component_to_forward_info[component][1]
                 value = frozen_values[component]
                 afferents = self.component_to_forward_info[component][3]
-                dim_x, dim_y = component.variable.shape
+                dim_x, dim_y = component.defaults.variable.shape
                 if i == 0:
                     for _y in range(0, dim_y):
                         cmp_arg = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(component_id), ctx.int32_ty(_y)])  # get input
                         res = self.bin_function_creator(
                             ctx, builder, component, builder.load(cmp_arg), execution_id=None)
                         builder.store(res, builder.gep(
-                            value, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(_y)]))
+                            value, [ctx.int32_ty(0), ctx.int32_ty(_y)]))
                 else:
                     # is_set keeps track of if we already have valid (i.e. non-garbage) values inside the alloc'd value
                     is_set = False
@@ -288,8 +303,9 @@ class PytorchModelCreator(torch.nn.Module):
                         if input_node.component in frozen_values:
                             input_value = frozen_values[input_node.component]
                         else:
-                            input_value = self.component_to_forward_info[input_node.component][0].numpy(
-                            ).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+                            pass
+                            #input_value = self.component_to_forward_info[input_node.component][0].numpy(
+                            #).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
                         weights_np = weights.detach().numpy()
                         x, y = weights_np.shape
@@ -304,36 +320,33 @@ class PytorchModelCreator(torch.nn.Module):
                         weights_llvmlite = ir.types.IntType(64)(weights_np.ctypes.data)
                         weights_llvmlite = builder.inttoptr(weights_llvmlite, ir.types.ArrayType(
                             ir.types.ArrayType(ir.types.DoubleType(), y), x).as_pointer())
-                        weighted_inp = self._gen_inject_matmul(
-                            ctx, builder, input_value, weights_llvmlite, 1, x, y)
+                        weighted_inp = self._gen_inject_vxm(
+                            ctx, builder, input_value, weights_llvmlite, x, y)
                         if is_set == False:
                             # copy weighted_inp to value
-                            for _x in range(0, 1):
-                                for _y in range(0, y):
-                                    loc = builder.gep(value, [ctx.int32_ty(
-                                        0), ctx.int32_ty(_x), ctx.int32_ty(_y)])
-                                    val_ptr = builder.gep(weighted_inp, [ctx.int32_ty(
-                                        0), ctx.int32_ty(_x), ctx.int32_ty(_y)])
-                                    builder.store(builder.load(val_ptr), loc)
+                            for _y in range(0, y):
+                                loc = builder.gep(value, [ctx.int32_ty(
+                                    0), ctx.int32_ty(_y)])
+                                val_ptr = builder.gep(weighted_inp, [ctx.int32_ty(
+                                    0), ctx.int32_ty(_y)])
+                                builder.store(builder.load(val_ptr), loc)
                             is_set = True
                         else:
                             # add to value
-                            for _x in range(0, 1):
-                                for _y in range(0, y):
-                                    loc = builder.gep(value, [ctx.int32_ty(
-                                        0), ctx.int32_ty(_x), ctx.int32_ty(_y)])
-                                    val_ptr = builder.gep(weighted_inp, [ctx.int32_ty(
-                                        0), ctx.int32_ty(_x), ctx.int32_ty(_y)])
-                                    builder.store(builder.fadd(builder.load(
-                                        loc), builder.load(val_ptr)), loc)
-                    for _x in range(0, dim_x):
-                        for _y in range(0, dim_y):
-                            cmp_arg = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(
-                                _x), ctx.int32_ty(_y)])  # get input vector
-                            res = self.bin_function_creator(
-                                ctx, builder, component, builder.load(cmp_arg), execution_id=None)
-                            builder.store(res, builder.gep(
-                                value, [ctx.int32_ty(0), ctx.int32_ty(_x), ctx.int32_ty(_y)]))
+                            for _y in range(0, y):
+                                loc = builder.gep(value, [ctx.int32_ty(
+                                    0), ctx.int32_ty(_y)])
+                                val_ptr = builder.gep(weighted_inp, [ctx.int32_ty(
+                                    0), ctx.int32_ty(_y)])
+                                builder.store(builder.fadd(builder.load(
+                                    loc), builder.load(val_ptr)), loc)
+
+                    # Apply Activation Func to values
+                    for _y in range(0, dim_y):
+                        cmp_arg = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(_y)])
+                        res = self.bin_function_creator(
+                            ctx, builder, component, builder.load(cmp_arg), execution_id=None)
+                        builder.store(res, cmp_arg)
                     # TODO: Add bias to value
                     # if biases is not None:
                     #   value = value + biases
@@ -343,13 +356,13 @@ class PytorchModelCreator(torch.nn.Module):
                     # We first grab which index we should insert into:
                     # Here, arr should be an array of arrays; each index correlates to self._id_map[i][component]
                     output_index = self._id_map[i][component]
-
+                    output_size = len(component.defaults.value[0])
                     # get ptr to first thing in struct (should be arr)
                     outer_arr_ptr = builder.gep(
                         arg_out, [ctx.int32_ty(0)])
-                    for _y in range(0, 1):
+                    for _y in range(0, output_size):
                         val_ptr = builder.gep(value, [ctx.int32_ty(
-                            0),  ctx.int32_ty(0),ctx.int32_ty(_y)])
+                            0), ctx.int32_ty(_y)])
                         self._output_forward_computation(
                             ctx, builder, arg_out, output_index, _y, builder.load(val_ptr))
 
@@ -390,6 +403,7 @@ class PytorchModelCreator(torch.nn.Module):
             totaltime += timeit.default_timer() - start_time
             #print(totaltime)
             outputs = pnlvm.execution._convert_ctype_to_python(outputs)
+            #print("FORWARD:",self._remap_output_struct(outputs))
             #return self._remap_output_struct(outputs)
         outputs = {}  # dict for storing values of terminal (output) nodes
 
@@ -436,7 +450,7 @@ class PytorchModelCreator(torch.nn.Module):
         self.copy_outputs_to_psyneulink(outputs, execution_id)
         if do_logging:
             self.log_weights(execution_id)
-        
+        #print("EXPECTED:",outputs)
         return outputs
 
     def detach_all(self):
