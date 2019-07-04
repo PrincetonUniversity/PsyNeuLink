@@ -2707,7 +2707,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if execution_id not in self.execution_ids:
             self.execution_ids.add(execution_id)
 
-        self._assign_context_values(execution_id=None, composition=self)
+        self._assign_context_values(execution_id=execution_id, composition=self)
         return execution_id
 
     def _identify_clamp_inputs(self, list_type, input_type, origins):
