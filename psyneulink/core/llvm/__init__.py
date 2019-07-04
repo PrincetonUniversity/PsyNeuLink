@@ -75,7 +75,6 @@ class LLVMBinaryFunction:
 
             self.__byref_arg_types.append(byref_type)
             params.append(param_type)
-            print("INIT HOST FUNC",a,byref_type)
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
 
     def __call__(self, *args, **kwargs):
