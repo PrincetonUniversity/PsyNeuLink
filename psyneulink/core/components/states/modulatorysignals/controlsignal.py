@@ -944,7 +944,7 @@ class ControlSignal(ModulatorySignal):
         self._initialize_cost_attributes(context=context)
 
     def _instantiate_allocation_samples(self, context=None):
-        '''Assign specified `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`.'''
+        """Assign specified `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`."""
 
         a = self.paramsCurrent[ALLOCATION_SAMPLES]
 
@@ -1053,8 +1053,8 @@ class ControlSignal(ModulatorySignal):
         return state_spec, params_dict
 
     def update(self, execution_id=None, params=None, context=None):
-        '''Update value (intensity) and costs
-        '''
+        """Update value (intensity) and costs
+        """
         super().update(execution_id=execution_id, params=params, context=context)
 
         if self.parameters.cost_options._get(execution_id):

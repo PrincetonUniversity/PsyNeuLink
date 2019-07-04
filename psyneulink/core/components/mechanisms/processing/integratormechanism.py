@@ -240,9 +240,9 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     #     super()._parse_function_variable(variable, execution_id, context)
 
     def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
-        '''If any parameters with len>1 have been specified for the Mechanism's function, and Mechanism's
+        """If any parameters with len>1 have been specified for the Mechanism's function, and Mechanism's
         default_variable has not been specified, reshape Mechanism's variable to match function's,
-        but make sure function's has the same outer dimensionality as the Mechanism's'''
+        but make sure function's has the same outer dimensionality as the Mechanism's"""
 
         # Get variable for Mechanism
         user_specified = False

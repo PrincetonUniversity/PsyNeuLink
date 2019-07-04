@@ -134,7 +134,7 @@ class TestAddMechanism:
         projections = [ab, bc]
         with pytest.raises(CompositionError) as err:
             comp.add_projections(projections)
-        assert "The add_projections method of Composition requires a list of Projections" in str(err)
+        assert "The add_projections method of Composition requires a list of Projections" in str(err.value)
 
     def test_add_multiple_projections_no_receiver(self):
         comp = Composition(name='comp')
@@ -151,7 +151,7 @@ class TestAddMechanism:
         projections = [ab, bc]
         with pytest.raises(CompositionError) as err:
             comp.add_projections(projections)
-        assert "The add_projections method of Composition requires a list of Projections" in str(err)
+        assert "The add_projections method of Composition requires a list of Projections" in str(err.value)
 
     def test_add_multiple_projections_not_a_proj(self):
         comp = Composition(name='comp')
@@ -168,7 +168,7 @@ class TestAddMechanism:
         projections = [ab, bc]
         with pytest.raises(CompositionError) as err:
             comp.add_projections(projections)
-        assert "The add_projections method of Composition requires a list of Projections" in str(err)
+        assert "The add_projections method of Composition requires a list of Projections" in str(err.value)
 
     def test_add_multiple_nodes_at_once(self):
         comp = Composition()
@@ -192,12 +192,12 @@ class TestAddMechanism:
     def test_timing_stress(self, count):
         t = timeit(
             'comp.add_node(TransferMechanism())',
-            setup='''
+            setup="""
 
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
 comp = Composition()
-''',
+""",
             number=count
         )
         print()
@@ -234,7 +234,7 @@ class TestAddProjection:
     #     comp.add_projection(proj, A, B)
     #     with pytest.raises(CompositionError) as error_text:
     #         comp.add_projection(proj, A, B)
-    #     assert "This Projection is already in the Composition" in str(error_text)
+    #     assert "This Projection is already in the Composition" in str(error_text.value)
 
     def test_add_fully_specified_projection_object(self):
         comp = Composition()
@@ -265,7 +265,7 @@ class TestAddProjection:
         comp.add_node(B)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(receiver=B)
-        assert "a sender must be specified" in str(error_text)
+        assert "a sender must be specified" in str(error_text.value)
 
     def test_add_proj_missing_receiver(self):
         comp = Composition()
@@ -276,7 +276,7 @@ class TestAddProjection:
         comp.add_node(B)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(sender=A)
-        assert "a receiver must be specified" in str(error_text)
+        assert "a receiver must be specified" in str(error_text.value)
 
     def test_add_proj_invalid_projection_spec(self):
         comp = Composition()
@@ -287,7 +287,7 @@ class TestAddProjection:
         comp.add_node(B)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection("projection")
-        assert "Invalid projection" in str(error_text)
+        assert "Invalid projection" in str(error_text.value)
 
     # KAM commented out this test 7/24/18 because it does not work. Should it work?
     # Or should the add_projection method of Composition only consider composition nodes as senders and receivers
@@ -349,7 +349,8 @@ class TestAddProjection:
         proj = MappingProjection(sender=A, receiver=B)
         with pytest.raises(CompositionError) as error:
             comp.add_projection(projection=proj, receiver=C)
-        assert "receiver assignment" in str(error) and "incompatible" in str(error)
+        assert "receiver assignment" in str(error.value)
+        assert "incompatible" in str(error.value)
 
     @pytest.mark.stress
     @pytest.mark.parametrize(
@@ -359,7 +360,7 @@ class TestAddProjection:
     )
     def test_timing_stress(self, count):
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
-                   setup='''
+                   setup="""
 
 from psyneulink.core.components.mechanisms.processingmechanisms.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathwayprojections.mappingprojection import MappingProjection
@@ -370,7 +371,7 @@ A = TransferMechanism(name='composition-pytests-A')
 B = TransferMechanism(name='composition-pytests-B')
 comp.add_node(A)
 comp.add_node(B)
-''',
+""",
                    number=count
                    )
         print()
@@ -384,7 +385,7 @@ comp.add_node(B)
     )
     def test_timing_stress(self, count):
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
-                   setup='''
+                   setup="""
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition
@@ -393,7 +394,7 @@ A = TransferMechanism(name='composition-pytests-A')
 B = TransferMechanism(name='composition-pytests-B')
 comp.add_node(A)
 comp.add_node(B)
-''',
+""",
                    number=count
                    )
         print()
@@ -1291,12 +1292,10 @@ class TestGetMechanismsByRole:
             else:
                 assert comp.get_nodes_by_role(role) == []
 
+    @pytest.mark.xfail(raises=CompositionError)
     def test_nonexistent_role(self):
-
         comp = Composition()
-
-        with pytest.raises(CompositionError):
-            comp.get_nodes_by_role(None)
+        comp.get_nodes_by_role(None)
 
 
 class TestGraph:

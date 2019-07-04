@@ -452,7 +452,7 @@ class Condition(object):
         self._owner = value
 
     def is_satisfied(self, *args, execution_context=None, **kwargs):
-        '''
+        """
         the function called to determine satisfaction of this Condition.
 
         Arguments
@@ -469,7 +469,7 @@ class Condition(object):
         -------
             True - if the Condition is satisfied
             False - if the Condition is not satisfied
-        '''
+        """
         execution_context = parse_execution_context(execution_context)
 
         # update so that kwargs can override self.kwargs

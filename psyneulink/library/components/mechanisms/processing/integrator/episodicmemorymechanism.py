@@ -255,7 +255,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     @property
     def memory(self):
-        '''Return function's memory attribute'''
+        """Return function's memory attribute"""
         try:
             return self.function.memory
         except:

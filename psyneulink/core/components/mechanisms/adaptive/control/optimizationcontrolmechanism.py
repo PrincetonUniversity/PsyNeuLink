@@ -727,7 +727,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  search_statefulness=None,
                  params=None,
                  **kwargs):
-        '''Implement OptimizationControlMechanism'''
+        """Implement OptimizationControlMechanism"""
 
         self.agent_rep = agent_rep
         self.search_function = search_function
@@ -747,7 +747,7 @@ class OptimizationControlMechanism(ControlMechanism):
                          **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        '''Insure that specification of ObjectiveMechanism has projections to it'''
+        """Insure that specification of ObjectiveMechanism has projections to it"""
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -799,9 +799,9 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"but it receives {len(state.path_afferents)} projections.")
 
     def _instantiate_output_states(self, context=None):
-        '''Assign ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals.
+        """Assign ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals.
         OptimizationControlMechanism requires use of at least one of the cost options
-        '''
+        """
         super()._instantiate_output_states(context)
 
         for control_signal in self.control_signals:
@@ -810,10 +810,10 @@ class OptimizationControlMechanism(ControlMechanism):
                 control_signal._instantiate_cost_attributes()
 
     def _instantiate_modulatory_signals(self, context):
-        '''Size control_allocation and assign modulatory_signals
+        """Size control_allocation and assign modulatory_signals
         Set size of control_allocadtion equal to number of modulatory_signals.
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
-        '''
+        """
         from psyneulink.core.globals.keywords import OWNER_VALUE
         for i, spec in enumerate(self.modulatory_signals):
             modulatory_signal = self._instantiate_modulatory_signal(spec, context=context)
@@ -823,7 +823,7 @@ class OptimizationControlMechanism(ControlMechanism):
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), override=True)
 
     def _instantiate_attributes_after_function(self, context=None):
-        '''Instantiate OptimizationControlMechanism's OptimizatonFunction attributes'''
+        """Instantiate OptimizationControlMechanism's OptimizatonFunction attributes"""
 
         super()._instantiate_attributes_after_function(context=context)
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
@@ -859,7 +859,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return np.array(state_values)
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
+        """Find control_allocation that optimizes result of `agent_rep.evaluate`  ."""
 
         if (self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
             return [defaultControlAllocation]
@@ -933,7 +933,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self.agent_rep._delete_contexts(sim_execution_id, check_simulation_storage=True)
 
     def evaluation_function(self, control_allocation, execution_id=None):
-        '''Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
+        """Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
         <ControlMechanism.control_allocation>`.
 
@@ -946,7 +946,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for the current `feature_values <OptimizationControlMechanism.feature_values>`
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
-        '''
+        """
         # agent_rep is a Composition (since runs_simuluations = True)
         if self.agent_rep.runs_simulations:
             # KDM 5/20/19: crudely using default here because it is a stateless parameter
@@ -1200,12 +1200,12 @@ class OptimizationControlMechanism(ControlMechanism):
         return os_input
 
     def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
-        '''Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
+        """Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
         specified `control_allocation <ControlMechanism.control_allocation>`.
 
         Called by `evaluate <Composition.evaluate>` method of `Composition` when it is assigned as `agent_rep
         <OptimizationControlMechanism.agent_rep>`.
-        '''
+        """
 
         value = [np.atleast_1d(a) for a in control_allocation]
         self.parameters.value._set(value, execution_id)
@@ -1224,11 +1224,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def add_features(self, features):
-        '''Add InputStates and Projections to OptimizationControlMechanism for features used to
+        """Add InputStates and Projections to OptimizationControlMechanism for features used to
         predict `net_outcome <ControlMechanism.net_outcome>`
 
         **features** argument can use any of the forms of specification allowed for InputState(s)
-        '''
+        """
 
         if features:
             features = self._parse_feature_specs(features=features,
@@ -1266,7 +1266,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @property
     def control_allocation_search_space(self):
-        '''Return list of SampleIterators for allocation_samples of control_signals'''
+        """Return list of SampleIterators for allocation_samples of control_signals"""
         return [c.allocation_samples for c in self.control_signals]
 
     # ******************************************************************************************************************
@@ -1274,7 +1274,7 @@ class OptimizationControlMechanism(ControlMechanism):
     # ******************************************************************************************************************
 
     def _initialize_composition_function_approximator(self):
-        '''Initialize CompositionFunctionApproximator'''
+        """Initialize CompositionFunctionApproximator"""
 
         # CompositionFunctionApproximator needs to have access to control_signals to:
         # - to construct control_allocation_search_space from their allocation_samples attributes

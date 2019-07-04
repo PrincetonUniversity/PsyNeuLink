@@ -1435,8 +1435,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     @property
     def _learning_signal_source(self):
-        '''Override default to use ACTIVITY_DIFFERENCE_OUTPUT as source of learning signal
-        '''
+        """Override default to use ACTIVITY_DIFFERENCE_OUTPUT as source of learning signal
+        """
         return self.output_states[ACTIVITY_DIFFERENCE_OUTPUT]
 
     @property

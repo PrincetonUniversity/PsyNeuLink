@@ -87,25 +87,25 @@ class TimeScale(enum.Enum):
 
     @classmethod
     def get_parent(cls, time_scale):
-        '''
+        """
         Returns
         -------
             the TimeScale one level wider in scope than time_scale : :class:`TimeScale`
-        '''
+        """
         return cls(time_scale.value + 1)
 
     @classmethod
     def get_child(cls, time_scale):
-        '''
+        """
         Returns
         -------
             the TimeScale one level smaller in scope than time_scale : :class:`TimeScale`
-        '''
+        """
         return cls(time_scale.value - 1)
 
 
 class Clock:
-    '''
+    """
     Stores a history of :class:`TimeScale`\\ s that have occurred, and keep track of a \
     current `Time`. Used in relation to a :doc:`Scheduler`
 
@@ -113,7 +113,7 @@ class Clock:
     ----------
         history : `TimeHistoryTree`
             a root `TimeHistoryTree` associated with this Clock
-    '''
+    """
     def __init__(self):
         self.history = TimeHistoryTree()
         self._simple_time = SimpleTime()
@@ -122,13 +122,13 @@ class Clock:
         return 'Clock({0})'.format(self.time.__repr__())
 
     def _increment_time(self, time_scale):
-        '''
+        """
         Calls `self.history.increment_time <TimeHistoryTree.increment_time>`
-        '''
+        """
         self.history.increment_time(time_scale)
 
     def get_total_times_relative(self, query_time_scale, base_time_scale, base_index=None):
-        '''
+        """
         Convenience simplified wrapper for `TimeHistoryTree.get_total_times_relative`
 
         Arguments
@@ -147,7 +147,7 @@ class Clock:
         -------
             the number of query_time_scale s that have occurred during the scope \
             of the base_index th base_time_scale : int
-        '''
+        """
         if base_index is None:
             base_index = self.get_time_by_time_scale(base_time_scale)
 
@@ -157,7 +157,7 @@ class Clock:
         )
 
     def get_time_by_time_scale(self, time_scale):
-        '''
+        """
         Arguments
         ---------
             time_scale : :class:`TimeScale`
@@ -166,21 +166,21 @@ class Clock:
         -------
             the current value of the time unit corresponding to time_scale \
             for this Clock : int
-        '''
+        """
         return self.time._get_by_time_scale(time_scale)
 
     @property
     def time(self):
-        '''
+        """
         the current time : `Time`
-        '''
+        """
         return self.history.current_time
 
     @property
     def simple_time(self):
-        '''
+        """
         the current time in simple format : `SimpleTime`
-        '''
+        """
         self._simple_time.run = self.time.run
         self._simple_time.trial = self.time.trial
         self._simple_time.time_step = self.time.time_step
@@ -195,7 +195,7 @@ class Clock:
 
 
 class Time(types.SimpleNamespace):
-    '''
+    """
     Represents an instance of time, having values for each :class:`TimeScale`
 
     Attributes
@@ -215,7 +215,7 @@ class Time(types.SimpleNamespace):
         time_step : int : 0
             the `TimeScale.TIME_STEP` value
 
-    '''
+    """
     _time_scale_attr_map = {
         TimeScale.TIME_STEP: 'time_step',
         TimeScale.PASS: 'pass_',
@@ -228,7 +228,7 @@ class Time(types.SimpleNamespace):
         super().__init__(time_step=time_step, pass_=pass_, trial=trial, run=run, life=life)
 
     def _get_by_time_scale(self, time_scale):
-        '''
+        """
         Arguments
         ---------
             time_scale : :class:`TimeScale`
@@ -237,33 +237,33 @@ class Time(types.SimpleNamespace):
         -------
             this Time's value of a TimeScale by the TimeScale enum, rather \
             than by attribute : int
-        '''
+        """
         return getattr(self, self._time_scale_attr_map[time_scale])
 
     def _set_by_time_scale(self, time_scale, value):
-        '''
+        """
         Arguments
         ---------
             time_scale : :class:`TimeScale`
 
         Sets this Time's value of a **time_scale** by the TimeScale enum,
         rather than by attribute
-        '''
+        """
         setattr(self, self._time_scale_attr_map[time_scale], value)
 
     def _increment_by_time_scale(self, time_scale):
-        '''
+        """
         Increments the value of **time_scale** in this Time by one
-        '''
+        """
         self._set_by_time_scale(time_scale, self._get_by_time_scale(time_scale) + 1)
         self._reset_by_time_scale(time_scale)
 
     def _reset_by_time_scale(self, time_scale):
-        '''
+        """
         Resets all the times for the time scale scope up to **time_scale**
         e.g. _reset_by_time_scale(TimeScale.TRIAL) will set the values for
         TimeScale.PASS and TimeScale.TIME_STEP to 0
-        '''
+        """
         for relative_time_scale in TimeScale:
             # this works because the enum is set so that higher granularities of time have lower values
             if relative_time_scale >= time_scale:
@@ -273,10 +273,10 @@ class Time(types.SimpleNamespace):
 
 
 class SimpleTime(types.SimpleNamespace):
-    '''
+    """
     A subset class of `Time`, used to provide simple access to only
     `run <Time.run>`, `trial <Time.trial>`, and `time_step <Time.time_step>`
-    '''
+    """
     def __init__(self, run=0, trial=0, time_step=0):
         super().__init__(run=0, trial=0, time_step=0)
 
@@ -287,7 +287,7 @@ class SimpleTime(types.SimpleNamespace):
 
 
 class TimeHistoryTree:
-    '''
+    """
     A tree object that stores a history of time that has occurred at various
     :class:`TimeScale`\\ s, typically used in conjunction with a `Clock`
 
@@ -332,7 +332,7 @@ class TimeHistoryTree:
         enable_current_time : bool : True
             sets this tree to maintain a `Time` object. If this tree is not
             a root (i.e. **time_scale** is `TimeScale.LIFE`)
-    '''
+    """
     def __init__(
         self,
         time_scale=TimeScale.LIFE,
@@ -367,14 +367,14 @@ class TimeHistoryTree:
         self.total_times = {ts: 0 for ts in TimeScale if ts < self.time_scale}
 
     def increment_time(self, time_scale):
-        '''
+        """
         Increases this tree's **current_time** by one **time_scale**
 
         Arguments
         ---------
             time_scale : :class:`TimeScale`
                 the unit of time to increment
-        '''
+        """
         if self.child_time_scale >= self.max_depth:
             if time_scale == self.child_time_scale:
                 self.children.append(
@@ -401,7 +401,7 @@ class TimeHistoryTree:
         query_time_scale,
         base_indices=None
     ):
-        '''
+        """
         Arguments
         ---------
             query_time_scale : :class:`TimeScale`
@@ -422,7 +422,7 @@ class TimeHistoryTree:
         -------
             the number of units of query_time_scale that have occurred within \
             the scope of time specified by base_indices : int
-        '''
+        """
         if query_time_scale >= self.time_scale:
             raise TimeScaleError(
                 'query_time_scale (given: {0}) must be of finer grain than {1}.time_scale ({2})'.format(

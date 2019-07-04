@@ -316,12 +316,12 @@ def is_distance_metric(s):
 
 
 def is_iterable(x):
-    '''
+    """
     Returns
     -------
         True - if **x** can be iterated on
         False - otherwise
-    '''
+    """
     if isinstance(x, np.ndarray) and x.ndim == 0:
         return False
     else:
@@ -578,14 +578,14 @@ def powerset(iterable):
 import typecheck as tc
 @tc.typecheck
 def tensor_power(items, levels:tc.optional(range)=None, flat=False):
-    '''return tensor product for all members of powerset of items
+    """return tensor product for all members of powerset of items
 
     levels specifies a range of set levels to return;  1=first order terms, 2=2nd order terms, etc.
     if None, all terms will be returned
 
     if flat=False, returns list of 1d arrays with tensor product for each member of the powerset
     if flat=True, returns 1d array of values
-    '''
+    """
 
     ps = list(powerset(items))
     max_levels = max([len(s) for s in ps])
@@ -735,7 +735,7 @@ def multi_getattr(obj, attr, default = None):
 
 # based off the answer here https://stackoverflow.com/a/15774013/3131666
 def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
-    '''
+    """
         Arguments
         ---------
             shared_keys
@@ -748,7 +748,7 @@ def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
         Returns
         -------
             a __deepcopy__ function
-    '''
+    """
     try:
         shared_types = tuple(shared_types)
     except TypeError:
@@ -901,14 +901,14 @@ def convert_to_np_array(value, dimension):
 
 
 def object_has_single_value(obj):
-    '''
+    """
         Returns
         -------
             True : if **obj** contains only one value, in any dimension
             False : otherwise
 
             **obj** will be cast to a numpy array if it is not already one
-    '''
+    """
     if not isinstance(obj, np.ndarray):
         obj = np.asarray(obj)
 
@@ -1365,7 +1365,7 @@ def get_class_attributes(cls):
 
 
 def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
-    '''
+    """
         Recursively converts all items in **arr** to numpy arrays, optionally casting
         items of type/dtype **cast_from** to type/dtype **cast_to**
 
@@ -1377,7 +1377,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
         Returns
         -------
         a numpy array containing the converted **arr**
-    '''
+    """
     if isinstance(arr, np.ndarray) and arr.ndim == 0:
         if cast_from is not None and isinstance(arr.item(0), cast_from):
             return np.asarray(arr, dtype=cast_to)
@@ -1440,11 +1440,11 @@ def set_global_seed(new_seed):
 
 
 def safe_len(arr, fallback=1):
-    '''
+    """
     Returns
     -------
         len(**arr**) if possible, otherwise **fallback**
-    '''
+    """
     try:
         return len(arr)
     except TypeError:

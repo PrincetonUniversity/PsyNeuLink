@@ -38,11 +38,11 @@ class TestContrastiveHebbian:
 
 
     def test_using_Hebbian_learning_of_orthognal_inputs_without_integrator_mode(self):
-        '''Same as tests/mechanisms/test_recurrent_transfer_mechanism/test_learning_of_orthognal_inputs
+        """Same as tests/mechanisms/test_recurrent_transfer_mechanism/test_learning_of_orthognal_inputs
 
         Tests that ContrastiveHebbianMechanism behaves like RecurrentTransferMechanism with Hebbian LearningFunction
         (allowing for epsilon differences due CONVERGENCE CRITERION.
-        '''
+        """
         size=4
         R = pnl.ContrastiveHebbianMechanism(
                 input_size=4,
@@ -101,11 +101,11 @@ class TestContrastiveHebbian:
         np.testing.assert_allclose(R.parameters.minus_phase_activity.get(S), [0.0, 0.0, 0.0, 0.0])
 
     def test_using_Hebbian_learning_of_orthognal_inputs_with_integrator_mode(self):
-        '''Same as tests/mechanisms/test_recurrent_transfer_mechanism/test_learning_of_orthognal_inputs
+        """Same as tests/mechanisms/test_recurrent_transfer_mechanism/test_learning_of_orthognal_inputs
 
         Tests that ContrastiveHebbianMechanism behaves like RecurrentTransferMechanism with Hebbian LearningFunction
         (allowing for epsilon differences due to INTEGRATION and convergence criterion).
-        '''
+        """
         size=4
         R = pnl.ContrastiveHebbianMechanism(
                 input_size=4,

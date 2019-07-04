@@ -8,13 +8,13 @@
 #
 #
 # *****************************************  STATEFUL FUNCTION *********************************************************
-'''
+"""
 
 * `StatefulFunction`
 * `IntegratorFunctions`
 * `MemoryFunctions`
 
-'''
+"""
 
 import numpy as np
 import typecheck as tc
