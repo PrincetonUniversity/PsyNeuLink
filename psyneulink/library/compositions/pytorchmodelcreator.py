@@ -167,7 +167,7 @@ class PytorchModelCreator(torch.nn.Module):
         vals = [None]*len(self.execution_sets[num_outp])
         for component in self.execution_sets[num_outp]:
             component_id = self._id_map[num_outp][component]
-            vals[component_id] = [0]*len(component.defaults.value[0])
+            vals[component_id] = component.defaults.value[0]
         vals = pnlvm.execution._tupleize(vals)
         return outp_cty(*vals)
 
@@ -227,7 +227,7 @@ class PytorchModelCreator(torch.nn.Module):
             builder = ctx.create_llvm_function(args, self)
             llvm_func = builder.function
 
-            params, context, arg_in, arg_out = llvm_func.args[:len(args)]
+            context, params, arg_in, arg_out = llvm_func.args[:len(args)]
             self._gen_llvm_forward_function_body(
                 ctx, builder, params, context, arg_in, arg_out)
             builder.ret_void()
@@ -310,16 +310,9 @@ class PytorchModelCreator(torch.nn.Module):
                         weights_np = weights.detach().numpy()
                         x, y = weights_np.shape
 
-                        # Convert weights np array to ctypes
-                        weights_ct = weights_np.ctypes.data_as(
-                            ctypes.POINTER(ctypes.c_double))
-                        weights_pt = ctypes.cast(
-                            weights_ct, ctypes.c_void_p).value
-
                         # We cast the ctype weights array to llvmlite pointer (THIS IS A BIG HACK NEED TO REMOVE - WEIGHTS ARRAY CAN BE MOVED BY GC!)
-                        weights_llvmlite = ir.types.IntType(64)(weights_np.ctypes.data)
-                        weights_llvmlite = builder.inttoptr(weights_llvmlite, ir.types.ArrayType(
-                            ir.types.ArrayType(ir.types.DoubleType(), y), x).as_pointer())
+                        afferent_node_id = self._afferent_id_map[component][input_node.component]
+                        weights_llvmlite = builder.gep(params,[ctx.int32_ty(0), ctx.int32_ty(i-1),ctx.int32_ty(component_id),ctx.int32_ty(afferent_node_id)])#builder.inttoptr(weights_llvmlite, ir.types.ArrayType(ir.types.ArrayType(ir.types.DoubleType(), y), x).as_pointer())
                         weighted_inp = self._gen_inject_vxm(
                             ctx, builder, input_value, weights_llvmlite, x, y)
                         if is_set == False:
