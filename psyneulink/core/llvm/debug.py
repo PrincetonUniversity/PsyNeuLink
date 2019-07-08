@@ -26,7 +26,7 @@
 # "cuda_data" -- print data upload/download statistic (to GPU VRAM)
 # "clear_run_data" -- use clean slate to run trials instead of reusing data
 # "force_runs" -- set number of runs to be fixed ('1' if no other value is specified)
-
+# "ref_pass" -- Pass arguments to llvm functions by reference, instead of copying structs (SHOULD BE FASTER)
 import os
 
 debug_env = dict(x.partition('=')[0:3:2] for x in str(os.environ.get("PNL_LLVM_DEBUG")).split(';'))

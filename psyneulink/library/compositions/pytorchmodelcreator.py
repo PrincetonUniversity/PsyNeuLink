@@ -7,6 +7,8 @@ import ctypes
 import functools
 import timeit
 import pprint
+
+debug_env = pnlvm.debug_env
 try:
     import torch
     from torch import nn
@@ -137,7 +139,10 @@ class PytorchModelCreator(torch.nn.Module):
         input_ty = [None]*len(self.execution_sets[0])
         for component in self.execution_sets[0]:
             component_id = self._id_map[0][component]
-            input_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(component.defaults.variable[0])
+            if "ref_pass" in debug_env:
+                input_ty[component_id] = ir.types.IntType(64)
+            else:
+                input_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(component.defaults.variable[0])
         struct_ty = ir.types.LiteralStructType(input_ty)
         return struct_ty
 
@@ -147,7 +152,10 @@ class PytorchModelCreator(torch.nn.Module):
         vals = [None]*len(self.execution_sets[0])
         for component, value in input.items():
             component_id = self._id_map[0][component]
-            vals[component_id] = value.numpy()
+            if "ref_pass" in debug_env:
+                vals[component_id] = value.numpy().ctypes.data_as(ctypes.c_void_p).value
+            else:
+                vals[component_id] = value.numpy()
         vals = pnlvm.execution._tupleize(vals)
         return inp_cty(*vals)
 
@@ -182,7 +190,10 @@ class PytorchModelCreator(torch.nn.Module):
                 for node,weights in afferents.items():
                     input_component = node.component
                     input_component_id = self._afferent_id_map[component][input_component]
-                    param_list[i-1][component_id][input_component_id] = ctx.convert_python_struct_to_llvm_ir(weights.detach().numpy())
+                    if "ref_pass" in debug_env:
+                        param_list[i-1][component_id][input_component_id] = ir.types.IntType(64)
+                    else:
+                        param_list[i-1][component_id][input_component_id] = ctx.convert_python_struct_to_llvm_ir(weights.detach().numpy())
                 param_list[i-1][component_id] = ir.types.LiteralStructType(param_list[i-1][component_id])
             param_list[i-1] = ir.types.LiteralStructType(param_list[i-1])
         struct_ty = ir.types.LiteralStructType(
@@ -203,8 +214,15 @@ class PytorchModelCreator(torch.nn.Module):
                     for node,weights in afferents.items():
                         input_component = node.component
                         input_component_id = self._afferent_id_map[component][input_component]
-                        param_list[i-1][component_id][input_component_id] = weights.detach().numpy()
+                        if "ref_pass" in debug_env:
+                            param_list[i-1][component_id][input_component_id] = weights.detach().numpy().ctypes.data_as(ctypes.c_void_p).value
+                        else:
+                            param_list[i-1][component_id][input_component_id] = weights.detach().numpy()
             self._cached_param_list = param_list
+        if "ref_pass" in debug_env:
+            if self._cached_tupleized_param_list is None:
+                self._cached_tupleized_param_list = param_cty(*pnlvm.execution._tupleize(self._cached_param_list))
+            return self._cached_tupleized_param_list
         params = pnlvm.execution._tupleize(self._cached_param_list)
         return param_cty(*params)
         
@@ -291,7 +309,14 @@ class PytorchModelCreator(torch.nn.Module):
                 dim_x, dim_y = component.defaults.variable.shape
                 if i == 0:
                     for _y in range(0, dim_y):
-                        cmp_arg = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(component_id), ctx.int32_ty(_y)])  # get input
+                        cmp_arg = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(component_id)])
+
+                        # if pass by reference, we first cast the results
+                        if "ref_pass" in debug_env:
+                            mem_addr = builder.load(cmp_arg)
+                            cmp_arg = builder.inttoptr(mem_addr,
+                            ir.types.ArrayType(ir.types.DoubleType(), dim_y).as_pointer())
+                        cmp_arg = builder.gep(cmp_arg, [ctx.int32_ty(0),ctx.int32_ty(_y)])  # get input
                         res = self.bin_function_creator(
                             ctx, builder, component, builder.load(cmp_arg), execution_id=None)
                         builder.store(res, builder.gep(
@@ -312,7 +337,10 @@ class PytorchModelCreator(torch.nn.Module):
 
                         # We cast the ctype weights array to llvmlite pointer (THIS IS A BIG HACK NEED TO REMOVE - WEIGHTS ARRAY CAN BE MOVED BY GC!)
                         afferent_node_id = self._afferent_id_map[component][input_node.component]
-                        weights_llvmlite = builder.gep(params,[ctx.int32_ty(0), ctx.int32_ty(i-1),ctx.int32_ty(component_id),ctx.int32_ty(afferent_node_id)])#builder.inttoptr(weights_llvmlite, ir.types.ArrayType(ir.types.ArrayType(ir.types.DoubleType(), y), x).as_pointer())
+                        weights_llvmlite = builder.gep(params,[ctx.int32_ty(0), ctx.int32_ty(i-1),ctx.int32_ty(component_id),ctx.int32_ty(afferent_node_id)])
+                        if "ref_pass" in debug_env:
+                            mem_addr = builder.load(weights_llvmlite)
+                            weights_llvmlite = builder.inttoptr(mem_addr,ir.types.ArrayType(ir.types.ArrayType(ir.types.DoubleType(), y),x).as_pointer())
                         weighted_inp = self._gen_inject_vxm(
                             ctx, builder, input_value, weights_llvmlite, x, y)
                         if is_set == False:
