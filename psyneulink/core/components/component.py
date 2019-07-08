@@ -2823,7 +2823,7 @@ class Component(object, metaclass=ComponentsMeta):
             # class default functions should always be copied, otherwise anything this component
             # does with its function will propagate to anything else that wants to use
             # the default
-            if function.owner is None and function is not self.class_defaults.function:
+            if function.owner is None and not function.is_pnl_inherent:
                 self.function = function
             else:
                 self.function = self._clone_function(function)

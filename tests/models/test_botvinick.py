@@ -192,19 +192,14 @@ def test_botvinick_model(benchmark, mode, reps):
 
     def run(bin_execute):
         results = []
-        for stim in Stimulus:
-            # RUN the SYSTEM to initialize ---------------------------------------
-            comp.run(inputs=stim[0], num_trials=ntrials0, bin_execute=bin_execute)
-            comp.run(inputs=stim[1], num_trials=ntrials, bin_execute=bin_execute)
-            # reinitialize after condition was run
-            colors_hidden_layer.reinitialize([[0, 0, 0]], execution_context=comp)
-            words_hidden_layer.reinitialize([[0, 0, 0]], execution_context=comp)
-            response_layer.reinitialize([[0, 0]], execution_context=comp)
-            task_layer.reinitialize([[0, 0]], execution_context=comp)
+        for i, stim in enumerate(Stimulus):
+            # RUN the COMPOSITION to initialize --------------------------------
+            exec_id = "exec_" + str(i)
+            comp.run(inputs=stim[0], num_trials=ntrials0, bin_execute=bin_execute, execution_id=exec_id)
+            comp.run(inputs=stim[1], num_trials=ntrials, bin_execute=bin_execute, execution_id=exec_id)
+
             # Comp results include concatenation of both the above runs
-            results.append(comp.results.copy())
-            comp.reinitialize()
-            comp.results = []
+            results.append(comp.results)
 
         return results
 
