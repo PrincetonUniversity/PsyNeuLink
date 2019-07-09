@@ -4569,6 +4569,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             initial_values=None,
             reinitialize_values=None,
             runtime_params=None,
+            skip_initialization=False,
             animate=False,
             execution_id=None,
             base_execution_id=None,
@@ -4812,7 +4813,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
         # called repeatedly (this init is repeated in Composition.execute)
         # initialize from base context but don't overwrite any values already set for this execution_id
-        if (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION):
+        if (
+            not skip_initialization
+            and (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION)
+        ):
             self._initialize_from_context(execution_id, base_execution_id, override=False)
             self._assign_context_values(execution_id, composition=self)
 
@@ -5481,7 +5485,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  num_trials=num_simulation_trials,
                  animate=animate,
                  context=context,
-                 bin_execute=execution_mode)
+                 bin_execute=execution_mode,
+                 skip_initialization=True,
+                 )
         # # MODIFIED 6/12/19 OLD:
         # self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
         # MODIFIED 6/12/19 NEW: [JDC]
