@@ -731,6 +731,7 @@ class AutodiffComposition(Composition):
                 context=None
                 ):
         execution_id = self._assign_execution_ids(execution_id)
+        self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
 
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
@@ -805,6 +806,7 @@ class AutodiffComposition(Composition):
         context=None):
         # TBI: Handle trials, timesteps, etc
         execution_id = self._assign_execution_ids(execution_id)
+        self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
 
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing

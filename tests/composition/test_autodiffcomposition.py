@@ -1800,15 +1800,15 @@ class TestACLogging:
         exec_id = xor.default_execution_id
 
         in_np_dict_vals = xor_in.log.nparray_dictionary()[exec_id]['value']
-        in_np_vals = xor_in.log.nparray()[1][1][1][1:]
+        in_np_vals = xor_in.log.nparray()[1][1][4][1:]
 
         hid_map_np_dict_mats = hid_map.log.nparray_dictionary()[exec_id]['matrix']
-        hid_map_np_mats = np.array(hid_map.log.nparray()[1][1][1][1:])
+        hid_map_np_mats = np.array(hid_map.log.nparray()[1][1][4][1:])
 
         hid_np_dict_vals = xor_hid.log.nparray_dictionary()[exec_id]['value']
 
         out_map_np_dict_mats = out_map.log.nparray_dictionary()[exec_id]['matrix']
-        out_map_np_mats = np.array(out_map.log.nparray()[1][1][1][1:])
+        out_map_np_mats = np.array(out_map.log.nparray()[1][1][4][1:])
 
         out_np_dict_vals = xor_out.log.nparray_dictionary()[exec_id]['value']
 
