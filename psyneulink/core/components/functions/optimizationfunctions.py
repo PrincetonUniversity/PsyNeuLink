@@ -424,7 +424,7 @@ class OptimizationFunction(Function_Base):
                                                        repr(SEARCH_TERMINATION_FUNCTION),
                                                        self.__class__.__name__))
 
-    def reinitialize(self, *args, execution_id=None):
+    def reinitialize(self, *args, execution_id=NotImplemented):
         """Reinitialize parameters of the OptimizationFunction
 
         Parameters to be reinitialized should be specified in a parameter specification dictionary, in which they key

@@ -1786,7 +1786,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
         return value + offset
 
-    def reinitialize(self, short=None, long=None, execution_context=None):
+    def reinitialize(self, short=None, long=None, execution_context=NotImplemented):
 
         """
         Effectively begins accumulation over again at the specified utilities.
@@ -1803,6 +1803,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         <DualAdaptiveIntegrator.initial_short_term_avg>` and `initial_long_term_avg
         <DualAdaptiveIntegrator.initial_long_term_avg>` are used.
         """
+        if execution_context is NotImplemented:
+            execution_context = self.most_recent_execution_id
 
         if short is None:
             short = self.get_current_function_param("initial_short_term_avg", execution_context)

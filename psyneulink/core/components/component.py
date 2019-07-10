@@ -2906,7 +2906,7 @@ class Component(object, metaclass=ComponentsMeta):
     def initialize(self, execution_context=None):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         """
             If the component's execute method involves execution of an `IntegratorFunction` Function, this method
             effectively begins the function's accumulation over again at the specified value, and may update related

@@ -2079,7 +2079,7 @@ class Mechanism_Base(Mechanism):
         """Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism"""
         pass
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         """
             If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
             `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
