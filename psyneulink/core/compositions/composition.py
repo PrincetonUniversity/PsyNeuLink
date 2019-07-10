@@ -2353,46 +2353,39 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._graph_processing = self.graph.copy()
 
-        visited_vertices = set()
-        next_vertices = []  # a queue
+        def remove_vertex(vertex):
+            logger.debug('Removing', vertex)
+            for parent in vertex.parents:
+                parent.children.remove(vertex)
+                for child in vertex.children:
+                    child.parents.remove(vertex)
+                    if vertex.feedback:
+                        child.backward_sources.add(parent.component)
+                    self._graph_processing.connect_vertices(parent, child)
+            # ensure that children get removed even if vertex has no parents
+            if len(vertex.parents) == 0:
+                for child in vertex.children:
+                    child.parents.remove(vertex)
+                    if vertex.feedback:
+                        child.backward_sources.add(parent.component)
 
-        unvisited_vertices = True
+            for node in cur_vertex.parents + cur_vertex.children:
+                logger.debug(
+                    'New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(
+                        node, node.parents, node.children
+                    )
+                )
 
-        while unvisited_vertices:
-            for vertex in self._graph_processing.vertices:
-                if vertex not in visited_vertices:
-                    next_vertices.append(vertex)
-                    break
-            else:
-                unvisited_vertices = False
+            logger.debug('Removing vertex {0}'.format(cur_vertex))
 
-            logger.debug('processing graph vertices: {0}'.format(self._graph_processing.vertices))
-            while len(next_vertices) > 0:
-                cur_vertex = next_vertices.pop(0)
-                logger.debug('Examining vertex {0}'.format(cur_vertex))
+            self._graph_processing.remove_vertex(vertex)
 
-                # must check that cur_vertex is not already visited because in cycles,
-                #    some nodes may be added to next_vertices twice
-                if cur_vertex not in visited_vertices and not cur_vertex.component.is_processing:
-                    for parent in cur_vertex.parents:
-                        parent.children.remove(cur_vertex)
-                        for child in cur_vertex.children:
-                            child.parents.remove(cur_vertex)
-                            if cur_vertex.feedback:
-                                child.backward_sources.add(parent.component)
-                            self._graph_processing.connect_vertices(parent, child)
-
-                    for node in cur_vertex.parents + cur_vertex.children:
-                        logger.debug('New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(node, node.parents,
-                                                                                                     node.children))
-                    logger.debug('Removing vertex {0}'.format(cur_vertex))
-
-                    self._graph_processing.remove_vertex(cur_vertex)
-
-                visited_vertices.add(cur_vertex)
-                # add to next_vertices (frontier) any parents and children of cur_vertex that have not been visited yet
-                next_vertices.extend(
-                    [vertex for vertex in cur_vertex.parents + cur_vertex.children if vertex not in visited_vertices])
+        # copy to avoid iteration problems when deleting
+        vert_list = self._graph_processing.vertices.copy()
+        for cur_vertex in vert_list:
+            logger.debug('Examining', cur_vertex)
+            if not cur_vertex.component.is_processing:
+                remove_vertex(cur_vertex)
 
         self.needs_update_graph_processing = False
 
