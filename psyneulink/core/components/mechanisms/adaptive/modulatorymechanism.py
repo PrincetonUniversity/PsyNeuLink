@@ -419,7 +419,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGatingAllocation
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTEXT, \
     CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, EID_SIMULATION, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
-    MODULATORY_SIGNAL, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, \
+    MODULATES, MODULATORY_SIGNAL, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, SYSTEM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -539,7 +539,6 @@ class DefaultAllocationFunction(Function_Base):
                  execution_id=None,
                  params=None,
                  context=None):
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         num_mod_sigs = self.get_current_function_param('num_modulatory_signals')
         result = np.array([variable[0]] * num_mod_sigs)
         return self.convert_output_type(result)

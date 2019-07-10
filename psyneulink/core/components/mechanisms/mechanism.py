@@ -2126,12 +2126,15 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
-        execution_id = parse_execution_context(execution_context)
+        if execution_context is NotImplemented:
+            execution_id = self.most_recent_execution_id
+        else:
+            execution_id = parse_execution_context(execution_context)
 
         # If the primary function of the mechanism is stateful:
         # (1) reinitialize it, (2) update value, (3) update output states
         if isinstance(self.function, StatefulFunction):
-            new_value = self.function.reinitialize(*args, execution_context=execution_context)
+            new_value = self.function.reinitialize(*args, execution_context=execution_id)
             self.parameters.value._set(np.atleast_2d(new_value), execution_id=execution_id, override=True)
             self._update_output_states(execution_id=execution_id,
                                        context="REINITIALIZING")

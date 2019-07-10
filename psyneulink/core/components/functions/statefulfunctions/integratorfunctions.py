@@ -365,7 +365,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
         return value
 
-    def function(self, *args, **kwargs):
+    def _function(self, *args, **kwargs):
         raise FunctionError("IntegratorFunction is not meant to be called explicitly")
 
 # *********************************************** INTEGRATOR FUNCTIONS *************************************************
@@ -606,7 +606,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                     self._runtime_params_reset[execution_id][param_name] = getattr(self.parameters, param_name)._get(execution_id)
                     self._set_parameter_value(param_name, runtime_params[param_name], execution_id)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -834,7 +834,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
         self.has_initializers = True
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -857,9 +857,6 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         updated value of integral : 2d array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
 
         offset = self.get_current_function_param(OFFSET, execution_id)
@@ -1182,7 +1179,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
         return builder
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1207,8 +1204,6 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         updated value of integral : ndarray (dimension equal to variable)
 
         """
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
         offset = self.get_current_function_param(OFFSET, execution_id)
         # execute noise if it is a function
@@ -1708,7 +1703,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                 raise FunctionError("\'{}\' arg for {} must be one of the following: {}".
                                     format(OPERATION, self.name, OPERATIONS))
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1732,7 +1727,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         updated value of integral : 2d array
 
         """
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         # rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
         # execute noise if it is a function
         # noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
@@ -2121,7 +2115,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
                 raise FunctionError("Value(s) specified for {} argument of {} ({}) must be in interval [0,1]".
                                     format(repr(DECAY), self.__class__.__name__, decay))
 
-    def function(self, variable=None, execution_id=None, params=None, context=None):
+    def _function(self, variable=None, execution_id=None, params=None, context=None):
         """
 
         Arguments
@@ -2141,9 +2135,6 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         updated value of integral : 2d array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
         decay = np.array(self.get_current_function_param(DECAY, execution_id)).astype(float)
         rest = np.array(self.get_current_function_param(REST, execution_id)).astype(float)
@@ -2493,7 +2484,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                 "Invalid noise parameter for {}. DriftDiffusionIntegrator requires noise parameter to be a float. Noise"
                 " parameter is used to construct the standard DDM noise distribution".format(self.name))
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -2518,8 +2509,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         updated value of integral : 2d array
 
         """
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
         noise = self.get_current_function_param(NOISE, execution_id)
         offset = self.get_current_function_param(OFFSET, execution_id)
@@ -2849,7 +2838,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
         self._output_type = None
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -2874,8 +2863,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         updated value of integral : 2d array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
         decay = self.get_current_function_param(DECAY, execution_id)
         noise = self.get_current_function_param(NOISE, execution_id)
@@ -3102,7 +3089,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
         self.has_initializers = True
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -3126,9 +3113,6 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         updated value of integral : 2d array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         rate = np.atleast_1d(self.get_current_function_param(RATE, execution_id))
         initializer = self.get_current_function_param(INITIALIZER, execution_id)  # unnecessary?
         time_step_size = self.get_current_function_param(TIME_STEP_SIZE, execution_id)
@@ -4022,7 +4006,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         return val
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,

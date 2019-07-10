@@ -133,7 +133,7 @@ class InterfaceStateMap(InterfaceFunction):
 
         # self.functionOutputType = None
 
-    def function(
+    def _function(
         self,
         variable=None,
         execution_id=None,
@@ -168,8 +168,6 @@ class InterfaceStateMap(InterfaceFunction):
         <InterfaceStateMap.input_states>`
 
         """
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         index = self.corresponding_input_state.position_in_mechanism
 
         if self.corresponding_input_state.owner.parameters.value._get(execution_id) is not None:

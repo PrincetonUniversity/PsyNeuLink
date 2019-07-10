@@ -563,7 +563,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         return value
 
     @abc.abstractmethod
-    def function(self, *args, **kwargs):
+    def _function(self, *args, **kwargs):
         raise FunctionError("StatefulFunction is not meant to be called explicitly")
 
     @property

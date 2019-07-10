@@ -293,7 +293,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         self.parameters.value.set(value, execution_context, override=True)
         return value
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -317,9 +317,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         updated value of deque : deque
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
 
         # execute noise if it is a function
@@ -1084,7 +1081,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         self.parameters.value.set(value, execution_context, override=True)
         return value
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1113,7 +1110,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         value of entry that best matches first item of `variable <ContentAddressableMemory.variable>`  : 1d array
         """
 
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         key = variable[KEYS]
         # if len(variable)==2:
         val = variable[VALS]

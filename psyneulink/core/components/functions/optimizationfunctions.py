@@ -436,7 +436,8 @@ class OptimizationFunction(Function_Base):
             * `search_function <OptimizationFunction.search_function>`
             * `search_termination_function <OptimizationFunction.search_termination_function>`
         """
-
+        if execution_id is NotImplemented:
+            execution_id = self.most_recent_execution_id
         self._validate_params(request_set=args[0])
 
         if DEFAULT_VARIABLE in args[0]:
@@ -458,7 +459,7 @@ class OptimizationFunction(Function_Base):
             if SEARCH_SPACE in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_SPACE)]
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -995,7 +996,7 @@ class GradientOptimization(OptimizationFunction):
 
         self.bounds = bounds
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1022,7 +1023,7 @@ class GradientOptimization(OptimizationFunction):
             evaluated; otherwise it is empty.
         """
 
-        optimal_sample, optimal_value, all_samples, all_values = super().function(variable=variable,
+        optimal_sample, optimal_value, all_samples, all_values = super()._function(variable=variable,
                                                                                   execution_id=execution_id,
                                                                                   params=params,
                                                                                   context=context)
@@ -1317,8 +1318,10 @@ class GridSearch(OptimizationFunction):
             #                                            ))
 
 
-    def reinitialize(self, *args, execution_id=None):
+    def reinitialize(self, *args, execution_id=NotImplemented):
         """Assign size of `search_space <GridSearch.search_space>"""
+        if execution_id is NotImplemented:
+            execution_id = self.most_recent_execution_id
         super(GridSearch, self).reinitialize(*args, execution_id=execution_id)
         sample_iterators = args[0]['search_space']
         owner_str = ''
@@ -1560,7 +1563,7 @@ class GridSearch(OptimizationFunction):
         builder.store(builder.load(min_value_ptr), out_value_ptr)
         return builder
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1690,7 +1693,7 @@ class GridSearch(OptimizationFunction):
                 "PROGRAM ERROR: bad value for {} arg of {}: {}". \
                     format(repr(DIRECTION), self.name, self.direction)
 
-            last_sample, last_value, all_samples, all_values = super().function(
+            last_sample, last_value, all_samples, all_values = super()._function(
                 variable=variable,
                 execution_id=execution_id,
                 params=params,
@@ -1968,7 +1971,7 @@ class GaussianProcess(OptimizationFunction):
         #                                             "must be less than or equal to its second element".
         #                                             format(repr(SEARCH_SPACE), self.__class__.__name__, i))
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -2003,7 +2006,7 @@ class GaussianProcess(OptimizationFunction):
             pass
 
         else:
-            last_sample, last_value, all_samples, all_values = super().function(
+            last_sample, last_value, all_samples, all_values = super()._function(
                     variable=variable,
                     execution_id=execution_id,
                     params=params,

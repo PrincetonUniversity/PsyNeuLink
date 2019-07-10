@@ -2915,6 +2915,8 @@ class Component(object, metaclass=ComponentsMeta):
         """
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
         if isinstance(self.function, IntegratorFunction):
+            if execution_context is NotImplemented:
+                execution_context = self.most_recent_execution_id
             new_value = self.function.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.atleast_2d(new_value), execution_context, override=True)
         else:
@@ -2922,9 +2924,16 @@ class Component(object, metaclass=ComponentsMeta):
                                  "(It does not have an accumulator to reinitialize).")
 
     def execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-
         if execution_id is None:
-            execution_id = self.most_recent_execution_id
+            try:
+                owner = self.owner
+                owner_parameters = self.owner.parameters.context._get(self.most_recent_execution_id)
+                if owner is not None and owner_parameters is None:
+                    execution_id = owner.most_recent_execution_id
+                else:
+                    raise AttributeError
+            except AttributeError:
+                execution_id = self.most_recent_execution_id
 
         # initialize context for this execution_id if not done already
         if self.parameters.context._get(execution_id) is None:
@@ -2966,7 +2975,6 @@ class Component(object, metaclass=ComponentsMeta):
 
             if owner is not None:
                 flags = owner.parameters.context._get(execution_id).flags
-
                 self._assign_context_values(
                     execution_id,
                     flags=flags,
