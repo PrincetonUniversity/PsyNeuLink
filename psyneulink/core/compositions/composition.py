@@ -4888,6 +4888,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     execution_autodiff_stimuli[node] = autodiff_stimuli[node]
 
+            for node in self.nodes:
+                if hasattr(node, "reinitialize_when") and node.parameters.has_initializers._get(execution_id):
+                    if node.reinitialize_when.is_satisfied(scheduler=self.scheduler_processing,
+                                                           execution_context=execution_id):
+                        node.reinitialize(None, execution_context=execution_id)
+
             # execute processing
             # pass along the stimuli for this trial
             trial_output = self.execute(inputs=execution_stimuli,

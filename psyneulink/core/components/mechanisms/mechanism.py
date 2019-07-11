@@ -1422,6 +1422,7 @@ class Mechanism_Base(Mechanism):
                  name=None,
                  prefs=None,
                  context=None,
+                 **kwargs
                  ):
         """Assign name, category-level preferences, and variable; register Mechanism; and enforce category methods
 
@@ -1487,7 +1488,8 @@ class Mechanism_Base(Mechanism):
                                              function=function,
                                              param_defaults=params,
                                              prefs=prefs,
-                                             name=name)
+                                             name=name,
+                                             **kwargs)
 
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
