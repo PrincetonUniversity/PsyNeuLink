@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlSignal &mdash; PsyNeuLink 0.5.3.2+275.ge893793 documentation</title>
+  <title>ControlSignal &mdash; PsyNeuLink 0.5.3.2+279.ge9f000b documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+275.ge893793',
+              VERSION:'0.5.3.2+279.ge9f000b',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+275
+                0.5.3.2+279
               </div>
             
           
@@ -394,7 +394,9 @@ ControlSignal to the <a class="reference internal" href="TransferFunctions.html#
 </div>
 <p>Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
 with a ControlProjection that projects to the TransferMechanism’s <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a>
-parameter of its <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function.  The default value of a ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.modulation" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute is Modulation.MULTIPLICATIVE, so that it will multiply the value of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a> parameter. When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
+parameter of its <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function.  The default value of a ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.modulation" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a>
+attribute is Modulation.MULTIPLICATIVE, so that it will multiply the value of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a> parameter.
+When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
 gain parameter.</p>
 <p><em>Specify attributes of a ControlSignal</em>.  Ordinarily, ControlSignals modify the <em>MULTIPLICATIVE_PARAM</em> of a
 ParameterState’s <a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState.function" title="psyneulink.core.components.states.parameterstate.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to modulate the parameter’s value.
@@ -509,7 +511,7 @@ which is assigned as the ControlSignal’s <a class="reference internal" href="#
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> (see <a class="reference internal" href="#controlsignal-execution"><span class="std std-ref">Execution</span></a>).</li>
 <li><strong>modulation</strong> (<em>ModulationParam : default ModulationParam.MULTIPLICATIVE</em>) – specifies the way in which the <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> the ControlSignal is used to modify the value of
 the parameter(s) that it controls.</li>
-<li><strong>projections</strong> (<em>list of Projection specifications</em>) – specifies the <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to be assigned to the ControlSignal, and that will be
+<li><strong>modulates</strong> (<em>list of Projection specifications</em>) – specifies the <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to be assigned to the ControlSignal, and that will be
 listed in its <a class="reference internal" href="#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.efferents" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> attribute (see <a class="reference internal" href="#controlsignal-projections"><span class="std std-ref">Projections</span></a> for additional
 details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for

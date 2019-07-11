@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InterfaceFunctions &mdash; PsyNeuLink 0.5.3.2+275.ge893793 documentation</title>
+  <title>InterfaceFunctions &mdash; PsyNeuLink 0.5.3.2+279.ge9f000b documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+275.ge893793',
+              VERSION:'0.5.3.2+279.ge9f000b',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.5.3.2+275
+                0.5.3.2+279
               </div>
             
           
@@ -178,7 +178,7 @@
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.interfacefunctions.</code><code class="descname">InterfaceStateMap</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>corresponding_input_state=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x10e9780d0&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.interfacefunctions.</code><code class="descname">InterfaceStateMap</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>corresponding_input_state=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x1096460d0&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Identity(                             default_variable,              params=None,                   owner=None,                    name=None,                     prefs=None                    )</p>
 <p id="identity">Returns <a class="reference internal" href="#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.variable" title="psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -222,36 +222,6 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.function">
-<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.interfacefunctions.InterfaceStateMap.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return: The item of <code class="xref any docutils literal"><span class="pre">value</span></code> whose index corresponds to the index of
-<code class="xref any docutils literal"><span class="pre">corresponding_input_state</span></code> in <code class="xref any docutils literal"><span class="pre">input_states</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number</em><em> or </em><em>np.array : default class_defaults.variable</em>) – a single value or array to be transformed.</li>
-<li><strong>corresponding_input_state</strong> (<em>InputState : default None</em>) – the InputState on the owner CompositionInterfaceMechanism to which this OutputState corresponds</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
-function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
-<li>The item of <code class="xref any docutils literal"><span class="pre">value</span></code> whose index corresponds to the index of</li>
-<li><code class="xref any docutils literal"><span class="pre">corresponding_input_state</span></code> in <a href="#id1"><span class="problematic" id="id2">`</span></a>input_states</li>
-<li>&lt;InterfaceStateMap.input_states&gt;`</li>
-</ul>
-</p>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 </dd></dl>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SelectionFunctions &mdash; PsyNeuLink 0.5.3.2+275.ge893793 documentation</title>
+  <title>SelectionFunctions &mdash; PsyNeuLink 0.5.3.2+279.ge9f000b documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+275.ge893793',
+              VERSION:'0.5.3.2+279.ge9f000b',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+275
+                0.5.3.2+279
               </div>
             
           
@@ -231,7 +231,7 @@ with all of its values zeroed except one as specified by <a class="reference int
 <li><strong>variable</strong> (<em>2d np.array : default class_defaults.variable</em>) – First (possibly only) item specifies a template for the array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> is
 <em>PROB</em> then a 2nd item must be included that is a probability distribution with same length as 1st item.</li>
 <li><strong>mode</strong> (<em>MAX_VAL</em><em>, </em><em>MAX_ABS_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, </em><em>MAX_ABS_INDICATOR</em><em>, </em><em>MIN_VAL</em><em>, </em><em>MIN_ABS_VAL</em><em>, </em><em>MIN_INDICATOR</em><em>,</em>) – </li>
-<li><strong>PROB</strong><strong> or </strong><strong>PROB_INDICATOR</strong> (<em>MIN_ABS_INDICATOR</em><em>,</em>) – specifies the nature of the single non-zero value in the array returned by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+<li><strong>PROB</strong><strong> or </strong><strong>PROB_INDICATOR</strong> (<em>MIN_ABS_INDICATOR</em><em>,</em>) – specifies the nature of the single non-zero value in the array returned by <code class="xref any docutils literal"><span class="pre">function</span></code>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -262,7 +262,7 @@ distribution, each element of which specifies the probability for selecting the 
 <dl class="attribute">
 <dt>
 <code class="descname">MIN_ABS_INDICATOR, PROB or PROB_INDICATOR</code></dt>
-<dd><p>determines the nature of the single non-zero value in the array returned by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="psyneulink.core.components.functions.selectionfunctions.OneHot.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+<dd><p>determines the nature of the single non-zero value in the array returned by <code class="xref any docutils literal"><span class="pre">function</span></code>
 (see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for options).</p>
 </dd></dl>
 
@@ -284,32 +284,6 @@ default is assigned by FunctionRegistry (see <a class="reference internal" href=
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.core.components.functions.selectionfunctions.OneHot.function">
-<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.function" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>2d np.array : default class_defaults.variable</em>) – 1st item is an array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> is <em>PROB</em>, 2nd item must be an array of
-probabilities (i.e., elements between 0 and 1) of equal length to the 1st item.</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
-function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>array with single non-zero value</strong> – specified by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a>.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.array</p>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 </dd></dl>

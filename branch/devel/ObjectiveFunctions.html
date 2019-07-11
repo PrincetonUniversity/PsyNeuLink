@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveFunctions &mdash; PsyNeuLink 0.5.3.2+275.ge893793 documentation</title>
+  <title>ObjectiveFunctions &mdash; PsyNeuLink 0.5.3.2+279.ge9f000b documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+275.ge893793',
+              VERSION:'0.5.3.2+279.ge9f000b',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+275
+                0.5.3.2+279
               </div>
             
           
@@ -280,26 +280,6 @@ arguments of the constructor.</p>
 <dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability.function">
-<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the stability of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
-<p>Compare the value of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> with its value after transformation by
-<a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="psyneulink.core.components.functions.objectivefunctions.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.transfer_fct" title="psyneulink.core.components.functions.objectivefunctions.Stability.transfer_fct"><code class="xref any py py-attr docutils literal"><span class="pre">transfer_fct</span></code></a> (if specified), using the specified
-<a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.metric" title="psyneulink.core.components.functions.objectivefunctions.Stability.metric"><code class="xref any py py-attr docutils literal"><span class="pre">metric</span></code></a>.  If <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.normalize" title="psyneulink.core.components.functions.objectivefunctions.Stability.normalize"><code class="xref any py py-attr docutils literal"><span class="pre">normalize</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, the result is divided
-by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>stability</strong></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">scalar</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="class">
@@ -362,24 +342,6 @@ arguments of the constructor.</p>
 <dt id="psyneulink.core.components.functions.objectivefunctions.Distance.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.function">
-<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>execution_id=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the distance between the two vectors in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
-<p>Use the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal"><span class="pre">distance</span> <span class="pre">metric</span></code></a> specified in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.metric" title="psyneulink.core.components.functions.objectivefunctions.Distance.metric"><code class="xref any py py-attr docutils literal"><span class="pre">metric</span></code></a> to calculate the distance.
-If <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.normalize" title="psyneulink.core.components.functions.objectivefunctions.Distance.normalize"><code class="xref any py py-attr docutils literal"><span class="pre">normalize</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, the result is divided by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>distance</strong></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">scalar</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 </dd></dl>
