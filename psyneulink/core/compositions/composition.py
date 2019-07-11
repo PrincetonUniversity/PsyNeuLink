@@ -2399,10 +2399,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in origin_nodes:
                 self._add_node_role(node, NodeRole.INPUT)
 
-        # If OUTPUT nodes were not specified by user, TERMINAL nodes become OUTPUT nodes
-        # If there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node
+        # If OUTPUT nodes were not specified by user, TERMINAL nodes become OUTPUT nodes.
+        # If there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
+        # If there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
         if not self.get_nodes_by_role(NodeRole.OUTPUT):
-            terminal_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
+            if self.get_nodes_by_role(NodeRole.LEARNING):
+                terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
+            else:
+                terminal_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
             if not terminal_nodes:
                 try:
                     terminal_nodes = self.nodes[-1]
