@@ -892,7 +892,7 @@ def run(obj,
             if call_before_time_step:
                 call_with_pruned_args(call_before_time_step, execution_context=execution_id)
 
-            # Reset any mechanisms whose 'reinitialize_when' conditions are satisfied
+            # Reinitialize any mechanisms that has a 'reinitialize_when' condition and it is satisfied
             for mechanism in obj.mechanisms:
                 if hasattr(mechanism, "reinitialize_when") and mechanism.parameters.has_initializers._get(execution_id):
                     if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing, execution_context=execution_id):
