@@ -587,9 +587,6 @@ AutodiffComposition
 
 
 
-
-
-
 .. Impelements all major forms of learning (autoassociative, RL and BP)
 .. Implementation favors modulariziation / depiction of process flow (pedagogical tool, e.g., animation - SHOW EXAMPLE)
 .. But integrates PyTorch for efficiency and generality: Autodiff EXAMPLE (Rumelhart network)
