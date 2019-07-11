@@ -1490,7 +1490,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return value
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         super().reinitialize(*args, execution_context=execution_context)
         self.parameters.previous_value.set(None, execution_context, override=True)
 

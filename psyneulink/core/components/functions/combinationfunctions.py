@@ -271,7 +271,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
             if not isinstance(offset, numbers.Number):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -297,10 +297,6 @@ class Concatenate(CombinationFunction):  # -------------------------------------
             in an array that is one dimension less than `variable <Concatenate.variable>`.
 
         """
-
-        # Validate variable and assign to variable, and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         scale = self.get_current_function_param(SCALE, execution_id)
         offset = self.get_current_function_param(OFFSET, execution_id)
 
@@ -551,7 +547,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
             indices.extend(item)
         return indices
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -575,10 +571,6 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         Rearranged items of outer dimension (axis 0) of **variable** : array
             in a 2d array.
         """
-
-        # Validate variable and assign to variable, and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         variable = np.atleast_2d(variable)
 
         scale = self.get_current_function_param(SCALE, execution_id)
@@ -840,7 +832,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             if not isinstance(offset, numbers.Number):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -867,10 +859,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
 
         """
-
-        # Validate variable and assign to variable, and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         weights = self.get_current_function_param(WEIGHTS, execution_id)
         exponents = self.get_current_function_param(EXPONENTS, execution_id)
         operation = self.get_current_function_param(OPERATION, execution_id)
@@ -1283,7 +1271,7 @@ class LinearCombination(
                         #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
                         #     format(operation))
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1309,10 +1297,6 @@ class LinearCombination(
             the result of linearly combining the arrays in `variable <LinearCombination.variable>`.
 
         """
-
-        # Validate variable and assign to variable, and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         weights = self.get_current_function_param(WEIGHTS, execution_id)
         exponents = self.get_current_function_param(EXPONENTS, execution_id)
         # if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZED:
@@ -1863,7 +1847,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                     #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
                     #     format(operation))
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1889,10 +1873,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             the result of taking the means of each array in `variable <CombineMeans.variable>` and combining them.
 
         """
-
-        # Validate variable and assign to variable, and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         exponents = self.get_current_function_param(EXPONENTS, execution_id)
         weights = self.get_current_function_param(WEIGHTS, execution_id)
         operation = self.get_current_function_param(OPERATION, execution_id)
@@ -2111,7 +2091,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                         len(target_set[WEIGHTS]),
                         len(self.defaults.variable.shape)))
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -2137,7 +2117,6 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         delta values : 1d np.array
 
         """
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         gamma = self.get_current_function_param(GAMMA, execution_id)
         sample = variable[0]
         reward = variable[1]

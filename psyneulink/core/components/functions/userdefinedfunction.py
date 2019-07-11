@@ -491,7 +491,7 @@ class UserDefinedFunction(Function_Base):
 
         self._initialize_parameters()
 
-    def function(self, variable, execution_id=None, **kwargs):
+    def _function(self, variable, execution_id=None, **kwargs):
 
         # Update value of parms in cust_fct_params
         for param in self.cust_fct_params:

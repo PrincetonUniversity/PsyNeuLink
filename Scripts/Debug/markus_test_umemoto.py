@@ -139,9 +139,9 @@ mySystem = pnl.System(processes=[TargetControlProcess,
                                  FlankerAutomaticProcess,
                                  RewardProcess],
                       controller=pnl.EVCControlMechanism(
-                              control_signals=pnl.ControlSignal(projections=[(pnl.SLOPE, Target_Rep),
-                                                                              (pnl.SLOPE, Distractor_Rep)
-                                                                              ],
+                              control_signals=pnl.ControlSignal(modulates=[(pnl.SLOPE, Target_Rep),
+                                                                           (pnl.SLOPE, Distractor_Rep)
+                                                                           ],
                                                                 function=psyneulink.core.components.functions.transferfunctions.Logistic,
                                                                 cost_options=[pnl.ControlSignalCosts.INTENSITY,
                                                                                pnl.ControlSignalCosts.ADJUSTMENT],

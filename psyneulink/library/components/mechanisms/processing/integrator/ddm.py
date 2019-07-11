@@ -1164,14 +1164,17 @@ class DDM(ProcessingMechanism_Base):
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
             return return_value
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
-        execution_id = parse_execution_context(execution_context)
+        if execution_context is NotImplemented:
+            execution_id = self.most_recent_execution_id
+        else:
+            execution_id = parse_execution_context(execution_context)
 
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
         if isinstance(self.function, IntegratorFunction):
-            new_values = self.function.reinitialize(*args, execution_context=execution_context)
+            new_values = self.function.reinitialize(*args, execution_context=execution_id)
             self.parameters.value._set(np.array(new_values), execution_id, override=True)
             self._update_output_states(execution_id=execution_id,
                                        context="REINITIALIZING")

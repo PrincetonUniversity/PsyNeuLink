@@ -162,7 +162,7 @@ lvoc = pnl.OptimizationControlMechanism(
     # opt control alloc used to compute ctrl sigs
     control_signals=[pnl.ControlSignal(
             default_allocation=default_control_signal,
-            projections=[(pnl.SLOPE, color_task), ('color_control', word_task)],
+            modulates=[(pnl.SLOPE, color_task), ('color_control', word_task)],
             # function=pnl.ReLU,
             # function=pnl.Logistic,
             cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
