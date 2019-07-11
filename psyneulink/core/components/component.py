@@ -856,6 +856,8 @@ class Component(object, metaclass=ComponentsMeta):
     componentCategory = None
     componentType = None
 
+    standard_constructor_args = [REINITIALIZE_WHEN]
+
     class Parameters(ParametersBase):
         """
             The `Parameters` that are associated with all `Components`
@@ -952,6 +954,11 @@ class Component(object, metaclass=ComponentsMeta):
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
         """
+
+        for arg in kwargs.keys():
+            if arg not in self.standard_constructor_args:
+                raise ComponentError(f"Unrecognized argument in constructor for {self.name} "
+                                     f"(type: {self.__class__.__name__}): {repr(arg)}")
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
 
