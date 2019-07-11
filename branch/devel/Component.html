@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.5.3.2+280.g0ec6f73 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.5.3.2+281.g84c1ebf documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+280.g0ec6f73',
+              VERSION:'0.5.3.2+281.g84c1ebf',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+280
+                0.5.3.2+281
               </div>
             
           
@@ -323,8 +323,10 @@ preference (see <code class="xref any docutils literal"><span class="pre">Prefer
 <li><p class="first"><strong>reinitialize_when</strong> - the <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize_when" title="psyneulink.core.components.component.Component.reinitialize_when"><code class="xref any py py-attr docutils literal"><span class="pre">reinitialize_when</span></code></a> attribute contains a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>. When
 this condition is satisfied, the Component calls its <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method. The
 <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method is executed without arguments, meaning that the relevant function’s
-<code class="xref any docutils literal"><span class="pre">initializer</span></code> attribute (or equivalent – initialization attributes vary among functions) is
-used for reinitialization. Keep in mind that the <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method and <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize_when" title="psyneulink.core.components.component.Component.reinitialize_when"><code class="xref any py py-attr docutils literal"><span class="pre">reinitialize_when</span></code></a> attribute only exist on stateful Mechanisms.</p>
+<code class="xref any docutils literal"><span class="pre">initializer</span></code> attribute (or equivalent – initialization attributes vary among
+functions) is used for reinitialization. Keep in mind that the <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method and
+<a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize_when" title="psyneulink.core.components.component.Component.reinitialize_when"><code class="xref any py py-attr docutils literal"><span class="pre">reinitialize_when</span></code></a> attribute only exist for Mechanisms that have <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a> Parameters, or that have a <code class="xref any docutils literal"><span class="pre">function</span></code> with <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a>
+Parameters.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Currently, only Mechanisms reinitialize when their reinitialize_when Conditions are satisfied. Other types of
@@ -447,7 +449,7 @@ argument, using a value of <a class="reference internal" href="#component-resetm
 <span id="component-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.components.component.Component">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>function=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>function=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for Component.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
