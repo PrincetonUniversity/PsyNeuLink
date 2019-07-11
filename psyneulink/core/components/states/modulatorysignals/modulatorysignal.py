@@ -209,7 +209,7 @@ from psyneulink.core.components.component import component_keywords
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL, VARIABLE
+from psyneulink.core.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL, VARIABLE, PROJECTIONS
 from psyneulink.core.globals.defaults import defaultModulatoryAllocation
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -412,7 +412,7 @@ class ModulatorySignal(OutputState):
                  size=None,
                  reference_value=None,
                  default_allocation=defaultModulatoryAllocation,
-                 projections=None,
+                 modulates=None,
                  modulation=None,
                  index=None,
                  assign=None,
@@ -427,6 +427,8 @@ class ModulatorySignal(OutputState):
         if kwargs:
             if VARIABLE in kwargs:
                 default_allocation = kwargs.pop(VARIABLE, default_allocation)
+            if PROJECTIONS in kwargs:
+                modulates = kwargs.pop(PROJECTIONS, modulates)
             if kwargs:
                 raise TypeError(f'{self.__class__.__name__} got one or more unexpected keyword argument(s): '
                                 f'{", ".join([repr(k) for k in list(kwargs.keys())])}')
@@ -450,7 +452,7 @@ class ModulatorySignal(OutputState):
                          reference_value=reference_value,
                          variable=default_allocation,
                          size=size,
-                         projections=projections,
+                         projections=modulates,
                          index=index,
                          assign=assign,
                          params=params,
@@ -458,6 +460,7 @@ class ModulatorySignal(OutputState):
                          prefs=prefs,
                          context=context,
                          function=function,
+                         **kwargs
                          )
 
         if self.context.initialization_status == ContextFlags.INITIALIZED:

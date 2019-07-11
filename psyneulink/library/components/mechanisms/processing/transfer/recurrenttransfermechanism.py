@@ -1535,7 +1535,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._get_variable_from_input(input, execution_id)
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         if self.parameters.integrator_mode.get(execution_context):
             super().reinitialize(*args, execution_context=execution_context)
         self.parameters.previous_value.set(None, execution_context, override=True)

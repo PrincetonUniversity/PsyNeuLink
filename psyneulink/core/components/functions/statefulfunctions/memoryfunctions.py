@@ -255,7 +255,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         self.has_initializers = True
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         """
 
         Clears the `previous_value <Buffer.previous_value>` deque.
@@ -267,6 +267,8 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         `value <Buffer.value>` takes on the same value as  `previous_value <Buffer.previous_value>`.
 
         """
+        if execution_context is NotImplemented:
+            execution_context = self.most_recent_execution_id
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
@@ -293,7 +295,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         self.parameters.value.set(value, execution_context, override=True)
         return value
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -317,9 +319,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         updated value of deque : deque
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
 
         # execute noise if it is a function
@@ -1045,7 +1044,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         if isinstance(self.selection_function, type):
             self.selection_function = self.selection_function()
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         """
         reinitialize(<new_dictionary> default={})
 
@@ -1059,6 +1058,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         `value <ContentAddressableMemory.value>` takes on the same value as
         `previous_value <ContentAddressableMemory.previous_value>`.
         """
+        if execution_context is NotImplemented:
+            execution_context = self.most_recent_execution_id
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
@@ -1084,7 +1085,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         self.parameters.value.set(value, execution_context, override=True)
         return value
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1113,7 +1114,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         value of entry that best matches first item of `variable <ContentAddressableMemory.variable>`  : 1d array
         """
 
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         key = variable[KEYS]
         # if len(variable)==2:
         val = variable[VALS]

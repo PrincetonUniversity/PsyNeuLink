@@ -2223,24 +2223,21 @@ class Process(Process_Base):
         """
         from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
-        if not context:
-            context = ContextFlags.COMPOSITION
-            self._assign_context_values(
-                execution_id,
-                execution_phase=ContextFlags.PROCESSING,
-                source=context,
-                string=EXECUTING + " " + PROCESS + " " + self.name
-            )
-
         if execution_id is None:
             execution_id = self.default_execution_id
 
-        for mech in self.mechanisms:
-            mech._execution_id = self._execution_id
-            mech._assign_context_values(execution_id, composition=self)
+        if not context:
+            context = ContextFlags.COMPOSITION
 
-        for proj in self.projections:
-            proj._assign_context_values(execution_id, composition=self)
+        if self.parameters.context._get(execution_id) is None:
+            self._assign_context_values(
+                execution_id,
+                propagate=True,
+                execution_phase=ContextFlags.PROCESSING,
+                source=context,
+                string=EXECUTING + " " + PROCESS + " " + self.name,
+                composition=self
+            )
 
         # initialize from base context but don't overwrite any values already set for this execution_id
         self._initialize_from_context(execution_id, base_execution_id, override=False)
@@ -2346,10 +2343,10 @@ class Process(Process_Base):
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
-            mech._assign_context_values(execution_id, execution_phase=ContextFlags.LEARNING)
             mech._assign_context_values(
                 execution_id,
-                string=self.parameters.context._get(execution_id).string.replace(EXECUTING, LEARNING + ' ')
+                string=self.parameters.context._get(execution_id).string.replace(EXECUTING, LEARNING + ' '),
+                execution_phase=ContextFlags.LEARNING
             )
 
             # IMPLEMENTATION NOTE:
@@ -2650,6 +2647,7 @@ class Process(Process_Base):
         return list(itertools.chain(
             super()._dependent_components,
             self._mechs,
+            self._learning_mechs,
             self.projections,
         ))
 

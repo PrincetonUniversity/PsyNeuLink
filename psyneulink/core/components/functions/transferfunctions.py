@@ -244,7 +244,7 @@ class Identity(TransferFunction):  # -------------------------------------------
 
         # self.functionOutputType = None
 
-    def function(
+    def _function(
         self,
         variable=None,
         execution_id=None,
@@ -272,8 +272,6 @@ class Identity(TransferFunction):  # -------------------------------------------
         variable : number or np.array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         # outputType = self.functionOutputType
 
         return variable
@@ -460,7 +458,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         builder.store(val, ptro)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -484,8 +482,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
         linear transformation of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         slope = self.get_current_function_param(SLOPE, execution_id)
         intercept = self.get_current_function_param(INTERCEPT, execution_id)
 
@@ -722,7 +718,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         builder.store(val, ptro)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -746,8 +742,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
         Exponential transformation of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         rate = self.get_current_function_param(RATE, execution_id)
         bias = self.get_current_function_param(BIAS, execution_id)
         scale = self.get_current_function_param(SCALE, execution_id)
@@ -999,7 +993,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         builder.store(val, ptro)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1023,8 +1017,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Logistic transformation of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         gain = self.get_current_function_param(GAIN, execution_id)
         bias = self.get_current_function_param(BIAS, execution_id)
         x_0 = self.get_current_function_param(X_0, execution_id)
@@ -1299,7 +1291,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
         builder.store(val, ptro)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1323,8 +1315,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         hyperbolic tangent of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         gain = self.get_current_function_param(GAIN, execution_id)
         bias = self.get_current_function_param(BIAS, execution_id)
         x_0 = self.get_current_function_param(X_0, execution_id)
@@ -1499,7 +1489,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1521,9 +1511,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         ReLU transformation of variable : number or array
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         gain = self.get_current_function_param(GAIN, execution_id)
         bias = self.get_current_function_param(BIAS, execution_id)
         leak = self.get_current_function_param(LEAK, execution_id)
@@ -1782,7 +1769,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
         builder.store(val, ptro)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1807,8 +1794,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Gaussian transformation of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, params=params, context=context)
         standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, execution_id)
         bias = self.get_current_function_param(BIAS, execution_id)
         scale = self.get_current_function_param(SCALE, execution_id)
@@ -2062,7 +2047,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
 
         builder.store(val, ptro)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -2087,8 +2072,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         Sample from Gaussian distribution for each element of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, params=params, context=context)
         variance = self.get_current_function_param(VARIANCE, execution_id)
         bias = self.get_current_function_param(BIAS, execution_id)
         scale = self.get_current_function_param(SCALE, execution_id)
@@ -2447,7 +2430,7 @@ class SoftMax(TransferFunction):
         else:
             return sm
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -2471,9 +2454,6 @@ class SoftMax(TransferFunction):
         SoftMax transformation of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         # Assign the params and return the result
         output_type = self.get_current_function_param(OUTPUT_TYPE, execution_id)
         gain = self.get_current_function_param(GAIN, execution_id)
@@ -3011,7 +2991,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
         return builder
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -3035,9 +3015,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             length of the array returned equals the number of columns of `matrix <LinearMatrix.matrix>`.
 
         """
-
-        # Note: this calls _validate_variable and _validate_params which are overridden above;
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         matrix = self.get_current_function_param(MATRIX, execution_id)
         result = np.dot(variable, matrix)
         return self.convert_output_type(result)
