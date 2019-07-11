@@ -266,19 +266,20 @@ Dynamics of Execution
 
 One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
 different time scales.  By default, each Mechanism executes once per pass through the Composition, in the order
-determined by the projections between (and shown in the `show_graph <Composition.show_graph>` method.  In the
-``Stroop_model`` above, the ``decison`` Mechanism executes once per pass, just after the ``ouput`` Mechanism.  This
-is a `DDM` Mechanism, that uses `DriftDiffusionAnalytical` as its default `function <DDM.function>`, which computes an
-analytic solution to the distribution of responses the DDM integration process (at a specified `threshold
-<DriftDiffusionAnalytical.threshold>`), and returns both the probability of threshold crossing and the mean
-crossing time.  However, it is also possible to simulate the dynamics of the integration process by assigning
-`DriftDiffusionIntegrator` as the Mechanism's `function <DDM.function>` and specifying, in the call to the
-Composition's `run <Composition.run>` method, that a `trial <TimeScale.TRIAL>` terminate only when the ``decision``
+determined by the projections between them (and shown in the `show_graph <Composition.show_graph>` method.  In the
+``Stroop_model`` above, the ``decison`` Mechanism executes once per pass, just after the ``ouput`` Mechanism.  The
+``decision`` Mechanism is a `DDM`.  This uses `DriftDiffusionAnalytical` as its default `function <DDM.function>`,
+which computes an analytic solution to the distribution of responses using the DDM integration process, and returns
+both the probability of crossing a specified `threshold <DriftDiffusionAnalytical.threshold>`), and the mean
+crossing time.  However, it is also possible to simulate the dynamics of the integration process.  This can be done by
+assigning `DriftDiffusionIntegrator` as the Mechanism's `function <DDM.function>` and, in the call to the Composition's
+`run <Composition.run>` method, specifying that a `trial <TimeScale.TRIAL>` terminates only when the ``decision``
 Mechanism has completed its execution, as follows::
 
     # Modify consruction of decision Mechanism:
     decision = DDM(name='DECISION',
                    input_format=ARRAY,
+                   reinitialize_when=AtTrialStart(),
                    function=DriftDiffusionIntegrator(noise=0.5, threshold=20)
                    )
     Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color},
@@ -289,25 +290,24 @@ Mechanism has completed its execution, as follows::
 
 The output is now the result of the `DriftDiffusionIntegrator`, which is the value of the decision variable when it
 crosses threshold (which is, by definition, equal to either the postive or negative value of the `threshold
-<DriftDiffusionAnalytical.threshold>`) and the number of executions it took to do so.  Since the ``decsion``
-Mechanism is the last (`TERMINAL`) Mechanism of the Composition, it is also its `OUTPUT` Mechanism, and therefore it
+<DriftDiffusionAnalytical.threshold>` attribute), and the number of executions it took to do so.  Since the ``decision``
+Mechanism is the last (`TERMINAL`) Mechanism of the Composition, it is also its `OUTPUT` Mechanism.  Therefore, its
 output is recorded in the `results <Composition.results>` attribute of the Stroop model, as shown above (note: because
 there is noise in the integration process, running the model several times produces varying response times).
 
-This version of the model includes Mechanisms that execute over different time-scales:  the ProcessingMechanisms
+This version of the model includes Mechanisms that execute over different time-scales. The ProcessingMechanisms
 completed their computations in a single execution, whereas the DDM took many executions to complete its computation.
 In this case, the coordination of time scales was straightforward, since the DDM was the last Mechanism in the
-Composition:  the ProcessingMechanisms in each pathway executed in sequence, ending in the DDM wich executed until
-it was complete.  PsyNeuLink's `Scheduler` can also be used to implement more complicated dependencies among Mechanisms
-that execute over different time scales, by assigning one or more `Conditions <Condition>` for execution of the
-Mechanisms to the `Scheduler` for the Composition. Conditions can specify the isolated behavior of a Mechanism (e.g.,
-how many times it should be executed in each `trial <TimeScale.TRIAL>`), its behavior relative to that of one or more
-other Components (e.g., how many times it should wait for another Mechanism to execute before it does so), or even
-arbitrary functions (e.g., a convergence criterion for the settling of a recurrent network). For example, the
-following implements a verion of the model above that uses a leaky competing accumulator `<https://www.ncbi.nlm.nih
-.gov/pubmed/11488378>`_ (`LCAMechanism`) for the ``task`` Mechanism, that settles for a specified number of executions
-before the color and word hidden layers execute -- simulating a situation in which the task instruction is processed
-before processing the color or word stimuli::
+Composition:  the ProcessingMechanisms in each pathway executed in sequence, ending in the DDM which executed until
+it was complete.  PsyNeuLink's `Scheduler` can be used to implement more complicated dependencies among Mechanisms, by
+creating one or more `Conditions <Condition>` for execution of those Mechanisms and assigning those to the Composition's
+`Scheduler`. Conditions can specify the behavior of a Mechanism on its own (e.g., how many times it should be executed
+in each `trial <TimeScale.TRIAL>`), its behavior relative to one or more other Components (e.g., how many times it
+should wait for another Mechanism to execute before it does so), or even arbitrary functions (e.g., a convergence
+criterion for the settling of a recurrent network). For example, the following implements a version of the model above
+that uses a leaky competing accumulator `<https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_ (`LCAMechanism`) for the
+``task`` Mechanism.  The latter settles for a specified number of executions before the color and word hidden layers
+execute, simulating a situation in which the task instruction is processed before processing the color or word stimuli::
 
     # Modify consruction of task Mechanism:
     task = LCAMechanism(name='TASK', size=2)
@@ -322,12 +322,12 @@ before processing the color or word stimuli::
     >>[[array([[20.]]), array([[42.]])]]
 
 In the example above, the ``color_hidden`` and ``word_hidden`` Mechanisms both wait to execute until the ``task``
-Mechanism has executed 100 times.  They could also each have been made to wait different number of times;  in that case,
-since the ``output`` Mechanism depends on both them, it would have waited until they had both executed before doing so
-itself.  This imposes a fixed "setting time" (100 executions) on the ``task`` Mechanism. However, it could also be
-allowed to settle until it reaches some criterion.  For example, the ``color_hidden`` and ``word_hidden`` can be
-configured to wait until the value of the ``task`` Mechanism "converges", by changing the conditions for execution
-of the ``color_hidden`` and ``task_hidden`` Mechanism's to depend on a function, as follows::
+Mechanism has executed 100 times.  They could also each have been made to wait different numbers of times;  in that
+case, since the ``output`` Mechanism depends on both them, it would have waited until they had both executed before
+doing so itself.  This example also imposes a fixed "setting time" (100 executions) on the ``task`` Mechanism. However,
+it could also be allowed to settle until it reaches some criterion.  For example, the ``color_hidden`` and
+``word_hidden`` can be configured to wait until the value of the ``task`` Mechanism "converges", by changing the
+conditions for execution of the ``color_hidden`` and ``task_hidden`` Mechanism's to depend on a function, as follows::
 
     # Define a function that detects when the a Mechanism's value has converged, such that the change in all of the
     elements of its value attribute from the last execution (given by its delta attribute) falls below ``epsilon``
@@ -340,10 +340,9 @@ of the ``color_hidden`` and ``task_hidden`` Mechanism's to depend on a function,
     Stroop_model.processing_scheduler.add_condition(color_hidden, When(converge, task, epsilon)))
     Stroop_model.processing_scheduler.add_condition(word_hidden, When(converge, task, epsilon)))
 
-Conditions can be made to depend on any Python function.  There is also a rich set of `pre-defined Conditions
-<Condition_Pre-Specified_List>` (such as ``When`` in the examples above).  Together, these can be combined to
+PsyNeuLink provides a rich set of `pre-defined Conditions <Condition_Pre-Specified_List>` (such as ``When`` in the
+examples above), but Conditions can also be constructed using any Python function.  Together, these can be combined to
 construct virtually any schedule of execution that is logically possible.
-
 
 .. _BasicsAndSampler_Control:
 
@@ -550,15 +549,47 @@ report the value of the ``control`` and ``task`` Mechanims each time they execut
     'TASK'         0:1:9:1      [[0.81 0.4 ]]
 
 The time is reported as run:trial:pass:time_step.  Note that there is only one entry for the ``control`` Mechanism,
-since it only executed once per trial, but there are ten entries for the ``task`` Mechanism since it executed 10
+since it only executed once per trial, but there are ten entries for the ``task`` Mechanism since it executed ten
 times, as specified in the Conditions described above.  The output of the `Log` can also be reported in various other
-formats, including a numpy array, a dictionary of values for each entry, and CSV format.
+formats, including a `numpy <https://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html>`_ array,
+a dictionary of values for each entry, and `CSV <https://en.wikipedia.org/wiki/Comma-separated_values>`_ format.
 
 .. .. _BasicsAndSampler_Learning:
 ..
 .. Learning
 .. ~~~~~~~~
-..
+
+Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
+processes.  PsyNeuLink does so in two ways  in a native form, and by integrating tools provided by other Python-based
+environments.  Each of these is described below.
+
+LearningMechanisms
+^^^^^^^^^^^^^^^^^^
+
+The `AdaptiveMechanism` class includes a subclass call `LearningMechanism` that can be used to implement various
+learning algorithms, from unsupervised forms such as Hebbian associative learning, to supervised forms such as
+reinforcment learning and backpropagation.  LearningMechanisms take as their input a target and/or an error signal,
+and are assigned LearningSignals as their output_states, that send LearningProjections to the MappingMapping
+Projections that are used to modify. The type of learning implemented by a LearningMechanism is determined by the
+class of `LearningFunction` assigned as its `function <LearningMechanism.function>`.  PsyNeuLink provides convenience
+methods for implementing relevent Components needed for a given type of learning in a Composition, including the
+LearningMechanism(s), their associated LearningSignals and LearningProjection(s), and any other Mechanisms required
+for the specified form of learning (e.g., the ComparatorMechanism used to compute the error signal from an externally
+presented target in supervised forms of learning).  The example below implements learning in a simple two-layered
+neural network::
+
+.. script example
+.. show_graph() output
+
+
+AutodiffComposition
+^^^^^^^^^^^^^^^^^^^
+
+
+
+
+
+
 .. Impelements all major forms of learning (autoassociative, RL and BP)
 .. Implementation favors modulariziation / depiction of process flow (pedagogical tool, e.g., animation - SHOW EXAMPLE)
 .. But integrates PyTorch for efficiency and generality: Autodiff EXAMPLE (Rumelhart network)
