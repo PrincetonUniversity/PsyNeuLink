@@ -898,7 +898,7 @@ class EVCControlMechanism(ControlMechanism):
                          prefs=prefs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        '''Validate prediction_mechanisms'''
+        """Validate prediction_mechanisms"""
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -925,10 +925,10 @@ class EVCControlMechanism(ControlMechanism):
         super()._instantiate_input_states(context=context)
 
     def _instantiate_modulatory_signals(self, context):
-        '''Size control_allocation and assign modulatory_signals
+        """Size control_allocation and assign modulatory_signals
         Set size of control_allocadtion equal to number of modulatory_signals.
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
-        '''
+        """
         from psyneulink.core.globals.keywords import OWNER_VALUE
         for i, spec in enumerate(self.modulatory_signals):
             modulatory_signal = self._instantiate_modulatory_signal(spec, context=context)
@@ -1079,7 +1079,7 @@ class EVCControlMechanism(ControlMechanism):
         self.parameters.predicted_input._set(predicted_input, override=True)
 
     def _instantiate_attributes_after_function(self, context=None):
-        '''Validate cost function'''
+        """Validate cost function"""
 
         super()._instantiate_attributes_after_function(context=context)
 
@@ -1111,9 +1111,9 @@ class EVCControlMechanism(ControlMechanism):
                                           num_control_projections))
 
     def _instantiate_control_signal(self, control_signal, context=None):
-        '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
+        """Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
         EVCControlMechanism requires use of at least one of the cost options
-        '''
+        """
         control_signal = super()._instantiate_control_signal(control_signal, context)
 
         if control_signal.cost_options is None:

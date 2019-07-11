@@ -1422,6 +1422,7 @@ class Mechanism_Base(Mechanism):
                  name=None,
                  prefs=None,
                  context=None,
+                 **kwargs
                  ):
         """Assign name, category-level preferences, and variable; register Mechanism; and enforce category methods
 
@@ -1487,7 +1488,8 @@ class Mechanism_Base(Mechanism):
                                              function=function,
                                              param_defaults=params,
                                              prefs=prefs,
-                                             name=name)
+                                             name=name,
+                                             **kwargs)
 
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
@@ -1512,7 +1514,7 @@ class Mechanism_Base(Mechanism):
     # ------------------------------------------------------------------------------------------------------------------
 
     def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
-        '''
+        """
             Finds whether default_variable can be determined using **default_variable** and **size**
             arguments.
 
@@ -1520,7 +1522,7 @@ class Mechanism_Base(Mechanism):
             -------
                 a default variable if possible
                 None otherwise
-        '''
+        """
         default_variable_from_input_states = None
 
         # handle specifying through params dictionary
@@ -1578,7 +1580,7 @@ class Mechanism_Base(Mechanism):
         return super()._handle_default_variable(default_variable=default_variable, size=size)
 
     def _handle_arg_input_states(self, input_states):
-        '''
+        """
         Takes user-inputted argument **input_states** and returns an defaults.variable-like
         object that it represents
 
@@ -1587,7 +1589,7 @@ class Mechanism_Base(Mechanism):
             A, B where
             A is an defaults.variable-like object
             B is True if **input_states** contained an explicit variable specification, False otherwise
-        '''
+        """
 
         if input_states is None:
             return None, False
@@ -2076,10 +2078,10 @@ class Mechanism_Base(Mechanism):
         _add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
     def _projection_added(self, projection, context=None):
-        '''Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism'''
+        """Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism"""
         pass
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         """
             If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
             `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
@@ -2126,12 +2128,15 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
-        execution_id = parse_execution_context(execution_context)
+        if execution_context is NotImplemented:
+            execution_id = self.most_recent_execution_id
+        else:
+            execution_id = parse_execution_context(execution_context)
 
         # If the primary function of the mechanism is stateful:
         # (1) reinitialize it, (2) update value, (3) update output states
         if isinstance(self.function, StatefulFunction):
-            new_value = self.function.reinitialize(*args, execution_context=execution_context)
+            new_value = self.function.reinitialize(*args, execution_context=execution_id)
             self.parameters.value._set(np.atleast_2d(new_value), execution_id=execution_id, override=True)
             self._update_output_states(execution_id=execution_id,
                                        context="REINITIALIZING")
@@ -2243,7 +2248,7 @@ class Mechanism_Base(Mechanism):
         context = context or ContextFlags.COMMAND_LINE
 
         # initialize context for this execution_id if not done already
-        if execution_id is not None:
+        if self.parameters.context._get(execution_id) is None:
             self._assign_context_values(execution_id)
 
         if not self.parameters.context._get(execution_id).source or context & ContextFlags.COMMAND_LINE:
@@ -2677,7 +2682,7 @@ class Mechanism_Base(Mechanism):
             is_output_type = pnlvm.ir.ArrayType(is_output_list[0], len(is_output_list))
         else:
             is_output_type = pnlvm.ir.LiteralStructType(is_output_list)
-        is_output = builder.alloca(is_output_type, 1)
+        is_output = builder.alloca(is_output_type)
 
         for i, state in enumerate(self.input_states):
             is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -2691,12 +2696,13 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_param_states(self, func, f_params_ptr, ctx, builder, params, context, si):
         # Allocate a shadow structure to overload user supplied parameters
-        f_params = builder.alloca(f_params_ptr.type.pointee, 1)
+        f_params = builder.alloca(f_params_ptr.type.pointee)
 
         # Call parameter states for function
         for idx, f_param in enumerate(func._get_param_ids()):
-            param_in_ptr = builder.gep(f_params_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-            raw_param_val = builder.load(param_in_ptr)
+            p_name = f_param + "_" + str(func)
+            param_in_ptr = builder.gep(f_params_ptr, [ctx.int32_ty(0), ctx.int32_ty(idx)], name="ptr_raw_" + p_name)
+            raw_param_val = builder.load(param_in_ptr, name="raw_" + p_name)
             param_out_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             # If there is no param state, provide a copy of the user param value
             # FIXME: why wouldn't it be there?
@@ -2718,7 +2724,7 @@ class Mechanism_Base(Mechanism):
             ps_context = builder.gep(context, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
 
             # Construct the input out of the user value and incoming projection
-            ps_input = builder.alloca(ps_function.args[2].type.pointee, 1)
+            ps_input = builder.alloca(ps_function.args[2].type.pointee)
             raw_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
             builder.store(raw_param_val, raw_ptr)
@@ -2763,7 +2769,7 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
         fun = ctx.get_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
-        fun_out = builder.alloca(fun.args[3].type.pointee, 1)
+        fun_out = builder.alloca(fun.args[3].type.pointee)
 
         builder.call(fun, [params, context, fun_in, fun_out])
 
@@ -3001,8 +3007,8 @@ class Mechanism_Base(Mechanism):
         inner_table_spec = '<table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD">'
 
         def mech_cell():
-            '''Return html with name of Mechanism, possibly with function and/or value
-            Inclusion of roles, function and/or value is determined by arguments of call to show_structure()'''
+            """Return html with name of Mechanism, possibly with function and/or value
+            Inclusion of roles, function and/or value is determined by arguments of call to show_structure()"""
             header = ''
             if show_headers:
                 header = mech_header
@@ -3063,18 +3069,18 @@ class Mechanism_Base(Mechanism):
         def state_table(state_list:ContentAddressableList,
                         state_type:tc.enum(InputState, ParameterState, OutputState)):
 
-            '''Return html with table for each state in state_list, including functions and/or values as specified
+            """Return html with table for each state in state_list, including functions and/or values as specified
 
             Each table has a header cell and and inner table with cells for each state in the list
             InputState and OutputState cells are aligned horizontally;  ParameterState cells are aligned vertically.
             Use show_functions, show_values and include_labels arguments from call to show_structure()
             See show_structure docstring for full template.
-            '''
+            """
 
             def state_cell(state, include_function:bool=False, include_value:bool=False, use_label:bool=False):
-                '''Return html for cell in state inner table
+                """Return html for cell in state inner table
                 Format:  <td port="StatePort">StateName<br/><i>function 1</i><br/><i>=value</i></td>
-                '''
+                """
 
                 function = ''
                 fct_params = ''
@@ -3600,7 +3606,7 @@ class Mechanism_Base(Mechanism):
 
     @property
     def attributes_dict(self):
-        '''Note: this needs to be updated each time it is called, as it must be able to report current values'''
+        """Note: this needs to be updated each time it is called, as it must be able to report current values"""
 
         # # MODIFIED 6/29/18 OLD:
         # attribs_dict = MechParamsDict(

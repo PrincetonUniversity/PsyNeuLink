@@ -8,7 +8,7 @@
 #
 #
 # ****************************************   DISTRIBUTION FUNCTIONS   **************************************************
-'''
+"""
 
 * `NormalDist`
 * `UniformToNormalDist`
@@ -22,7 +22,7 @@ Overview
 
 Functions that return one or more samples from a distribution.
 
-'''
+"""
 from enum import IntEnum
 
 import numpy as np
@@ -168,14 +168,11 @@ class NormalDist(DistributionFunction):
                 raise FunctionError("The standard_deviation parameter ({}) of {} must be greater than zero.".
                                     format(target_set[STANDARD_DEVIATION], self.name))
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
                  context=None):
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         mean = self.get_current_function_param(DIST_MEAN, execution_id)
         standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, execution_id)
 
@@ -318,7 +315,7 @@ class UniformToNormalDist(DistributionFunction):
                          context=ContextFlags.CONSTRUCTOR)
 
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -328,9 +325,6 @@ class UniformToNormalDist(DistributionFunction):
             from scipy.special import erfinv
         except:
             raise FunctionError("The UniformToNormalDist function requires the SciPy package.")
-
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         mean = self.get_current_function_param(DIST_MEAN, execution_id)
         standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, execution_id)
@@ -436,13 +430,11 @@ class ExponentialDist(DistributionFunction):
                          context=ContextFlags.CONSTRUCTOR)
 
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
                  context=None):
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         beta = self.get_current_function_param(BETA, execution_id)
         result = np.random.exponential(beta)
@@ -556,13 +548,11 @@ class UniformDist(DistributionFunction):
                          context=ContextFlags.CONSTRUCTOR)
 
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
                  context=None):
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         low = self.get_current_function_param(LOW, execution_id)
         high = self.get_current_function_param(HIGH, execution_id)
@@ -684,13 +674,11 @@ class GammaDist(DistributionFunction):
                          context=ContextFlags.CONSTRUCTOR)
 
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
                  context=None):
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         scale = self.get_current_function_param(SCALE, execution_id)
         dist_shape = self.get_current_function_param(DIST_SHAPE, execution_id)
@@ -811,13 +799,11 @@ class WaldDist(DistributionFunction):
                          context=ContextFlags.CONSTRUCTOR)
 
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
                  context=None):
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         scale = self.get_current_function_param(SCALE, execution_id)
         mean = self.get_current_function_param(DIST_MEAN, execution_id)
@@ -1096,7 +1082,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         """
         self._shenhav_et_al_compat_mode = value
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1122,8 +1108,6 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         Decision variable, mean ER, mean RT : (float, float, float)
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         attentional_drift_rate = float(self.get_current_function_param(DRIFT_RATE, execution_id))
         stimulus_drift_rate = float(variable)

@@ -758,7 +758,7 @@ class RunError(Exception):
         return repr(self.error_value)
 
 class Vertex(object):
-    '''
+    """
         Stores a Component for use with a `Graph`
 
         Arguments
@@ -784,7 +784,7 @@ class Vertex(object):
 
         children : list[Vertex]
             the `Vertices <Vertex>` corresponding to the outgoing edges of this `Vertex`
-    '''
+    """
 
     def __init__(self, component, parents=None, children=None, feedback=None):
         self.component = component
@@ -805,7 +805,7 @@ class Vertex(object):
 
 
 class Graph(object):
-    '''
+    """
         A Graph of vertices and edges/
 
         Attributes
@@ -817,20 +817,20 @@ class Graph(object):
         vertices : List[Vertex]
             the `Vertices <Vertex>` contained in this Graph.
 
-    '''
+    """
 
     def __init__(self):
         self.comp_to_vertex = collections.OrderedDict()  # Translate from PNL Mech, Comp or Proj to corresponding vertex
         self.vertices = []  # List of vertices within graph
 
     def copy(self):
-        '''
+        """
             Returns
             -------
 
             A copy of the Graph. `Vertices <Vertex>` are distinct from their originals, and point to the same
             `Component <Component>` object : `Graph`
-        '''
+        """
         g = Graph()
 
         for vertex in self.vertices:
@@ -894,7 +894,7 @@ class Graph(object):
             child.parents.append(parent)
 
     def get_parents_from_component(self, component):
-        '''
+        """
             Arguments
             ---------
 
@@ -905,11 +905,11 @@ class Graph(object):
             -------
 
             A list[Vertex] of the parent `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
-        '''
+        """
         return self.comp_to_vertex[component].parents
 
     def get_children_from_component(self, component):
-        '''
+        """
             Arguments
             ---------
 
@@ -920,11 +920,11 @@ class Graph(object):
             -------
 
             A list[Vertex] of the child `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
-        '''
+        """
         return self.comp_to_vertex[component].children
 
     def get_forward_children_from_component(self, component):
-        '''
+        """
             Arguments
             ---------
 
@@ -935,7 +935,7 @@ class Graph(object):
             -------
 
             A list[Vertex] of the parent `Vertices <Vertex>` of the Vertex associated with **component**: list[`Vertex`]
-        '''
+        """
         forward_children = []
         for child in self.comp_to_vertex[component].children:
             if component not in self.comp_to_vertex[child.component].backward_sources:
@@ -943,7 +943,7 @@ class Graph(object):
         return forward_children
 
     def get_forward_parents_from_component(self, component):
-        '''
+        """
             Arguments
             ---------
 
@@ -954,7 +954,7 @@ class Graph(object):
             -------
 
             A list[Vertex] of the parent `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
-        '''
+        """
         forward_parents = []
         for parent in self.comp_to_vertex[component].parents:
             if parent.component not in self.comp_to_vertex[component].backward_sources:
@@ -962,7 +962,7 @@ class Graph(object):
         return forward_parents
 
     def get_backward_children_from_component(self, component):
-        '''
+        """
             Arguments
             ---------
 
@@ -973,7 +973,7 @@ class Graph(object):
             -------
 
             A list[Vertex] of the child `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
-        '''
+        """
         backward_children = []
         for child in self.comp_to_vertex[component].children:
             if component in self.comp_to_vertex[child.component].backward_sources:
@@ -981,7 +981,7 @@ class Graph(object):
         return backward_children
 
     def get_backward_parents_from_component(self, component):
-        '''
+        """
             Arguments
             ---------
 
@@ -992,7 +992,7 @@ class Graph(object):
             -------
 
             A list[Vertex] of the child `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
-        '''
+        """
 
         return list(self.comp_to_vertex[component].backward_sources)
 
@@ -1003,7 +1003,7 @@ STATE_FUNCTION_PARAMS = "STATE_FUNCTION_PARAMS"
 
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
-    '''
+    """
         Composition
 
         Arguments
@@ -1106,7 +1106,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             see `prefs <Composition_Prefs>`
         COMMENT
 
-    '''
+    """
     # Composition now inherits from Component, so registry inherits name None
     componentType = 'Composition'
 
@@ -1227,11 +1227,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def graph_processing(self):
-        '''
+        """
             The Composition's processing graph (contains only `Mechanisms <Mechanism>`.
 
             :getter: Returns the processing graph, and builds the graph if it needs updating since the last access.
-        '''
+        """
         if self.needs_update_graph_processing or self._graph_processing is None:
             self._update_processing_graph()
 
@@ -1239,12 +1239,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def scheduler_processing(self):
-        '''
+        """
             A default `Scheduler` automatically generated by the Composition, used for the
             (`processing <System_Execution_Processing>` phase of execution.
 
             :getter: Returns the default processing scheduler, and builds it if it needs updating since the last access.
-        '''
+        """
         if self.needs_update_scheduler_processing or not isinstance(self._scheduler_processing, Scheduler):
             old_scheduler = self._scheduler_processing
             self._scheduler_processing = Scheduler(graph=self.graph_processing, execution_id=self.default_execution_id)
@@ -1290,7 +1290,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.shadows[input_state.shadow_inputs.owner].append(node)
 
     def add_node(self, node, required_roles=None):
-        '''
+        """
             Add a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
 
             Arguments
@@ -1301,7 +1301,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             required_roles : `NodeRole` or list of NodeRoles
                 any NodeRoles roles that this node should have in addition to those determined by analyze graph.
-        '''
+        """
 
         self._update_shadows_dict(node)
 
@@ -1617,7 +1617,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        name=None,
                        allow_duplicates=False
                        ):
-        '''Add **projection** to the Composition, if one with the same sender and receiver doesn't already exist.
+        """Add **projection** to the Composition, if one with the same sender and receiver doesn't already exist.
 
         If **projection** is not specified, create a default `MappingProjection` using **sender** and **receiver**.
 
@@ -1675,7 +1675,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             When True, this Projection "breaks" the cycle, such that all Nodes execute in sequence, and only the
             Projection marked as 'feedback' passes to its `receiver <Projection_Base.receiver>` the
             `value <Projection.value>` of its `sender <Projection_Base.sender>` from the previous execution.
-    '''
+    """
 
         projection = self._parse_projection_spec(projection, name)
         duplicate = False
@@ -1756,7 +1756,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.projections.append(projection)
 
     def add_projections(self, projections=None):
-        '''
+        """
             Calls `add_projection <Composition.add_projection>` for each Projection in the *projections* list. Each
             Projection must have its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`
             already specified.
@@ -1766,7 +1766,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             projections : list of Projections
                 list of Projections to be added to the Composition
-        '''
+        """
 
         if isinstance(projections, list):
             for projection in projections:
@@ -1795,14 +1795,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # step 3 - TBI? remove Projection from afferents & efferents lists of any node
 
     def add_pathway(self, path):
-        '''
+        """
             Adds an existing Pathway to the current Composition
 
             Arguments
             ---------
 
             path: the Pathway (Composition) to be added
-        '''
+        """
 
         # identify nodes and projections
         nodes, projections = [], []
@@ -1825,9 +1825,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
 
     def add_linear_processing_pathway(self, pathway, feedback=False, *args):
-        '''Add sequence of Mechanisms or Compositions possibly with intercolated Projections
+        """Add sequence of Mechanisms or Compositions possibly with intercolated Projections
         Tuples (Mechanism, NodeRole(s)) can be used to assign required_roles to Mechanisms.
-        '''
+        """
         nodes = []
         # First, verify that the pathway begins with a node
         if not isinstance(pathway, (list, tuple)):
@@ -1943,14 +1943,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       learning_rate):
         # Create learning components
         target_mechanism = ProcessingMechanism(name='Target',
-                                               default_variable=output_source.value)
+                                               default_variable=output_source.defaults.value)
 
         comparator_mechanism = PredictionErrorMechanism(
             sample={NAME: SAMPLE,
-                    VARIABLE: output_source.value,
+                    VARIABLE: output_source.defaults.value,
                     },
             target={NAME: TARGET,
-                    VARIABLE: output_source.value
+                    VARIABLE: output_source.defaults.value
                     },
             function=PredictionErrorDeltaFunction(gamma=1.0),
             # name="{} {}".format(output_source.name
@@ -1959,9 +1959,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
 
         learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
-                                               default_variable=[input_source.output_states[0].value,
-                                                                 output_source.output_states[0].value,
-                                                                 comparator_mechanism.output_states[0].value],
+                                               default_variable=[input_source.output_states[0].defaults.value,
+                                                                 output_source.output_states[0].defaults.value,
+                                                                 comparator_mechanism.output_states[0].defaults.value],
                                                error_sources=comparator_mechanism,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
@@ -2295,12 +2295,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.INTERNAL)
 
     def _check_for_projection_assignments(self):
-        '''Check that all Projections and States with require_projection_in_composition attribute are configured.
+        """Check that all Projections and States with require_projection_in_composition attribute are configured.
 
         Validate that all InputStates with require_projection_in_composition == True have an afferent Projection.
         Validate that all OuputStates with require_projection_in_composition == True have an efferent Projection.
         Validate that all Projections have senders and receivers.
-        '''
+        """
         projections = self.projections.copy()
 
         for node in self.nodes:
@@ -2438,59 +2438,52 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_graph = False
 
     def _update_processing_graph(self):
-        '''
+        """
         Constructs the processing graph (the graph that contains only Nodes as vertices)
         from the composition's full graph
-        '''
+        """
         logger.debug('Updating processing graph')
 
         self._graph_processing = self.graph.copy()
 
-        visited_vertices = set()
-        next_vertices = []  # a queue
+        def remove_vertex(vertex):
+            logger.debug('Removing', vertex)
+            for parent in vertex.parents:
+                parent.children.remove(vertex)
+                for child in vertex.children:
+                    child.parents.remove(vertex)
+                    if vertex.feedback:
+                        child.backward_sources.add(parent.component)
+                    self._graph_processing.connect_vertices(parent, child)
+            # ensure that children get removed even if vertex has no parents
+            if len(vertex.parents) == 0:
+                for child in vertex.children:
+                    child.parents.remove(vertex)
+                    if vertex.feedback:
+                        child.backward_sources.add(parent.component)
 
-        unvisited_vertices = True
+            for node in cur_vertex.parents + cur_vertex.children:
+                logger.debug(
+                    'New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(
+                        node, node.parents, node.children
+                    )
+                )
 
-        while unvisited_vertices:
-            for vertex in self._graph_processing.vertices:
-                if vertex not in visited_vertices:
-                    next_vertices.append(vertex)
-                    break
-            else:
-                unvisited_vertices = False
+            logger.debug('Removing vertex {0}'.format(cur_vertex))
 
-            logger.debug('processing graph vertices: {0}'.format(self._graph_processing.vertices))
-            while len(next_vertices) > 0:
-                cur_vertex = next_vertices.pop(0)
-                logger.debug('Examining vertex {0}'.format(cur_vertex))
+            self._graph_processing.remove_vertex(vertex)
 
-                # must check that cur_vertex is not already visited because in cycles,
-                #    some nodes may be added to next_vertices twice
-                if cur_vertex not in visited_vertices and not cur_vertex.component.is_processing:
-                    for parent in cur_vertex.parents:
-                        parent.children.remove(cur_vertex)
-                        for child in cur_vertex.children:
-                            child.parents.remove(cur_vertex)
-                            if cur_vertex.feedback:
-                                child.backward_sources.add(parent.component)
-                            self._graph_processing.connect_vertices(parent, child)
-
-                    for node in cur_vertex.parents + cur_vertex.children:
-                        logger.debug('New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(node, node.parents,
-                                                                                                     node.children))
-                    logger.debug('Removing vertex {0}'.format(cur_vertex))
-
-                    self._graph_processing.remove_vertex(cur_vertex)
-
-                visited_vertices.add(cur_vertex)
-                # add to next_vertices (frontier) any parents and children of cur_vertex that have not been visited yet
-                next_vertices.extend(
-                    [vertex for vertex in cur_vertex.parents + cur_vertex.children if vertex not in visited_vertices])
+        # copy to avoid iteration problems when deleting
+        vert_list = self._graph_processing.vertices.copy()
+        for cur_vertex in vert_list:
+            logger.debug('Examining', cur_vertex)
+            if not cur_vertex.component.is_processing:
+                remove_vertex(cur_vertex)
 
         self.needs_update_graph_processing = False
 
     def get_nodes_by_role(self, role):
-        '''
+        """
             Returns a List of Composition Nodes in this Composition that have the *role* specified
 
             Arguments
@@ -2504,7 +2497,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             List of Composition Nodes with `NodeRole` *role* : List(`Mechanisms <Mechanism>` and
             `Compositions <Composition>`)
-        '''
+        """
         if role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
@@ -2548,9 +2541,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    node_state: tc.any(InputState, OutputState),
                                    role: tc.enum(NodeRole.INPUT, NodeRole.OUTPUT)
                                    ):
-        '''Check for node in nested Composition
+        """Check for node in nested Composition
         Return relevant state of relevant CIM if found and nested Composition in which it was found, else (None, None)
-        '''
+        """
 
         nested_comp = CIM_state_for_nested_node = CIM = None
 
@@ -2605,7 +2598,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _create_CIM_states(self, context=None):
 
-        '''
+        """
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
               InputStates and OutputStates are being added to the CIMs
 
@@ -2628,7 +2621,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - delete all of the above for any node States which were previously, but are no longer, classified as
               INPUT/OUTPUT
 
-        '''
+        """
 
         if not self.input_CIM.connected_to_composition:
             self.input_CIM.input_states.remove(self.input_CIM.input_state)
@@ -2787,11 +2780,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.input_CIM.execute(build_CIM_input, execution_id=execution_id)
 
     def _assign_execution_ids(self, execution_id=None):
-        '''
+        """
             assigns the same execution id to each Node in the composition's processing graph as well as the CIMs.
             The execution id is either specified in the user's call to run(), or from the Composition's
             **default_execution_id**
-        '''
+        """
 
         # Traverse processing graph and assign one uuid to all of its nodes
         if execution_id is None:
@@ -2800,7 +2793,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if execution_id not in self.execution_ids:
             self.execution_ids.add(execution_id)
 
-        self._assign_context_values(execution_id=None, composition=self)
         return execution_id
 
     def _identify_clamp_inputs(self, list_type, input_type, origins):
@@ -3016,8 +3008,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                r'\nCIMOUTPUTSTATES'
 
         def mech_string(mech):
-            '''Return string with name of mechanism possibly with function and/or value
-            Inclusion of role, function and/or value is determined by arguments of call to show_structure '''
+            """Return string with name of mechanism possibly with function and/or value
+            Inclusion of role, function and/or value is determined by arguments of call to show_structure """
             if show_headers:
                 mech_header = mechanism_header
             else:
@@ -3055,7 +3047,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           include_function: bool = False,
                           include_value: bool = False,
                           use_label: bool = False):
-            '''Return string with name of states in ContentAddressableList with functions and/or values as specified'''
+            """Return string with name of states in ContentAddressableList with functions and/or values as specified"""
             states = open_bracket
             for i, state in enumerate(state_list):
                 if i:
@@ -3366,7 +3358,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         _locals = locals().copy()
 
         def _assign_processing_components(g, rcvr, show_nested):
-            '''Assign nodes to graph'''
+            """Assign nodes to graph"""
             if isinstance(rcvr, Composition) and show_nested:
                 # User passed args for nested Composition
                 output_fmt_arg = {'output_fmt':'gv'}
@@ -3686,7 +3678,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    color=proj_color, penwidth=proj_width)
 
         def _assign_controller_components(g):
-            '''Assign control nodes and edges to graph '''
+            """Assign control nodes and edges to graph """
 
             controller = self.controller
             if controller is None:
@@ -4047,7 +4039,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Sort to put ORIGIN nodes first and controller and its objective_mechanism last
         def get_index_of_node_in_G_body(node):
-            '''Get index of node in G.body'''
+            """Get index of node in G.body"""
             for i, item in enumerate(G.body):
                 # Skip projections
                 if node.name in item and not '->' in item:
@@ -4100,7 +4092,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             skip_initialization=False,
             bin_execute=False,
             context=None):
-        '''
+        """
             Passes inputs to any Nodes receiving inputs directly from the user (via the "inputs" argument) then
             coordinates with the Scheduler to execute sets of nodes that are eligible to execute until
             termination conditions are met.
@@ -4144,7 +4136,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             ---------
 
             output value of the final Mechanism executed in the Composition : various
-        '''
+        """
 
         # ASSIGNMENTS **************************************************************************************************
 
@@ -4168,6 +4160,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Assign the same execution_ids to all nodes in the Composition and get it (if it was None)
         execution_id = self._assign_execution_ids(execution_id)
+
+        if not skip_initialization:
+            self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
+
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
         execution_scheduler = scheduler_processing or self.scheduler_processing
@@ -4200,8 +4196,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and execution_context.execution_phase is not ContextFlags.SIMULATION
             ):
                 self._initialize_from_context(execution_id, base_execution_id, override=False)
-
-            self._assign_context_values(execution_id, composition=self)
+                self._assign_context_values(execution_id, composition=self)
 
         # Generate first frame of animation without any active_items
         if self._animate is not False:
@@ -4497,7 +4492,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                              skip_log=True, override=True)
 
                     # Pass outer execution_id to nested Composition
-                    node._assign_context_values(execution_id, composition=node)
+                    node._assign_context_values(execution_id, composition=node, propagate=True)
 
                     # Execute Composition
                     # FIX: 6/12/19 WHERE IS COMPILED EXECUTION OF NESTED NODE?
@@ -4639,7 +4634,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def reinitialize(self, values, execution_context=NotImplemented):
         if execution_context is NotImplemented:
-            execution_context = self.default_execution_id
+            execution_context = self.most_recent_execution_id
 
         for i in range(self.stateful_nodes):
             self.stateful_nodes[i].reinitialize(values[i], execution_context=execution_context)
@@ -4662,12 +4657,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             initial_values=None,
             reinitialize_values=None,
             runtime_params=None,
+            skip_initialization=False,
             animate=False,
             execution_id=None,
             base_execution_id=None,
             context=None):
 
-        '''Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
+        """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.  See `Run` for details of formatting input specifications. See `Run` for details of
         formatting input specifications. Use **animate** to generate a gif of the execution sequence.
 
@@ -4808,7 +4804,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ---------
 
         output value of the final Node executed in the composition : various
-        '''
+        """
 
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
@@ -4905,9 +4901,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
         # called repeatedly (this init is repeated in Composition.execute)
         # initialize from base context but don't overwrite any values already set for this execution_id
-        if (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION):
+        if (
+            not skip_initialization
+            and (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION)
+        ):
             self._initialize_from_context(execution_id, base_execution_id, override=False)
-            self._assign_context_values(execution_id, composition=self)
+            self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
 
         is_simulation = (execution_context is not None and
                          execution_context.execution_phase == ContextFlags.SIMULATION)
@@ -4981,6 +4980,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_autodiff_stimuli[node] = autodiff_stimuli[node][stimulus_index]
                 else:
                     execution_autodiff_stimuli[node] = autodiff_stimuli[node]
+
+            for node in self.nodes:
+                if hasattr(node, "reinitialize_when") and node.parameters.has_initializers._get(execution_id):
+                    if node.reinitialize_when.is_satisfied(scheduler=self.scheduler_processing,
+                                                           execution_context=execution_id):
+                        node.reinitialize(None, execution_context=execution_id)
 
             # execute processing
             # pass along the stimuli for this trial
@@ -5172,7 +5177,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def reinitialize(self, execution_context=NotImplemented):
         if execution_context is NotImplemented:
-            execution_context = self.default_execution_id
+            execution_context = self.most_recent_execution_id
 
         self._compilation_data.ptx_execution.set(None, execution_context)
         self._compilation_data.parameter_struct.set(None, execution_context)
@@ -5546,11 +5551,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context=None,
             execution_mode=False,
     ):
-        '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
+        """Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
            `controller <Composition.controller>` in order to return the
            `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
            `controller <Composition.controller>` under that control_allocation. All values are
-           reset to pre-simulation values at the end of the simulation. '''
+           reset to pre-simulation values at the end of the simulation. """
         # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
         total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
 
@@ -5574,7 +5579,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  num_trials=num_simulation_trials,
                  animate=animate,
                  context=context,
-                 bin_execute=execution_mode)
+                 bin_execute=execution_mode,
+                 skip_initialization=True,
+                 )
         # # MODIFIED 6/12/19 OLD:
         # self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
         # MODIFIED 6/12/19 NEW: [JDC]
@@ -5601,9 +5608,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return net_outcome
 
     def disable_all_history(self):
-        '''
+        """
             When run, disables history tracking for all Parameters of all Components used in this Composition
-        '''
+        """
         self._set_all_parameter_properties_recursively(history_max_length=0)
 
     def _dict_summary(self):

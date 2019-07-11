@@ -8,7 +8,7 @@
 #
 #
 # *******************************************   LEARNING FUNCTIONS *****************************************************
-'''
+"""
 
 * `BayesGLM`
 * `Kohonen`
@@ -20,7 +20,7 @@
 
 Functions that parameterize a function.
 
-'''
+"""
 
 from collections import namedtuple
 
@@ -474,9 +474,9 @@ class BayesGLM(LearningFunction):
         return super()._handle_default_variable(default_variable=default_variable, size=size)
 
     def initialize_priors(self):
-        '''Set the prior parameters (`mu_prior <BayesGLM.mu_prior>`, `Lamba_prior <BayesGLM.Lambda_prior>`,
+        """Set the prior parameters (`mu_prior <BayesGLM.mu_prior>`, `Lamba_prior <BayesGLM.Lambda_prior>`,
         `gamma_shape_prior <BayesGLM.gamma_shape_prior>`, and `gamma_size_prior <BayesGLM.gamma_size_prior>`)
-        to their initial (_0) values, and assign current (_n) values to the priors'''
+        to their initial (_0) values, and assign current (_n) values to the priors"""
 
         variable = np.array(self.defaults.variable)
         variable = self.defaults.variable
@@ -516,13 +516,13 @@ class BayesGLM(LearningFunction):
                                                         np.zeros_like(args[0][DEFAULT_VARIABLE][1])])
             self.initialize_priors()
 
-    def function(
+    def _function(
         self,
         variable=None,
         execution_id=None,
         params=None,
         context=None):
-        '''
+        """
 
         Arguments
         ---------
@@ -545,7 +545,7 @@ class BayesGLM(LearningFunction):
         sample weights : 1d array
             array of weights drawn from updated weight distributions.
 
-        '''
+        """
 
         if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             self.initialize_priors()
@@ -603,9 +603,9 @@ class BayesGLM(LearningFunction):
         return self.sample_weights(gamma_shape_n, gamma_size_n, mu_n, Lambda_n)
 
     def sample_weights(self, gamma_shape_n, gamma_size_n, mu_n, Lambda_n):
-        '''Draw a sample of prediction weights from the distributions parameterized by `mu_n <BayesGLM.mu_n>`,
+        """Draw a sample of prediction weights from the distributions parameterized by `mu_n <BayesGLM.mu_n>`,
         `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`, and `gamma_size_n
-        <BayesGLM.gamma_size_n>`.'''
+        <BayesGLM.gamma_size_n>`."""
         phi = np.random.gamma(gamma_shape_n / 2, gamma_size_n / 2)
         return np.random.multivariate_normal(mu_n.reshape(-1,), phi * np.linalg.inv(Lambda_n))
 
@@ -829,7 +829,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
             self.measure=self.distance_function
             self.distance_function = scalar_distance
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -856,8 +856,6 @@ class Kohonen(LearningFunction):  # --------------------------------------------
             similar to that input pattern.
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -1062,7 +1060,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
             self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1295,7 +1293,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
             self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1596,7 +1594,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
             self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -2024,7 +2022,7 @@ class BackPropagation(LearningFunction):
                                     "length of the output {} of the activity vector being monitored ({})".
                                     format(rows, MATRIX, self.name, activity_output_len))
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  error_matrix=None,

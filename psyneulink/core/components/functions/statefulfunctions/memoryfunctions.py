@@ -8,7 +8,7 @@
 #
 #
 # *******************************************  MEMORY FUNCTIONS ********************************************************
-'''
+"""
 
 Functions that store and can retrieve a record of their current input.
 
@@ -20,7 +20,7 @@ Overview
 
 Functions that store and can return a record of their input.
 
-'''
+"""
 
 from collections import deque, OrderedDict
 from random import choice
@@ -255,7 +255,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         self.has_initializers = True
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         """
 
         Clears the `previous_value <Buffer.previous_value>` deque.
@@ -267,6 +267,8 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         `value <Buffer.value>` takes on the same value as  `previous_value <Buffer.previous_value>`.
 
         """
+        if execution_context is NotImplemented:
+            execution_context = self.most_recent_execution_id
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
@@ -293,7 +295,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         self.parameters.value.set(value, execution_context, override=True)
         return value
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -317,9 +319,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         updated value of deque : deque
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
 
         # execute noise if it is a function
@@ -968,7 +967,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                     format(repr(STORAGE_PROB), self.__class___.__name__, storage_prob))
 
     def _validate(self):
-        '''Validate distance_function, selection_function and memory store'''
+        """Validate distance_function, selection_function and memory store"""
         distance_function = self.distance_function
         test_var = [self.defaults.variable[KEYS], self.defaults.variable[VALS]]
         if isinstance(distance_function, type):
@@ -1011,13 +1010,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                 f'({result}) must return an array of the same length it receives')
 
     def _initialize_previous_value(self, initializer, execution_context=None):
-        '''Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
+        """Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
 
         - Validate, if initializer is specified, it is a 3d array
             (must be done here rather than in validate_params as it is needed to initialize previous_value
         - Insure that it has exactly 2 items in outer dimension (axis 0)
             and that all items in each of those two items are all arrays
-        '''
+        """
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
 
         previous_value = np.ndarray(shape=(2, 0))
@@ -1045,7 +1044,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         if isinstance(self.selection_function, type):
             self.selection_function = self.selection_function()
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         """
         reinitialize(<new_dictionary> default={})
 
@@ -1059,6 +1058,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         `value <ContentAddressableMemory.value>` takes on the same value as
         `previous_value <ContentAddressableMemory.previous_value>`.
         """
+        if execution_context is NotImplemented:
+            execution_context = self.most_recent_execution_id
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
@@ -1084,7 +1085,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         self.parameters.value.set(value, execution_context, override=True)
         return value
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1113,7 +1114,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         value of entry that best matches first item of `variable <ContentAddressableMemory.variable>`  : 1d array
         """
 
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         key = variable[KEYS]
         # if len(variable)==2:
         val = variable[VALS]
@@ -1350,7 +1350,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                         self.parameters.previous_value._set(self._memory, execution_id)
 
     def _parse_memories(self, memories, method, execution_id=None):
-        '''Parse passing of single vs. multiple memories, validate memories, and return ndarray'''
+        """Parse passing of single vs. multiple memories, validate memories, and return ndarray"""
         memories = np.array(memories)
         if not 1 <= memories.ndim <= 3:
             raise FunctionError(f"'memories' arg for {method} method of {self.__class__.__name__} "

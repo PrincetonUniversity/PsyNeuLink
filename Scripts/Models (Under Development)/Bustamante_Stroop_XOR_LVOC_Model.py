@@ -11,12 +11,12 @@
 # along with str cast in log line 1516 vv
 # next_eid_entry_data += ", \'" + "\', \'".join(str(i[0]) if isinstance(i, list) else i for i in data[0]) + "\'"
 
-'''
+"""
 Implements a model of the `Stroop XOR task
 <https://scholar.google.com/scholar?hl=en&as_sdt=0%2C31&q=laura+bustamante+cohen+musslick&btnG=>`_
 using a version of the `Learned Value of Control Model
 <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006043&rev=2>`_
-'''
+"""
 import importlib
 
 import numpy as np
@@ -35,7 +35,7 @@ np.random.seed(0)
 
 
 def w_fct(stim, color_control):
-    '''function for word_task, to modulate strength of word reading based on 1-strength of color_naming ControlSignal'''
+    """function for word_task, to modulate strength of word reading based on 1-strength of color_naming ControlSignal"""
     print('color control: ', color_control)
     return stim * (1 - color_control)
 
@@ -44,10 +44,10 @@ w_fct_UDF = pnl.UserDefinedFunction(custom_function=w_fct, color_control=1)
 
 
 def objective_function(v):
-    '''function used for ObjectiveMechanism of lvoc
+    """function used for ObjectiveMechanism of lvoc
      v[0] = output of DDM: [probability of color naming, probability of word reading]
      v[1] = reward:        [color naming rewarded, word reading rewarded]
-     '''
+     """
     prob_upper = v[0]
     prob_lower = v[1]
     reward_upper = v[2][0]
@@ -114,7 +114,7 @@ lvoc = pnl.OptimizationControlMechanism(
         # direction=pnl.ASCENT
     ),
     control_signals=pnl.ControlSignal(
-        projections=[(pnl.SLOPE, color_task), ('color_control', word_task)],
+        modulates=[(pnl.SLOPE, color_task), ('color_control', word_task)],
         # function=pnl.ReLU,
         function=pnl.Logistic,
         cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],

@@ -209,6 +209,7 @@ from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.core.scheduling.condition import Condition, TimeScale, WhenFinished
 from psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
+from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
 
 __all__ = [
     'CONVERGENCE', 'EXTERNAL', 'EXTERNAL_INDEX',
@@ -289,11 +290,21 @@ def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, execution
     from psyneulink.library.components.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
 
     try:
-        a = get_auto_matrix(owning_component.parameters.auto._get(execution_id), owning_component.size[0])
-        c = get_hetero_matrix(owning_component.parameters.hetero._get(execution_id), owning_component.size[0])
+        a = get_auto_matrix(owning_component.parameters.auto._get(execution_id), owning_component.recurrent_size)
+        c = get_hetero_matrix(owning_component.parameters.hetero._get(execution_id), owning_component.recurrent_size)
         return a + c
     except TypeError:
         return None
+
+
+def _get_auto_hetero_from_matrix(matrix):
+    matrix = matrix.copy()
+    auto = np.diag(matrix).copy()
+
+    np.fill_diagonal(matrix, 0)
+    hetero = matrix
+
+    return auto, hetero
 
 
 def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, execution_id=None):
@@ -305,17 +316,17 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, ex
     #     owning_component.recurrent_projection.parameter_states["matrix"].function.parameters.previous_value._set(value, execution_id)
 
     try:
-        value = get_matrix(value, owning_component.size[0], owning_component.size[0])
+        value = get_matrix(value, owning_component.recurrent_size, owning_component.recurrent_size)
     except AttributeError:
         pass
 
     if value is not None:
-        temp_matrix = value.copy()
-        owning_component.parameters.auto._set(np.diag(temp_matrix).copy(), execution_id)
-        np.fill_diagonal(temp_matrix, 0)
-        owning_component.parameters.hetero._set(temp_matrix, execution_id)
+        auto, hetero = _get_auto_hetero_from_matrix(value)
+        owning_component.parameters.auto._set(auto, execution_id)
+        owning_component.parameters.hetero._set(hetero, execution_id)
 
     return value
+
 
 def _recurrent_transfer_mechanism_learning_rate_setter(value, owning_component=None, execution_id=None):
     if hasattr(owning_component, "learning_mechanism") and owning_component.learning_mechanism:
@@ -919,7 +930,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  has_recurrent_input_state=False,
                  combination_function:is_function_type=LinearCombination,
                  function=Linear,
-                 matrix=HOLLOW_MATRIX,
+                 matrix=None,
                  auto=None,
                  hetero=None,
                  integrator_mode=False,
@@ -949,14 +960,17 @@ class RecurrentTransferMechanism(TransferMechanism):
         if output_states is None or output_states is RESULT:
             output_states = [RESULT]
 
-        try:
-            self.recurrent_size
-        except:
-            # Defer determination until Component has parsed size of Mechanism's variable
-            self.recurrent_size = None
-
         if isinstance(hetero, (list, np.matrix)):
             hetero = np.array(hetero)
+
+        if isinstance(auto, list):
+            auto = np.array(auto)
+
+        # since removing the default argument matrix=HOLLOW_MATRIX to detect a user setting,
+        # some hidden steps in validate_params that set this case to HOLLOW_MATRIX did not
+        # happen
+        if matrix is AutoAssociativeProjection:
+            matrix = HOLLOW_MATRIX
 
         self._learning_enabled = enable_learning
 
@@ -973,25 +987,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   output_states=output_states,
                                                   params=params,
                                                   )
-
-        # KDM 10/24/18: below is here because of the complex properties that set matrix and auto/hetero
-        # after assignment, auto and hetero would sometimes be None when the matrix is set and valid, and
-        # these values are needed to get the stateful value for matrix
-        # If we can simplify the non-stateful properties of matrix, auto, hetero, we should try to remove this
-        # piece as well
-        try:
-            if auto is None and hetero is None:
-                if isinstance(self.matrix, list):
-                    self.matrix = np.asarray(self.matrix)
-                temp_matrix = self.matrix.copy()
-                self._auto = np.diag(temp_matrix).copy()
-                np.fill_diagonal(temp_matrix, 0)
-                self._hetero = temp_matrix
-
-                params['auto'] = self._auto
-                params['hetero'] = self._hetero
-        except (AttributeError, ValueError):
-            pass
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -1017,15 +1012,18 @@ class RecurrentTransferMechanism(TransferMechanism):
                          prefs=prefs)
 
     # def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
-    #     '''Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item'''
+    #     """Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item"""
     #     default_variable = super()._handle_default_variable(default_variable, size, input_states, params)
     #     self.recurrent_size = self.recurrent_size or len(default_variable[0])
     #     return default_variable
 
     def _instantiate_defaults(
             self,variable=None,request_set=None,assign_missing=True,target_set=None,default_set=None,context=None):
-        '''Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item of variable'''
-        self.recurrent_size = self.recurrent_size or len(variable[0])
+        """Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item of variable"""
+        try:
+            self.recurrent_size
+        except AttributeError:
+            self.recurrent_size = len(variable[0])
         super()._instantiate_defaults(variable,request_set,assign_missing,target_set,default_set,context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -1059,6 +1057,12 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 rows = np.array(matrix).shape[0]
                 cols = np.array(matrix).shape[1]
+
+            try:
+                if 'U' in repr(matrix.dtype):
+                    raise RecurrentTransferMechanism("{0} has non-numeric entries".format(matrix))
+            except AttributeError:
+                pass
 
             # Shape of matrix must be square
             if rows != cols:
@@ -1128,18 +1132,48 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         param_keys = self._parameter_states.key_values
 
-        specified_matrix = get_matrix(self.params[MATRIX], rows=self.recurrent_size, cols=self.recurrent_size)
+        matrix = get_matrix(self.defaults.matrix, rows=self.recurrent_size, cols=self.recurrent_size)
+
+        # below implements the rules provided by KAM:
+        # - If auto and hetero but not matrix are specified, the diagonal terms of the matrix are determined by auto and the off-diagonal terms are determined by hetero.
+        # - If auto, hetero, and matrix are all specified, matrix is ignored in favor of auto and hetero.
+        # - If auto and matrix are both specified, the diagonal terms are determined by auto and the off-diagonal terms are determined by matrix. ​
+        # - If hetero and matrix are both specified, the diagonal terms are determined by matrix and the off-diagonal terms are determined by hetero.
+        auto = get_auto_matrix(self.defaults.auto, self.recurrent_size)
+        hetero = get_hetero_matrix(self.defaults.hetero, self.recurrent_size)
+        auto_specified = self.parameters.auto._user_specified
+        hetero_specified = self.parameters.hetero._user_specified
+
+        if auto_specified and hetero_specified:
+            matrix = auto + hetero
+        elif auto_specified:
+            np.fill_diagonal(matrix, 0)
+            matrix = matrix + auto
+        elif hetero_specified:
+            diag = np.diag(matrix)
+            matrix = hetero.copy()
+            np.fill_diagonal(matrix, diag)
+
+        self.parameters.matrix._set(matrix)
 
         # 9/23/17 JDC: DOESN'T matrix arg default to something?
         # If no matrix was specified, then both AUTO and HETERO must be specified
-        if specified_matrix is None and (AUTO not in param_keys or HETERO not in param_keys):
+        if (
+            matrix is None
+            and (
+                AUTO not in param_keys
+                or HETERO not in param_keys
+                or not auto_specified
+                or not hetero_specified
+            )
+        ):
             raise RecurrentTransferError("Matrix parameter ({}) for {} failed to produce a suitable matrix: "
                                          "if the matrix parameter does not produce a suitable matrix, the "
                                          "'auto' and 'hetero' parameters must be specified; currently, either"
                                          "auto or hetero parameter is missing.".format(self.params[MATRIX], self))
 
         if AUTO not in param_keys and HETERO in param_keys:
-            d = np.diagonal(specified_matrix).copy()
+            d = np.diagonal(matrix).copy()
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
                                        name=AUTO,
@@ -1156,7 +1190,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                            format(self.__class__.__name__, self.name))
         if HETERO not in param_keys and AUTO in param_keys:
 
-            m = specified_matrix.copy()
+            m = matrix.copy()
             np.fill_diagonal(m, 0.0)
             self._hetero = m
             state = _instantiate_state(owner=self,
@@ -1227,7 +1261,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.combination_function = None
 
         if self.auto is None and self.hetero is None:
-            self.matrix = specified_matrix
+            self.matrix = matrix
             if self.matrix is None:
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
@@ -1288,79 +1322,47 @@ class RecurrentTransferMechanism(TransferMechanism):
     # single flag to check whether to get matrix from auto and hetero?
     @property
     def matrix(self):
-        from psyneulink.library.components.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
-
-        if hasattr(self, '_parameter_states') \
-                and 'auto' in self._parameter_states and 'hetero' in self._parameter_states:
-            if not hasattr(self, 'size'):
-                raise Exception('Error in retrieving matrix parameter for {}: `size` is not instantiated.'.format(self))
-            a = get_auto_matrix(self.auto, self.size[0])
-            c = get_hetero_matrix(self.hetero, self.size[0])
-            return a + c
-        else:
-            # if auto and hetero are not yet instantiated, then just use the standard method of attribute retrieval
-            backing_field = '_matrix'
-            # try:
-            #     return self.recurrent_projection.matrix
-            # except (AttributeError, TypeError):
-            # KAM MODIFIED 1/9/18 -- removed parameter state value look up (now reserved for 'mod_' params)
-            return getattr(self, backing_field)
+        return self.parameters.matrix._get()
 
     @matrix.setter
     def matrix(self, val): # simplified version of standard setter (in Component.py)
         # KDM 10/12/18: removing below because it doesn't seem to be correct, and also causes
         # unexpected values to be set to previous_value
-        # if hasattr(self, "recurrent_projection"):
-        #     self.recurrent_projection.parameter_states["matrix"].function.previous_value = val
-        if hasattr(self, '_parameter_states')\
-                and 'auto' in self._parameter_states and 'hetero' in self._parameter_states:
-            if hasattr(self, 'size'):
-                val = get_matrix(val, self.size[0], self.size[0])
-            temp_matrix = val.copy()
-            self.auto = np.diag(temp_matrix).copy()
-            np.fill_diagonal(temp_matrix, 0)
-            self.hetero = temp_matrix
-        else:
-            name = 'matrix'
-            backing_field = '_matrix'
-            setattr(self, backing_field, val)
-            self.user_params.__additem__(name, val)
+        # KDM 7/1/19: reinstating below
+        if hasattr(self, "recurrent_projection"):
+            self.recurrent_projection.parameter_states["matrix"].function.previous_value = val
 
-            if hasattr(self, '_parameter_states') and name in self._parameter_states:
-                param_state = self._parameter_states[name]
+        self.parameters.matrix._set(val)
 
-                if hasattr(param_state.function, 'initializer'):
-                    param_state.function.reinitialize = val
+        if hasattr(self, '_parameter_states') and 'matrix' in self._parameter_states:
+            param_state = self._parameter_states['matrix']
+
+            if hasattr(param_state.function, 'initializer'):
+                param_state.function.reinitialize = val
 
     @property
     def auto(self):
-        return getattr(self, "_auto")
+        return self.parameters.auto._get()
 
     @auto.setter
     def auto(self, val):
-
-        setattr(self, "_auto", val)
+        self.parameters.auto._set(val)
 
         if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_states:
             self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix
 
-        # Update user_params dict with new value
-        self.user_params.__additem__("auto", val)
 
     @property
     def hetero(self):
-        return getattr(self, "_hetero")
+        return self.parameters.hetero._get()
 
     @hetero.setter
     def hetero(self, val):
-
-        setattr(self, "_hetero", val)
+        self.parameters.hetero._set(val)
 
         if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_states:
-            self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix
+            self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix_param
 
-        # Update user_params dict with new value
-        self.user_params.__additem__("hetero", val)
     @property
     def learning_enabled(self):
         return self._learning_enabled
@@ -1533,16 +1535,16 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._get_variable_from_input(input, execution_id)
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         if self.parameters.integrator_mode.get(execution_context):
             super().reinitialize(*args, execution_context=execution_context)
         self.parameters.previous_value.set(None, execution_context, override=True)
 
     @property
     def _learning_signal_source(self):
-        '''Return default source of learning signal (`Primary OutputState <OutputState_Primary>)`
+        """Return default source of learning signal (`Primary OutputState <OutputState_Primary>)`
               Subclass can override this to provide another source (e.g., see `ContrastiveHebbianMechanism`)
-        '''
+        """
         return self.output_state
 
     def _get_input_struct_type(self, ctx):
@@ -1595,7 +1597,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         real_input_type = super()._get_input_struct_type(ctx)
-        real_in = builder.alloca(real_input_type, 1)
+        real_in = builder.alloca(real_input_type)
         old_val = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
         # FIXME: What if we have more than one state? Does the autoprojection

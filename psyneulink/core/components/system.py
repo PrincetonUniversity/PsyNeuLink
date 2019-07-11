@@ -2708,25 +2708,11 @@ class System(System_Base):
             context = ContextFlags.COMPOSITION
             self._assign_context_values(
                 execution_id,
+                propagate=True,
                 execution_phase=ContextFlags.PROCESSING,
                 string=EXECUTING + " " + SYSTEM + " " + self.name,
+                composition=self
             )
-
-        # Update execution_id for self and all mechanisms in graph (including learning) and controller
-        # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
-        # self.learning_execution_list
-        for mech in self.execution_graph:
-            mech._assign_context_values(execution_id, composition=self)
-
-        for learning_mech in self.learning_execution_list:
-            learning_mech._assign_context_values(execution_id, composition=self)
-
-        if self.controller is not None:
-            self.controller._assign_context_values(execution_id, composition=self)
-            if self.enable_controller and self.controller.input_states:
-                for state in self.controller.input_states:
-                    for projection in state.all_afferents:
-                        projection.sender.owner._assign_context_values(execution_id, composition=self)
 
         self._report_system_output = (self.prefs.reportOutputPref and
                                       self.parameters.context._get(execution_id).execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING))
@@ -4064,7 +4050,7 @@ class System(System_Base):
         def _assign_processing_components(G, sg, rcvr,
                                           processes:tc.optional(list)=None,
                                           subgraphs:tc.optional(dict)=None):
-            '''Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** '''
+            """Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** """
 
             from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
@@ -4323,7 +4309,7 @@ class System(System_Base):
 
         tc.typecheck
         def _assign_learning_components(G, sg, lg, rcvr, processes:tc.optional(list)=None):
-            '''Assign learning nodes and edges to graph, or subgraph for rcvr in any of the specified **processes**'''
+            """Assign learning nodes and edges to graph, or subgraph for rcvr in any of the specified **processes**"""
 
             # if rcvr is Projection, skip (handled in _assign_processing_components)
             if isinstance(rcvr, MappingProjection):
@@ -4547,7 +4533,7 @@ class System(System_Base):
             return True
 
         def _assign_control_components(G, sg, show_prediction_mechanisms):
-            '''Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
+            """Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** """
 
             controller = self.controller
             if controller in active_items:

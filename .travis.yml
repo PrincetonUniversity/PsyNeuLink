@@ -42,6 +42,7 @@ matrix:
     language: minimal
     env:
         - PYTHON=3.6.8
+        - PYTHONWARNINGS="ignore::DeprecationWarning"
     # Cache installed python virtual env and homebrew downloads
     cache:
         directories:

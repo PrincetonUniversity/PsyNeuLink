@@ -8,7 +8,7 @@
 #
 #
 # *******************************************  SELECTION FUNCTIONS *****************************************************
-'''
+"""
 
 * `OneHot`
 
@@ -20,7 +20,7 @@ COMMENT
 
 Functions that selects a subset of elements to maintain or transform, while nulling the others.
 
-'''
+"""
 
 __all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_NEXT', 'MAX_VS_AVG']
 
@@ -404,7 +404,7 @@ class OneHot(SelectionFunction):
 
         return builder
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -431,8 +431,6 @@ class OneHot(SelectionFunction):
 
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         if self.mode is MAX_VAL:
             max_value = np.max(variable)

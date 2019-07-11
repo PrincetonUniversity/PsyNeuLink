@@ -304,14 +304,14 @@ class MappingError(Exception):
         self.error_value = error_value
 
 def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
-    '''Get matrix parameter for MappingProjection
+    """Get matrix parameter for MappingProjection
     If MappingProjection is using Identity function (for efficiency), return properly shaped identity function
     # IMPLEMENTATION NOTE:
     #  This is for consistency of interpretation of matrix parameter on MappingProjection;
     #  It is OK to do this, even though the MappingProjection's function doesn't actually have a matrix parameter
     #    since, if any attempt is made to modify it by assigning a new one, the MappingProjection's original function
     #    (stored in _original_function) is restored.
-    '''
+    """
     # # MODIFIED 5/24/19 OLD:
     # return owning_component.function.parameters.matrix._get(execution_id)
     # MODIFIED 5/24/19 NEW [JDC]:
@@ -337,12 +337,12 @@ def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
 #     return value
 # MODIFIED 5/24/19 NEW: [JDC]
 def _mapping_projection_matrix_setter(matrix, owning_component=None, execution_id=None, **kwargs):
-    '''Assign matrix parameter for MappingProjection
+    """Assign matrix parameter for MappingProjection
     If value is identity matrix and MappingProjection's matrix ParameterState has no modulatory projections then,
         for efficiency, assign Identity Function which simply passes the variable of the MappingProjection to its value.
     If suppress_identity_function is passed in kwargs, and is set to True,
         then use originally assigned function and IDENTITY_MATRIX
-    '''
+    """
     current_function = owning_component.parameters.function._get(execution_id)
     current_function_variable = current_function.parameters.variable._get(execution_id)
     num_mod_afferents = len(owning_component._parameter_states[MATRIX].mod_afferents)
@@ -808,9 +808,9 @@ class MappingProjection(PathwayProjection_Base):
         # If function is Identity Function, no need to update ParameterStates, as matrix is not used
         if not isinstance(self.function, Identity):
 
-            if (hasattr(self.context, "composition") and
-                    hasattr(self.context.composition, "learning_enabled") and
-                    self.context.composition.learning_enabled):
+            if (hasattr(self.parameters.context._get(execution_id), "composition") and
+                    hasattr(self.parameters.context._get(execution_id).composition, "learning_enabled") and
+                    self.parameters.context._get(execution_id).composition.learning_enabled):
                 self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
                 self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
                 self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING

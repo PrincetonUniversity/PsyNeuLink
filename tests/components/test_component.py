@@ -5,7 +5,7 @@ import pytest
 class TestComponent:
 
     def test_component_execution_counts_for_standalone_mechanism(self):
-        '''Note: input_state should not update execution count, since it has no afferents'''
+        """Note: input_state should not update execution count, since it has no afferents"""
 
         T = pnl.TransferMechanism()
 

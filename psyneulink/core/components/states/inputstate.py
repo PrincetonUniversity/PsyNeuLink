@@ -1010,9 +1010,9 @@ class InputState(State_Base):
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         variable = super()._parse_function_variable(variable, execution_id, context)
         try:
-            if self._use_1d_variable:
+            if self._use_1d_variable and variable.ndim > 1:
                 return np.array(variable[0])
-        except:
+        except AttributeError:
             pass
         return variable
 
@@ -1247,10 +1247,10 @@ class InputState(State_Base):
         return state_spec, params_dict
 
     def _parse_self_state_type_spec(self, owner, input_state, context=None):
-        '''Return InputState specification dictionary with projections that shadow inputs to input_state
+        """Return InputState specification dictionary with projections that shadow inputs to input_state
 
         Called by _parse_state_spec if InputState specified for a Mechanism belongs to a different Mechanism
-        '''
+        """
 
         if not isinstance(input_state, InputState):
             raise InputStateError("PROGRAM ERROR: "
@@ -1268,7 +1268,7 @@ class InputState(State_Base):
 
     @staticmethod
     def _state_spec_allows_override_variable(spec):
-        '''
+        """
         Returns
         -------
             True - if **spec** outlines a spec for creating an InputState whose variable can be
@@ -1276,7 +1276,7 @@ class InputState(State_Base):
             False - otherwise
 
             ex: specifying an InputState with a Mechanism allows overriding
-        '''
+        """
         from psyneulink.core.components.mechanisms.mechanism import Mechanism
 
         if isinstance(spec, Mechanism):
@@ -1444,7 +1444,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     return state_list
 
 def _parse_shadow_inputs(owner, input_states):
-    '''Parses any {SHADOW_INPUTS:[InputState or Mechaism,...]} items in input_states into InputState specif. dict.'''
+    """Parses any {SHADOW_INPUTS:[InputState or Mechaism,...]} items in input_states into InputState specif. dict."""
 
     input_states_to_shadow_specs=[]
     for spec_idx, spec in enumerate(input_states):

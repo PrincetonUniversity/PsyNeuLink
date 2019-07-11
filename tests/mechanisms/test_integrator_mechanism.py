@@ -360,8 +360,8 @@ class TestReinitialize:
             I_not_integrator = IntegratorMechanism(function=Linear)
             I_not_integrator.execute(1.0)
             I_not_integrator.reinitialize(0.0)
-        assert "not allowed because this Mechanism is not stateful." in str(err_txt) \
-               and "(It does not have an accumulator to reinitialize)" in str(err_txt)
+        assert "not allowed because this Mechanism is not stateful." in str(err_txt.value)
+        assert "(It does not have an accumulator to reinitialize)" in str(err_txt.value)
 
 
 VECTOR_SIZE=4
@@ -777,7 +777,7 @@ class TestIntegratorInputs:
             )
             # P = Process(pathway=[I])
             I.execute([10.0, 5.0, 2.0, 1.0, 0.0])
-        assert "does not match required length" in str(error_text)
+        assert "does not match required length" in str(error_text.value)
 
     # input = list of length < default length
 
@@ -792,7 +792,7 @@ class TestIntegratorInputs:
             )
             # P = Process(pathway=[I])
             I.execute([10.0, 5.0, 2.0])
-        assert "does not match required length" in str(error_text)
+        assert "does not match required length" in str(error_text.value)
 
 
 # ======================================= RATE TESTS ============================================
@@ -994,7 +994,8 @@ class TestIntegratorRate:
             )
         error_msg_a = "Shape of 'variable' for function specified for IntegratorMechanism (AdaptiveIntegrator Function"
         error_msg_b = "(2,)) does not match the shape of the 'default_variable' specified for the 'Mechanism'."
-        assert all(error_msg in str(error_text) for error_msg in {error_msg_a, error_msg_b})
+        assert error_msg_a in str(error_text.value)
+        assert error_msg_b in str(error_text.value)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1010,9 +1011,8 @@ class TestIntegratorRate:
             float(result)
         error_msg_a = 'Length (1) of input ([10.]) does not match required length (3) for input to '
         error_msg_b = 'InputState-0 InputState of IntegratorMechanism'
-        assert (
-            error_msg_a in str(error_text) and error_msg_b in str(error_text)
-        )
+        assert error_msg_a in str(error_text.value)
+        assert error_msg_b in str(error_text.value)
 
     # rate = list len 2, incrment = list len 3, integration_type = accumulator
 
@@ -1029,7 +1029,8 @@ class TestIntegratorRate:
 
         error_msg_a = "The parameters with len>1 specified for AccumulatorIntegrator Function-0 "
         error_msg_b = "(['rate', 'increment']) don't all have the same length"
-        assert all(error_msg in str(error_text) for error_msg in {error_msg_a, error_msg_b})
+        assert error_msg_a in str(error_text.value)
+        assert error_msg_b in str(error_text.value)
 
 
     # @pytest.mark.mechanism
@@ -1044,11 +1045,9 @@ class TestIntegratorRate:
     #         )
     #         # P = Process(pathway=[I])
     #         float(I.execute(10.0))
-    #     assert (
-    #         "array specified for the rate parameter" in str(error_text)
-    #         and "must match the length" in str(error_text)
-    #         and "of the default input" in str(error_text)
-    #     )
+    #     assert "array specified for the rate parameter" in str(error_text.value)
+    #     assert "must match the length" in str(error_text.value)
+    #     assert "of the default input" in str(error_text.value)
 
     # @pytest.mark.mechanism
     # @pytest.mark.integrator_mechanism

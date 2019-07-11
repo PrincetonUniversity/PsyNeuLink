@@ -228,7 +228,9 @@ ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function
 
 Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
 with a ControlProjection that projects to the TransferMechanism's `ParameterState` for the `bias <Logistic.bias>`
-parameter of its `Logistic` Function.  The default value of a ControlSignal's `modulation <ControlSignal.modulation>` attribute is Modulation.MULTIPLICATIVE, so that it will multiply the value of the `bias <Logistic.bias>` parameter. When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
+parameter of its `Logistic` Function.  The default value of a ControlSignal's `modulation <ControlSignal.modulation>`
+attribute is Modulation.MULTIPLICATIVE, so that it will multiply the value of the `bias <Logistic.bias>` parameter.
+When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
 gain parameter.
 
 *Specify attributes of a ControlSignal*.  Ordinarily, ControlSignals modify the *MULTIPLICATIVE_PARAM* of a
@@ -503,7 +505,7 @@ class ControlSignal(ModulatorySignal):
         specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
         the parameter(s) that it controls.
 
-    projections : list of Projection specifications
+    modulates : list of Projection specifications
         specifies the `ControlProjection(s) <ControlProjection>` to be assigned to the ControlSignal, and that will be
         listed in its `efferents <ControlSignal.efferents>` attribute (see `ControlSignal_Projections` for additional
         details).
@@ -789,7 +791,7 @@ class ControlSignal(ModulatorySignal):
                  combine_costs_function:tc.optional(is_function_type)=Reduce(operation=SUM),
                  allocation_samples=Parameters.allocation_samples.default_value,
                  modulation:tc.optional(_is_modulation_param)=None,
-                 projections=None,
+                 modulates=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -827,7 +829,7 @@ class ControlSignal(ModulatorySignal):
                          modulation=modulation,
                          index=index,
                          assign=None,
-                         projections=projections,
+                         modulates=modulates,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -944,7 +946,7 @@ class ControlSignal(ModulatorySignal):
         self._initialize_cost_attributes(context=context)
 
     def _instantiate_allocation_samples(self, context=None):
-        '''Assign specified `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`.'''
+        """Assign specified `allocation_samples <ControlSignal.allocation_samples>` to a `SampleIterator`."""
 
         a = self.paramsCurrent[ALLOCATION_SAMPLES]
 
@@ -1053,8 +1055,8 @@ class ControlSignal(ModulatorySignal):
         return state_spec, params_dict
 
     def update(self, execution_id=None, params=None, context=None):
-        '''Update value (intensity) and costs
-        '''
+        """Update value (intensity) and costs
+        """
         super().update(execution_id=execution_id, params=params, context=context)
 
         if self.parameters.cost_options._get(execution_id):

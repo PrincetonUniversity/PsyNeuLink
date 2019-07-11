@@ -147,7 +147,7 @@ difference = Distance(metric=DIFFERENCE)
 #   function for ObjectiveMechanism
 
 def objective_function(variable):
-    '''Return difference between optimal and actual actions'''
+    """Return difference between optimal and actual actions"""
     actual_action = variable[0]
     optimal_action = variable[1]
     similarity = 1-difference([optimal_action, actual_action])/4
@@ -162,15 +162,15 @@ ocm = OptimizationControlMechanism(name='EVC',
                                                                           function=objective_function,
                                                                           monitor=[action_mech, optimal_action_mech]),
                                    # compute_reconfiguration_cost=Distance(metric=EUCLIDEAN, normalize=True),
-                                   control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
+                                   control_signals=[ControlSignal(modulates=(VARIANCE, player_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
                                                                                                       bias=COST_BIAS)),
-                                                    ControlSignal(projections=(VARIANCE,predator_percept),
+                                                    ControlSignal(modulates=(VARIANCE, predator_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
                                                                                                       bias=COST_BIAS)),
-                                                    ControlSignal(projections=(VARIANCE,prey_percept),
+                                                    ControlSignal(modulates=(VARIANCE, prey_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
                                                                                                       bias=COST_BIAS))])

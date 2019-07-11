@@ -42,9 +42,10 @@ if ptx_enabled:
     __all__.append('ptx_jit_engine')
 
 
-
 # Compiler binding
 __initialized = False
+
+
 def _binding_initialize():
     global __initialized
     if not __initialized:
@@ -216,7 +217,7 @@ class jit_engine:
             new_mod = _try_parse_module(m)
             if new_mod is not None:
                 mod_bundle.link_in(new_mod)
-                mod_bundle.name = m.name # Set the name of the last module
+                mod_bundle.name = m.name  # Set the name of the last module
                 compiled_modules.add(m)
 
         self.opt_and_append_bin_module(mod_bundle)
@@ -224,7 +225,7 @@ class jit_engine:
 
 class cpu_jit_engine(jit_engine):
 
-    def __init__(self, object_cache = None):
+    def __init__(self, object_cache=None):
         super().__init__()
         self._object_cache = object_cache
 
@@ -235,13 +236,15 @@ class cpu_jit_engine(jit_engine):
 
         self._jit_engine, self._jit_pass_manager, self._target_machine = _cpu_jit_constructor()
         if self._object_cache is not None:
-             self._jit_engine.set_object_cache(self._object_cache)
+            self._jit_engine.set_object_cache(self._object_cache)
+
 
 _ptx_builtin_source = """
 __device__ {type} __pnl_builtin_log({type} a) {{ return log(a); }}
 __device__ {type} __pnl_builtin_exp({type} a) {{ return exp(a); }}
 __device__ {type} __pnl_builtin_pow({type} a, {type} b) {{ return pow(a, b); }}
 """
+
 
 class ptx_jit_engine(jit_engine):
     class cuda_engine():
@@ -286,7 +289,7 @@ class ptx_jit_engine(jit_engine):
                     pass
             return function
 
-    def __init__(self, object_cache = None):
+    def __init__(self, object_cache=None):
         super().__init__()
         self._object_cache = object_cache
 
@@ -301,7 +304,7 @@ class ptx_jit_engine(jit_engine):
     def get_kernel(self, name):
         kernel = self._engine._find_kernel(name + "_cuda_kernel")
         if kernel is None:
-            function = _find_llvm_function(name);
+            function = _find_llvm_function(name)
             wrapper_mod = _gen_cuda_kernel_wrapper_module(function)
             self.compile_modules([wrapper_mod], set())
             kernel = self._engine._find_kernel(name + "_cuda_kernel")

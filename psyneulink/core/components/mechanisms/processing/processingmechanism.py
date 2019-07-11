@@ -140,12 +140,13 @@ class ProcessingMechanism_Base(Mechanism_Base):
                  default_variable=None,
                  size=None,
                  input_states=None,
+                 function=None,
                  output_states=None,
                  params=None,
                  name=None,
                  prefs=None,
                  context=None,
-                 function=None,
+                 **kwargs
                  ):
         """Abstract class for processing mechanisms
 
@@ -162,12 +163,13 @@ class ProcessingMechanism_Base(Mechanism_Base):
         super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
+                         function=function,
                          output_states=output_states,
                          params=params,
                          name=name,
                          prefs=prefs,
                          context=context,
-                         function=function,
+                         **kwargs
                          )
 
     def _validate_inputs(self, inputs=None):

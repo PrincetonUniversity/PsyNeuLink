@@ -24,10 +24,12 @@ from .jit_engine import *
 
 __all__ = ['LLVMBuilderContext']
 
+
 _compiled_modules = set()
 _binary_generation = 0
 
-def _llvm_build(target_generation = _binary_generation + 1):
+
+def _llvm_build(target_generation=_binary_generation + 1):
     global _binary_generation
     if target_generation <= _binary_generation:
         if "compile" in debug_env:
@@ -131,7 +133,7 @@ class LLVMBinaryFunction:
         try:
             multirun_llvm = _find_llvm_function(self.name + "_multirun")
         except ValueError:
-            function = _find_llvm_function(self.name);
+            function = _find_llvm_function(self.name)
             with LLVMBuilderContext.get_global() as ctx:
                 multirun_llvm = ctx.gen_multirun_wrapper(function)
 
@@ -142,12 +144,14 @@ _cpu_engine = cpu_jit_engine()
 if ptx_enabled:
     _ptx_engine = ptx_jit_engine()
 
+
 # Initialize builtins
 def init_builtins():
     with LLVMBuilderContext.get_global() as ctx:
         builtins.setup_pnl_intrinsics(ctx)
         builtins.setup_vxm(ctx)
         builtins.setup_mersenne_twister(ctx)
+
 
 def cleanup():
     _cpu_engine.clean_module()
@@ -159,5 +163,6 @@ def cleanup():
     _all_modules.clear()
     LLVMBinaryFunction.get.cache_clear()
     init_builtins()
+
 
 init_builtins()

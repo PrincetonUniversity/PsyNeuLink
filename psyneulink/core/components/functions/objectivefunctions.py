@@ -8,7 +8,7 @@
 #
 #
 # *****************************************  OBJECTIVE FUNCTIONS *******************************************************
-'''
+"""
 
 * `Stability`
 * `Energy`
@@ -17,7 +17,7 @@
 
 Functions that return a scalar evaluation of their input.
 
-'''
+"""
 
 import functools
 import itertools
@@ -404,7 +404,7 @@ class Stability(ObjectiveFunction):
         builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
         return builder
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -422,9 +422,6 @@ class Stability(ObjectiveFunction):
         stability : scalar
 
         """
-
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # MODIFIED 6/12/19 NEW: [JDC]
         variable = np.array(variable)
@@ -1106,7 +1103,7 @@ class Distance(ObjectiveFunction):
 
         return builder
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1123,8 +1120,6 @@ class Distance(ObjectiveFunction):
         distance : scalar
 
         """
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         v1 = variable[0]
         v2 = variable[1]
