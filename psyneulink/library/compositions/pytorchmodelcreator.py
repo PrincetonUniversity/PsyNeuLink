@@ -134,7 +134,6 @@ class PytorchModelCreator(torch.nn.Module):
         # every time the weights are updated
         self.copy_weights_to_psyneulink(execution_id)
         #self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self)
-        print("PTR INIT")
 
     # defines input type
     def _get_input_struct_type(self, ctx):  # Test case: {[1 x [2 x double]]}
@@ -253,7 +252,6 @@ class PytorchModelCreator(torch.nn.Module):
             builder.ret_void()
             llvm_func = builder.function
         self._forward_llvm_func = llvm_func
-        print(llvm_func)
         return llvm_func
 
     # Injects matrix multiplication of m1 and m2 into builder (and returns allocated output)
@@ -283,20 +281,6 @@ class PytorchModelCreator(torch.nn.Module):
         output_vec = builder.alloca(ir.types.ArrayType(ir.types.DoubleType(), z))
         builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [builder.bitcast(m1,ctx.float_ty.as_pointer()), builder.bitcast(m2,ctx.float_ty.as_pointer()), ctx.int32_ty(y), ctx.int32_ty(z), builder.bitcast(output_vec,ctx.float_ty.as_pointer())])
-        #with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(z), "outer") as (builder, _z):
-        #for _z in range(0, z):
-        #    curr_val = ir.types.DoubleType()(0)
-        #    with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(y), "inner") as (builder, _y):
-            #for _y in range(0, y):
-        #        print("_Y,_Z",_y,_z,y,z)
-        #        v1 = builder.load(builder.gep(
-        #            m1, [ctx.int32_ty(0), _y]))
-        #        v2 = builder.load(builder.gep(
-        #            m2, [ctx.int32_ty(0), _y, _z]))
-        #        print("v1",v1,"v2",v2)
-        #        curr_val = builder.fadd(curr_val, builder.fmul(v1, v2))
-        #    builder.store(curr_val, builder.gep(
-        #        output_vec, [ctx.int32_ty(0), _z]))
         return output_vec
     # figure out type of arg_in
     def _gen_llvm_forward_function_body(self, ctx, builder, params, _, arg_in, arg_out):
@@ -485,7 +469,7 @@ class PytorchModelCreator(torch.nn.Module):
             self.log_weights(execution_id)
         #print("EXPECTED:",outputs)
         total_nonbin_time += timeit.default_timer() - start_time
-        print("NOBIN:",total_nonbin_time)
+        #print("NOBIN:",total_nonbin_time)
         return outputs
 
     def detach_all(self):
