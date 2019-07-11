@@ -937,7 +937,8 @@ class Component(object, metaclass=ComponentsMeta):
                  size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
                  function=None,
                  name=None,
-                 prefs=None):
+                 prefs=None,
+                 **kwargs):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
 
         Initialization arguments:

@@ -837,7 +837,8 @@ class DDM(ProcessingMechanism_Base):
                  output_states:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None):
+                 prefs: is_pref_set = None,
+                 **kwargs):
 
         self.standard_output_states = StandardOutputStates(self,
                                                            DDM_standard_output_states,
@@ -923,7 +924,8 @@ class DDM(ProcessingMechanism_Base):
                                   name=name,
                                   prefs=prefs,
                                   size=size,
-                                  context=ContextFlags.CONSTRUCTOR)
+                                  context=ContextFlags.CONSTRUCTOR,
+                                  **kwargs),
         self._instantiate_plotting_functions()
         # # TEST PRINT
         # print("\n{} user_params:".format(self.name))
