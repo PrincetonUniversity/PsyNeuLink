@@ -103,7 +103,7 @@ class Mechanism(ShellClass):
                  function=None,
                  param_defaults=None,
                  name=None,
-                 prefs=None
+                 prefs=None,
                  **kwargs):
         super().__init__(default_variable=default_variable,
                          size=size,
