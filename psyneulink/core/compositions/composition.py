@@ -3420,9 +3420,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 nested_comp_graph.attr(label=rcvr_label)
                 g.subgraph(nested_comp_graph)
 
-            # If rcvr is a learning component,
+            # If rcvr is a learning component and not an INPUT node,
             #    break and handle in _assign_learning_components()
-            if NodeRole.LEARNING in self.nodes_to_roles[rcvr]:
+            #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
+            if NodeRole.LEARNING in self.nodes_to_roles[rcvr] and not NodeRole.INPUT in self.nodes_to_roles[rcvr]:
                 return
 
             # If rcvr is ObjectiveMechanism for Composition's controller,
@@ -3905,7 +3906,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def _assign_learning_components(g):
             """Assign learning nodes and edges to graph"""
 
-            learning_components = [node for node in self.nodes if NodeRole.LEARNING in self.nodes_to_roles[node]]
+            # Get learning_components, with exception of INPUT (i.e. TARGET) nodes
+            #    (i.e., allow TARGET node to continue to be marked as an INPUT node)
+            learning_components = [node for node in self.nodes
+                                   if (NodeRole.LEARNING in self.nodes_to_roles[node]
+                                       and not NodeRole.INPUT in self.nodes_to_roles[node])]
 
             for rcvr in learning_components:
                 # if rcvr is Projection, skip (handled in _assign_processing_components)
@@ -4063,7 +4068,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 self.active_item_rendered = True
 
                             # Projection to or from a LearningMechanism
-                            # elif (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
                             elif (NodeRole.LEARNING in self.nodes_to_roles[rcvr]):
                                 proj_color = learning_color
                                 proj_width = str(default_width)
