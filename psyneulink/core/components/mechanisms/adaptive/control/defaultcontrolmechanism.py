@@ -110,17 +110,20 @@ class DefaultControlMechanism(ControlMechanism):
                  name=None,
                  prefs:is_pref_set=None,
                  function=None,
+                 **kwargs
                  ):
 
-        super(DefaultControlMechanism, self).__init__(# default_variable=default_variable,
-                                                    # size=size,
-                                                    objective_mechanism=objective_mechanism,
-                                                    control_signals=control_signals,
-                                                    function=function,
-                                                    params=params,
-                                                    name=name,
-                                                    prefs=prefs,
-                                                    context=ContextFlags.CONSTRUCTOR)
+        super(DefaultControlMechanism, self).__init__(
+                # default_variable=default_variable,
+                # size=size,
+                objective_mechanism=objective_mechanism,
+                control_signals=control_signals,
+                function=function,
+                params=params,
+                name=name,
+                prefs=prefs,
+                context=ContextFlags.CONSTRUCTOR,
+                **kwargs)
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_value attribute

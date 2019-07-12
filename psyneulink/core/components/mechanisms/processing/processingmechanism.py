@@ -193,12 +193,12 @@ class ProcessingMechanismError(Exception):
 
 class ProcessingMechanism(ProcessingMechanism_Base):
     """
-    ProcessingMechanism(                            \
-    default_variable=None,                               \
-    size=None,                                              \
-    function=Linear, \
-    params=None,                                            \
-    name=None,                                              \
+    ProcessingMechanism(   \
+    default_variable=None, \
+    size=None,             \
+    function=Linear,       \
+    params=None,           \
+    name=None,             \
     prefs=None)
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that does not have any specialized features.
@@ -287,7 +287,8 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  function=Linear,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
@@ -303,4 +304,5 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  context=ContextFlags.CONSTRUCTOR)
+                                                  context=ContextFlags.CONSTRUCTOR,
+                                                  **kwargs)

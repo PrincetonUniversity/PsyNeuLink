@@ -162,6 +162,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
                  prefs,
                  context,
                  function=None,
+                 **kwargs
                  ):
         """Abstract class for AdaptiveMechanism
         """
@@ -181,6 +182,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
                          prefs=prefs,
                          context=context,
                          function=function,
+                         **kwargs
                          )
 
 #     def _instantiate_output_states(self, context=None):

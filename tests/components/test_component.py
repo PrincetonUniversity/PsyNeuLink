@@ -6,13 +6,13 @@ class TestComponent:
 
     def test_detection_of_illegal_arg_in_kwargs(self):
         with pytest.raises(pnl.ComponentError) as error_text:
-            pnl.DDM(flim_flam=1)
-        assert "Unrecognized argument in constructor for DDM-0 (type: DDM): 'flim_flam'"
+            pnl.ProcessingMechanism(flim_flam=1)
+        assert "Unrecognized argument in constructor for ProcessingMechanism-0 (type: ProcessingMechanism): 'flim_flam'"
 
     def test_detection_of_illegal_args_in_kwargs(self):
         with pytest.raises(pnl.ComponentError) as error_text:
-            pnl.DDM(flim_flam=1, grumblabble=2)
-        assert "Unrecognized arguments in constructor for DDM-0 (type: DDM): 'flim_flam, grumblabble'"
+            pnl.ProcessingMechanism(name='MY_MECH', flim_flam=1, grumblabble=2)
+        assert "Unrecognized arguments in constructor for MY_MECH (type: ProcessingMechanism): 'flim_flam, grumblabble'"
 
     def test_component_execution_counts_for_standalone_mechanism(self):
         """Note: input_state should not update execution count, since it has no afferents"""

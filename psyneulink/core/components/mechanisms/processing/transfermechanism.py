@@ -936,7 +936,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
         """Assign type-level preferences and call super.__init__
         """
 
@@ -972,14 +973,15 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                indices=PRIMARY)
 
         super(TransferMechanism, self).__init__(
-            default_variable=default_variable,
-            size=size,
-            input_states=input_states,
-            function=function,
-            params=params,
-            name=name,
-            prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR,
+                default_variable=default_variable,
+                size=size,
+                input_states=input_states,
+                function=function,
+                params=params,
+                name=name,
+                prefs=prefs,
+                context=ContextFlags.CONSTRUCTOR,
+                **kwargs
         )
 
     def _parse_arg_initial_value(self, initial_value):

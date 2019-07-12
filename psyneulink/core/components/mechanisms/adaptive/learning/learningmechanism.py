@@ -1005,7 +1005,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
 
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO ABC WHEN CREATED
         if context is ContextFlags.CONSTRUCTOR:
@@ -1045,7 +1046,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         context=ContextFlags.CONSTRUCTOR,
+                         **kwargs)
 
     def _check_type_and_timing(self):
         try:
