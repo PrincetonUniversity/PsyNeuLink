@@ -1,6 +1,7 @@
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core import llvm as pnlvm
+from llvmlite import ir
 import numpy
 import ctypes
 import functools
@@ -142,10 +143,10 @@ class PytorchModelCreator(torch.nn.Module):
         for component in self.execution_sets[0]:
             component_id = self._id_map[0][component]
             if "ref_pass" in debug_env:
-                input_ty[component_id] = pnlvm.irtypes.IntType(64)
+                input_ty[component_id] = ir.types.IntType(64)
             else:
                 input_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(component.defaults.variable[0])
-        struct_ty = pnlvm.irtypes.LiteralStructType(input_ty)
+        struct_ty = ir.types.LiteralStructType(input_ty)
         return struct_ty
 
     # Converts tensor input to ctype
@@ -167,7 +168,7 @@ class PytorchModelCreator(torch.nn.Module):
         for component in self.execution_sets[num_outp]:
             component_id = self._id_map[num_outp][component]
             outp_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(component.defaults.value[0])
-        struct_ty = pnlvm.irtypes.LiteralStructType(outp_ty)
+        struct_ty = ir.types.LiteralStructType(outp_ty)
         return struct_ty
 
     # Creates an output struct to be passed into forward computation
@@ -193,12 +194,12 @@ class PytorchModelCreator(torch.nn.Module):
                     input_component = node.component
                     input_component_id = self._afferent_id_map[component][input_component]
                     if "ref_pass" in debug_env:
-                        param_list[i-1][component_id][input_component_id] = pnlvm.irtypes.IntType(64)
+                        param_list[i-1][component_id][input_component_id] = ir.types.IntType(64)
                     else:
                         param_list[i-1][component_id][input_component_id] = ctx.convert_python_struct_to_llvm_ir(weights.detach().numpy())
-                param_list[i-1][component_id] = pnlvm.irtypes.LiteralStructType(param_list[i-1][component_id])
-            param_list[i-1] = pnlvm.irtypes.LiteralStructType(param_list[i-1])
-        struct_ty = pnlvm.irtypes.LiteralStructType(
+                param_list[i-1][component_id] = ir.types.LiteralStructType(param_list[i-1][component_id])
+            param_list[i-1] = ir.types.LiteralStructType(param_list[i-1])
+        struct_ty = ir.types.LiteralStructType(
             param_list)
         return struct_ty
 
@@ -229,7 +230,7 @@ class PytorchModelCreator(torch.nn.Module):
         return param_cty(*params)
         
     def _get_context_struct_type(self, ctx):
-        struct_ty = pnlvm.irtypes.LiteralStructType([
+        struct_ty = ir.types.LiteralStructType([
             ctx.convert_python_struct_to_llvm_ir(self.defaults['value'])
         ])
         return struct_ty
@@ -243,7 +244,7 @@ class PytorchModelCreator(torch.nn.Module):
                     ctx.get_input_struct_type(self).as_pointer(),
                     ctx.get_output_struct_type(self).as_pointer()
                     ]
-            # NEED TO GET INPUT VECTOR SIZE (maybe just pass as pnlvm.irVectorType?)
+            # NEED TO GET INPUT VECTOR SIZE (maybe just pass as ir.VectorType?)
             builder = ctx.create_llvm_function(args, self)
             llvm_func = builder.function
 
@@ -260,12 +261,12 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_inject_matmul(self, ctx, builder, m1, m2, x, y, z):
         # create output mat
         output_mat = builder.alloca(ir.types.ArrayType(
-            pnlvm.irtypes.ArrayType(ir.types.DoubleType(), z), x))
+            ir.types.ArrayType(ir.types.DoubleType(), z), x))
         # do computation
         for _x in range(0, x):
             # this is the current row we are making in the output
             for _z in range(0, z):
-                curr_val = pnlvm.irtypes.DoubleType()(0)
+                curr_val = ir.types.DoubleType()(0)
                 for _y in range(0, y):
                     v1 = builder.load(builder.gep(
                         m1, [ctx.int32_ty(0), ctx.int32_ty(_x), ctx.int32_ty(_y)]))
@@ -313,7 +314,7 @@ class PytorchModelCreator(torch.nn.Module):
                         if "ref_pass" in debug_env:
                             mem_addr = builder.load(cmp_arg)
                             cmp_arg = builder.inttoptr(mem_addr,
-                            pnlvm.irtypes.ArrayType(ir.types.DoubleType(), dim_y).as_pointer())
+                            ir.types.ArrayType(ir.types.DoubleType(), dim_y).as_pointer())
                         cmp_arg = builder.gep(cmp_arg, [ctx.int32_ty(0),_y])  # get input
                         res = self.bin_function_creator(
                             ctx, builder, component, builder.load(cmp_arg), execution_id=None)
@@ -508,7 +509,7 @@ class PytorchModelCreator(torch.nn.Module):
 
     # Helper method that functions the same as function_creator, but instead injects the computation to the builder
     def bin_function_creator(self, ctx, builder, node, x, execution_id=None):
-        ir_dbl = pnlvm.irtypes.DoubleType()
+        ir_dbl = ir.types.DoubleType()
 
         def get_fct_param_value(param_name):
             val = node.function.get_current_function_param(
