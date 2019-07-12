@@ -3953,18 +3953,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             proj_receiver = proj.receiver.owner
 
-            # # If Projection has a LearningProjection from a LearningMechanism
-            # #    that executes in the execution_phase, include it here
-            # proj_learning_in_execution_phase = (proj.has_learning_projection and
-            #                                     proj.has_learning_projection.sender.owner.learning_timing is
-            #                                     LearningTiming.EXECUTION_PHASE)
-            # if proj_learning_in_execution_phase:
-            #     learning_mech = proj.parameter_states[MATRIX].mod_afferents[0].sender.owner
-            #     learning_rcvrs = [learning_mech, proj]
-            #     learning_graph={proj:{learning_mech}}
-            #     for lr in learning_rcvrs:
-            #         _assign_learning_components(g, learning_graph, lr)
-
             # Node for Projection
             g.node(label, shape=learning_projection_shape, color=proj_color, penwidth=proj_width)
 
@@ -4238,8 +4226,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if i is not None:
                     G.body.insert(0,G.body.pop(i))
         if self.controller and show_controller:
-            # i = get_index_of_node_in_G_body(self.controller.objective_mechanism)
-            # G.body.insert(len(G.body),G.body.pop(i))
             i = get_index_of_node_in_G_body(self.controller)
             G.body.insert(len(G.body),G.body.pop(i))
 
