@@ -2001,7 +2001,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                error_sources=comparator_mechanism,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
-
         self.learning_enabled = True
         self.add_nodes(nodes=[target_mechanism, comparator_mechanism, learning_mechanism],
                        required_roles=NodeRole.LEARNING)
@@ -2033,6 +2032,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
 
+        if not learning_mechanism.output_states[ERROR_SIGNAL].efferents:
+            learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
+                                                                                                            override=True)
+
         self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
 
         proj = MappingProjection(sender=previous_learning_mechanism.output_states[0],
@@ -2062,7 +2065,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         act_in_projection = MappingProjection(sender=input_source.output_states[0],
                                               receiver=learning_mechanism.input_states[0])
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
-
 
     def _create_learning_projection(self, learning_mechanism, learned_projection):
 
@@ -3934,108 +3936,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             color=rcvr_color, penwidth=rcvr_width,
                             rank=learning_rank, shape=mechanism_shape)
 
-                # MODIFIED 7/11/19 OLD:
-                # # Projections to ObjectiveMechanism
-                # if isinstance(rcvr, ObjectiveMechanism):
-                #     if show_learning is ALL:
-                #         # Projections to ObjectiveMechanism
-                #         for input_state in rcvr.input_states:
-                #             for proj in input_state.path_afferents:
-                #
-                #                 smpl_or_trgt_src = proj.sender.owner
-                #
-                #                 # Projection is from System
-                #                 # Create node for System "TARGET" input
-                #                 # Note: Mechanism.show_structure is not called for SystemInterfaceMechanism
-                #                 if isinstance(smpl_or_trgt_src, CompositionInterfaceMechanism):
-                #
-                #                     if smpl_or_trgt_src in active_items:
-                #                         if active_color is BOLD:
-                #                             smpl_or_trgt_src_color = composition_color
-                #                         else:
-                #                             smpl_or_trgt_src_color = active_color
-                #                         smpl_or_trgt_src_width = str(bold_width + active_thicker_by)
-                #                         self.active_item_rendered = True
-                #                     else:
-                #                         smpl_or_trgt_src_color = composition_color
-                #                         smpl_or_trgt_src_width = str(bold_width)
-                #
-                #                     g.node(self._get_label(smpl_or_trgt_src, show_dimensions),
-                #                             color=smpl_or_trgt_src_color,
-                #                             rank='min',
-                #                             penwidth=smpl_or_trgt_src_width)
-                #
-                #                 if proj.receiver.owner in active_items:
-                #                     if active_color is BOLD:
-                #                         learning_proj_color = learning_color
-                #                     else:
-                #                         learning_proj_color = active_color
-                #                     learning_proj_width = str(default_width + active_thicker_by)
-                #                     self.active_item_rendered = True
-                #                 else:
-                #                     learning_proj_color = learning_color
-                #                     learning_proj_width = str(default_width)
-                #                 if show_projection_labels:
-                #                     edge_label = proj.name
-                #                 else:
-                #                     edge_label = ''
-                #
-                #                 sndr_label = self._get_label(smpl_or_trgt_src, show_dimensions)
-                #                 rcvr_label = self._get_label(proj.receiver.owner, show_dimensions)
-                #                 if show_node_structure:
-                #                     proc_mech_rcvr_label = rcvr_label +':'+ InputState.__name__ +'-'+ proj.receiver.name
-                #                 else:
-                #                     proc_mech_rcvr_label = rcvr_label
-                #
-                #                 G.edge(sndr_label, proc_mech_rcvr_label, label=edge_label,
-                #                        color=learning_proj_color, penwidth=learning_proj_width)
-                #     return
-                #
-                # # Implement edges for Projections to LearningMechanism
-                # #    from other LearningMechanisms or ObjectiveMechanism, and from ProcessingMechanisms if 'ALL' is set
-                # for input_state in rcvr.input_states:
-                #     for proj in input_state.path_afferents:
-                #
-                #         if proj.receiver.owner in active_items:
-                #             if active_color is BOLD:
-                #                 learning_proj_color = learning_color
-                #             else:
-                #                 learning_proj_color = active_color
-                #             learning_proj_width = str(default_width + active_thicker_by)
-                #             self.active_item_rendered = True
-                #         else:
-                #             learning_proj_color = learning_color
-                #             learning_proj_width = str(default_width)
-                #
-                #         # Get sndr info
-                #         sndr = proj.sender.owner
-                #         sndr_label = self._get_graph_node_label(sndr, show_dimensions)
-                #
-                #         # Create an edge for the Projection to the LearningMechanism if:
-                #         #    - it is from another LearningMechanism in the same Composition
-                #         #    - it is from an ObjectiveMechanism used for learning in the same Composition
-                #         #    - **show_learning** argument was specifid as ALL
-                #         if (((isinstance(sndr, LearningMechanism)
-                #               or (isinstance(sndr, ObjectiveMechanism) and NodeRole.LEARNING in self.nodes_to_roles[sndr])))
-                #                 or show_learning is ALL):
-                #             if not sndr in self.nodes:
-                #                 continue
-                #             if show_projection_labels:
-                #                 edge_label = proj.name
-                #             else:
-                #                 edge_label = ''
-                #             if show_node_structure:
-                #                 G.edge(sndr_label + ':' + OutputState.__name__ + '-' + proj.sender.name,
-                #                        rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
-                #                        label=edge_label, color=learning_proj_color, penwidth=learning_proj_width)
-                #             else:
-                #                 G.edge(sndr_label, rcvr_label, label=edge_label,
-                #                        color=learning_proj_color, penwidth=learning_proj_width)
-                # MODIFIED 7/11/19 NEW: [JDC]
                 # Implement sender edges
                 sndrs = processing_graph[rcvr]
                 _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
-                # MODIFIED 7/11/19 END
 
         def render_projection_as_node(g, proj, label,
                                       proj_color, proj_width,
@@ -4160,7 +4063,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 self.active_item_rendered = True
 
                             # Projection to or from a LearningMechanism
-                            elif (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
+                            # elif (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
+                            elif (NodeRole.LEARNING in self.nodes_to_roles[rcvr]):
                                 proj_color = learning_color
                                 proj_width = str(default_width)
 
