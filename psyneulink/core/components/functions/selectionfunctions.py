@@ -404,7 +404,7 @@ class OneHot(SelectionFunction):
 
         return builder
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -431,8 +431,6 @@ class OneHot(SelectionFunction):
 
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         if self.mode is MAX_VAL:
             max_value = np.max(variable)

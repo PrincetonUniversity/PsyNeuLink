@@ -591,6 +591,9 @@ class Scheduler(object):
             else:
                 self.execution_list[execution_id] = []
 
+        self._init_clock(execution_id, base_execution_id)
+
+    def _init_clock(self, execution_id=None, base_execution_id=None):
         # instantiate new Clock for this execution_id if necessary
         # currently does not work with base_execution_id
         if execution_id not in self.clocks:

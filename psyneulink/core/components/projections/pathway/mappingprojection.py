@@ -694,11 +694,17 @@ class MappingProjection(PathwayProjection_Base):
         matrix = get_matrix(self._parameter_states[MATRIX].value)
         initial_rate = matrix * 0.0
 
-        self._parameter_states[MATRIX].function = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
-                                                                               default_variable=matrix,
-                                                                               initializer=matrix,
-                                                                               # rate=initial_rate
-                                                                               )
+        # KDM 7/11/19: instead of simply setting the function, we need to reinstantiate to ensure
+        # new defaults get set properly
+        self._parameter_states[MATRIX]._instantiate_function(
+            function=AccumulatorIntegrator(
+                owner=self._parameter_states[MATRIX],
+                default_variable=matrix,
+                initializer=matrix,
+                # rate=initial_rate
+            )
+        )
+        self._parameter_states[MATRIX]._instantiate_value(context)
 
 
         # # Assign ParameterState the same Log as the MappingProjection, so that its entries are accessible to Mechanisms

@@ -326,7 +326,7 @@ class GatingSignal(ModulatorySignal):
         `value <State_Base.value>` of the State(s) to which the GatingSignal's
         `GatingProjection(s) <GatingProjection>` project.
 
-    projections : list of Projection specifications
+    modulates : list of Projection specifications
         specifies the `GatingProjection(s) <GatingProjection>` to be assigned to the GatingSignal, and that will be
         listed in its `efferents <GatingSignal.efferents>` attribute (see `GatingSignal_Projections` for additional
         details).
@@ -470,7 +470,7 @@ class GatingSignal(ModulatorySignal):
                  assign=None,
                  function=Linear(),
                  modulation:tc.optional(_is_modulation_param)=None,
-                 projections=None,
+                 modulates=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -508,7 +508,7 @@ class GatingSignal(ModulatorySignal):
                          modulation=modulation,
                          index=index,
                          assign=assign,
-                         projections=projections,
+                         modulates=modulates,
                          params=params,
                          name=name,
                          prefs=prefs,

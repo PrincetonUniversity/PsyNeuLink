@@ -163,9 +163,11 @@ user once the component is constructed, with the one exception of `prefs <Compon
 * **reinitialize_when** - the `reinitialize_when <Component.reinitialize_when>` attribute contains a `Condition`. When
   this condition is satisfied, the Component calls its `reinitialize <Component.reinitialize>` method. The
   `reinitialize <Component.reinitialize>` method is executed without arguments, meaning that the relevant function's
-  `initializer<IntegratorFunction.initializer>` attribute (or equivalent -- initialization attributes vary among functions) is
-  used for reinitialization. Keep in mind that the `reinitialize <Component.reinitialize>` method and `reinitialize_when
-  <Component.reinitialize_when>` attribute only exist on stateful Mechanisms.
+  `initializer<IntegratorFunction.initializer>` attribute (or equivalent -- initialization attributes vary among
+  functions) is used for reinitialization. Keep in mind that the `reinitialize <Component.reinitialize>` method and
+  `reinitialize_when <Component.reinitialize_when>` attribute only exist for Mechanisms that have `stateful
+  <Parameter.stateful>` Parameters, or that have a `function <Mechanism.function>` with `stateful <Parameter.stateful>`
+  Parameters.
 
   .. note::
 
@@ -416,7 +418,11 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context, ContextFlags, _get_time
-from psyneulink.core.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+from psyneulink.core.globals.keywords import \
+    COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, \
+    FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, \
+    LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, \
+    PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
@@ -850,6 +856,8 @@ class Component(object, metaclass=ComponentsMeta):
     componentCategory = None
     componentType = None
 
+    standard_constructor_args = [REINITIALIZE_WHEN]
+
     class Parameters(ParametersBase):
         """
             The `Parameters` that are associated with all `Components`
@@ -935,7 +943,8 @@ class Component(object, metaclass=ComponentsMeta):
                  size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
                  function=None,
                  name=None,
-                 prefs=None):
+                 prefs=None,
+                 **kwargs):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
 
         Initialization arguments:
@@ -945,6 +954,11 @@ class Component(object, metaclass=ComponentsMeta):
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
         """
+
+        for arg in kwargs.keys():
+            if arg not in self.standard_constructor_args:
+                raise ComponentError(f"Unrecognized argument in constructor for {self.name} "
+                                     f"(type: {self.__class__.__name__}): {repr(arg)}")
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
 
@@ -1005,7 +1019,11 @@ class Component(object, metaclass=ComponentsMeta):
         self.paramInstanceDefaults = {}
 
         self.has_initializers = False
-        self.reinitialize_when = Never()
+
+        if kwargs and REINITIALIZE_WHEN in kwargs:
+            self.reinitialize_when = kwargs[REINITIALIZE_WHEN]
+        else:
+            self.reinitialize_when = Never()
 
         self._role = None
 
@@ -2276,7 +2294,7 @@ class Component(object, metaclass=ComponentsMeta):
                 for execution_context in execution_contexts:
                     param.delete(execution_context)
 
-    def _assign_context_values(self, execution_id, base_execution_id=None, propagate=True, **kwargs):
+    def _assign_context_values(self, execution_id, base_execution_id=None, propagate=False, **kwargs):
         context_param = self.parameters.context._get(execution_id)
         if context_param is None:
             self.parameters.context._initialize_from_context(execution_id, base_execution_id)
@@ -2291,7 +2309,7 @@ class Component(object, metaclass=ComponentsMeta):
 
         if propagate:
             for comp in self._dependent_components:
-                comp._assign_context_values(execution_id, base_execution_id, **kwargs)
+                comp._assign_context_values(execution_id, base_execution_id, propagate=propagate, **kwargs)
 
     def _set_all_parameter_properties_recursively(self, **kwargs):
         # sets a property of all parameters for this component and all its dependent components
@@ -2906,7 +2924,7 @@ class Component(object, metaclass=ComponentsMeta):
     def initialize(self, execution_context=None):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         """
             If the component's execute method involves execution of an `IntegratorFunction` Function, this method
             effectively begins the function's accumulation over again at the specified value, and may update related
@@ -2915,6 +2933,8 @@ class Component(object, metaclass=ComponentsMeta):
         """
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
         if isinstance(self.function, IntegratorFunction):
+            if execution_context is NotImplemented:
+                execution_context = self.most_recent_execution_id
             new_value = self.function.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.atleast_2d(new_value), execution_context, override=True)
         else:
@@ -2922,13 +2942,20 @@ class Component(object, metaclass=ComponentsMeta):
                                  "(It does not have an accumulator to reinitialize).")
 
     def execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-
         if execution_id is None:
-            execution_id = self.most_recent_execution_id
+            try:
+                owner = self.owner
+                owner_parameters = self.owner.parameters.context._get(self.most_recent_execution_id)
+                if owner is not None and owner_parameters is None:
+                    execution_id = owner.most_recent_execution_id
+                else:
+                    raise AttributeError
+            except AttributeError:
+                execution_id = self.most_recent_execution_id
 
         # initialize context for this execution_id if not done already
-        if execution_id is not None:
-            self._assign_context_values(execution_id)
+        if self.parameters.context._get(execution_id) is None:
+            self._assign_context_values(execution_id, propagate=True)
 
         value = self._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
         self.parameters.value._set(value, execution_id=execution_id, override=True)
@@ -2966,7 +2993,6 @@ class Component(object, metaclass=ComponentsMeta):
 
             if owner is not None:
                 flags = owner.parameters.context._get(execution_id).flags
-
                 self._assign_context_values(
                     execution_id,
                     flags=flags,

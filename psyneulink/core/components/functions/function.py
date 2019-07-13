@@ -674,6 +674,28 @@ class Function_Base(Function):
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
 
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 target_set=None,
+                 context=None,
+                 **kwargs):
+        # Validate variable and assign to variable, and validate params
+        variable = self._check_args(variable=variable,
+                                    execution_id=execution_id,
+                                    params=params,
+                                    target_set=target_set,
+                                    context=context)
+        value = self._function(variable=variable,
+                               execution_id=execution_id,
+                               params=params,
+                               context=context,
+                               **kwargs)
+        self.most_recent_execution_id=execution_id
+        self.parameters.value._set(value, execution_context=execution_id, override=True)
+        return value
+
     def _parse_arg_generic(self, arg_val):
         if isinstance(arg_val, list):
             return np.asarray(arg_val)
@@ -1061,7 +1083,7 @@ class ArgumentTherapy(Function_Base):
 
         super()._validate_params(request_set, target_set, context)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1087,8 +1109,6 @@ class ArgumentTherapy(Function_Base):
         therapeutic response : boolean
 
         """
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         # Compute the function
         statement = variable
         propensity = self.get_current_function_param(PROPENSITY, execution_id)

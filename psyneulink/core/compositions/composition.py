@@ -1926,14 +1926,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       learning_rate):
         # Create learning components
         target_mechanism = ProcessingMechanism(name='Target',
-                                               default_variable=output_source.value)
+                                               default_variable=output_source.defaults.value)
 
         comparator_mechanism = PredictionErrorMechanism(
             sample={NAME: SAMPLE,
-                    VARIABLE: output_source.value,
+                    VARIABLE: output_source.defaults.value,
                     },
             target={NAME: TARGET,
-                    VARIABLE: output_source.value
+                    VARIABLE: output_source.defaults.value
                     },
             function=PredictionErrorDeltaFunction(gamma=1.0),
             # name="{} {}".format(output_source.name
@@ -1942,9 +1942,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
 
         learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
-                                               default_variable=[input_source.output_states[0].value,
-                                                                 output_source.output_states[0].value,
-                                                                 comparator_mechanism.output_states[0].value],
+                                               default_variable=[input_source.output_states[0].defaults.value,
+                                                                 output_source.output_states[0].defaults.value,
+                                                                 comparator_mechanism.output_states[0].defaults.value],
                                                error_sources=comparator_mechanism,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
@@ -2353,46 +2353,39 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._graph_processing = self.graph.copy()
 
-        visited_vertices = set()
-        next_vertices = []  # a queue
+        def remove_vertex(vertex):
+            logger.debug('Removing', vertex)
+            for parent in vertex.parents:
+                parent.children.remove(vertex)
+                for child in vertex.children:
+                    child.parents.remove(vertex)
+                    if vertex.feedback:
+                        child.backward_sources.add(parent.component)
+                    self._graph_processing.connect_vertices(parent, child)
+            # ensure that children get removed even if vertex has no parents
+            if len(vertex.parents) == 0:
+                for child in vertex.children:
+                    child.parents.remove(vertex)
+                    if vertex.feedback:
+                        child.backward_sources.add(parent.component)
 
-        unvisited_vertices = True
+            for node in cur_vertex.parents + cur_vertex.children:
+                logger.debug(
+                    'New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(
+                        node, node.parents, node.children
+                    )
+                )
 
-        while unvisited_vertices:
-            for vertex in self._graph_processing.vertices:
-                if vertex not in visited_vertices:
-                    next_vertices.append(vertex)
-                    break
-            else:
-                unvisited_vertices = False
+            logger.debug('Removing vertex {0}'.format(cur_vertex))
 
-            logger.debug('processing graph vertices: {0}'.format(self._graph_processing.vertices))
-            while len(next_vertices) > 0:
-                cur_vertex = next_vertices.pop(0)
-                logger.debug('Examining vertex {0}'.format(cur_vertex))
+            self._graph_processing.remove_vertex(vertex)
 
-                # must check that cur_vertex is not already visited because in cycles,
-                #    some nodes may be added to next_vertices twice
-                if cur_vertex not in visited_vertices and not cur_vertex.component.is_processing:
-                    for parent in cur_vertex.parents:
-                        parent.children.remove(cur_vertex)
-                        for child in cur_vertex.children:
-                            child.parents.remove(cur_vertex)
-                            if cur_vertex.feedback:
-                                child.backward_sources.add(parent.component)
-                            self._graph_processing.connect_vertices(parent, child)
-
-                    for node in cur_vertex.parents + cur_vertex.children:
-                        logger.debug('New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(node, node.parents,
-                                                                                                     node.children))
-                    logger.debug('Removing vertex {0}'.format(cur_vertex))
-
-                    self._graph_processing.remove_vertex(cur_vertex)
-
-                visited_vertices.add(cur_vertex)
-                # add to next_vertices (frontier) any parents and children of cur_vertex that have not been visited yet
-                next_vertices.extend(
-                    [vertex for vertex in cur_vertex.parents + cur_vertex.children if vertex not in visited_vertices])
+        # copy to avoid iteration problems when deleting
+        vert_list = self._graph_processing.vertices.copy()
+        for cur_vertex in vert_list:
+            logger.debug('Examining', cur_vertex)
+            if not cur_vertex.component.is_processing:
+                remove_vertex(cur_vertex)
 
         self.needs_update_graph_processing = False
 
@@ -2707,7 +2700,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if execution_id not in self.execution_ids:
             self.execution_ids.add(execution_id)
 
-        self._assign_context_values(execution_id=None, composition=self)
         return execution_id
 
     def _identify_clamp_inputs(self, list_type, input_type, origins):
@@ -4075,6 +4067,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Assign the same execution_ids to all nodes in the Composition and get it (if it was None)
         execution_id = self._assign_execution_ids(execution_id)
+
+        if not skip_initialization:
+            self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
+
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
         execution_scheduler = scheduler_processing or self.scheduler_processing
@@ -4107,8 +4103,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and execution_context.execution_phase is not ContextFlags.SIMULATION
             ):
                 self._initialize_from_context(execution_id, base_execution_id, override=False)
-
-            self._assign_context_values(execution_id, composition=self)
+                self._assign_context_values(execution_id, composition=self)
 
         # Generate first frame of animation without any active_items
         if self._animate is not False:
@@ -4404,7 +4399,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                              skip_log=True, override=True)
 
                     # Pass outer execution_id to nested Composition
-                    node._assign_context_values(execution_id, composition=node)
+                    node._assign_context_values(execution_id, composition=node, propagate=True)
 
                     # Execute Composition
                     # FIX: 6/12/19 WHERE IS COMPILED EXECUTION OF NESTED NODE?
@@ -4546,7 +4541,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def reinitialize(self, values, execution_context=NotImplemented):
         if execution_context is NotImplemented:
-            execution_context = self.default_execution_id
+            execution_context = self.most_recent_execution_id
 
         for i in range(self.stateful_nodes):
             self.stateful_nodes[i].reinitialize(values[i], execution_context=execution_context)
@@ -4569,6 +4564,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             initial_values=None,
             reinitialize_values=None,
             runtime_params=None,
+            skip_initialization=False,
             animate=False,
             execution_id=None,
             base_execution_id=None,
@@ -4812,9 +4808,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
         # called repeatedly (this init is repeated in Composition.execute)
         # initialize from base context but don't overwrite any values already set for this execution_id
-        if (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION):
+        if (
+            not skip_initialization
+            and (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION)
+        ):
             self._initialize_from_context(execution_id, base_execution_id, override=False)
-            self._assign_context_values(execution_id, composition=self)
+            self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
 
         is_simulation = (execution_context is not None and
                          execution_context.execution_phase == ContextFlags.SIMULATION)
@@ -4888,6 +4887,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_autodiff_stimuli[node] = autodiff_stimuli[node][stimulus_index]
                 else:
                     execution_autodiff_stimuli[node] = autodiff_stimuli[node]
+
+            for node in self.nodes:
+                if hasattr(node, "reinitialize_when") and node.parameters.has_initializers._get(execution_id):
+                    if node.reinitialize_when.is_satisfied(scheduler=self.scheduler_processing,
+                                                           execution_context=execution_id):
+                        node.reinitialize(None, execution_context=execution_id)
 
             # execute processing
             # pass along the stimuli for this trial
@@ -5079,7 +5084,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def reinitialize(self, execution_context=NotImplemented):
         if execution_context is NotImplemented:
-            execution_context = self.default_execution_id
+            execution_context = self.most_recent_execution_id
 
         self._compilation_data.ptx_execution.set(None, execution_context)
         self._compilation_data.parameter_struct.set(None, execution_context)
@@ -5481,7 +5486,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  num_trials=num_simulation_trials,
                  animate=animate,
                  context=context,
-                 bin_execute=execution_mode)
+                 bin_execute=execution_mode,
+                 skip_initialization=True,
+                 )
         # # MODIFIED 6/12/19 OLD:
         # self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
         # MODIFIED 6/12/19 NEW: [JDC]

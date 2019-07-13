@@ -516,7 +516,7 @@ class BayesGLM(LearningFunction):
                                                         np.zeros_like(args[0][DEFAULT_VARIABLE][1])])
             self.initialize_priors()
 
-    def function(
+    def _function(
         self,
         variable=None,
         execution_id=None,
@@ -829,7 +829,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
             self.measure=self.distance_function
             self.distance_function = scalar_distance
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -856,8 +856,6 @@ class Kohonen(LearningFunction):  # --------------------------------------------
             similar to that input pattern.
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -1062,7 +1060,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
             self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1295,7 +1293,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
             self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1596,7 +1594,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
             self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -2024,7 +2022,7 @@ class BackPropagation(LearningFunction):
                                     "length of the output {} of the activity vector being monitored ({})".
                                     format(rows, MATRIX, self.name, activity_output_len))
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  error_matrix=None,
