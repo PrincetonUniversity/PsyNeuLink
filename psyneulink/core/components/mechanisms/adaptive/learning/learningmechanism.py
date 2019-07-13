@@ -552,7 +552,9 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
+from psyneulink.core.globals.keywords import ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
+    LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
+    MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1005,10 +1007,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None,
-                 **kwargs):
+                 # context=None,
+                 **kwargs
+                 ):
 
-        # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO ABC WHEN CREATED
+        context = kwargs.pop(CONTEXT, None)
+        # IMPLEMENTATION NOTE: This seems to be specific to System;  deprecate?
         if context is ContextFlags.CONSTRUCTOR:
             self._check_type_and_timing()
         else:

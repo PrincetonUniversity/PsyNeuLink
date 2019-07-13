@@ -969,17 +969,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 # context=ContextFlags.CONSTRUCTOR,
                  **kwargs
                  ):
-
-        # if kwargs:
-        #         for k in kwargs.keys():
-        #             if CONTEXT in k:
-        #                 context=kwargs[CONTEXT]
-        #                 continue
-        #             raise ModulatoryMechanismError("Unrecognized arg in constructor for {}: {}".
-        #                                         format(self.__class__.__name__, repr(i)))
 
         context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 

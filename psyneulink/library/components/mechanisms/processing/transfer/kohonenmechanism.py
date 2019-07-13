@@ -425,12 +425,10 @@ class KohonenMechanism(TransferMechanism):
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function:is_function_type=Kohonen(distance_function=GAUSSIAN),
                  learned_projection:tc.optional(MappingProjection)=None,
-                 # input_states:tc.optional(tc.any(list, dict)) = None,
                  additional_output_states:tc.optional(tc.any(str, Iterable))=None,
-                 params=None,
                  name=None,
                  prefs: is_pref_set = None,
-                 context=componentType + INITIALIZING,
+                 **kwargs
                  ):
         # # Default output_states is specified in constructor as a string rather than a list
         # # to avoid "gotcha" associated with mutable default arguments
@@ -449,9 +447,7 @@ class KohonenMechanism(TransferMechanism):
         self._learning_enable_deferred = False
 
         params = self._assign_args_to_param_dicts(
-                # input_states=input_states,
                 integrator_mode=integrator_mode,
-                # selection_function=selection_function,
                 learning_rate=learning_rate,
                 learning_function=learning_function,
                 learned_projection=learned_projection,
@@ -460,7 +456,6 @@ class KohonenMechanism(TransferMechanism):
 
         super().__init__(default_variable=default_variable,
                          size=size,
-                         # input_states=input_states,
                          function=function,
                          integrator_function=integrator_function,
                          integrator_mode=integrator_mode,
@@ -471,7 +466,8 @@ class KohonenMechanism(TransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set, target_set, context)

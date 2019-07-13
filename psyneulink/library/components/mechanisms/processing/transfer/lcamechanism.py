@@ -592,7 +592,8 @@ class LCAMechanism(RecurrentTransferMechanism):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
         """Instantiate LCAMechanism
         """
 
@@ -638,7 +639,8 @@ class LCAMechanism(RecurrentTransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         **kwargs)
 
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context, execution_id=None):
 

@@ -174,7 +174,6 @@ class AdaptiveMechanism_Base(Mechanism_Base):
         params = self._assign_args_to_param_dicts(params=params,
                                                   modulation=modulation)
 
-
         super().__init__(default_variable=default_variable,
                          size=size,
                          params=params,
@@ -184,9 +183,3 @@ class AdaptiveMechanism_Base(Mechanism_Base):
                          function=function,
                          **kwargs
                          )
-
-#     def _instantiate_output_states(self, context=None):
-#         super()._instantiate_output_states(context=context)
-#
-#
-# def _instantiate_adaptive_projections()
