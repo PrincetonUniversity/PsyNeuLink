@@ -2969,14 +2969,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         else:
             return np.array(specification)
 
-    def _get_output_struct_type(self, ctx):
-        # FIXME: self.defaults.value reports incorrect shape (scalar)
-        default_val = np.atleast_1d(self.defaults.value)
-        return ctx.convert_python_struct_to_llvm_ir(default_val)
-
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Restrict to 1d arrays
         assert self.defaults.variable.ndim == 1
+        assert self.defaults.value.ndim == 1
 
         matrix = ctx.get_param_ptr(self, builder, params, MATRIX)
 
