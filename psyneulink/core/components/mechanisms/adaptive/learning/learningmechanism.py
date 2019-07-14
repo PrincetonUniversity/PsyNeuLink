@@ -1007,17 +1007,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 # context=None,
                  **kwargs
                  ):
 
-        context = kwargs.pop(CONTEXT, None)
-        # IMPLEMENTATION NOTE: This seems to be specific to System;  deprecate?
-        if context is ContextFlags.CONSTRUCTOR:
-            self._check_type_and_timing()
-        else:
-            self.learning_type = LearningType.SUPERVISED
-            self.learning_timing = LearningTiming.LEARNING_PHASE
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         if error_sources and not isinstance(error_sources, list):
             error_sources = [error_sources]
@@ -1050,7 +1043,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR,
+                         context=context,
                          **kwargs)
 
     def _check_type_and_timing(self):
