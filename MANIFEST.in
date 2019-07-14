@@ -1,0 +1,9 @@
+include *.md
+
+recursive-include docs *.rst
+include docs/Makefile
+
+recursive-include tests *.py
+recursive-include tutorial *.ipynb
+include versioneer.py
+include psyneulink/_version.py
