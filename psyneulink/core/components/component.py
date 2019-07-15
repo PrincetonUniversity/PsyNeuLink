@@ -955,10 +955,13 @@ class Component(object, metaclass=ComponentsMeta):
 
         """
 
-        for arg in kwargs.keys():
-            if arg not in self.standard_constructor_args:
-                raise ComponentError(f"Unrecognized argument in constructor for {self.name} "
-                                     f"(type: {self.__class__.__name__}): {repr(arg)}")
+        illegal_args = [arg for arg in kwargs.keys() if arg not in self.standard_constructor_args]
+        if illegal_args:
+            plural = ''
+            if len(illegal_args)>1:
+                plural = 's'
+            raise ComponentError(f"Unrecognized argument{plural} in constructor for {self.name} "
+                                 f"(type: {self.__class__.__name__}): {repr(', '.join(illegal_args))}")
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
 

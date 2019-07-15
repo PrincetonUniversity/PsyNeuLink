@@ -718,8 +718,8 @@ class LCControlMechanism(ControlMechanism):
                  scaling_factor_gain=3.0,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None
+                 ):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,

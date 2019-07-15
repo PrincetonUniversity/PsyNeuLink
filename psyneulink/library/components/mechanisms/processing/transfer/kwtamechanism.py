@@ -577,7 +577,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
-                 context=componentType + INITIALIZING,
+                 **kwargs
                  ):
         # Default output_states is specified in constructor as a string rather than a list
         # to avoid "gotcha" associated with mutable default arguments
@@ -616,7 +616,8 @@ class KWTAMechanism(RecurrentTransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         **kwargs)
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         if variable.dtype.char == "U":

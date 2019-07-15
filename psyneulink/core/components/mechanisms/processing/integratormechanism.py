@@ -216,7 +216,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
 
@@ -232,7 +233,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  context=ContextFlags.CONSTRUCTOR)
+                                                  context=ContextFlags.CONSTRUCTOR,
+                                                  **kwargs)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 
