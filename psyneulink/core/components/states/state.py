@@ -1048,11 +1048,11 @@ class State_Base(State):
                  variable=None,
                  size=None,
                  projections=None,
+                 function=None,
                  params=None,
                  name=None,
                  prefs=None,
                  context=None,
-                 function=None,
                  **kargs):
         """Initialize subclass that computes and represents the value of a particular State of a Mechanism
 

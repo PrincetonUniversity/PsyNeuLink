@@ -474,9 +474,9 @@ class GatingSignal(ModulatorySignal):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None,
                  **kwargs):
 
+        # FIX: [JDC 7/14/19] MOVE THIS TO Component OR ADD TO ControlSignal
         if context is None:
             context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE

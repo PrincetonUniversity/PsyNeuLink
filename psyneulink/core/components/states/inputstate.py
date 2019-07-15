@@ -796,7 +796,8 @@ class InputState(State_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
 
         if context is None:
             context = ContextFlags.COMMAND_LINE
@@ -805,6 +806,16 @@ class InputState(State_Base):
         else:
             context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
+
+        # context = kwargs.pop(CONTEXT, None)
+        # if context is None:
+        #     context = ContextFlags.COMMAND_LINE
+        #     self.context.source = ContextFlags.COMMAND_LINE
+        #     self.context.string = COMMAND_LINE
+        # else:
+        #     context = ContextFlags.CONSTRUCTOR
+        #     self.context.source = ContextFlags.CONSTRUCTOR
+
 
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
