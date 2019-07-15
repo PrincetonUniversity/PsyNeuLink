@@ -177,7 +177,9 @@ from psyneulink.core.components.states.modulatorysignals.modulatorysignal import
 from psyneulink.core.components.states.outputstate import PRIMARY
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import COMMAND_LINE, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER
+from psyneulink.core.globals.keywords import \
+    CONTEXT, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_STATE_PARAMS, \
+    PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -391,9 +393,10 @@ class LearningSignal(ModulatorySignal):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None,
                  **kwargs):
 
+        # FIX: [JDC 7/14/19] MOVE THIS TO Component OR ADD TO ControlSignal
+        context = kwargs.pop(CONTEXT, None)
         if context is None:
             context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE
@@ -419,12 +422,12 @@ class LearningSignal(ModulatorySignal):
                          modulation=modulation,
                          index=index,
                          assign=None,
+                         function=function,
                          modulates=modulates,
                          params=params,
                          name=name,
                          prefs=prefs,
                          context=context,
-                         function=function,
                          **kwargs)
 
     def _get_primary_state(self, projection):

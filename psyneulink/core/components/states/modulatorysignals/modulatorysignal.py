@@ -428,10 +428,7 @@ class ModulatorySignal(OutputState):
                 default_allocation = kwargs.pop(VARIABLE, default_allocation)
             if PROJECTIONS in kwargs:
                 modulates = kwargs.pop(PROJECTIONS, modulates)
-            if kwargs:
-                raise TypeError(f'{self.__class__.__name__} got one or more unexpected keyword argument(s): '
-                                f'{", ".join([repr(k) for k in list(kwargs.keys())])}')
-        
+
         # Deferred initialization
         # if self.context.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
         if self.context.initialization_status & ContextFlags.DEFERRED_INIT:
