@@ -607,7 +607,6 @@ AutodiffComposition
 .. `Reinforcement Learning <Reinforcement>`, and others are currently being implemented (including Hebbian, Temporal
 .. Differences, and supervised learning for recurrent networks).
 ..
-..
 .. -----------------
 ..
 .. STUFF TO ADD:
