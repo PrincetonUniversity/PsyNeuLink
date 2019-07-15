@@ -180,7 +180,9 @@ from psyneulink.core.components.states.modulatorysignals.learningsignal import L
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
+from psyneulink.core.globals.keywords import \
+    CONTEXT, FUNCTION, FUNCTION_PARAMS, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
+    MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -488,16 +490,19 @@ class LearningProjection(ModulatoryProjection_Base):
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
                  weight=None,
                  exponent=None,
-                 function=None,
                  params:tc.optional(dict)=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs
+                 ):
 
         # IMPLEMENTATION NOTE:
         #     the error_function and learning_function arguments are implemented to preserve the ability to pass
         #     error function and learning function specifications from the specification of a LearningProjection (used
         #     to implement learning for a MappingProjection, e.g., in a tuple) to the LearningMechanism responsible
         #     for implementing the function; and for specifying the default LearningProjection for a Process.
+
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(error_function=error_function,
@@ -513,6 +518,7 @@ class LearningProjection(ModulatoryProjection_Base):
         if sender is None or receiver is None:
             # Flag for deferred initialization
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
+
         super().__init__(sender=sender,
                          receiver=receiver,
                          weight=weight,
@@ -520,7 +526,9 @@ class LearningProjection(ModulatoryProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         context=context,
+                         **kwargs)
+
         self.learning_enable = True
 
 

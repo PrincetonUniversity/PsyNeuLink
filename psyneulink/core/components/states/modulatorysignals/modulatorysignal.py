@@ -412,6 +412,7 @@ class ModulatorySignal(OutputState):
                  size=None,
                  reference_value=None,
                  default_allocation=defaultModulatoryAllocation,
+                 function=None,
                  modulates=None,
                  modulation=None,
                  index=None,
@@ -419,20 +420,14 @@ class ModulatorySignal(OutputState):
                  params=None,
                  name=None,
                  prefs=None,
-                 context=None,
-                 function=None,
-                 **kwargs
-                 ):
+                 **kwargs):
 
         if kwargs:
             if VARIABLE in kwargs:
                 default_allocation = kwargs.pop(VARIABLE, default_allocation)
             if PROJECTIONS in kwargs:
                 modulates = kwargs.pop(PROJECTIONS, modulates)
-            if kwargs:
-                raise TypeError(f'{self.__class__.__name__} got one or more unexpected keyword argument(s): '
-                                f'{", ".join([repr(k) for k in list(kwargs.keys())])}')
-        
+
         # Deferred initialization
         # if self.context.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
         if self.context.initialization_status & ContextFlags.DEFERRED_INIT:
@@ -455,16 +450,14 @@ class ModulatorySignal(OutputState):
                          projections=modulates,
                          index=index,
                          assign=assign,
+                         function=function,
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
-                         function=function,
-                         **kwargs
-                         )
+                         **kwargs)
 
         if self.context.initialization_status == ContextFlags.INITIALIZED:
-            self._assign_default_state_name(context=context)
+            self._assign_default_state_name()
 
     def _instantiate_attributes_after_function(self, context=None):
         # If owner is specified but modulation has not been specified, assign to owner's value

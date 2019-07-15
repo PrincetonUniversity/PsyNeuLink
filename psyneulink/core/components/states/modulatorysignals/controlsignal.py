@@ -782,7 +782,6 @@ class ControlSignal(ModulatorySignal):
                  default_allocation=None,
                  size=None,
                  index=None,
-                 assign=None,
                  function=Linear(),
                  cost_options:tc.optional(tc.any(ControlSignalCosts, list))=None,
                  intensity_cost_function:(is_function_type)=Exponential,
@@ -795,7 +794,6 @@ class ControlSignal(ModulatorySignal):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None,
                  **kwargs):
 
         # This is included in case ControlSignal was created by another Component (such as ControlProjection)
@@ -826,15 +824,14 @@ class ControlSignal(ModulatorySignal):
                          reference_value=reference_value,
                          default_allocation=default_allocation,
                          size=size,
-                         modulation=modulation,
                          index=index,
                          assign=None,
+                         function=function,
+                         modulation=modulation,
                          modulates=modulates,
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
-                         function=function,
                          **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):

@@ -108,7 +108,8 @@ from psyneulink.core.components.projections.modulatory.modulatoryprojection impo
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, PARAMETER_STATE, PROJECTION_SENDER
+from psyneulink.core.globals.keywords import \
+    CONTEXT, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, PARAMETER_STATE, PROJECTION_SENDER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -323,7 +324,10 @@ class ControlProjection(ModulatoryProjection_Base):
                  control_signal_params:tc.optional(dict)=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
+
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
@@ -347,7 +351,8 @@ class ControlProjection(ModulatoryProjection_Base):
                                                 params=params,
                                                 name=name,
                                                 prefs=prefs,
-                                                context=ContextFlags.CONSTRUCTOR)
+                                                context=context,
+                                                **kwargs)
 
     def _instantiate_sender(self, sender, params=None, context=None):
 

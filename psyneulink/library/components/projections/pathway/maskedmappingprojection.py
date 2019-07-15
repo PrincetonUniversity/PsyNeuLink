@@ -237,7 +237,8 @@ class MaskedMappingProjection(MappingProjection):
                  function=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None):
+                 prefs: is_pref_set = None,
+                 **kwargs):
 
         params = self._assign_args_to_param_dicts(mask=mask,
                                                   mask_operation=mask_operation,
@@ -251,8 +252,8 @@ class MaskedMappingProjection(MappingProjection):
                          suppress_identity_function=True,
                          params=params,
                          name=name,
-                         prefs=prefs)
-
+                         prefs=prefs,
+                         **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate **mask** argument"""
