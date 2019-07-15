@@ -420,8 +420,7 @@ class ModulatorySignal(OutputState):
                  params=None,
                  name=None,
                  prefs=None,
-                 **kwargs
-                 ):
+                 **kwargs):
 
         if kwargs:
             if VARIABLE in kwargs:
@@ -455,8 +454,7 @@ class ModulatorySignal(OutputState):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         **kwargs
-                         )
+                         **kwargs)
 
         if self.context.initialization_status == ContextFlags.INITIALIZED:
             self._assign_default_state_name()

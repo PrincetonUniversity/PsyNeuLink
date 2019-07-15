@@ -239,7 +239,7 @@ from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
-    COMMAND_LINE, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, \
+    CONTEXT, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, \
     OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -476,14 +476,6 @@ class GatingSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  **kwargs):
 
-        # FIX: [JDC 7/14/19] MOVE THIS TO Component OR ADD TO ControlSignal
-        if context is None:
-            context = ContextFlags.COMMAND_LINE
-            self.context.source = ContextFlags.COMMAND_LINE
-        else:
-            context = ContextFlags.CONSTRUCTOR
-            self.context.source = ContextFlags.CONSTRUCTOR
-
         if index is None and owner is not None:
             allocation = owner.gating_allocation
             if len(allocation)==1:
@@ -512,7 +504,6 @@ class GatingSignal(ModulatorySignal):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          function=function,
                          **kwargs)
 

@@ -395,15 +395,6 @@ class LearningSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  **kwargs):
 
-        # FIX: [JDC 7/14/19] MOVE THIS TO Component OR ADD TO ControlSignal
-        context = kwargs.pop(CONTEXT, None)
-        if context is None:
-            context = ContextFlags.COMMAND_LINE
-            self.context.source = ContextFlags.COMMAND_LINE
-        else:
-            context = ContextFlags.CONSTRUCTOR
-            self.context.source = ContextFlags.CONSTRUCTOR
-
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   learning_rate=learning_rate,
@@ -427,7 +418,6 @@ class LearningSignal(ModulatorySignal):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          **kwargs)
 
     def _get_primary_state(self, projection):

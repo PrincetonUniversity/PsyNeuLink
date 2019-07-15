@@ -362,7 +362,10 @@ from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
+from psyneulink.core.globals.keywords import \
+    CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
+    LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
+    PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities \
@@ -552,7 +555,15 @@ class ParameterState(State_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 **kwargs):
+
+        # If context is not COMPONENT or CONSTRUCTOR, raise exception
+        context = kwargs.pop(CONTEXT, None)
+        if context == ContextFlags.COMPONENT:
+            context = ContextFlags.CONSTRUCTOR
+        if not context == ContextFlags.CONSTRUCTOR:
+            raise ParameterStateError(f"Contructor for {self.__class__.__name__} cannot be called directly"
+                                      f"(context: {context}")
 
         # FIX: UPDATED TO INCLUDE LEARNING [CHANGE THIS TO INTEGRATOR FUNCTION??]
         # # Reassign default for MATRIX param of MappingProjection
@@ -575,8 +586,7 @@ class ParameterState(State_Base):
                                              params=params,
                                              name=name,
                                              prefs=prefs,
-                                             context=ContextFlags.CONSTRUCTOR)
-                                             # context=context)
+                                             context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that ParameterState (as identified by its name) is for a valid parameter of the owner
