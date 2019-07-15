@@ -1134,7 +1134,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  additional_output_states:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set=None):
+                 prefs: is_pref_set=None,
+                 **kwargs):
 
         """Instantiate ContrastiveHebbianMechanism
         """
@@ -1225,7 +1226,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
 

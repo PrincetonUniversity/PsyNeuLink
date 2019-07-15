@@ -305,7 +305,7 @@ class AutoAssociativeProjection(MappingProjection):
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
-                 context=None,
+                 **kwargs
                  ):
 
         if owner is not None:
@@ -324,7 +324,8 @@ class AutoAssociativeProjection(MappingProjection):
                          function=function,
                          params=params,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         **kwargs)
 
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
 

@@ -552,7 +552,9 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
+from psyneulink.core.globals.keywords import ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
+    LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
+    MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1005,14 +1007,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 **kwargs
+                 ):
 
-        # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO ABC WHEN CREATED
-        if context is ContextFlags.CONSTRUCTOR:
-            self._check_type_and_timing()
-        else:
-            self.learning_type = LearningType.SUPERVISED
-            self.learning_timing = LearningTiming.LEARNING_PHASE
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         if error_sources and not isinstance(error_sources, list):
             error_sources = [error_sources]
@@ -1045,7 +1043,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         context=context,
+                         **kwargs)
 
     def _check_type_and_timing(self):
         try:

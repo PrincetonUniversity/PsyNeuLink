@@ -97,7 +97,9 @@ from psyneulink.core.components.projections.modulatory.modulatoryprojection impo
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER
+from psyneulink.core.globals.keywords import \
+    CONTEXT, FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, \
+    INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -310,7 +312,11 @@ class GatingProjection(ModulatoryProjection_Base):
                  gating_signal_params:tc.optional(dict)=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs
+                 ):
+
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
@@ -332,7 +338,8 @@ class GatingProjection(ModulatoryProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         context=context,
+                         **kwargs)
 
     def _instantiate_sender(self, sender, params=None, context=None):
         """Check that sender is not a process and that, if specified as a Mechanism, it is a GatingMechanism

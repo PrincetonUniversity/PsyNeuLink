@@ -73,23 +73,27 @@ class PathwayProjection_Base(Projection_Base):
                  sender=None,
                  weight=None,
                  exponent=None,
+                 function=None,
                  params=None,
                  name=None,
                  prefs=None,
                  context=None,
-                 function=None,
-                 ):
+                 **kwargs):
+
+        if context != ContextFlags.CONSTRUCTOR:
+            raise PathwayProjectionError(f"Direct call to abstract class {self.__name__} is not allowed; "
+                                         f"use projection() or a subclasses.")
 
         super().__init__(receiver=receiver,
                          sender=sender,
                          weight=weight,
                          exponent=exponent,
+                         function=function,
                          params=params,
                          name=name,
                          prefs=prefs,
                          context=context,
-                         function=function,
-                         )
+                         **kwargs)
 
     def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
 

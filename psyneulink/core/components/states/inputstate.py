@@ -489,15 +489,14 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
+    COMBINE, COMMAND_LINE, CONTEXT, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
     LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
     PARAMS, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
     SENDER, SIZE, STATE_TYPE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import \
-    append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityType
+from psyneulink.core.globals.utilities import append_type_to_name, is_numeric, iscompatible, kwCompatibilityLength
 
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords', 'SHADOW_INPUTS',
@@ -796,8 +795,9 @@ class InputState(State_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 **kwargs):
 
+        context = kwargs.pop(CONTEXT, None)
         if context is None:
             context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE
@@ -845,11 +845,11 @@ class InputState(State_Base):
                                          variable=variable,
                                          size=size,
                                          projections=projections,
+                                         function=function,
                                          params=params,
                                          name=name,
                                          prefs=prefs,
                                          context=context,
-                                         function=function,
                                          )
 
         if self.name is self.componentName or self.componentName + '-' in self.name:

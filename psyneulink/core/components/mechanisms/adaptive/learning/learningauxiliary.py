@@ -138,7 +138,8 @@ from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.combinationfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.learningfunctions import BackPropagation, Hebbian, Reinforcement, TDLearning
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, \
+    ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism, LearningType, LearningTiming
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -600,6 +601,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                            # learning_signals=[lc.activation_mech_projection],
                                            learning_signals=[learning_projection],
                                            name=LEARNING_MECHANISM + " for " + lc.activation_mech_projection.name)
+    learning_mechanism.learning_type = LearningType.SUPERVISED
+    learning_mechanism.learning_timing = LearningTiming.LEARNING_PHASE
 
     # IMPLEMENTATION NOTE:
     # ADD ARGUMENTS TO LearningMechanism FOR activation_input AND activation_output, AND THEN INSTANTIATE THE
