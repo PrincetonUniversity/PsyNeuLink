@@ -324,17 +324,12 @@ class PytorchModelCreator(torch.nn.Module):
                     # is_set keeps track of if we already have valid (i.e. non-garbage) values inside the alloc'd value
                     is_set = False
                     for input_node, weights in afferents.items():
-                        if input_node.component in frozen_values:
-                            input_value = frozen_values[input_node.component]
-                        else:
-                            pass
-                            #input_value = self.component_to_forward_info[input_node.component][0].numpy(
-                            #).ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+                        input_value = frozen_values[input_node.component]
 
                         weights_np = weights.detach().numpy()
                         x, y = weights_np.shape
 
-                        # We cast the ctype weights array to llvmlite pointer (THIS IS A BIG HACK NEED TO REMOVE - WEIGHTS ARRAY CAN BE MOVED BY GC!)
+                        # We cast the ctype weights array to llvmlite pointer
                         afferent_node_id = self._afferent_id_map[component][input_node.component]
                         weights_llvmlite = builder.gep(params,[ctx.int32_ty(0), ctx.int32_ty(i-1),ctx.int32_ty(component_id),ctx.int32_ty(afferent_node_id)])
                         if "ref_pass" in debug_env:
@@ -403,6 +398,7 @@ class PytorchModelCreator(torch.nn.Module):
     # Creates a set that maps each component to its output (from llvm execution)
     # Uses self._id_map
     def _remap_output_struct(self, outputs):
+        start_time = timeit.default_timer()
         output_dict = {}
         for component in self.execution_sets[len(self.execution_sets)-1]:
             id = self._id_map[len(self.execution_sets)-1][component]
