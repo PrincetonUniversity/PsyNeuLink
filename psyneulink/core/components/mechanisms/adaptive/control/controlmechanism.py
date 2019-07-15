@@ -727,10 +727,10 @@ class ControlMechanism(ModulatoryMechanism):
                  **kwargs
                  ):
 
-        if kwargs:
-                for i in kwargs.keys():
-                    raise ControlMechanismError("Unrecognized arg in constructor for {}: {}".
-                                                format(self.__class__.__name__, repr(i)))
+        # if kwargs:
+        #         for i in kwargs.keys():
+        #             raise ControlMechanismError("Unrecognized arg in constructor for {}: {}".
+        #                                         format(self.__class__.__name__, repr(i)))
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
@@ -751,7 +751,8 @@ class ControlMechanism(ModulatoryMechanism):
                                                params=params,
                                                name=name,
                                                prefs=prefs,
-                                               context=ContextFlags.CONSTRUCTOR)
+                                               context=ContextFlags.CONSTRUCTOR,
+                                               **kwargs)
 
     def _instantiate_output_states(self, context=None):
         self._register_modulatory_signal_type(ControlSignal,context)
