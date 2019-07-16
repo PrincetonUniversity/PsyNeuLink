@@ -1285,20 +1285,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         """
 
-        # # MODIFIED 7/15/19 OLD:
-        # # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
-        # current_error_signal_inputs = self.error_signal_input_states
-        # curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
-        # error_signal_inputs = variable[curr_indices]
-        # # KAM added 3/27/19 to get past None error
-        # if not self.error_matrices:
-        #     self.error_matrices = [[0.]]
-        # error_matrices = np.array(self.error_matrices)
-        # error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
-        # for i, matrix in enumerate(error_matrices):
-        #     if isinstance(error_matrices[i], ParameterState):
-        #         error_matrices[i] = error_matrices[i].parameters.value._get(execution_id)
-        # MODIFIED 7/15/19 NEW:
         # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
         current_error_signal_inputs = self.error_signal_input_states
         curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
@@ -1329,8 +1315,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterState):
                 error_matrices[i] = error_matrices[i].parameters.value._get(execution_id)
-        # MODIFIED END:
-
 
         summed_learning_signal = 0
         summed_error_signal = 0
@@ -1352,12 +1336,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
 
-        # MODIFIED 7/15/19 NEW:
-        # KAM added 6/27/19 - hack to get backprop working
-        # If this was an initialization run, return zeros so that the first "real" trial does not start
-        # with the error computed during initialization
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
-            return [0*summed_learning_signal, 0*summed_error_signal]
+        # # MODIFIED 7/15/19 NEW:
+        # # KAM added 6/27/19 - hack to get backprop working
+        # # If this was an initialization run, return zeros so that the first "real" trial does not start
+        # # with the error computed during initialization
+        # if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        #     return [0*summed_learning_signal, 0*summed_error_signal]
         # MODIFIED 7/15/19 END:
 
         return [summed_learning_signal, summed_error_signal]

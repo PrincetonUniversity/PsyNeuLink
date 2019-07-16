@@ -1012,15 +1012,6 @@ class InputState(State_Base):
                 return None
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
-        # # MODIFIED 7/15/19 OLD:
-        # variable = super()._parse_function_variable(variable, execution_id, context)
-        # try:
-        #     if self._use_1d_variable:
-        #         return np.array(variable[0])
-        # except:
-        #     pass
-        # return variable
-        # MODIFIED 7/15/19 NEW:
         variable = super()._parse_function_variable(variable, execution_id, context)
         try:
             if self._use_1d_variable and variable.ndim > 1:
@@ -1028,7 +1019,6 @@ class InputState(State_Base):
         except AttributeError:
             pass
         return variable
-        # MODIFIED 7/15/19 END:
 
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
