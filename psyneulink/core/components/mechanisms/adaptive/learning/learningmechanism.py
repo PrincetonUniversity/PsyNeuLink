@@ -1264,7 +1264,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
             if ERROR_SIGNAL in input_state.name:
                 self._error_signal_input_states.append(input_state)
 
-    # MODIFIED 7/15/19 OLD:
     def _execute(
         self,
         variable=None,
@@ -1289,11 +1288,28 @@ class LearningMechanism(AdaptiveMechanism_Base):
         current_error_signal_inputs = self.error_signal_input_states
         curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
         error_signal_inputs = variable[curr_indices]
-        # KAM added 3/27/19 to get past None error
-        if not self.error_matrices:
-            self.error_matrices = [[0.]]
-        error_matrices = np.array(self.error_matrices)
-        error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
+        if self.error_matrices is None:
+            # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
+            if self.function is BackPropagation or isinstance(self.function, BackPropagation):
+                mat = []
+                for i in range(len(error_signal_inputs[0])):
+                    row = []
+                    for j in range(len(error_signal_inputs[0])):
+                        if i == j:
+                            row.append(1.)
+                        else:
+                            row.append(0.)
+                    mat.append(row)
+                self.error_matrices = mat
+                error_matrices = mat
+
+
+            else:
+                self.error_matrices = [[0.]]
+
+                error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
+        else:
+            error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
 
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterState):
@@ -1319,87 +1335,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
 
+        # KAM added 6/27/19 - hack to get backprop working
+        # If this was an initialization run, return zeros so that the first "real" trial does not start
+        # with the error computed during initialization
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            return [0*summed_learning_signal, 0*summed_error_signal]
+
         return [summed_learning_signal, summed_error_signal]
-    # # MODIFIED 7/15/19 NEW: [JDC]
-    # def _execute(
-    #     self,
-    #     variable=None,
-    #     execution_id=None,
-    #     runtime_params=None,
-    #     context=None
-    # ):
-    #     """Execute LearningMechanism function and return learning_signal
-    #
-    #     Identify error_signals received from LearningMechanisms currently being executed
-    #     Assign them, and the corresponding error_matrices to a pair of arrays
-    #     Execute function for each error_signal, error_matrix pair
-    #     Sum the learning_signal and error_signal values received from each execution
-    #
-    #     Returns
-    #     -------
-    #
-    #     List[ndarray, ndarray] : summed learning_signal, summed error_signal
-    #
-    #     """
-    #     # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
-    #     current_error_signal_inputs = self.error_signal_input_states
-    #     curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
-    #     error_signal_inputs = variable[curr_indices]
-    #     if self.error_matrices is None:
-    #         # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
-    #         if self.function is BackPropagation or isinstance(self.function, BackPropagation):
-    #             mat = []
-    #             for i in range(len(error_signal_inputs[0])):
-    #                 row = []
-    #                 for j in range(len(error_signal_inputs[0])):
-    #                     if i == j:
-    #                         row.append(1.)
-    #                     else:
-    #                         row.append(0.)
-    #                 mat.append(row)
-    #             self.error_matrices = mat
-    #             error_matrices = mat
-    #
-    #
-    #         else:
-    #             self.error_matrices = [[0.]]
-    #
-    #             error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
-    #     else:
-    #         error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
-    #
-    #     for i, matrix in enumerate(error_matrices):
-    #         if isinstance(error_matrices[i], ParameterState):
-    #             error_matrices[i] = error_matrices[i].parameters.value._get(execution_id)
-    #
-    #     summed_learning_signal = 0
-    #     summed_error_signal = 0
-    #
-    #     # Compute learning_signal for each error_signal (and corresponding error-Matrix:
-    #     for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
-    #         variable[ERROR_OUTPUT_INDEX] = error_signal_input
-    #         learning_signal, error_signal = super()._execute(
-    #             variable=variable,
-    #             execution_id=execution_id,
-    #             error_matrix=error_matrix,
-    #             runtime_params=runtime_params,
-    #             context=context
-    #         )
-    #         # Sum learning_signals and error_signals
-    #         summed_learning_signal += learning_signal
-    #         summed_error_signal += error_signal
-    #
-    #     if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
-    #         print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
-    #
-    #     # KAM added 6/27/19 - hack to get backprop working
-    #     # If this was an initialization run, return zeros so that the first "real" trial does not start
-    #     # with the error computed during initialization
-    #     if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
-    #         return [0*summed_learning_signal, 0*summed_error_signal]
-    #
-    #     return [summed_learning_signal, summed_error_signal]
-    # # MODIFIED 7/15/19 END
 
     @property
     def learning_enabled(self):

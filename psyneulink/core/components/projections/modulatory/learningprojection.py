@@ -650,43 +650,21 @@ class LearningProjection(ModulatoryProjection_Base):
             self.receiver.owner.matrix = self.receiver.defaults.value
 
         # FIX: SHOULD TEST WHETHER IT CAN BE USED, NOT WHETHER IT IS THE SAME SHAPE
-        # # MODIFIED 3/8/17 OLD:
-        # if receiver_weight_matrix_shape != learning_signal_shape:
-        #     raise ProjectionError("Shape ({}) of learing_signal matrix for {} from {}"
-        #                           " must match shape of the weight matrix ({}) for the receiver {}".
-        #                           format(learning_signal_shape,
-        #                                  self.name,
-        #                                  self.sender.name,
-        #                                  receiver_weight_matrix_shape,
-        #                                  self.receiver.owner.name))
-        # MODIFIED 3/8/17 END
-
         learning_mechanism = self.sender.owner
         learned_projection = self.receiver.owner
 
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
 
-        # MODIFIED 7/15/19 OLD:
-        try:
-            candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
-            if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
-                learned_projection.objective_mechanism = candidate_objective_mech
-        except TypeError:
-            # learning_mechanism does not receive from an ObjectiveMechanism
-            #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
-            pass
-        # # MODIFIED 7/15/19 NEW: [JDC]
-        # # KAM Commented out next 8 lines on 6/24/19 to get past bug in multilayer backprop on Composition
-        # # try:
-        # #     candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
-        # #     if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
-        # #         learned_projection.objective_mechanism = candidate_objective_mech
-        # # except TypeError:
-        # #     # learning_mechanism does not receive from an ObjectiveMechanism
-        # #     #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
-        # #     pass
-        # # MODIFIED 7/15/19 END
+        # KAM Commented out next 8 lines on 6/24/19 to get past bug in multilayer backprop on Composition
+        # try:
+        #     candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
+        #     if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
+        #         learned_projection.objective_mechanism = candidate_objective_mech
+        # except TypeError:
+        #     # learning_mechanism does not receive from an ObjectiveMechanism
+        #     #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
+        #     pass
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = self
 
