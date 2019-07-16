@@ -267,7 +267,7 @@ Dynamics of Execution
 One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
 different time scales.  By default, each Mechanism executes once per pass through the Composition, in the order
 determined by the projections between them (and shown in the `show_graph <Composition.show_graph>` method.  In the
-``Stroop_model`` above, the ``decison`` Mechanism executes once per pass, just after the ``ouput`` Mechanism.  The
+``Stroop_model`` above, the ``decision`` Mechanism executes once per pass, just after the ``ouput`` Mechanism.  The
 ``decision`` Mechanism is a `DDM`.  This uses `DriftDiffusionAnalytical` as its default `function <DDM.function>`,
 which computes an analytic solution to the distribution of responses using the DDM integration process, and returns
 both the probability of crossing a specified `threshold <DriftDiffusionAnalytical.threshold>`), and the mean

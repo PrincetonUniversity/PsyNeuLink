@@ -618,42 +618,42 @@ def _get_time(component, context_flags, execution_id=None):
 
     if system and hasattr(system, 'scheduler_processing'):
         execution_flags = context_flags & ContextFlags.EXECUTION_PHASE_MASK
-        # MODIFIED 7/15/19 OLD:
-        try:
-            if execution_flags == ContextFlags.PROCESSING or not execution_flags:
-                t = system.scheduler_processing.clocks[execution_id].time
-                t = time(t.run, t.trial, t.pass_, t.time_step)
-            elif execution_flags == ContextFlags.CONTROL:
-                t = system.scheduler_processing.clocks[execution_id].time
-                t = time(t.run, t.trial, t.pass_, t.time_step)
-            elif execution_flags == ContextFlags.LEARNING:
-                if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
-                    t = system.scheduler_learning.clocks[execution_id].time
-                    t = time(t.run, t.trial, t.pass_, t.time_step)
-                # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-                # Add autoassociative learning mechanism + related projections to composition as processing components
-                else:
-                    t = None
-            else:
-                t = None
-        # # MODIFIED 7/15/19 NEW:
+        # # MODIFIED 7/15/19 OLD:
         # try:
-        #     if execution_flags in {ContextFlags.PROCESSING, ContextFlags.LEARNING} or not execution_flags:
+        #     if execution_flags == ContextFlags.PROCESSING or not execution_flags:
         #         t = system.scheduler_processing.clocks[execution_id].time
         #         t = time(t.run, t.trial, t.pass_, t.time_step)
         #     elif execution_flags == ContextFlags.CONTROL:
         #         t = system.scheduler_processing.clocks[execution_id].time
         #         t = time(t.run, t.trial, t.pass_, t.time_step)
-        #     # elif execution_flags == ContextFlags.LEARNING:
-        #     #     if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
-        #     #         t = system.scheduler_learning.clocks[execution_id].time
-        #     #         t = time(t.run, t.trial, t.pass_, t.time_step)
-        #     #     # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        #     #     # Add autoassociative learning mechanism + related projections to composition as processing components
-        #     #     else:
-        #     #         t = None
+        #     elif execution_flags == ContextFlags.LEARNING:
+        #         if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
+        #             t = system.scheduler_learning.clocks[execution_id].time
+        #             t = time(t.run, t.trial, t.pass_, t.time_step)
+        #         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        #         # Add autoassociative learning mechanism + related projections to composition as processing components
+        #         else:
+        #             t = None
         #     else:
         #         t = None
+        # MODIFIED 7/15/19 NEW:
+        try:
+            if execution_flags in {ContextFlags.PROCESSING, ContextFlags.LEARNING} or not execution_flags:
+                t = system.scheduler_processing.clocks[execution_id].time
+                t = time(t.run, t.trial, t.pass_, t.time_step)
+            elif execution_flags == ContextFlags.CONTROL:
+                t = system.scheduler_processing.clocks[execution_id].time
+                t = time(t.run, t.trial, t.pass_, t.time_step)
+            # elif execution_flags == ContextFlags.LEARNING:
+            #     if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
+            #         t = system.scheduler_learning.clocks[execution_id].time
+            #         t = time(t.run, t.trial, t.pass_, t.time_step)
+            #     # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+            #     # Add autoassociative learning mechanism + related projections to composition as processing components
+            #     else:
+            #         t = None
+            else:
+                t = None
         # MODIFIED 7/15/19 END:
         except KeyError:
             t = None
