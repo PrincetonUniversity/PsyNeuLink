@@ -993,8 +993,12 @@ class InputState(State_Base):
             # If there are any active PathwayProjections
             if len(path_proj_values) > 0:
                 # Combine Projection values
-                # KAM added [0] 6/25/19 to get past bug in multilayer backprop
-                variable = np.asarray(path_proj_values[0])
+                # MODIFIED 7/15/19 OLD:
+                variable = np.asarray(path_proj_values)
+                # # MODIFIED 7/15/19 NEW:
+                # # KAM added [0] 6/25/19 to get past bug in multilayer backprop
+                # variable = np.asarray(path_proj_values[0])
+                # MODIFIED 7/15/19 END:
                 combined_values = super()._execute(variable=variable,
                                                    execution_id=execution_id,
                                                    runtime_params=runtime_params,
@@ -1008,6 +1012,15 @@ class InputState(State_Base):
                 return None
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
+        # # MODIFIED 7/15/19 OLD:
+        # variable = super()._parse_function_variable(variable, execution_id, context)
+        # try:
+        #     if self._use_1d_variable:
+        #         return np.array(variable[0])
+        # except:
+        #     pass
+        # return variable
+        # MODIFIED 7/15/19 NEW:
         variable = super()._parse_function_variable(variable, execution_id, context)
         try:
             if self._use_1d_variable and variable.ndim > 1:
@@ -1015,6 +1028,7 @@ class InputState(State_Base):
         except AttributeError:
             pass
         return variable
+        # MODIFIED 7/15/19 END:
 
     def _get_primary_state(self, mechanism):
         return mechanism.input_state

@@ -2128,15 +2128,23 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
+        # # MODIFIED 7/15/19 OLD:
+        # execution_id = parse_execution_context(execution_context)
+        # MODIFIED 7/15/19 NEW:
         if execution_context is NotImplemented:
             execution_id = self.most_recent_execution_id
         else:
             execution_id = parse_execution_context(execution_context)
+        # MODIFIED 7/15/19 END:
 
         # If the primary function of the mechanism is stateful:
         # (1) reinitialize it, (2) update value, (3) update output states
         if isinstance(self.function, StatefulFunction):
+            # # MODIFIED 7/15/19 OLD:
+            # new_value = self.function.reinitialize(*args, execution_context=execution_context)
+            # MODIFIED 7/15/19 NEW:
             new_value = self.function.reinitialize(*args, execution_context=execution_id)
+            # MODIFIED 7/15/19 END:
             self.parameters.value._set(np.atleast_2d(new_value), execution_id=execution_id, override=True)
             self._update_output_states(execution_id=execution_id,
                                        context="REINITIALIZING")
@@ -2248,7 +2256,11 @@ class Mechanism_Base(Mechanism):
         context = context or ContextFlags.COMMAND_LINE
 
         # initialize context for this execution_id if not done already
+        # # MODIFIED 7/15/19 OLD:
+        # if execution_id is not None:
+        # MODIFIED 7/15/19 NEW:
         if self.parameters.context._get(execution_id) is None:
+        # MODIFIED 7/15/19 END:
             self._assign_context_values(execution_id)
 
         if not self.parameters.context._get(execution_id).source or context & ContextFlags.COMMAND_LINE:
@@ -2479,8 +2491,11 @@ class Mechanism_Base(Mechanism):
         for i in range(len(self.input_states)):
             state = self.input_states[i]
             state.update(execution_id=execution_id, params=runtime_params, context=context)
+        # # MODIFIED 7/15/19 OLD:
+        # return np.array([state.parameters.value._get(execution_id) for state in self.input_states])
+        # MODIFIED 7/15/19 NEW:
         return np.array(self.get_input_values(execution_id))
-
+        # MODIFIED 7/15/19 END:
 
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
 
@@ -3448,6 +3463,9 @@ class Mechanism_Base(Mechanism):
             return None
 
     def get_input_values(self, execution_context=None):
+        # # MODIFIED 7/15/19 OLD:
+        # return [input_state.parameters.value.get(execution_context) for input_state in self.input_states]
+        # MODIFIED 7/15/19 NEW:
         input_values = []
         for input_state in self.input_states:
             if "LearningSignal" in input_state.name:
@@ -3455,6 +3473,7 @@ class Mechanism_Base(Mechanism):
             else:
                 input_values.append(input_state.parameters.value.get(execution_context))
         return input_values
+        # MODIFIED 7/15/19 END:
 
     @property
     def external_input_states(self):

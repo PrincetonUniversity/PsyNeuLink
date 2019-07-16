@@ -701,6 +701,13 @@ class MappingProjection(PathwayProjection_Base):
         matrix = get_matrix(self._parameter_states[MATRIX].value)
         initial_rate = matrix * 0.0
 
+        # # MODIFIED 7/15/19 OLD:
+        # self._parameter_states[MATRIX].function = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
+        #                                                                        default_variable=matrix,
+        #                                                                        initializer=matrix,
+        #                                                                        # rate=initial_rate
+        #                                                                        )
+        # MODIFIED 7/15/19 NEW:
         # KDM 7/11/19: instead of simply setting the function, we need to reinstantiate to ensure
         # new defaults get set properly
         self._parameter_states[MATRIX]._instantiate_function(
@@ -712,6 +719,7 @@ class MappingProjection(PathwayProjection_Base):
             )
         )
         self._parameter_states[MATRIX]._instantiate_value(context)
+        # MODIFIED 7/15/19 END:
 
 
         # # Assign ParameterState the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
@@ -821,6 +829,16 @@ class MappingProjection(PathwayProjection_Base):
         # If function is Identity Function, no need to update ParameterStates, as matrix is not used
         if not isinstance(self.function, Identity):
 
+            # # MODIFIED 7/15/19 OLD:
+            # if (hasattr(self.context, "composition") and
+            #         hasattr(self.context.composition, "learning_enabled") and
+            #         self.context.composition.learning_enabled):
+            #     self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
+            #     self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+            #     self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+            #
+            # self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+            # MODIFIED 7/15/19 NEW:
             if (hasattr(self.parameters.context._get(execution_id), "composition") and
                     hasattr(self.parameters.context._get(execution_id).composition, "learning_enabled") and
                     self.parameters.context._get(execution_id).composition.learning_enabled):
@@ -829,6 +847,7 @@ class MappingProjection(PathwayProjection_Base):
                 self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
             else:
                 self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+            # MODIFIED 7/15/19 END:
 
         value = super()._execute(
                 variable=variable,

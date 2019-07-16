@@ -1220,7 +1220,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._compilation_data = self._CompilationData(owner=self)
 
         self.log = CompositionLog(owner=self)
-        self._terminal_backprop_sequences = {}
+        # # MODIFIED 7/15/19 NEW:
+        # self._terminal_backprop_sequences = {}
+        # MODIFIED 7/15/19 END:
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -1828,7 +1830,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Add sequence of Mechanisms or Compositions possibly with intercolated Projections
         Tuples (Mechanism, NodeRole(s)) can be used to assign required_roles to Mechanisms.
         """
-        nodes = []
+        # # MODIFIED 7/15/19 NEW:
+        # nodes = []
+        # MODIFIED 7/15/19 END:
         # First, verify that the pathway begins with a node
         if not isinstance(pathway, (list, tuple)):
             raise CompositionError(f"First arg for add_linear_processing_pathway method of '{self.name}' "
@@ -1836,7 +1840,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if isinstance(pathway[0], (Mechanism, Composition, tuple)):
             self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
-            nodes.append(pathway[0])
+            # # MODIFIED 7/15/19 NEW:
+            # nodes.append(pathway[0])
+            # MODIFIED 7/15/19 END:
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise CompositionError("The first item in a linear processing pathway must be a Node (Mechanism or "
@@ -1847,8 +1853,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
             if isinstance(pathway[c], (Mechanism, Composition, tuple)):
                 self.add_nodes([pathway[c]])
-                nodes.append(pathway[c])
-        projections = []
+        # # MODIFIED 7/15/19 NEW:
+        #         nodes.append(pathway[c])
+        # projections = []
+        # MODIFIED 7/15/19 END:
         # Then, loop through and validate that the Mechanism-Projection relationships make sense
         # and add MappingProjections where needed
         for c in range(1, len(pathway)):
@@ -1856,10 +1864,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(pathway[c], (Mechanism, Composition, tuple)):
                 if isinstance(pathway[c - 1], (Mechanism, Composition, tuple)):
                     # if the previous item was also a Composition Node, add a mapping projection between them
-                    proj = self.add_projection(sender=pathway[c - 1],
-                                               receiver=pathway[c],
-                                               feedback=feedback)
-                    projections.append(proj)
+                    # MODIFIED 7/15/19 OLD:
+                    self.add_projection(sender=pathway[c - 1],
+                                        receiver=pathway[c],
+                                        feedback=feedback)
+                    # # MODIFIED 7/15/19 NEW:
+                    # proj = self.add_projection(sender=pathway[c - 1],
+                    #                            receiver=pathway[c],
+                    #                            feedback=feedback)
+                    # projections.append(proj)
+                    # MODIFIED 7/15/19 END:
             # if the current item is a Projection specification
             elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
                 if c == len(pathway) - 1:
@@ -1873,12 +1887,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         proj = MappingProjection(sender=pathway[c - 1],
                                                  matrix=pathway[c],
                                                  receiver=pathway[c + 1])
-                    self.add_projection(projection=proj,
-                                        sender=pathway[c - 1],
-                                        receiver=pathway[c + 1],
+
+                    # MODIFIED 7/15/19 OLD:
+                    self.add_projection(proj, pathway[c - 1], pathway[c + 1],
                                         feedback=feedback,
                                         allow_duplicates=False)
-                    projections.append(proj)
+                    # # MODIFIED 7/15/19 NEW:
+                    # self.add_projection(projection=proj,
+                    #                     sender=pathway[c - 1],
+                    #                     receiver=pathway[c + 1],
+                    #                     feedback=feedback,
+                    #                     allow_duplicates=False)
+                    # projections.append(proj)
+                    # MODIFIED 7/15/19 END:
 
 
                 else:
@@ -1890,13 +1911,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("{} is not a Projection or a Composition node (Mechanism or Composition). A "
                                        "linear processing pathway must be made up of Projections and Composition Nodes."
                                        .format(pathway[c]))
-        # interleave nodes and projections
-        explicit_pathway = [nodes[0]]
-        for i in range(len(projections)):
-            explicit_pathway.append(projections[i])
-            explicit_pathway.append(nodes[i+1])
-
-        return explicit_pathway
+        # # MODIFIED 7/15/19 NEW:
+        # # interleave nodes and projections
+        # explicit_pathway = [nodes[0]]
+        # for i in range(len(projections)):
+        #     explicit_pathway.append(projections[i])
+        #     explicit_pathway.append(nodes[i+1])
+        #
+        # return explicit_pathway
+        # MODIFIED 7/15/19 END:
 
     def _create_learning_related_mechanisms(self,
                                             input_source,
@@ -1968,12 +1991,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.learning_enabled = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
-    def _create_terminal_backprop_sequence_components(self,
-                                                    input_source,
-                                                    output_source,
-                                                    error_function,
-                                                    learned_projection,
-                                                    learning_rate):
+    # MODIFIED 7/15/19 OLD:
+    def _create_backprop_related_mechanisms(self,
+                                            input_source,
+                                            output_source,
+                                            error_function,
+                                            learned_projection,
+                                            learning_rate):
+        # Create learning components
+    # # MODIFIED 7/15/19 NEW:
+    # def _create_terminal_backprop_sequence_components(self,
+    #                                                 input_source,
+    #                                                 output_source,
+    #                                                 error_function,
+    #                                                 learned_projection,
+    #                                                 learning_rate):
+    # MODIFIED 7/15/19 END:
 
         target_mechanism = ProcessingMechanism(name='Target',
                                                default_variable=output_source.output_states[0].value)
@@ -2001,21 +2034,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                error_sources=comparator_mechanism,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
-        self.learning_enabled = True
-        self.add_nodes(nodes=[target_mechanism, comparator_mechanism, learning_mechanism],
-                       required_roles=NodeRole.LEARNING)
-        learning_related_projections = self._create_learning_related_projections(input_source,
-                                                                                 output_source,
-                                                                                 target_mechanism,
-                                                                                 comparator_mechanism,
-                                                                                 learning_mechanism)
-        self.add_projections(learning_related_projections)
-
-        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection, feedback=True)
+        # # MODIFIED 7/15/19 NEW:
+        # self.learning_enabled = True
+        # self.add_nodes(nodes=[target_mechanism, comparator_mechanism, learning_mechanism],
+        #                required_roles=NodeRole.LEARNING)
+        # learning_related_projections = self._create_learning_related_projections(input_source,
+        #                                                                          output_source,
+        #                                                                          target_mechanism,
+        #                                                                          comparator_mechanism,
+        #                                                                          learning_mechanism)
+        # self.add_projections(learning_related_projections)
+        #
+        # learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        # self.add_projection(learning_projection, feedback=True)
+        # MODIFIED 7/15/19 END:
 
         return target_mechanism, comparator_mechanism, learning_mechanism
 
+    # MODIFIED 7/15/19 NEW:
     def _create_multiplayer_backprop_components(self, input_source, output_source, learned_projection, learning_rate, previous_learning_mechanism):
 
         learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
@@ -2050,6 +2086,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_projection(learning_projection, feedback=True)
 
         return learning_mechanism
+    # MODIFIED 7/15/19 END:
 
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
         # construct learning related mapping projections
@@ -2184,68 +2221,105 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_related_components
 
+    # MODIFIED 7/15/19 OLD:
     def add_back_propagation_pathway(self, pathway, learning_rate=0.05, error_function=None):
         if not error_function:
             error_function = LinearCombination()
 
-        # add_linear_processing_pathway returns the pathway in its most explicit form
-        # e.g. if the user specified
-        processing_pathway = self.add_linear_processing_pathway(pathway)
+        # Processing Components
+        input_source, output_source, learned_projection = \
+            self._unpack_processing_components_of_learning_pathway(pathway)
+        self.add_linear_processing_pathway([input_source, learned_projection, output_source])
 
-        path_length = len(processing_pathway)
+        # Learning Components
+        target, comparator, learning_mechanism = self._create_backprop_related_mechanisms(input_source,
+                                                                                          output_source,
+                                                                                          error_function,
+                                                                                          learned_projection,
+                                                                                          learning_rate)
+        self.add_nodes([target, comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
 
-        if path_length >= 3:
-            # get the "terminal_sequence" --
-            # the last 2 nodes in the back prop pathway and the projection between them
-            # these components are are processed separately because
-            # they inform the construction of the Target and Comparator mechs
-            terminal_sequence = processing_pathway[path_length - 3: path_length]
-        else:
-            raise CompositionError("Backpropagation pathway specification does not contain enough components. ")
+        learning_related_projections = self._create_learning_related_projections(input_source,
+                                                                                 output_source,
+                                                                                 target,
+                                                                                 comparator,
+                                                                                 learning_mechanism)
+        self.add_projections(learning_related_projections)
 
-        # Unpack and process terminal_sequence:
-        input_source, learned_projection, output_source = terminal_sequence
+        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        self.add_projection(learning_projection, feedback=True)
 
-        if output_source in self._terminal_backprop_sequences:
-            target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
-            comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
-            learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
-        else:
-            target, comparator, learning_mechanism = self._create_terminal_backprop_sequence_components(input_source,
-                                                                                                        output_source,
-                                                                                                        error_function,
-                                                                                                        learned_projection,
-                                                                                                        learning_rate)
-            self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
-                                                                TARGET_MECHANISM: target,
-                                                                COMPARATOR_MECHANISM: comparator}
-
-        # loop backwards through the rest of the pathway to create and connect
-        # the remaining learning mechanisms
-        learning_mechanisms = [learning_mechanism]
-        learned_projections = [learned_projection]
-        for ind in range(path_length - 3, 1, -2):
-            # set variables for this iteration
-            input_source = processing_pathway[ind-2]
-            learned_projection = processing_pathway[ind-1]
-            output_source = processing_pathway[ind]
-            previous_learning_mechanism = learning_mechanisms[-1]
-
-            new_learning_mechanism = self._create_multiplayer_backprop_components(input_source,
-                                                                                  output_source,
-                                                                                  learned_projection,
-                                                                                  learning_rate,
-                                                                                  previous_learning_mechanism)
-
-            learning_mechanisms.append(new_learning_mechanism)
-            learned_projections.append(learned_projection)
-
-        learning_related_components = {LEARNING_MECHANISM: learning_mechanisms,
+        learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
                                        COMPARATOR_MECHANISM: comparator,
                                        TARGET_MECHANISM: target,
-                                       LEARNED_PROJECTION: learned_projections}
+                                       LEARNED_PROJECTION: learned_projection}
 
         return learning_related_components
+
+    # # MODIFIED 7/15/19 NEW:
+    # def add_back_propagation_pathway(self, pathway, learning_rate=0.05, error_function=None):
+    #     if not error_function:
+    #         error_function = LinearCombination()
+    #
+    #     # add_linear_processing_pathway returns the pathway in its most explicit form
+    #     # e.g. if the user specified
+    #     processing_pathway = self.add_linear_processing_pathway(pathway)
+    #
+    #     path_length = len(processing_pathway)
+    #
+    #     if path_length >= 3:
+    #         # get the "terminal_sequence" --
+    #         # the last 2 nodes in the back prop pathway and the projection between them
+    #         # these components are are processed separately because
+    #         # they inform the construction of the Target and Comparator mechs
+    #         terminal_sequence = processing_pathway[path_length - 3: path_length]
+    #     else:
+    #         raise CompositionError("Backpropagation pathway specification does not contain enough components. ")
+    #
+    #     # Unpack and process terminal_sequence:
+    #     input_source, learned_projection, output_source = terminal_sequence
+    #
+    #     if output_source in self._terminal_backprop_sequences:
+    #         target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
+    #         comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
+    #         learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
+    #     else:
+    #         target, comparator, learning_mechanism = self._create_terminal_backprop_sequence_components(input_source,
+    #                                                                                                     output_source,
+    #                                                                                                     error_function,
+    #                                                                                                     learned_projection,
+    #                                                                                                     learning_rate)
+    #         self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
+    #                                                             TARGET_MECHANISM: target,
+    #                                                             COMPARATOR_MECHANISM: comparator}
+    #
+    #     # loop backwards through the rest of the pathway to create and connect
+    #     # the remaining learning mechanisms
+    #     learning_mechanisms = [learning_mechanism]
+    #     learned_projections = [learned_projection]
+    #     for ind in range(path_length - 3, 1, -2):
+    #         # set variables for this iteration
+    #         input_source = processing_pathway[ind-2]
+    #         learned_projection = processing_pathway[ind-1]
+    #         output_source = processing_pathway[ind]
+    #         previous_learning_mechanism = learning_mechanisms[-1]
+    #
+    #         new_learning_mechanism = self._create_multiplayer_backprop_components(input_source,
+    #                                                                               output_source,
+    #                                                                               learned_projection,
+    #                                                                               learning_rate,
+    #                                                                               previous_learning_mechanism)
+    #
+    #         learning_mechanisms.append(new_learning_mechanism)
+    #         learned_projections.append(learned_projection)
+    #
+    #     learning_related_components = {LEARNING_MECHANISM: learning_mechanisms,
+    #                                    COMPARATOR_MECHANISM: comparator,
+    #                                    TARGET_MECHANISM: target,
+    #                                    LEARNED_PROJECTION: learned_projections}
+    #
+    #     return learning_related_components
+    # MODIFIED 7/15/19 END:
 
     def _validate_projection(self,
                              projection,
@@ -2401,14 +2475,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in origin_nodes:
                 self._add_node_role(node, NodeRole.INPUT)
 
-        # If OUTPUT nodes were not specified by user, TERMINAL nodes become OUTPUT nodes.
-        # If there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
-        # If there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
+        # MODIFIED 7/15/19 OLD:
+        # If OUTPUT nodes were not specified by user, TERMINAL nodes become OUTPUT nodes
+        # If there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node
         if not self.get_nodes_by_role(NodeRole.OUTPUT):
-            if self.get_nodes_by_role(NodeRole.LEARNING):
-                terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
-            else:
-                terminal_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
+            terminal_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
             if not terminal_nodes:
                 try:
                     terminal_nodes = self.nodes[-1]
@@ -2416,6 +2487,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     terminal_nodes = []
             for node in terminal_nodes:
                 self._add_node_role(node, NodeRole.OUTPUT)
+        # # MODIFIED 7/15/19 NEW:
+        # # If OUTPUT nodes were not specified by user, TERMINAL nodes become OUTPUT nodes.
+        # # If there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
+        # # If there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
+        # if not self.get_nodes_by_role(NodeRole.OUTPUT):
+        #     if self.get_nodes_by_role(NodeRole.LEARNING):
+        #         terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
+        #     else:
+        #         terminal_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
+        #     if not terminal_nodes:
+        #         try:
+        #             terminal_nodes = self.nodes[-1]
+        #         except IndexError:
+        #             terminal_nodes = []
+        #     for node in terminal_nodes:
+        #         self._add_node_role(node, NodeRole.OUTPUT)
+        # MODIFIED 7/15/19 END:
 
     def _analyze_graph(self):
         """
