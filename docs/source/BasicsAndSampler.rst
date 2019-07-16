@@ -560,22 +560,21 @@ a dictionary of values for each entry, and `CSV <https://en.wikipedia.org/wiki/C
 .. ~~~~~~~~
 
 Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
-processes.  PsyNeuLink does so in two ways  in a native form, and by integrating tools provided by other Python-based
-environments.  Each of these is described below.
+mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools provided available in other
+Python-based environments.  Each of these is described below.
 
 LearningMechanisms
 ^^^^^^^^^^^^^^^^^^
 
-The `AdaptiveMechanism` class includes a subclass call `LearningMechanism` that can be used to implement various
-learning algorithms, from unsupervised forms such as Hebbian associative learning, to supervised forms such as
-reinforcment learning and backpropagation.  LearningMechanisms take as their input a target and/or an error signal,
-and are assigned LearningSignals as their output_states, that send LearningProjections to the MappingMapping
-Projections that are used to modify. The type of learning implemented by a LearningMechanism is determined by the
-class of `LearningFunction` assigned as its `function <LearningMechanism.function>`.  PsyNeuLink provides convenience
-methods for implementing relevent Components needed for a given type of learning in a Composition, including the
-LearningMechanism(s), their associated LearningSignals and LearningProjection(s), and any other Mechanisms required
-for the specified form of learning (e.g., the ComparatorMechanism used to compute the error signal from an externally
-presented target in supervised forms of learning).  The example below implements learning in a simple two-layered
+PsyNeuLink has a native class -- `LearningMechanism` -- that can be used to implement various forms of learning,
+including both unsupervised (such as `Hebbian`) and supervised (such as reinforcment learning and backpropagation).
+LearningMechanisms take as their input a target and/or an error signal, usually provided by a `MappingProjection` from
+the sourxe of the error signal or another LearningMechanism.  They are assigned a `LearningSignal` as their
+output_state, which sends a `LearningProjection` to the `MappingProjection` that is being learned.  The type of
+learning implemented by a LearningMechanism is determined by the class of `LearningFunction` assigned to its
+`function <LearningMechanism.function>`.  In some cases (such as multilayered backpropagation networks), configuration
+of the LearningMechanisms and corresponding Projections can become complex; PsyNeuLink provides convenience methods for
+implementing these for commonly used forms of learning.  The example below implements learning in a simple three-layered
 neural network::
 
 .. script example
