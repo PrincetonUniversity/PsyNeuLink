@@ -4788,7 +4788,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_id=None,
             context=None,
             execution_mode=False,
-            return_results=False
+            return_results=False,
+            delete_context=False
     ):
         '''Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
            `controller <Composition.controller>` in order to return the
@@ -4825,6 +4826,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
         net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
+
+        #if delete_context:
+        #    self._delete_contexts(execution_id)
 
         if return_results:
             return net_outcome, results

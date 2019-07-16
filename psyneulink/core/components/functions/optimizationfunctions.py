@@ -2037,7 +2037,10 @@ class ParamEstimationFunction(OptimizationFunction):
         try:
             # Call the objective_function and check its return type
             zero_input = np.zeros(len(self.search_space))
-            ret = self.objective_function(zero_input, execution_id=execution_id, return_results=True)
+            ret = self.objective_function(zero_input,
+                                          execution_id=execution_id,
+                                          return_results=True,
+                                          delete_context=True)
         except TypeError as ex:
             return None
 
@@ -2045,6 +2048,37 @@ class ParamEstimationFunction(OptimizationFunction):
         # is an int.
         if type(ret) is int:
             return None
+
+        # Define a function that simulates a 2nd order moving average, assuming mean zero:
+        # y_t = w_t + t1*w_t-1 + t2*w_t-2
+        # where t1 and t2 are real and w_k is i.i.d sequence white noise with N(0,1)
+        def MA2(t1, t2, n_obs=100, batch_size=1, random_state=None):
+            r"""Generate a sequence of samples from the MA2 model.
+
+            The sequence is a moving average
+
+                x_i = w_i + \theta_1 w_{i-1} + \theta_2 w_{i-2}
+
+            where w_i are white noise ~ N(0,1).
+
+            Parameters
+            ----------
+            t1 : float, array_like
+            t2 : float, array_like
+            n_obs : int, optional
+            batch_size : int, optional
+            random_state : RandomState, optional
+
+            """
+            # Make inputs 2d arrays for broadcasting with w
+            t1 = np.asanyarray(t1).reshape((-1, 1))
+            t2 = np.asanyarray(t2).reshape((-1, 1))
+            random_state = random_state or np.random
+
+            # i.i.d. sequence ~ N(0,1)
+            w = random_state.randn(batch_size, n_obs + 2)
+            x = w[:, 2:] + t1 * w[:, 1:-1] + t2 * w[:, :-2]
+            return x
 
         # Things are ready, create a function for the simulator that invokes
         # the objective function.
@@ -2080,24 +2114,36 @@ class ParamEstimationFunction(OptimizationFunction):
             # self.owner.parameters.num_estimates.set(batch_size, execution_id)
 
             # TODO: This is hardcoded in here for memory profiling, remove later.
-            if False:
-                try:
-                    if self.num_calls % 1 == 0:
-                        print(f"objective_function: num_calls={self.num_calls}")
-                        self.memory_tracker.print_diff()
-                    self.num_calls = self.num_calls + 1
-                except AttributeError:
-                    print("Creating memory tracker.")
-                    from pympler import tracker
-                    self.memory_tracker = tracker.SummaryTracker()
-                    self.num_calls = 0
+            # if False:
+            #     import tracemalloc
+            #     try:
+            #         if self.num_calls % 100 == 0:
+            #             print(f"objective_function: num_calls={self.num_calls}")
+            #             #self.memory_tracker.print_diff()
+            #             self.old_snapshot = self.new_snapshot
+            #             self.new_snapshot = tracemalloc.take_snapshot()
+            #             top_stats = self.new_snapshot.compare_to(self.old_snapshot, 'lineno')
+            #
+            #             print("[ Top 10 ]")
+            #             for stat in top_stats[:10]:
+            #                 print(stat)
+            #
+            #         self.num_calls = self.num_calls + 1
+            #     except AttributeError:
+            #         print("Creating memory tracker.")
+            #         # from pympler import tracker
+            #         # self.memory_tracker = tracker.SummaryTracker()
+            #         tracemalloc.start()
+            #         self.new_snapshot = tracemalloc.take_snapshot()
+            #         self.num_calls = 0
 
             # Run batch_size simulations of the PsyNeuLink composition
             results = []
             for i in range(batch_size):
                 net_outcome, result = self.objective_function(control_allocation,
                                                            execution_id=execution_id,
-                                                           return_results=True)
+                                                           return_results=True,
+                                                           delete_context=True)
                 results.append(result[0])
 
             # Turn the list of simulation results into a 2D array of (batch_size, N)
@@ -2106,6 +2152,7 @@ class ParamEstimationFunction(OptimizationFunction):
             return results
 
         return simulator
+        #return MA2
 
     def _initialize_model(self, execution_id):
         """
@@ -2137,9 +2184,12 @@ class ParamEstimationFunction(OptimizationFunction):
             # Create the simulator, specifying the priors in proper order as arguments
             Y = elfi.Simulator(self._sim_func, *elfi_priors, observed=self._observed)
 
+            agent_rep_node = elfi.Constant(self.owner.agent_rep)
+
             # FIXME: This is a hack, we need to figure out a way to elegantly pass these
             # Create the summary nodes
-            summary_nodes = [elfi.Summary(args[0], Y, *args[1:]) for args in self._summary]
+            summary_nodes = [elfi.Summary(args[0], agent_rep_node, Y, *args[1:])
+                             for args in self._summary]
 
             # Create the discrepancy node.
             d = elfi.Distance('euclidean', *summary_nodes)
@@ -2206,4 +2256,5 @@ class ParamEstimationFunction(OptimizationFunction):
         return_all_samples = np.array(result.samples_array)
         return_all_values = np.array(result.discrepancies)
 
+        print(result)
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values

@@ -936,7 +936,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def evaluation_function(self, control_allocation,
                             execution_id=None,
-                            return_results=False):
+                            return_results=False,
+                            delete_context=False):
         '''Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
         <ControlMechanism.control_allocation>`.
@@ -956,10 +957,10 @@ class OptimizationControlMechanism(ControlMechanism):
             # KDM 5/20/19: crudely using default here because it is a stateless parameter
             # and there is a bug in setting parameter values on init, see TODO note above
             # call to self._instantiate_defaults around component.py:1115
-            if self.defaults.search_statefulness:
-                new_execution_id = self._set_up_simulation(execution_id, control_allocation)
-            else:
-                new_execution_id = execution_id
+#            if self.defaults.search_statefulness:
+#                new_execution_id = self._set_up_simulation(execution_id, control_allocation)
+#            else:
+            new_execution_id = execution_id
 
             if not return_results:
                 outcome = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
@@ -968,7 +969,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                              base_execution_id=execution_id,
                                              execution_id=new_execution_id,
                                              context=self.function.parameters.context.get(execution_id),
-                                             execution_mode=self.parameters.comp_execution_mode.get(execution_id))
+                                             execution_mode=self.parameters.comp_execution_mode.get(execution_id),
+                                             delete_context=delete_context)
 
                 return outcome
             else:
@@ -979,15 +981,16 @@ class OptimizationControlMechanism(ControlMechanism):
                                                   execution_id=new_execution_id,
                                                   context=self.function.parameters.context.get(execution_id),
                                                   execution_mode=self.parameters.comp_execution_mode.get(execution_id),
-                                                  return_results=True)
-
+                                                  return_results=True,
+                                                  delete_context=delete_context)
                 return outcome, results
         else:
             outcome = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
                                              control_allocation,
                                              self.parameters.num_estimates.get(execution_id),
                                              execution_id=execution_id,
-                                             context=self.function.parameters.context.get(execution_id))
+                                             context=self.function.parameters.context.get(execution_id),
+                                             delete_context=delete_context)
 
             return outcome
 
