@@ -656,15 +656,18 @@ class LearningProjection(ModulatoryProjection_Base):
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
 
+        # MODIFIED 7/16/19 OLD: JDC RESTORED TO ALLOW SYSTEM TO WORK (DOESN"T SEEM TO TRASH BP, AT LEAST NOT YET
         # KAM Commented out next 8 lines on 6/24/19 to get past bug in multilayer backprop on Composition
-        # try:
-        #     candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
-        #     if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
-        #         learned_projection.objective_mechanism = candidate_objective_mech
-        # except TypeError:
-        #     # learning_mechanism does not receive from an ObjectiveMechanism
-        #     #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
-        #     pass
+        try:
+            candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
+            if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
+                learned_projection.objective_mechanism = candidate_objective_mech
+        except TypeError:
+            # learning_mechanism does not receive from an ObjectiveMechanism
+            #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
+            pass
+        # MODIFIED 7/15/19 END
+
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = self
 

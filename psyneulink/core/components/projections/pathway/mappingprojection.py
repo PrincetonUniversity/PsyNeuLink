@@ -826,8 +826,12 @@ class MappingProjection(PathwayProjection_Base):
                 self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
                 self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
                 self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+            # # MODIFIED 7/15/19 OLD:
+            # self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+            # MODIFIED 7/15/19 NEW: [JDC]
             else:
                 self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+            # MODIFIED 7/15/19 END
 
         value = super()._execute(
                 variable=variable,
