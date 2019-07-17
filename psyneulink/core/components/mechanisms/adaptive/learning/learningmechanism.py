@@ -552,7 +552,9 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
+from psyneulink.core.globals.keywords import ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
+    LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
+    MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1005,14 +1007,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 **kwargs
+                 ):
 
-        # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO ABC WHEN CREATED
-        if context is ContextFlags.CONSTRUCTOR:
-            self._check_type_and_timing()
-        else:
-            self.learning_type = LearningType.SUPERVISED
-            self.learning_timing = LearningTiming.LEARNING_PHASE
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         if error_sources and not isinstance(error_sources, list):
             error_sources = [error_sources]
@@ -1045,7 +1043,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         context=context,
+                         **kwargs)
 
     def _check_type_and_timing(self):
         try:
@@ -1285,6 +1284,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         List[ndarray, ndarray] : summed learning_signal, summed error_signal
 
         """
+
         # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
         current_error_signal_inputs = self.error_signal_input_states
         curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
@@ -1336,11 +1336,28 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
 
+        # FIX 7/15/19: THIS NEEDS TO BE RESOLVED MORE GENERALLY
+        # MODIFIED 7/15/19 NEW:
         # KAM added 6/27/19 - hack to get backprop working
         # If this was an initialization run, return zeros so that the first "real" trial does not start
         # with the error computed during initialization
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        # JDC 7/15/19: added conditions that it is in Composition and function is backprop to get to work more generally
+        if (self.in_composition and
+                isinstance(self.function, BackPropagation) and
+                self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
+            # TEST PRINT:
+            print('error_signal_inputs:\n', error_signal_inputs)
+            print('error_signal_matrices:\n', error_matrices)
+            print('summed_learning_signal:\n', summed_learning_signal)
+            print('summed_error_signal:\n', summed_error_signal)
             return [0*summed_learning_signal, 0*summed_error_signal]
+        # # MODIFIED 7/15/19 END:
+
+        # TEST PRINT:
+        print('error_signal_inputs:\n', error_signal_inputs)
+        print('error_signal_matrices:\n', error_matrices)
+        print('summed_learning_signal:\n', summed_learning_signal)
+        print('summed_error_signal:\n', summed_error_signal)
 
         return [summed_learning_signal, summed_error_signal]
 

@@ -950,7 +950,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
                  name=None,
-                 prefs: is_pref_set=None):
+                 prefs: is_pref_set=None,
+                 **kwargs):
         """Instantiate RecurrentTransferMechanism
         """
 
@@ -1009,7 +1010,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         **kwargs)
 
     # def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
     #     """Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item"""

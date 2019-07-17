@@ -623,11 +623,11 @@ class Projection_Base(Projection):
                  sender=None,
                  weight=None,
                  exponent=None,
+                 function=None,
                  params=None,
                  name=None,
                  prefs=None,
                  context=None,
-                 function=None,
                  ):
         """Assign sender, receiver, and execute method and register Mechanism with ProjectionRegistry
 

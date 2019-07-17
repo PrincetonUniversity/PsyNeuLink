@@ -96,7 +96,7 @@ import typecheck as tc
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import PROCESSING_MECHANISM, kwPreferenceSetName
+from psyneulink.core.globals.keywords import CONTEXT, PROCESSING_MECHANISM, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -193,12 +193,12 @@ class ProcessingMechanismError(Exception):
 
 class ProcessingMechanism(ProcessingMechanism_Base):
     """
-    ProcessingMechanism(                            \
-    default_variable=None,                               \
-    size=None,                                              \
-    function=Linear, \
-    params=None,                                            \
-    name=None,                                              \
+    ProcessingMechanism(   \
+    default_variable=None, \
+    size=None,             \
+    function=Linear,       \
+    params=None,           \
+    name=None,             \
     prefs=None)
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that does not have any specialized features.
@@ -287,7 +287,10 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  function=Linear,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
+
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
@@ -303,4 +306,5 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  context=ContextFlags.CONSTRUCTOR)
+                                                  context=context,
+                                                  **kwargs)

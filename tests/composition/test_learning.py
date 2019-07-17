@@ -21,6 +21,9 @@ class TestHebbian:
         src = [1, 0, 0, 1, 0, 0, 1, 0, 0]
 
         inputs_dict = {Hebb2: np.array(src)}
+        # # MODIFIED 7/15/19 NEW:
+        # Hebb_C.learning_enabled = True
+        # MODIFIED 7/15/19 END:
 
         Hebb_C.run(num_trials=5,
                    inputs=inputs_dict)
@@ -436,7 +439,7 @@ class TestBackProp:
         learning_components = comp.add_back_propagation_pathway(pathway=p,
                                                                 learning_rate=1.)
 
-        target_node = learning_components[pnl.TARGET]
+        target_node = learning_components[pnl.TARGET_MECHANISM]
 
         input_dictionary = {target_node: [[0., 0., 1.]],
                             input_layer: [[-1., 30.]]}

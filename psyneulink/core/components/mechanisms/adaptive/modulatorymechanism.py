@@ -972,13 +972,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                  **kwargs
                  ):
 
-        if kwargs:
-                for k in kwargs.keys():
-                    if CONTEXT in k:
-                        context=kwargs[CONTEXT]
-                        continue
-                    raise ModulatoryMechanismError("Unrecognized arg in constructor for {}: {}".
-                                                format(self.__class__.__name__, repr(i)))
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         function = function or DefaultAllocationFunction
         modulatory_signals = modulatory_signals or []
@@ -1001,13 +995,14 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self._sim_counts = {}
 
         super(ModulatoryMechanism, self).__init__(default_variable=default_variable,
-                                               size=size,
-                                               modulation=modulation,
-                                               params=params,
-                                               name=name,
-                                               function=function,
-                                               prefs=prefs,
-                                               context=ContextFlags.CONSTRUCTOR)
+                                                  size=size,
+                                                  modulation=modulation,
+                                                  params=params,
+                                                  name=name,
+                                                  function=function,
+                                                  prefs=prefs,
+                                                  context=context,
+                                                  **kwargs)
 
         if system is not None:
             self._activate_projections_for_compositions(system)

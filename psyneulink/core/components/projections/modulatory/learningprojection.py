@@ -180,7 +180,9 @@ from psyneulink.core.components.states.modulatorysignals.learningsignal import L
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
+from psyneulink.core.globals.keywords import \
+    CONTEXT, FUNCTION, FUNCTION_PARAMS, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
+    MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -488,16 +490,19 @@ class LearningProjection(ModulatoryProjection_Base):
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
                  weight=None,
                  exponent=None,
-                 function=None,
                  params:tc.optional(dict)=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs
+                 ):
 
         # IMPLEMENTATION NOTE:
         #     the error_function and learning_function arguments are implemented to preserve the ability to pass
         #     error function and learning function specifications from the specification of a LearningProjection (used
         #     to implement learning for a MappingProjection, e.g., in a tuple) to the LearningMechanism responsible
         #     for implementing the function; and for specifying the default LearningProjection for a Process.
+
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(error_function=error_function,
@@ -513,6 +518,7 @@ class LearningProjection(ModulatoryProjection_Base):
         if sender is None or receiver is None:
             # Flag for deferred initialization
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
+
         super().__init__(sender=sender,
                          receiver=receiver,
                          weight=weight,
@@ -520,7 +526,9 @@ class LearningProjection(ModulatoryProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         context=context,
+                         **kwargs)
+
         self.learning_enable = True
 
 
@@ -642,32 +650,24 @@ class LearningProjection(ModulatoryProjection_Base):
             self.receiver.owner.matrix = self.receiver.defaults.value
 
         # FIX: SHOULD TEST WHETHER IT CAN BE USED, NOT WHETHER IT IS THE SAME SHAPE
-        # # MODIFIED 3/8/17 OLD:
-        # if receiver_weight_matrix_shape != learning_signal_shape:
-        #     raise ProjectionError("Shape ({}) of learing_signal matrix for {} from {}"
-        #                           " must match shape of the weight matrix ({}) for the receiver {}".
-        #                           format(learning_signal_shape,
-        #                                  self.name,
-        #                                  self.sender.name,
-        #                                  receiver_weight_matrix_shape,
-        #                                  self.receiver.owner.name))
-        # MODIFIED 3/8/17 END
-
         learning_mechanism = self.sender.owner
         learned_projection = self.receiver.owner
 
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
 
+        # MODIFIED 7/16/19 OLD: JDC RESTORED TO ALLOW SYSTEM TO WORK (DOESN"T SEEM TO TRASH BP, AT LEAST NOT YET
         # KAM Commented out next 8 lines on 6/24/19 to get past bug in multilayer backprop on Composition
-        # try:
-        #     candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
-        #     if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
-        #         learned_projection.objective_mechanism = candidate_objective_mech
-        # except TypeError:
-        #     # learning_mechanism does not receive from an ObjectiveMechanism
-        #     #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
-        #     pass
+        try:
+            candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
+            if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
+                learned_projection.objective_mechanism = candidate_objective_mech
+        except TypeError:
+            # learning_mechanism does not receive from an ObjectiveMechanism
+            #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
+            pass
+        # MODIFIED 7/15/19 END
+
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = self
 

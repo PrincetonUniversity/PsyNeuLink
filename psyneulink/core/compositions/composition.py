@@ -1849,6 +1849,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.add_nodes([pathway[c]])
                 nodes.append(pathway[c])
         projections = []
+
         # Then, loop through and validate that the Mechanism-Projection relationships make sense
         # and add MappingProjections where needed
         for c in range(1, len(pathway)):
@@ -1873,13 +1874,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         proj = MappingProjection(sender=pathway[c - 1],
                                                  matrix=pathway[c],
                                                  receiver=pathway[c + 1])
+
                     self.add_projection(projection=proj,
                                         sender=pathway[c - 1],
                                         receiver=pathway[c + 1],
                                         feedback=feedback,
                                         allow_duplicates=False)
                     projections.append(proj)
-
 
                 else:
                     raise CompositionError(
