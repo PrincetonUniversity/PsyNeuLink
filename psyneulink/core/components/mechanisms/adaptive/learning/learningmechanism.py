@@ -1336,13 +1336,17 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
 
-        # # MODIFIED 7/15/19 NEW:
-        # # KAM added 6/27/19 - hack to get backprop working
-        # # If this was an initialization run, return zeros so that the first "real" trial does not start
-        # # with the error computed during initialization
-        # if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
-        #     return [0*summed_learning_signal, 0*summed_error_signal]
-        # MODIFIED 7/15/19 END:
+        # FIX 7/15/19: THIS NEEDS TO BE RESOLVED MORE GENERALLY
+        # MODIFIED 7/15/19 NEW:
+        # KAM added 6/27/19 - hack to get backprop working
+        # If this was an initialization run, return zeros so that the first "real" trial does not start
+        # with the error computed during initialization
+        # JDC 7/15/19: added conditions that it is in Composition and function is backprop to get to work more generally
+        if (self.in_composition and
+                isinstance(self.function, BackPropagation) and
+                self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
+            return [0*summed_learning_signal, 0*summed_error_signal]
+        # # MODIFIED 7/15/19 END:
 
         return [summed_learning_signal, summed_error_signal]
 
