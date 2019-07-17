@@ -145,8 +145,8 @@ class TransferFunction(Function_Base):
         # Pretend we have one huge array to work on
         # TODO: should this be invoked in parts?
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
+        assert arg_in.type == arg_out.type
         if isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType):
-            assert arg_in.type == arg_out.type
             # Array elements need all to be of the same size
             length = arg_in.type.pointee.count * arg_in.type.pointee.element.count
             arr_ty = pnlvm.ir.ArrayType(ctx.float_ty, length);
