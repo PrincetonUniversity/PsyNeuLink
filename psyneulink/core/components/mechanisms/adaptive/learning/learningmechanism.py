@@ -1287,9 +1287,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
         current_error_signal_inputs = self.error_signal_input_states
-        curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
-        error_signal_inputs = variable[curr_indices]
+        # Get indices of error_signal InputStates
+        error_signal_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
+        error_signal_inputs = variable[error_signal_indices]
         if self.error_matrices is None:
+            # FIX: [JDC 7/15/19] - STILL NEEDED??
             # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
             if self.function is BackPropagation or isinstance(self.function, BackPropagation):
                 mat = []
@@ -1304,13 +1306,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 self.error_matrices = mat
                 error_matrices = mat
 
-
             else:
                 self.error_matrices = [[0.]]
-
-                error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
+                error_matrices = \
+                    np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in error_signal_indices])]
         else:
-            error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
+            error_matrices = \
+                np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in error_signal_indices])]
 
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterState):
@@ -1333,7 +1335,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
             summed_learning_signal += learning_signal
             summed_error_signal += error_signal
 
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if (self.reportOutputPref and
+                self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING):
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
 
         # FIX 7/15/19: THIS NEEDS TO BE RESOLVED MORE GENERALLY
@@ -1347,7 +1350,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
             # TEST PRINT:
             print('error_signal_inputs:\n', error_signal_inputs)
-            print('error_signal_matrices:\n', error_matrices)
+            print('error_matrices:\n', error_matrices)
             print('summed_learning_signal:\n', summed_learning_signal)
             print('summed_error_signal:\n', summed_error_signal)
             return [0*summed_learning_signal, 0*summed_error_signal]
@@ -1355,7 +1358,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # TEST PRINT:
         print('error_signal_inputs:\n', error_signal_inputs)
-        print('error_signal_matrices:\n', error_matrices)
+        print('error_matrices:\n', error_matrices)
         print('summed_learning_signal:\n', summed_learning_signal)
         print('summed_error_signal:\n', summed_error_signal)
 
@@ -1405,3 +1408,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
     @property
     def learned_projections(self):
         return [lp.receiver.owner for ls in self.learning_signals for lp in ls.efferents]
+
+    @property
+    def error_matrices(self):
+        try:
+            return self._error_matrices
+        except:
+            return None
+
+    @error_matrices.setter
+    def error_matrices(self, matrix):
+        self._error_matrices = matrix
