@@ -146,17 +146,20 @@ class TransferFunction(Function_Base):
         # TODO: should this be invoked in parts?
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
         assert arg_in.type == arg_out.type
-        if isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType):
-            # Array elements need all to be of the same size
-            length = arg_in.type.pointee.count * arg_in.type.pointee.element.count
-            arr_ty = pnlvm.ir.ArrayType(ctx.float_ty, length);
-            arg_in = builder.bitcast(arg_in, arr_ty.as_pointer())
-            arg_out = builder.bitcast(arg_out, arr_ty.as_pointer())
+
+        is_2d = isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
 
         assert arg_in.type == arg_out.type
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as args:
-            self._gen_llvm_transfer(ctx=ctx, vi=arg_in, vo=arg_out,
-                                    params=params, state=state, *args)
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as (b, idx):
+            if is_2d:
+                vi = b.gep(arg_in, [ctx.int32_ty(0), idx])
+                vo = b.gep(arg_out, [ctx.int32_ty(0), idx])
+                with pnlvm.helpers.array_ptr_loop(b, vi, "nested_transfer_loop") as args:
+                    self._gen_llvm_transfer(ctx=ctx, vi=vi, vo=vo,
+                                            params=params, state=state, *args)
+            else:
+               self._gen_llvm_transfer(b, idx, ctx=ctx, vi=arg_in, vo=arg_out,
+                                       params=params, state=state)
 
         return builder
 
