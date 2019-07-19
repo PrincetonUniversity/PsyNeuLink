@@ -248,9 +248,7 @@ from psyneulink.core.globals.keywords import MULTIPLICATIVE
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
-from psyneulink.core.globals.utilities import \
-    call_with_pruned_args, copy_dict_or_list_with_shared, get_alias_property_getter, get_alias_property_setter, \
-    get_deepcopy_with_shared, unproxy_weakproxy
+from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterable_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'get_validator_by_type_only', 'Parameter', 'ParameterAlias', 'ParameterError',
@@ -1069,7 +1067,7 @@ class Parameter(types.SimpleNamespace):
                 shared_types = (Component, types.MethodType)
 
                 if isinstance(new_val, (dict, list)):
-                    new_val = copy_dict_or_list_with_shared(new_val, shared_types)
+                    new_val = copy_iterable_with_shared(new_val, shared_types)
                 elif not isinstance(new_val, shared_types):
                     new_val = copy.deepcopy(new_val)
 

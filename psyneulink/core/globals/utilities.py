@@ -108,7 +108,7 @@ from psyneulink.core.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUS
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes', 'flatten_list',
+    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'NodeRole', 'get_class_attributes', 'flatten_list',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component',
     'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
@@ -778,14 +778,16 @@ def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
     return __deepcopy__
 
 
-def copy_dict_or_list_with_shared(obj, shared_types=None):
+def copy_iterable_with_shared(obj, shared_types=None):
     try:
         shared_types = tuple(shared_types)
     except TypeError:
-        shared_types = ()
+        shared_types = (shared_types, )
 
     dict_types = (dict, collections.UserDict)
     list_types = (list, collections.UserList, collections.deque)
+    tuple_types = (tuple, )
+    all_types_using_recursion = dict_types + list_types + tuple_types
 
     if isinstance(obj, dict_types):
         result = obj.__class__()
@@ -793,8 +795,8 @@ def copy_dict_or_list_with_shared(obj, shared_types=None):
             # key can never be unhashable dict or list
             new_k = k if isinstance(k, shared_types) else copy.deepcopy(k)
 
-            if isinstance(v, dict_types + list_types):
-                new_v = copy_dict_or_list_with_shared(v, shared_types)
+            if isinstance(v, all_types_using_recursion):
+                new_v = copy_iterable_with_shared(v, shared_types)
             elif isinstance(v, shared_types):
                 new_v = v
             else:
@@ -805,16 +807,28 @@ def copy_dict_or_list_with_shared(obj, shared_types=None):
             except UtilitiesError:
                 # handle ReadOnlyOrderedDict
                 result.__additem__(new_k, new_v)
-    elif isinstance(obj, list_types):
-        result = obj.__class__()
+    elif isinstance(obj, list_types + tuple_types):
+        is_tuple = isinstance(obj, tuple_types)
+        if is_tuple:
+            result = list()
+        else:
+            result = obj.__class__()
+
         for item in obj:
-            if isinstance(item, dict_types + list_types):
-                new_item = copy_dict_or_list_with_shared(item, shared_types)
+            if isinstance(item, all_types_using_recursion):
+                new_item = copy_iterable_with_shared(item, shared_types)
             elif isinstance(item, shared_types):
                 new_item = item
             else:
                 new_item = copy.deepcopy(item)
             result.append(new_item)
+
+        if is_tuple:
+            try:
+                result = obj.__class__(result)
+            except TypeError:
+                # handle namedtuple
+                result = obj.__class__(*result)
     else:
         raise TypeError
 
