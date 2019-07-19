@@ -819,8 +819,13 @@ class MappingProjection(PathwayProjection_Base):
 
         # If function is Identity Function, no need to update ParameterStates, as matrix is not used
         if not isinstance(self.function, Identity):
-
+            from psyneulink.core.compositions.composition import Composition
             if (hasattr(self.parameters.context._get(execution_id), "composition") and
+                    # MODIFIED 7/15/19 NEW: [JDC]
+                    # If MappingProjection is learning in a Composition,
+                    # its matrix parameteter will be updated at the end of the trial
+                    not isinstance(self.parameters.context._get(execution_id).composition, Composition) and
+                    # MODIFIED 7/15/19 END
                     hasattr(self.parameters.context._get(execution_id).composition, "learning_enabled") and
                     self.parameters.context._get(execution_id).composition.learning_enabled):
                 self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
@@ -832,6 +837,8 @@ class MappingProjection(PathwayProjection_Base):
             else:
                 self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
             # MODIFIED 7/15/19 END
+            # TEST PRINT [JDC 7/15/19]:
+            print(f'Executed Mapping Projection: {self.name}')
 
         value = super()._execute(
                 variable=variable,

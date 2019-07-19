@@ -1996,13 +1996,18 @@ class State_Base(State):
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
-            if isinstance(projection, LearningProjection) and self.parameters.context._get(execution_id).execution_phase != ContextFlags.LEARNING:
+            if (isinstance(projection, LearningProjection)
+                    and self.parameters.context._get(execution_id).execution_phase != ContextFlags.LEARNING):
                 projection_value = projection.defaults.value * 0.0
             else:
                 projection_value = projection.execute(variable=projection.sender.parameters.value._get(execution_id),
                                                       execution_id=execution_id,
                                                       runtime_params=projection_params,
                                                       context=context)
+                # TEST PRINT [JDC 7/15/19]:
+                if 'matrix' in self.name:
+                    print(f'Updated matrix for {self.owner.name};')
+                    # print(f'value: {projection_value}')
 
             # If this is initialization run and projection initialization has been deferred, pass
             try:

@@ -695,14 +695,15 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, CONDITIONS, FUNCTIONS, HARD_CLAMP, \
-    IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX_KEYWORD_VALUES, MECHANISMS, \
-    NO_CLAMP, OUTPUT, OWNER_VALUE, PULSE_CLAMP, ROLES, SOFT_CLAMP, VALUES, NAME, \
-    SAMPLE, SIMULATIONS, TARGET, TARGET_MECHANISM, VARIABLE, PROJECTIONS, WEIGHT, OUTCOME
+    IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX, MATRIX_KEYWORD_VALUES, MECHANISMS, \
+    NAME, NO_CLAMP, OUTCOME, OUTPUT, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SAMPLE, SIMULATIONS, SOFT_CLAMP, \
+    TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -3909,9 +3910,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Get learning_components, with exception of INPUT (i.e. TARGET) nodes
             #    (i.e., allow TARGET node to continue to be marked as an INPUT node)
-            learning_components = [node for node in self.nodes
-                                   if (NodeRole.LEARNING in self.nodes_to_roles[node]
-                                       and not NodeRole.INPUT in self.nodes_to_roles[node])]
+            learning_components = [node for node in self.learning_components
+                                   if not NodeRole.INPUT in self.nodes_to_roles[node]]
 
             for rcvr in learning_components:
                 # if rcvr is Projection, skip (handled in _assign_processing_components)
@@ -4280,8 +4280,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 the shape of which must match the node's default variable.
 
             scheduler_processing : Scheduler
-                the scheduler object that owns the conditions that will instruct the non-learning execution of this
-                Composition. If not specified, the Composition will use its automatically generated scheduler.
+                the scheduler object that owns the conditions that will instruct the execution of this Composition
+                If not specified, the Composition will use its automatically generated scheduler.
 
             execution_id
                 execution_id will be set to self.default_execution_id if unspecified
@@ -4728,6 +4728,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if call_after_time_step:
                 call_with_pruned_args(call_after_time_step, execution_context=execution_id)
 
+        # MODIFIED 7/15/19 NEW: [JDC]
+        # Update matrix parameter of all learned projections
+        if self.learning_enabled:
+            for projection in reversed([p for p in self.projections if
+                                        hasattr(p, 'has_learning_projection') and p.has_learning_projection]):
+                execution_phase_buffer = projection.parameters.context._get(execution_id).execution_phase
+                projection.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
+                projection.parameters.context._get(execution_id).string = \
+                    f"Updating {ParameterState.__name__} for {projection.name} in {self.name}"
+                projection._parameter_states[MATRIX].update(execution_id=execution_id,
+                                                            context=ContextFlags.COMPOSITION)
+                projection.parameters.context._get(execution_id).execution_phase = execution_phase_buffer
+        # MODIFIED 7/15/19 END
+
         if call_after_pass:
             call_with_pruned_args(call_after_pass, execution_context=execution_id)
 
@@ -4850,8 +4864,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 list corresponds to a certain `TRIAL`.
 
             scheduler_processing : Scheduler
-                the scheduler object that owns the conditions that will instruct the non-learning execution of
-                this Composition. If not specified, the Composition will use its automatically generated scheduler.
+                the scheduler object that owns the conditions that will instruct the execution of the Composition.
+                If not specified, the Composition will use its automatically generated scheduler.
 
             execution_id
                 execution_id will be set to self.default_execution_id if unspecified
@@ -5132,6 +5146,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 execution_context=execution_id
             ):
                 break
+
             # PROCESSING ------------------------------------------------------------------------
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
             if callable(inputs):
@@ -5923,3 +5938,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.output_CIM.afferents,
             [self.controller] if self.controller is not None else []
         ))
+
+    @property
+    def learning_components(self):
+        return [node for node in self.nodes if NodeRole.LEARNING in self.nodes_to_roles[node]]

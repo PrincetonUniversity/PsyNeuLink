@@ -1371,19 +1371,20 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if (self.in_composition and
                 isinstance(self.function, BackPropagation) and
                 self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
-            # TEST PRINT:
-            print('error_signal_inputs:\n', error_signal_inputs)
-            print('error_matrices:\n', error_matrices)
-            print('summed_learning_signal:\n', summed_learning_signal)
-            print('summed_error_signal:\n', summed_error_signal)
+            # # TEST PRINT [JDC 7/15/19]:
+            # print('error_signal_inputs:\n', error_signal_inputs)
+            # print('error_matrices:\n', error_matrices)
+            # print('summed_learning_signal:\n', summed_learning_signal)
+            # print('summed_error_signal:\n', summed_error_signal)
             return [0*summed_learning_signal, 0*summed_error_signal]
         # # MODIFIED 7/15/19 END:
 
-        # TEST PRINT:
-        print('error_signal_inputs:\n', error_signal_inputs)
-        print('error_matrices:\n', error_matrices)
-        print('summed_learning_signal:\n', summed_learning_signal)
-        print('summed_error_signal:\n', summed_error_signal)
+        # TEST PRINT [JDC 7/15/19]:
+        print(f'Executed {self.name}')
+        # print('error_signal_inputs:\n', error_signal_inputs)
+        # print('error_matrices:\n', error_matrices)
+        # print('summed_learning_signal:\n', summed_learning_signal)
+        # print('summed_error_signal:\n', summed_error_signal)
 
         return [summed_learning_signal, summed_error_signal]
 
@@ -1431,14 +1432,3 @@ class LearningMechanism(AdaptiveMechanism_Base):
     @property
     def learned_projections(self):
         return [lp.receiver.owner for ls in self.learning_signals for lp in ls.efferents]
-
-    @property
-    def error_matrices(self):
-        try:
-            return self._error_matrices
-        except:
-            return None
-
-    @error_matrices.setter
-    def error_matrices(self, matrix):
-        self._error_matrices = matrix
