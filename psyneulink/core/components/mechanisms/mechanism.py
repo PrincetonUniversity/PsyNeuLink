@@ -2321,7 +2321,7 @@ class Mechanism_Base(Mechanism):
 
         # UPDATE VARIABLE and INPUT STATE(S)
 
-        # Executing or simulating Process or System, get input by updating input_states
+        # Executing or simulating Process, System or Composition, so get input by updating input_states
 
         if (input is None
             and (self.parameters.context._get(execution_id).execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))

@@ -1169,11 +1169,34 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
+        # # MODIFIED 7/15/19 OLD:
+        # self.error_matrices = None
+        # # IMPLEMENTATION NOTE:
+        # #    Composition._create_terminal_backprop_sequence_components and _create_multiplayer_backprop_components
+        # #    take care of creating projections from error_sources to LearningMechanisms
+        # if self.error_sources and not self.in_composition:
+        #     self.error_matrices = [None] * len(self.error_sources)
+        #     for i, error_source in enumerate(self.error_sources):
+        #         self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source, receiver=self)
+        #         if isinstance(error_source, ObjectiveMechanism):
+        #             self.error_matrices[i] = np.identity(len(error_source.input_states[SAMPLE].value))
+        #         else:
+        #             # IMPLEMENTATION NOTE:
+        #             #     This assumes that error_source has only one LearningSignal or,
+        #             #     if it has more, that they are all equivalent
+        #             self.error_matrices[i] = error_source.primary_learned_projection.parameter_states[MATRIX]
+        # MODIFIED 7/15/19 NEW: [JDC]
         self.error_matrices = None
-        if self.error_sources and not self.in_composition:
+        if self.error_sources:
             self.error_matrices = [None] * len(self.error_sources)
             for i, error_source in enumerate(self.error_sources):
-                self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source, receiver=self)
+                if not self.in_composition:
+                    # FIX: [JDC 7/15/19] - SHOULD THIS HAPPEN OUTSIDE OF SYSTEM OR PROCESS,
+                    #  OR BY REMOVED WHEN THOSE ARE FULLY DEPRECATED
+                    # IMPLEMENTATION NOTE:
+                    #    _create_terminal_backprop_sequence_components and _create_multiplayer_backprop_components
+                    #    in Composition take care of creating projections from error_sources to LearningMechanisms
+                    self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source, receiver=self)
                 if isinstance(error_source, ObjectiveMechanism):
                     self.error_matrices[i] = np.identity(len(error_source.input_states[SAMPLE].value))
                 else:
@@ -1181,6 +1204,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                     #     This assumes that error_source has only one LearningSignal or,
                     #     if it has more, that they are all equivalent
                     self.error_matrices[i] = error_source.primary_learned_projection.parameter_states[MATRIX]
+        # MODIFIED 7/15/19 END
 
     def _instantiate_output_states(self, context=None):
 
@@ -1324,13 +1348,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Compute learning_signal for each error_signal (and corresponding error-Matrix:
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
             variable[ERROR_OUTPUT_INDEX] = error_signal_input
-            learning_signal, error_signal = super()._execute(
-                variable=variable,
-                execution_id=execution_id,
-                error_matrix=error_matrix,
-                runtime_params=runtime_params,
-                context=context
-            )
+            learning_signal, error_signal = super()._execute(variable=variable,
+                                                             execution_id=execution_id,
+                                                             error_matrix=error_matrix,
+                                                             runtime_params=runtime_params,
+                                                             context=context
+                                                             )
             # Sum learning_signals and error_signals
             summed_learning_signal += learning_signal
             summed_error_signal += error_signal

@@ -1926,8 +1926,7 @@ class BackPropagation(LearningFunction):
         variable = super()._validate_variable(variable, context)
 
         if len(variable) != 3:
-            raise ComponentError("Variable for {} ({}) must have three items: "
-                                 "{}, {}, and {})".
+            raise ComponentError("Variable for {} ({}) must have three items: {}, {}, and {})".
                                  format(self.name, variable, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL))
 
         return variable

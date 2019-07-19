@@ -143,6 +143,7 @@ class TestRumelhartSemanticNetwork:
               #          qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
               #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
               )
+
     def test_rumelhart_semantic_network_crossing(self):
 
         rep_in = pnl.TransferMechanism(size=10, name='REP_IN')

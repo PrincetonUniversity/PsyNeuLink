@@ -2039,14 +2039,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
 
-        proj = MappingProjection(sender=previous_learning_mechanism.output_states[0],
-                                 receiver=learning_mechanism.input_states[2])
-        act_out_projection = MappingProjection(sender=output_source.output_states[0],
-                                               receiver=learning_mechanism.input_states[1])
         act_in_projection = MappingProjection(sender=input_source.output_states[0],
                                               receiver=learning_mechanism.input_states[0])
+        act_out_projection = MappingProjection(sender=output_source.output_states[0],
+                                               receiver=learning_mechanism.input_states[1])
+        error_projection = MappingProjection(sender=previous_learning_mechanism.output_states[0],
+                                             receiver=learning_mechanism.input_states[2])
 
-        self.add_projections([proj, act_out_projection, act_in_projection])
+        self.add_projections([act_in_projection, act_out_projection, error_projection])
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
         self.add_projection(learning_projection, feedback=True)
 
@@ -2055,16 +2055,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
         # construct learning related mapping projections
         # FIX 5/29/19 [JDC]:  REPLACE INDICES BELOW WITH RELEVANT KEYWORDS
-        target_projection = MappingProjection(sender=target,
-                                              receiver=comparator.input_states[1])
         sample_projection = MappingProjection(sender=output_source,
                                               receiver=comparator.input_states[0])
-        error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
-                                                    receiver=learning_mechanism.input_states[2])
-        act_out_projection = MappingProjection(sender=output_source.output_states[0],
-                                               receiver=learning_mechanism.input_states[1])
+        target_projection = MappingProjection(sender=target,
+                                              receiver=comparator.input_states[1])
         act_in_projection = MappingProjection(sender=input_source.output_states[0],
                                               receiver=learning_mechanism.input_states[0])
+        act_out_projection = MappingProjection(sender=output_source.output_states[0],
+                                               receiver=learning_mechanism.input_states[1])
+        error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
+                                                    receiver=learning_mechanism.input_states[2])
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
 
     def _create_learning_projection(self, learning_mechanism, learned_projection):
