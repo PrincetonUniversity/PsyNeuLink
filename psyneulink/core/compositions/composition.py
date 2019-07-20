@@ -1959,11 +1959,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         comparator_mechanism = PredictionErrorMechanism(
             sample={NAME: SAMPLE,
-                    VARIABLE: output_source.defaults.value,
-                    },
+                    VARIABLE: output_source.defaults.value},
             target={NAME: TARGET,
-                    VARIABLE: output_source.defaults.value
-                    },
+                    VARIABLE: output_source.defaults.value},
             function=PredictionErrorDeltaFunction(gamma=1.0),
             # name="{} {}".format(output_source.name
             #                     # PREDICTION_ERROR_MECHANISM
@@ -2000,8 +1998,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                            VARIABLE: output_source.output_states[0].value,
                                                            WEIGHT: -1},
                                                    function=error_function,
-                                                   output_states=[OUTCOME, MSE]
-                                                   )
+                                                   output_states=[OUTCOME, MSE])
 
         learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
                                                               output_source.output_states[0].value,
@@ -2017,9 +2014,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                learning_enabled=learning_update,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
-        self.enable_learning = True
+
         self.add_nodes(nodes=[target_mechanism, comparator_mechanism, learning_mechanism],
                        required_roles=NodeRole.LEARNING)
+
         learning_related_projections = self._create_learning_related_projections(input_source,
                                                                                  output_source,
                                                                                  target_mechanism,
@@ -2029,6 +2027,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
         self.add_projection(learning_projection, feedback=True)
+
+        self.enable_learning = True
 
         return target_mechanism, comparator_mechanism, learning_mechanism
 
@@ -2094,6 +2094,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_projection = LearningProjection(name="Learning Projection",
                                                  sender=learning_mechanism.learning_signals[0],
                                                  receiver=learned_projection.parameter_states["matrix"])
+
         learned_projection.has_learning_projection = True
 
         return learning_projection
@@ -2111,7 +2112,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return input_source, output_source, learned_projection
 
     def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                           learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
+                                           learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None):
         """
         Arguments
         ---------
@@ -2184,7 +2185,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return learning_related_components
 
     def add_td_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
+                                learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None):
         """
         Arguments
         ---------
@@ -4846,13 +4847,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.enable_learning:
             for projection in [p for p in self.projections if
                                hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
-                execution_phase_buffer = projection.parameters.context._get(execution_id).execution_phase
-                projection.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
-                projection.parameters.context._get(execution_id).string = \
-                    f"Updating {ParameterState.__name__} for {projection.name} in {self.name}"
-                projection._parameter_states[MATRIX].update(execution_id=execution_id,
-                                                            context=ContextFlags.COMPOSITION)
-                projection.parameters.context._get(execution_id).execution_phase = execution_phase_buffer
+                matrix_parameter_state = projection.parameter_states[MATRIX]
+                if any([lp for lp in matrix_parameter_state.mod_afferents if lp.learning_enabled == AFTER]):
+                    execution_phase_buffer = projection.parameters.context._get(execution_id).execution_phase
+                    projection.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
+                    projection.parameters.context._get(execution_id).string = \
+                        f"Updating {ParameterState.__name__} for {projection.name} in {self.name}"
+                    matrix_parameter_state.update(execution_id=execution_id,
+                                                                context=ContextFlags.COMPOSITION)
+                    projection.parameters.context._get(execution_id).execution_phase = execution_phase_buffer
         # MODIFIED 7/15/19 END
 
         if call_after_pass:

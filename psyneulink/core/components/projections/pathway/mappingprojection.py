@@ -819,23 +819,64 @@ class MappingProjection(PathwayProjection_Base):
 
         # If function is Identity Function, no need to update ParameterStates, as matrix is not used
         if not isinstance(self.function, Identity):
+            # # MODIFIED 7/15/19 OLD:
+            # from psyneulink.core.compositions.composition import Composition
+            # # If MappingProjection is learning in a Composition and learning_enabled == AFTER,
+            # # its matrix parameteter will be updated at the end of the trial
+            # # (see Composition: "# Update matrix parameter of all learned projections")
+            # if (hasattr(self.parameters.context._get(execution_id), "composition") and
+            #         not isinstance(self.parameters.context._get(execution_id).composition, Composition) and
+            #         hasattr(self.parameters.context._get(execution_id).composition, "learning_enabled") and
+            #         self.parameters.context._get(execution_id).composition.learning_enabled):
+            #     self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
+            #     self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+            #     self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+            # else:
+            #     self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+
+            # MODIFIED 7/15/19 NEW: [JDC]
+            # CURRENT:
+            # If:
+            # - context is Composition
+            # - context.composition is NOT a Composition
+            # - context.composition has learning_enabled attribute
+            # - context.composition.learning_enabled is True
+            # then:
+            # - set execution_phase to LEARNING
+            # - call update_parameter_states on projection.parameter_state[MATRIX]
+            # else:
+            # - leave execution_phase as is (PROCESSING)
+            # - call update_parameter_states on projection.parameter_state[MATRIX]
+
+            # REFACTOR:
+            # If:
+            # - context is Composition
+            # - context.composition has learning_enabled attribute
+            # - context.composition.learning_enabled is True or
+            # then:
+            # - set execution_phase to LEARNING
+            # - call update_parameter_states on projection.parameter_state[MATRIX]
+            # else:
+            # - leave execution_phase as is (PROCESSING)
+            # - call update_parameter_states on projection.parameter_state[MATRIX]
+
+            #
+
             from psyneulink.core.compositions.composition import Composition
+            # If MappingProjection is learning in a Composition and learning_enabled == AFTER,
+            # its matrix parameteter will be updated at the end of the trial
+            # (see Composition: "# Update matrix parameter of all learned projections")
             if (hasattr(self.parameters.context._get(execution_id), "composition") and
-                    # If MappingProjection is learning in a Composition,
-                    # its matrix parameteter will be updated at the end of the trial
-                    # (see Composition: "# Update matrix parameter of all learned projections")
                     not isinstance(self.parameters.context._get(execution_id).composition, Composition) and
-                    hasattr(self.parameters.context._get(execution_id).composition, "learning_enabled") and
-                    self.parameters.context._get(execution_id).composition.learning_enabled):
+                    hasattr(self.parameters.context._get(execution_id).composition, "enable_learning") and
+                    self.parameters.context._get(execution_id).composition.enable_learning):
                 self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
                 self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
                 self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-            # # MODIFIED 7/15/19 OLD:
-            # self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-            # MODIFIED 7/15/19 NEW: [JDC]
             else:
                 self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
             # MODIFIED 7/15/19 END
+
             # TEST PRINT [JDC 7/15/19]:
             print(f'Executed Mapping Projection: {self.name}')
 

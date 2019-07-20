@@ -970,6 +970,7 @@ class Projection_Base(Projection):
 
     @property
     def parameter_states(self):
+        """Read-only access to _parameter_states"""
         return self._parameter_states
 
     @parameter_states.setter
