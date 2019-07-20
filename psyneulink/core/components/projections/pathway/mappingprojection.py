@@ -861,8 +861,21 @@ class MappingProjection(PathwayProjection_Base):
             # - call update_parameter_states on projection.parameter_state[MATRIX]
 
             #
-
+            # HANDLE SYSTEM/PROCESS and COMPOSITION SEPARATELY
             from psyneulink.core.compositions.composition import Composition
+            from psyneulink.core.components.system import System
+            from psyneulink.core.components.process import Process
+
+            composition = None
+            if hasattr(self.parameters.context._get(execution_id), "composition"):
+                composition = self.parameters.context._get(execution_id).composition
+
+            if isinstance(composition, (System, Process)):
+                self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+
+            elif isinstance(composition, Composition)
+
+
             # If MappingProjection is learning in a Composition and learning_enabled == AFTER,
             # its matrix parameteter will be updated at the end of the trial
             # (see Composition: "# Update matrix parameter of all learned projections")
