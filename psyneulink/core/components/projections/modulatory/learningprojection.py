@@ -487,6 +487,7 @@ class LearningProjection(ModulatoryProjection_Base):
         learning_function = Parameter(BackPropagation, stateful=False, loggable=False)
         learning_rate = Parameter(None, modulable=True)
         learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter, setter=_learning_signal_setter)
+        learning_enabled = True
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
@@ -529,6 +530,7 @@ class LearningProjection(ModulatoryProjection_Base):
                                                   learning_rate=learning_rate,
                                                   # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                                                   # learning_signal_params=learning_signal_params,
+                                                  learning_enabled=learning_enabled,
                                                   weight=weight,
                                                   exponent=exponent,
                                                   params=params)
@@ -548,7 +550,7 @@ class LearningProjection(ModulatoryProjection_Base):
                          context=context,
                          **kwargs)
 
-        self.learning_enable = True
+        # self.learning_enable = True
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
