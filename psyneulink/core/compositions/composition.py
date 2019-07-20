@@ -1147,7 +1147,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             enable_controller=None,
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
             controller_condition:Condition=Always(),
-            learning_enabled=False,
+            enable_learning=False,
             retain_old_simulation_data=None,
             **param_defaults
     ):
@@ -1191,7 +1191,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._scheduler_processing = None
 
-        self.learning_enabled = False
+        self.enable_learning = False
 
         # status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
@@ -1934,7 +1934,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #  REQUIRE IT
         learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
                                                                                                         override=True)
-        self.learning_enabled = True
+        self.enable_learning = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
     def _create_td_related_mechanisms(self,
@@ -1967,7 +1967,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                error_sources=comparator_mechanism,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
-        self.learning_enabled = True
+        self.enable_learning = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
     def _create_terminal_backprop_sequence_components(self,
@@ -2004,7 +2004,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                error_sources=comparator_mechanism,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
-        self.learning_enabled = True
+        self.enable_learning = True
         self.add_nodes(nodes=[target_mechanism, comparator_mechanism, learning_mechanism],
                        required_roles=NodeRole.LEARNING)
         learning_related_projections = self._create_learning_related_projections(input_source,
@@ -4579,7 +4579,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # PURGE LEARNING IF NOT ENABLED ---------------------------------------------------------------
 
             # If learning is turned off, check for any learning related nodes and remove them from the execution set
-            if not self.learning_enabled:
+            if not self.enable_learning:
                 next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
             # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4737,7 +4737,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # MODIFIED 7/15/19 NEW: [JDC]
         # Update matrix parameter of all learned projections
-        if self.learning_enabled:
+        if self.enable_learning:
             for projection in [p for p in self.projections if
                                hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
                 execution_phase_buffer = projection.parameters.context._get(execution_id).execution_phase
