@@ -4731,8 +4731,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 7/15/19 NEW: [JDC]
         # Update matrix parameter of all learned projections
         if self.learning_enabled:
-            for projection in reversed([p for p in self.projections if
-                                        hasattr(p, 'has_learning_projection') and p.has_learning_projection]):
+            for projection in [p for p in self.projections if
+                               hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
                 execution_phase_buffer = projection.parameters.context._get(execution_id).execution_phase
                 projection.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
                 projection.parameters.context._get(execution_id).string = \

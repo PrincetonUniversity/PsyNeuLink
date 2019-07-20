@@ -821,11 +821,10 @@ class MappingProjection(PathwayProjection_Base):
         if not isinstance(self.function, Identity):
             from psyneulink.core.compositions.composition import Composition
             if (hasattr(self.parameters.context._get(execution_id), "composition") and
-                    # MODIFIED 7/15/19 NEW: [JDC]
                     # If MappingProjection is learning in a Composition,
                     # its matrix parameteter will be updated at the end of the trial
+                    # (see Composition: "# Update matrix parameter of all learned projections")
                     not isinstance(self.parameters.context._get(execution_id).composition, Composition) and
-                    # MODIFIED 7/15/19 END
                     hasattr(self.parameters.context._get(execution_id).composition, "learning_enabled") and
                     self.parameters.context._get(execution_id).composition.learning_enabled):
                 self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING

@@ -300,11 +300,9 @@ refer to the Components being learned and/or its operation:
   `LearningProjection`, listed in the order of the `LearningSignal(s) <LearningSignal>` to which they belong,
   as those are listed in the LearningMechanism's `learning_signals <LearningMechanism.learning_signals>` attribute.
 ..
-* `learning_enabled <LearningMechanism.learning_enabled>` - if set to `False`, learning is disabled for all of its
-  `LearningProjections <LearningProjection>`;  however, the LearningMechanism is still executed during the learning
-  phase of execution of a `Process <Process_Execution>` or `System  <System_Execution_Learning>`, so that the error
-  signals it calculates can be passed to any other LearningMechanism(s) to which it projects (see
-  `LearningMechanism_Multilayer_Learning`).
+* `learning_enabled <LearningMechanism.learning_enabled>` - determines whether and when the LearningMechanism's
+  `learning_projections <LearningMechanism.learning_priojections>` are executed (see `learning_enabled
+  <LearningMechanism.learning_enabled>` for additional details).
 ..
 * `input_source` - the `Mechanism <Mechanism>` that sends the `primary_learned_projection`, and projects to the
   LearningMechanism's *ACTIVATION_INPUT* `InputState <LearningMechanism_Activation_Input>`.
@@ -554,7 +552,8 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
+    MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE, AFTER, \
+    ONLINE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -776,6 +775,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         specifies the learning rate for the LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
         for details).
 
+    learning_enabled : bool or Enum[ONLINE|AFTER] : True
+        specifies whether and when the LearningMechanism's `LearningProjections <LearningProjection>` are executed
+        (see `learning_enabled <LearningMechanism.learning_enabled>` for additional details).
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
@@ -837,12 +840,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         all of the MappingProjections modified by the LearningMechanism;  the first item in the list is always the
         `primary_learned_projection <LearningMechanism.primary_learned_projection>`.
 
-    learning_enabled : bool : True
-        if set to False, learning is disabled for all of its LearningProjections; however, the LearningMechanism is
-        still executed during the learning phase of execution of a `Process <Process_Execution>` or `System
-        <System_Execution_Learning>`, so that the error signals it calculates can be passed to any other
-        LearningMechanism(s) to which it projects (see `LearningMechanism_Multilayer_Learning`).
-
     function : LearningFunction or function : default BackPropagation
         specifies the function used to calculate the `learning_signal <LearningMechanism.learning_signal>` (assigned
         to the LearningMechanism's `LearningSignal(s) <LearningMechanism_LearningSignal>`), and the `error_signal
@@ -887,6 +884,21 @@ class LearningMechanism(AdaptiveMechanism_Base):
         list of all of the LearningProjections <LearningProject>` from the LearningMechanism, listed in the order of
         the `LearningSignals <LearningSignal>` to which they belong (that is, in the order they are listed in
         the `learning_signals <LearningMechanism>` attribute).
+
+    learning_enabled : bool or Enum[ONLINE|AFTER]
+        determines whether and when the `learning_projections <LearningMechanism.learning_projections>` are executed.
+        If set to False, they are never updated;  however, the LearningMechanism is still executed in any `Composition`
+        to which it belongs, so that the error signals it calculates can be passed to any other LearningMechanism(s)
+        to which it projects (see `LearningMechanism_Multilayer_Learning`).  If set to True or `ONLINE`,
+        `learning_projections <LearningMechanism.learning_projections>` are updated when the LearningMechanism
+        executes.  If set to `AFTER`, `learning_projections <LearningMechanism.learning_projections>` are updated at
+        the end of each `TRIAL` of execution of the Composition to which the LearningMechanism belongs.
+
+        .. note::
+           the `learning_abled <LearningMechanism.learning_enabled>` attribute of a LearningMechanism determines the
+           default behavior of its `learning_projections <LearningMechanism.learning_projections>`.  However, this
+           can be overridden for individual `LearningProjections <LearningProjection>` by assigning their
+           `learning_enabled <LearningProjection.learning_enabled>` attributes either at or after construction.
 
     output_states : ContentAddressableList[OutputState]
         list of the LearningMechanism's `OutputStates <OutputState>`, including its *ERROR_SIGNAL* `OutputState
@@ -1397,7 +1409,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             return self._learning_enabled
 
     @learning_enabled.setter
-    def learning_enabled(self, assignment):
+    def learning_enabled(self, assignment:tc.any(bool, tc.enum(ONLINE, AFTER))):
         self._learning_enabled = assignment
 
     @property
