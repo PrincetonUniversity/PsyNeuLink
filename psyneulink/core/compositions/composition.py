@@ -702,8 +702,8 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, CONDITIONS, FUNCTIONS, HARD_CLAMP, \
     IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX, MATRIX_KEYWORD_VALUES, MECHANISMS, \
-    NAME, NO_CLAMP, OUTCOME, OUTPUT, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, SAMPLE, SIMULATIONS, SOFT_CLAMP, \
-    TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
+    NAME, NO_CLAMP, ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -1976,6 +1976,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                     error_function,
                                                     learned_projection,
                                                     learning_rate):
+        """Create ComparatorMechanism, LearningMechanism and LearningProjection for Component in learning sequence"""
 
         target_mechanism = ProcessingMechanism(name='Target',
                                                default_variable=output_source.output_states[0].value)
@@ -2018,7 +2019,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return target_mechanism, comparator_mechanism, learning_mechanism
 
-    def _create_multiplayer_backprop_components(self, input_source, output_source, learned_projection, learning_rate, previous_learning_mechanism):
+    def _create_multiplayer_backprop_components(self,
+                                                input_source,
+                                                output_source,
+                                                learned_projection,
+                                                learning_rate,
+                                                previous_learning_mechanism):
 
         learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
                                                               output_source.output_states[0].value,
@@ -2186,7 +2192,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_related_components
 
-    def add_back_propagation_pathway(self, pathway, learning_rate=0.05, error_function=None):
+    def add_back_propagation_pathway(self, pathway, learning_rate=0.05, error_function=None,
+                                     update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None):
         if not error_function:
             error_function = LinearCombination()
 
