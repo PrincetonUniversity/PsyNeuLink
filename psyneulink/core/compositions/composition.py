@@ -1012,87 +1012,95 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         name: str
 
-        controller:   `OptimizationControlmechanism`
-            must be specified if the `OptimizationControlMechanism` runs simulations of its own `Composition`.
+        controller:   `OptimizationControlmechanism` : default None
+            specifies the `OptimizationControlMechanism` to use as the Composition's `controller
+            <Composition.controller>` (see `Composition_Controller` for details).
 
-        enable_controller: bool
-            when set to True, executes the controller. When False, ignores the controller.
+        enable_controller: bool : default None
+            specifies whether the Composition's `controller <Composition.controller>` is executed when the
+            Composition is executed.  Set to True by default if **controller** specified;  if set to False,
+            the `controller <Composition.controller>` is ignored when the Composition is executed.
 
-        controller_mode: AFTER
-            specifies whether the controller is executed before or after the rest of the `Composition`
-            is executed in each trial.  Must be either the keyword BEFORE or AFTER.
+        controller_mode: Enum[BEOFRE|AFTER] : default AFTER
+            specifies whether the controller is executed before or after the rest of the Composition
+            in each trial.  Must be either the keyword *BEFORE* or *AFTER*.
 
-        controller_condition: Always
-            specifies whether the controller is executed in a given trial. Must be a `Condition`.
+        controller_condition: Condition : default Always
+            specifies when the Composition's `controller <Composition.controller>` is executed in a trial.
+
+        enable_learning: bool : default True
+            specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when it is
+            executed.
+
 
         Attributes
         ----------
 
         graph : `Graph`
-            The full `Graph` associated with this Composition. Contains both Nodes (`Mechanisms <Mechanism>` or
+            the full `Graph` associated with this Composition. Contains both Nodes (`Mechanisms <Mechanism>` or
             `Compositions <Composition>`) and `Projections <Projection>`
 
         nodes : `list[Mechanisms and Compositions]`
-            A list of all Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
+            a list of all Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
             this Composition
 
         input_CIM : `CompositionInterfaceMechanism`
-            Aggregates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
+            aggregates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
             input_CIM and its InputStates serve as proxies for the Composition itself in terms of afferent projections.
 
         output_CIM : `CompositionInterfaceMechanism`
-            Aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
+            aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
             output_CIM and its OutputStates serve as proxies for Composition itself in terms of efferent projections.
 
         input_CIM_states : dict
-            A dictionary in which keys are InputStates of INPUT Nodes in a composition, and values are lists
+            a dictionary in which keys are InputStates of INPUT Nodes in a composition, and values are lists
             containing two items: the corresponding InputState and OutputState on the input_CIM.
 
         output_CIM_states : dict
-            A dictionary in which keys are OutputStates of OUTPUT Nodes in a composition, and values are lists
+            a dictionary in which keys are OutputStates of OUTPUT Nodes in a composition, and values are lists
             containing two items: the corresponding InputState and OutputState on the input_CIM.
 
         env : Gym Forager Environment : default: None
-            Stores a Gym Forager Environment so that the Composition may interact with this environment within a
+            stores a Gym Forager Environment so that the Composition may interact with this environment within a
             single call to `run <Composition.run>`.
 
         shadows : dict
-            A dictionary in which the keys are all in the Composition and the values are lists of any Nodes that
+            a dictionary in which the keys are all in the Composition and the values are lists of any Nodes that
             `shadow <InputState_Shadow_Inputs>` the original Node's input.
 
         controller : OptimizationControlMechanism
-            If the Composition contains an `OptimizationControlMechanism` that runs simulations of its own
-            `Composition`, then the OCM is stored here.
+            identifies the `OptimizationControlMechanism` used as the Composition's controller
+            (see `Composition_Controller` for details).
 
         enable_controller : bool
-            When True, executes the Composition's `controller <Composition.controller>` in
-            each trial (see controller_mode <Composition.controller_mode>` for timing of
-            execution).
+            determines whether the Composition's `controller <Composition.controller>` is executed in each trial
+            (see controller_mode <Composition.controller_mode>` for timing of execution).  Set to True by default
+            if `controller <Composition.controller>` is specified.  Setting it to False suppresses exectuion of the
+            `controller <Composition.controller>`.
 
         controller_mode :  BEFORE or AFTER
-            Determines whether the controller is executed before or after the rest of the `Composition`
+            determines whether the controller is executed before or after the rest of the `Composition`
             is executed on each trial.
 
         controller_condition : Condition
-            Specifies whether the controller is executed in a given trial.  The default is `Always`, which
+            specifies whether the controller is executed in a given trial.  The default is `Always`, which
             executes the controller on every trial.
 
         default_execution_id
-            if no *execution_id* is specified in a call to run, this *execution_id* is used.
-
-            :default value: the Composition's name
+            if no *execution_id* is specified in a call to run, this *execution_id* is used;  by default,
+            it is the Composition's `name <Composition.name>`.
 
         execution_ids : set
-            Stores all execution_ids used by this Composition.
+            stores all execution_ids used by this Composition.
 
         results : 3d array
-            Stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` Mechanisms in the Composition for
+            stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` Mechanisms in the Composition for
             every `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`.  Each item in the outermost
             dimension (axis 0) of the array corresponds to a trial; each item within a trial corresponds to the
             `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism.
 
         simulation_results : 3d array
-            Stores the `results <Composition.results>` for executions of the Composition when it is executed using
+            stores the `results <Composition.results>` for executions of the Composition when it is executed using
             its `evaluate <Composition.evaluate>` method.
 
         retain_old_simulation_data : bool
@@ -1905,7 +1913,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             output_source,
                                             error_function,
                                             learned_projection,
-                                            learning_rate):
+                                            learning_rate,
+                                            learning_update):
         # Create learning components
         target_mechanism = ProcessingMechanism(name='Target')
 
@@ -1917,18 +1926,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    function=error_function,
                                                    output_states=[OUTCOME, MSE])
 
-        learning_mechanism = LearningMechanism(
-                                function=Reinforcement(default_variable=[input_source.output_states[0].value,
-                                                                         output_source.output_states[0].value,
-                                                                         comparator_mechanism.output_states[0].value],
-
-                                                       learning_rate=learning_rate),
-                                default_variable=[input_source.output_states[0].value,
-                                                  output_source.output_states[0].value,
-                                                  comparator_mechanism.output_states[0].value],
-                                error_sources=comparator_mechanism,
-                                in_composition=True,
-                                name="Learning Mechanism for " + learned_projection.name)
+        learning_mechanism = \
+            LearningMechanism(function=Reinforcement(default_variable=[input_source.output_states[0].value,
+                                                                       output_source.output_states[0].value,
+                                                                       comparator_mechanism.output_states[0].value],
+                                                     learning_rate=learning_rate),
+                              default_variable=[input_source.output_states[0].value,
+                                                output_source.output_states[0].value,
+                                                comparator_mechanism.output_states[0].value],
+                              error_sources=comparator_mechanism,
+                              learning_enabled=learning_update,
+                              in_composition=True,
+                              name="Learning Mechanism for " + learned_projection.name)
 
         # FIX 5/29/19 [JDC]:  MIGHT WANT TO TEST HERE WHETHER IT IS IN A BP CHAIN AND, IF SO, AND NOT LAST, THEN
         #  REQUIRE IT
@@ -1942,7 +1951,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       output_source,
                                       error_function,
                                       learned_projection,
-                                      learning_rate):
+                                      learning_rate,
+                                      learning_update):
         # Create learning components
         target_mechanism = ProcessingMechanism(name='Target',
                                                default_variable=output_source.defaults.value)
@@ -1965,6 +1975,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  output_source.output_states[0].defaults.value,
                                                                  comparator_mechanism.output_states[0].defaults.value],
                                                error_sources=comparator_mechanism,
+                                               learning_enabled=learning_update,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
         self.enable_learning = True
@@ -1975,7 +1986,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                     output_source,
                                                     error_function,
                                                     learned_projection,
-                                                    learning_rate):
+                                                    learning_rate,
+                                                    learning_update):
         """Create ComparatorMechanism, LearningMechanism and LearningProjection for Component in learning sequence"""
 
         target_mechanism = ProcessingMechanism(name='Target',
@@ -2002,6 +2014,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  output_source.output_states[0].value,
                                                                  comparator_mechanism.output_states[0].value],
                                                error_sources=comparator_mechanism,
+                                               learning_enabled=learning_update,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
         self.enable_learning = True
@@ -2024,6 +2037,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 output_source,
                                                 learned_projection,
                                                 learning_rate,
+                                                learning_update,
                                                 previous_learning_mechanism):
 
         learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
@@ -2037,6 +2051,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  output_source.output_states[0].value,
                                                                  previous_learning_mechanism.output_states[0].value],
                                                error_sources=previous_learning_mechanism,
+                                               learning_enabled=learning_update,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
 
@@ -2095,32 +2110,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"is supported by this method. See AutodiffComposition for other learning models.")
         return input_source, output_source, learned_projection
 
-    def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None):
+    def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
+                                           learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
         """
         Arguments
         ---------
 
-            pathway: List
-                list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
-                specified, that projection is the learned projection. Otherwise, a default MappingProjection is
-                automatically generated for the learned projection.
+        pathway: List
+            list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
+            specified, that projection is the learned projection. Otherwise, a default MappingProjection is
+            automatically generated for the learned projection.
 
-            learning_rate: float (default = 0.05)
-                learning rate of the ReinforcementLearning function
+        learning_rate : float : default 0.05
+            specifies the `learning_rate <ReinforcementLearning.learning_rate>` used for the `ReinforcementLearning`
+            function of the `LearningMechanism` in the **pathway**.
 
-            error_function: function (default = LinearCombination
-                function of the ComparatorMechanism
+        error_function : function : default LinearCombination
+            specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and
+            the output (`value <Mechanism_Base.value>`) of the `TARGET` Mechanism in the **pathway**).
+
+        learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
+            specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
+            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
+            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
+            <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
+            <LearningMechanism.learning_enabled>` for meaning of values).
 
         Returns
         --------
 
-            A dictionary of components that were automatically generated and added to the Composition in order to
-            implement ReinforcementLearning along the pathway.
+        A dictionary of components that were automatically generated and added to the Composition in order to
+        implement ReinforcementLearning in the pathway.
 
-            {LEARNING_MECHANISM: learning_mechanism,
-             COMPARATOR_MECHANISM: comparator,
-             TARGET_MECHANISM: target,
-             LEARNED_PROJECTION: learned_projection}
+        {LEARNING_MECHANISM: learning_mechanism,
+         COMPARATOR_MECHANISM: comparator,
+         TARGET_MECHANISM: target,
+         LEARNED_PROJECTION: learned_projection}
         """
 
         if not error_function:
@@ -2137,7 +2162,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                           output_source,
                                                                                           error_function,
                                                                                           learned_projection,
-                                                                                          learning_rate)
+                                                                                          learning_rate,
+                                                                                          learning_update)
         self.add_nodes([target, comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
 
         learning_related_projections = self._create_learning_related_projections(input_source,
@@ -2157,7 +2183,43 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_related_components
 
-    def add_td_learning_pathway(self, pathway, learning_rate=0.05, error_function=None):
+    def add_td_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
+                                learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
+        """
+        Arguments
+        ---------
+
+        pathway: List
+            list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
+            specified, that projection is the learned projection. Otherwise, a default MappingProjection is
+            automatically generated for the learned projection.
+
+        learning_rate : float : default 0.05
+            specifies the `learning_rate <TDLearning.learning_rate>` used for the `TDLearning` function of the
+            `LearningMechanism` in the **pathway**.
+
+        error_function : function : default LinearCombination
+            specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and
+            the output (`value <Mechanism_Base.value>`) of the `TARGET` Mechanism in the **pathway**).
+
+        learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
+            specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
+            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
+            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
+            <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
+            <LearningMechanism.learning_enabled>` for meaning of values).
+
+        Returns
+        --------
+
+        A dictionary of components that were automatically generated and added to the Composition in order to
+        implement TDLearning in the pathway.
+
+        {LEARNING_MECHANISM: learning_mechanism,
+         COMPARATOR_MECHANISM: comparator,
+         TARGET_MECHANISM: target,
+         LEARNED_PROJECTION: learned_projection}
+        """
 
         if not error_function:
             error_function = LinearCombination()
@@ -2172,7 +2234,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                     output_source,
                                                                                     error_function,
                                                                                     learned_projection,
-                                                                                    learning_rate)
+                                                                                    learning_rate,
+                                                                                    learning_update)
         self.add_nodes([target, comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
 
         learning_related_projections = self._create_learning_related_projections(input_source,
@@ -2193,7 +2256,46 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return learning_related_components
 
     def add_back_propagation_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                     update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None):
+                                     learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
+        """Add linear processing pathway with backpropogation learning
+
+        Arguments
+        ---------
+        pathway : list
+            specifies list of nodes for the pathway (see `add_linear_processing_pathway` for details of specification).
+
+        pathway: List
+            specifies nodes of the pathway for the learning sequence  (see `add_linear_processing_pathway` for
+            details of specification).  Any `MappingProjections <MappingProjection>` specified or constructed for the
+            pathway are assigned as `learned_projections`.
+
+        learning_rate : float : default 0.05
+            specifies the `learning_rate <Backpropagation.learning_rate>` used for the `Backpropagation` function of
+            the `LearningMechanisms <LearningMechanism>` in the **pathway**.
+
+        error_function : function : default LinearCombination
+            specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and the
+            output (`value <Mechanism_Base.value>`) of the `TARGET` (last) Mechanism in the **pathway**).
+
+        learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
+            specifies when the `matrix <MappingProjection.matrix>` parameters of the `learned_projections` are updated
+            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
+            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanisms
+            <LearningMechanism>` in the pathway, and their `LearningProjections <LearningProjection>`
+            (see `learning_enabled <LearningMechanism.learning_enabled>` for meaning of values).
+
+        Returns
+        --------
+
+        A dictionary of components that were automatically generated and added to the Composition in order to
+        implement Backpropagation along the pathway.
+
+        {LEARNING_MECHANISM: learning_mechanism,
+         COMPARATOR_MECHANISM: comparator,
+         TARGET_MECHANISM: target,
+         LEARNED_PROJECTION: learned_projection}
+        """
+
         if not error_function:
             error_function = LinearCombination()
 
@@ -2215,16 +2317,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Unpack and process terminal_sequence:
         input_source, learned_projection, output_source = terminal_sequence
 
+        # Create terminal_sequence if it doesn't already exisit
         if output_source in self._terminal_backprop_sequences:
             target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
             comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
             learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
         else:
-            target, comparator, learning_mechanism = self._create_terminal_backprop_sequence_components(input_source,
-                                                                                                        output_source,
-                                                                                                        error_function,
-                                                                                                        learned_projection,
-                                                                                                        learning_rate)
+            target, comparator, learning_mechanism = \
+                self._create_terminal_backprop_sequence_components(input_source,
+                                                                   output_source,
+                                                                   error_function,
+                                                                   learned_projection,
+                                                                   learning_rate,
+                                                                   learning_update)
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 COMPARATOR_MECHANISM: comparator}
@@ -2244,6 +2349,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                   output_source,
                                                                                   learned_projection,
                                                                                   learning_rate,
+                                                                                  learning_update,
                                                                                   previous_learning_mechanism)
 
             learning_mechanisms.append(new_learning_mechanism)
