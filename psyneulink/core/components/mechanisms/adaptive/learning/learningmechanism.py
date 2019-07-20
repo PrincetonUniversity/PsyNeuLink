@@ -679,15 +679,16 @@ def _learning_mechanism_learning_rate_setter(value, owning_component=None, execu
 
 class LearningMechanism(AdaptiveMechanism_Base):
     """
-    LearningMechanism(                             \
-        variable,                                  \
-        error_sources,                             \
-        function=BackPropagation,                  \
-        learning_rate=None,                        \
-        learning_signals=LEARNING_SIGNAL,          \
-        modulation=ModulationParam.ADDITIVE,       \
-        params=None,                               \
-        name=None,                                 \
+    LearningMechanism(                        \
+        variable,                             \
+        error_sources,                        \
+        function=BackPropagation,             \
+        learning_rate=None,                   \
+        learning_signals=LEARNING_SIGNAL,     \
+        modulation=ModulationParam.ADDITIVE,  \
+        learning_enabled=True,                \
+        params=None,                          \
+        name=None,                            \
         prefs=None)
 
     Implements a Mechanism that modifies the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
@@ -754,15 +755,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         <LearningMechanism_Single_Layer_Learning>`, or for the last `MappingProjection` in a learning sequence in
         `multilayer learning <LearningMechanism_Multilayer_Learning>`;  otherwise they must be a `LearningMechanism`.
 
-    learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] :
-    default *LEARNING_SIGNAL*
-        specifies the parameter(s) to be learned (see `learning_signals <LearningMechanism.learning_signals>` for
-        details).
-
-    modulation : ModulationParam : default ModulationParam.ADDITIVE
-        specifies the default form of modulation used by the LearningMechanism's LearningSignals,
-        unless they are `individually specified <LearningSignal_Specification>`.
-
     function : LearningFunction or function : default BackPropagation
         specifies the function used to calculate the LearningMechanism's `learning_signal
         <LearningMechanism.learning_signal>` and `error_signal <LearningMechanism.error_signal>` attributes.  It's
@@ -774,6 +766,15 @@ class LearningMechanism(AdaptiveMechanism_Base):
     learning_rate : float : default None
         specifies the learning rate for the LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
         for details).
+
+    learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] :
+    default *LEARNING_SIGNAL*
+        specifies the parameter(s) to be learned (see `learning_signals <LearningMechanism.learning_signals>` for
+        details).
+
+    modulation : ModulationParam : default ModulationParam.ADDITIVE
+        specifies the default form of modulation used by the LearningMechanism's LearningSignals,
+        unless they are `individually specified <LearningSignal_Specification>`.
 
     learning_enabled : bool or Enum[ONLINE|AFTER] : True
         specifies whether and when the LearningMechanism's `LearningProjections <LearningProjection>` are executed
@@ -987,11 +988,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         """
         function = Parameter(BackPropagation, stateful=False, loggable=False)
         error_matrix = Parameter(None, modulable=True)
-
         learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter)
         error_signal = Parameter(None, read_only=True, getter=_error_signal_getter)
         learning_rate = Parameter(None, modulable=True, setter=_learning_mechanism_learning_rate_setter)
-
         learning_enabled = True
 
     paramClassDefaults = AdaptiveMechanism_Base.paramClassDefaults.copy()
@@ -1015,6 +1014,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  learning_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
+                 learning_enabled:tc.any(bool, tc.enum(ONLINE, AFTER))=True,
                  in_composition=False,
                  params=None,
                  name=None,
@@ -1033,6 +1033,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         params = self._assign_args_to_param_dicts(error_sources=error_sources,
                                                   function=function,
                                                   learning_signals=learning_signals,
+                                                  learning_enabled=learning_enabled,
                                                   params=params)
 
         # # USE FOR IMPLEMENTATION OF deferred_init()
@@ -1400,17 +1401,17 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         return [summed_learning_signal, summed_error_signal]
 
-    @property
-    def learning_enabled(self):
-        try:
-            return self._learning_enabled
-        except AttributeError:
-            self._learning_enabled = True
-            return self._learning_enabled
-
-    @learning_enabled.setter
-    def learning_enabled(self, assignment:tc.any(bool, tc.enum(ONLINE, AFTER))):
-        self._learning_enabled = assignment
+    # @property
+    # def learning_enabled(self):
+    #     try:
+    #         return self._learning_enabled
+    #     except AttributeError:
+    #         self._learning_enabled = True
+    #         return self._learning_enabled
+    #
+    # @learning_enabled.setter
+    # def learning_enabled(self, assignment:tc.any(bool, tc.enum(ONLINE, AFTER))):
+    #     self._learning_enabled = assignment
 
     @property
     def input_source(self):
