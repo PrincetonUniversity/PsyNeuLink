@@ -225,16 +225,17 @@ def _learning_signal_setter(value, owning_component=None, execution_id=None, ove
 
 class LearningProjection(ModulatoryProjection_Base):
     """
-    LearningProjection(               \
-                 sender=None,         \
-                 receiver=None,       \
-                 error_function,      \
-                 learning_function,   \
-                 learning_rate=None,  \
-                 weight=None,         \
-                 exponent=None,       \
-                 params=None,         \
-                 name=None,           \
+    LearningProjection(                \
+                 sender=None,          \
+                 receiver=None,        \
+                 error_function,       \
+                 learning_function,    \
+                 learning_rate=None,   \
+                 learning_enabled=None \
+                 weight=None,          \
+                 exponent=None,        \
+                 params=None,          \
+                 name=None,            \
                  prefs=None)
 
     Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of a `ParameterState` for the
@@ -308,7 +309,7 @@ class LearningProjection(ModulatoryProjection_Base):
         `learning_signal <LearningProjection.learning_signal>` (see `LearningProjection_Function_and_Learning_Rate` for
         additional details).
 
-    learning_enabled : bool or Enum[ONLINE|AFTER] : default : True
+    learning_enabled : Optional[bool or Enum[ONLINE|AFTER]] : default : None
         determines whether or when the `value <LearningProjection.value>` of the LearningProjection is used to modify
         the `learned_projection <LearningProjection.learned_projection>` when the latter is executed (see
         `learning_enabled <LearningProjection.learning_enabled>` for additional details).
@@ -487,7 +488,7 @@ class LearningProjection(ModulatoryProjection_Base):
         learning_function = Parameter(BackPropagation, stateful=False, loggable=False)
         learning_rate = Parameter(None, modulable=True)
         learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter, setter=_learning_signal_setter)
-        learning_enabled = True
+        learning_enabled = None
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
@@ -507,7 +508,7 @@ class LearningProjection(ModulatoryProjection_Base):
                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                  # learning_signal_params:tc.optional(dict)=None,
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
-                 learning_enabled:tc.any(bool, tc.enum(ONLINE, AFTER))=True,
+                 learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None,
                  weight=None,
                  exponent=None,
                  params:tc.optional(dict)=None,
@@ -549,9 +550,6 @@ class LearningProjection(ModulatoryProjection_Base):
                          prefs=prefs,
                          context=context,
                          **kwargs)
-
-        # self.learning_enable = True
-
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate sender and receiver
@@ -637,6 +635,8 @@ class LearningProjection(ModulatoryProjection_Base):
     def _instantiate_receiver(self, context=None):
         """Validate that receiver has been assigned and is compatible with the output of function
 
+        Set learning_enabled to value of receiver if it was not otherwise specified in the constructor
+
         Notes:
         * _validate_params verifies that receiver is a parameterState for the matrix parameter of a MappingProjection.
         * _super()._instantiate_receiver verifies that the projection has not already been assigned to the receiver.
@@ -673,6 +673,10 @@ class LearningProjection(ModulatoryProjection_Base):
         # FIX: SHOULD TEST WHETHER IT CAN BE USED, NOT WHETHER IT IS THE SAME SHAPE
         learning_mechanism = self.sender.owner
         learned_projection = self.receiver.owner
+
+        # Set learning_enabled to value of its LearningMechanism sender if it was not specified in the constructor
+        if self.learning_enabled is None:
+            self.learning_enabled = self.parameters.learning_enabled.default_value = learning_mechanism.learning_enabled
 
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
