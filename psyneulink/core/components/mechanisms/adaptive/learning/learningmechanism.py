@@ -1182,30 +1182,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
-        # # MODIFIED 7/15/19 OLD:
-        # self.error_matrices = None
-        # # IMPLEMENTATION NOTE:
-        # #    Composition._create_terminal_backprop_sequence_components and _create_multiplayer_backprop_components
-        # #    take care of creating projections from error_sources to LearningMechanisms
-        # if self.error_sources and not self.in_composition:
-        #     self.error_matrices = [None] * len(self.error_sources)
-        #     for i, error_source in enumerate(self.error_sources):
-        #         self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source, receiver=self)
-        #         if isinstance(error_source, ObjectiveMechanism):
-        #             self.error_matrices[i] = np.identity(len(error_source.input_states[SAMPLE].value))
-        #         else:
-        #             # IMPLEMENTATION NOTE:
-        #             #     This assumes that error_source has only one LearningSignal or,
-        #             #     if it has more, that they are all equivalent
-        #             self.error_matrices[i] = error_source.primary_learned_projection.parameter_states[MATRIX]
-        # MODIFIED 7/15/19 NEW: [JDC]
         self.error_matrices = None
         if self.error_sources:
             self.error_matrices = [None] * len(self.error_sources)
             for i, error_source in enumerate(self.error_sources):
                 if not self.in_composition:
                     # FIX: [JDC 7/15/19] - SHOULD THIS HAPPEN OUTSIDE OF SYSTEM OR PROCESS,
-                    #  OR BY REMOVED WHEN THOSE ARE FULLY DEPRECATED
+                    #  OR BE REMOVED WHEN THOSE ARE FULLY DEPRECATED
                     # IMPLEMENTATION NOTE:
                     #    _create_terminal_backprop_sequence_components and _create_multiplayer_backprop_components
                     #    in Composition take care of creating projections from error_sources to LearningMechanisms
@@ -1217,7 +1200,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                     #     This assumes that error_source has only one LearningSignal or,
                     #     if it has more, that they are all equivalent
                     self.error_matrices[i] = error_source.primary_learned_projection.parameter_states[MATRIX]
-        # MODIFIED 7/15/19 END
 
     def _instantiate_output_states(self, context=None):
 
@@ -1375,29 +1357,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING):
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
 
-        # FIX 7/15/19: THIS NEEDS TO BE RESOLVED MORE GENERALLY
-        # MODIFIED 7/15/19 NEW:
-        # KAM added 6/27/19 - hack to get backprop working
-        # If this was an initialization run, return zeros so that the first "real" trial does not start
+        # Durning initialization return zeros so that the first "real" trial for Backprop does not start
         # with the error computed during initialization
-        # JDC 7/15/19: added conditions that it is in Composition and function is backprop to get to work more generally
         if (self.in_composition and
                 isinstance(self.function, BackPropagation) and
                 self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
-            # # TEST PRINT [JDC 7/15/19]:
-            # print('error_signal_inputs:\n', error_signal_inputs)
-            # print('error_matrices:\n', error_matrices)
-            # print('summed_learning_signal:\n', summed_learning_signal)
-            # print('summed_error_signal:\n', summed_error_signal)
             return [0*summed_learning_signal, 0*summed_error_signal]
-        # # MODIFIED 7/15/19 END:
-
-        # TEST PRINT [JDC 7/15/19]:
-        print(f'Executed {self.name}')
-        # print('error_signal_inputs:\n', error_signal_inputs)
-        # print('error_matrices:\n', error_matrices)
-        # print('summed_learning_signal:\n', summed_learning_signal)
-        # print('summed_error_signal:\n', summed_error_signal)
 
         return [summed_learning_signal, summed_error_signal]
 

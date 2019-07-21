@@ -322,7 +322,7 @@ class TestNestedLearning:
         model.add_projection(sender=rl_agent_action, receiver=action)
         model.add_projection(sender=rl_agent, receiver=action)
 
-        model.show_graph(show_controller=True, show_nested=True, show_node_structure=True)
+        # model.show_graph(show_controller=True, show_nested=True, show_node_structure=True)
 
         stimuli = {stim_in: np.array([1] * stim_size),
                    context_in: np.array([10] * context_size)}
@@ -403,8 +403,6 @@ class TestBackProp:
         learning_components = comp.add_back_propagation_pathway(pathway=[word, wh_weights, hidden, ho_weights, response
                                                    ])
         target = learning_components[pnl.TARGET_MECHANISM]
-        # comp.add_back_propagation_pathway(pathway=[hidden, ho_weights, response])
-        comp.show_graph()
         comp.run(inputs={color: [[1, 1]],
                          word: [[-2, -2]],
                          target: [[1, 1]]},
@@ -444,7 +442,7 @@ class TestBackProp:
         input_dictionary = {target_node: [[0., 0., 1.]],
                             input_layer: [[-1., 30.]]}
 
-        comp.show_graph()
+        # comp.show_graph()
 
         comp.run(inputs=input_dictionary,
                  num_trials=10)

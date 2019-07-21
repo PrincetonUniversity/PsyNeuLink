@@ -682,7 +682,7 @@ class LearningProjection(ModulatoryProjection_Base):
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
 
         # FIX: REMOVE WHEN System IS FULLY DEPRECATED
-        # MODIFIED 7/16/19 OLD: JDC RESTORED TO ALLOW SYSTEM TO WORK (DOESN"T SEEM TO TRASH BP)
+        # MODIFIED 7/15/19 OLD: JDC RESTORED TO ALLOW SYSTEM TO WORK (DOESN"T SEEM TO TRASH BP)
         # KAM Commented out next 8 lines on 6/24/19 to get past bug in multilayer backprop on Composition
         try:
             candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner

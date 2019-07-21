@@ -993,12 +993,7 @@ class InputState(State_Base):
             # If there are any active PathwayProjections
             if len(path_proj_values) > 0:
                 # Combine Projection values
-                # MODIFIED 7/15/19 OLD:
                 variable = np.asarray(path_proj_values)
-                # # MODIFIED 7/15/19 NEW:
-                # # KAM added [0] 6/25/19 to get past bug in multilayer backprop
-                # variable = np.asarray(path_proj_values[0])
-                # MODIFIED 7/15/19 END:
                 combined_values = super()._execute(variable=variable,
                                                    execution_id=execution_id,
                                                    runtime_params=runtime_params,

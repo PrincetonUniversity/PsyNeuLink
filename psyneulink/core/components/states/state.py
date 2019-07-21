@@ -2004,10 +2004,6 @@ class State_Base(State):
                                                       execution_id=execution_id,
                                                       runtime_params=projection_params,
                                                       context=context)
-                # TEST PRINT [JDC 7/15/19]:
-                if 'matrix' in self.name:
-                    print(f'Updated matrix for {self.owner.name};')
-                    # print(f'value: {projection_value}')
 
             # If this is initialization run and projection initialization has been deferred, pass
             try:

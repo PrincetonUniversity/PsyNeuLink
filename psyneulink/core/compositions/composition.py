@@ -4729,32 +4729,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                            execution_context=execution_id):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
-                    # Set execution_phase for node's context to PROCESSING
+                    # Set context.execution_phase
+
+                    # Set to PROCESSING by default
                     node.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-                    # MODIFIED 7/15/19 NEW: [JDC]
-                    # Set context to LEARNING for any Mechanisms that receive a MappingProjection being learned
+
+                    # Set to LEARNING if Mechanism receives any PathwayProjections that are being learned
+                    #    for which learning_enabled == True or ONLINE (i.e., not False or AFTER)
                     if self.enable_learning:
                         projections = set(self.projections).intersection(set(node.path_afferents))
                         if any([p for p in projections if
                                 any([a for a in p.parameter_states[MATRIX].mod_afferents
                                      if (hasattr(a, 'learning_enabled') and a.learning_enabled in {True, ONLINE})])]):
-                            # execution_phase_buffer = node.parameters.context._get(execution_id).execution_phase
                             node.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
-                            # node.parameters.context._get(execution_id).string = \
-                            #     f"Updating {ParameterState.__name__} for {projection.name} in {self.name}"
-                            # projection.parameters.context._get(execution_id).execution_phase = execution_phase_buffer
-                    # MODIFIED 7/15/19 END
 
                     # Execute node
                     if bin_execute:
                         _comp_ex.execute_node(node)
                     else:
                         if node is not self.controller:
-                            node.execute(
-                                execution_id=execution_id,
-                                runtime_params=execution_runtime_params,
-                                context=ContextFlags.COMPOSITION
-                            )
+                            node.execute(execution_id=execution_id,
+                                         runtime_params=execution_runtime_params,
+                                         context=ContextFlags.COMPOSITION)
 
                     # Reset runtime_params for node and its function if specified
                         if execution_id in node._runtime_params_reset:
@@ -4766,10 +4762,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if execution_id in node.function._runtime_params_reset:
                             for key in node.function._runtime_params_reset[execution_id]:
                                 node.function._set_parameter_value(
-                                    key,
-                                    node.function._runtime_params_reset[execution_id][key],
-                                    execution_id
-                                )
+                                        key,
+                                        node.function._runtime_params_reset[execution_id][key],
+                                        execution_id)
+
                         node.function._runtime_params_reset[execution_id] = {}
 
                     # Set execution_phase for node's context back to IDLE
@@ -4855,8 +4851,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if call_after_time_step:
                 call_with_pruned_args(call_after_time_step, execution_context=execution_id)
 
-        # MODIFIED 7/15/19 NEW: [JDC]
-        # Update matrix parameter of all learned projections
+        # Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
         if self.enable_learning:
             for projection in [p for p in self.projections if
                                hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
@@ -4869,7 +4864,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     matrix_parameter_state.update(execution_id=execution_id,
                                                                 context=ContextFlags.COMPOSITION)
                     projection.parameters.context._get(execution_id).execution_phase = execution_phase_buffer
-        # MODIFIED 7/15/19 END
 
         if call_after_pass:
             call_with_pruned_args(call_after_pass, execution_context=execution_id)
