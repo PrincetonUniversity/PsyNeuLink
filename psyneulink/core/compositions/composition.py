@@ -2112,7 +2112,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return input_source, output_source, learned_projection
 
     def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                           learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None):
+                                           learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
         """
         Arguments
         ---------
@@ -2185,7 +2185,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return learning_related_components
 
     def add_td_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None):
+                                learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
         """
         Arguments
         ---------
@@ -4683,7 +4683,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if bin_execute:
                 _comp_ex.freeze_values()
 
-            # PURGE LEARNING IF NOT ENABLED ---------------------------------------------------------------
+            # PURGE LEARNING IF NOT ENABLED ----------------------------------------------------------------
 
             # If learning is turned off, check for any learning related nodes and remove them from the execution set
             if not self.enable_learning:
@@ -4731,6 +4731,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Set execution_phase for node's context to PROCESSING
                     node.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+                    # MODIFIED 7/15/19 NEW: [JDC]
+                    # Set context to LEARNING for any Mechanisms that receive a MappingProjection being learned
+                    if self.enable_learning:
+                        projections = set(self.projections).intersection(set(node.path_afferents))
+                        if any([p for p in projections if
+                                any([a for a in p.parameter_states[MATRIX].mod_afferents
+                                     if (hasattr(a, 'learning_enabled') and a.learning_enabled in {True, ONLINE})])]):
+                            # execution_phase_buffer = node.parameters.context._get(execution_id).execution_phase
+                            node.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
+                            # node.parameters.context._get(execution_id).string = \
+                            #     f"Updating {ParameterState.__name__} for {projection.name} in {self.name}"
+                            # projection.parameters.context._get(execution_id).execution_phase = execution_phase_buffer
+                    # MODIFIED 7/15/19 END
 
                     # Execute node
                     if bin_execute:

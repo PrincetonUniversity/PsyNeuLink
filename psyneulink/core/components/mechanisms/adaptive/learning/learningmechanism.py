@@ -1014,7 +1014,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  learning_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
-                 learning_enabled:tc.any(bool, tc.enum(ONLINE, AFTER))=True,
+                 learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=True,
                  in_composition=False,
                  params=None,
                  name=None,

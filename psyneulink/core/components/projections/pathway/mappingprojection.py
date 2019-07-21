@@ -814,7 +814,12 @@ class MappingProjection(PathwayProjection_Base):
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
-        self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+        # # MODIFIED 7/15/19 OLD:
+        # self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+        # MODIFIED 7/15/19 NEW: [JDC]
+        self.parameters.context._get(execution_id).execution_phase = \
+            self.receiver.owner.parameters.context._get(execution_id).execution_phase
+        # MODIFIED 7/15/19 END
         self.parameters.context._get(execution_id).string = context
 
         # If function is Identity Function, no need to update ParameterStates, as matrix is not used
@@ -862,32 +867,35 @@ class MappingProjection(PathwayProjection_Base):
 
             #
             # HANDLE SYSTEM/PROCESS and COMPOSITION SEPARATELY
-            from psyneulink.core.compositions.composition import Composition
-            from psyneulink.core.components.system import System
-            from psyneulink.core.components.process import Process
 
-            composition = None
-            if hasattr(self.parameters.context._get(execution_id), "composition"):
-                composition = self.parameters.context._get(execution_id).composition
+            # from psyneulink.core.compositions.composition import Composition
+            # from psyneulink.core.components.system import System
+            # from psyneulink.core.components.process import Process
+            #
+            # composition = None
+            # if hasattr(self.parameters.context._get(execution_id), "composition"):
+            #     composition = self.parameters.context._get(execution_id).composition
+            #
+            # if isinstance(composition, (System, Process)):
+            #     self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+            #
+            #
+            #
+            # # If MappingProjection is learning in a Composition and learning_enabled == AFTER,
+            # # its matrix parameteter will be updated at the end of the trial
+            # # (see Composition: "# Update matrix parameter of all learned projections")
+            # if (hasattr(self.parameters.context._get(execution_id), "composition") and
+            #         not isinstance(self.parameters.context._get(execution_id).composition, Composition) and
+            #         hasattr(self.parameters.context._get(execution_id).composition, "enable_learning") and
+            #         self.parameters.context._get(execution_id).composition.enable_learning):
+            #     self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
+            #     self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+            #     self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+            # else:
+            #     self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
-            if isinstance(composition, (System, Process)):
-                self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+            self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
-            elif isinstance(composition, Composition)
-
-
-            # If MappingProjection is learning in a Composition and learning_enabled == AFTER,
-            # its matrix parameteter will be updated at the end of the trial
-            # (see Composition: "# Update matrix parameter of all learned projections")
-            if (hasattr(self.parameters.context._get(execution_id), "composition") and
-                    not isinstance(self.parameters.context._get(execution_id).composition, Composition) and
-                    hasattr(self.parameters.context._get(execution_id).composition, "enable_learning") and
-                    self.parameters.context._get(execution_id).composition.enable_learning):
-                self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
-                self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-                self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-            else:
-                self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
             # MODIFIED 7/15/19 END
 
             # TEST PRINT [JDC 7/15/19]:
