@@ -814,99 +814,20 @@ class MappingProjection(PathwayProjection_Base):
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
-        # # MODIFIED 7/15/19 OLD:
-        # self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-        # MODIFIED 7/15/19 NEW: [JDC]
         self.parameters.context._get(execution_id).execution_phase = \
             self.receiver.owner.parameters.context._get(execution_id).execution_phase
-        # MODIFIED 7/15/19 END
         self.parameters.context._get(execution_id).string = context
 
         # If function is Identity Function, no need to update ParameterStates, as matrix is not used
         if not isinstance(self.function, Identity):
-            # # MODIFIED 7/15/19 OLD:
-            # from psyneulink.core.compositions.composition import Composition
-            # # If MappingProjection is learning in a Composition and learning_enabled == AFTER,
-            # # its matrix parameteter will be updated at the end of the trial
-            # # (see Composition: "# Update matrix parameter of all learned projections")
-            # if (hasattr(self.parameters.context._get(execution_id), "composition") and
-            #         not isinstance(self.parameters.context._get(execution_id).composition, Composition) and
-            #         hasattr(self.parameters.context._get(execution_id).composition, "learning_enabled") and
-            #         self.parameters.context._get(execution_id).composition.learning_enabled):
-            #     self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
-            #     self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-            #     self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-            # else:
-            #     self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-
-            # MODIFIED 7/15/19 NEW: [JDC]
-            # CURRENT:
-            # If:
-            # - context is Composition
-            # - context.composition is NOT a Composition
-            # - context.composition has learning_enabled attribute
-            # - context.composition.learning_enabled is True
-            # then:
-            # - set execution_phase to LEARNING
-            # - call update_parameter_states on projection.parameter_state[MATRIX]
-            # else:
-            # - leave execution_phase as is (PROCESSING)
-            # - call update_parameter_states on projection.parameter_state[MATRIX]
-
-            # REFACTOR:
-            # If:
-            # - context is Composition
-            # - context.composition has learning_enabled attribute
-            # - context.composition.learning_enabled is True or
-            # then:
-            # - set execution_phase to LEARNING
-            # - call update_parameter_states on projection.parameter_state[MATRIX]
-            # else:
-            # - leave execution_phase as is (PROCESSING)
-            # - call update_parameter_states on projection.parameter_state[MATRIX]
-
-            #
-            # HANDLE SYSTEM/PROCESS and COMPOSITION SEPARATELY
-
-            # from psyneulink.core.compositions.composition import Composition
-            # from psyneulink.core.components.system import System
-            # from psyneulink.core.components.process import Process
-            #
-            # composition = None
-            # if hasattr(self.parameters.context._get(execution_id), "composition"):
-            #     composition = self.parameters.context._get(execution_id).composition
-            #
-            # if isinstance(composition, (System, Process)):
-            #     self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-            #
-            #
-            #
-            # # If MappingProjection is learning in a Composition and learning_enabled == AFTER,
-            # # its matrix parameteter will be updated at the end of the trial
-            # # (see Composition: "# Update matrix parameter of all learned projections")
-            # if (hasattr(self.parameters.context._get(execution_id), "composition") and
-            #         not isinstance(self.parameters.context._get(execution_id).composition, Composition) and
-            #         hasattr(self.parameters.context._get(execution_id).composition, "enable_learning") and
-            #         self.parameters.context._get(execution_id).composition.enable_learning):
-            #     self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
-            #     self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-            #     self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-            # else:
-            #     self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-
             self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-
-            # MODIFIED 7/15/19 END
-
-            # TEST PRINT [JDC 7/15/19]:
-            print(f'Executed Mapping Projection: {self.name}')
 
         value = super()._execute(
                 variable=variable,
                 execution_id=execution_id,
                 runtime_params=runtime_params,
-                context=context
-        )
+                context=context)
+
         return value
 
     @property
@@ -934,8 +855,7 @@ class MappingProjection(PathwayProjection_Base):
                 (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {LEARNING, LEARNING_PROJECTION}
                  or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection) or
                      (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
-                          issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection)))
-            ):
+                          issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection)))):
             self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX,
                                                             (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]))
 
