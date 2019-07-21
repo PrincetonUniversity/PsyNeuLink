@@ -1,5 +1,6 @@
 import psyneulink as pnl
 import numpy as np
+import pytest
 
 class TestHebbian:
 
@@ -447,4 +448,165 @@ class TestBackProp:
         comp.run(inputs=input_dictionary,
                  num_trials=10)
 
+    
+    @pytest.mark.parametrize('models', [[pnl.SYSTEM,pnl.COMPOSITION],
+                                        [pnl.SYSTEM,'AUTODIFF'],
+                                        [pnl.COMPOSITION,'AUTODIFF']])
+    def test_xor_training_identicalness_system_composition_autodiff(self, models):
+        """Test equality of results for running 3-layered xor network using System, Composition and Audodiff"""
 
+        num_epochs=2
+
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+    
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+    
+        in_to_hidden_matrix = np.random.rand(2,10)
+        hidden_to_out_matrix = np.random.rand(10,1)
+    
+        # SET UP MODELS --------------------------------------------------------------------------------
+    
+        # System
+        if pnl.SYSTEM in models:
+    
+            input_sys = pnl.TransferMechanism(name='input_sys',
+                                           default_variable=np.zeros(2))
+    
+            hidden_sys = pnl.TransferMechanism(name='hidden_sys',
+                                            default_variable=np.zeros(10),
+                                            function=pnl.Logistic())
+    
+            output_sys = pnl.TransferMechanism(name='output_sys',
+                                            default_variable=np.zeros(1),
+                                            function=pnl.Logistic())
+    
+            in_to_hidden_sys = pnl.MappingProjection(name='in_to_hidden_sys',
+                                        matrix=in_to_hidden_matrix.copy(),
+                                        sender=input_sys,
+                                        receiver=hidden_sys)
+    
+            hidden_to_out_sys = pnl.MappingProjection(name='hidden_to_out_sys',
+                                        matrix=hidden_to_out_matrix.copy(),
+                                        sender=hidden_sys,
+                                        receiver=output_sys)
+    
+            xor_process = pnl.Process(pathway=[input_sys,
+                                           in_to_hidden_sys,
+                                           hidden_sys,
+                                           hidden_to_out_sys,
+                                           output_sys],
+                                  learning=pnl.LEARNING)
+
+            xor_sys = pnl.System(processes=[xor_process],
+                             learning_rate=10)
+    
+        # STANDARD Composition
+        if pnl.COMPOSITION in models:
+    
+            input_comp = pnl.TransferMechanism(name='input_comp',
+                                       default_variable=np.zeros(2))
+    
+            hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+                                        default_variable=np.zeros(10),
+                                        function=pnl.Logistic())
+    
+            output_comp = pnl.TransferMechanism(name='output_comp',
+                                        default_variable=np.zeros(1),
+                                        function=pnl.Logistic())
+    
+            in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
+                                        matrix=in_to_hidden_matrix.copy(),
+                                        sender=input_comp,
+                                        receiver=hidden_comp)
+    
+            hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+                                        matrix=hidden_to_out_matrix.copy(),
+                                        sender=hidden_comp,
+                                        receiver=output_comp)
+    
+            xor_comp = pnl.Composition()
+    
+            learning_components = xor_comp.add_back_propagation_pathway([input_comp,
+                                                                         in_to_hidden_comp,
+                                                                         hidden_comp,
+                                                                         hidden_to_out_comp,
+                                                                         output_comp],
+                                                                        learning_rate=10)
+            target_mech = learning_components[pnl.TARGET_MECHANISM]
+
+        # AutodiffComposition
+        if 'AUTODIFF' in models:
+    
+            input_autodiff = pnl.TransferMechanism(name='input',
+                                       default_variable=np.zeros(2))
+    
+            hidden_autodiff = pnl.TransferMechanism(name='hidden',
+                                        default_variable=np.zeros(10),
+                                        function=pnl.Logistic())
+    
+            output_autodiff = pnl.TransferMechanism(name='output',
+                                        default_variable=np.zeros(1),
+                                        function=pnl.Logistic())
+    
+            in_to_hidden_autodiff = pnl.MappingProjection(name='in_to_hidden',
+                                        matrix=in_to_hidden_matrix.copy(),
+                                        sender=input_autodiff,
+                                        receiver=hidden_autodiff)
+    
+            hidden_to_out_autodiff = pnl.MappingProjection(name='hidden_to_out',
+                                        matrix=hidden_to_out_matrix.copy(),
+                                        sender=hidden_autodiff,
+                                        receiver=output_autodiff)
+    
+            xor_autodiff = pnl.AutodiffComposition(param_init_from_pnl=True,
+                                      learning_rate=10,
+                                      optimizer_type='sgd')
+    
+            xor_autodiff.add_node(input_autodiff)
+            xor_autodiff.add_node(hidden_autodiff)
+            xor_autodiff.add_node(output_autodiff)
+    
+            xor_autodiff.add_projection(sender=input_autodiff, projection=in_to_hidden_autodiff, receiver=hidden_autodiff)
+            xor_autodiff.add_projection(sender=hidden_autodiff, projection=hidden_to_out_autodiff, receiver=output_autodiff)
+    
+            inputs_dict = {"inputs": {input_autodiff:xor_inputs},
+                           "targets": {output_autodiff:xor_targets},
+                           "epochs": num_epochs}
+
+        # RUN MODELS -----------------------------------------------------------------------------------
+    
+        if pnl.SYSTEM in models:
+            results_sys = xor_sys.run(inputs={input_sys:xor_inputs},
+                                      targets={output_sys:xor_targets},
+                                      num_trials=(num_epochs*xor_inputs.shape[0]),
+                                      )
+        if pnl.COMPOSITION in models:
+            result = xor_comp.run(inputs={input_comp:xor_inputs,
+                                          target_mech:xor_targets},
+                                  num_trials=(num_epochs*xor_inputs.shape[0]),
+                                  )
+        if 'AUTODIFF' in models:
+            result = xor_autodiff.run(inputs=inputs_dict)
+            autodiff_weights = xor_autodiff.get_parameters()[0]
+    
+        # COMPARE WEIGHTS FOR PAIRS OF MODELS ----------------------------------------------------------
+    
+        if all(m in models for m in {pnl.SYSTEM, 'AUTODIFF'}):
+            assert np.allclose(autodiff_weights[in_to_hidden_autodiff], in_to_hidden_sys.get_mod_matrix(xor_sys))
+            assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_sys.get_mod_matrix(xor_sys))
+    
+        if all(m in models for m in {pnl.SYSTEM, pnl.COMPOSITION}):
+            assert np.allclose(in_to_hidden_comp.get_mod_matrix(xor_comp), in_to_hidden_sys.get_mod_matrix(xor_sys))
+            assert np.allclose(hidden_to_out_comp.get_mod_matrix(xor_comp), hidden_to_out_sys.get_mod_matrix(xor_sys))
+    
+        if all(m in models for m in {pnl.COMPOSITION, 'AUTODIFF'}):
+            assert np.allclose(autodiff_weights[in_to_hidden_autodiff], in_to_hidden_comp.get_mod_matrix(xor_comp))
+            assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_comp.get_mod_matrix(xor_comp))
