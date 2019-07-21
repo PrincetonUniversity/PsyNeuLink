@@ -636,7 +636,7 @@ def _get_time(component, context_flags, execution_id=None):
         #             t = None
         #     else:
         #         t = None
-        # MODIFIED 7/15/19 NEW:
+        # MODIFIED 7/15/19 NEW:  ACCOMODATE LEARNING IN COMPOSITION DONE WITH scheduler_processing
         try:
             if execution_flags in {ContextFlags.PROCESSING, ContextFlags.LEARNING} or not execution_flags:
                 t = system.scheduler_processing.clocks[execution_id].time
