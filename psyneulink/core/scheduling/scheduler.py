@@ -196,6 +196,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 
     >>> comp = pnl.Composition()
     >>> comp.add_linear_processing_pathway([A, B, C])
+    [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to B[InputState-0]), (TransferMechanism B), (MappingProjection MappingProjection from B[RESULTS] to C[InputState-0]), (TransferMechanism C)]
 
     >>> # implicit condition of Always for A
     >>> comp.scheduler_processing.add_condition(B, pnl.EveryNCalls(A, 2))
@@ -210,6 +211,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 
     >>> comp = pnl.Composition()
     >>> comp.add_linear_processing_pathway([A, B])
+    [(TransferMechanism A), (MappingProjection Deferred Init MappingProjection-2), (TransferMechanism B)]
 
     >>> comp.scheduler_processing.add_condition(
     ...     A,
@@ -226,7 +228,6 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     ...         pnl.EveryNCalls(B, 1)
     ...     )
     ... )
-
     >>> termination_conds = {
     ...     pnl.TimeScale.TRIAL: pnl.AfterNCalls(B, 4, time_scale=pnl.TimeScale.TRIAL)
     ... }
@@ -238,7 +239,10 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 
     >>> comp = pnl.Composition()
     >>> comp.add_linear_processing_pathway([A, C])
+    [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to C[InputState-0]), (TransferMechanism C)]
+
     >>> comp.add_linear_processing_pathway([B, C])
+    [(TransferMechanism B), (MappingProjection Deferred Init MappingProjection-4), (TransferMechanism C)]
 
     >>> comp.scheduler_processing.add_condition(A, pnl.EveryNPasses(1))
     >>> comp.scheduler_processing.add_condition(B, pnl.EveryNCalls(A, 2))
@@ -249,7 +253,6 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     ...         pnl.AfterNCalls(B, 3)
     ...     )
     ... )
-
     >>> termination_conds = {
     ...     pnl.TimeScale.TRIAL: pnl.AfterNCalls(C, 4, time_scale=pnl.TimeScale.TRIAL)
     ... }
