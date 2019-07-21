@@ -137,7 +137,7 @@ class TestReinforcement:
         assert np.allclose(trial_30_expected, delta_vals[29][0])
         assert np.allclose(trial_50_expected, delta_vals[49][0])
 
-    def test_rl_learning_enabled_false(self):
+    def test_rl_enable_learning_false(self):
             input_layer = pnl.TransferMechanism(size=2,
                                                 name='Input Layer')
             input_layer.log.set_log_conditions(items=pnl.VALUE)
@@ -173,7 +173,7 @@ class TestReinforcement:
                                                         [1.85006765]])
 
             # Pause learning -- values are the same as the previous trial (because we pass in the same inputs)
-            comp.learning_enabled = False
+            comp.enable_learning = False
             inputs_dict = {input_layer: [[1., 1.], [1., 1.]]}
             comp.run(inputs=inputs_dict)
             assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
@@ -182,7 +182,7 @@ class TestReinforcement:
                                                         [1.85006765]])
 
             # Resume learning
-            comp.learning_enabled = True
+            comp.enable_learning = True
             inputs_dict = {input_layer: [[1., 1.], [1., 1.]],
                            target_mechanism: [[10.], [10.]]}
             comp.run(inputs=inputs_dict)
@@ -191,7 +191,7 @@ class TestReinforcement:
                                                         [0.118109771], [1.32123733], [0.978989672], [0.118109771],
                                                         [1.32123733]])
 
-    def test_td_learning_enabled_false(self):
+    def test_td_enabled_learning_false(self):
 
         # create processing mechanisms
         sample_mechanism = pnl.TransferMechanism(default_variable=np.zeros(60),
@@ -258,11 +258,11 @@ class TestReinforcement:
         assert np.allclose(trial_30_expected, delta_vals[29][0])
 
         # Pause Learning
-        comp.learning_enabled = False
+        comp.enable_learning = False
         comp.run(inputs={sample_mechanism: samples[0:3]})
 
         # Resume Learning
-        comp.learning_enabled = True
+        comp.enable_learning = True
         comp.run(inputs=inputs2)
         delta_vals = comparator_mechanism.log.nparray_dictionary()['TD_Learning'][pnl.VALUE]
 
