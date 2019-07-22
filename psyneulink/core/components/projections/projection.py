@@ -838,7 +838,11 @@ class Projection_Base(Projection):
 
         # Assign projection to self.sender's efferents list attribute
         if self not in self.sender.efferents:
+            # MODIFIED 7/22/19 OLD:
             self.sender.efferents.append(self)
+            # MODIFIED 7/22/19 NEW: [JDC]
+
+            # MODIFIED 7/22/19 END
 
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.states.parameterstate import _instantiate_parameter_state

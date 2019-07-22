@@ -2717,7 +2717,9 @@ class ProcessInputState(OutputState):
         else:
             self.name = owner.name + "_" + name
         self.prefs = prefs
-        self.efferents = []
+        # MODIFIED 7/22/19 OLD:
+        # self.efferents = []
+        # MODIFIED 7/22/19 END
         self.owner = owner
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)

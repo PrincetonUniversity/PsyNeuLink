@@ -3558,13 +3558,13 @@ class Mechanism_Base(Mechanism):
 
     @property
     def afferents(self):
-        """Return all afferent Projections"""
+        """Return list of all of the Mechanism's afferent Projections"""
         return ContentAddressableList(component_type=Projection,
                                       list= list(self.path_afferents) + list(self.mod_afferents))
 
     @property
     def efferents(self):
-        """Return list of all of the Mechanism's Projections"""
+        """Return list of all of the Mechanism's efferent Projections"""
         projs = []
         try:
             for output_state in self.output_states:

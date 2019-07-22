@@ -5052,7 +5052,9 @@ class SystemInputState(OutputState):
         self.context.string = context
         self.prefs = prefs
         self.log = Log(owner=self)
-        self.efferents = []
+        # MODIFIED 7/22/19 OLD:
+        # self.efferents = []
+        # MODIFIED 7/22/19 END
         self.owner = owner
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)

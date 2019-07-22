@@ -1138,7 +1138,9 @@ class State_Base(State):
 
         self.path_afferents = []
         self.mod_afferents = []
-        self.efferents = []
+        # # MODIFIED 7/22/19 OLD:
+        # self.efferents = []
+        # MODIFIED 7/22/19 END
 
         self._path_proj_values = []
         # Create dict with entries for each ModualationParam and initialize - used in update()
@@ -1872,6 +1874,7 @@ class State_Base(State):
             # if not projection in self.efferents:
             #     self.efferents.append(projection)
             # MODIFIED 7/22/19 NEW [JDC]:
+            assert True
             if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
                 warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
                               format(Projection.__name__, repr(projection.sender.name),
@@ -2153,6 +2156,20 @@ class State_Base(State):
         except AttributeError:
             self._afferents_info = {}
             return self._afferents_info
+
+    # MODIFIED 7/22/19 NEW: [JDC]
+    @property
+    def efferents(self):
+        try:
+            return self._efferents
+        except:
+            self._efferents = []
+            return self._efferents
+
+    @efferents.setter
+    def efferents(self, proj):
+        assert False, f"Illegal attempt to directly assign {repr('efferents')} attribute of {self.name}"
+    # MODIFIED 7/22/19 END
 
     def _assign_default_state_name(self, context=None):
         return False
