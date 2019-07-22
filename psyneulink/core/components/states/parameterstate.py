@@ -351,6 +351,7 @@ Class Reference
 """
 
 import inspect
+import warnings
 
 import numpy as np
 import typecheck as tc
@@ -641,6 +642,15 @@ class ParameterState(State_Base):
                                     pathway_proj_names))
 
         self._instantiate_projections_to_state(projections=projections, context=context)
+
+    def _check_for_duplicate_projections(self, projection):
+        if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+            from psyneulink.core.components.projections.projection import Projection
+            warnings.warn(f'{Projection.__name__} from {self.name} of {self.owner.name}'
+                          f' to {projection.receiver.name} of {projection.receiver.owner.name} already exists; '
+                          f'will ignore additional one specified ({projection.name}).')
+            return True
+        return False
 
     @tc.typecheck
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):

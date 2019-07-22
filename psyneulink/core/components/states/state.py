@@ -1345,6 +1345,7 @@ class State_Base(State):
                          format(self.__class__.__name__,
                                 self.name))
 
+    # FIX: MOVE TO InputState AND ParameterState OR...
     # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a State and assign them to self.path_afferents
@@ -1534,12 +1535,17 @@ class State_Base(State):
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.path_afferents or mod_afferents lists
-            if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
-                warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
-                              format(Projection.__name__, repr(projection.sender.name),
-                                     projection.sender.owner.name,
-                              repr(self.name), self.owner.name, repr(projection.name)))
+            # # MODIFIED 7/22/19 OLD:
+            # if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+            #     warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
+            #                   format(Projection.__name__, repr(projection.sender.name),
+            #                          projection.sender.owner.name,
+            #                   repr(self.name), self.owner.name, repr(projection.name)))
+            #     continue
+            # MODIFIED 7/22/19 NEW [JDC]:
+            if self._check_for_duplicate_projections(projection):
                 continue
+            # MODIFIED 7/22/19 END
 
             # reassign default variable shape to this state and its function
             if isinstance(projection, PathwayProjection_Base) and not projection in self.path_afferents:
@@ -1588,6 +1594,8 @@ class State_Base(State):
 
         return new_projections
 
+    # FIX: MOVE TO OutputState or...
+    # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_projection_from_state(self, projection_spec, receiver=None, context=None):
         """Instantiate outgoing projection from a State and assign it to self.efferents
 
@@ -1874,12 +1882,7 @@ class State_Base(State):
             # if not projection in self.efferents:
             #     self.efferents.append(projection)
             # MODIFIED 7/22/19 NEW [JDC]:
-            assert True
-            if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
-                warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
-                              format(Projection.__name__, repr(projection.sender.name),
-                                     projection.sender.owner.name,
-                              repr(self.name), self.owner.name, repr(projection.name)))
+            if self._check_for_duplicate_projections(projection):
                 continue
             # MODIFIED 7/22/19 END
             if isinstance(projection, ModulatoryProjection_Base):

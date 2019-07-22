@@ -5054,6 +5054,8 @@ class SystemInputState(OutputState):
         self.log = Log(owner=self)
         # MODIFIED 7/22/19 OLD:
         # self.efferents = []
+        # MODIFIED 7/22/19 NEW: [JDC]
+        self.path_afferents = []
         # MODIFIED 7/22/19 END
         self.owner = owner
 

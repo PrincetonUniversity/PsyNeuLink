@@ -967,6 +967,17 @@ class InputState(State_Base):
         """
         self._instantiate_projections_to_state(projections=projections, context=context)
 
+    def _check_for_duplicate_projections(self, projection):
+        # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_STATE
+        assert True
+        if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+            from psyneulink.core.components.projections.projection import Projection
+            warnings.warn(f'{Projection.__name__} from {projection.sender.name} of {projection.sender.owner.name}'
+                          f' to {self.name} of {self.owner.name} already exists; '
+                          f'will ignore additional one specified ({projection.name}).')
+            return True
+        return False
+
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
 

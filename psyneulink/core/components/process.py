@@ -1777,8 +1777,8 @@ class Process(Process_Base):
                                        format(i, process_input[i], self.name, mechanism.name, input_state_variable))
                 # Create MappingProjection from Process input state to corresponding mechanism.input_state
                 proj = MappingProjection(sender=self.process_input_states[i],
-                                  receiver=mechanism.input_states[i],
-                                  name=self.name+'_Input Projection')
+                                         receiver=mechanism.input_states[i],
+                                         name=self.name+'_Input Projection')
                 proj._activate_for_compositions(self)
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
@@ -2719,6 +2719,8 @@ class ProcessInputState(OutputState):
         self.prefs = prefs
         # MODIFIED 7/22/19 OLD:
         # self.efferents = []
+        # MODIFIED 7/22/19 NEW: [JDC]
+        self.path_afferents = []
         # MODIFIED 7/22/19 END
         self.owner = owner
 
@@ -2727,7 +2729,6 @@ class ProcessInputState(OutputState):
 
         self.parameters.value._set(variable, override=True)
 
-        # self.path_afferents = []
         # self.index = PRIMARY
         # self.assign = None
 

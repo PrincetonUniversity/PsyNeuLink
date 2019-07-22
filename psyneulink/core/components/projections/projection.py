@@ -837,6 +837,7 @@ class Projection_Base(Projection):
                                   format(self.name, self.sender))
 
         # Assign projection to self.sender's efferents list attribute
+        # First make sure that projection is not already in efferents
         if self not in self.sender.efferents:
             # # MODIFIED 7/22/19 OLD:
             # self.sender.efferents.append(self)
@@ -848,9 +849,16 @@ class Projection_Base(Projection):
             # sender._instantiate_projection_from_state(projection_spec=self,
             #                                           context=context)
             # MODIFIED 7/22/19 NEWER: [JDC]
-            projection.py_check_for_existing_projection()
-            self.sender.efferents.append(self)
+            # Then make sure there is not already a projection to its receiver
+            receiver = self.receiver
+            if isinstance(self.receiver, Mechanism):
+                receiver = self.receiver.input_state
+            if not receiver._check_for_duplicate_projections(self):
+                self.sender.efferents.append(self)
             # MODIFIED 7/22/19 END
+        else:
+            # FIX 7/22/19 [JDC] - HANDLE ATTEMPT TO ASSIGN DUPLICATE TO EFFERENTS
+            pass
 
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.states.parameterstate import _instantiate_parameter_state
