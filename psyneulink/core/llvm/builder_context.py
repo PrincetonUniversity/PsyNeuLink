@@ -117,7 +117,6 @@ class LLVMBuilderContext:
 
     def gen_llvm_function(self, obj):
         if obj not in self._cache:
-            #print("GRAB",obj,"LLVMFUN TO CACHE")
             self._cache[obj] = obj._gen_llvm_function()
         return self._cache[obj]
 
@@ -227,6 +226,95 @@ class LLVMBuilderContext:
             return builder.gep(element, [self.int32_ty(0), self.int32_ty(0)])
         return element
 
+    def gen_autodiffcomp_exec(self,composition,simulation=False):
+        """Creates llvm bin execute for autodiffcomp"""
+        composition._build_pytorch_representation(composition.default_execution_id)
+        pytorch_model = composition.parameters.pytorch_representation._get(composition.default_execution_id)
+        cond_gen = ConditionGenerator(self, composition)
+
+        name = 'exec_sim_wrap_' if simulation else 'exec_wrap_'
+        name += composition.name
+        args = [self.get_context_struct_type(composition).as_pointer(),
+                self.get_param_struct_type(composition).as_pointer(),
+                self.get_input_struct_type(composition).as_pointer(),
+                self.get_data_struct_type(composition).as_pointer(),
+                cond_gen.get_condition_struct_type().as_pointer()]
+                
+        builder = self.create_llvm_function(args, composition, name)
+        llvm_func = builder.function
+        for a in llvm_func.args:
+            a.attributes.add('noalias')
+
+        context, params, comp_in, data_arg, cond = llvm_func.args
+
+        if "const_params" in debug_env:
+            const_params = params.type.pointee(composition._get_param_initializer(None))
+            params = builder.alloca(const_params.type, name="const_params_loc")
+            builder.store(const_params, params)
+
+        if "alloca_data" in debug_env:
+            data = builder.alloca(data_arg.type.pointee)
+            data_vals = builder.load(data_arg)
+            builder.store(data_vals, data)
+        else:
+            data = data_arg
+
+        # Call input CIM
+        input_cim_w = composition._get_node_wrapper(composition.input_CIM, simulation)
+        input_cim_f = self.get_llvm_function(input_cim_w)
+        # TODO: Figure out why data is passed twice?
+        builder.call(input_cim_f, [context, params, comp_in, data, data])
+
+        if simulation is False and composition.enable_controller and \
+           composition.controller_mode == BEFORE:
+            assert composition.controller is not None
+            controller = composition._get_node_wrapper(composition.controller, simulation)
+            controller_f = self.get_llvm_function(controller)
+            builder.call(controller_f, [context, params, comp_in, data, data])
+
+        # Call pytorch internal compiled llvm func
+        
+        pytorch_forward_func = self.get_llvm_function(pytorch_model._bin_exec_func.name)
+        input_cim_idx = composition._get_node_index(composition.input_CIM)
+
+        model_context = builder.gep(data,[self.int32_ty(0),
+                                        self.int32_ty(0),
+                                        self.int32_ty(input_cim_idx)])
+        model_params = builder.gep(params,[self.int32_ty(0),
+                                        self.int32_ty(2)])
+
+        # Extract the input that should be inserted into the model
+        model_input = builder.gep(data,[self.int32_ty(0),
+                                        self.int32_ty(0),
+                                        self.int32_ty(input_cim_idx)])
+        model_output = builder.gep(data,[self.int32_ty(0),
+                                         ])
+        builder.call(pytorch_forward_func,[model_context,model_params,model_input,model_output])
+        if simulation is False and composition.enable_controller and \
+           composition.controller_mode == AFTER:
+            assert composition.controller is not None
+            controller = composition._get_node_wrapper(composition.controller, simulation)
+            controller_f = self.get_llvm_function(controller)
+            builder.call(controller_f, [context, params, comp_in, data, data])
+
+        
+        # Call output CIM
+        output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation)
+        output_cim_f = self.get_llvm_function(output_cim_w)
+        builder.block.name = "invoke_" + output_cim_f.name
+        builder.call(output_cim_f, [context, params, comp_in, data, data])
+
+        if "alloca_data" in debug_env:
+            data_vals = builder.load(data)
+            builder.store(data_vals, data_arg)
+
+        # Bump run counter
+        cond_gen.bump_ts(builder, cond, (1, 0, 0))
+
+        builder.ret_void()
+
+        return llvm_func
+
     def gen_composition_exec(self, composition, simulation=False):
         # Create condition generator
         cond_gen = ConditionGenerator(self, composition)
@@ -238,6 +326,7 @@ class LLVMBuilderContext:
                 self.get_input_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),
                 cond_gen.get_condition_struct_type().as_pointer()]
+                
         builder = self.create_llvm_function(args, composition, name)
         llvm_func = builder.function
         for a in llvm_func.args:
@@ -261,7 +350,6 @@ class LLVMBuilderContext:
         input_cim_w = composition._get_node_wrapper(composition.input_CIM, simulation)
         input_cim_f = self.get_llvm_function(input_cim_w)
         builder.call(input_cim_f, [context, params, comp_in, data, data])
-
         if simulation is False and composition.enable_controller and \
            composition.controller_mode == BEFORE:
             assert composition.controller is not None

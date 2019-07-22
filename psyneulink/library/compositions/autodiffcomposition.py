@@ -238,7 +238,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
-
+from psyneulink.core import llvm as pnlvm
 import copy
 import numpy as np
 
@@ -466,6 +466,9 @@ class AutodiffComposition(Composition):
         self.loss = None
         self.force_no_retain_graph = force_no_retain_graph
 
+        # stores compiled binary execute function
+        self.__bin_exec_func = None
+
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
 
@@ -502,7 +505,8 @@ class AutodiffComposition(Composition):
                                         self.param_init_from_pnl,
                                         self.execution_sets,
                                         self.device,
-                                        execution_id)
+                                        execution_id,
+                                        composition = self)
             self.parameters.pytorch_representation._set(model, execution_id)
 
         # Set up optimizer function
@@ -572,7 +576,7 @@ class AutodiffComposition(Composition):
         return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
 
     # performs forward computation for one input
-    def autodiff_processing(self, inputs, execution_id=None, do_logging=False, scheduler=None):
+    def autodiff_processing(self, inputs, execution_id=None, do_logging=False, scheduler=None,bin_execute=False):
         pytorch_representation = self.parameters.pytorch_representation._get(execution_id)
         # run the model on inputs - switch autograd off for this (we don't need it)
         with torch.no_grad():
@@ -586,7 +590,7 @@ class AutodiffComposition(Composition):
         return outputs
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
-    def autodiff_training(self, inputs, targets, epochs, execution_id=None, do_logging=False, scheduler=None):
+    def autodiff_training(self, inputs, targets, epochs, execution_id=None, do_logging=False, scheduler=None,bin_execute=False):
 
         # FIX CW 11/1/18: this value of num_inputs assumes all inputs have same length, and that the length of
         # the input for an origin component equals the number of desired trials. We could clean this up
@@ -649,7 +653,7 @@ class AutodiffComposition(Composition):
                     curr_tensor_inputs,
                     execution_id,
                     do_logging,
-                    scheduler=scheduler
+                    scheduler=scheduler,
                 )
 
                 # compute total loss across output neurons for current trial
@@ -711,6 +715,16 @@ class AutodiffComposition(Composition):
         else:
             return outputs
 
+    @property
+    def _bin_exec_func(self):
+        if self.__bin_exec_func is None:
+            with pnlvm.LLVMBuilderContext.get_global() as ctx:
+                self.__bin_exec_func = ctx.gen_autodiffcomp_exec(self)
+        return self.__bin_exec_func
+    
+    def _gen_llvm_function(self):
+        return self._bin_exec_func
+
     def execute(self,
                 inputs=None,
                 autodiff_stimuli=None,
@@ -767,7 +781,6 @@ class AutodiffComposition(Composition):
 
             return output
 
-        # learning not enabled. execute as a normal composition
         return super(AutodiffComposition, self).execute(inputs=inputs,
                                                         scheduler_processing=scheduler_processing,
                                                         termination_processing=termination_processing,
@@ -830,6 +843,7 @@ class AutodiffComposition(Composition):
                     inputs=adjusted_stimuli[stimulus_index],
                     execution_id=execution_id,
                     do_logging=do_logging,
+                    bin_execute = bin_execute
                 )
                 results.append(trial_output)
 
@@ -936,6 +950,36 @@ class AutodiffComposition(Composition):
 
         return weights, biases
 
+    def _get_param_struct_type(self, ctx):
+        # We only need input/output params (rest should be in pytorch model params)
+        mech_param_type_list = (ctx.get_param_struct_type(m) if (m is self.input_CIM or m is self.output_CIM) 
+                                else pnlvm.ir.LiteralStructType([]) for m in self._all_nodes)
+        proj_param_type_list = (ctx.get_param_struct_type(p) if ( p.sender in self.input_CIM.input_states or p.receiver in self.output_CIM.input_states) 
+                                else pnlvm.ir.LiteralStructType([]) for p in self.projections)
+        self._build_pytorch_representation(self.default_execution_id)
+        model = self.parameters.pytorch_representation._get(self.default_execution_id)
+        pytorch_params = model._get_param_struct_type(ctx)
+        return pnlvm.ir.LiteralStructType((
+            pnlvm.ir.LiteralStructType(mech_param_type_list),
+            pnlvm.ir.LiteralStructType(proj_param_type_list),
+            pytorch_params
+            ))
+
+    def _get_param_initializer(self, execution_id, simulation=False):
+        def _parameterize_node(node):
+            if node is self.input_CIM or node is self.output_CIM:
+                return tuple(node._get_param_initializer(execution_id))
+            else:
+                return tuple()
+        
+        mech_params = (_parameterize_node(m)
+                       for m in self._all_nodes if m is not self.controller or not simulation)
+        proj_params = (tuple(p._get_param_initializer(execution_id)) if (p.sender in self.input_CIM.input_states or p.receiver in self.output_CIM.input_states) 
+                       else tuple() for p in self.projections)
+        self._build_pytorch_representation(self.default_execution_id)
+        model = self.parameters.pytorch_representation._get(self.default_execution_id)
+        pytorch_params = model._get_param_struct()
+        return (tuple(mech_params), tuple(proj_params),pytorch_params)
 
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):
