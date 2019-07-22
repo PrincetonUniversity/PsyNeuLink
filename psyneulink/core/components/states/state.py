@@ -1864,11 +1864,21 @@ class State_Base(State):
 
 
             # ASSIGN TO STATE
+            # FIX: 7/22/19 - MAKE METHOD AND USE HERE AND IN _instantiate_projection_to_state
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.efferents
-            if not projection in self.efferents:
-                self.efferents.append(projection)
+            # # MODIFIED 7/22/19 OLD:
+            # if not projection in self.efferents:
+            #     self.efferents.append(projection)
+            # MODIFIED 7/22/19 NEW [JDC]:
+            if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+                warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
+                              format(Projection.__name__, repr(projection.sender.name),
+                                     projection.sender.owner.name,
+                              repr(self.name), self.owner.name, repr(projection.name)))
+                continue
+            # MODIFIED 7/22/19 END
             if isinstance(projection, ModulatoryProjection_Base):
                 self.owner.aux_components.append(projection)
             return projection

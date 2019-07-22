@@ -2486,7 +2486,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif isinstance(receiver, Composition):
                 receiver = receiver.input_CIM.input_state
 
-        if [proj for proj in sender.efferents if proj.receiver is receiver]:
+        if [proj for proj in sender.efferents if proj.receiver is receiver and proj in self.projections]:
             return True
         return False
 
