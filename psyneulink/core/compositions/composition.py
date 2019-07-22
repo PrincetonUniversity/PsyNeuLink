@@ -1684,6 +1684,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             When True, this Projection "breaks" the cycle, such that all Nodes execute in sequence, and only the
             Projection marked as 'feedback' passes to its `receiver <Projection_Base.receiver>` the
             `value <Projection.value>` of its `sender <Projection_Base.sender>` from the previous execution.
+
+        Returns
+        -------
+
+        projection if added, else None
+
     """
 
         projection = self._parse_projection_spec(projection, name)
@@ -1693,7 +1699,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
         receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
-        
+
+        # MODIFIED 7/22/19 NEW: [JDC]
+        if self._check_for_existing_projection(projection):
+            return None
+        # MODIFIED 7/22/19 END
+
         # If Deferred init
         if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
             # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
@@ -1869,7 +1880,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     proj = self.add_projection(sender=pathway[c - 1],
                                                receiver=pathway[c],
                                                feedback=feedback)
-                    projections.append(proj)
+                    # # MODIFIED 7/22/19 OLD:
+                    # projections.append(proj)
+                    # MODIFIED 7/22/19 NEW: [JDC]
+                    if proj:
+                        projections.append(proj)
+                    # MODIFIED 7/22/19 END
             # if the current item is a Projection specification
             elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
                 if c == len(pathway) - 1:
@@ -1884,12 +1900,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  matrix=pathway[c],
                                                  receiver=pathway[c + 1])
 
-                    self.add_projection(projection=proj,
-                                        sender=pathway[c - 1],
-                                        receiver=pathway[c + 1],
-                                        feedback=feedback,
-                                        allow_duplicates=False)
-                    projections.append(proj)
+                    # # MODIFIED 7/22/19 OLD:
+                    # self.add_projection(projection=proj,
+                    #                     sender=pathway[c - 1],
+                    #                     receiver=pathway[c + 1],
+                    #                     feedback=feedback,
+                    #                     allow_duplicates=False)
+                    # projections.append(proj)
+                    # MODIFIED 7/22/19 NEW: [JDC]
+                    proj = self.add_projection(projection=proj,
+                                               sender=pathway[c - 1],
+                                               receiver=pathway[c + 1],
+                                               feedback=feedback,
+                                               allow_duplicates=False)
+                    if proj:
+                        projections.append(proj)
+                    # MODIFIED 7/22/19 END
 
                 else:
                     raise CompositionError(
@@ -2460,7 +2486,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif isinstance(receiver, Composition):
                 receiver = receiver.input_CIM.input_state
 
-        if [proj for proj in sender.efferents if proj.sender is sender and proj.receiver is receiver]:
+        if [proj for proj in sender.efferents if proj.receiver is receiver]:
             return True
         return False
 
