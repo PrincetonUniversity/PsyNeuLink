@@ -838,10 +838,18 @@ class Projection_Base(Projection):
 
         # Assign projection to self.sender's efferents list attribute
         if self not in self.sender.efferents:
-            # MODIFIED 7/22/19 OLD:
+            # # MODIFIED 7/22/19 OLD:
+            # self.sender.efferents.append(self)
+            # # MODIFIED 7/22/19 NEW: [JDC]
+            # FIX: THIS CRASHES IF RECEIVER IS NONE;
+            #      CAN BE FIXED BY HAVING _instantiate_projection_from_state HANDLE THAT GRACEFULLY BY
+            #      SIMPLY ADDING PROJECTION TO self.sender.efferents;  THAT SHOULD ALSO TAKE CARE OF
+            #      CHECKING FOR DUPLICATES
+            # sender._instantiate_projection_from_state(projection_spec=self,
+            #                                           context=context)
+            # MODIFIED 7/22/19 NEWER: [JDC]
+            projection.py_check_for_existing_projection()
             self.sender.efferents.append(self)
-            # MODIFIED 7/22/19 NEW: [JDC]
-
             # MODIFIED 7/22/19 END
 
     def _instantiate_attributes_after_function(self, context=None):
