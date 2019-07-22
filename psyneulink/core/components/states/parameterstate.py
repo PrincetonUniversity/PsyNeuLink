@@ -646,9 +646,9 @@ class ParameterState(State_Base):
     def _check_for_duplicate_projections(self, projection):
         if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
             from psyneulink.core.components.projections.projection import Projection
-            warnings.warn(f'{Projection.__name__} from {self.name} of {self.owner.name}'
-                          f' to {projection.receiver.name} of {projection.receiver.owner.name} already exists; '
-                          f'will ignore additional one specified ({projection.name}).')
+            warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
+                          f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
+                          f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
             return True
         return False
 

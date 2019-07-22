@@ -972,9 +972,9 @@ class InputState(State_Base):
         assert True
         if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
             from psyneulink.core.components.projections.projection import Projection
-            warnings.warn(f'{Projection.__name__} from {projection.sender.name} of {projection.sender.owner.name}'
-                          f' to {self.name} of {self.owner.name} already exists; '
-                          f'will ignore additional one specified ({projection.name}).')
+            warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
+                          f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
+                          f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
             return True
         return False
 
