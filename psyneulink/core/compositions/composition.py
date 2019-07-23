@@ -2349,11 +2349,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
             comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
             learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
-        # MODIFIED 7/22/19 NEW: [JDC]
-        # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
-        elif any(isinstance(p.receiver.owner, LearningMechanism) for p in output_source.efferents)
-            # FIX: ASSIGN target, comparator and learning_mechanism AS ABOVE?  OR CREATE NEW METHOD TO CREATE THEM?
-            pass
+        # # MODIFIED 7/22/19 NEW: [JDC]
+        # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
+        # elif any(isinstance(p.receiver.owner, LearningMechanism) for p in output_source.efferents)
+        #     # FIX: ASSIGN target, comparator and learning_mechanism AS ABOVE?  OR CREATE NEW METHOD TO CREATE THEM?
+        #     pass
         # MODIFIED 7/22/19 END
         else:
             target, comparator, learning_mechanism = \
