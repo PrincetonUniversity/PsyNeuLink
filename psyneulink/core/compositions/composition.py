@@ -1871,7 +1871,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projections = []
 
         # Then, loop through and validate that the Mechanism-Projection relationships make sense
-        # and add MappingProjections where needed
+        # and add MappingProjection(s) where needed
         for c in range(1, len(pathway)):
             # if the current item is a Node
             if isinstance(pathway[c], (Mechanism, Composition, tuple)):
@@ -2058,13 +2058,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return target_mechanism, comparator_mechanism, learning_mechanism
 
-    def _create_multiplayer_backprop_components(self,
-                                                input_source,
-                                                output_source,
-                                                learned_projection,
-                                                learning_rate,
-                                                learning_update,
-                                                previous_learning_mechanism):
+    def _create_multilayer_backprop_components(self,
+                                               input_source,
+                                               output_source,
+                                               learned_projection,
+                                               learning_rate,
+                                               learning_update,
+                                               previous_learning_mechanism):
 
         learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
                                                               output_source.output_states[0].value,
@@ -2349,6 +2349,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
             comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
             learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
+        # MODIFIED 7/22/19 NEW: [JDC]
+        # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
+        elif any(isinstance(p.receiver.owner, LearningMechanism) for p in output_source.efferents)
+            # FIX: ASSIGN target, comparator and learning_mechanism AS ABOVE?  OR CREATE NEW METHOD TO CREATE THEM?
+            pass
+        # MODIFIED 7/22/19 END
         else:
             target, comparator, learning_mechanism = \
                 self._create_terminal_backprop_sequence_components(input_source,
@@ -2365,22 +2371,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # the remaining learning mechanisms
         learning_mechanisms = [learning_mechanism]
         learned_projections = [learned_projection]
-        for ind in range(path_length - 3, 1, -2):
+        for i in range(path_length - 3, 1, -2):
             # set variables for this iteration
-            input_source = processing_pathway[ind-2]
-            learned_projection = processing_pathway[ind-1]
-            output_source = processing_pathway[ind]
+            input_source = processing_pathway[i-2]
+            learned_projection = processing_pathway[i-1]
+            output_source = processing_pathway[i]
             previous_learning_mechanism = learning_mechanisms[-1]
 
-            new_learning_mechanism = self._create_multiplayer_backprop_components(input_source,
-                                                                                  output_source,
-                                                                                  learned_projection,
-                                                                                  learning_rate,
-                                                                                  learning_update,
-                                                                                  previous_learning_mechanism)
+            new_learning_mechanism = self._create_multilayer_backprop_components(input_source,
+                                                                                 output_source,
+                                                                                 learned_projection,
+                                                                                 learning_rate,
+                                                                                 learning_update,
+                                                                                 previous_learning_mechanism)
 
             learning_mechanisms.append(new_learning_mechanism)
             learned_projections.append(learned_projection)
+
+        # MODIFIED 7/22/19 NEW: [JDC]
+        self._analyze_graph()
+        # MODIFIED 7/22/19 END
 
         learning_related_components = {LEARNING_MECHANISM: learning_mechanisms,
                                        COMPARATOR_MECHANISM: comparator,
@@ -4745,6 +4755,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # EXECUTE A MECHANISM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
                 if isinstance(node, Mechanism):
+
+                    # TEST PRINT 7/22/19
+                    print('Executed ',node.name)
 
                     execution_runtime_params = {}
 

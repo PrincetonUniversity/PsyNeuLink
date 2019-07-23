@@ -1190,7 +1190,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                     # FIX: [JDC 7/15/19] - SHOULD THIS HAPPEN OUTSIDE OF SYSTEM OR PROCESS,
                     #  OR BE REMOVED WHEN THOSE ARE FULLY DEPRECATED
                     # IMPLEMENTATION NOTE:
-                    #    _create_terminal_backprop_sequence_components and _create_multiplayer_backprop_components
+                    #    _create_terminal_backprop_sequence_components and _create_multilayer_backprop_components
                     #    in Composition take care of creating projections from error_sources to LearningMechanisms
                     self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source, receiver=self)
                 if isinstance(error_source, ObjectiveMechanism):
