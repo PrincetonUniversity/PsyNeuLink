@@ -2369,7 +2369,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Set learning_mechanism to the one to which output_source projects
             learning_mechanism = next((p.receiver.owner for p in output_source.efferents
                                        if isinstance(p.receiver.owner, LearningMechanism)))
-            # Use existing target and comparator to learning_mechanism for Mechanism to which output_source project
+            # # Use existing target and comparator to learning_mechanism for Mechanism to which output_source project
+            # target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
+            # comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
             target = None
             comparator = None
             sequence_end = path_length-1
@@ -4576,8 +4578,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, input_nodes)
 
         # Animate input_CIM
-        # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
-        #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
+        # FIX: COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
+        #      (NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THAT)
         execution_phase_buffer = self.parameters.context.get(execution_id).execution_phase
         self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
         if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
@@ -4683,6 +4685,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # PREPROCESS (get inputs, call_before_pass, animate first frame) ----------------------------------
 
         if execution_context:
+            # FIX: REPLACE WITH STACK ON CONTEXT ALONG WITH INSTANCES OF execution_phase_buffer
             entry_execution_phase = execution_context.execution_phase
             self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
 
@@ -4780,7 +4783,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(node, Mechanism):
 
                     # TEST PRINT 7/22/19
-                    print('Executed ',node.name)
+                    print(f'Executed {node.name}: {node.variable}')
+                    print(f'{self.name} context: {self.parameters.context.get(self).flags_string}')
 
                     execution_runtime_params = {}
 

@@ -2950,6 +2950,9 @@ class System(System_Base):
                         if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
                             process._report_process_completion()
 
+                # TEST PRINT 7/22/19
+                print(f'Executed {mechanism.name}: {mechanism.variable}')
+
             if i == 0:
                 # Zero input to first mechanism after first run (in case it is repeated in the pathway)
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
@@ -3025,6 +3028,9 @@ class System(System_Base):
 
                     # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                     component.execute(execution_id=execution_id, runtime_params=params, context=context)
+
+                    # TEST PRINT 7/22/19
+                    print(f'Executed {component.name}: {component.variable}')
 
                 elif isinstance(component, MappingProjection):
                     processes = list(component.sender.owner.processes.keys())
