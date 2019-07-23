@@ -1249,12 +1249,14 @@ class OutputState(State_Base):
             except ComponentError:
                 variable = None
 
-        return super()._execute(
+        value = super()._execute(
             variable=variable,
             execution_id=execution_id,
             runtime_params=runtime_params,
             context=context,
         )
+
+        return np.atleast_1d(value)
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
