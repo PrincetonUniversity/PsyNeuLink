@@ -684,6 +684,7 @@ from psyneulink.core.components.component import Component, ComponentsMeta, func
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
+from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ERROR_SIGNAL
@@ -1934,13 +1935,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return explicit_pathway
 
-    def _create_learning_related_mechanisms(self,
-                                            input_source,
-                                            output_source,
-                                            error_function,
-                                            learned_projection,
-                                            learning_rate,
-                                            learning_update):
+    def _create_rl_learning_related_mechanisms(self,
+                                               input_source,
+                                               output_source,
+                                               error_function,
+                                               learned_projection,
+                                               learning_rate,
+                                               learning_update):
         # Create learning components
         target_mechanism = ProcessingMechanism(name='Target')
 
@@ -2041,7 +2042,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
 
-        self.add_nodes(nodes=[target_mechanism, comparator_mechanism, learning_mechanism],
+        self.add_nodes(nodes=[(target_mechanism, NodeRole.TARGET), comparator_mechanism, learning_mechanism],
                        required_roles=NodeRole.LEARNING)
 
         learning_related_projections = self._create_learning_related_projections(input_source,
@@ -2185,13 +2186,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_required_node_role(output_source, NodeRole.OUTPUT)
 
         # Learning Components
-        target, comparator, learning_mechanism = self._create_learning_related_mechanisms(input_source,
-                                                                                          output_source,
-                                                                                          error_function,
-                                                                                          learned_projection,
-                                                                                          learning_rate,
-                                                                                          learning_update)
-        self.add_nodes([target, comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
+        target, comparator, learning_mechanism = self._create_rl_learning_related_mechanisms(input_source,
+                                                                                             output_source,
+                                                                                             error_function,
+                                                                                             learned_projection,
+                                                                                             learning_rate,
+                                                                                             learning_update)
+        self.add_nodes([(target, NodeRole.TARGET), comparator, learning_mechanism],
+                       required_roles=NodeRole.LEARNING)
 
         learning_related_projections = self._create_learning_related_projections(input_source,
                                                                                  output_source,
@@ -2263,7 +2265,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                     learned_projection,
                                                                                     learning_rate,
                                                                                     learning_update)
-        self.add_nodes([target, comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
+        self.add_nodes([(target, NodeRole.TARGET), comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
 
         learning_related_projections = self._create_learning_related_projections(input_source,
                                                                                  output_source,
@@ -2323,8 +2325,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
          LEARNED_PROJECTION: learned_projection}
         """
 
+
         if not error_function:
             error_function = LinearCombination()
+
+        # MODIFIED 7/22/19 NEW: [JDC]
+        self._analyze_graph()
+        # MODIFIED 7/22/19 END
 
         # add_linear_processing_pathway returns the pathway in its most explicit form
         # e.g. if the user specified
@@ -2332,6 +2339,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         path_length = len(processing_pathway)
 
+        # Pathway length must be >=3 (Mechanism, Projection, Mechanism
         if path_length >= 3:
             # get the "terminal_sequence" --
             # the last 2 nodes in the back prop pathway and the projection between them
@@ -2339,22 +2347,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # they inform the construction of the Target and Comparator mechs
             terminal_sequence = processing_pathway[path_length - 3: path_length]
         else:
-            raise CompositionError("Backpropagation pathway specification does not contain enough components. ")
+            raise CompositionError(f"Backpropagation pathway specification ({pathway}) must not contain "
+                                   f"at least three components "
+                                   f"([{Mechanism.__name__}, {Projection.__name__}, {Mechanism.__name__}]).")
 
         # Unpack and process terminal_sequence:
         input_source, learned_projection, output_source = terminal_sequence
 
-        # Create terminal_sequence if it doesn't already exisit
+        # If pathway includes existing terminal_sequence, use that
         if output_source in self._terminal_backprop_sequences:
             target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
             comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
             learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
+            sequence_end = path_length-3
+
         # # MODIFIED 7/22/19 NEW: [JDC]
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
-        # elif any(isinstance(p.receiver.owner, LearningMechanism) for p in output_source.efferents)
-        #     # FIX: ASSIGN target, comparator and learning_mechanism AS ABOVE?  OR CREATE NEW METHOD TO CREATE THEM?
-        #     pass
+        # Otherwise, if output_source already projects to a learning Mechanism, integrate with pathway
+        elif any(isinstance(p.receiver.owner, LearningMechanism) for p in output_source.efferents):
+            # FIX: ASSIGN target, comparator and learning_mechanism AS ABOVE?  OR CREATE NEW METHOD TO CREATE THEM?
+            # Set learning_mechanism to the one to which output_source projects
+            learning_mechanism = next((p.receiver.owner for p in output_source.efferents
+                                       if isinstance(p.receiver.owner, LearningMechanism)))
+            # Use existing target and comparator to learning_mechanism for Mechanism to which output_source project
+            target = None
+            comparator = None
+            sequence_end = path_length-1
         # MODIFIED 7/22/19 END
+        # Otherwise create terminal_sequence if it doesn't already exisit
         else:
             target, comparator, learning_mechanism = \
                 self._create_terminal_backprop_sequence_components(input_source,
@@ -2366,12 +2386,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 COMPARATOR_MECHANISM: comparator}
+            sequence_end = path_length-3
 
         # loop backwards through the rest of the pathway to create and connect
         # the remaining learning mechanisms
         learning_mechanisms = [learning_mechanism]
         learned_projections = [learned_projection]
-        for i in range(path_length - 3, 1, -2):
+        for i in range(sequence_end, 1, -2):
             # set variables for this iteration
             input_source = processing_pathway[i-2]
             learned_projection = processing_pathway[i-1]
@@ -2387,10 +2408,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             learning_mechanisms.append(new_learning_mechanism)
             learned_projections.append(learned_projection)
-
-        # MODIFIED 7/22/19 NEW: [JDC]
-        self._analyze_graph()
-        # MODIFIED 7/22/19 END
 
         learning_related_components = {LEARNING_MECHANISM: learning_mechanisms,
                                        COMPARATOR_MECHANISM: comparator,
@@ -2558,12 +2575,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
         if not self.get_nodes_by_role(NodeRole.OUTPUT):
             if self.get_nodes_by_role(NodeRole.LEARNING):
-                terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
+                # FIX: ADD COMMENT HERE
+                # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
+                terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
+                                       if any([item for item in items
+                                               if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
             else:
                 terminal_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
             if not terminal_nodes:
                 try:
-                    terminal_nodes = self.nodes[-1]
+                    # FIX: ADD COMMENT HERE
+                    terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
+                                           if any([item for item in items
+                                                   if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
                 except IndexError:
                     terminal_nodes = []
             for node in terminal_nodes:
@@ -2582,7 +2606,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <NodeRole.INPUT>` by default. If the required_roles argument of `add_node <Composition.add_node>` is used
         to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
         nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
-
 
         :param graph:
         :param context:

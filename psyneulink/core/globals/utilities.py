@@ -1584,6 +1584,9 @@ class NodeRole(Enum):
 
     LEARNING
         A Node that is only executed when learning is enabled.
+
+    TARGET
+        A Node that receives the target for a learning sequence
     """
     ORIGIN = 0
     INPUT = 1
@@ -1595,6 +1598,7 @@ class NodeRole(Enum):
     FEEDBACK_RECEIVER = 7
     CYCLE = 8
     LEARNING = 9
+    TARGET = 10
 
 def unproxy_weakproxy(proxy):
     """
