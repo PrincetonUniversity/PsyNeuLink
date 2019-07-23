@@ -906,7 +906,7 @@ class Projection_Base(Projection):
             getattr(self.parameters, state_name)._set(value, execution_id)
             # manual setting of previous value to matrix value (happens in above param['matrix'] setting
             if state_name == MATRIX:
-                state.function.parameters.previous_value._set(value, execution_id, override=True)
+                state.function.parameters.previous_value._set(value, execution_id)
 
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)

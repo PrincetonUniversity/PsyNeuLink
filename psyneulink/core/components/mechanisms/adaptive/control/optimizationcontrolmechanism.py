@@ -820,7 +820,7 @@ class OptimizationControlMechanism(ControlMechanism):
             modulatory_signal._variable_spec = (OWNER_VALUE, i)
             self._modulatory_signals[i] = modulatory_signal
         self.defaults.value = np.tile(modulatory_signal.parameters.variable.default_value, (i+1, 1))
-        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), override=True)
+        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value))
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate OptimizationControlMechanism's OptimizatonFunction attributes"""
@@ -871,7 +871,7 @@ class OptimizationControlMechanism(ControlMechanism):
         control_allocation = self.parameters.control_allocation._get(execution_id)
         if control_allocation is None:
             control_allocation = [c.defaults.variable for c in self.control_signals]
-            self.parameters.control_allocation._set(control_allocation, execution_id=None, override=True)
+            self.parameters.control_allocation._set(control_allocation, execution_id=None)
 
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         if hasattr(self.agent_rep, "adapt"):

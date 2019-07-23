@@ -538,10 +538,10 @@ class OptimizationFunction(Function_Base):
 
             if self.parameters.save_samples._get(execution_id):
                 samples.append(new_sample)
-                self.parameters.saved_samples._set(samples, execution_id, override=True)
+                self.parameters.saved_samples._set(samples, execution_id)
             if self.parameters.save_values._get(execution_id):
                 values.append(current_value)
-                self.parameters.saved_values._set(values, execution_id, override=True)
+                self.parameters.saved_values._set(values, execution_id)
 
         return new_sample, new_value, samples, values
 
@@ -1074,8 +1074,8 @@ class GradientOptimization(OptimizationFunction):
 
         if iteration is 0:
             # self._convergence_metric = self.convergence_threshold + EPSILON
-            self.parameters.previous_variable._set(variable, execution_id, override=True)
-            self.parameters.previous_value._set(value, execution_id, override=True)
+            self.parameters.previous_variable._set(variable, execution_id)
+            self.parameters.previous_value._set(value, execution_id)
             return False
 
         # Evaluate for convergence
@@ -1085,8 +1085,8 @@ class GradientOptimization(OptimizationFunction):
             convergence_metric = np.max(np.abs(np.array(variable) -
                                                np.array(previous_variable)))
 
-        self.parameters.previous_variable._set(variable, execution_id, override=True)
-        self.parameters.previous_value._set(value, execution_id, override=True)
+        self.parameters.previous_variable._set(variable, execution_id)
+        self.parameters.previous_value._set(value, execution_id)
 
         return convergence_metric <= self.parameters.convergence_threshold._get(execution_id)
 

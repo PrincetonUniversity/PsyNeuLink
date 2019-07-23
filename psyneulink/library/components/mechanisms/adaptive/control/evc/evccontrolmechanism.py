@@ -1076,7 +1076,7 @@ class EVCControlMechanism(ControlMechanism):
         predicted_input = {}
         for i, origin_mech in zip(range(len(system.origin_mechanisms)), system.origin_mechanisms):
             predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].defaults.variable
-        self.parameters.predicted_input._set(predicted_input, override=True)
+        self.parameters.predicted_input._set(predicted_input)
 
     def _instantiate_attributes_after_function(self, context=None):
         """Validate cost function"""
@@ -1166,7 +1166,6 @@ class EVCControlMechanism(ControlMechanism):
         self.parameters.control_signal_search_space._set(
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals),
             execution_id,
-            override=True
         )
 
         # EXECUTE SEARCH
@@ -1243,7 +1242,7 @@ class EVCControlMechanism(ControlMechanism):
 
         if self.parameters.value._get(execution_id) is None:
             # Initialize value if it is None
-            self.parameters.value._set(np.empty(len(self.control_signals)), execution_id, override=True)
+            self.parameters.value._set(np.empty(len(self.control_signals)), execution_id)
 
         # Implement the current control_allocation over ControlSignals (OutputStates),
         #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states
@@ -1294,7 +1293,7 @@ class EVCControlMechanism(ControlMechanism):
         for i, c in enumerate(self.control_signals):
             if c.parameters.cost_options._get(execution_id) is not None:
                 control_signal_costs[i] = c.parameters.cost._get(execution_id)
-        self.parameters.control_signal_costs._set(control_signal_costs, execution_id, override=True)
+        self.parameters.control_signal_costs._set(control_signal_costs, execution_id)
         # MODIFIED 9/18/18 END
 
         return monitored_states

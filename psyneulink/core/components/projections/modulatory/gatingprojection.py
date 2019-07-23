@@ -124,8 +124,8 @@ def _gating_signal_getter(owning_component=None, execution_id=None):
     return owning_component.sender.parameters.value._get(execution_id)
 
 
-def _gating_signal_setter(value, owning_component=None, execution_id=None, override=False):
-    owning_component.sender.parameters.value._set(value, execution_id, override=override)
+def _gating_signal_setter(value, owning_component=None, execution_id=None):
+    owning_component.sender.parameters.value._set(value, execution_id)
     return value
 
 

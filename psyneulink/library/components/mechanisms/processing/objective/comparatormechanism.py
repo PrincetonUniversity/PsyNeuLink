@@ -404,7 +404,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                          )
 
         # Require Projection to TARGET InputState (already required for SAMPLE as primary InputState)
-        self.input_states[1].parameters.require_projection_in_composition._set(True, override=True)
+        self.input_states[1].parameters.require_projection_in_composition._set(True)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """If sample and target values are specified, validate that they are compatible

@@ -1848,7 +1848,7 @@ class Process(Process_Base):
 
         # Assign items in input to value of each process_input_state
         for i in range(len(self.process_input_states)):
-            self.process_input_states[i].parameters.value._set(input[i], execution_id, override=True)
+            self.process_input_states[i].parameters.value._set(input[i], execution_id)
 
         return input
 
@@ -2324,7 +2324,7 @@ class Process(Process_Base):
         # Assign items of self.target to target_input_states
         #   (ProcessInputStates that project to corresponding target_nodes for the Process)
         for i, target_input_state in zip(range(len(self.target_input_states)), self.target_input_states):
-            target_input_state.parameters.value._set(target[i], execution_id, override=True)
+            target_input_state.parameters.value._set(target[i], execution_id)
 
         # # Zero any input from projections to target(s) from any other processes
         for target_mech in self.target_mechanisms:
@@ -2723,7 +2723,7 @@ class ProcessInputState(OutputState):
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
-        self.parameters.value._set(variable, override=True)
+        self.parameters.value._set(variable)
 
         # self.path_afferents = []
         # self.index = PRIMARY

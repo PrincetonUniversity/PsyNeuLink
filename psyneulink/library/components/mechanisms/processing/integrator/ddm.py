@@ -1173,7 +1173,7 @@ class DDM(ProcessingMechanism):
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
         if isinstance(self.function, IntegratorFunction):
             new_values = self.function.reinitialize(*args, execution_context=execution_id)
-            self.parameters.value._set(np.array(new_values), execution_id, override=True)
+            self.parameters.value._set(np.array(new_values), execution_id)
             self._update_output_states(execution_id=execution_id,
                                        context="REINITIALIZING")
 

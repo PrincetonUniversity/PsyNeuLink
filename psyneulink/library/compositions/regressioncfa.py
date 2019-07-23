@@ -306,7 +306,6 @@ class RegressionCFA(CompositionFunctionApproximator):
             previous_state=previous_state,
             prediction_vector=prediction_vector,
             regression_weights=regression_weights,
-            override=True
         )
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
