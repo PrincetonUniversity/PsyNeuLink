@@ -1472,22 +1472,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 proj._activate_for_compositions(self)
             # MODIFIED 6/11/19 END
 
-    def _parse_projection_spec(self, projection, name):
+    # # MODIFIED 7/22/19 OLD:
+    # def _parse_projection_spec(self, projection, name):
+    #     if isinstance(projection, (np.ndarray, np.matrix, list)):
+    #         return MappingProjection(matrix=projection, name=name)
+    #     elif isinstance(projection, str):
+    #         if projection in MATRIX_KEYWORD_VALUES:
+    #             return MappingProjection(matrix=projection, name=name)
+    #         else:
+    #             raise CompositionError("Invalid projection ({}) specified for {}.".format(projection, self.name))
+    #     elif isinstance(projection, ModulatoryProjection_Base):
+    #         return projection
+    #     elif projection is None:
+    #         return MappingProjection(name=name)
+    #     elif not isinstance(projection, Projection):
+    #         raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
+    #                                .format(projection, self.name))
+    #     return projection
+    # MODIFIED 7/22/19 NEW:
+    def _parse_projection_spec(self, projection, sender, receiver, name):
         if isinstance(projection, (np.ndarray, np.matrix, list)):
-            return MappingProjection(matrix=projection, name=name)
+            return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
             if projection in MATRIX_KEYWORD_VALUES:
-                return MappingProjection(matrix=projection, name=name)
+                return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
             else:
                 raise CompositionError("Invalid projection ({}) specified for {}.".format(projection, self.name))
         elif isinstance(projection, ModulatoryProjection_Base):
             return projection
         elif projection is None:
-            return MappingProjection(name=name)
+            return MappingProjection(sender=sender, receiver=receiver, name=name)
         elif not isinstance(projection, Projection):
             raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
                                    .format(projection, self.name))
         return projection
+    # MODIFIED 7/22/19 END
 
     def _parse_sender_spec(self, projection, sender):
 
@@ -1693,13 +1712,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     """
 
-        projection = self._parse_projection_spec(projection, name)
-        duplicate = False
+        # # MODIFIED 7/22/19 OLD: [JDC] MOVED TO BELOW
+        # projection = self._parse_projection_spec(projection, name)
+        # duplicate = False
+        # MODIFIED 7/22/19 END
 
         # Parse sender and receiver specs
         sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
         receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
+
+        # MODIFIED 7/22/19 OLD: [JDC] MOVED FROM ABOVE
+        projection = self._parse_projection_spec(projection, sender, receiver, name)
+        duplicate = False
+        # MODIFIED 7/22/19 END
 
         # MODIFIED 7/22/19 NEW: [JDC]
         if self._check_for_existing_projection(projection):
@@ -2333,8 +2359,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
         # MODIFIED 7/22/19 END
 
-        # add_linear_processing_pathway returns the pathway in its most explicit form
-        # e.g. if the user specified
+        # Add pathway to graph and get its full specification
         processing_pathway = self.add_linear_processing_pathway(pathway)
 
         path_length = len(processing_pathway)

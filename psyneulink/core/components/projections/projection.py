@@ -818,18 +818,18 @@ class Projection_Base(Projection):
             isinstance(sender, (Mechanism, State, Process_Base))
             or (inspect.isclass(sender) and issubclass(sender, (Mechanism, State)))
         ):
-            raise ProjectionError("PROGRAM ERROR: Invalid specification for {} ({1}) of {} "
-                                  "(including paramClassDefaults: {}".
-                                  format(SENDER, sender, self.name, self.paramClassDefaults[PROJECTION_SENDER]))
+            assert False, \
+                f"PROGRAM ERROR: Invalid specification for {SENDER} ({sender}) of {self.name} " \
+                f"(including paramClassDefaults: {self.paramClassDefaults[PROJECTION_SENDER]})."
 
-        self.sender = sender
         # If self.sender is specified as a Mechanism (rather than a State),
         #     get relevant OutputState and assign it to self.sender
         # IMPLEMENTATION NOTE: Assume that self.sender should be the primary OutputState; if that is not the case,
         #                      self.sender should either be explicitly assigned, or handled in an override of the
         #                      method by the relevant subclass prior to calling super
-        if isinstance(self.sender, Mechanism):
-            self.sender = self.sender.output_state
+        if isinstance(sender, Mechanism):
+            sender = sender.output_state
+        self.sender = sender
 
         # At this point, self.sender should be a OutputState
         if not isinstance(self.sender, OutputState):

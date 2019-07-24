@@ -583,9 +583,9 @@ class TestBackProp:
 
     @pytest.mark.parametrize('order', [
         # 'color_full',
-        # 'word_full',
+        'word_full',
         # 'word_partial',
-        'full_overlap'
+        # 'full_overlap'
     ])
     def test_stroop_model_learning(self, order):
         '''Test backpropagation learning for simple convergent/overlapping pathways'''
