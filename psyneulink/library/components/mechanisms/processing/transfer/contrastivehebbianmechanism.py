@@ -1134,7 +1134,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  additional_output_states:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set=None):
+                 prefs: is_pref_set=None,
+                 **kwargs):
 
         """Instantiate ContrastiveHebbianMechanism
         """
@@ -1225,7 +1226,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -1300,14 +1302,13 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 minus_phase_activity=self.input_states[RECURRENT].socket_template,
                 plus_phase_activity=self.input_states[RECURRENT].socket_template,
                 execution_phase=None,
-                override=True
             )
             if self._target_included:
-                self.parameters.output_activity._set(self.input_states[TARGET].socket_template, override=True)
+                self.parameters.output_activity._set(self.input_states[TARGET].socket_template)
 
         # Initialize execution_phase as minus_phase
         if self.parameters.execution_phase._get(execution_id) is None:
-            self.parameters.execution_phase._set(MINUS_PHASE, execution_id, override=True)
+            self.parameters.execution_phase._set(MINUS_PHASE, execution_id)
 
         if self.parameters.execution_phase._get(execution_id) is MINUS_PHASE:
             self.parameters.current_termination_criterion._set(self.parameters.minus_phase_termination_criterion._get(execution_id), execution_id)
@@ -1320,7 +1321,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             #    input does not contain residual activity of previous trial
             variable[RECURRENT_INDEX] = self.input_states[RECURRENT].socket_template
 
-        self.parameters.is_finished_._set(False, execution_id, override=True)
+        self.parameters.is_finished_._set(False, execution_id)
 
         # Need to store this, as it will be updated in call to super
         previous_value = self.parameters.previous_value._get(execution_id)
@@ -1374,7 +1375,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 # self.current_activity = self.plus_phase_activity
                 self.parameters.current_activity._set(current_activity, execution_id)
                 # self.execution_phase = None
-                self.parameters.is_finished_._set(True, execution_id, override=True)
+                self.parameters.is_finished_._set(True, execution_id)
 
             # Otherwise, prepare for start of plus phase on next execution
             else:
@@ -1390,7 +1391,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 self.parameters.current_termination_condition._set(self.plus_phase_termination_condition, execution_id)
 
             # Switch execution_phase
-            self.parameters.execution_phase._set(not self.parameters.execution_phase._get(execution_id), execution_id, override=True)
+            self.parameters.execution_phase._set(not self.parameters.execution_phase._get(execution_id), execution_id)
             self.parameters.phase_execution_count._set(0, execution_id)
 
         return current_activity

@@ -972,13 +972,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                  **kwargs
                  ):
 
-        if kwargs:
-                for k in kwargs.keys():
-                    if CONTEXT in k:
-                        context=kwargs[CONTEXT]
-                        continue
-                    raise ModulatoryMechanismError("Unrecognized arg in constructor for {}: {}".
-                                                format(self.__class__.__name__, repr(i)))
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         function = function or DefaultAllocationFunction
         modulatory_signals = modulatory_signals or []
@@ -1001,13 +995,14 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self._sim_counts = {}
 
         super(ModulatoryMechanism, self).__init__(default_variable=default_variable,
-                                               size=size,
-                                               modulation=modulation,
-                                               params=params,
-                                               name=name,
-                                               function=function,
-                                               prefs=prefs,
-                                               context=ContextFlags.CONSTRUCTOR)
+                                                  size=size,
+                                                  modulation=modulation,
+                                                  params=params,
+                                                  name=name,
+                                                  function=function,
+                                                  prefs=prefs,
+                                                  context=context,
+                                                  **kwargs)
 
         if system is not None:
             self._activate_projections_for_compositions(system)
@@ -1284,7 +1279,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # For DefaultAllocationFunction, set defaults.value to have number of items equal to num modulatory_signals
         if isinstance(self.function, DefaultAllocationFunction):
             self.defaults.value = np.tile(self.function.value, (num_modulatory_signals, 1))
-            self.parameters.modulatory_allocation._set(copy.deepcopy(self.defaults.value), override=True)
+            self.parameters.modulatory_allocation._set(copy.deepcopy(self.defaults.value))
             self.function.num_modulatory_signals = num_modulatory_signals
 
         # For other functions, assume that if its value has:
@@ -1367,7 +1362,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                 control_signal_costs = np.append(control_signal_costs, np.zeros((1, 1)), axis=0)
             except (AttributeError, ValueError):
                 control_signal_costs = np.zeros((1, 1))
-            self.parameters.control_signal_costs._set(control_signal_costs, override=True)
+            self.parameters.control_signal_costs._set(control_signal_costs)
 
         # UPDATE output_states AND modulatory_projections -------------------------------------------------------------
 

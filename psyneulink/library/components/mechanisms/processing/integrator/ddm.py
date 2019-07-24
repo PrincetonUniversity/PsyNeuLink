@@ -359,7 +359,7 @@ from psyneulink.core.components.functions.distributionfunctions import THRESHOLD
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.core.globals.context import ContextFlags
@@ -601,17 +601,17 @@ class DDMError(Exception):
         return repr(self.error_value)
 
 
-class DDM(ProcessingMechanism_Base):
+class DDM(ProcessingMechanism):
     # DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
     #             ADD INFO ABOUT B VS. N&F
     #             ADD _instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
     """
-    DDM(                    \
-    default_variable=None,  \
-    size=None,              \
-    function=DriftDiffusionAnalytical,    \
-    params=None,            \
-    name=None,              \
+    DDM(                               \
+    default_variable=None,             \
+    size=None,                         \
+    function=DriftDiffusionAnalytical, \
+    params=None,                       \
+    name=None,                         \
     prefs=None)
 
     Implement a Drift Diffusion Process, either by calculating an `analytic solution <DDM_Analytic_Mode>` or carrying
@@ -781,7 +781,7 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class Parameters(ProcessingMechanism_Base.Parameters):
+    class Parameters(ProcessingMechanism.Parameters):
         """
             Attributes
             ----------
@@ -924,13 +924,9 @@ class DDM(ProcessingMechanism_Base):
                                   name=name,
                                   prefs=prefs,
                                   size=size,
-                                  context=ContextFlags.CONSTRUCTOR,
                                   **kwargs),
+
         self._instantiate_plotting_functions()
-        # # TEST PRINT
-        # print("\n{} user_params:".format(self.name))
-        # for param in self.user_params.keys():
-        #     print("\t{}: {}".format(param, self.user_params[param]))
 
 
     def plot(self, stimulus=1.0, threshold=10.0):
@@ -1177,7 +1173,7 @@ class DDM(ProcessingMechanism_Base):
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
         if isinstance(self.function, IntegratorFunction):
             new_values = self.function.reinitialize(*args, execution_context=execution_id)
-            self.parameters.value._set(np.array(new_values), execution_id, override=True)
+            self.parameters.value._set(np.array(new_values), execution_id)
             self._update_output_states(execution_id=execution_id,
                                        context="REINITIALIZING")
 

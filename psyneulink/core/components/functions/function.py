@@ -693,7 +693,7 @@ class Function_Base(Function):
                                context=context,
                                **kwargs)
         self.most_recent_execution_id=execution_id
-        self.parameters.value._set(value, execution_context=execution_id, override=True)
+        self.parameters.value._set(value, execution_context=execution_id)
         return value
 
     def _parse_arg_generic(self, arg_val):

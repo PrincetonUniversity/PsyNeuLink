@@ -91,7 +91,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.inputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import NAME, OWNER_VALUE, SIZE, VARIABLE
+from psyneulink.core.globals.keywords import CONTEXT, NAME, OWNER_VALUE, SIZE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
@@ -194,7 +194,10 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                  function:Function=ContentAddressableMemory,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
+
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         # Template for memory_store entries
         default_variable = [np.zeros(content_size)]
@@ -216,7 +219,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR
+                         context=context,
+                         **kwargs
                          )
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):

@@ -936,7 +936,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
         """Assign type-level preferences and call super.__init__
         """
 
@@ -972,14 +973,15 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                indices=PRIMARY)
 
         super(TransferMechanism, self).__init__(
-            default_variable=default_variable,
-            size=size,
-            input_states=input_states,
-            function=function,
-            params=params,
-            name=name,
-            prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR,
+                default_variable=default_variable,
+                size=size,
+                input_states=input_states,
+                function=function,
+                params=params,
+                name=name,
+                prefs=prefs,
+                context=ContextFlags.CONSTRUCTOR,
+                **kwargs
         )
 
     def _parse_arg_initial_value(self, initial_value):
@@ -1150,7 +1152,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         # if self.integrator_mode:
-        # self.parameters.previous_value._set(None, override=True)
+        # self.parameters.previous_value._set(None)
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -1486,7 +1488,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         value = self._clip_result(clip, value)
 
         # Used by update_previous_value, convergence_function and delta
-        # self.parameters.value._set(np.atleast_2d(value), execution_id, override=True, skip_history=True, skip_log=True)
+        # self.parameters.value._set(np.atleast_2d(value), execution_id, skip_history=True, skip_log=True)
 
         return value
 
@@ -1499,7 +1501,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             value = self.parameters.value._get(execution_id)
             if value is None:
                 value = self.defaults.value
-            self.parameters.previous_value._set(value, execution_id, override=True)
+            self.parameters.previous_value._set(value, execution_id)
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         if context is ContextFlags.INSTANTIATE:
@@ -1521,7 +1523,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                         context,
                                                         execution_id=execution_id)
 
-            self.parameters.integrator_function_value._set(value, execution_id, override=True)
+            self.parameters.integrator_function_value._set(value, execution_id)
             return value
 
         else:

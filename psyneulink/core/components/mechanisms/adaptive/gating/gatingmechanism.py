@@ -426,7 +426,8 @@ class GatingMechanism(ModulatoryMechanism):
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
@@ -441,7 +442,8 @@ class GatingMechanism(ModulatoryMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         context=ContextFlags.CONSTRUCTOR,
+                         **kwargs)
 
     def _instantiate_output_states(self, context=None):
         self._register_modulatory_signal_type(GatingSignal,context)

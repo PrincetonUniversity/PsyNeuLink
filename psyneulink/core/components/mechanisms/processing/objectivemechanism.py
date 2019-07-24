@@ -348,8 +348,8 @@ from psyneulink.core.components.states.inputstate import InputState, INPUT_STATE
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, \
-    OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
+    CONTEXT, CONTROL, EXPONENT, EXPONENTS, FUNCTION, LEARNING, MATRIX, NAME, \
+    OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
     kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
@@ -596,7 +596,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  **kwargs):
 
         # For backward compatibility
-
         if MONITORED_OUTPUT_STATES in kwargs:
             if monitor:
                 raise ObjectiveMechanismError(f'Can\'t specifiy both {repr(MONITOR)} ({monitor}) '
@@ -604,7 +603,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                               f' args of {self.name} specified; pick one!')
             warnings.warn(f'Use of {repr(MONITORED_OUTPUT_STATES)} as arg of {self.__class__.__name__} is deprecated;  '
                           f'use {repr(MONITOR)} instead')
-            monitor = kwargs[MONITORED_OUTPUT_STATES]
+            monitor = kwargs.pop(MONITORED_OUTPUT_STATES)
+
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         monitor = monitor or None # deal with possibility of empty list
         input_states = monitor
@@ -633,7 +634,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         context=context,
+                         **kwargs)
 
         # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
         #    the controller for a System;  it is set by the ControlMechanism when it creates the ObjectiveMechanism

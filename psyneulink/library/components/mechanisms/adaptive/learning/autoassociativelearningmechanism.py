@@ -328,7 +328,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs
+                 ):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
@@ -355,7 +357,8 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         **kwargs
+                         )
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         return variable
@@ -432,7 +435,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         value = np.array([learning_signal])
 
-        self.parameters.value._set(value, execution_id, override=True)
+        self.parameters.value._set(value, execution_id)
 
         return value
 

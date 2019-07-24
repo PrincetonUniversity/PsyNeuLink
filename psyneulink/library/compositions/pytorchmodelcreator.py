@@ -167,8 +167,8 @@ class PytorchModelCreator(torch.nn.Module):
     def copy_outputs_to_psyneulink(self, outputs, execution_id=None):
         for component, value in outputs.items():
             detached_value = value.detach().numpy()
-            component.parameters.value._set(detached_value, execution_id, override=True, skip_history=True, skip_log=True)
-            component.output_state.parameters.value._set(detached_value, execution_id, override=True, skip_history=True, skip_log=True)
+            component.parameters.value._set(detached_value, execution_id, skip_history=True, skip_log=True)
+            component.output_state.parameters.value._set(detached_value, execution_id, skip_history=True, skip_log=True)
 
     def log_weights(self, execution_id=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
