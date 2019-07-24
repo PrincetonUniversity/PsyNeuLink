@@ -2149,9 +2149,6 @@ class State_Base(State):
     def _get_input_struct_type(self, ctx):
         return ctx.get_input_struct_type(self.function)
 
-    def _get_output_struct_type(self, ctx):
-        return ctx.get_output_struct_type(self.function)
-
     def _get_param_struct_type(self, ctx):
         return ctx.get_param_struct_type(self.function)
 
