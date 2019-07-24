@@ -20,8 +20,6 @@ except ImportError:
 
 import numpy as np
 
-totaltime = 0
-total_nonbin_time = 0
 __all__ = ['PytorchModelCreator']
 # Class that is called to create pytorch representations of autodiff compositions based on their processing graphs.
 # Called to do so when the composition is run for the first time.
@@ -366,8 +364,6 @@ class PytorchModelCreator(torch.nn.Module):
 
     # performs forward computation for the model
     def forward(self, inputs, execution_id=None, do_logging=True,scheduler=None):
-        global total_nonbin_time
-        start_time = timeit.default_timer()
         outputs = {}  # dict for storing values of terminal (output) nodes
 
         for i in range(len(self.execution_sets)):
@@ -416,9 +412,6 @@ class PytorchModelCreator(torch.nn.Module):
         self.copy_outputs_to_psyneulink(outputs, execution_id)
         if do_logging:
             self.log_weights(execution_id)
-        #print("EXPECTED:",outputs)
-        total_nonbin_time += timeit.default_timer() - start_time
-        #print("NOBIN:",total_nonbin_time)
         return outputs
 
     def detach_all(self):
