@@ -379,36 +379,77 @@ class TestBackProp:
         #     else:
         #         print(node.name, " EMPTY LOG!")
 
-    def test_stroop_with_backprop(self):
-        # Mechanisms
-        color = pnl.TransferMechanism(size=2,
-                                      function=pnl.Linear(),
-                                      name='color')
-        word = pnl.TransferMechanism(size=2,
-                                     function=pnl.Linear(),
-                                     name='word')
-        hidden = pnl.TransferMechanism(size=2,
-                                       function=pnl.Logistic(),
-                                       name='hidden')
-        response = pnl.TransferMechanism(size=2,
-                                         function=pnl.Logistic(),
-                                         name='response')
-        # Weights
-        ch_weights = np.arange(4).reshape((2, 2))
-        wh_weights = np.arange(4).reshape((2, 2))
-        ho_weights = np.arange(4).reshape((2, 2))
+    def test_stroop_model_learning(self):
 
-        # Assemble Composition
-        comp = pnl.Composition(name='stroop-with-learning')
-        comp.add_back_propagation_pathway(pathway=[color, ch_weights, hidden, ho_weights, response])
-        learning_components = comp.add_back_propagation_pathway(pathway=[word, wh_weights, hidden, ho_weights, response
-                                                   ])
-        target = learning_components[pnl.TARGET_MECHANISM]
-        comp.run(inputs={color: [[1, 1]],
-                         word: [[-2, -2]],
-                         target: [[1, 1]]},
-                 num_trials=2)
-        print(response.value)
+        num_trials = 2
+
+        color_to_hidden_wts = np.arange(4).reshape((2, 2))
+        word_to_hidden_wts = np.arange(4).reshape((2, 2))
+        hidden_to_response_wts = np.arange(4).reshape((2, 2))
+
+        # CONSTRUCT MODEL ---------------------------------------------------------------------------
+
+        color_comp = pnl.TransferMechanism(size=2, name='Color')
+        word_comp = pnl.TransferMechanism(size=2, name='Word')
+        hidden_comp = pnl.TransferMechanism(size=2, function=pnl.Logistic(), name='Hidden')
+        response_comp = pnl.TransferMechanism(size=2, function=pnl.Logistic(), name='Response')
+        comp = pnl.Composition(name='Stroop Model - Composition')
+        comp.add_back_propagation_pathway(pathway=[color_comp,
+                                                   color_to_hidden_wts.copy(),
+                                                   hidden_comp,
+                                                   hidden_to_response_wts.copy(),
+                                                   response_comp],
+                                          learning_rate=1)
+        # comp.show_graph(show_learning=True)
+        comp.add_back_propagation_pathway(pathway=[word_comp,
+                                                   word_to_hidden_wts.copy(),
+                                                   hidden_comp],
+                                          learning_rate=1)
+
+        # RUN MODEL ---------------------------------------------------------------------------
+
+        # print('\nEXECUTING COMPOSITION-----------------------\n')
+        target = comp.get_nodes_by_role(pnl.NodeRole.TARGET)[0]
+        results_comp = comp.run(inputs={color_comp: [[1, 1]],
+                                        word_comp: [[-2, -2]],
+                                        target: [[1, 1]]},
+                                num_trials=num_trials)
+        # print('\nCOMPOSITION RESULTS')
+        # print(f'Results: {comp.results}')
+        # print(f'color_to_hidden_comp: {comp.projections[0].get_mod_matrix(comp)}')
+        # print(f'word_to_hidden_comp: {comp.projections[15].get_mod_matrix(comp)}')
+
+        # VALIDATE RESULTS ---------------------------------------------------------------------------
+        # Note:  numbers based on test of System in tests/learning/test_stroop
+
+        composition_and_expected_outputs = [
+            (color_comp.output_states[0].parameters.value.get(comp), np.array([1., 1.])),
+            (word_comp.output_states[0].parameters.value.get(comp), np.array([-2., -2.])),
+            (hidden_comp.output_states[0].parameters.value.get(comp), np.array([0.13227553, 0.01990677])),
+            (response_comp.output_states[0].parameters.value.get(comp), np.array([0.51044657, 0.5483048])),
+            (comp.nodes[4].output_states[0].parameters.value.get(comp), np.array([0.48955343, 0.4516952])),
+            (comp.nodes[4].output_states[pnl.MSE].parameters.value.get(comp), np.array(0.22184555903789838)),
+            (comp.projections[0].get_mod_matrix(comp), np.array([
+                [ 0.02512045, 1.02167245],
+                [ 2.02512045, 3.02167245],
+            ])),
+            (comp.projections[15].get_mod_matrix(comp), np.array([
+                [-0.05024091, 0.9566551 ],
+                [ 1.94975909, 2.9566551 ],
+            ])),
+            (comp.projections[1].get_mod_matrix(comp), np.array([
+                [ 0.03080958, 1.02830959],
+                [ 2.00464242, 3.00426575],
+            ])),
+            (results_comp, [np.array([0.51044657, 0.5483048])]),
+        ]
+
+        for i in range(len(composition_and_expected_outputs)):
+            val, expected = composition_and_expected_outputs[i]
+            # setting absolute tolerance to be in accordance with reference_output precision
+            # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
+            # which WILL FAIL unless you gather higher precision values to use as reference
+            np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
     def test_multilayer(self):
 
@@ -449,9 +490,11 @@ class TestBackProp:
                  num_trials=10)
 
     
-    @pytest.mark.parametrize('models', [[pnl.SYSTEM,pnl.COMPOSITION],
-                                        [pnl.SYSTEM,'AUTODIFF'],
-                                        [pnl.COMPOSITION,'AUTODIFF']])
+    @pytest.mark.parametrize('models', [
+        # [pnl.SYSTEM,pnl.COMPOSITION],
+        # [pnl.SYSTEM,'AUTODIFF'],
+        [pnl.COMPOSITION,'AUTODIFF']
+    ])
     def test_xor_training_identicalness_system_composition_autodiff(self, models):
         """Test equality of results for running 3-layered xor network using System, Composition and Audodiff"""
 
