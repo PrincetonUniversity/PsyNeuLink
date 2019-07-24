@@ -2951,7 +2951,7 @@ class System(System_Base):
                             process._report_process_completion()
 
                 # TEST PRINT 7/22/19
-                print(f'Executed {mechanism.name}: {mechanism.variable}')
+                print(f'Executed {mechanism.name}: \n\tvariable: {mechanism.variable}\n\tvalue: {mechanism.value}')
 
             if i == 0:
                 # Zero input to first mechanism after first run (in case it is repeated in the pathway)
@@ -3030,7 +3030,7 @@ class System(System_Base):
                     component.execute(execution_id=execution_id, runtime_params=params, context=context)
 
                     # TEST PRINT 7/22/19
-                    print(f'Executed {component.name}: {component.variable}')
+                    print(f'Executed {component.name}: \n\tvariable: {component.variable}\n\tvalue: {component.value}')
 
                 elif isinstance(component, MappingProjection):
                     processes = list(component.sender.owner.processes.keys())
