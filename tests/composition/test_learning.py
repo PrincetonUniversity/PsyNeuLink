@@ -380,6 +380,7 @@ class TestBackProp:
         #         print(node.name, " EMPTY LOG!")
 
     def test_stroop_model_learning(self):
+        '''Test backpropagation learning in convergent pathway'''
 
         num_trials = 2
 
@@ -397,13 +398,17 @@ class TestBackProp:
         comp.add_back_propagation_pathway(pathway=[color_comp,
                                                    color_to_hidden_wts.copy(),
                                                    hidden_comp,
-                                                   hidden_to_response_wts.copy(),
-                                                   response_comp],
+                                                   # hidden_to_response_wts.copy(),
+                                                   # response_comp
+                                                   ],
                                           learning_rate=1)
         # comp.show_graph(show_learning=True)
         comp.add_back_propagation_pathway(pathway=[word_comp,
                                                    word_to_hidden_wts.copy(),
-                                                   hidden_comp],
+                                                   hidden_comp,
+                                                   hidden_to_response_wts.copy(),
+                                                   response_comp
+                                                   ],
                                           learning_rate=1)
 
         # RUN MODEL ---------------------------------------------------------------------------
@@ -427,8 +432,8 @@ class TestBackProp:
             (word_comp.output_states[0].parameters.value.get(comp), np.array([-2., -2.])),
             (hidden_comp.output_states[0].parameters.value.get(comp), np.array([0.13227553, 0.01990677])),
             (response_comp.output_states[0].parameters.value.get(comp), np.array([0.51044657, 0.5483048])),
-            (comp.nodes[4].output_states[0].parameters.value.get(comp), np.array([0.48955343, 0.4516952])),
-            (comp.nodes[4].output_states[pnl.MSE].parameters.value.get(comp), np.array(0.22184555903789838)),
+            (comp.nodes[8].output_states[0].parameters.value.get(comp), np.array([0.48955343, 0.4516952])),
+            (comp.nodes[8].output_states[pnl.MSE].parameters.value.get(comp), np.array(0.22184555903789838)),
             (comp.projections[0].get_mod_matrix(comp), np.array([
                 [ 0.02512045, 1.02167245],
                 [ 2.02512045, 3.02167245],
