@@ -2038,7 +2038,7 @@ class State_Base(State):
                         continue
                     # Otherwise, for efficiency, assign OVERRIDE value to State here and return
                     else:
-                        self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), execution_id, override=True)
+                        self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), execution_id)
                         return
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
@@ -2050,7 +2050,7 @@ class State_Base(State):
         # Handle ModulatoryProjection OVERRIDE
         #    if there is one and it wasn't been handled above (i.e., if paramValidation is set)
         if modulatory_override:
-            self.parameters.value._set(type_match(modulatory_override[1], type(self.defaults.value)), execution_id, override=True)
+            self.parameters.value._set(type_match(modulatory_override[1], type(self.defaults.value)), execution_id)
             return
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------

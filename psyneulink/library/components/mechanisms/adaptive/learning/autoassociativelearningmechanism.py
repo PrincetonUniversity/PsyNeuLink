@@ -435,7 +435,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         value = np.array([learning_signal])
 
-        self.parameters.value._set(value, execution_id, override=True)
+        self.parameters.value._set(value, execution_id)
 
         return value
 
