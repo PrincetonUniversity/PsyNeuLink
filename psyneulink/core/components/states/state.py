@@ -2164,6 +2164,10 @@ class State_Base(State):
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         main_function = ctx.get_llvm_function(self.function)
+        # OutputState returns 1D array even for scalar functions
+        if arg_out.type != main_function.args[3].type:
+            assert len(arg_out.type.pointee) == 1
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.call(main_function, [params, context, arg_in, arg_out])
 
         return builder
