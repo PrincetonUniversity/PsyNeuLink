@@ -250,8 +250,8 @@ class ModulatoryProjection_Base(Projection_Base):
                                             format(self, ContextFlags._get_context_string(self.context.flags,
                                                                                           INITIALIZATION_STATUS)))
 
-def _delete_projection(projection):
-    """Delete Projection and its entry in receiver and sender lists"""
-    del projection.sender.efferents[projection]
-    del projection.receiver.mod_afferents[projection]
-    del projection
+    def _delete_projection(projection):
+        """Delete Projection and its entry in receiver and sender lists"""
+        del projection.sender.efferents[projection.sender.efferents.index(projection)]
+        del projection.receiver.mod_afferents[projection.receiver.mod_afferents.index(projection)]
+        del projection

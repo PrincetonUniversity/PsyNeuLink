@@ -2154,7 +2154,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
 
-        self.add_nodes(nodes=[(target_mechanism, NodeRole.TARGET), comparator_mechanism, learning_mechanism],
+        self.add_nodes(nodes=[(target_mechanism, NodeRole.TARGET),
+                              comparator_mechanism,
+                              learning_mechanism],
                        required_roles=NodeRole.LEARNING)
 
         learning_related_projections = self._create_learning_related_projections(input_source,
@@ -2536,7 +2538,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Add error_signal projection from new learning_mechanism to LearningMechanism for old output_source
             #    (to replace its old_comparator)
             if terminal_sequence_replaced:
-                self.add_projection(sender=learning_mechanism,
+                self.add_projection(sender=learning_mechanism.output_states[ERROR_SIGNAL],
                                     receiver=old_learning_mechanism.input_states[ERROR_SIGNAL])
 
 

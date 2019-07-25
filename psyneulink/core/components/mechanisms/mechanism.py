@@ -3344,8 +3344,6 @@ class Mechanism_Base(Mechanism):
         """
         # from psyneulink.core.components.states.inputstate import INPUT_STATE
         from psyneulink.core.components.states.outputstate import OutputState
-        from psyneulink.core.components.projections.pathway.pathwayprojection import _delete_projection
-        from psyneulink.core.components.projections.modulatory.modulatoryprojection import _delete_projection
 
         # Put in list to standardize treatment below
         if not isinstance(states, list):
@@ -3353,7 +3351,7 @@ class Mechanism_Base(Mechanism):
 
         def delete_state_projections(proj_list):
             for proj in proj_list:
-                _delete_projection(proj)
+                type(proj)._delete_projection(proj)
 
         for state in states:
 
@@ -3395,6 +3393,13 @@ class Mechanism_Base(Mechanism):
                                               component=state)
 
         self.defaults.variable = self.input_values
+
+    def _delete_mechanism(mechanism):
+        mechanism.remove_states(mechanism.input_states)
+        mechanism.remove_states(mechanism.parameter_states)
+        mechanism.remove_states(mechanism.output_states)
+        del mechanism.function
+        del mechanism
 
     def _get_mechanism_param_values(self):
         """Return dict with current value of each ParameterState in paramsCurrent

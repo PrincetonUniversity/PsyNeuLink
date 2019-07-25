@@ -1050,6 +1050,9 @@ class Projection_Base(Projection):
             self.parameter_states,
         ))
 
+    def _delete_projection(projection):
+        raise ProjectionError(f"{Projection.__name__} class {type(projection)} does not implement _delete method.")
+
 
 @tc.typecheck
 def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
@@ -2169,7 +2172,3 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                                                       name=sender.name+'.output_states')
 
     output_state._instantiate_projections_to_state(projections=projection_spec, context=context)
-
-
-def _delete_projection(projection):
-    raise ProjectionError(f"{Projection.__name__} class {type(projection)} does not implement _delete method.")
