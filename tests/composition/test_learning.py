@@ -651,7 +651,8 @@ class TestBackProp:
                                           learning_rate=1)
         comp.add_backpropagation_pathway(pathway=word_pathway,
                                           learning_rate=1)
-        comp.show_graph(show_learning=True)
+        # comp.show_graph(show_learning=True)
+
         # RUN MODEL ---------------------------------------------------------------------------
 
         # print('\nEXECUTING COMPOSITION-----------------------\n')

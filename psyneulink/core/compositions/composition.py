@@ -684,10 +684,11 @@ from psyneulink.core.components.component import Component, ComponentsMeta, func
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.mechanism import MechanismRegistry
 from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ERROR_SIGNAL
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
+    LearningMechanism, ACTIVATION_OUTPUT, ERROR_SIGNAL
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
@@ -700,11 +701,13 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.core.globals.registry import remove_instance_from_registry
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, CONDITIONS, FUNCTIONS, HARD_CLAMP, \
-    IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX, MATRIX_KEYWORD_VALUES, MECHANISMS, \
-    NAME, NO_CLAMP, ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
+    MATRIX, MATRIX_KEYWORD_VALUES, MECHANISM, MECHANISMS, NAME, NO_CLAMP, \
+    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
@@ -2487,6 +2490,37 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Otherwise create terminal_sequence for the sequence,
         #    and eliminate existing terminal_sequences previously created for Mechanisms now in the pathway
         else:
+
+            # MODIFIED 7/22/19 NEW: [JDC]
+            # Eliminate any existing comparators and targets for Mechanisms now in the pathway that were output_sources
+            #   (i.e., ones that belong to previously-created sequences that overlap with the current one)
+            terminal_sequence_replaced = False
+            for old_output_source in [m for m in pathway[:-1:] if isinstance(m, Mechanism)]:
+
+                old_comparator = next((p.receiver.owner for p in old_output_source.efferents
+                                       if (isinstance(p.receiver.owner, ComparatorMechanism)
+                                           and p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING))),
+                                      None)
+                if old_comparator:
+                    old_target = next((p.sender.owner for p in old_comparator.input_states[TARGET].path_afferents
+                                       if p.sender.owner in self.get_nodes_by_role(NodeRole.TARGET)),
+                                      None)
+                    self.remove_nodes([old_comparator, old_target])
+                    remove_instance_from_registry(MechanismRegistry, old_comparator.__class__.__name__,
+                                                  component=old_comparator)
+                    remove_instance_from_registry(MechanismRegistry, old_target.__class__.__name__,
+                                                  component=old_target)
+                    del old_comparator
+                    del old_target
+                    old_learning_mechanism = next((p.receiver.owner for p in old_output_source.efferents
+                                                   if (isinstance(p.receiver.owner, LearningMechanism)
+                                                       and p.receiver.owner in self.nodes
+                                                       and ACTIVATION_OUTPUT in p.receiver.name )),
+                                                  None)
+                    assert True
+                    terminal_sequence_replaced = True
+            # MODIFIED 7/22/19 END
+
             # Create teminal_sequence
             target, comparator, learning_mechanism = \
                 self._create_terminal_backprop_sequence_components(input_source,
@@ -2498,27 +2532,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 COMPARATOR_MECHANISM: comparator}
+
+            # Add error_signal projection from new learning_mechanism to LearningMechanism for old output_source
+            #    (to replace its old_comparator)
+            if terminal_sequence_replaced:
+                self.add_projection(sender=learning_mechanism,
+                                    receiver=old_learning_mechanism.input_states[ERROR_SIGNAL])
+
+
             sequence_end = path_length-3
-
-            # MODIFIED 7/22/19 NEW: [JDC]
-            # FIX: MOVE TO ABOVE SO OLD IS DELETED BEFORE NEW IS CREATED, AND REMOVE FROM REGISTRY
-            #      (LOOK AT RELEVANT System METHOD FOR EXAMPLE)
-            # Eliminate any existing comparators and targets for Mechanisms now in the pathway
-            #   (i.e., ones that belong to rpeviously-created sequences that overlap with the current one)
-            for mech in [m for m in pathway[:-1:] if isinstance(m, Mechanism)]:
-                old_comparator = next((p.receiver.owner for p in mech.efferents
-                                       if (isinstance(p.receiver.owner, ComparatorMechanism)
-                                           and p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING))),
-                                      None)
-                if old_comparator:
-                    old_target = next((p.sender.owner for p in old_comparator.input_states[TARGET].path_afferents
-                                       if p.sender.owner in self.get_nodes_by_role(NodeRole.TARGET)),
-                                      None)
-                    self.remove_nodes([old_comparator, old_target])
-            # FIX: NEED TO ALSO CREATE PROJECTION FROM NEW LEARNINGMECHANISM TO MECHANISM THAT USED TO PROJECT TO
-            #  COMPARATOR
-            # MODIFIED 7/22/19 END
-
 
         # loop backwards through the rest of the pathway to create and connect
         # the remaining learning mechanisms
