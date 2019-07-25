@@ -134,3 +134,9 @@ class PathwayProjection_Base(Projection_Base):
                                             format(self,
                                                    ContextFlags._get_context_string(
                                                            self.context.flags, INITIALIZATION_STATUS)))
+
+def _delete_projection(projection):
+    """Delete Projection and its entry in receiver and sender lists"""
+    del projection.sender.efferents[projection]
+    del projection.receiver.path_afferents[projection]
+    del projection

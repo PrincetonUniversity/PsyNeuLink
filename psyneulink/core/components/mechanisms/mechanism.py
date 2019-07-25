@@ -956,9 +956,9 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
-    INPUT_LABELS_DICT, INPUT_STATES, INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    OUTPUT_LABELS_DICT, OUTPUT_STATES, OWNER_VALUE, PARAMETER_STATES, PREVIOUS_VALUE, REFERENCE_VALUE, \
-    TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
+    INPUT_LABELS_DICT, INPUT_STATE, INPUT_STATES, INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
+    OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, \
+    REFERENCE_VALUE, TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
 from psyneulink.core.globals.parameters import Parameter, parse_execution_context
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -3338,26 +3338,32 @@ class Mechanism_Base(Mechanism):
         ---------
 
         states : State or List[State]
-            one more `InputStates <InputState>` or `OutputStates <OutputState>` to be removed from the Mechanism.
-            State specification(s) can be an InputState or OutputState object or the name of one.
+            one more states to be removed from the Mechanism.
+            State specification(s) can be an State object or the name of one.
 
         """
-        from psyneulink.core.components.states.inputstate import INPUT_STATE
-        from psyneulink.core.components.states.outputstate import OutputState, OUTPUT_STATE
+        # from psyneulink.core.components.states.inputstate import INPUT_STATE
+        from psyneulink.core.components.states.outputstate import OutputState
+        from psyneulink.core.components.projections.pathway.pathwayprojection import _delete_projection
+        from psyneulink.core.components.projections.modulatory.modulatoryprojection import _delete_projection
 
         # Put in list to standardize treatment below
         if not isinstance(states, list):
             states = [states]
 
-        input_states = []
-        output_states = []
+        def delete_state_projections(proj_list):
+            for proj in proj_list:
+                _delete_projection(proj)
 
         for state in states:
+
+            delete_state_projections(state.mod_afferents)
 
             if state in self.input_states:
                 if isinstance(state, str):
                     state = self.input_states[state]
                 index = self.input_states.index(state)
+                delete_state_projections(state.path_afferents)
                 del self.input_states[index]
                 remove_instance_from_registry(registry=self._stateRegistry,
                                               category=INPUT_STATE,
@@ -3366,11 +3372,22 @@ class Mechanism_Base(Mechanism):
                 old_variable = np.delete(old_variable,index,0)
                 self.defaults.variable = old_variable
 
+            elif state in self.parameter_states:
+                if isinstance(state, ParameterState):
+                    index = self.parameter_states.index(state)
+                else:
+                    index = self.parameter_states.index(self.parameter_states[state])
+                del self.parameter_states[index]
+                remove_instance_from_registry(registry=self._stateRegistry,
+                                              category=PARAMETER_STATE,
+                                              component=state)
+
             elif state in self.output_states:
                 if isinstance(state, OutputState):
                     index = self.output_states.index(state)
                 else:
                     index = self.output_states.index(self.output_states[state])
+                delete_state_projections(state.efferents)
                 del self.output_states[state]
                 del self.output_values[index]
                 remove_instance_from_registry(registry=self._stateRegistry,
