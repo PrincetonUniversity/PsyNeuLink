@@ -1805,17 +1805,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
 
+        # FIX: 7/22/19 [JDC] - THIS COULD BE CLEANED UP MORE
         # MODIFIED 7/22/19 NEW: [JDC] MOVED FROM ABOVE
         try:
             projection = self._parse_projection_spec(projection, sender, receiver, name)
         except DuplicateProjectionError:
             return None
         duplicate = False
-        # MODIFIED 7/22/19 END
-
-        # MODIFIED 7/22/19 NEW: [JDC]
-        if self._check_for_existing_projection(projection):
-            return None
         # MODIFIED 7/22/19 END
 
         # If Deferred init
@@ -1834,6 +1830,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projection.init_args['sender'] = sender
                 projection.init_args['receiver'] = receiver
                 projection._deferred_init(context=" INITIALIZING ")
+
+        # MODIFIED 7/22/19 NEW: [JDC]
+        elif self._check_for_existing_projection(projection, sender=sender, receiver=receiver):
+            return None
+        # MODIFIED 7/22/19 END
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
