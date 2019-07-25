@@ -1598,9 +1598,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if hasattr(projection, "sender"):
                 sender = projection.sender.owner
             else:
-                raise CompositionError("For a Projection to be added to a Composition, a sender must be specified, "
-                                       "either on the Projection or in the call to Composition.add_projection(). {}"
-                                       " is missing a sender specification. ".format(projection.name))
+                raise CompositionError(f"{projection.name} is missing a sender specification. "
+                                       f"For a Projection to be added to a Composition a sender must be specified, "
+                                       "either on the Projection or in the call to Composition.add_projection(). ")
 
         # initialize all receiver-related variables
         graph_sender = sender_mechanism = sender_output_state = sender
@@ -1795,6 +1795,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     """
 
+        # FIX: 7/22/19 [JDC] - THIS COULD BE CLEANED UP MORE
+
         # # MODIFIED 7/22/19 OLD: [JDC] MOVED TO BELOW
         # projection = self._parse_projection_spec(projection, name)
         # duplicate = False
@@ -1805,7 +1807,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
 
-        # FIX: 7/22/19 [JDC] - THIS COULD BE CLEANED UP MORE
         # MODIFIED 7/22/19 NEW: [JDC] MOVED FROM ABOVE
         try:
             projection = self._parse_projection_spec(projection, sender, receiver, name)
