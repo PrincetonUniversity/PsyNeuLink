@@ -1800,6 +1800,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # # MODIFIED 7/22/19 OLD: [JDC] MOVED TO BELOW
         # projection = self._parse_projection_spec(projection, name)
         # duplicate = False
+        # MODIFIED 7/22/19 NEWER:
+        try:
+            projection = self._parse_projection_spec(projection, sender, receiver, name)
+        except DuplicateProjectionError:
+            return None
+        duplicate = False
         # MODIFIED 7/22/19 END
 
         # Parse sender and receiver specs
@@ -1807,12 +1813,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
 
-        # MODIFIED 7/22/19 NEW: [JDC] MOVED FROM ABOVE
-        try:
-            projection = self._parse_projection_spec(projection, sender, receiver, name)
-        except DuplicateProjectionError:
-            return None
-        duplicate = False
+        # # MODIFIED 7/22/19 NEW: [JDC] MOVED FROM ABOVE
+        # try:
+        #     projection = self._parse_projection_spec(projection, sender, receiver, name)
+        # except DuplicateProjectionError:
+        #     return None
+        # duplicate = False
         # MODIFIED 7/22/19 END
 
         # If Deferred init

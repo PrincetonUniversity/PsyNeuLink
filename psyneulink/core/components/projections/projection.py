@@ -860,8 +860,11 @@ class Projection_Base(Projection):
             # MODIFIED 7/22/19 NEWER: [JDC]
             # Then make sure there is not already a projection to its receiver
             receiver = self.receiver
-            if isinstance(self.receiver, Mechanism):
-                receiver = self.receiver.input_state
+            if isinstance(receiver, Composition):
+                receiver = receiver.input_CIM
+            if isinstance(receiver, Mechanism):
+                receiver = receiver.input_state
+
             if not receiver._check_for_duplicate_projections(self):
                 self.sender.efferents.append(self)
             else:

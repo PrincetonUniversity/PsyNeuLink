@@ -780,7 +780,7 @@ class TestRumelhartSemanticNetwork:
         comp.show_graph(show_learning=True)
         # validate_learning_mechs(comp)
 
-        # print(S.origin_mechanisms)
+        # print(S.orixgin_mechanisms)
         # print(S.terminal_mechanisms)
         # comp.run(
         #       # num_trials=2,
