@@ -690,6 +690,7 @@ from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolm
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ERROR_SIGNAL
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -863,9 +864,34 @@ class Graph(object):
 
     def remove_component(self, component):
         try:
-            self.remove_vertex(self.comp_to_vertex(component))
+            self.remove_vertex(self.comp_to_vertex[component])
         except KeyError as e:
             raise CompositionError('Component {1} not found in graph {2}: {0}'.format(e, component, self))
+        # MODIFIED 7/22/19 NEWER: [JDC]
+        if isinstance(component, (Mechanism, Composition)):
+            for proj in component.afferents:
+                try:
+                    self.remove_component(proj)
+                except:
+                    pass
+            for proj in component.efferents:
+                try:
+                    self.remove_component(proj)
+                except:
+                    pass
+        # MODIFIED 7/22/19 NEW
+        for vertex in self.vertices:
+            children_to_remove = set()
+            for i, child in enumerate(vertex.children):
+                if child.component is component:
+                    children_to_remove.add(vertex.children[i])
+            vertex.children = [c for c in vertex.children if c not in children_to_remove]
+            parents_to_remove = set()
+            for i, parent in enumerate(vertex.parents):
+                if parent.component is component:
+                    parents_to_remove.add(vertex.parents[i])
+            vertex.parents = [p for p in vertex.parents if p not in parents_to_remove]
+        # MODIFIED 7/22/19 END
 
     def remove_vertex(self, vertex):
         try:
@@ -875,6 +901,18 @@ class Graph(object):
             #   check if this removal puts the graph in an inconsistent state
         except ValueError as e:
             raise CompositionError('Vertex {1} not found in graph {2}: {0}'.format(e, vertex, self))
+        # FIX: 7/22/19 WHY DOESN'T THIS WORK INSTEAD OF DOING IT IN remove_component?
+        # for vertex in self.vertices:
+        #     children_to_remove = set()
+        #     for i, child in enumerate(vertex.children):
+        #         if child is vertex:
+        #             children_to_remove.add(vertex.children[i])
+        #     vertex.children = [c for c in vertex.children if c not in children_to_remove]
+        #     parents_to_remove = set()
+        #     for i, parent in enumerate(vertex.parents):
+        #         if parent is vertex:
+        #             parents_to_remove.add(vertex.parents[i])
+        #     vertex.parents = [p for p in vertex.parents if p not in parents_to_remove]
 
     def connect_components(self, parent, child):
         try:
@@ -1049,17 +1087,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             aggregates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
             input_CIM and its InputStates serve as proxies for the Composition itself in terms of afferent projections.
 
-        output_CIM : `CompositionInterfaceMechanism`
-            aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
-            output_CIM and its OutputStates serve as proxies for Composition itself in terms of efferent projections.
-
         input_CIM_states : dict
             a dictionary in which keys are InputStates of INPUT Nodes in a composition, and values are lists
             containing two items: the corresponding InputState and OutputState on the input_CIM.
 
+        afferents : ContentAddressableList
+            a list of all of the `Projections <Projection>` to the Composition's `input_CIM`.
+
+        output_CIM : `CompositionInterfaceMechanism`
+            aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
+            output_CIM and its OutputStates serve as proxies for Composition itself in terms of efferent projections.
+
         output_CIM_states : dict
             a dictionary in which keys are OutputStates of OUTPUT Nodes in a composition, and values are lists
             containing two items: the corresponding InputState and OutputState on the input_CIM.
+
+        efferents : ContentAddressableList
+            a list of all of the `Projections <Projection>` from the Composition's `output_CIM`.
 
         env : Gym Forager Environment : default: None
             stores a Gym Forager Environment so that the Composition may interact with this environment within a
@@ -1430,6 +1474,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
                                        f"or a tuple containing one of those and a {NodeRole.__name__} or list of them")
 
+    def remove_nodes(self, nodes):
+        if not isinstance(nodes, (list, Mechanism, Composition)):
+            assert False, 'Argument of remove_nodes must be a Mechanism, Composition or list containing either or both'
+        nodes = convert_to_list(nodes)
+        for node in nodes:
+            for proj in node.afferents:
+                try:
+                    del self.projections[proj]
+                # FIX: 7/22/19: CHECK THAT ALL ARE PASSING AND THEN MANAGE EXCEPTION
+                except:
+                    pass
+                # MODIFIED 7/22/19 OLD:
+                # try:
+                #     self.graph.remove_component(proj)
+                # except:
+                #     pass
+                # MODIFIED 7/22/19 END
+            for proj in node.efferents:
+                try:
+                    del self.projections[proj]
+                # FIX: 7/22/19: CHECK THAT ALL ARE PASSING AND THEN MANAGE EXCEPTION
+                except:
+                    pass
+                # MODIFIED 7/22/19 OLD:
+                # try:
+                #     self.graph.remove_component(proj)
+                # except:
+                #     pass
+                # MODIFIED 7/22/19 END
+            self.graph.remove_component(node)
+            del self.nodes_to_roles[node]
+            node_role_pairs = [item for item in self.required_node_roles if item[0] is node]
+            for item in node_role_pairs:
+                self.required_node_roles.remove(item)
+            del self.nodes[node]
+
     def add_controller(self, controller:ModulatoryMechanism):
         """
         Add an `OptimizationControlMechanism` as the `controller
@@ -1722,8 +1802,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
 
-        # MODIFIED 7/22/19 OLD: [JDC] MOVED FROM ABOVE
-        projection = self._parse_projection_spec(projection, sender, receiver, name)
+        # MODIFIED 7/22/19 NEW: [JDC] MOVED FROM ABOVE
+        try:
+            projection = self._parse_projection_spec(projection, sender, receiver, name)
+        except DuplicateProjectionError:
+            return None
         duplicate = False
         # MODIFIED 7/22/19 END
 
@@ -2310,7 +2393,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_related_components
 
-    def add_back_propagation_pathway(self, pathway, learning_rate=0.05, error_function=None,
+    def add_backpropagation_pathway(self, pathway, learning_rate=0.05, error_function=None,
                                      learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
         """Add linear processing pathway with backpropogation learning
 
@@ -2379,7 +2462,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Unpack and process terminal_sequence:
         input_source, learned_projection, output_source = terminal_sequence
 
-        # If pathway includes existing terminal_sequence, use that
+        # If pathway includes existing terminal_sequence for the output_source, use that
         if output_source in self._terminal_backprop_sequences:
             target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
             comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
@@ -2388,7 +2471,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # # MODIFIED 7/22/19 NEW: [JDC]
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
-        # Otherwise, if output_source already projects to a learning Mechanism, integrate with pathway
+        # Otherwise, if output_source already projects to a learning Mechanism, integrate with existing sequence
         elif any(isinstance(p.receiver.owner, LearningMechanism) for p in output_source.efferents):
             # FIX: ASSIGN target, comparator and learning_mechanism AS ABOVE?  OR CREATE NEW METHOD TO CREATE THEM?
             # Set learning_mechanism to the one to which output_source projects
@@ -2401,8 +2484,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             comparator = None
             sequence_end = path_length-1
         # MODIFIED 7/22/19 END
-        # Otherwise create terminal_sequence if it doesn't already exisit
+        # Otherwise create terminal_sequence for the sequence,
+        #    and eliminate existing terminal_sequences previously created for Mechanisms now in the pathway
         else:
+            # Create teminal_sequence
             target, comparator, learning_mechanism = \
                 self._create_terminal_backprop_sequence_components(input_source,
                                                                    output_source,
@@ -2414,6 +2499,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 TARGET_MECHANISM: target,
                                                                 COMPARATOR_MECHANISM: comparator}
             sequence_end = path_length-3
+
+            # MODIFIED 7/22/19 NEW: [JDC]
+            # FIX: MOVE TO ABOVE SO OLD IS DELETED BEFORE NEW IS CREATED, AND REMOVE FROM REGISTRY
+            #      (LOOK AT RELEVANT System METHOD FOR EXAMPLE)
+            # Eliminate any existing comparators and targets for Mechanisms now in the pathway
+            #   (i.e., ones that belong to rpeviously-created sequences that overlap with the current one)
+            for mech in [m for m in pathway[:-1:] if isinstance(m, Mechanism)]:
+                old_comparator = next((p.receiver.owner for p in mech.efferents
+                                       if (isinstance(p.receiver.owner, ComparatorMechanism)
+                                           and p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING))),
+                                      None)
+                if old_comparator:
+                    old_target = next((p.sender.owner for p in old_comparator.input_states[TARGET].path_afferents
+                                       if p.sender.owner in self.get_nodes_by_role(NodeRole.TARGET)),
+                                      None)
+                    self.remove_nodes([old_comparator, old_target])
+            # FIX: NEED TO ALSO CREATE PROJECTION FROM NEW LEARNINGMECHANISM TO MECHANISM THAT USED TO PROJECT TO
+            #  COMPARATOR
+            # MODIFIED 7/22/19 END
+
 
         # loop backwards through the rest of the pathway to create and connect
         # the remaining learning mechanisms
@@ -6156,3 +6261,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def learning_components(self):
         return [node for node in self.nodes if NodeRole.LEARNING in self.nodes_to_roles[node]]
+
+    @property
+    def afferents(self):
+        return ContentAddressableList(component_type=Projection,
+                                      list=[proj for proj in self.input_CIM.afferents])
+
+    @property
+    def efferents(self):
+        return ContentAddressableList(component_type=Projection,
+                                      list=[proj for proj in self.output_CIM.efferents])

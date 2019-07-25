@@ -315,7 +315,6 @@ class TestNestedLearning:
                                                                               rl_agent_action])
         rl_agent._analyze_graph()
 
-
         model = pnl.Composition(name='Adaptive Replay Model')
         model.add_nodes([stim_in, context_in, reward_in, perceptual_state, rl_agent, action])
         model.add_projection(sender=perceptual_state, receiver=rl_agent_state)
@@ -323,7 +322,7 @@ class TestNestedLearning:
         model.add_projection(sender=rl_agent_action, receiver=action)
         model.add_projection(sender=rl_agent, receiver=action)
 
-        # model.show_graph(show_controller=True, show_nested=True, show_node_structure=True)
+        model.show_graph(show_controller=True, show_nested=True, show_node_structure=True)
 
         stimuli = {stim_in: np.array([1] * stim_size),
                    context_in: np.array([10] * context_size)}
@@ -348,7 +347,7 @@ class TestBackProp:
                                              function=pnl.Logistic())
 
         comp = pnl.Composition(name="backprop-composition")
-        learning_components = comp.add_back_propagation_pathway(pathway=[input_layer, hidden_layer, output_layer],
+        learning_components = comp.add_backpropagation_pathway(pathway=[input_layer, hidden_layer, output_layer],
                                                                 learning_rate=0.5)
         # learned_projection = learning_components[pnl.LEARNED_PROJECTION]
         # learned_projection.log.set_log_conditions(pnl.MATRIX)
@@ -404,7 +403,7 @@ class TestBackProp:
         comp = pnl.Composition(name='multilayer')
 
         p = [input_layer, input_weights, hidden_layer_1, middle_weights, hidden_layer_2, output_weights, output_layer]
-        learning_components = comp.add_back_propagation_pathway(pathway=p,
+        learning_components = comp.add_backpropagation_pathway(pathway=p,
                                                                 learning_rate=1.)
 
         target_node = learning_components[pnl.TARGET_MECHANISM]
@@ -504,7 +503,7 @@ class TestBackProp:
     
             xor_comp = pnl.Composition()
     
-            learning_components = xor_comp.add_back_propagation_pathway([input_comp,
+            learning_components = xor_comp.add_backpropagation_pathway([input_comp,
                                                                          in_to_hidden_comp,
                                                                          hidden_comp,
                                                                          hidden_to_out_comp,
@@ -648,11 +647,11 @@ class TestBackProp:
             assert False, 'Bad order specified for test_stroop_model_learning'
 
         comp = pnl.Composition(name='Stroop Model - Composition')
-        comp.add_back_propagation_pathway(pathway=color_pathway,
+        comp.add_backpropagation_pathway(pathway=color_pathway,
                                           learning_rate=1)
-        # comp.show_graph(show_learning=True)
-        comp.add_back_propagation_pathway(pathway=word_pathway,
+        comp.add_backpropagation_pathway(pathway=word_pathway,
                                           learning_rate=1)
+        comp.show_graph(show_learning=True)
         # RUN MODEL ---------------------------------------------------------------------------
 
         # print('\nEXECUTING COMPOSITION-----------------------\n')
@@ -668,15 +667,15 @@ class TestBackProp:
 
         # VALIDATE RESULTS ---------------------------------------------------------------------------
         # Note:  numbers based on test of System in tests/learning/test_stroop
-        assert True
 
         composition_and_expected_outputs = [
             (color_comp.output_states[0].parameters.value.get(comp), np.array([1., 1.])),
             (word_comp.output_states[0].parameters.value.get(comp), np.array([-2., -2.])),
             (hidden_comp.output_states[0].parameters.value.get(comp), np.array([0.13227553, 0.01990677])),
             (response_comp.output_states[0].parameters.value.get(comp), np.array([0.51044657, 0.5483048])),
-            (comp.nodes['Comparator'].output_states[0].parameters.value.get(comp), np.array([0.48955343, 0.4516952])),
-            (comp.nodes['Comparator'].output_states[pnl.MSE].parameters.value.get(comp), np.array(0.22184555903789838)),
+            (comp.nodes['Comparator-1'].output_states[0].parameters.value.get(comp), np.array([0.48955343, 0.4516952])),
+            (comp.nodes['Comparator-1'].output_states[pnl.MSE].parameters.value.get(comp), np.array(
+                    0.22184555903789838)),
             (comp.projections[0].get_mod_matrix(comp), np.array([
                 [ 0.02512045, 1.02167245],
                 [ 2.02512045, 3.02167245],
