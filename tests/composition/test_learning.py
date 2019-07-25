@@ -582,8 +582,8 @@ class TestBackProp:
 
     @pytest.mark.parametrize('order', [
         # 'color_full',
-        'word_full',
-        # 'word_partial',
+        'word_partial',
+        # 'word_full',
         # 'full_overlap'
     ])
     def test_stroop_model_learning(self, order):
@@ -651,7 +651,7 @@ class TestBackProp:
                                           learning_rate=1)
         comp.add_backpropagation_pathway(pathway=word_pathway,
                                           learning_rate=1)
-        comp.show_graph(show_learning=True)
+        # comp.show_graph(show_learning=True)
 
         # RUN MODEL ---------------------------------------------------------------------------
 
