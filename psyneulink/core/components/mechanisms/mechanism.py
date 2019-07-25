@@ -3346,7 +3346,7 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.states.outputstate import OutputState
 
         # Put in list to standardize treatment below
-        if not isinstance(states, list):
+        if not isinstance(states, (list, ContentAddressableList)):
             states = [states]
 
         def delete_state_projections(proj_list):
@@ -3386,8 +3386,8 @@ class Mechanism_Base(Mechanism):
                 else:
                     index = self.output_states.index(self.output_states[state])
                 delete_state_projections(state.efferents)
-                del self.output_states[state]
                 del self.output_values[index]
+                del self.output_states[state]
                 remove_instance_from_registry(registry=self._stateRegistry,
                                               category=OUTPUT_STATE,
                                               component=state)
@@ -3398,8 +3398,11 @@ class Mechanism_Base(Mechanism):
         mechanism.remove_states(mechanism.input_states)
         mechanism.remove_states(mechanism.parameter_states)
         mechanism.remove_states(mechanism.output_states)
-        del mechanism.function
+        # del mechanism.function
+        remove_instance_from_registry(MechanismRegistry, mechanism.__class__.__name__,
+                                      component=mechanism)
         del mechanism
+
 
     def _get_mechanism_param_values(self):
         """Return dict with current value of each ParameterState in paramsCurrent

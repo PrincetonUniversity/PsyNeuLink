@@ -684,7 +684,7 @@ from psyneulink.core.components.component import Component, ComponentsMeta, func
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
-from psyneulink.core.components.mechanisms.mechanism import MechanismRegistry
+from psyneulink.core.components.mechanisms.mechanism import MechanismRegistry, Mechanism_Base
 from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
@@ -1892,7 +1892,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
             Calls `add_projection <Composition.add_projection>` for each Projection in the *projections* list. Each
             Projection must have its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`
-            already specified.
+            already specified.  If an item in the list is a list of projections, called recursively on that list.
 
             Arguments
             ---------
@@ -1903,7 +1903,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if isinstance(projections, list):
             for projection in projections:
-                if isinstance(projection, Projection) and \
+                if isinstance(projection, list):
+                    self.add_projections(projection)
+                elif isinstance(projection, Projection) and \
                         hasattr(projection, "sender") and \
                         hasattr(projection, "receiver"):
                     self.add_projection(projection)
@@ -2008,10 +2010,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(pathway[c - 1], (Mechanism, Composition)) \
                         and isinstance(pathway[c + 1], (Mechanism, Composition)):
                     proj = pathway[c]
-                    if isinstance(pathway[c], (np.ndarray, np.matrix, list)):
-                        proj = MappingProjection(sender=pathway[c - 1],
-                                                 matrix=pathway[c],
-                                                 receiver=pathway[c + 1])
+                    # # MODIFIED 7/22/19 OLD:
+                    # if isinstance(pathway[c], (np.ndarray, np.matrix, list)):
+                    #     proj = MappingProjection(sender=pathway[c - 1],
+                    #                              matrix=pathway[c],
+                    #                              receiver=pathway[c + 1])
+                    # MODIFIED 7/22/19 NEW:
+                    try:
+                        if isinstance(pathway[c], (np.ndarray, np.matrix, list)):
+                            proj = MappingProjection(sender=pathway[c - 1],
+                                                     matrix=pathway[c],
+                                                     receiver=pathway[c + 1])
+                    except DuplicateProjectionError:
+                        # FIX: 7/22/19 ADD WARNING HERE??
+                        pass
+                    # MODIFIED 7/22/19 END
 
                     # # MODIFIED 7/22/19 OLD:
                     # self.add_projection(projection=proj,
@@ -2226,9 +2239,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               receiver=learning_mechanism.input_states[0])
         act_out_projection = MappingProjection(sender=output_source.output_states[0],
                                                receiver=learning_mechanism.input_states[1])
+        # MODIFIED 7/22/19 OLD:
         error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
                                                     receiver=learning_mechanism.input_states[2])
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
+        # # MODIFIED 7/22/19 XXX NEW:
+        # error_signal_projections = []
+        # for learning_mech in learning_mechanism.dependent_learning_mechanisms:
+        #     error_signal_projections.append(MappingProjection(sender=comparator.output_states[OUTCOME],
+        #                                                       receiver=learning_mechanism.input_states[2]))
+        return [target_projection, sample_projection, error_signal_projections, act_out_projection, act_in_projection]
+        # MODIFIED 7/22/19 END
 
     def _create_learning_projection(self, learning_mechanism, learned_projection):
 
@@ -2443,10 +2464,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not error_function:
             error_function = LinearCombination()
 
-        # MODIFIED 7/22/19 NEW: [JDC]
-        self._analyze_graph()
-        # MODIFIED 7/22/19 END
-
         # Add pathway to graph and get its full specification
         processing_pathway = self.add_linear_processing_pathway(pathway)
 
@@ -2494,9 +2511,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
 
             # MODIFIED 7/22/19 NEW: [JDC]
-            # Eliminate any existing comparators and targets for Mechanisms now in the pathway that were output_sources
+            # Eliminate existing comparators and targets for Mechanisms now in the pathway that were output_sources
             #   (i.e., ones that belong to previously-created sequences that overlap with the current one)
-            terminal_sequence_replaced = False
+            old_learning_mechanisms = []
             for old_output_source in [m for m in pathway[:-1:] if isinstance(m, Mechanism)]:
 
                 old_comparator = next((p.receiver.owner for p in old_output_source.efferents
@@ -2508,19 +2525,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        if p.sender.owner in self.get_nodes_by_role(NodeRole.TARGET)),
                                       None)
                     self.remove_nodes([old_comparator, old_target])
-                    remove_instance_from_registry(MechanismRegistry, old_comparator.__class__.__name__,
-                                                  component=old_comparator)
-                    remove_instance_from_registry(MechanismRegistry, old_target.__class__.__name__,
-                                                  component=old_target)
-                    del old_comparator
-                    del old_target
-                    old_learning_mechanism = next((p.receiver.owner for p in old_output_source.efferents
-                                                   if (isinstance(p.receiver.owner, LearningMechanism)
-                                                       and p.receiver.owner in self.nodes
-                                                       and ACTIVATION_OUTPUT in p.receiver.name )),
-                                                  None)
-                    assert True
-                    terminal_sequence_replaced = True
+                    Mechanism_Base._delete_mechanism(old_comparator)
+                    Mechanism_Base._delete_mechanism(old_target)
+                    old_learning_mechanisms.append(next((p.receiver.owner for p in old_output_source.efferents
+                                                         if (isinstance(p.receiver.owner, LearningMechanism)
+                                                             and p.receiver.owner in self.nodes
+                                                             and ACTIVATION_OUTPUT in p.receiver.name )),
+                                                        None))
             # MODIFIED 7/22/19 END
 
             # Create teminal_sequence
@@ -2535,11 +2546,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 TARGET_MECHANISM: target,
                                                                 COMPARATOR_MECHANISM: comparator}
 
-            # Add error_signal projection from new learning_mechanism to LearningMechanism for old output_source
-            #    (to replace its old_comparator)
-            if terminal_sequence_replaced:
+            # # MODIFIED 7/22/19 NEW:
+            if old_learning_mechanisms:
                 self.add_projection(sender=learning_mechanism.output_states[ERROR_SIGNAL],
-                                    receiver=old_learning_mechanism.input_states[ERROR_SIGNAL])
+                                    receiver=old_learning_mechanisms[0].input_states[ERROR_SIGNAL])
+                old_learning_mechanisms[0].error_matrices[0] = \
+                    learning_mechanism.learned_projections[0].parameter_states[MATRIX]
+            # # MODIFIED 7/22/19 NEWER:
+            # # Update old_learning_mechanism
+            # for old_learning_mech in old_learning_mechanisms:
+            #     # Get LearningMechanism(s) providing new source(s) of error_signal(s) (replaces old comparator)
+            #     # FIX 7/22/19: STILL NEED TO ADD CHECK IF LEARNING PROJECTION
+            #     #              p.parameter_states[MATRIX].mod_afferents[0]IS IN COMPOSITION
+            #     for error_sources in [p.parameter_states[MATRIX].mod_afferents[0].sender.owner
+            #                           for p in old_learning_mech.output_source.efferents
+            #                           if (p.has_learning_projection and p in self.projections]:
+            #         new_error_source = old_learning_mech.input_states[ACTIVATION_OUTPUT].path_afferents[0].sender.owner
+            #         # Get index of error_signal associated with new error_source
+            #         # Add projection from that
+            #         self.add_projection(sender=new_error_source.output_states[ERROR_SIGNAL],
+            #                             receiver=old_learning_mech.input_states[ERROR_SIGNAL])
+            #         # Update old_learning_mech's error_matrices with new projection
+            #         error_matrix = \
+            #             old_learning_mech.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner.learning_signal.receiver.matrix
+            # MODIFIED 7/22/19 OLD
 
 
             sequence_end = path_length-3
@@ -2569,6 +2599,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        COMPARATOR_MECHANISM: comparator,
                                        TARGET_MECHANISM: target,
                                        LEARNED_PROJECTION: learned_projections}
+
+        # MODIFIED 7/22/19 NEW: [JDC]
+        self._analyze_graph()
+        # MODIFIED 7/22/19 END
 
         return learning_related_components
 

@@ -1305,12 +1305,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         """
 
         # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
-        current_error_signal_inputs = self.error_signal_input_states
-        # Get indices of error_signal InputStates
-        error_signal_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
+        error_signal_indices = self.error_signal_indices
         error_signal_inputs = variable[error_signal_indices]
+        # FIX 7/22/19 [JDC] MOVE THIS TO ITS OWN METHOD CALLED ON INITALIZATION AND UPDTATED AS NECESSARY
         if self.error_matrices is None:
-            # FIX: [JDC 7/15/19] - STILL NEEDED??
             # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
             if self.function is BackPropagation or isinstance(self.function, BackPropagation):
                 mat = []
@@ -1404,9 +1402,19 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 return [s for s in self.input_states if ERROR_SIGNAL in s]
 
     @property
+    def error_signal_indices(self):
+        current_error_signal_inputs = self.error_signal_input_states
+        return [self.input_states.index(s) for s in current_error_signal_inputs]
+
+    @property
     def primary_learned_projection(self):
         return self.learned_projections[0]
 
     @property
     def learned_projections(self):
         return [lp.receiver.owner for ls in self.learning_signals for lp in ls.efferents]
+
+    @property
+    def dependent_learning_mechanisms(self):
+        return [p.parameter_states[MATRIX].mod_afferents[0].sender.owner for p in self.input_source.path_afferents
+                if p.has_learning_projection]

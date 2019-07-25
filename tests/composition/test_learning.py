@@ -581,10 +581,10 @@ class TestBackProp:
             assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_comp.get_mod_matrix(xor_comp))
 
     @pytest.mark.parametrize('order', [
-        # 'color_full',
+        'color_full',
         'word_partial',
-        # 'word_full',
-        # 'full_overlap'
+        'word_full',
+        'full_overlap'
     ])
     def test_stroop_model_learning(self, order):
         '''Test backpropagation learning for simple convergent/overlapping pathways'''
@@ -677,18 +677,21 @@ class TestBackProp:
             (comp.nodes['Comparator'].output_states[0].parameters.value.get(comp), np.array([0.48955343, 0.4516952])),
             (comp.nodes['Comparator'].output_states[pnl.MSE].parameters.value.get(comp), np.array(
                     0.22184555903789838)),
-            (comp.projections[0].get_mod_matrix(comp), np.array([
-                [ 0.02512045, 1.02167245],
-                [ 2.02512045, 3.02167245],
-            ])),
-            (comp.projections[15].get_mod_matrix(comp), np.array([
-                [-0.05024091, 0.9566551 ],
-                [ 1.94975909, 2.9566551 ],
-            ])),
-            (comp.projections[1].get_mod_matrix(comp), np.array([
-                [ 0.03080958, 1.02830959],
-                [ 2.00464242, 3.00426575],
-            ])),
+            (comp.projections['MappingProjection from Color[RESULTS] to Hidden[InputState-0]'].get_mod_matrix(comp),
+             np.array([
+                 [ 0.02512045, 1.02167245],
+                 [ 2.02512045, 3.02167245],
+             ])),
+            (comp.projections['MappingProjection from Word[RESULTS] to Hidden[InputState-0]'].get_mod_matrix(comp),
+             np.array([
+                 [-0.05024091, 0.9566551 ],
+                 [ 1.94975909, 2.9566551 ],
+             ])),
+            (comp.projections['MappingProjection from Hidden[RESULTS] to Response[InputState-0]'].get_mod_matrix(comp),
+             np.array([
+                 [ 0.03080958, 1.02830959],
+                 [ 2.00464242, 3.00426575],
+             ])),
             (results_comp, [np.array([0.51044657, 0.5483048])]),
         ]
 
