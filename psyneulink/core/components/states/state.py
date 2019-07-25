@@ -2147,6 +2147,8 @@ class State_Base(State):
         return False
 
     def _get_input_struct_type(self, ctx):
+        # Use function input type. The shape should be the same,
+        # however, some functions still need input shape workarounds.
         return ctx.get_input_struct_type(self.function)
 
     def _get_param_struct_type(self, ctx):
