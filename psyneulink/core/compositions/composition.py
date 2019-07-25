@@ -1573,7 +1573,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                .format(projection, self.name))
     #     return projection
     # MODIFIED 7/22/19 NEW:
-    def _parse_projection_spec(self, projection, sender, receiver, name):
+    def _parse_projection_spec(self, projection, sender=None, receiver=None, name=None):
         if isinstance(projection, (np.ndarray, np.matrix, list)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
@@ -1802,7 +1802,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # duplicate = False
         # MODIFIED 7/22/19 NEWER:
         try:
-            projection = self._parse_projection_spec(projection, sender, receiver, name)
+            # projection = self._parse_projection_spec(projection, sender, receiver, name)
+            projection = self._parse_projection_spec(projection, name)
         except DuplicateProjectionError:
             return None
         duplicate = False
