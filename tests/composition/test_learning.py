@@ -674,8 +674,8 @@ class TestBackProp:
             (word_comp.output_states[0].parameters.value.get(comp), np.array([-2., -2.])),
             (hidden_comp.output_states[0].parameters.value.get(comp), np.array([0.13227553, 0.01990677])),
             (response_comp.output_states[0].parameters.value.get(comp), np.array([0.51044657, 0.5483048])),
-            (comp.nodes['Comparator-1'].output_states[0].parameters.value.get(comp), np.array([0.48955343, 0.4516952])),
-            (comp.nodes['Comparator-1'].output_states[pnl.MSE].parameters.value.get(comp), np.array(
+            (comp.nodes['Comparator'].output_states[0].parameters.value.get(comp), np.array([0.48955343, 0.4516952])),
+            (comp.nodes['Comparator'].output_states[pnl.MSE].parameters.value.get(comp), np.array(
                     0.22184555903789838)),
             (comp.projections[0].get_mod_matrix(comp), np.array([
                 [ 0.02512045, 1.02167245],
