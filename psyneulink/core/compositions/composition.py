@@ -898,6 +898,11 @@ class Graph(object):
 
     def remove_vertex(self, vertex):
         try:
+            for parent in vertex.parents:
+                parent.children.remove(vertex)
+            for child in vertex.children:
+                child.parents.remove(vertex)
+
             self.vertices.remove(vertex)
             del self.comp_to_vertex[vertex.component]
             # TODO:
@@ -2822,16 +2827,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def remove_vertex(vertex):
             logger.debug('Removing', vertex)
             for parent in vertex.parents:
-                parent.children.remove(vertex)
                 for child in vertex.children:
-                    child.parents.remove(vertex)
                     if vertex.feedback:
                         child.backward_sources.add(parent.component)
                     self._graph_processing.connect_vertices(parent, child)
-            # ensure that children get removed even if vertex has no parents
+            # ensure that children get handled
             if len(vertex.parents) == 0:
                 for child in vertex.children:
-                    child.parents.remove(vertex)
                     if vertex.feedback:
                         child.backward_sources.add(parent.component)
 
