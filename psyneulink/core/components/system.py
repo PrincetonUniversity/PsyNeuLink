@@ -2950,8 +2950,8 @@ class System(System_Base):
                         if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
                             process._report_process_completion()
 
-                # TEST PRINT 7/22/19
-                print(f'Executed {mechanism.name}: \n\tvariable: {mechanism.variable}\n\tvalue: {mechanism.value}')
+                # # TEST PRINT 7/22/19
+                # print(f'Executed {mechanism.name}: \n\tvariable: {mechanism.variable}\n\tvalue: {mechanism.value}')
 
             if i == 0:
                 # Zero input to first mechanism after first run (in case it is repeated in the pathway)
