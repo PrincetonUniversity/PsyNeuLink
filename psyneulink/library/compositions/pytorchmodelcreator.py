@@ -225,16 +225,13 @@ class PytorchModelCreator(torch.nn.Module):
         return context_cty(*(1,))
 
     def _get_context_struct_type(self, ctx):
-        struct_ty = ir.types.LiteralStructType([
-            ctx.int32_ty
-        ])
-        return struct_ty
+        return self._composition._get_context_struct_type(ctx)
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self,extra_args=[],name=None):
         llvm_func = None
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            args = [ctx.get_input_struct_type(self).as_pointer(),
+            args = [ctx.get_context_struct_type(self).as_pointer(),
                     ctx.get_param_struct_type(self).as_pointer(),
                     ctx.get_input_struct_type(self).as_pointer(),
                     ctx.get_data_struct_type(self).as_pointer()

@@ -277,9 +277,7 @@ class LLVMBuilderContext:
         pytorch_forward_func = self.get_llvm_function(pytorch_model._bin_exec_func.name)
         input_cim_idx = composition._get_node_index(composition.input_CIM)
 
-        model_context = builder.gep(data,[self.int32_ty(0),
-                                        self.int32_ty(0),
-                                        self.int32_ty(input_cim_idx)])
+        model_context = context
         model_params = builder.gep(params,[self.int32_ty(0),
                                         self.int32_ty(2)])
 
