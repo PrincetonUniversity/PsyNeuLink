@@ -421,7 +421,7 @@ class TestBackProp:
         # [pnl.SYSTEM,'AUTODIFF'],
         [pnl.COMPOSITION,'AUTODIFF']
     ])
-    def test_xor_training_identicalness_system_composition_autodiff(self, models):
+    def test_xor_training_identicalness_standard_composition_vs_autodiff(self, models):
         """Test equality of results for running 3-layered xor network using System, Composition and Audodiff"""
 
         num_epochs=2
