@@ -145,18 +145,21 @@ class TransferFunction(Function_Base):
         # Pretend we have one huge array to work on
         # TODO: should this be invoked in parts?
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
-        if isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType):
-            assert arg_in.type == arg_out.type
-            # Array elements need all to be of the same size
-            length = arg_in.type.pointee.count * arg_in.type.pointee.element.count
-            arg_in = builder.bitcast(arg_in, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
-            arg_out = builder.bitcast(arg_out, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
+        assert arg_in.type == arg_out.type
 
-        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state":state}
+        is_2d = isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
 
-        assert arg_in.type.pointee.count == arg_out.type.pointee.count
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as args:
-            self._gen_llvm_transfer(*args, **kwargs)
+        assert arg_in.type == arg_out.type
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as (b, idx):
+            if is_2d:
+                vi = b.gep(arg_in, [ctx.int32_ty(0), idx])
+                vo = b.gep(arg_out, [ctx.int32_ty(0), idx])
+                with pnlvm.helpers.array_ptr_loop(b, vi, "nested_transfer_loop") as args:
+                    self._gen_llvm_transfer(ctx=ctx, vi=vi, vo=vo,
+                                            params=params, state=state, *args)
+            else:
+               self._gen_llvm_transfer(b, idx, ctx=ctx, vi=arg_in, vo=arg_out,
+                                       params=params, state=state)
 
         return builder
 
@@ -2377,13 +2380,14 @@ class SoftMax(TransferFunction):
         ptro = builder.gep(arg_out, [ctx.int32_ty(0), index])
 
         if output_type == ALL:
-            kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "gain": gain, "exp_sum": exp_sum}
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
-                self.__gen_llvm_exp_div(*args, **kwargs)
+                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=arg_out,
+                                        gain=gain, exp_sum=exp_sum, *args)
         elif output_type == MAX_VAL:
             # zero out the output array
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
                 b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
+
             ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
             exp_f = ctx.get_builtin("exp", [ctx.float_ty])
             orig_val = builder.load(ptri)
@@ -2969,14 +2973,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         else:
             return np.array(specification)
 
-    def _get_output_struct_type(self, ctx):
-        # FIXME: self.defaults.value reports incorrect shape (scalar)
-        default_val = np.atleast_1d(self.defaults.value)
-        return ctx.convert_python_struct_to_llvm_ir(default_val)
-
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Restrict to 1d arrays
         assert self.defaults.variable.ndim == 1
+        assert self.defaults.value.ndim == 1
 
         matrix = ctx.get_param_ptr(self, builder, params, MATRIX)
 

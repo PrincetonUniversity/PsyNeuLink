@@ -2160,10 +2160,9 @@ class State_Base(State):
         return False
 
     def _get_input_struct_type(self, ctx):
+        # Use function input type. The shape should be the same,
+        # however, some functions still need input shape workarounds.
         return ctx.get_input_struct_type(self.function)
-
-    def _get_output_struct_type(self, ctx):
-        return ctx.get_output_struct_type(self.function)
 
     def _get_param_struct_type(self, ctx):
         return ctx.get_param_struct_type(self.function)
@@ -2180,6 +2179,10 @@ class State_Base(State):
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         main_function = ctx.get_llvm_function(self.function)
+        # OutputState returns 1D array even for scalar functions
+        if arg_out.type != main_function.args[3].type:
+            assert len(arg_out.type.pointee) == 1
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.call(main_function, [params, context, arg_in, arg_out])
 
         return builder

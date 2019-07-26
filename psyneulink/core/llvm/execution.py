@@ -494,6 +494,8 @@ class CompExecution(CUDAExecution):
 
     def run(self, inputs, runs, num_input_sets):
         inputs = self._get_run_input_struct(inputs, num_input_sets)
+        if "force_runs" in debug_env:
+            runs = max(runs, int(debug_env["force_runs"]))
         ct_vo = self._bin_run_func.byref_arg_types[4] * runs
         if len(self._execution_ids) > 1:
             ct_vo = ct_vo * len(self._execution_ids)
@@ -517,6 +519,8 @@ class CompExecution(CUDAExecution):
         data_in = self.upload_ctype(inputs)
 
         # Create output buffer
+        if "force_runs" in debug_env:
+            runs = max(runs, int(debug_env["force_runs"]))
         output_type = (self._bin_run_func.byref_arg_types[4] * runs)
         if len(self._execution_ids) > 1:
             output_type = output_type * len(self._execution_ids)

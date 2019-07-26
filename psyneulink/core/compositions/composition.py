@@ -5776,9 +5776,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               ctx.int32_ty(state_idx),
                                               ctx.int32_ty(projection_idx)])
 
-                if proj_in.type != proj_function.args[2].type:
-                    assert node is self.output_CIM
-                    proj_in = builder.bitcast(proj_in, proj_function.args[2].type)
                 builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
 
             idx = ctx.int32_ty(self._get_node_index(node))
