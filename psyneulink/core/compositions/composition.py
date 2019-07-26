@@ -1752,111 +1752,91 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     """
 
-        # # FIX: 7/22/19 [JDC] - THIS COULD BE CLEANED UP MORE
-        #
-        # # # MODIFIED 7/22/19 OLD: [JDC] MOVED TO BELOW
-        # # projection = self._parse_projection_spec(projection, name)
-        # # duplicate = False
-        # # MODIFIED 7/22/19 NEWER:
-        # try:
-        #     # projection = self._parse_projection_spec(projection, sender, receiver, name)
-        #     projection = self._parse_projection_spec(projection, name)
-        # except DuplicateProjectionError:
-        #     return projection
-        # duplicate = False
-        # # MODIFIED 7/22/19 END
-        #
-        # # Parse sender and receiver specs
-        # sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
-        # receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
-        #     self._parse_receiver_spec(projection, receiver, sender, learning_projection)
-        #
-        # # # MODIFIED 7/22/19 NEW: [JDC] MOVED FROM ABOVE
-        # # try:
-        # #     projection = self._parse_projection_spec(projection, sender, receiver, name)
-        # # except DuplicateProjectionError:
-        # #     return None
-        # # duplicate = False
-        # # MODIFIED 7/22/19 END
-        #
-        # # If Deferred init
-        # if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
-        #     # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
-        #     if not isinstance(sender, OutputState):
-        #         # sender = graph_sender
-        #         sender = sender_mechanism
-        #     if not isinstance(receiver, InputState):
-        #         # receiver = graph_receiver
-        #         receiver = receiver_mechanism
-        #     # Check if Projection to be initialized already exists;  if so, mark as duplicate and skip
-        #     duplicate = self._check_for_existing_projection(sender=sender, receiver=receiver)
-        #     if not duplicate:
-        #         # Initialize Projection
-        #         projection.init_args['sender'] = sender
-        #         projection.init_args['receiver'] = receiver
-        #         try:
-        #             projection._deferred_init(context=" INITIALIZING ")
-        #         except DuplicateProjectionError:
-        #             return projection
-        #
-        # # MODIFIED 7/22/19 NEW: [JDC]
-        # elif self._check_for_existing_projection(projection, sender=sender, receiver=receiver):
-        #     return projection
-        # # MODIFIED 7/22/19 END
-        #
-        # # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        # # Add autoassociative learning mechanism + related projections to composition as processing components
-        # if sender_mechanism != self.input_CIM and receiver_mechanism != self.output_CIM \
-        #         and projection not in [vertex.component for vertex in self.graph.vertices] and not learning_projection:
-        #
-        #     projection.is_processing = False
-        #     # KDM 5/24/19: removing below rename because it results in several duplicates
-        #     # projection.name = f'{sender} to {receiver}'
-        #     self.graph.add_component(projection, feedback=feedback)
-        #
-        #     try:
-        #         self.graph.connect_components(graph_sender, projection)
-        #         self.graph.connect_components(projection, graph_receiver)
-        #     except CompositionError as c:
-        #         raise CompositionError(f"{c.args[0]} to {self.name}.")
-        #
-        # # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        # # Add autoassociative learning mechanism + related projections to composition as processing components
-        # if not duplicate:
-        #     self._validate_projection(projection,
-        #                               sender, receiver,
-        #                               sender_mechanism, receiver_mechanism,
-        #                               learning_projection)
-        #     self.needs_update_graph = True
-        #     self.needs_update_graph_processing = True
-        #     self.needs_update_scheduler_processing = True
-        #
-        #     projection._activate_for_compositions(self)
-        #     for comp in nested_compositions:
-        #         projection._activate_for_compositions(comp)
-        #
-        # # Note: do all of the following even if Projection is a duplicate,
-        # #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
-        #
-        # # Create "shadow" projections to any input states that are meant to shadow this projection's receiver
-        # # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
-        # if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
-        #     for shadow in self.shadows[receiver_mechanism]:
-        #         for input_state in shadow.input_states:
-        #             if input_state.shadow_inputs is not None:
-        #                 if input_state.shadow_inputs.owner == receiver:
-        #                     # TBI: Copy the projection type/matrix value of the projection that is being shadowed
-        #                     self.add_projection(MappingProjection(sender=sender, receiver=input_state),
-        #                                         sender_mechanism, shadow)
-        # if feedback:
-        #     self.feedback_senders.add(sender_mechanism)
-        #     self.feedback_receivers.add(receiver_mechanism)
-        #
-        # return projection
+        # FIX: 7/22/19 [JDC] - THIS COULD BE CLEANED UP MORE
+        try:
+            # projection = self._parse_projection_spec(projection, sender, receiver, name)
+            projection = self._parse_projection_spec(projection, name)
+        except DuplicateProjectionError:
+            return projection
+        duplicate = False
 
-        # FIX: FROM DEVEL:
+        # Parse sender and receiver specs
+        sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
+        receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
+            self._parse_receiver_spec(projection, receiver, sender, learning_projection)
 
+        # If Deferred init
+        if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
+            if not isinstance(sender, OutputState):
+                sender = sender_mechanism
+            if not isinstance(receiver, InputState):
+                receiver = receiver_mechanism
+            # Check if Projection to be initialized already exists;  if so, mark as duplicate and skip
+            duplicate = self._check_for_existing_projection(sender=sender, receiver=receiver)
+            if not duplicate:
+                # Initialize Projection
+                projection.init_args['sender'] = sender
+                projection.init_args['receiver'] = receiver
+                try:
+                    projection._deferred_init(context=" INITIALIZING ")
+                except DuplicateProjectionError:
+                    return projection
 
+        # MODIFIED 7/22/19 NEW: [JDC]
+        elif self._check_for_existing_projection(projection, sender=sender, receiver=receiver):
+            duplicate = True
+        # MODIFIED 7/22/19 END
+
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        if sender_mechanism != self.input_CIM and receiver_mechanism != self.output_CIM \
+                and projection not in [vertex.component for vertex in self.graph.vertices] and not learning_projection:
+
+            projection.is_processing = False
+            # KDM 5/24/19: removing below rename because it results in several duplicates
+            # projection.name = f'{sender} to {receiver}'
+            self.graph.add_component(projection, feedback=feedback)
+
+            try:
+                self.graph.connect_components(graph_sender, projection)
+                self.graph.connect_components(projection, graph_receiver)
+            except CompositionError as c:
+                raise CompositionError(f"{c.args[0]} to {self.name}.")
+
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        if not duplicate:
+            self._validate_projection(projection,
+                                      sender, receiver,
+                                      sender_mechanism, receiver_mechanism,
+                                      learning_projection)
+            self.needs_update_graph = True
+            self.needs_update_graph_processing = True
+            self.needs_update_scheduler_processing = True
+
+            projection._activate_for_compositions(self)
+            for comp in nested_compositions:
+                projection._activate_for_compositions(comp)
+
+        # Note: do all of the following even if Projection is a duplicate,
+        #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
+
+        # Create "shadow" projections to any input states that are meant to shadow this projection's receiver
+        # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
+        if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
+            for shadow in self.shadows[receiver_mechanism]:
+                for input_state in shadow.input_states:
+                    if input_state.shadow_inputs is not None:
+                        if input_state.shadow_inputs.owner == receiver:
+                            # TBI: Copy the projection type/matrix value of the projection that is being shadowed
+                            self.add_projection(MappingProjection(sender=sender, receiver=input_state),
+                                                sender_mechanism, shadow)
+        if feedback:
+            self.feedback_senders.add(sender_mechanism)
+            self.feedback_receivers.add(receiver_mechanism)
+
+        return projection
 
     def _add_projection(self, projection):
         self.projections.append(projection)
