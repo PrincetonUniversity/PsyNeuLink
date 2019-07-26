@@ -1784,6 +1784,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # MODIFIED 7/22/19 NEW: [JDC]
         elif self._check_for_existing_projection(projection, sender=sender, receiver=receiver):
+            # FIX: THE FOLLOWING IS REQUIRED SO AS NOT TO CRASH IN test_alias_equivalence_for_modulates_and_projections
+            #      - BLOCK OF CODE BELOW (KAM HACK) IS REQUIRED
+            # return projection
             duplicate = True
         # MODIFIED 7/22/19 END
 
