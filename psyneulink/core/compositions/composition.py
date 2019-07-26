@@ -1805,7 +1805,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # projection = self._parse_projection_spec(projection, sender, receiver, name)
             projection = self._parse_projection_spec(projection, name)
         except DuplicateProjectionError:
-            return None
+            return projection
         duplicate = False
         # MODIFIED 7/22/19 END
 
@@ -1837,11 +1837,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Initialize Projection
                 projection.init_args['sender'] = sender
                 projection.init_args['receiver'] = receiver
-                projection._deferred_init(context=" INITIALIZING ")
+                try:
+                    projection._deferred_init(context=" INITIALIZING ")
+                except DuplicateProjectionError:
+                    return projection
 
         # MODIFIED 7/22/19 NEW: [JDC]
         elif self._check_for_existing_projection(projection, sender=sender, receiver=receiver):
-            return None
+            return projection
         # MODIFIED 7/22/19 END
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330

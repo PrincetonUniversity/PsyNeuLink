@@ -18,7 +18,7 @@ class TestControlSignals:
         tMech2 = TransferMechanism()
         cMech1 = ControlMechanism(control_signals=ControlSignal(modulates=(SLOPE, tMech2)),
                                   objective_mechanism=ObjectiveMechanism(monitor=(RESULTS, tMech2)))
-        comp1.add_nodes([tMech1, tMech2, cMech1])
+        # comp1.add_nodes([tMech1, tMech2, cMech1])
         comp1.add_linear_processing_pathway([cMech1, tMech1, tMech2])
         comp1.run(inputs=inputs)
         comp2 = Composition()
