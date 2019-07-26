@@ -870,52 +870,20 @@ class Graph(object):
             self.remove_vertex(self.comp_to_vertex[component])
         except KeyError as e:
             raise CompositionError('Component {1} not found in graph {2}: {0}'.format(e, component, self))
-        # MODIFIED 7/22/19 NEWER: [JDC]
-        if isinstance(component, (Mechanism, Composition)):
-            for proj in component.afferents:
-                try:
-                    self.remove_component(proj)
-                except:
-                    pass
-            for proj in component.efferents:
-                try:
-                    self.remove_component(proj)
-                except:
-                    pass
-        # MODIFIED 7/22/19 NEW
-        for vertex in self.vertices:
-            children_to_remove = set()
-            for i, child in enumerate(vertex.children):
-                if child.component is component:
-                    children_to_remove.add(vertex.children[i])
-            vertex.children = [c for c in vertex.children if c not in children_to_remove]
-            parents_to_remove = set()
-            for i, parent in enumerate(vertex.parents):
-                if parent.component is component:
-                    parents_to_remove.add(vertex.parents[i])
-            vertex.parents = [p for p in vertex.parents if p not in parents_to_remove]
-        # MODIFIED 7/22/19 END
 
     def remove_vertex(self, vertex):
         try:
+            for parent in vertex.parents:
+                parent.children.remove(vertex)
+            for child in vertex.children:
+                child.parents.remove(vertex)
+
             self.vertices.remove(vertex)
             del self.comp_to_vertex[vertex.component]
             # TODO:
             #   check if this removal puts the graph in an inconsistent state
         except ValueError as e:
             raise CompositionError('Vertex {1} not found in graph {2}: {0}'.format(e, vertex, self))
-        # FIX: 7/22/19 WHY DOESN'T THIS WORK INSTEAD OF DOING IT IN remove_component?
-        # for vertex in self.vertices:
-        #     children_to_remove = set()
-        #     for i, child in enumerate(vertex.children):
-        #         if child is vertex:
-        #             children_to_remove.add(vertex.children[i])
-        #     vertex.children = [c for c in vertex.children if c not in children_to_remove]
-        #     parents_to_remove = set()
-        #     for i, parent in enumerate(vertex.parents):
-        #         if parent is vertex:
-        #             parents_to_remove.add(vertex.parents[i])
-        #     vertex.parents = [p for p in vertex.parents if p not in parents_to_remove]
 
     def connect_components(self, parent, child):
         try:
@@ -1482,30 +1450,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             assert False, 'Argument of remove_nodes must be a Mechanism, Composition or list containing either or both'
         nodes = convert_to_list(nodes)
         for node in nodes:
-            for proj in node.afferents:
+            for proj in node.afferents + node.efferents:
                 try:
                     del self.projections[proj]
-                # FIX: 7/22/19: CHECK THAT ALL ARE PASSING AND THEN MANAGE EXCEPTION
-                except:
+                except ValueError:
+                    # why are these not present?
                     pass
-                # MODIFIED 7/22/19 OLD:
-                # try:
-                #     self.graph.remove_component(proj)
-                # except:
-                #     pass
-                # MODIFIED 7/22/19 END
-            for proj in node.efferents:
+
                 try:
-                    del self.projections[proj]
-                # FIX: 7/22/19: CHECK THAT ALL ARE PASSING AND THEN MANAGE EXCEPTION
-                except:
+                    self.graph.remove_component(proj)
+                except CompositionError:
+                    # why are these not present?
                     pass
-                # MODIFIED 7/22/19 OLD:
-                # try:
-                #     self.graph.remove_component(proj)
-                # except:
-                #     pass
-                # MODIFIED 7/22/19 END
+
             self.graph.remove_component(node)
             del self.nodes_to_roles[node]
             node_role_pairs = [item for item in self.required_node_roles if item[0] is node]
@@ -2829,16 +2786,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def remove_vertex(vertex):
             logger.debug('Removing', vertex)
             for parent in vertex.parents:
-                parent.children.remove(vertex)
                 for child in vertex.children:
-                    child.parents.remove(vertex)
                     if vertex.feedback:
                         child.backward_sources.add(parent.component)
                     self._graph_processing.connect_vertices(parent, child)
-            # ensure that children get removed even if vertex has no parents
+            # ensure that children get handled
             if len(vertex.parents) == 0:
                 for child in vertex.children:
-                    child.parents.remove(vertex)
                     if vertex.feedback:
                         child.backward_sources.add(parent.component)
 
