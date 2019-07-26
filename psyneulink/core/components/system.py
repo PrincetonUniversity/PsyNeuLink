@@ -3029,8 +3029,8 @@ class System(System_Base):
                     # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                     component.execute(execution_id=execution_id, runtime_params=params, context=context)
 
-                    # TEST PRINT 7/22/19
-                    print(f'Executed {component.name}: \n\tvariable: {component.variable}\n\tvalue: {component.value}')
+                    # # TEST PRINT 7/22/19
+                    # print(f'Executed {component.name}: \n\tvariable: {component.variable}\n\tvalue: {component.value}')
 
                 elif isinstance(component, MappingProjection):
                     processes = list(component.sender.owner.processes.keys())

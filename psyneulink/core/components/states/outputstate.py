@@ -1128,7 +1128,7 @@ class OutputState(State_Base):
     def _check_for_duplicate_projections(self, projection):
         # FIX: 7/22/19 - CHECK IF RECEIVER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_INPUT_STATE
         assert True
-        if any(proj.sender == projection.sender and proj != projection for proj in self.efferents):
+        if any(proj.receiver == projection.receiver and proj != projection for proj in self.efferents):
             from psyneulink.core.components.projections.projection import Projection
             warnings.warn(f'{Projection.__name__} from {projection.sender.name} of {projection.sender.owner.name} '
                           f'to {self.name} of {self.owner.name} already exists; will ignore additional '

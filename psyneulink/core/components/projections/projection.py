@@ -865,12 +865,12 @@ class Projection_Base(Projection):
             if isinstance(receiver, Mechanism):
                 receiver = receiver.input_state
 
-            if not receiver._check_for_duplicate_projections(self):
-                self.sender.efferents.append(self)
-            else:
+            if receiver._check_for_duplicate_projections(self):
                 raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
                                                f"{receiver.owner.name} that already has an identical "
                                                f"{Projection.__name__}.")
+            else:
+                self.sender.efferents.append(self)
             # MODIFIED 7/22/19 END
         else:
             # # MODIFIED 7/22/19 NEW: [JDC]
