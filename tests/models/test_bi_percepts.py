@@ -40,7 +40,7 @@ node_dict = {percept: None for percept in ALL_PERCEPTS}
     pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
-def test_bi_precepts(benchmark, mode):
+def test_simplified_necker_cube(benchmark, mode):
     excit_level = 1
     inhib_level = 1
 
