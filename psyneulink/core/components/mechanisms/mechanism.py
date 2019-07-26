@@ -1957,7 +1957,7 @@ class Mechanism_Base(Mechanism):
         raise MechanismError("{} does not support run() method".format(self.__class__.__name__))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        self.parameters.previous_value._set(None, override=True)
+        self.parameters.previous_value._set(None)
         self._instantiate_input_states(context=context)
         self._instantiate_parameter_states(function=function, context=context)
         super()._instantiate_attributes_before_function(function=function, context=context)
@@ -2137,7 +2137,7 @@ class Mechanism_Base(Mechanism):
         # (1) reinitialize it, (2) update value, (3) update output states
         if isinstance(self.function, StatefulFunction):
             new_value = self.function.reinitialize(*args, execution_context=execution_id)
-            self.parameters.value._set(np.atleast_2d(new_value), execution_id=execution_id, override=True)
+            self.parameters.value._set(np.atleast_2d(new_value), execution_id=execution_id)
             self._update_output_states(execution_id=execution_id,
                                        context="REINITIALIZING")
 
@@ -2174,7 +2174,7 @@ class Mechanism_Base(Mechanism):
                                  "(It does not have an accumulator to reinitialize).".format(self.name))
 
         # if hasattr(self, PREVIOUS_VALUE):
-        #     self.parameters.previous_value._set(None, override=True)
+        #     self.parameters.previous_value._set(None)
 
     def get_current_mechanism_param(self, param_name, execution_id=None):
         if param_name == "variable":
@@ -2338,7 +2338,7 @@ class Mechanism_Base(Mechanism):
             #           variable should be based on afferent projections
             variable = self._get_variable_from_input(input, execution_id)
 
-        self.parameters.variable._set(variable, execution_id=execution_id, override=True)
+        self.parameters.variable._set(variable, execution_id=execution_id)
 
         # UPDATE PARAMETER STATE(S)
         self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
@@ -2375,7 +2375,7 @@ class Mechanism_Base(Mechanism):
                 # return converted_to_2d
                 value = converted_to_2d
 
-        self.parameters.value._set(value, execution_id=execution_id, override=True)
+        self.parameters.value._set(value, execution_id=execution_id)
 
         # UPDATE OUTPUT STATE(S)
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
@@ -2449,7 +2449,7 @@ class Mechanism_Base(Mechanism):
                                   format(num_inputs, self.name,  num_input_states ))
         for input_item, input_state in zip(input, self.input_states):
             if len(input_state.defaults.value) == len(input_item):
-                input_state.parameters.value._set(input_item, execution_id, override=True)
+                input_state.parameters.value._set(input_item, execution_id)
             else:
                 raise MechanismError(
                     "Length ({}) of input ({}) does not match "
@@ -2466,7 +2466,7 @@ class Mechanism_Base(Mechanism):
         return np.array(self.get_input_values(execution_id))
 
     def _update_previous_value(self, execution_id=None):
-        self.parameters.previous_value._set(self.parameters.value._get(execution_id), execution_id, override=True)
+        self.parameters.previous_value._set(self.parameters.value._get(execution_id), execution_id)
 
     def _update_input_states(self, execution_id=None, runtime_params=None, context=None):
         """ Update value for each InputState in self.input_states:

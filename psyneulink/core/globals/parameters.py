@@ -889,17 +889,17 @@ class Parameter(types.SimpleNamespace):
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `setter` if it exists
         """
+        if not override and self.read_only:
+            warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=_ro_warning_stacklevel)
+
         if not self.stateful:
             execution_id = None
         else:
             execution_id = parse_execution_context(execution_context)
 
-        self._set(value, execution_id, override, skip_history, skip_log, _ro_warning_stacklevel, **kwargs)
+        self._set(value, execution_id, skip_history, skip_log, _ro_warning_stacklevel, **kwargs)
 
-    def _set(self, value, execution_id=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
-        if not override and self.read_only:
-            warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=_ro_warning_stacklevel)
-
+    def _set(self, value, execution_id=None, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
         if not self.stateful:
             execution_id = None
 
@@ -908,7 +908,6 @@ class Parameter(types.SimpleNamespace):
                 **self._default_setter_kwargs,
                 **{
                     'execution_id': execution_id,
-                    'override': override,
                 },
                 **kwargs
             }

@@ -1128,7 +1128,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         hetero were None in the initialization call.
         :param function:
         """
-        self.parameters.previous_value._set(None, override=True)
+        self.parameters.previous_value._set(None)
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -1318,7 +1318,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         value = self.parameters.value._get(execution_id)
         if value is None:
             value = self.defaults.value
-        self.parameters.previous_value._set(value, execution_id, override=True)
+        self.parameters.previous_value._set(value, execution_id)
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
@@ -1514,7 +1514,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
         # if self.context.initialization_status != ContextFlags.INITIALIZING:
-        #     self.parameters.previous_value._set(self.value, override=True)
+        #     self.parameters.previous_value._set(self.value)
         # self._output = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
         # return self._output
         return super()._execute(variable, execution_id, runtime_params, context)

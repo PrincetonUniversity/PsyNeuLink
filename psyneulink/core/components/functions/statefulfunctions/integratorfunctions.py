@@ -658,7 +658,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
-            self.parameters.previous_value._set(value, execution_id, override=True)
+            self.parameters.previous_value._set(value, execution_id)
 
         return self.convert_output_type(value)
 
@@ -2810,7 +2810,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.parameters.previous_value._set(initializer, override=True)
+        self.parameters.previous_value._set(initializer)
         self.previous_time = starting_point
 
         super().__init__(

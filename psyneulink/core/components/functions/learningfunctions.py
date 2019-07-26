@@ -2079,7 +2079,7 @@ class BackPropagation(LearningFunction):
                 raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
                                     format(self.__class__.__name__, owner_string))
 
-        self.parameters.error_matrix._set(error_matrix, execution_id, override=True)
+        self.parameters.error_matrix._set(error_matrix, execution_id)
         # self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # Manage learning_rate

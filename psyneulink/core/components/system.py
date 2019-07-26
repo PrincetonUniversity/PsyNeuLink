@@ -2758,10 +2758,10 @@ class System(System_Base):
 
                     if system_input_state:
                         if isinstance(input, dict):
-                            system_input_state.parameters.value._set(input[origin_mech][j], execution_id, override=True)
+                            system_input_state.parameters.value._set(input[origin_mech][j], execution_id)
 
                         else:
-                            system_input_state.parameters.value._set(input[j], execution_id, override=True)
+                            system_input_state.parameters.value._set(input[j], execution_id)
                     else:
                         logger.warning("Failed to find expected SystemInputState "
                                        "for {} at input state number ({}), ({})".
@@ -2979,13 +2979,13 @@ class System(System_Base):
                 target_value = target[terminal_mechanism]
                 if callable(target_value):
                     val = call_with_pruned_args(target_value, execution_context=execution_id, execution_id=execution_id, composition=self)
-                    self.target_input_states[i].parameters.value._set(val, execution_id, override=True)
+                    self.target_input_states[i].parameters.value._set(val, execution_id)
                 else:
-                    self.target_input_states[i].parameters.value._set(target_value, execution_id, override=True)
+                    self.target_input_states[i].parameters.value._set(target_value, execution_id)
 
         elif isinstance(target, (list, np.ndarray)):
             for i in range(len(self.target_mechanisms)):
-                self.target_input_states[i].parameters.value._set(target[i], execution_id, override=True)
+                self.target_input_states[i].parameters.value._set(target[i], execution_id)
 
         # THEN, execute all components involved in learning
         if self.scheduler_learning is None:
@@ -5068,7 +5068,7 @@ class SystemInputState(OutputState):
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
-        self.parameters.value._set(variable, override=True)
+        self.parameters.value._set(variable)
 
     @property
     def _dependent_components(self):

@@ -1511,7 +1511,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     for state in owner._output_states:
         # Assign True for owner's primary OutputState and the value has not already been set in OutputState constructor
         if state.require_projection_in_composition is None and owner.output_state == state:
-            state.parameters.require_projection_in_composition._set(True, override=True)
+            state.parameters.require_projection_in_composition._set(True)
 
     return state_list
 
