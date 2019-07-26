@@ -1732,7 +1732,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projection if added, else None
 
     """
-        # FIX: 7/22/19 [JDC] - THIS COULD BE CLEANED UP MORE
+        # FIX 7/22/19 [JDC]: THIS COULD BE CLEANED UP MORE
         try:
             # projection = self._parse_projection_spec(projection, sender, receiver, name)
             projection = self._parse_projection_spec(projection, name)
@@ -2145,6 +2145,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
         # construct learning related mapping projections
+        # FIX 7/22/19 [JDC]: REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
+        #  1) Determine whether this is a terminal sequence:
+        #     - use arg passed in or determine from context (see current implementation in add_backpropagation_pathway)
+        #     - for terminal sequence, handle target and sample projections as below
+        #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
+        #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
+        #     - check validity of existing error_signal projections with respect to those and, if possible,
+        #       their correspondence with error_matrices
+        #     - check if any ERROR_SIGNAL input_states are empty (vacated by terminal sequence elements deleted in
+        #       add_projection)
+        #     - call add_states method on LearningMechanism to add new ERROR_SIGNAL input_state to its input_states
+        #       and error_matrix to its self.error_matrices attribute
+        #     - add new error_signal projection
+
         # FIX 5/29/19 [JDC]:  REPLACE INDICES BELOW WITH RELEVANT KEYWORDS
         sample_projection = MappingProjection(sender=output_source,
                                               receiver=comparator.input_states[0])
@@ -2158,11 +2172,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
                                                     receiver=learning_mechanism.input_states[2])
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
-        # # FIX: 7/22/19 [JDC] REFACTOR TO DEAL WITH CROSSING PATHWAYS:
-        # #                    CALL add_states method on LearningMechanism to add ERROR_SIGNAL input_states for
-        # #                    error_signals coming from LearningMechanisms associated with all efferent projections of
-        # #                    ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism,
-        # #                    and to update/add their matrices to the LearningMechanism's self.error_matrices.
         # # MODIFIED 7/22/19 NEW:
         # error_signal_projections = []
         # for learning_mech in learning_mechanism.dependent_learning_mechanisms:
@@ -2429,8 +2438,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    and eliminate existing terminal_sequences previously created for Mechanisms now in the pathway
         else:
 
-            # FIX: 7/22/19 [JDC] - THIS SHOULD BE (RE-MOVED) ONCE CONVERGENT/CROSSING PATHWAYS
-            #                      IS HANDLED IN _create_learning_related_projections
+            # FIX 7/22/19 [JDC]:  NO NEED TO KEEP old_learning_mechanisms
+            #                     ONCE create_learning_related_projections has been refactored
             # Eliminate existing comparators and targets for Mechanisms now in the pathway that were output_sources
             #   (i.e., ones that belong to previously-created sequences that overlap with the current one)
             old_learning_mechanisms = []
@@ -2465,7 +2474,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 TARGET_MECHANISM: target,
                                                                 COMPARATOR_MECHANISM: comparator}
 
-            # FIX: 7/22/19 [JDC] - THIS SHOULD BE (RE-MOVED) ONCE CONVERGENT/CROSSING PATHWAYS
+            # # FIX 7/22/19 [JDC]: THIS SHOULD BE (RE-MOVED) ONCE CONVERGENT/CROSSING PATHWAYS
             #                      IS HANDLED IN _create_learning_related_projections
             # # MODIFIED 7/22/19 NEW:
             if old_learning_mechanisms:

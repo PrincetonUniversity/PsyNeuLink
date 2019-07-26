@@ -1307,7 +1307,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
         error_signal_indices = self.error_signal_indices
         error_signal_inputs = variable[error_signal_indices]
-        # FIX 7/22/19 [JDC] MOVE THIS TO ITS OWN METHOD CALLED ON INITALIZATION AND UPDTATED AS NECESSARY
+        # FIX 7/22/19 [JDC]: MOVE THIS TO ITS OWN METHOD CALLED ON INITALIZATION AND UPDTATED AS NECESSARY
         if self.error_matrices is None:
             # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
             if self.function is BackPropagation or isinstance(self.function, BackPropagation):
