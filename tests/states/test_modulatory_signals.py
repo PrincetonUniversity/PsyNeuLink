@@ -21,6 +21,7 @@ class TestControlSignals:
         comp1.add_nodes([tMech1, tMech2, cMech1])
         comp1.add_linear_processing_pathway([cMech1, tMech1, tMech2])
         comp1.run(inputs=inputs)
+
         comp2 = Composition()
         tMech3 = TransferMechanism()
         tMech4 = TransferMechanism()
