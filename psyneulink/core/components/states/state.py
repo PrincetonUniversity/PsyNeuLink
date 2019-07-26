@@ -1138,9 +1138,6 @@ class State_Base(State):
 
         self.path_afferents = []
         self.mod_afferents = []
-        # # MODIFIED 7/22/19 OLD:
-        # self.efferents = []
-        # MODIFIED 7/22/19 END
 
         self._path_proj_values = []
         # Create dict with entries for each ModualationParam and initialize - used in update()
@@ -1535,17 +1532,8 @@ class State_Base(State):
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.path_afferents or mod_afferents lists
-            # # MODIFIED 7/22/19 OLD:
-            # if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
-            #     warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
-            #                   format(Projection.__name__, repr(projection.sender.name),
-            #                          projection.sender.owner.name,
-            #                   repr(self.name), self.owner.name, repr(projection.name)))
-            #     continue
-            # MODIFIED 7/22/19 NEW [JDC]:
             if self._check_for_duplicate_projections(projection):
                 continue
-            # MODIFIED 7/22/19 END
 
             # reassign default variable shape to this state and its function
             if isinstance(projection, PathwayProjection_Base) and not projection in self.path_afferents:
@@ -1878,13 +1866,9 @@ class State_Base(State):
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.efferents
-            # # MODIFIED 7/22/19 OLD:
-            # if not projection in self.efferents:
-            #     self.efferents.append(projection)
-            # MODIFIED 7/22/19 NEW [JDC]:
             if self._check_for_duplicate_projections(projection):
                 continue
-            # MODIFIED 7/22/19 END
+
             if isinstance(projection, ModulatoryProjection_Base):
                 self.owner.aux_components.append(projection)
             return projection
@@ -2160,7 +2144,6 @@ class State_Base(State):
             self._afferents_info = {}
             return self._afferents_info
 
-    # MODIFIED 7/22/19 NEW: [JDC]
     @property
     def efferents(self):
         try:
@@ -2172,7 +2155,6 @@ class State_Base(State):
     @efferents.setter
     def efferents(self, proj):
         assert False, f"Illegal attempt to directly assign {repr('efferents')} attribute of {self.name}"
-    # MODIFIED 7/22/19 END
 
     def _assign_default_state_name(self, context=None):
         return False

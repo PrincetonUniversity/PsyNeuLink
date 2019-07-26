@@ -1512,24 +1512,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 proj._activate_for_compositions(self)
             # MODIFIED 6/11/19 END
 
-    # # MODIFIED 7/22/19 OLD:
-    # def _parse_projection_spec(self, projection, name):
-    #     if isinstance(projection, (np.ndarray, np.matrix, list)):
-    #         return MappingProjection(matrix=projection, name=name)
-    #     elif isinstance(projection, str):
-    #         if projection in MATRIX_KEYWORD_VALUES:
-    #             return MappingProjection(matrix=projection, name=name)
-    #         else:
-    #             raise CompositionError("Invalid projection ({}) specified for {}.".format(projection, self.name))
-    #     elif isinstance(projection, ModulatoryProjection_Base):
-    #         return projection
-    #     elif projection is None:
-    #         return MappingProjection(name=name)
-    #     elif not isinstance(projection, Projection):
-    #         raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
-    #                                .format(projection, self.name))
-    #     return projection
-    # MODIFIED 7/22/19 NEW:
     def _parse_projection_spec(self, projection, sender=None, receiver=None, name=None):
         if isinstance(projection, (np.ndarray, np.matrix, list)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
@@ -1546,7 +1528,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
                                    .format(projection, self.name))
         return projection
-    # MODIFIED 7/22/19 END
 
     def _parse_sender_spec(self, projection, sender):
 
@@ -1950,12 +1931,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     proj = self.add_projection(sender=pathway[c - 1],
                                                receiver=pathway[c],
                                                feedback=feedback)
-                    # # MODIFIED 7/22/19 OLD:
-                    # projections.append(proj)
-                    # MODIFIED 7/22/19 NEW: [JDC]
                     if proj:
                         projections.append(proj)
-                    # MODIFIED 7/22/19 END
             # if the current item is a Projection specification
             elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
                 if c == len(pathway) - 1:
@@ -1965,12 +1942,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(pathway[c - 1], (Mechanism, Composition)) \
                         and isinstance(pathway[c + 1], (Mechanism, Composition)):
                     proj = pathway[c]
-                    # # MODIFIED 7/22/19 OLD:
-                    # if isinstance(pathway[c], (np.ndarray, np.matrix, list)):
-                    #     proj = MappingProjection(sender=pathway[c - 1],
-                    #                              matrix=pathway[c],
-                    #                              receiver=pathway[c + 1])
-                    # MODIFIED 7/22/19 NEW:
                     try:
                         if isinstance(pathway[c], (np.ndarray, np.matrix, list)):
                             proj = MappingProjection(sender=pathway[c - 1],
@@ -1979,16 +1950,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     except DuplicateProjectionError:
                         # FIX: 7/22/19 ADD WARNING HERE??
                         pass
-                    # MODIFIED 7/22/19 END
 
-                    # # MODIFIED 7/22/19 OLD:
-                    # self.add_projection(projection=proj,
-                    #                     sender=pathway[c - 1],
-                    #                     receiver=pathway[c + 1],
-                    #                     feedback=feedback,
-                    #                     allow_duplicates=False)
-                    # projections.append(proj)
-                    # MODIFIED 7/22/19 NEW: [JDC]
                     proj = self.add_projection(projection=proj,
                                                sender=pathway[c - 1],
                                                receiver=pathway[c + 1],
@@ -1996,7 +1958,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                allow_duplicates=False)
                     if proj:
                         projections.append(proj)
-                    # MODIFIED 7/22/19 END
 
                 else:
                     raise CompositionError(
@@ -2197,7 +2158,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
                                                     receiver=learning_mechanism.input_states[2])
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
-        # # MODIFIED 7/22/19 XXX NEW:
+        # # FIX: 7/22/19 [JDC] REFACTOR TO DEAL WITH CROSSING PATHWAYS:
+        # #                    CALL add_states method on LearningMechanism to add ERROR_SIGNAL input_states for
+        # #                    error_signals coming from LearningMechanisms associated with all efferent projections of
+        # #                    ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism,
+        # #                    and to update/add their matrices to the LearningMechanism's self.error_matrices.
+        # # MODIFIED 7/22/19 NEW:
         # error_signal_projections = []
         # for learning_mech in learning_mechanism.dependent_learning_mechanisms:
         #     error_signal_projections.append(MappingProjection(sender=comparator.output_states[OUTCOME],
@@ -2445,7 +2411,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
             sequence_end = path_length-3
 
-        # # MODIFIED 7/22/19 NEW: [JDC]
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
         # Otherwise, if output_source already projects to a learning Mechanism, integrate with existing sequence
         elif any(isinstance(p.receiver.owner, LearningMechanism) for p in output_source.efferents):
@@ -2459,12 +2424,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target = None
             comparator = None
             sequence_end = path_length-1
-        # MODIFIED 7/22/19 END
+
         # Otherwise create terminal_sequence for the sequence,
         #    and eliminate existing terminal_sequences previously created for Mechanisms now in the pathway
         else:
 
-            # MODIFIED 7/22/19 NEW: [JDC]
+            # FIX: 7/22/19 [JDC] - THIS SHOULD BE (RE-MOVED) ONCE CONVERGENT/CROSSING PATHWAYS
+            #                      IS HANDLED IN _create_learning_related_projections
             # Eliminate existing comparators and targets for Mechanisms now in the pathway that were output_sources
             #   (i.e., ones that belong to previously-created sequences that overlap with the current one)
             old_learning_mechanisms = []
@@ -2486,7 +2452,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                              and p.receiver.owner in self.nodes
                                                              and ACTIVATION_OUTPUT in p.receiver.name )),
                                                         None))
-            # MODIFIED 7/22/19 END
 
             # Create teminal_sequence
             target, comparator, learning_mechanism = \
@@ -2500,6 +2465,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 TARGET_MECHANISM: target,
                                                                 COMPARATOR_MECHANISM: comparator}
 
+            # FIX: 7/22/19 [JDC] - THIS SHOULD BE (RE-MOVED) ONCE CONVERGENT/CROSSING PATHWAYS
+            #                      IS HANDLED IN _create_learning_related_projections
             # # MODIFIED 7/22/19 NEW:
             if old_learning_mechanisms:
                 self.add_projection(sender=learning_mechanism.output_states[ERROR_SIGNAL],
@@ -2554,9 +2521,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        TARGET_MECHANISM: target,
                                        LEARNED_PROJECTION: learned_projections}
 
-        # MODIFIED 7/22/19 NEW: [JDC]
+        # Update graph in case method is called again
         self._analyze_graph()
-        # MODIFIED 7/22/19 END
 
         return learning_related_components
 
@@ -4967,9 +4933,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         node.function._runtime_params_reset[execution_id] = {}
 
-                    # TEST PRINT 7/22/19
-                    print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(execution_id)}'
-                          f'\n\tvalue: {node.parameters.value.get(execution_id)}')
+                    # # TEST PRINT 7/22/19
+                    # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(execution_id)}'
+                    #       f'\n\tvalue: {node.parameters.value.get(execution_id)}')
 
                     # Set execution_phase for node's context back to IDLE
                     node.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE

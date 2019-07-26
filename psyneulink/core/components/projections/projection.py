@@ -873,12 +873,8 @@ class Projection_Base(Projection):
                 self.sender.efferents.append(self)
             # MODIFIED 7/22/19 END
         else:
-            # # MODIFIED 7/22/19 NEW: [JDC]
-            # pass
-            # MODIFIED 7/22/19 NEWER: [JDC]
             raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} from {sender.name} of "
                                            f"{sender.owner.name} that already has an identical {Projection.__name__}.")
-            # MODIFIED 7/22/19 END
 
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.states.parameterstate import _instantiate_parameter_state
