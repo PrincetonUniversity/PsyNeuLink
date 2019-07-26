@@ -1751,7 +1751,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projection if added, else None
 
     """
-
         # FIX: 7/22/19 [JDC] - THIS COULD BE CLEANED UP MORE
         try:
             # projection = self._parse_projection_spec(projection, sender, receiver, name)
