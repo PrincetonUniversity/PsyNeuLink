@@ -515,7 +515,7 @@ a model.  For example, including the following lines in the script for ``Stroop_
     control.log.set_log_conditions(VARIABLE)
     control.log.set_log_conditions(VALUE)
     ...
-    # after call to Stroop_model.run:
+    # After call to Stroop_model.run:
     Stroop_model.log.print_entries(display=[TIME, VALUE])
 
 report the value of the ``control`` and ``task`` Mechanims each time they executed for three trials::
@@ -560,26 +560,80 @@ a dictionary of values for each entry, and `CSV <https://en.wikipedia.org/wiki/C
 .. ~~~~~~~~
 
 Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
-mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools provided available in other
-Python-based environments.  Each of these is described below.
+mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available in other
+Python-based environments, such as Pytorch.  Since the latter are becoming increasingly accessible and powerful, the
+native implementation of learning in PsyNeuLink is designed with the goals of modularity and exposition rather than
+efficiency of computation.  That is, it is better suited for "story-boarding" a model that includes learning
+components, and for illustrating process flow during learning, than it is for large scale simulations involving
+learning.  However, the specification of the learning components of a model in PsyNeuLink can easily be translated
+into a Pytorch description, which can then be integrated into the PsyNeuLink model with all the benefits of
+Pytorch execution.  Each of the two ways of specifying learning components is described below.
 
 LearningMechanisms
 ^^^^^^^^^^^^^^^^^^
 
 PsyNeuLink has a native class -- `LearningMechanism` -- that can be used to implement various forms of learning,
-including both unsupervised (such as `Hebbian`) and supervised (such as reinforcment learning and backpropagation).
-LearningMechanisms take as their input a target and/or an error signal, usually provided by a `MappingProjection` from
-the sourxe of the error signal or another LearningMechanism.  They are assigned a `LearningSignal` as their
-output_state, which sends a `LearningProjection` to the `MappingProjection` that is being learned.  The type of
-learning implemented by a LearningMechanism is determined by the class of `LearningFunction` assigned to its
-`function <LearningMechanism.function>`.  In some cases (such as multilayered backpropagation networks), configuration
-of the LearningMechanisms and corresponding Projections can become complex; PsyNeuLink provides convenience methods for
-implementing these for commonly used forms of learning.  The example below implements learning in a simple three-layered
-neural network::
+including unsupervised forms (such as `Hebbian`) and supervised forms (such as reinforcment learning and
+backpropagation). LearningMechanisms take as their input a target and/or an error signal, provided by a
+`MappingProjection` from the source of the error signal (either a ComparatorMechanism or another LearningMechanism).
+LearningMechanisms use `LearningSignals` (a type of `OutputState`) to send a `LearningProjection` to the
+`MappingProjection` that is being learned.  The type of learning implemented by a LearningMechanism is determined by
+the class of `LearningFunction` assigned as its `function <LearningMechanism.function>`.  In some cases (such as
+multilayered backpropagation networks), configuration of the LearningMechanisms and corresponding Projections can
+become complex; PsyNeuLink provides methods for implementing these automatically, which also serves to illustrate the
+flow of signals and errors implemented by the algorithm.  The example below implements learning in a simple
+three-layered neural network that learns to compute the X-OR operation::
 
-.. script example
-.. show_graph() output
+    input_mech = pnl.TransferMechanism(name='INPUT', size=2)
+    hidden_mech = pnl.TransferMechanism(name='HIDDEN', size=10, function=Logistic)
+    output_mech = pnl.TransferMechanism(name='OUTPUT', size=1, function=Logistic)
+    input_to_hidden_projection = MappingProjection(name='INPUT_TO_HIDDEN',
+                                                   matrix=np.random.rand(2,10),
+                                                   sender=input_mech,
+                                                   receiver=hidden_mech)
+    hidden_to_output_projection = MappingProjection(name='HIDDEN_TO_OUTPUT',
+                                                    matrix=np.random.rand(10,1),
+                                                    sender=hidden_mech,
+                                                    receiver=output_mech)
+    xor_model = Composition()
+    learning_components = xor_model.add_backpropagation_pathway([input_mech,
+                                                                 input_to_hidden_projection,
+                                                                 hidden_mech,
+                                                                 hidden_to_output_projection,
+                                                                 output_mech],
+                                                                 learning_rate=10)
 
+Calling the Composition's ``show_graph`` with ``show_learning=True`` shows the network along with all of the learning
+components created by the call to ``add_backpropagation_pathway``:
+
+
+.. _BasicsAndSampler_XOR_MODEL_Figure:
+
+.. figure:: _static/BasicsAndSampler_XOR_Model_fig.svg
+
+    **XOR Model.**  Items in orange are learning components implemented by the call to ``add_backpropagation_pathway``;
+    diamonds represent Projections, shown as nodes so that the `LearningProjections` to them can be shown.
+
+
+Training the model requires specifying a set of inputs and targets to use as training stimuli, and identifying the
+target Mechanism (that receives the target responses)::
+
+    # Construct 4 trials worth of stimuli and responses (for the four conditions of the XOR operation):
+    xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    xor_targets = np.array([ [0],   [1],     [1],    [0]])
+
+    # Identify target Mechanism returned by add_backpropation_pathway called above
+    target_mech = learning_components[TARGET_MECHANISM]
+
+    # Run the model:
+    result = xor_model.run(inputs={input_mech:xor_inputs,
+                                   target_mech:xor_targets},
+                           num_trials=2)
+
+It can also be run without learning by calling the run method with ``enable_learning=False``.
+
+XXX STROOP MODEL EXAMPLE:  MORE THAN ONE PATHWAY
+XXX RUMELHART MODEL:  EVEN MORE COMPLEX EXAMPLE -> AUTODIFF
 
 AutodiffComposition
 ^^^^^^^^^^^^^^^^^^^

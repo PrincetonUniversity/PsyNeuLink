@@ -1,0 +1,35 @@
+from psyneulink import *
+import numpy as np
+
+input_mech = TransferMechanism(name='INPUT', size=2)
+hidden_mech = TransferMechanism(name='HIDDEN', size=10, function=Logistic)
+output_mech = TransferMechanism(name='OUTPUT', size=1, function=Logistic)
+input_to_hidden_projection = MappingProjection(name='INPUT_TO_HIDDEN',
+                                               matrix=np.random.rand(2,10),
+                                               sender=input_mech,
+                                               receiver=hidden_mech)
+hidden_to_output_projection = MappingProjection(name='HIDDEN_TO_OUTPUT',
+                                                matrix=np.random.rand(10,1),
+                                                sender=hidden_mech,
+                                                receiver=output_mech)
+xor_model = Composition()
+learning_components = xor_model.add_backpropagation_pathway([input_mech,
+                                                             input_to_hidden_projection,
+                                                             hidden_mech,
+                                                             hidden_to_output_projection,
+                                                             output_mech],
+                                                            learning_rate=10)
+
+# Construct 4 trials worth of stimuli and responses (for the four conditions of the XOR operation): 
+xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+xor_targets = np.array([ [0],   [1],     [1],    [0]])
+
+# Identify target Mechanism returned by add_backpropation_pathway called above 
+target_mech = learning_components[TARGET_MECHANISM]
+
+# Run the model: 
+result = xor_model.run(inputs={input_mech:xor_inputs,
+                               target_mech:xor_targets},
+                       num_trials=2)
+print(result)
+xor_model.show_graph(show_learning=True)
