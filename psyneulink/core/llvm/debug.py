@@ -31,4 +31,11 @@
 
 import os
 
-debug_env = dict(x.partition('=')[0:3:2] for x in str(os.environ.get("PNL_LLVM_DEBUG")).split(';'))
+debug_env = dict()
+
+def _update():
+    global debug_env
+    debug_env.clear()
+    debug_env.update({x.partition('=')[0:3:2] for x in str(os.environ.get("PNL_LLVM_DEBUG")).split(';')})
+
+_update()
