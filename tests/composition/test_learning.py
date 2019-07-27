@@ -330,6 +330,7 @@ class TestNestedLearning:
 
 class TestBackProp:
 
+    @pytest.mark.pytorch
     def test_back_prop(self):
 
         input_layer = pnl.TransferMechanism(name="input",
@@ -419,6 +420,7 @@ class TestBackProp:
         # [pnl.SYSTEM,'AUTODIFF'],
         [pnl.COMPOSITION,'AUTODIFF']
     ])
+    @pytest.mark.pytorch
     def test_xor_training_identicalness_standard_composition_vs_autodiff(self, models):
         """Test equality of results for running 3-layered xor network using System, Composition and Audodiff"""
 
