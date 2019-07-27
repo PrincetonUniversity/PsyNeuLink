@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+309.gde76f95 documentation</title>
+  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+310.gffed6d5 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+309.gde76f95',
+              VERSION:'0.5.3.2+310.gffed6d5',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+309
+                0.5.3.2+310
               </div>
             
           
@@ -387,17 +387,19 @@ a non-zero <a class="reference internal" href="DistributionFunctions.html#psyneu
 <span id="basicsandsampler-dynamics-of-execution"></span><h3>Dynamics of Execution<a class="headerlink" href="#dynamics-of-execution" title="Permalink to this headline">¶</a></h3>
 <p>One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
 different time scales.  By default, each Mechanism executes once per pass through the Composition, in the order
-determined by the projections between (and shown in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method.  In the
-<code class="docutils literal"><span class="pre">Stroop_model</span></code> above, the <code class="docutils literal"><span class="pre">decison</span></code> Mechanism executes once per pass, just after the <code class="docutils literal"><span class="pre">ouput</span></code> Mechanism.  This
-is a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism, that uses <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionAnalytical</span></code></a> as its default <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, which computes an
-analytic solution to the distribution of responses the DDM integration process (at a specified <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>), and returns both the probability of threshold crossing and the mean
-crossing time.  However, it is also possible to simulate the dynamics of the integration process by assigning
-<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionIntegrator</span></code></a> as the Mechanism’s <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and specifying, in the call to the
-Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method, that a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a> terminate only when the <code class="docutils literal"><span class="pre">decision</span></code>
+determined by the projections between them (and shown in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method.  In the
+<code class="docutils literal"><span class="pre">Stroop_model</span></code> above, the <code class="docutils literal"><span class="pre">decision</span></code> Mechanism executes once per pass, just after the <code class="docutils literal"><span class="pre">ouput</span></code> Mechanism.  The
+<code class="docutils literal"><span class="pre">decision</span></code> Mechanism is a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a>.  This uses <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionAnalytical</span></code></a> as its default <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>,
+which computes an analytic solution to the distribution of responses using the DDM integration process, and returns
+both the probability of crossing a specified <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>), and the mean
+crossing time.  However, it is also possible to simulate the dynamics of the integration process.  This can be done by
+assigning <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionIntegrator</span></code></a> as the Mechanism’s <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and, in the call to the Composition’s
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method, specifying that a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a> terminates only when the <code class="docutils literal"><span class="pre">decision</span></code>
 Mechanism has completed its execution, as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Modify consruction of decision Mechanism:</span>
 <span class="n">decision</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;DECISION&#39;</span><span class="p">,</span>
                <span class="n">input_format</span><span class="o">=</span><span class="n">ARRAY</span><span class="p">,</span>
+               <span class="n">reinitialize_when</span><span class="o">=</span><span class="n">AtTrialStart</span><span class="p">(),</span>
                <span class="n">function</span><span class="o">=</span><span class="n">DriftDiffusionIntegrator</span><span class="p">(</span><span class="n">noise</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
                <span class="p">)</span>
 <span class="n">Stroop_model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">color_input</span><span class="p">:</span><span class="n">red</span><span class="p">,</span> <span class="n">word_input</span><span class="p">:</span><span class="n">green</span><span class="p">,</span> <span class="n">task_input</span><span class="p">:</span><span class="n">color</span><span class="p">},</span>
@@ -408,23 +410,23 @@ Mechanism has completed its execution, as follows:</p>
 </pre></div>
 </div>
 <p>The output is now the result of the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionIntegrator</span></code></a>, which is the value of the decision variable when it
-crosses threshold (which is, by definition, equal to either the postive or negative value of the <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>) and the number of executions it took to do so.  Since the <code class="docutils literal"><span class="pre">decsion</span></code>
-Mechanism is the last (<a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>) Mechanism of the Composition, it is also its <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="psyneulink.core.globals.utilities.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Mechanism, and therefore it
+crosses threshold (which is, by definition, equal to either the postive or negative value of the <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> attribute), and the number of executions it took to do so.  Since the <code class="docutils literal"><span class="pre">decision</span></code>
+Mechanism is the last (<a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>) Mechanism of the Composition, it is also its <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="psyneulink.core.globals.utilities.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Mechanism.  Therefore, its
 output is recorded in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal"><span class="pre">results</span></code></a> attribute of the Stroop model, as shown above (note: because
 there is noise in the integration process, running the model several times produces varying response times).</p>
-<p>This version of the model includes Mechanisms that execute over different time-scales:  the ProcessingMechanisms
+<p>This version of the model includes Mechanisms that execute over different time-scales. The ProcessingMechanisms
 completed their computations in a single execution, whereas the DDM took many executions to complete its computation.
 In this case, the coordination of time scales was straightforward, since the DDM was the last Mechanism in the
-Composition:  the ProcessingMechanisms in each pathway executed in sequence, ending in the DDM wich executed until
-it was complete.  PsyNeuLink’s <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can also be used to implement more complicated dependencies among Mechanisms
-that execute over different time scales, by assigning one or more <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> for execution of the
-Mechanisms to the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> for the Composition. Conditions can specify the isolated behavior of a Mechanism (e.g.,
-how many times it should be executed in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>), its behavior relative to that of one or more
-other Components (e.g., how many times it should wait for another Mechanism to execute before it does so), or even
-arbitrary functions (e.g., a convergence criterion for the settling of a recurrent network). For example, the
-following implements a verion of the model above that uses a leaky competing accumulator <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/11488378">https://www.ncbi.nlm.nih.gov/pubmed/11488378</a> (<a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a>) for the <code class="docutils literal"><span class="pre">task</span></code> Mechanism, that settles for a specified number of executions
-before the color and word hidden layers execute – simulating a situation in which the task instruction is processed
-before processing the color or word stimuli:</p>
+Composition:  the ProcessingMechanisms in each pathway executed in sequence, ending in the DDM which executed until
+it was complete.  PsyNeuLink’s <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can be used to implement more complicated dependencies among Mechanisms, by
+creating one or more <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> for execution of those Mechanisms and assigning those to the Composition’s
+<a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>. Conditions can specify the behavior of a Mechanism on its own (e.g., how many times it should be executed
+in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>), its behavior relative to one or more other Components (e.g., how many times it
+should wait for another Mechanism to execute before it does so), or even arbitrary functions (e.g., a convergence
+criterion for the settling of a recurrent network). For example, the following implements a version of the model above
+that uses a leaky competing accumulator <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/11488378">https://www.ncbi.nlm.nih.gov/pubmed/11488378</a> (<a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a>) for the
+<code class="docutils literal"><span class="pre">task</span></code> Mechanism.  The latter settles for a specified number of executions before the color and word hidden layers
+execute, simulating a situation in which the task instruction is processed before processing the color or word stimuli:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Modify consruction of task Mechanism:</span>
 <span class="n">task</span> <span class="o">=</span> <span class="n">LCAMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;TASK&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
@@ -439,12 +441,12 @@ before processing the color or word stimuli:</p>
 </pre></div>
 </div>
 <p>In the example above, the <code class="docutils literal"><span class="pre">color_hidden</span></code> and <code class="docutils literal"><span class="pre">word_hidden</span></code> Mechanisms both wait to execute until the <code class="docutils literal"><span class="pre">task</span></code>
-Mechanism has executed 100 times.  They could also each have been made to wait different number of times;  in that case,
-since the <code class="docutils literal"><span class="pre">output</span></code> Mechanism depends on both them, it would have waited until they had both executed before doing so
-itself.  This imposes a fixed “setting time” (100 executions) on the <code class="docutils literal"><span class="pre">task</span></code> Mechanism. However, it could also be
-allowed to settle until it reaches some criterion.  For example, the <code class="docutils literal"><span class="pre">color_hidden</span></code> and <code class="docutils literal"><span class="pre">word_hidden</span></code> can be
-configured to wait until the value of the <code class="docutils literal"><span class="pre">task</span></code> Mechanism “converges”, by changing the conditions for execution
-of the <code class="docutils literal"><span class="pre">color_hidden</span></code> and <code class="docutils literal"><span class="pre">task_hidden</span></code> Mechanism’s to depend on a function, as follows:</p>
+Mechanism has executed 100 times.  They could also each have been made to wait different numbers of times;  in that
+case, since the <code class="docutils literal"><span class="pre">output</span></code> Mechanism depends on both them, it would have waited until they had both executed before
+doing so itself.  This example also imposes a fixed “setting time” (100 executions) on the <code class="docutils literal"><span class="pre">task</span></code> Mechanism. However,
+it could also be allowed to settle until it reaches some criterion.  For example, the <code class="docutils literal"><span class="pre">color_hidden</span></code> and
+<code class="docutils literal"><span class="pre">word_hidden</span></code> can be configured to wait until the value of the <code class="docutils literal"><span class="pre">task</span></code> Mechanism “converges”, by changing the
+conditions for execution of the <code class="docutils literal"><span class="pre">color_hidden</span></code> and <code class="docutils literal"><span class="pre">task_hidden</span></code> Mechanism’s to depend on a function, as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span># Define a function that detects when the a Mechanism&#39;s value has converged, such that the change in all of the
 elements of its value attribute from the last execution (given by its delta attribute) falls below ``epsilon``
 
@@ -457,7 +459,8 @@ Stroop_model.processing_scheduler.add_condition(color_hidden, When(converge, tas
 Stroop_model.processing_scheduler.add_condition(word_hidden, When(converge, task, epsilon)))
 </pre></div>
 </div>
-<p>Conditions can be made to depend on any Python function.  There is also a rich set of <a class="reference internal" href="Condition.html#condition-pre-specified-list"><span class="std std-ref">pre-defined Conditions</span></a> (such as <code class="docutils literal"><span class="pre">When</span></code> in the examples above).  Together, these can be combined to
+<p>PsyNeuLink provides a rich set of <a class="reference internal" href="Condition.html#condition-pre-specified-list"><span class="std std-ref">pre-defined Conditions</span></a> (such as <code class="docutils literal"><span class="pre">When</span></code> in the
+examples above), but Conditions can also be constructed using any Python function.  Together, these can be combined to
 construct virtually any schedule of execution that is logically possible.</p>
 </div>
 <div class="section" id="control">
@@ -614,7 +617,7 @@ a model.  For example, including the following lines in the script for <code cla
 <span class="n">control</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">(</span><span class="n">VARIABLE</span><span class="p">)</span>
 <span class="n">control</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">(</span><span class="n">VALUE</span><span class="p">)</span>
 <span class="o">...</span>
-<span class="c1"># after call to Stroop_model.run:</span>
+<span class="c1"># After call to Stroop_model.run:</span>
 <span class="n">Stroop_model</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="p">[</span><span class="n">TIME</span><span class="p">,</span> <span class="n">VALUE</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -649,9 +652,80 @@ a model.  For example, including the following lines in the script for <code cla
 </pre></div>
 </div>
 <p>The time is reported as run:trial:pass:time_step.  Note that there is only one entry for the <code class="docutils literal"><span class="pre">control</span></code> Mechanism,
-since it only executed once per trial, but there are ten entries for the <code class="docutils literal"><span class="pre">task</span></code> Mechanism since it executed 10
+since it only executed once per trial, but there are ten entries for the <code class="docutils literal"><span class="pre">task</span></code> Mechanism since it executed ten
 times, as specified in the Conditions described above.  The output of the <a class="reference internal" href="Log.html"><span class="doc">Log</span></a> can also be reported in various other
-formats, including a numpy array, a dictionary of values for each entry, and CSV format.</p>
+formats, including a <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html">numpy</a> array,
+a dictionary of values for each entry, and <a class="reference external" href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> format.</p>
+<p>Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
+mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available in other
+Python-based environments, such as Pytorch.  Since the latter are becoming increasingly accessible and powerful, the
+native implementation of learning in PsyNeuLink is designed with the goals of modularity and exposition rather than
+efficiency of computation.  That is, it is better suited for “story-boarding” a model that includes learning
+components, and for illustrating process flow during learning, than it is for large scale simulations involving
+learning.  However, the specification of the learning components of a model in PsyNeuLink can easily be translated
+into a Pytorch description, which can then be integrated into the PsyNeuLink model with all the benefits of
+Pytorch execution.  Each of the two ways of specifying learning components is described below.</p>
+<div class="section" id="learningmechanisms">
+<h4>LearningMechanisms<a class="headerlink" href="#learningmechanisms" title="Permalink to this headline">¶</a></h4>
+<p>PsyNeuLink has a native class – <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> – that can be used to implement various forms of learning,
+including unsupervised forms (such as <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Hebbian" title="psyneulink.core.components.functions.learningfunctions.Hebbian"><code class="xref any py py-class docutils literal"><span class="pre">Hebbian</span></code></a>) and supervised forms (such as reinforcment learning and
+backpropagation). LearningMechanisms take as their input a target and/or an error signal, provided by a
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the source of the error signal (either a ComparatorMechanism or another LearningMechanism).
+LearningMechanisms use <code class="xref any docutils literal"><span class="pre">LearningSignals</span></code> (a type of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>) to send a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> to the
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that is being learned.  The type of learning implemented by a LearningMechanism is determined by
+the class of <code class="xref any docutils literal"><span class="pre">LearningFunction</span></code> assigned as its <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  In some cases (such as
+multilayered backpropagation networks), configuration of the LearningMechanisms and corresponding Projections can
+become complex; PsyNeuLink provides methods for implementing these automatically, which also serves to illustrate the
+flow of signals and errors implemented by the algorithm.  The example below implements learning in a simple
+three-layered neural network that learns to compute the X-OR operation:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;INPUT&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">hidden_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;HIDDEN&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
+<span class="n">output_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;OUTPUT&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
+<span class="n">input_to_hidden_projection</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;INPUT_TO_HIDDEN&#39;</span><span class="p">,</span>
+                                               <span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span>
+                                               <span class="n">sender</span><span class="o">=</span><span class="n">input_mech</span><span class="p">,</span>
+                                               <span class="n">receiver</span><span class="o">=</span><span class="n">hidden_mech</span><span class="p">)</span>
+<span class="n">hidden_to_output_projection</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;HIDDEN_TO_OUTPUT&#39;</span><span class="p">,</span>
+                                                <span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+                                                <span class="n">sender</span><span class="o">=</span><span class="n">hidden_mech</span><span class="p">,</span>
+                                                <span class="n">receiver</span><span class="o">=</span><span class="n">output_mech</span><span class="p">)</span>
+<span class="n">xor_model</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">()</span>
+<span class="n">learning_components</span> <span class="o">=</span> <span class="n">xor_model</span><span class="o">.</span><span class="n">add_backpropagation_pathway</span><span class="p">([</span><span class="n">input_mech</span><span class="p">,</span>
+                                                             <span class="n">input_to_hidden_projection</span><span class="p">,</span>
+                                                             <span class="n">hidden_mech</span><span class="p">,</span>
+                                                             <span class="n">hidden_to_output_projection</span><span class="p">,</span>
+                                                             <span class="n">output_mech</span><span class="p">],</span>
+                                                             <span class="n">learning_rate</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Calling the Composition’s <code class="docutils literal"><span class="pre">show_graph</span></code> with <code class="docutils literal"><span class="pre">show_learning=True</span></code> shows the network along with all of the learning
+components created by the call to <code class="docutils literal"><span class="pre">add_backpropagation_pathway</span></code>:</p>
+<div class="figure" id="id5">
+<span id="basicsandsampler-xor-model-figure"></span><img alt="_static/BasicsAndSampler_XOR_Model_fig.svg" src="_static/BasicsAndSampler_XOR_Model_fig.svg" /><p class="caption"><span class="caption-text"><strong>XOR Model.</strong>  Items in orange are learning components implemented by the call to <code class="docutils literal"><span class="pre">add_backpropagation_pathway</span></code>;
+diamonds represent Projections, shown as nodes so that the <a class="reference internal" href="LearningProjections.html"><span class="doc">Learning Projections</span></a> to them can be shown.</span></p>
+</div>
+<p>Training the model requires specifying a set of inputs and targets to use as training stimuli, and identifying the
+target Mechanism (that receives the target responses):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct 4 trials worth of stimuli and responses (for the four conditions of the XOR operation):</span>
+<span class="n">xor_inputs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="n">xor_targets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span>   <span class="p">[</span><span class="mi">1</span><span class="p">],</span>     <span class="p">[</span><span class="mi">1</span><span class="p">],</span>    <span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+
+<span class="c1"># Identify target Mechanism returned by add_backpropation_pathway called above</span>
+<span class="n">target_mech</span> <span class="o">=</span> <span class="n">learning_components</span><span class="p">[</span><span class="n">TARGET_MECHANISM</span><span class="p">]</span>
+
+<span class="c1"># Run the model:</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">xor_model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">input_mech</span><span class="p">:</span><span class="n">xor_inputs</span><span class="p">,</span>
+                               <span class="n">target_mech</span><span class="p">:</span><span class="n">xor_targets</span><span class="p">},</span>
+                       <span class="n">num_trials</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It can also be run without learning by calling the run method with <code class="docutils literal"><span class="pre">enable_learning=False</span></code>.</p>
+<p>XXX STROOP MODEL EXAMPLE:  MORE THAN ONE PATHWAY
+XXX RUMELHART MODEL:  EVEN MORE COMPLEX EXAMPLE -&gt; AUTODIFF</p>
+</div>
+<div class="section" id="autodiffcomposition">
+<h4>AutodiffComposition<a class="headerlink" href="#autodiffcomposition" title="Permalink to this headline">¶</a></h4>
+</div>
 </div>
 </div>
 </div>

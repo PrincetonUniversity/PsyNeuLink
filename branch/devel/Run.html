@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Run &mdash; PsyNeuLink 0.5.3.2+309.gde76f95 documentation</title>
+  <title>Run &mdash; PsyNeuLink 0.5.3.2+310.gffed6d5 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+309.gde76f95',
+              VERSION:'0.5.3.2+310.gffed6d5',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+309
+                0.5.3.2+310
               </div>
             
           
@@ -707,15 +707,15 @@ value.</p>
 <div class="section" id="targets">
 <span id="run-targets"></span><h2><em>Targets</em><a class="headerlink" href="#targets" title="Permalink to this headline">¶</a></h2>
 <p>If learning is specified for a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>, then
-target values for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> must be provided for each <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism in the Process or System being run.  These
+target values for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> must be provided for each <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism in the Process or System being run.  These
 are specified in the <strong>targets</strong> argument of the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.</p>
-<p>Recall that the <code class="xref any docutils literal"><span class="pre">TARGET</span></code>, or <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a>, of a learning sequence receives a TARGET, which is provided by the
+<p>Recall that the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>, or <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a>, of a learning sequence receives a TARGET, which is provided by the
 user at run time, and a SAMPLE, which is received from a projection sent by the last mechanism of the learning sequence.
-The TARGET and SAMPLE values for a particular <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism must have the same shape. See <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">learning sequence</span></a> for more details on how these components relate to each other.</p>
+The TARGET and SAMPLE values for a particular <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism must have the same shape. See <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">learning sequence</span></a> for more details on how these components relate to each other.</p>
 <p>The standard format for specifying targets is a Python dictionary where the keys are the last mechanism of each learning
 sequence, and the values are lists in which the i-th element represents the target value for that learning sequence on
-trial i. There must be the same number of keys in the target specification dictionary as there are <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanisms
-in the system. Each target value must be compatible with the shape of the <code class="xref any docutils literal"><span class="pre">TARGET</span></code> mechanism’s TARGET <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_states" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input</span> <span class="pre">state</span></code></a>. This means that for a given key (which is always the last mechanism of the
+trial i. There must be the same number of keys in the target specification dictionary as there are <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms
+in the system. Each target value must be compatible with the shape of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism’s TARGET <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_states" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input</span> <span class="pre">state</span></code></a>. This means that for a given key (which is always the last mechanism of the
 learning sequence) in the target specification dictionary, the value is usually a list of 1d lists/arrays.</p>
 <p>The number of targets specified for each Mechanism must equal the number specified for the <strong>inputs</strong> argument;  as
 with <strong>inputs</strong>, if the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s specified is greater than the number of inputs (and targets), then the
@@ -773,7 +773,7 @@ containing <strong>Mechanism c</strong></td>
 <div class="figure" id="run-targets-fig">
 <img alt="Example of dictionary format of target specification" src="_images/target_spec_dictionary.svg" /></div>
 <p>Alternatively, the value for a given key (last mechanism in the learning sequence) in the target specification
-dictionary may be a function. The output of that function must be compatible with the shape of the <code class="xref any docutils literal"><span class="pre">TARGET</span></code> mechanism’s
+dictionary may be a function. The output of that function must be compatible with the shape of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism’s
 TARGET <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_states" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input</span> <span class="pre">state</span></code></a>. The function will be executed at the start of the learning
 portion of each trial. This format allows targets to be constructed programmatically, in response
 to computations made during the run.</p>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+309.gde76f95 documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+310.gffed6d5 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+309.gde76f95',
+              VERSION:'0.5.3.2+310.gffed6d5',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+309
+                0.5.3.2+310
               </div>
             
           
@@ -791,7 +791,7 @@ the input dictionary.</p>
 </div>
 <p>The same general rules apply when using labels to specify <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">target values</span></a> for a pathway with learning.
 With target values, however, the labels must be included in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_labels_dict" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_labels_dict"><code class="xref any py py-attr docutils literal"><span class="pre">output_labels_dict</span></code></a>
-of the Mechanism that projects to the <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-targets"><span class="std std-ref">TARGET Mechanisms</span></a>), or in
+of the Mechanism that projects to the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-targets"><span class="std std-ref">TARGET Mechanisms</span></a>), or in
 other words, the last Mechanism in the <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">learning sequence</span></a>. This is the same Mechanism used
 to specify target values for a particular learning sequence in the <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">targets dictionary</span></a>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_labels_dict_M1</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;red&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]],</span>
@@ -1211,7 +1211,7 @@ specifying the class or keyword for InputState or OutputState).</li>
 <dl class="attribute">
 <dt>
 <code class="descname">afferents</code></dt>
-<dd><p>Return all afferent Projections</p>
+<dd><p>Return list of all of the Mechanism’s afferent Projections</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1223,7 +1223,7 @@ specifying the class or keyword for InputState or OutputState).</li>
 <dl class="attribute">
 <dt>
 <code class="descname">efferents</code></dt>
-<dd><p>Return list of all of the Mechanism’s Projections</p>
+<dd><p>Return list of all of the Mechanism’s efferent Projections</p>
 </dd></dl>
 
 <dl class="method">
@@ -1418,8 +1418,8 @@ attribute, which may produce an incompatibility with its <a class="reference int
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>states</strong> (<em>State</em><em> or </em><em>List</em><em>[</em><em>State</em><em>]</em>) – one more <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> to be removed from the Mechanism.
-State specification(s) can be an InputState or OutputState object or the name of one.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>states</strong> (<em>State</em><em> or </em><em>List</em><em>[</em><em>State</em><em>]</em>) – one more states to be removed from the Mechanism.
+State specification(s) can be an State object or the name of one.</td>
 </tr>
 </tbody>
 </table>
@@ -1460,7 +1460,7 @@ description of formatting requirements and options).</li>
 
 <dl class="method">
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.show_structure">
-<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions: bool = False</em>, <em>show_mech_function_params: bool = False</em>, <em>show_state_function_params: bool = False</em>, <em>show_values: bool = False</em>, <em>use_labels: bool = False</em>, <em>show_headers: bool = False</em>, <em>show_roles: bool = False</em>, <em>show_conditions: bool = False</em>, <em>composition=None</em>, <em>compact_cim: bool = False</em>, <em>condition: &lt;typecheck.framework.optional object at 0x116c6fa58&gt; = None</em>, <em>node_border: str = '1'</em>, <em>output_fmt: &lt;typecheck.tc_predicates.enum object at 0x116c6fa20&gt; = 'pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.show_structure" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions: bool = False</em>, <em>show_mech_function_params: bool = False</em>, <em>show_state_function_params: bool = False</em>, <em>show_values: bool = False</em>, <em>use_labels: bool = False</em>, <em>show_headers: bool = False</em>, <em>show_roles: bool = False</em>, <em>show_conditions: bool = False</em>, <em>composition=None</em>, <em>compact_cim: bool = False</em>, <em>condition: &lt;typecheck.framework.optional object at 0x11181e0b8&gt; = None</em>, <em>node_border: str = '1'</em>, <em>output_fmt: &lt;typecheck.tc_predicates.enum object at 0x11181e0f0&gt; = 'pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.show_structure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a detailed display of a the structure of a Mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Process &mdash; PsyNeuLink 0.5.3.2+309.gde76f95 documentation</title>
+  <title>Process &mdash; PsyNeuLink 0.5.3.2+310.gffed6d5 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+309.gde76f95',
+              VERSION:'0.5.3.2+310.gffed6d5',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+309
+                0.5.3.2+310
               </div>
             
           
@@ -346,7 +346,7 @@ the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.c
 <p id="process-learning-components">The following Components are created for each learning sequence specified for a Process (see figure below):</p>
 <blockquote>
 <div><ul class="simple">
-<li>a <code class="xref any docutils literal"><span class="pre">TARGET</span></code> <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> (assigned to the Process’ <code class="xref any docutils literal"><span class="pre">target_nodes</span></code>
+<li>a <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> (assigned to the Process’ <code class="xref any docutils literal"><span class="pre">target_nodes</span></code>
 attribute), that is used to <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-function"><span class="std std-ref">calculate an error signal</span></a> for the sequence, by
 comparing <a class="reference internal" href="LearningMechanism.html#learningmechanism-activation-output"><span class="std std-ref">a specified output</span></a> of the last Mechanism in the learning
 sequence (received in the ComparatorMechanism’s <em>SAMPLE</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputState</span></a>) with the
@@ -354,14 +354,14 @@ item of the <strong>target</strong> argument in Process’ <a class="reference i
 corresponding to the learning sequence (received in the ComparatorMechanism’s <em>TARGET</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputState</span></a>).</li>
 </ul>
 <ul class="simple">
-<li>a MappingProjection that projects from the last ProcessingMechanism in the sequence to the <em>SAMPLE</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputState</span></a> of the <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism;</li>
+<li>a MappingProjection that projects from the last ProcessingMechanism in the sequence to the <em>SAMPLE</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputState</span></a> of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism;</li>
 </ul>
 <ul class="simple">
 <li>a ProcessingInputState to represent the corresponding item of the <strong>target</strong> argument of the Process’ <a class="reference internal" href="#psyneulink.core.components.process.Process.execute" title="psyneulink.core.components.process.Process.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.process.Process.run" title="psyneulink.core.components.process.Process.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods;</li>
 </ul>
 <ul class="simple">
 <li>a MappingProjection that projects from the <a class="reference internal" href="#processinputstate"><span class="std std-ref">ProcessInputState</span></a> for the <strong>target</strong> item to the
-<em>TARGET</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputState</span></a> of the <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism;</li>
+<em>TARGET</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputState</span></a> of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism;</li>
 </ul>
 <ul class="simple">
 <li>a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> for each MappingProjection in the sequence that calculates the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> used to modify the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter for that
@@ -486,7 +486,7 @@ Note that it uses the <a class="reference internal" href="TransferFunctions.html
 </div>
 <p><em>Process with individual Projections that implement learning:</em> This <a class="reference internal" href="#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> implements learning
 for two MappingProjections (between <code class="docutils literal"><span class="pre">mechanism_1</span></code> and <code class="docutils literal"><span class="pre">mechanism_2</span></code>, and <code class="docutils literal"><span class="pre">mechanism_3</span></code> and <code class="docutils literal"><span class="pre">mechanism_4</span></code>).
-Since they are not contiguous, two <a class="reference internal" href="#process-learning-sequence"><span class="std std-ref">learning sequences</span></a> are created, with <code class="xref any docutils literal"><span class="pre">TARGET</span></code>
+Since they are not contiguous, two <a class="reference internal" href="#process-learning-sequence"><span class="std std-ref">learning sequences</span></a> are created, with <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>
 Mechanisms assigned to <code class="docutils literal"><span class="pre">mechanism_2</span></code> and <code class="docutils literal"><span class="pre">mechanism_4</span></code> (that will be listed in <code class="docutils literal"><span class="pre">my_process.target_nodes</span></code>):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
 <span class="n">mechanism_2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
@@ -520,7 +520,7 @@ that conform to the format for the <a class="reference internal" href="#psyneuli
 
 <dl class="class">
 <dt id="psyneulink.core.components.process.Process">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.process.</code><code class="descname">Process</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>pathway=None</em>, <em>initial_values=None</em>, <em>clamp_input=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning=None</em>, <em>learning_rate=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x11464c158&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.process.Process" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.process.</code><code class="descname">Process</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>pathway=None</em>, <em>initial_values=None</em>, <em>clamp_input=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning=None</em>, <em>learning_rate=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10f1ed158&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.process.Process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Process(process_spec=None,                               default_variable=None,                                   pathway=None,                                            initial_values={},                                       clamp_input:=None,                                       default_projection_matrix=DEFAULT_PROJECTION_MATRIX,     learning=None,                                           learning_rate=None                                       target=None,                                             params=None,                                             name=None,                                               prefs=None</p>
 <p>Base class for Process.</p>
 <dl class="attribute">
@@ -644,7 +644,7 @@ and those created for <a class="reference internal" href="#process-learning-sequ
 <dl class="attribute">
 <dt id="psyneulink.core.components.process.Process.target_mechanisms">
 <code class="descname">target_mechanisms</code><a class="headerlink" href="#psyneulink.core.components.process.Process.target_mechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> – the <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanisms for the Process, listed in <code class="docutils literal"><span class="pre">target_nodes.data</span></code>;  each is a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a>
+<dd><p><em>MechanismList</em> – the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms for the Process, listed in <code class="docutils literal"><span class="pre">target_nodes.data</span></code>;  each is a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a>
 associated with the last ProcessingMechanism of a <a class="reference internal" href="#process-learning-sequence"><span class="std std-ref">learning sequence</span></a> in the
 Process;</p>
 </dd></dl>

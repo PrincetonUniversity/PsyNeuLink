@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.5.3.2+309.gde76f95 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.5.3.2+310.gffed6d5 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+309.gde76f95',
+              VERSION:'0.5.3.2+310.gffed6d5',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+309
+                0.5.3.2+310
               </div>
             
           
@@ -281,7 +281,7 @@ belonging to more than one Process (as shown for control in this figure).</span>
 <p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.CYCLE" title="psyneulink.core.globals.utilities.NodeRole.CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">CYCLE</span></code></a>: receives a Projection that closes a recurrent loop.</p>
 <p><a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags.CONTROL" title="psyneulink.core.globals.context.ContextFlags.CONTROL"><code class="xref any py py-attr docutils literal"><span class="pre">CONTROL</span></code></a>: monitors the value of another Mechanism for use in controlling parameter values.</p>
 <p><a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags.LEARNING" title="psyneulink.core.globals.context.ContextFlags.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>: monitors the value of another Mechanism for use in learning.</p>
-<p><code class="xref any docutils literal"><span class="pre">TARGET</span></code>: ComparatorMechanism that monitors a <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of a Process and compares it to a corresponding
+<p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>: ComparatorMechanism that monitors a <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of a Process and compares it to a corresponding
 value provided in the <a class="reference internal" href="#psyneulink.core.components.system.System.execute" title="psyneulink.core.components.system.System.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
 <p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.INTERNAL" title="psyneulink.core.globals.utilities.NodeRole.INTERNAL"><code class="xref any py py-attr docutils literal"><span class="pre">INTERNAL</span></code></a>: ProcessingMechanism that does not fall into any of the categories above.</p>
 <div class="admonition note">
@@ -376,7 +376,7 @@ both cases, two other types of input can be provided in corresponding arguments 
 a list or ndarray of <strong>initial_values</strong>, and a list or ndarray of <strong>target</strong> values. The <strong>initial_values</strong> are
 assigned at the start of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> as input to Mechanisms that close recurrent loops (designated as <code class="xref any docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>,
 and listed in the System’s <a class="reference internal" href="#psyneulink.core.components.system.System.recurrent_init_mechanisms" title="psyneulink.core.components.system.System.recurrent_init_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_init_mechanisms</span></code></a> attribute), and
-<strong>target</strong> values are assigned as the <em>TARGET</em> input of the System’s <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanisms (see
+<strong>target</strong> values are assigned as the <em>TARGET</em> input of the System’s <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms (see
 <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">Learning</span></a> below;  also, see <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for additional details of formatting input specifications).</p>
 </div>
 <div class="section" id="processing">
@@ -402,10 +402,10 @@ before the <code class="xref any docutils literal"><span class="pre">controller<
 <p>The learning Components of a System can be displayed using the System’s <a class="reference internal" href="#psyneulink.core.components.system.System.show_graph" title="psyneulink.core.components.system.System.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method with its
 <strong>show_learning</strong> argument assigned <code class="xref any docutils literal"><span class="pre">True</span></code> or <em>ALL</em>. The target values used for learning can be specified in either of
 two formats: dictionary or function, which are described in the <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> module (see <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">Targets</span></a>). Both formats require
-that a target value be provided for each <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism of the System (listed in its <code class="xref any docutils literal"><span class="pre">target_nodes</span></code> attribute).</p>
+that a target value be provided for each <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism of the System (listed in its <code class="xref any docutils literal"><span class="pre">target_nodes</span></code> attribute).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">A <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism of a Process is not necessarily one of the <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanisms of the System to which it belongs
+<p class="last">A <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism of a Process is not necessarily one of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms of the System to which it belongs
 (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-targets"><span class="std std-ref">TARGET Mechanisms</span></a>).  Also, the changes to a System induced by learning are not
 applied until the Mechanisms that receive the Projections being learned are next executed; see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of “lazy” updating).</p>
 </div>
@@ -614,16 +614,16 @@ each entry is a <a class="reference internal" href="Mechanism.html"><span class=
 <dl class="attribute">
 <dt id="psyneulink.core.components.system.System.target_mechanisms">
 <code class="descname">target_mechanisms</code><a class="headerlink" href="#psyneulink.core.components.system.System.target_mechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> – all <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanisms in the System (used for <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">learning</span></a>), listed in
+<dd><p><em>MechanismList</em> – all <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms in the System (used for <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">learning</span></a>), listed in
 <code class="docutils literal"><span class="pre">target_nodes.data</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.system.System.target_input_states">
 <code class="descname">target_input_states</code><a class="headerlink" href="#psyneulink.core.components.system.System.target_input_states" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[SystemInputState]</em> – one item for each <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism in the System (listed in its <code class="xref any docutils literal"><span class="pre">target_nodes</span></code> attribute).  Used to represent the values specified in the <strong>targets</strong>
+<dd><p><em>List[SystemInputState]</em> – one item for each <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism in the System (listed in its <code class="xref any docutils literal"><span class="pre">target_nodes</span></code> attribute).  Used to represent the values specified in the <strong>targets</strong>
 argument of the System’s <a class="reference internal" href="#psyneulink.core.components.system.System.execute" title="psyneulink.core.components.system.System.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods, and to provide
-thoese values to the TARGET <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of each <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanism during <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">execution</span></a>.</p>
+thoese values to the TARGET <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of each <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism during <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">execution</span></a>.</p>
 <blockquote>
 <div></div></blockquote>
 </dd></dl>
@@ -783,7 +783,7 @@ the show_graph <strong>show_control</strong> argument specified as <em>ALL</em> 
 <dt id="psyneulink.core.components.system.System.show">
 <code class="descname">show</code><span class="sig-paren">(</span><em>options=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.system.System.show" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print <code class="docutils literal"><span class="pre">execution_sets</span></code>, <code class="docutils literal"><span class="pre">execution_list</span></code>, <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a>, <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms,
-<code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanisms, <code class="docutils literal"><span class="pre">outputs</span></code> and their labels for the System.</p>
+<a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms, <code class="docutils literal"><span class="pre">outputs</span></code> and their labels for the System.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -812,7 +812,7 @@ the show_graph <strong>show_control</strong> argument specified as <em>ALL</em> 
 Mechanisms;</p>
 <p>NUM_PHASES_PER_TRIAL: number of phases required to execute all Mechanisms in the system;</p>
 <p>LEARNING_MECHANISMS: list of <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a>;</p>
-<p>TARGET: list of <code class="xref any docutils literal"><span class="pre">TARGET</span></code> Mechanisms;</p>
+<p>TARGET: list of <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms;</p>
 <p>LEARNING_PROJECTION_RECEIVERS: list of <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> that receive learning
 projections;</p>
 <p>CONTROL_MECHANISM: <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> of the System;</p>

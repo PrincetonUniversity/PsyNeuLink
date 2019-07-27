@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; PsyNeuLink 0.5.3.2+309.gde76f95 documentation</title>
+  <title>Index &mdash; PsyNeuLink 0.5.3.2+310.gffed6d5 documentation</title>
   
 
   
@@ -24,7 +24,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+309.gde76f95',
+              VERSION:'0.5.3.2+310.gffed6d5',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -69,7 +69,7 @@
             
             
               <div class="version">
-                0.5.3.2+309
+                0.5.3.2+310
               </div>
             
           
@@ -225,6 +225,8 @@
 </li>
       <li><a href="AdaptiveMechanism.html#psyneulink.core.components.mechanisms.adaptive.adaptivemechanism.AdaptiveMechanism_Base">AdaptiveMechanism_Base (class in psyneulink.core.components.mechanisms.adaptive.adaptivemechanism)</a>
 </li>
+      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.add_backpropagation_pathway">add_backpropagation_pathway() (psyneulink.core.compositions.composition.Composition method)</a>
+</li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet.add_condition">add_condition() (psyneulink.core.scheduling.condition.ConditionSet method)</a>
 
       <ul>
@@ -263,6 +265,8 @@
         <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_states">(psyneulink.core.components.mechanisms.mechanism.Mechanism_Base method)</a>
 </li>
       </ul></li>
+      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.add_td_learning_pathway">add_td_learning_pathway() (psyneulink.core.compositions.composition.Composition method)</a>
+</li>
       <li><a href="MemoryFunctions.html#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_to_memory">add_to_memory() (psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory method)</a>
 </li>
       <li><a href="ModulatoryMechanism.html#psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism.add_to_monitor">add_to_monitor() (psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism method)</a>
@@ -278,7 +282,11 @@
       <li><a href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.adjustment_cost_function">adjustment_cost_function (psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal attribute)</a>
 </li>
       <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents">afferents (psyneulink.core.components.mechanisms.mechanism.Mechanism_Base attribute)</a>, <a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents">[1]</a>
+
+      <ul>
+        <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.afferents">(psyneulink.core.compositions.composition.Composition attribute)</a>
 </li>
+      </ul></li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterCall">AfterCall (class in psyneulink.core.scheduling.condition)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNCalls">AfterNCalls (class in psyneulink.core.scheduling.condition)</a>
@@ -287,12 +295,12 @@
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNPasses">AfterNPasses (class in psyneulink.core.scheduling.condition)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNRuns">AfterNRuns (class in psyneulink.core.scheduling.condition)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNTimeSteps">AfterNTimeSteps (class in psyneulink.core.scheduling.condition)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNTrials">AfterNTrials (class in psyneulink.core.scheduling.condition)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterPass">AfterPass (class in psyneulink.core.scheduling.condition)</a>
@@ -891,6 +899,8 @@
         <li><a href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.efferents">(psyneulink.core.components.states.outputstate.OutputState attribute)</a>
 </li>
         <li><a href="State.html#psyneulink.core.components.states.state.State_Base.efferents">(psyneulink.core.components.states.state.State_Base attribute)</a>
+</li>
+        <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.efferents">(psyneulink.core.compositions.composition.Composition attribute)</a>
 </li>
       </ul></li>
       <li><a href="System.html#psyneulink.core.components.system.System.enable_controller">enable_controller (psyneulink.core.components.system.System attribute)</a>
@@ -2562,7 +2572,7 @@
       <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_states">parameter_states (psyneulink.core.components.mechanisms.mechanism.Mechanism_Base attribute)</a>
 
       <ul>
-        <li><a href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.parameter_states">(psyneulink.core.components.projections.projection.Projection_Base attribute)</a>, <a href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.parameter_states">[1]</a>
+        <li><a href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.parameter_states">(psyneulink.core.components.projections.projection.Projection_Base attribute)</a>, <a href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.parameter_states">[1]</a>, <a href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.parameter_states">[2]</a>
 </li>
       </ul></li>
       <li><a href="Parameters.html#psyneulink.core.globals.parameters.ParameterAlias">ParameterAlias (class in psyneulink.core.globals.parameters)</a>
@@ -3510,6 +3520,8 @@
       <li><a href="LCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.t_0_FitzHughNagumo">t_0_FitzHughNagumo (psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
 </li>
       <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Tanh">Tanh (class in psyneulink.core.components.functions.transferfunctions)</a>
+</li>
+      <li><a href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET">TARGET (psyneulink.core.globals.utilities.NodeRole attribute)</a>
 </li>
       <li><a href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target">target (psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism attribute)</a>
 
