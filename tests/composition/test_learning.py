@@ -838,7 +838,7 @@ class TestBackProp:
         'full_overlap'
     ])
     def test_stroop_model_learning(self, order):
-        '''Test backpropagation learning for simple convergent/overlapping pathways'''
+        """Test backpropagation learning for simple convergent/overlapping pathways"""
 
         # CONSTRUCT MODEL ---------------------------------------------------------------------------
 

@@ -1304,7 +1304,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     # FIX 7/28/19 [JDC]:  REMOVE THIS ONCE error_input_states HAS SETTER OR IS OTHERWISE REFACTORED
     def remove_states(self, states):
-        '''Keep error_signal_input_states and error_matrices in sych with error_signals in input_states'''
+        """Keep error_signal_input_states and error_matrices in sych with error_signals in input_states"""
         states = convert_to_list(states)
         for i, state in enumerate([s for s in states if s in self.error_signal_input_states]):
             del self.error_matrices[i]
