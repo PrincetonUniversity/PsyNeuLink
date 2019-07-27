@@ -34,7 +34,6 @@ def test_debug_comp(mode, debug_env):
     comp.add_node(A)
     comp.add_node(B)
     comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-    comp._analyze_graph()
     sched = Scheduler(composition=comp)
 
     inputs_dict = {A: [5]}

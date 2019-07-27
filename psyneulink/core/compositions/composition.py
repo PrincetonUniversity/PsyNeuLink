@@ -1330,6 +1330,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._update_shadows_dict(node)
 
+        try:
+            node._analyze_graph()
+        except AttributeError:
+            pass
+
         if node not in [vertex.component for vertex in
                         self.graph.vertices]:  # Only add if it doesn't already exist in graph
             node.is_processing = True

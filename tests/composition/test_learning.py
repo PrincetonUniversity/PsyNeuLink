@@ -313,8 +313,6 @@ class TestNestedLearning:
         rl_agent = pnl.Composition(name='RL Agent')
         rl_learning_components = rl_agent.add_reinforcement_learning_pathway([rl_agent_state,
                                                                               rl_agent_action])
-        rl_agent._analyze_graph()
-
         model = pnl.Composition(name='Adaptive Replay Model')
         model.add_nodes([stim_in, context_in, reward_in, perceptual_state, rl_agent, action])
         model.add_projection(sender=perceptual_state, receiver=rl_agent_state)
