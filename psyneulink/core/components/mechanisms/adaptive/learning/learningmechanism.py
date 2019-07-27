@@ -1282,6 +1282,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             self.error_matrices.append(error_source.primary_learned_projection.parameter_states[MATRIX])
             if ERROR_SIGNAL in input_state.name:
                 self._error_signal_input_states.append(input_state)
+        return states
 
     def _execute(
         self,

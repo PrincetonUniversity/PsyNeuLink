@@ -610,6 +610,7 @@ components created by the call to ``add_backpropagation_pathway``:
 .. _BasicsAndSampler_XOR_MODEL_Figure:
 
 .. figure:: _static/BasicsAndSampler_XOR_Model_fig.svg
+   :width: 75%
 
     **XOR Model.**  Items in orange are learning components implemented by the call to ``add_backpropagation_pathway``;
     diamonds represent Projections, shown as nodes so that the `LearningProjections` to them can be shown.
