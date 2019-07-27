@@ -713,7 +713,6 @@ class MappingProjection(PathwayProjection_Base):
         )
         self._parameter_states[MATRIX]._instantiate_value(context)
 
-
         # # Assign ParameterState the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
         # self._parameter_states[MATRIX].log = self.log
 
@@ -815,27 +814,20 @@ class MappingProjection(PathwayProjection_Base):
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
-        self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+        self.parameters.context._get(execution_id).execution_phase = \
+            self.receiver.owner.parameters.context._get(execution_id).execution_phase
         self.parameters.context._get(execution_id).string = context
 
         # If function is Identity Function, no need to update ParameterStates, as matrix is not used
         if not isinstance(self.function, Identity):
-
-            if (hasattr(self.parameters.context._get(execution_id), "composition") and
-                    hasattr(self.parameters.context._get(execution_id).composition, "learning_enabled") and
-                    self.parameters.context._get(execution_id).composition.learning_enabled):
-                self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
-                self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-                self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-
             self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         value = super()._execute(
                 variable=variable,
                 execution_id=execution_id,
                 runtime_params=runtime_params,
-                context=context
-        )
+                context=context)
+
         return value
 
     @property
@@ -863,8 +855,7 @@ class MappingProjection(PathwayProjection_Base):
                 (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {LEARNING, LEARNING_PROJECTION}
                  or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection) or
                      (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
-                          issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection)))
-            ):
+                          issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection)))):
             self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX,
                                                             (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]))
 

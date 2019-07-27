@@ -403,7 +403,9 @@ from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric, type_match
 
 __all__ = [
-    'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError', 'ProjectionRegistry'
+    'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS',
+    'ProjectionError', 'DuplicateProjectionError', 'ProjectionRegistry',
+    'kpProjectionTimeScaleLogEntry'
 ]
 
 ProjectionRegistry = {}
@@ -431,6 +433,10 @@ ProjectionTuple = namedtuple("ProjectionTuple", "state, weight, exponent, projec
 
 
 class ProjectionError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+class DuplicateProjectionError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -812,24 +818,27 @@ class Projection_Base(Projection):
         If self.sender is a State class reference, validate that it is a OutputState
         Assign projection to sender's efferents attribute
         """
+        from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.states.outputstate import OutputState
 
         if not (
-            isinstance(sender, (Mechanism, State, Process_Base))
+            isinstance(sender, (Composition, Mechanism, State, Process_Base))
             or (inspect.isclass(sender) and issubclass(sender, (Mechanism, State)))
         ):
-            raise ProjectionError("PROGRAM ERROR: Invalid specification for {} ({1}) of {} "
-                                  "(including paramClassDefaults: {}".
-                                  format(SENDER, sender, self.name, self.paramClassDefaults[PROJECTION_SENDER]))
+            assert False, \
+                f"PROGRAM ERROR: Invalid specification for {SENDER} ({sender}) of {self.name} " \
+                f"(including paramClassDefaults: {self.paramClassDefaults[PROJECTION_SENDER]})."
 
-        self.sender = sender
         # If self.sender is specified as a Mechanism (rather than a State),
         #     get relevant OutputState and assign it to self.sender
         # IMPLEMENTATION NOTE: Assume that self.sender should be the primary OutputState; if that is not the case,
         #                      self.sender should either be explicitly assigned, or handled in an override of the
         #                      method by the relevant subclass prior to calling super
-        if isinstance(self.sender, Mechanism):
-            self.sender = self.sender.output_state
+        if isinstance(sender, Composition):
+            sender = sender.output_CIM
+        if isinstance(sender, Mechanism):
+            sender = sender.output_state
+        self.sender = sender
 
         # At this point, self.sender should be a OutputState
         if not isinstance(self.sender, OutputState):
@@ -837,8 +846,35 @@ class Projection_Base(Projection):
                                   format(self.name, self.sender))
 
         # Assign projection to self.sender's efferents list attribute
+        # First make sure that projection is not already in efferents
         if self not in self.sender.efferents:
-            self.sender.efferents.append(self)
+            # # MODIFIED 7/22/19 OLD:
+            # self.sender.efferents.append(self)
+            # # MODIFIED 7/22/19 NEW: [JDC]
+            # FIX: THIS CRASHES IF RECEIVER IS NONE;
+            #      CAN BE FIXED BY HAVING _instantiate_projection_from_state HANDLE THAT GRACEFULLY BY
+            #      SIMPLY ADDING PROJECTION TO self.sender.efferents;  THAT SHOULD ALSO TAKE CARE OF
+            #      CHECKING FOR DUPLICATES
+            # sender._instantiate_projection_from_state(projection_spec=self,
+            #                                           context=context)
+            # MODIFIED 7/22/19 NEWER: [JDC]
+            # Then make sure there is not already a projection to its receiver
+            receiver = self.receiver
+            if isinstance(receiver, Composition):
+                receiver = receiver.input_CIM
+            if isinstance(receiver, Mechanism):
+                receiver = receiver.input_state
+
+            if receiver._check_for_duplicate_projections(self):
+                raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
+                                               f"{receiver.owner.name} that already has an identical "
+                                               f"{Projection.__name__}.")
+            else:
+                self.sender.efferents.append(self)
+            # MODIFIED 7/22/19 END
+        else:
+            raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} from {sender.name} of "
+                                           f"{sender.owner.name} that already has an identical {Projection.__name__}.")
 
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.states.parameterstate import _instantiate_parameter_state
@@ -970,6 +1006,7 @@ class Projection_Base(Projection):
 
     @property
     def parameter_states(self):
+        """Read-only access to _parameter_states"""
         return self._parameter_states
 
     @parameter_states.setter
@@ -1005,6 +1042,9 @@ class Projection_Base(Projection):
             [self.function],
             self.parameter_states,
         ))
+
+    def _delete_projection(projection):
+        raise ProjectionError(f"{Projection.__name__} class {type(projection)} does not implement _delete method.")
 
 
 @tc.typecheck

@@ -187,6 +187,8 @@ lvoc.set_log_conditions('value')
 # lvoc.reportOutputPref=True
 
 c.add_node(lvoc)
+c._analyze_graph()
+c.show_graph(show_controller=True, show_cim=True)
 
 # c.show_graph(show_node_structure=pnl.ALL, show_cim=True)
 

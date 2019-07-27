@@ -1777,8 +1777,8 @@ class Process(Process_Base):
                                        format(i, process_input[i], self.name, mechanism.name, input_state_variable))
                 # Create MappingProjection from Process input state to corresponding mechanism.input_state
                 proj = MappingProjection(sender=self.process_input_states[i],
-                                  receiver=mechanism.input_states[i],
-                                  name=self.name+'_Input Projection')
+                                         receiver=mechanism.input_states[i],
+                                         name=self.name+'_Input Projection')
                 proj._activate_for_compositions(self)
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
@@ -2717,7 +2717,7 @@ class ProcessInputState(OutputState):
         else:
             self.name = owner.name + "_" + name
         self.prefs = prefs
-        self.efferents = []
+        self.path_afferents = []
         self.owner = owner
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
@@ -2725,7 +2725,6 @@ class ProcessInputState(OutputState):
 
         self.parameters.value._set(variable)
 
-        # self.path_afferents = []
         # self.index = PRIMARY
         # self.assign = None
 

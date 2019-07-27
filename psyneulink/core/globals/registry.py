@@ -292,7 +292,7 @@ def remove_instance_from_registry(registry, category, name=None, component=None)
 
     try:
         clear_registry(registry_entry.instanceDict[name]._stateRegistry)
-    except AttributeError:
+    except (AttributeError):
         pass
 
     # Delete instance

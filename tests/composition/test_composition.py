@@ -1911,9 +1911,9 @@ class TestRun:
         D = TransferMechanism(name="composition-pytests-D", function=Linear(slope=2.0))
         E = TransferMechanism(name="composition-pytests-E", function=Linear(slope=2.0))
         A_to_B = MappingProjection(sender=A, receiver=B)
-        D_to_E = MappingProjection(sender=D, receiver=E)
+        C_to_E = MappingProjection(sender=C, receiver=E)
         with pytest.raises(CompositionError) as error_text:
-            comp.add_linear_processing_pathway([A, A_to_B, B, C, D, E, D_to_E])
+            comp.add_linear_processing_pathway([A, A_to_B, B, C, D, E, C_to_E])
 
         assert "A projection cannot be the last item in a linear processing pathway." in str(error_text.value)
 

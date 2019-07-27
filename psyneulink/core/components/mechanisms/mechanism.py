@@ -956,9 +956,9 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
-    INPUT_LABELS_DICT, INPUT_STATES, INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    OUTPUT_LABELS_DICT, OUTPUT_STATES, OWNER_VALUE, PARAMETER_STATES, PREVIOUS_VALUE, REFERENCE_VALUE, \
-    TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
+    INPUT_LABELS_DICT, INPUT_STATE, INPUT_STATES, INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
+    OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, \
+    REFERENCE_VALUE, TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
 from psyneulink.core.globals.parameters import Parameter, parse_execution_context
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -2321,7 +2321,7 @@ class Mechanism_Base(Mechanism):
 
         # UPDATE VARIABLE and INPUT STATE(S)
 
-        # Executing or simulating Process or System, get input by updating input_states
+        # Executing or simulating Process, System or Composition, so get input by updating input_states
 
         if (input is None
             and (self.parameters.context._get(execution_id).execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))
@@ -2475,10 +2475,11 @@ class Mechanism_Base(Mechanism):
         Aggregate results (using InputState execute method)
         Update InputState.value
         """
+
         for i in range(len(self.input_states)):
             state = self.input_states[i]
             state.update(execution_id=execution_id, params=runtime_params, context=context)
-        return np.array([state.parameters.value._get(execution_id) for state in self.input_states])
+        return np.array(self.get_input_values(execution_id))
 
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
 
@@ -3337,26 +3338,30 @@ class Mechanism_Base(Mechanism):
         ---------
 
         states : State or List[State]
-            one more `InputStates <InputState>` or `OutputStates <OutputState>` to be removed from the Mechanism.
-            State specification(s) can be an InputState or OutputState object or the name of one.
+            one more states to be removed from the Mechanism.
+            State specification(s) can be an State object or the name of one.
 
         """
-        from psyneulink.core.components.states.inputstate import INPUT_STATE
-        from psyneulink.core.components.states.outputstate import OutputState, OUTPUT_STATE
+        # from psyneulink.core.components.states.inputstate import INPUT_STATE
+        from psyneulink.core.components.states.outputstate import OutputState
 
         # Put in list to standardize treatment below
-        if not isinstance(states, list):
+        if not isinstance(states, (list, ContentAddressableList)):
             states = [states]
 
-        input_states = []
-        output_states = []
+        def delete_state_projections(proj_list):
+            for proj in proj_list:
+                type(proj)._delete_projection(proj)
 
         for state in states:
+
+            delete_state_projections(state.mod_afferents)
 
             if state in self.input_states:
                 if isinstance(state, str):
                     state = self.input_states[state]
                 index = self.input_states.index(state)
+                delete_state_projections(state.path_afferents)
                 del self.input_states[index]
                 remove_instance_from_registry(registry=self._stateRegistry,
                                               category=INPUT_STATE,
@@ -3365,18 +3370,39 @@ class Mechanism_Base(Mechanism):
                 old_variable = np.delete(old_variable,index,0)
                 self.defaults.variable = old_variable
 
+            elif state in self.parameter_states:
+                if isinstance(state, ParameterState):
+                    index = self.parameter_states.index(state)
+                else:
+                    index = self.parameter_states.index(self.parameter_states[state])
+                del self.parameter_states[index]
+                remove_instance_from_registry(registry=self._stateRegistry,
+                                              category=PARAMETER_STATE,
+                                              component=state)
+
             elif state in self.output_states:
                 if isinstance(state, OutputState):
                     index = self.output_states.index(state)
                 else:
                     index = self.output_states.index(self.output_states[state])
-                del self.output_states[state]
+                delete_state_projections(state.efferents)
                 del self.output_values[index]
+                del self.output_states[state]
                 remove_instance_from_registry(registry=self._stateRegistry,
                                               category=OUTPUT_STATE,
                                               component=state)
 
         self.defaults.variable = self.input_values
+
+    def _delete_mechanism(mechanism):
+        mechanism.remove_states(mechanism.input_states)
+        mechanism.remove_states(mechanism.parameter_states)
+        mechanism.remove_states(mechanism.output_states)
+        # del mechanism.function
+        remove_instance_from_registry(MechanismRegistry, mechanism.__class__.__name__,
+                                      component=mechanism)
+        del mechanism
+
 
     def _get_mechanism_param_values(self):
         """Return dict with current value of each ParameterState in paramsCurrent
@@ -3446,7 +3472,13 @@ class Mechanism_Base(Mechanism):
             return None
 
     def get_input_values(self, execution_context=None):
-        return [input_state.parameters.value.get(execution_context) for input_state in self.input_states]
+        input_values = []
+        for input_state in self.input_states:
+            if "LearningSignal" in input_state.name:
+                input_values.append(input_state.parameters.value.get(execution_context).flatten())
+            else:
+                input_values.append(input_state.parameters.value.get(execution_context))
+        return input_values
 
     @property
     def external_input_states(self):
@@ -3551,13 +3583,13 @@ class Mechanism_Base(Mechanism):
 
     @property
     def afferents(self):
-        """Return all afferent Projections"""
+        """Return list of all of the Mechanism's afferent Projections"""
         return ContentAddressableList(component_type=Projection,
                                       list= list(self.path_afferents) + list(self.mod_afferents))
 
     @property
     def efferents(self):
-        """Return list of all of the Mechanism's Projections"""
+        """Return list of all of the Mechanism's efferent Projections"""
         projs = []
         try:
             for output_state in self.output_states:

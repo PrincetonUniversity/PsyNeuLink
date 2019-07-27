@@ -300,11 +300,9 @@ refer to the Components being learned and/or its operation:
   `LearningProjection`, listed in the order of the `LearningSignal(s) <LearningSignal>` to which they belong,
   as those are listed in the LearningMechanism's `learning_signals <LearningMechanism.learning_signals>` attribute.
 ..
-* `learning_enabled <LearningMechanism.learning_enabled>` - if set to `False`, learning is disabled for all of its
-  `LearningProjections <LearningProjection>`;  however, the LearningMechanism is still executed during the learning
-  phase of execution of a `Process <Process_Execution>` or `System  <System_Execution_Learning>`, so that the error
-  signals it calculates can be passed to any other LearningMechanism(s) to which it projects (see
-  `LearningMechanism_Multilayer_Learning`).
+* `learning_enabled <LearningMechanism.learning_enabled>` - determines whether and when the LearningMechanism's
+  `learning_projections <LearningMechanism.learning_priojections>` are executed (see `learning_enabled
+  <LearningMechanism.learning_enabled>` for additional details).
 ..
 * `input_source` - the `Mechanism <Mechanism>` that sends the `primary_learned_projection`, and projects to the
   LearningMechanism's *ACTIVATION_INPUT* `InputState <LearningMechanism_Activation_Input>`.
@@ -554,7 +552,8 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
+    MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE, AFTER, \
+    ONLINE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -680,15 +679,16 @@ def _learning_mechanism_learning_rate_setter(value, owning_component=None, execu
 
 class LearningMechanism(AdaptiveMechanism_Base):
     """
-    LearningMechanism(                             \
-        variable,                                  \
-        error_sources,                             \
-        function=BackPropagation,                  \
-        learning_rate=None,                        \
-        learning_signals=LEARNING_SIGNAL,          \
-        modulation=ModulationParam.ADDITIVE,       \
-        params=None,                               \
-        name=None,                                 \
+    LearningMechanism(                        \
+        variable,                             \
+        error_sources,                        \
+        function=BackPropagation,             \
+        learning_rate=None,                   \
+        learning_signals=LEARNING_SIGNAL,     \
+        modulation=ModulationParam.ADDITIVE,  \
+        learning_enabled=True,                \
+        params=None,                          \
+        name=None,                            \
         prefs=None)
 
     Implements a Mechanism that modifies the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
@@ -755,15 +755,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         <LearningMechanism_Single_Layer_Learning>`, or for the last `MappingProjection` in a learning sequence in
         `multilayer learning <LearningMechanism_Multilayer_Learning>`;  otherwise they must be a `LearningMechanism`.
 
-    learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] :
-    default *LEARNING_SIGNAL*
-        specifies the parameter(s) to be learned (see `learning_signals <LearningMechanism.learning_signals>` for
-        details).
-
-    modulation : ModulationParam : default ModulationParam.ADDITIVE
-        specifies the default form of modulation used by the LearningMechanism's LearningSignals,
-        unless they are `individually specified <LearningSignal_Specification>`.
-
     function : LearningFunction or function : default BackPropagation
         specifies the function used to calculate the LearningMechanism's `learning_signal
         <LearningMechanism.learning_signal>` and `error_signal <LearningMechanism.error_signal>` attributes.  It's
@@ -775,6 +766,19 @@ class LearningMechanism(AdaptiveMechanism_Base):
     learning_rate : float : default None
         specifies the learning rate for the LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
         for details).
+
+    learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] :
+    default *LEARNING_SIGNAL*
+        specifies the parameter(s) to be learned (see `learning_signals <LearningMechanism.learning_signals>` for
+        details).
+
+    modulation : ModulationParam : default ModulationParam.ADDITIVE
+        specifies the default form of modulation used by the LearningMechanism's LearningSignals,
+        unless they are `individually specified <LearningSignal_Specification>`.
+
+    learning_enabled : bool or Enum[ONLINE|AFTER] : True
+        specifies whether and when the LearningMechanism's `LearningProjections <LearningProjection>` are executed
+        (see `learning_enabled <LearningMechanism.learning_enabled>` for additional details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -837,12 +841,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         all of the MappingProjections modified by the LearningMechanism;  the first item in the list is always the
         `primary_learned_projection <LearningMechanism.primary_learned_projection>`.
 
-    learning_enabled : bool : True
-        if set to False, learning is disabled for all of its LearningProjections; however, the LearningMechanism is
-        still executed during the learning phase of execution of a `Process <Process_Execution>` or `System
-        <System_Execution_Learning>`, so that the error signals it calculates can be passed to any other
-        LearningMechanism(s) to which it projects (see `LearningMechanism_Multilayer_Learning`).
-
     function : LearningFunction or function : default BackPropagation
         specifies the function used to calculate the `learning_signal <LearningMechanism.learning_signal>` (assigned
         to the LearningMechanism's `LearningSignal(s) <LearningMechanism_LearningSignal>`), and the `error_signal
@@ -887,6 +885,21 @@ class LearningMechanism(AdaptiveMechanism_Base):
         list of all of the LearningProjections <LearningProject>` from the LearningMechanism, listed in the order of
         the `LearningSignals <LearningSignal>` to which they belong (that is, in the order they are listed in
         the `learning_signals <LearningMechanism>` attribute).
+
+    learning_enabled : bool or Enum[ONLINE|AFTER]
+        determines whether and when the `learning_projections <LearningMechanism.learning_projections>` are executed.
+        If set to False, they are never updated;  however, the LearningMechanism is still executed in any `Composition`
+        to which it belongs, so that the error signals it calculates can be passed to any other LearningMechanism(s)
+        to which it projects (see `LearningMechanism_Multilayer_Learning`).  If set to True or `ONLINE`,
+        `learning_projections <LearningMechanism.learning_projections>` are updated when the LearningMechanism
+        executes.  If set to `AFTER`, `learning_projections <LearningMechanism.learning_projections>` are updated at
+        the end of each `TRIAL` of execution of the Composition to which the LearningMechanism belongs.
+
+        .. note::
+           the `learning_abled <LearningMechanism.learning_enabled>` attribute of a LearningMechanism determines the
+           default behavior of its `learning_projections <LearningMechanism.learning_projections>`.  However, this
+           can be overridden for individual `LearningProjections <LearningProjection>` by assigning their
+           `learning_enabled <LearningProjection.learning_enabled>` attributes either at or after construction.
 
     output_states : ContentAddressableList[OutputState]
         list of the LearningMechanism's `OutputStates <OutputState>`, including its *ERROR_SIGNAL* `OutputState
@@ -975,11 +988,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         """
         function = Parameter(BackPropagation, stateful=False, loggable=False)
         error_matrix = Parameter(None, modulable=True)
-
         learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter)
         error_signal = Parameter(None, read_only=True, getter=_error_signal_getter)
         learning_rate = Parameter(None, modulable=True, setter=_learning_mechanism_learning_rate_setter)
-
         learning_enabled = True
 
     paramClassDefaults = AdaptiveMechanism_Base.paramClassDefaults.copy()
@@ -1003,6 +1014,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  learning_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
+                 learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=True,
                  in_composition=False,
                  params=None,
                  name=None,
@@ -1021,6 +1033,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         params = self._assign_args_to_param_dicts(error_sources=error_sources,
                                                   function=function,
                                                   learning_signals=learning_signals,
+                                                  learning_enabled=learning_enabled,
                                                   params=params)
 
         # # USE FOR IMPLEMENTATION OF deferred_init()
@@ -1170,10 +1183,16 @@ class LearningMechanism(AdaptiveMechanism_Base):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         self.error_matrices = None
-        if self.error_sources and not self.in_composition:
+        if self.error_sources:
             self.error_matrices = [None] * len(self.error_sources)
             for i, error_source in enumerate(self.error_sources):
-                self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source, receiver=self)
+                if not self.in_composition:
+                    # FIX: [JDC 7/15/19] - SHOULD THIS HAPPEN OUTSIDE OF SYSTEM OR PROCESS,
+                    #  OR BE REMOVED WHEN THOSE ARE FULLY DEPRECATED
+                    # IMPLEMENTATION NOTE:
+                    #    _create_terminal_backprop_sequence_components and _create_multilayer_backprop_components
+                    #    in Composition take care of creating projections from error_sources to LearningMechanisms
+                    self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source, receiver=self)
                 if isinstance(error_source, ObjectiveMechanism):
                     self.error_matrices[i] = np.identity(len(error_source.input_states[SAMPLE].value))
                 else:
@@ -1284,15 +1303,34 @@ class LearningMechanism(AdaptiveMechanism_Base):
         List[ndarray, ndarray] : summed learning_signal, summed error_signal
 
         """
+
         # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
-        current_error_signal_inputs = self.error_signal_input_states
-        curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
-        error_signal_inputs = variable[curr_indices]
-        # KAM added 3/27/19 to get past None error
-        if not self.error_matrices:
-            self.error_matrices = [[0.]]
-        error_matrices = np.array(self.error_matrices)
-        error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
+        error_signal_indices = self.error_signal_indices
+        error_signal_inputs = variable[error_signal_indices]
+        # FIX 7/22/19 [JDC]: MOVE THIS TO ITS OWN METHOD CALLED ON INITALIZATION AND UPDTATED AS NECESSARY
+        if self.error_matrices is None:
+            # KAM 6/28/19 Hack to get the correct shape and contents for initial error matrix in backprop
+            if self.function is BackPropagation or isinstance(self.function, BackPropagation):
+                mat = []
+                for i in range(len(error_signal_inputs[0])):
+                    row = []
+                    for j in range(len(error_signal_inputs[0])):
+                        if i == j:
+                            row.append(1.)
+                        else:
+                            row.append(0.)
+                    mat.append(row)
+                self.error_matrices = mat
+                error_matrices = mat
+
+            else:
+                self.error_matrices = [[0.]]
+                error_matrices = \
+                    np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in error_signal_indices])]
+        else:
+            error_matrices = \
+                np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in error_signal_indices])]
+
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterState):
                 error_matrices[i] = error_matrices[i].parameters.value._get(execution_id)
@@ -1303,33 +1341,40 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Compute learning_signal for each error_signal (and corresponding error-Matrix:
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
             variable[ERROR_OUTPUT_INDEX] = error_signal_input
-            learning_signal, error_signal = super()._execute(
-                variable=variable,
-                execution_id=execution_id,
-                error_matrix=error_matrix,
-                runtime_params=runtime_params,
-                context=context
-            )
+            learning_signal, error_signal = super()._execute(variable=variable,
+                                                             execution_id=execution_id,
+                                                             error_matrix=error_matrix,
+                                                             runtime_params=runtime_params,
+                                                             context=context
+                                                             )
             # Sum learning_signals and error_signals
             summed_learning_signal += learning_signal
             summed_error_signal += error_signal
 
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if (self.reportOutputPref and
+                self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING):
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
+
+        # Durning initialization return zeros so that the first "real" trial for Backprop does not start
+        # with the error computed during initialization
+        if (self.in_composition and
+                isinstance(self.function, BackPropagation) and
+                self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
+            return [0*summed_learning_signal, 0*summed_error_signal]
 
         return [summed_learning_signal, summed_error_signal]
 
-    @property
-    def learning_enabled(self):
-        try:
-            return self._learning_enabled
-        except AttributeError:
-            self._learning_enabled = True
-            return self._learning_enabled
-
-    @learning_enabled.setter
-    def learning_enabled(self, assignment):
-        self._learning_enabled = assignment
+    # @property
+    # def learning_enabled(self):
+    #     try:
+    #         return self._learning_enabled
+    #     except AttributeError:
+    #         self._learning_enabled = True
+    #         return self._learning_enabled
+    #
+    # @learning_enabled.setter
+    # def learning_enabled(self, assignment:tc.any(bool, tc.enum(ONLINE, AFTER))):
+    #     self._learning_enabled = assignment
 
     @property
     def input_source(self):
@@ -1357,9 +1402,19 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 return [s for s in self.input_states if ERROR_SIGNAL in s]
 
     @property
+    def error_signal_indices(self):
+        current_error_signal_inputs = self.error_signal_input_states
+        return [self.input_states.index(s) for s in current_error_signal_inputs]
+
+    @property
     def primary_learned_projection(self):
         return self.learned_projections[0]
 
     @property
     def learned_projections(self):
         return [lp.receiver.owner for ls in self.learning_signals for lp in ls.efferents]
+
+    @property
+    def dependent_learning_mechanisms(self):
+        return [p.parameter_states[MATRIX].mod_afferents[0].sender.owner for p in self.input_source.path_afferents
+                if p.has_learning_projection]
