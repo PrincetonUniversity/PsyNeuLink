@@ -1033,7 +1033,6 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, B])
         comp.add_linear_processing_pathway([A, B, D])
         comp.add_linear_processing_pathway([A, C, D])
-        comp._analyze_graph()
 
         inputs_dict = {A: [4.0]}
         sched = Scheduler(composition=comp)
@@ -1080,7 +1079,6 @@ class TestExecutionOrder:
         comp.add_node(B)
         comp.add_node(A)
 
-        comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
         sched = Scheduler(composition=comp)
@@ -1127,7 +1125,6 @@ class TestExecutionOrder:
         comp.add_node(B)
         comp.add_node(A)
 
-        comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
         sched = Scheduler(composition=comp)
@@ -1174,7 +1171,6 @@ class TestExecutionOrder:
         comp.add_node(B)
         comp.add_node(A)
 
-        comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
         sched = Scheduler(composition=comp)
@@ -1221,7 +1217,6 @@ class TestExecutionOrder:
         comp.add_node(B)
         comp.add_node(A)
 
-        comp._analyze_graph()
 
         inputs_dict = {C: [4.0]}
         sched = Scheduler(composition=comp)
@@ -1526,7 +1521,6 @@ class TestRun:
     #     comp.add_node(A)
     #     comp.add_node(B)
     #     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    #     comp._analyze_graph()
     #     sched = Scheduler(composition=comp)
     #     output = comp.run(
     #         scheduler_processing=sched
@@ -1550,7 +1544,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(P, A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [5, 4]}
         sched = Scheduler(composition=comp)
         output = comp.run(
@@ -1577,7 +1570,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(P, A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [5, 4, 3]}
         sched = Scheduler(composition=comp)
         output = comp.run(
@@ -1602,7 +1594,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
@@ -1677,7 +1668,6 @@ class TestRun:
         comp.add_node(E)
         comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
         comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
-        comp._analyze_graph()
         inputs_dict = {A: [5],
                        B: [5]}
         sched = Scheduler(composition=comp)
@@ -1698,7 +1688,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -1726,7 +1715,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -1749,7 +1737,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
@@ -1772,7 +1759,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
@@ -1794,7 +1780,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=5, bin_execute=mode)
@@ -1815,7 +1800,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [[5], [4], [3]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=3, bin_execute=mode)
@@ -1988,7 +1972,6 @@ class TestRun:
         E = TransferMechanism(name="composition-pytests-E", function=Linear(slope=5.0))
         comp.add_linear_processing_pathway([A, C, E])
         comp.add_linear_processing_pathway([B, D, E])
-        comp._analyze_graph()
         inputs_dict = {A: [5],
                        B: [5]}
         sched = Scheduler(composition=comp)
@@ -2011,7 +1994,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs={A: [[1.0]]}, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(25, output)
@@ -2034,7 +2016,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, scheduler_processing=sched, bin_execute=mode)
         assert 25 == output[0][0]
@@ -2057,7 +2038,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs={A: [var]}, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose([25.0 for x in range(vector_length)], output[0])
@@ -2089,7 +2069,6 @@ class TestRun:
         comp.add_node(E)
         comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
         comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
-        comp._analyze_graph()
         inputs_dict = {C: [5.0],
                        D: [5.0]}
         sched = Scheduler(composition=comp)
@@ -2123,7 +2102,6 @@ class TestRun:
         comp.add_node(E)
         comp.add_projection(MappingProjection(sender=C, receiver=D), C, D)
         comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
-        comp._analyze_graph()
         inputs_dict = {C: [5.0]}
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
@@ -2156,7 +2134,6 @@ class TestRun:
         comp.add_node(E)
         comp.add_projection(MappingProjection(sender=C, receiver=E.input_states['a']), C, E)
         comp.add_projection(MappingProjection(sender=D, receiver=E.input_states['b']), D, E)
-        comp._analyze_graph()
         inputs_dict = {C: [6.0],
                        D: [8.0]}
         sched = Scheduler(composition=comp)
@@ -2193,7 +2170,6 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=C.output_states[1], receiver=E.input_states['b']), C, E)
         comp.add_projection(MappingProjection(sender=D.output_states[0], receiver=E.input_states['a']), D, E)
         comp.add_projection(MappingProjection(sender=D.output_states[1], receiver=E.input_states['b']), D, E)
-        comp._analyze_graph()
         inputs_dict = {C: [[5.0], [6.0]],
                        D: [[7.0], [8.0]]}
         sched = Scheduler(composition=comp)
@@ -2230,7 +2206,6 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=C.output_states[1], receiver=E), C, E)
         comp.add_projection(MappingProjection(sender=D.output_states[0], receiver=E), D, E)
         comp.add_projection(MappingProjection(sender=D.output_states[1], receiver=E), D, E)
-        comp._analyze_graph()
         inputs_dict = {C: [[5.0], [6.0]],
                        D: [[7.0], [8.0]]}
         sched = Scheduler(composition=comp)
@@ -2250,7 +2225,6 @@ class TestRun:
         comp = Composition()
         A = RecurrentTransferMechanism(size=3, function=Linear(slope=5.0), name="A")
         comp.add_node(A)
-        comp._analyze_graph()
         sched = Scheduler(composition=comp)
         output1 = comp.run(inputs={A: [[1.0, 2.0, 3.0]]}, scheduler_processing=sched, bin_execute=(mode == 'LLVM'))
         assert np.allclose([5.0, 10.0, 15.0], output1)
@@ -2441,7 +2415,6 @@ class TestCallBeforeAfterTimescale:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
 
@@ -2488,7 +2461,6 @@ class TestCallBeforeAfterTimescale:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
 
@@ -2558,7 +2530,6 @@ class TestCallBeforeAfterTimescale:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [1, 2]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -2654,7 +2625,6 @@ class TestCallBeforeAfterTimescale:
     #     comp.add_node(A)
     #     comp.add_node(B)
     #     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    #     comp._analyze_graph()
     #     inputs_dict = {A: [[5], [4], [3]]}
     #     output = comp.run(
     #         inputs=inputs_dict,
@@ -2704,7 +2674,6 @@ class TestCallBeforeAfterTimescale:
     #     comp.add_projection(Hidden_Layer_1, MappingProjection(), Hidden_Layer_2)
     #     comp.add_projection(Hidden_Layer_2, MappingProjection(), Output_Layer)
     #
-    #     comp._analyze_graph()
     #     stim_list = {Input_Layer: [[-1, 30]]}
     #     sched = Scheduler(composition=comp)
     #     output = comp.run(
@@ -2767,7 +2736,6 @@ class TestCallBeforeAfterTimescale:
 #         comp.add_node(E)
 #         comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
 #         comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
-#         comp._analyze_graph()
 #         inputs_dict = {
 #             A: [[5]],
 #             B: [[5]]
@@ -2803,7 +2771,6 @@ class TestCallBeforeAfterTimescale:
 #         comp.add_node(E)
 #         comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
 #         comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
-#         comp._analyze_graph()
 #         inputs_dict = {
 #             A: [[5.]],
 #             B: [[5.]]
@@ -2839,7 +2806,6 @@ class TestCallBeforeAfterTimescale:
 #         comp.add_node(E)
 #         comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
 #         comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
-#         comp._analyze_graph()
 #         inputs_dict = {
 #             A: [[5]],
 #             B: [[5]]
@@ -2888,7 +2854,6 @@ class TestCallBeforeAfterTimescale:
 #         comp.add_node(E)
 #         comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
 #         comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
-#         comp._analyze_graph()
 #         inputs_dict = {
 #             A: [[5]],
 #             B: [[5]]
@@ -2939,7 +2904,6 @@ class TestCallBeforeAfterTimescale:
 #         comp.add_node(E)
 #         comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
 #         comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
-#         comp._analyze_graph()
 #         inputs_dict = {
 #             A: [[100.0]],
 #             B: [[500.0]]
@@ -2971,7 +2935,6 @@ class TestSystemComposition:
     #     sys.add_node(A)
     #     sys.add_node(B)
     #     sys.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    #     sys._analyze_graph()
     #     sched = Scheduler(composition=sys)
     #     output = sys.run(
     #         scheduler_processing=sched
@@ -2985,7 +2948,6 @@ class TestSystemComposition:
         sys.add_node(A)
         sys.add_node(B)
         sys.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        sys._analyze_graph()
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=sys)
         output = sys.run(inputs=inputs_dict, scheduler_processing=sched)
@@ -2999,7 +2961,6 @@ class TestSystemComposition:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [[1], [2], [3], [4]]}
         sched = Scheduler(composition=comp)
 
@@ -3070,7 +3031,6 @@ class TestSystemComposition:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [[1], [2]]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -3165,7 +3125,6 @@ class TestSystemComposition:
     #     comp.add_node(A)
     #     comp.add_node(B)
     #     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    #     comp._analyze_graph()
     #     inputs_dict = {A: [[5], [4], [3]]}
     #     output = comp.run(
     #         inputs=inputs_dict,
@@ -3215,7 +3174,6 @@ class TestSystemComposition:
     #     comp.add_projection(Hidden_Layer_1, MappingProjection(), Hidden_Layer_2)
     #     comp.add_projection(Hidden_Layer_2, MappingProjection(), Output_Layer)
     #
-    #     comp._analyze_graph()
     #     stim_list = {Input_Layer: [[-1, 30]]}
     #     sched = Scheduler(composition=comp)
     #     output = comp.run(
@@ -3475,13 +3433,11 @@ class TestNestedCompositions:
 
         inner_comp = Composition(name="inner_comp")
         inner_comp.add_linear_processing_pathway([A, B])
-        inner_comp._analyze_graph()
         sched = Scheduler(composition=inner_comp)
 
         outer_comp = Composition(name="outer_comp")
         outer_comp.add_node(inner_comp)
 
-        outer_comp._analyze_graph()
         sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs=[1.0], bin_execute=mode)
         assert np.allclose(ret, [[[0.52497918747894]]])
@@ -3506,7 +3462,6 @@ class TestNestedCompositions:
 
         inner_comp1 = Composition(name="inner_comp1")
         inner_comp1.add_linear_processing_pathway([A, B])
-        inner_comp1._analyze_graph()
         sched = Scheduler(composition=inner_comp1)
 
         C = TransferMechanism(name="C",
@@ -3516,14 +3471,12 @@ class TestNestedCompositions:
 
         inner_comp2 = Composition(name="inner_comp2")
         inner_comp2.add_node(C)
-        inner_comp2._analyze_graph()
         sched = Scheduler(composition=inner_comp2)
 
         outer_comp = Composition(name="outer_comp")
         outer_comp.add_node(inner_comp1)
         outer_comp.add_node(inner_comp2)
 
-        outer_comp._analyze_graph()
         sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, bin_execute=mode)
         assert np.allclose(ret, [[[0.52497918747894]],[[0.52497918747894]]])
@@ -3754,9 +3707,6 @@ class TestNestedCompositions:
         # add mechanisms to myPath with default MappingProjections between them
         myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
 
-        # analyze graph (assign roles)
-        myPath._analyze_graph()
-
         # assign input to origin mech
         stimulus = {myMech1: [[1]]}
 
@@ -3794,14 +3744,10 @@ class TestNestedCompositions:
         # add mechanisms to myPath with default MappingProjections between them
         myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
 
-        # analyze graph (assign roles)
-        myPath._analyze_graph()
-
         myPath2 = PathwayComposition()
         myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
         myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
         myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech3])
-        myPath2._analyze_graph()
 
         sys = SystemComposition()
         sys.add_pathway(myPath)
@@ -3832,15 +3778,11 @@ class TestNestedCompositions:
         # add mechanisms to myPath with default MappingProjections between them
         myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
 
-        # analyze graph (assign roles)
-        myPath._analyze_graph()
-
         myPath2 = PathwayComposition()
         myMech4 = TransferMechanism(function=Linear(slope=2.0))
         myMech5 = TransferMechanism(function=Linear(slope=2.0))
         myMech6 = TransferMechanism(function=Linear(slope=2.0))
         myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech6])
-        myPath2._analyze_graph()
 
         sys = SystemComposition()
         sys.add_pathway(myPath)
@@ -3851,7 +3793,6 @@ class TestNestedCompositions:
         # assign input to origin mechs
         # myMech4 ignores its input from the outside world because it is no longer considered an origin!
         stimulus = {myMech1: [[1]]}
-        sys._analyze_graph()
 
         # schedule = Scheduler(composition=sys)
         output = sys.run(inputs=stimulus)
@@ -3879,8 +3820,6 @@ class TestNestedCompositions:
         # add mechanisms to myPath with default MappingProjections between them
         myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
 
-        # analyze graph (assign roles)
-        myPath._analyze_graph()
         myPathScheduler = Scheduler(composition=myPath)
         myPathScheduler.add_condition(myMech2, AfterNCalls(myMech1, 2))
 
@@ -3890,7 +3829,6 @@ class TestNestedCompositions:
         myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
         myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
         myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech3])
-        myPath2._analyze_graph()
 
         sys = SystemComposition()
         sys.add_pathway(myPath)
@@ -3960,7 +3898,6 @@ class TestCompositionInterface:
         comp.add_node(E)
         comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
         comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
-        comp._analyze_graph()
         inputs_dict = {
             A: [[5.]],
             # two trials of one input state each
@@ -4006,7 +3943,6 @@ class TestCompositionInterface:
         comp.add_node(E)
         comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
         comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
-        comp._analyze_graph()
         inputs_dict = {
             A: [[5.]],
             B: [[5.]]
@@ -4044,9 +3980,6 @@ class TestCompositionInterface:
         comp.add_projection(projection=MappingProjection(sender=F, receiver=G), sender=F, receiver=G)
         comp.add_projection(projection=MappingProjection(sender=G, receiver=E), sender=G, receiver=E)
 
-        # reassign roles
-        comp._analyze_graph()
-
         # execute the updated composition
         inputs_dict2 = {
             A: [[1.]],
@@ -4073,7 +4006,6 @@ class TestCompositionInterface:
         comp.add_node(C)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp.add_projection(MappingProjection(sender=B, receiver=C), B, C)
-        comp._analyze_graph()
         inputs_dict = {A: [[5.]]}
         sched = Scheduler(composition=comp)
 
@@ -4086,8 +4018,6 @@ class TestCompositionInterface:
         comp.add_node(F)
         comp.add_projection(projection=MappingProjection(sender=F, receiver=A), sender=F, receiver=A)
 
-        # reassign roles
-        comp._analyze_graph()
 
         # execute the updated composition
         inputs_dict2 = {F: [[3.]]}
@@ -4120,7 +4050,6 @@ class TestCompositionInterface:
                               function=my_fun
                               )
         comp.add_node(A)
-        comp._analyze_graph()
         inputs_dict = {A: [[5.], [5.]]}
 
         sched = Scheduler(composition=comp)
@@ -4161,7 +4090,6 @@ class TestCompositionInterface:
         comp.add_node(C)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp.add_projection(MappingProjection(sender=B, receiver=C), B, C)
-        comp._analyze_graph()
 
         inputs_dict = {A: [[5.], [5.]]}
 
@@ -4189,7 +4117,6 @@ class TestCompositionInterface:
         comp.add_projection(MappingProjection(sender=D, receiver=B), D, B)
         # Need to analyze graph again (identify D as an origin so that we can assign input) AND create the scheduler
         # again (sched, even though it is tied to comp, will not update according to changes in comp)
-        comp._analyze_graph()
         sched = Scheduler(composition=comp)
 
         inputs_dict2 = {A: [[2.], [4.]],
@@ -4223,7 +4150,6 @@ class TestCompositionInterface:
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp.add_projection(MappingProjection(sender=B, receiver=C), B, C)
 
-        comp._analyze_graph()
         comp.run(inputs={A: [1.0]})
 
         for terminal_state in comp.output_CIM_states:
@@ -4261,7 +4187,6 @@ class TestCompositionInterface:
         comp.add_projection(MappingProjection(sender=B, receiver=C), B, C)
         comp.add_projection(MappingProjection(sender=B, receiver=D), B, D)
         comp.add_projection(MappingProjection(sender=B, receiver=E), B, E)
-        comp._analyze_graph()
         comp.run(inputs={A: [1.0]})
 
         for terminal_state in comp.output_CIM_states:
@@ -4340,7 +4265,6 @@ class TestInputStateSpecifications:
 
         comp.add_node(A)
 
-        comp._analyze_graph()
 
         inputs_dict = {A: [[2.], [4.]]}
         sched = Scheduler(composition=comp)
@@ -4373,7 +4297,6 @@ class TestInputStateSpecifications:
         comp.add_node(A)
 
         # get comp ready to run (identify roles, create sched, assign inputs)
-        comp._analyze_graph()
         inputs_dict = { A: [[2.],[4.]]}
 
         sched = Scheduler(composition=comp)
@@ -4399,7 +4322,6 @@ class TestInputStateSpecifications:
         comp.add_node(A)
 
         # get comp ready to run (identify roles, create sched, assign inputs)
-        comp._analyze_graph()
         inputs_dict = {A: [[2.], [4.]]}
 
         sched = Scheduler(composition=comp)
@@ -4427,7 +4349,6 @@ class TestInputStateSpecifications:
         comp.add_node(A)
 
         # get comp ready to run (identify roles, create sched, assign inputs)
-        comp._analyze_graph()
 
         inputs_dict = {A: [[2.], [4.]]}
 
@@ -4454,7 +4375,6 @@ class TestInputStateSpecifications:
         comp.add_node(A)
 
         # get comp ready to run (identify roles, create sched, assign inputs)
-        comp._analyze_graph()
         inputs_dict = {A: [[2.], [4.]]}
 
         sched = Scheduler(composition=comp)
@@ -4474,7 +4394,6 @@ class TestInputSpecifications:
     #     comp.add_node(A)
     #     comp.add_node(B)
     #     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    #     comp._analyze_graph()
     #     sched = Scheduler(composition=comp)
     #     output = comp.run(
     #         scheduler_processing=sched
@@ -4516,7 +4435,6 @@ class TestInputSpecifications:
         comp.add_projection(MappingProjection(sender=A, receiver=D), A, D)
         comp.add_projection(MappingProjection(sender=B, receiver=D), B, D)
         comp.add_projection(MappingProjection(sender=C, receiver=D), C, D)
-        comp._analyze_graph()
         inputs = {A: [[[0], [0]], [[1], [1]], [[2], [2]]],
                   B: [[0, 0], [1, 1], [2, 2]],
                   C: [[0, 0, 0], [1, 1, 1], [2, 2, 2]]
@@ -4534,7 +4452,6 @@ class TestInputSpecifications:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
@@ -4547,7 +4464,6 @@ class TestInputSpecifications:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=5)
@@ -4573,7 +4489,6 @@ class TestInputSpecifications:
         comp.add_node(C)
         comp.add_node(D)
 
-        comp._analyze_graph()
 
         inputs = {B: [[1., 2., 3.]],
                   D: [[4.]]}
@@ -4593,7 +4508,6 @@ class TestInputSpecifications:
                               default_variable=[[1.0, 2.0], [3.0, 4.0]],
                               function=Linear(slope=2.0))
         compA.add_node(A)
-        compA._analyze_graph()
 
         comp = Composition()
 
@@ -4610,7 +4524,6 @@ class TestInputSpecifications:
         comp.add_node(C)
         comp.add_node(D)
 
-        comp._analyze_graph()
 
         inputs = {B: [[1., 2., 3.]],
                   D: [[4.]]}
