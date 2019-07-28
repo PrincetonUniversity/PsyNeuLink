@@ -745,15 +745,27 @@ class TestRumelhartSemanticNetwork:
     with the following structure:
 
     # Semantic Network:
-    #                         _
-    #       REP PROP QUAL ACT  |
-    #         \___\__/____/    |
-    #             |        _   | Output Processes
-    #           HIDDEN      | _|
-    #            / \        |
-    #       HIDDEN REL_IN   |  Input Processes
-    #          /            |
-    #       REP_IN         _|
+    #                        __
+    #    REP PROP QUAL ACT     |
+    #      \   \  /   /   __   | Output Processes
+    #       REL_HIDDEN      |__|
+    #          /   \        |
+    #  REP_HIDDEN  REL_IN   |  Input Processes
+    #       /               |
+    #   REP_IN           ___|
+
+
+    Also test thes:
+    #                   *MOTOR*
+    #                   /
+    #    REP PROP QUAL ACT
+    #      \   \  /   /  \
+    #       REL_HIDDEN   *IMAGINE*
+    #          /   \
+    #  REP_HIDDEN  REL_IN
+    #       /
+    #   REP_IN
+
     """
 
     def test_rumelhart_semantic_network_sequential(self):
@@ -770,12 +782,13 @@ class TestRumelhartSemanticNetwork:
 
         comp = Composition()
 
-        comp.add_backpropagation_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
+        # comp.add_backpropagation_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
         comp.add_backpropagation_pathway(pathway=[rel_in, rel_hidden])
         comp.add_backpropagation_pathway(pathway=[rel_hidden, rep_out])
         comp.add_backpropagation_pathway(pathway=[rel_hidden, prop_out])
         comp.add_backpropagation_pathway(pathway=[rel_hidden, qual_out])
         comp.add_backpropagation_pathway(pathway=[rel_hidden, act_out])
+        comp.add_backpropagation_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
 
         comp.show_graph(show_learning=True)
         # validate_learning_mechs(comp)

@@ -1276,13 +1276,17 @@ class LearningMechanism(AdaptiveMechanism_Base):
             context = ContextFlags.COMMAND_LINE
 
         states = super().add_states(states=states)
+        instantiated_input_states = []
         for input_state in states[INPUT_STATES]:
             error_source = input_state.path_afferents[0].sender.owner
-            self.error_sources.append(error_source)
+            # # MODIFIED 7/28/19 OLD:
+            # self.error_sources.append(error_source)
+            # MODIFIED 7/28/19 END
             self.error_matrices.append(error_source.primary_learned_projection.parameter_states[MATRIX])
             if ERROR_SIGNAL in input_state.name:
                 self._error_signal_input_states.append(input_state)
-        return states
+            instantiated_input_states.append(input_state)
+        return instantiated_input_states
 
     def _execute(
         self,
@@ -1406,6 +1410,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def error_signal_indices(self):
         current_error_signal_inputs = self.error_signal_input_states
         return [self.input_states.index(s) for s in current_error_signal_inputs]
+
+    @property
+    def error_sources(self):
+        error_sources = []
+        for error_signal_input_state in self.error_signal_input_states:
+            for error_signal_projection in error_signal_input_state.path_afferents:
+                error_sources.append(error_signal_projection.sender.owner)
+        return error_sources
 
     @property
     def primary_learned_projection(self):
