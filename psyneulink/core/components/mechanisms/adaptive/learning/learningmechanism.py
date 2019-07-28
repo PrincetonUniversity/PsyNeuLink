@@ -749,11 +749,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
         <InputState.value>` of the corresponding `InputState <LearningMechanism_InputStates>` (see `variable
         <LearningMechanism.variable>` for additional details).
 
-    error_sources : ComparatorMechanism, LearningMechanism or list of them
+    error_sources : ComparatorMechanism, LearningMechanism, OutputState or list of them
         specifies the source(s) of the error signal(s) used by the LearningMechanism's `function
         <LearningMechanism.function>`.  Each must be a `ComparatorMechanism` for `single layer learning
         <LearningMechanism_Single_Layer_Learning>`, or for the last `MappingProjection` in a learning sequence in
-        `multilayer learning <LearningMechanism_Multilayer_Learning>`;  otherwise they must be a `LearningMechanism`.
+        `multilayer learning <LearningMechanism_Multilayer_Learning>`;  otherwise they must be a `LearningMechanism`
+        or the *ERROR_SIGNAL* OutputState of one.
 
     function : LearningFunction or function : default BackPropagation
         specifies the function used to calculate the LearningMechanism's `learning_signal
@@ -1024,14 +1025,18 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
+        # IMPLEMENTATION NOTE:
+        #    assign to private attribute as self.error_sources is used as a property
+        #    private attribute is used for validation and in _instantiate_attribute_before_function;
+        #    thereafter, self.error_sources contains actual error_sources
         if error_sources and not isinstance(error_sources, list):
             error_sources = [error_sources]
+        self._error_sources = error_sources
 
         self.in_composition = in_composition
 
         # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(error_sources=error_sources,
-                                                  function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                   learning_signals=learning_signals,
                                                   learning_enabled=learning_enabled,
                                                   params=params)
@@ -1119,8 +1124,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate error_sources
 
-        `error_sources` argument must be an `ObjectiveMechanism`, another `LearningMechanism`, or a list of them,
-        and there must be the same number as there are ERROR_SIGNAL InputStates.
+        `error_sources` argument must be an `ObjectiveMechanism`, another `LearningMechanism`, an *ERROR_SIGNAL*
+        OutputState of a LearningMechanism, or a list of these, and there must be the same number as there are
+        ERROR_SIGNAL InputStates.
 
         """
 
@@ -1131,8 +1137,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.projections.projection import _validate_receiver
 
-        if ERROR_SOURCES in target_set and target_set[ERROR_SOURCES] is not None:
-            error_sources = target_set[ERROR_SOURCES]
+        if self._error_sources:
+            error_sources = self._error_sources
             if not isinstance(error_sources, list):
                 error_sources = [error_sources]
 
@@ -1183,15 +1189,15 @@ class LearningMechanism(AdaptiveMechanism_Base):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         self.error_matrices = None
-        if self.error_sources:
-            self.error_matrices = [None] * len(self.error_sources)
-            for i, error_source in enumerate(self.error_sources):
+        if self._error_sources:
+            self.error_matrices = [None] * len(self._error_sources)
+            for i, error_source in enumerate(self._error_sources):
                 if not self.in_composition:
                     # FIX: [JDC 7/15/19] - SHOULD THIS HAPPEN OUTSIDE OF SYSTEM OR PROCESS,
                     #  OR BE REMOVED WHEN THOSE ARE FULLY DEPRECATED
                     # IMPLEMENTATION NOTE:
                     #    _create_terminal_backprop_sequence_components and _create_multilayer_backprop_components
-                    #    in Composition take care of creating projections from error_sources to LearningMechanisms
+                    #    in Composition take care of creating projections from _error_sources to LearningMechanisms
                     self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source, receiver=self)
                 if isinstance(error_source, ObjectiveMechanism):
                     self.error_matrices[i] = np.identity(len(error_source.input_states[SAMPLE].value))
@@ -1269,31 +1275,20 @@ class LearningMechanism(AdaptiveMechanism_Base):
         #    since it is used by the execute method
         self._error_signal_input_states = self.error_signal_input_states
 
-    def add_states(self, states, context=None):
+    def add_states(self, error_sources, context=None):
         """Add error_source and error_matrix for each InputState added"""
 
         if context is None:
             context = ContextFlags.COMMAND_LINE
 
-        states = super().add_states(states=states)
+        states = super().add_states(states=error_sources)
         instantiated_input_states = []
         for input_state in states[INPUT_STATES]:
             error_source = input_state.path_afferents[0].sender.owner
-            # MODIFIED 7/28/19 OLD:
-            self.error_sources.append(error_source)
-            # MODIFIED 7/28/19 END
             self.error_matrices.append(error_source.primary_learned_projection.parameter_states[MATRIX])
             if ERROR_SIGNAL in input_state.name:
                 self._error_signal_input_states.append(input_state)
             instantiated_input_states.append(input_state)
-
-        # MODIFIED 7/28/18 NEW: [JDC]
-        error_sources = []
-        for error_signal_input_state in self.error_signal_input_states:
-            for error_signal_projection in error_signal_input_state.path_afferents:
-                error_sources.append(error_signal_projection.sender.owner)
-        self.error_sources = error_sources
-        # MODIFIED 7/28/18 END
 
         return instantiated_input_states
 
@@ -1419,6 +1414,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def error_signal_indices(self):
         current_error_signal_inputs = self.error_signal_input_states
         return [self.input_states.index(s) for s in current_error_signal_inputs]
+
+    @property
+    def error_sources(self):
+        error_sources = []
+        for error_signal_input_state in self.error_signal_input_states:
+            for error_signal_projection in error_signal_input_state.path_afferents:
+                error_sources.append(error_signal_projection.sender.owner)
+        return error_sources
 
     @property
     def primary_learned_projection(self):
