@@ -2363,15 +2363,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # For each LearningProjection to that afferent, if its LearningMechanism doesn't already receiver
             for learning_projection in [lp for lp in afferent.parameter_states[MATRIX].mod_afferents
                                         if (isinstance(lp, LearningProjection)
-                                            and error_source not in lp.sender.owner.dependent_learning_mechanisms)]:
+                                            and error_source not in lp.sender.owner.error_sources)]:
                 dependent_learning_mech = learning_projection.sender.owner
                 error_signal_input_state = dependent_learning_mech.add_states(
                                                         InputState(projections=error_source.output_states[ERROR_SIGNAL],
                                                                    name=ERROR_SIGNAL,
                                                                    context=ContextFlags.METHOD),
                                                         context=ContextFlags.METHOD)
-                projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
-                                                     receiver=error_signal_input_state[0]))
+                projections.append(error_signal_input_state[0].path_afferents[0])
+                # projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
+                #                                      receiver=error_signal_input_state[0]))
         return projections
 
     def _get_backprop_error_projections(self, learning_mech, receiver_activity_mech):
@@ -2737,6 +2738,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                              and p.receiver.owner in self.nodes
                                                              and ACTIVATION_OUTPUT in p.receiver.name )),
                                                         None))
+                # FIX CROSSED_PATHWAYS [JDC]
+                #  ADD HERE:
+                #  - get rid of output projection to output_CIM
+                #  - remove from terminal_backprop_sequences
 
             # Create teminal_sequence
             target, comparator, learning_mechanism = \
