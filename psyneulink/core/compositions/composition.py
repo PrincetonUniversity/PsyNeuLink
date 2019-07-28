@@ -2363,7 +2363,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # For each LearningProjection to that afferent, if its LearningMechanism doesn't already receiver
             for learning_projection in [lp for lp in afferent.parameter_states[MATRIX].mod_afferents
                                         if (isinstance(lp, LearningProjection)
-                                            and error_source is not lp.sender.owner.error_sources)]:
+                                            and error_source not in lp.sender.owner.dependent_learning_mechanisms)]:
                 dependent_learning_mech = learning_projection.sender.owner
                 error_signal_input_state = dependent_learning_mech.add_states(
                                                         InputState(projections=error_source.output_states[ERROR_SIGNAL],
