@@ -580,6 +580,78 @@ class TestBackProp:
             assert np.allclose(autodiff_weights[in_to_hidden_autodiff], in_to_hidden_comp.get_mod_matrix(xor_comp))
             assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_comp.get_mod_matrix(xor_comp))
 
+
+    def test_backprop_with_various_intersecting_pathway_configurations(self):
+        '''Test add_backpropgation using various configurations of intersecting pathways
+        #
+        # 1) First mech is already a terminal (EXTEND UP)
+        #                  E
+        #                /
+        #               D
+        #              /
+        #         C + C
+        #       /
+        #      B
+        #     /
+        #    A
+        #
+        # 2) First mech is intermediate (BRANCH UP)
+        #
+        #            E
+        #             \
+        #         C   D
+        #       /      \
+        #      B   +    B
+        #     /
+        #    A
+        #
+        # 3) Intermediate mech is already an origin (Y DOWN)
+        #
+        #    C       D
+        #     \     /
+        #      B + B
+        #         /
+        #        A
+
+        # 4) Intermediate mech is already an intermediate (CROSS)
+        #
+        #    C       E
+        #     \     /
+        #      B + B
+        #     /     \
+        #    A       D
+        #
+        # 5) Intermediate mech is already a terminal (Y UP)
+        #
+        #          D
+        #          \
+        #      B + B
+        #     /     \
+        #    A      C
+        #
+        # 6) Last mech is already an intermediate (BRANCH DOWN)
+        #
+        #    C
+        #     \
+        #      B + B
+        #     /     \
+        #    A       D
+        #
+        # 7) Last mech is already a terminal (EXTEND DOWN)
+        #
+        #        C + C
+        #       /     \
+        #      B       E
+        #     /         \
+        #    A           D
+
+        # 8) Deep extends??
+        '''
+
+
+
+
+
     @pytest.mark.parametrize('order', [
         # 'color_full',
         # 'word_partial',
@@ -753,19 +825,6 @@ class TestRumelhartSemanticNetwork:
     #  REP_HIDDEN  REL_IN   |  Input Processes
     #       /               |
     #   REP_IN           ___|
-
-
-    Also test thes:
-    #                   *MOTOR*
-    #                   /
-    #    REP PROP QUAL ACT
-    #      \   \  /   /  \
-    #       REL_HIDDEN   *IMAGINE*
-    #          /   \
-    #  REP_HIDDEN  REL_IN
-    #       /
-    #   REP_IN
-
     """
 
     def test_rumelhart_semantic_network_sequential(self):
