@@ -1193,6 +1193,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if self._error_sources:
             self.input_states = self.input_states[:2] + [ERROR_SIGNAL] * len(self._error_sources)
 
+            # FIX CROSSED_PATHWAYS 7/22/19 [JDC]:
             self.defaults.variable = np.array([self.defaults.variable[0],
                                                self.defaults.variable[1]] +
                                                [self.defaults.variable[2]] * len(self._error_sources))
