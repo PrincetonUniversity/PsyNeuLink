@@ -2359,10 +2359,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    so they can be added to the Composition by _create_multilayer_backprop_components
         return error_sources, error_projections
 
-    def _add_error_projection_to_dependent_learning_mechs(self, error_source, receiver_activity_mech):
+    # MODIFIED CROSSED_PATHWAYS 7/28/19 OLD:
+    # def _add_error_projection_to_dependent_learning_mechs(self, error_source, receiver_activity_mech):
+    # MODIFIED CROSSED_PATHWAYS 7/28/19 [JDC] NEW: CHECK NUMERICALLY
+    def _add_error_projection_to_dependent_learning_mechs(self, error_source):
+    # MODIFIED CROSSED_PATHWAYS 7/28/19 END
         projections = []
         # Get all afferents to receiver_activity_mech in Composition that have LearningProjections
-        for afferent in [p for p in receiver_activity_mech.path_afferents
+        for afferent in [p for p in error_source.input_source.path_afferents
                          if (p in self.projections
                              and hasattr(p, 'has_learning_projection')
                              and p.has_learning_projection)]:
@@ -2371,6 +2375,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         if (isinstance(lp, LearningProjection)
                                             and error_source not in lp.sender.owner.error_sources)]:
                 dependent_learning_mech = learning_projection.sender.owner
+                # FIX CROSSED_PATHWAYS 7/28/19: CHECK IF THERE IS A VACATED ERROR_SIGNAL InputState AND, IF SO, USE IT
                 error_signal_input_state = dependent_learning_mech.add_states(
                                                         InputState(projections=error_source.output_states[ERROR_SIGNAL],
                                                                    name=ERROR_SIGNAL,
@@ -2738,11 +2743,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        if p.sender.owner in self.get_nodes_by_role(NodeRole.TARGET)),
                                       None)
                     self.remove_nodes([old_comparator, old_target])
-                    # FIX CROSSED_PATHWAYS [JDC]:
-                    #  ERROR_SIGNAL InputState HAS BEEN VACATED AND SO IS AVAILABLE FOR NEW error_signal PROJECTION;
-                    #  HOWEVER, STILL NEED TO DELETE CORRESPONDING error_matrix in old_learing_mechanism.error_matrices
+                    # FIX CROSSING_PATHWAYS [JDC]: MAKE THE FOLLOWING A METHOD?
+                    # Collect InputStates that received error_signal projections from the old_comparator
+                    #    and delete after old_comparator has been deleted
+                    #    (i.e., after those InputStates have been vacated)
+                    old_error_signal_input_states = []
+                    for error_projection in old_comparator.output_state.efferents:
+                        old_error_signal_input_states.append(error_projection.receiver)
                     Mechanism_Base._delete_mechanism(old_comparator)
                     Mechanism_Base._delete_mechanism(old_target)
+                    for input_state in old_error_signal_input_states:
+                        input_state.owner.remove_states(input_state)
+
+                    # FIX CROSS_PATHWAYS [JDC]: GET RID OF ASSOCIATED INPUTSTATES IF EMPTY
+                    #  ERROR_SIGNAL InputState HAS BEEN VACATED AND SO IS AVAILABLE FOR NEW error_signal PROJECTION;
+                    #  HOWEVER, STILL NEED TO DELETE CORRESPONDING error_matrix in old_learing_mechanism.error_matrices
+
                     # # MODIFIED 7/28/19 CROSSED_PATHWAYS NEW:
                     # old_learning_mechanisms.append(next((p.receiver.owner for p in pathway_mech.efferents
                     #                                      if (isinstance(p.receiver.owner, LearningMechanism)
@@ -2751,9 +2767,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #                                     None))
                     # MODIFIED 7/28/19 CROSSED_PATHWAYS OLD
 
-                    assert True
-                    # FIX CROSSED_PATHWAYS [JDC]
-                    #  ADD HERE:
+                    # FIX CROSSED_PATHWAYS [JDC]: ADD HERE
                     #  - get rid of output projection to output_CIM
                     del self._terminal_backprop_sequences[pathway_mech]
 
@@ -2803,11 +2817,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_mechanisms.append(learning_mechanism)
             learned_projections.append(learned_projection)
 
-        # MODIFIED CROSSED_PATHWAYS NEW: [JDC]
+        # MODIFIED CROSSED_PATHWAYS 7/28/19 [JDC] NEW: CHECK NUMERICALLY
         # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
-        if learning_mechanism.dependent_learning_mechanisms:
-            projections = self._add_error_projection_to_dependent_learning_mechs(learning_mechanism, input_source)
-            self.add_projections(projections)
+        for lm in learning_mechanisms:
+            if lm.dependent_learning_mechanisms:
+                # projections = self._add_error_projection_to_dependent_learning_mechs(lm, input_source)
+                projections = self._add_error_projection_to_dependent_learning_mechs(lm)
+                self.add_projections(projections)
         # MODIFIED CROSSED_PATHWAYS END
 
         # Suppress no efferent connections warning for error_signal OutputState of last LearningMechanism in sequence
