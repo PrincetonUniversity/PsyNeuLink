@@ -1310,9 +1310,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:  REMOVE THIS ONCE error_input_states HAS SETTER OR IS OTHERWISE REFACTORED
     def remove_states(self, states):
+        states = convert_to_list(states)
+        for i, state in enumerate([s for s in states if s in self.error_signal_input_states]):
+            del self.error_matrices[i]
         super().remove_states(states=states)
         self._error_signal_input_states = [s for s in self.input_states if ERROR_SIGNAL in s.name]
-        assert True
+
+        self.error_matrices
 
     def _execute(
         self,

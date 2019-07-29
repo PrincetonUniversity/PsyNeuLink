@@ -584,7 +584,7 @@ class TestBackProp:
         # 'color_full',
         # 'word_partial',
         'word_full',
-        # 'full_overlap'
+        'full_overlap'
     ])
     def test_stroop_model_learning(self, order):
         '''Test backpropagation learning for simple convergent/overlapping pathways'''

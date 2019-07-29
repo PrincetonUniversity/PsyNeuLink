@@ -2690,7 +2690,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Unpack and process terminal_sequence:
         input_source, learned_projection, output_source = terminal_sequence
 
-        assert True
         # FIX CROSSED_PATHWAYS: HERE OR SOMEWHERE:
         #                         IF input_source HAS ANY AFFERENT PROJECTIONS AND THEY HAVE LEARNINGPROJECTIONS
         #                         IN THE SAME COMPOSITION, THEN NEED TO UPDATE THE ERROR_SIGNAL PROJECTIONS
@@ -5221,9 +5220,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         node.function._runtime_params_reset[execution_id] = {}
 
-                    # # TEST PRINT 7/22/19
-                    # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(execution_id)}'
-                    #       f'\n\tvalue: {node.parameters.value.get(execution_id)}')
+                    # TEST PRINT 7/22/19
+                    print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(execution_id)}'
+                          f'\n\tvalue: {node.parameters.value.get(execution_id)}')
 
                     # Set execution_phase for node's context back to IDLE
                     node.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
