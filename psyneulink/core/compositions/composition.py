@@ -2181,18 +2181,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    they will be created (using error_sources) when, and determined after learning_mechanism is created below
         else:
             error_sources, error_projections = self._get_back_prop_error_sources(output_source)
-            error_signal_template = error_sources[0].output_states[0].value
+            # FIX CROSSED_PATHWAYS 7/22/19 [JDC] SET TO # OF AND SIZE OF EACH error_source AND ADD TO DEFAULT_VARIABLE
+            # error_signal_template = error_sources[0].output_states[0].value
+            # default_variable = []
+            error_signal_template = [error_source.output_states[ERROR_SIGNAL].value for error_source in error_sources]
+            default_variable = [input_source.output_states[0].value, output_source.output_states[0].value] + \
+                               error_signal_template
 
             learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
                                                                   output_source.output_states[0].value,
-                                                                  error_signal_template],
+                                                                  error_signal_template[0]],
                                                 activation_derivative_fct=output_source.function.derivative,
                                                 learning_rate=learning_rate)
 
             learning_mechanism = LearningMechanism(function=learning_function,
-                                                   default_variable=[input_source.output_states[0].value,
-                                                                     output_source.output_states[0].value,
-                                                                     error_signal_template],
+                                                   # default_variable=[input_source.output_states[0].value,
+                                                   #                   output_source.output_states[0].value,
+                                                   #                   error_signal_template],
+                                                   default_variable=default_variable,
                                                    error_sources=error_sources,
                                                    learning_enabled=learning_update,
                                                    in_composition=True,

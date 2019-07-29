@@ -1112,10 +1112,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
             try:
                 item_name = self.input_states.names[i]
             except:
-                item_name = input_state_names[i]
+                try:
+                    item_name = input_state_names[i]
+                except IndexError:
+                    item_name = f'{ERROR_SIGNAL}-{i-2}'
             if not np.array(variable[i]).ndim == 1:
-                raise LearningMechanismError("{} of variable for {} ({}:{}) is not a list or 1d np.array".
-                                              format(item_num_string, self.name, item_name, variable[i]))
+                raise LearningMechanismError(f"{item_num_string} of variable for {self.name} ({item_name}:{variable[i]}) "
+                                             f"is not a list or 1d np.array.")
             if not (is_numeric(variable[i])):
                 raise LearningMechanismError("{} of variable for {} ({}:{}) is not numeric".
                                               format(item_num_string, self.name, item_name, variable[i]))
@@ -1143,6 +1146,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             if not isinstance(error_sources, list):
                 error_sources = [error_sources]
 
+            # FIX CROSSED_PATHWAYS 7/28/19 [JDC]: VALIDATE AGAINST SIZE OF VARIABLE (AND CHECK EACH IS THE RIGHT SIZE)
             # if not len(error_sources) == len(self.error_signal_input_states):
             #     raise LearningMechanismError(f"Number of items specified in {repr(ERROR_SOURCES)} arg "
             #                                  f"for {self.name} ({len(error_sources)}) must equal the number "
@@ -1150,7 +1154,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
             #                                  f"({len(self.error_signal_input_states)}).")
 
             for error_source in error_sources:
-                prev_error_len = None
                 if (not isinstance(error_source, (ObjectiveMechanism, LearningMechanism, OutputState))
                         or (isinstance(error_source, OutputState)
                             and not error_source in error_source.owner.output_states[ERROR_SIGNAL])):
@@ -1193,14 +1196,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if self._error_sources:
             self.input_states = self.input_states[:2] + [ERROR_SIGNAL] * len(self._error_sources)
 
-            # FIX CROSSED_PATHWAYS 7/22/19 [JDC]:
-            self.defaults.variable = np.array([self.defaults.variable[0],
-                                               self.defaults.variable[1]] +
-                                               [self.defaults.variable[2]] * len(self._error_sources))
+            # # FIX CROSSED_PATHWAYS 7/22/19 [JDC]:  GET LENGTH OF ERROR_SOURCES RIGHT OR DELETE IF HANDLED W/ VARIABLE:
+            # self.defaults.variable = np.array([self.defaults.variable[0],
+            #                                    self.defaults.variable[1]] +
+            #                                    [self.defaults.variable[2]] * len(self._error_sources))
 
         super()._instantiate_attributes_before_function(function=function, context=context)
-
-        # if self.input_states
 
         self.error_matrices = None
         if self._error_sources:
@@ -1364,12 +1365,15 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Compute learning_signal for each error_signal (and corresponding error-Matrix):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
+            # MODIFIED CROSS_PATHWAYS 7/22/19 OLD:
             # variable[ERROR_OUTPUT_INDEX] = error_signal_input
+            # learning_signal, error_signal = super()._execute(variable=variable,
+            # MODIFIED CROSS_PATHWAYS 7/22/19 NEW: [JDC]
             function_variable = np.array([variable[ACTIVATION_INPUT_INDEX],
                                           variable[ACTIVATION_OUTPUT_INDEX],
                                           error_signal_input])
-            # learning_signal, error_signal = super()._execute(variable=variable,
             learning_signal, error_signal = super()._execute(variable=function_variable,
+            # MODIFIED CROSS_PATHWAYS 7/22/19 END
                                                              execution_id=execution_id,
                                                              error_matrix=error_matrix,
                                                              runtime_params=runtime_params,
