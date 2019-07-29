@@ -2164,7 +2164,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                              IF NOT, CREATE NEW ONE;  IF SO, JUST ADD ERROR SIGNALS AND PROJECTIONS AS NEEDED
 
         assert True
-        # Get existing LearningMechanism if one exists (i.e., if this is a crossing point of another pathway)
+        # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
         learning_mechanism = \
             next((lp.receiver.owner for lp in learned_projection.parameter_states[MATRIX].mod_afferents
                   if isinstance(lp, LearningProjection)),

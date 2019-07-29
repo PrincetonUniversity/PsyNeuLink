@@ -546,18 +546,18 @@ from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import Ada
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
+from psyneulink.core.globals.keywords import \
+    AFTER, ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE, AFTER, \
-    ONLINE
+    MATRIX, NAME, ONLINE, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, \
+    VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, is_numeric, parameter_spec
+from psyneulink.core.globals.utilities import ContentAddressableList, is_numeric, parameter_spec, convert_to_list
 
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
@@ -1133,6 +1133,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
 
         from psyneulink.core.components.states.state import _parse_state_spec
+        from psyneulink.core.components.states.outputstate import OutputState
         from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.projections.projection import _validate_receiver
@@ -1142,18 +1143,32 @@ class LearningMechanism(AdaptiveMechanism_Base):
             if not isinstance(error_sources, list):
                 error_sources = [error_sources]
 
-            if not len(error_sources) == len(self.error_signal_input_states):
-                raise LearningMechanismError("Number of items specified in \'{}\' arg for {} ({}) "
-                                             "must equal the number of its \'{}\' {}s ()".
-                                             format(ERROR_SOURCES, self.name, len(error_sources),
-                                                    InputState.__name__, ERROR_SIGNAL.upper(),
-                                                    len(self.error_signal_input_states)))
+            # if not len(error_sources) == len(self.error_signal_input_states):
+            #     raise LearningMechanismError(f"Number of items specified in {repr(ERROR_SOURCES)} arg "
+            #                                  f"for {self.name} ({len(error_sources)}) must equal the number "
+            #                                  f"of its {InputState.__name__} {ERROR_SIGNAL.upper()}s "
+            #                                  f"({len(self.error_signal_input_states)}).")
 
             for error_source in error_sources:
-                if not isinstance(error_source, (ObjectiveMechanism, LearningMechanism)):
-                    raise LearningMechanismError("{} arg for {} ({}) must be an ObjectiveMechanism, another "
-                                                 "LearningMechanism, or list of them".
-                                                 format(ERROR_SOURCES, self.name, error_source))
+                prev_error_len = None
+                if (not isinstance(error_source, (ObjectiveMechanism, LearningMechanism, OutputState))
+                        or (isinstance(error_source, OutputState)
+                            and not error_source in error_source.owner.output_states[ERROR_SIGNAL])):
+                    raise LearningMechanismError(f"{repr(ERROR_SOURCES)} arg for {self.name} ({error_source}) "
+                                                 f"must be an {ObjectiveMechanism.__name__}, "
+                                                 f"another {LearningMechanism.__name__}, an {repr(ERROR_SIGNAL)} "
+                                                 f"{OutputState.__name__} of one, or list of any of these.")
+                if isinstance(error_source, ObjectiveMechanism):
+                    error_len = len(error_source.output_state.value)
+                elif isinstance(error_source, LearningMechanism):
+                    error_len = len(error_source.output_states[ERROR_SIGNAL].value)
+                elif isinstance(error_source, OutputState):
+                    error_len = len(error_source.value)
+                if prev_error_len:
+                    if not error_len == prev_error_len:
+                        raise LearningMechanismError(f"Length of {repr(VALUE)} attribute of {repr(ERROR_SOURCES)} arg "
+                                                     f"for {self.name} ({error_source}: {error_len}) "
+                                                     f"must be the same as all of the others ({prev_error_len}).")
 
         if LEARNING_SIGNALS in target_set and target_set[LEARNING_SIGNALS]:
 
@@ -1186,7 +1201,16 @@ class LearningMechanism(AdaptiveMechanism_Base):
         from psyneulink.core.components.mechanisms.adaptive.learning.learningauxiliary \
             import _instantiate_error_signal_projection
 
+        if self._error_sources:
+            self.input_states = self.input_states[:2] + [ERROR_SIGNAL] * len(self._error_sources)
+
+            self.defaults.variable = np.array([self.defaults.variable[0],
+                                               self.defaults.variable[1]] +
+                                               [self.defaults.variable[2]] * len(self._error_sources))
+
         super()._instantiate_attributes_before_function(function=function, context=context)
+
+        # if self.input_states
 
         self.error_matrices = None
         if self._error_sources:
@@ -1198,7 +1222,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                     # IMPLEMENTATION NOTE:
                     #    _create_terminal_backprop_sequence_components and _create_multilayer_backprop_components
                     #    in Composition take care of creating projections from _error_sources to LearningMechanisms
-                    self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source, receiver=self)
+                    self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source,
+                                                                                        receiver=self)
                 if isinstance(error_source, ObjectiveMechanism):
                     self.error_matrices[i] = np.identity(len(error_source.input_states[SAMPLE].value))
                 else:
@@ -1347,7 +1372,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         summed_learning_signal = 0
         summed_error_signal = 0
 
-        # Compute learning_signal for each error_signal (and corresponding error-Matrix:
+        # Compute learning_signal for each error_signal (and corresponding error-Matrix):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
             variable[ERROR_OUTPUT_INDEX] = error_signal_input
             learning_signal, error_signal = super()._execute(variable=variable,
