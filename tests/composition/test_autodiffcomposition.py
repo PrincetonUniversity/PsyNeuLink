@@ -1408,27 +1408,22 @@ class TestTrainingIdenticalness():
                        "targets": {xor_out:xor_targets},
                        "epochs": eps}
         result = xor.run(inputs=inputs_dict)
-
         comp_weights = xor.get_parameters()[0]
 
         # SET UP SYSTEM
-
         xor_process = Process(pathway=[xor_in_sys,
                                        hid_map_sys,
                                        xor_hid_sys,
                                        out_map_sys,
                                        xor_out_sys],
                               learning=pnl.LEARNING)
-
         xor_sys = System(processes=[xor_process],
                          learning_rate=10)
 
         # TRAIN SYSTEM
-
         results_sys = xor_sys.run(inputs={xor_in_sys:xor_inputs},
                                   targets={xor_out_sys:xor_targets},
                                   num_trials=(eps*xor_inputs.shape[0]))
-
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
 
         assert np.allclose(comp_weights[hid_map], hid_map_sys.get_mod_matrix(xor_sys))
@@ -1900,8 +1895,6 @@ class TestNested:
 
         # -----------------------------------------------------------------
 
-        xor_autodiff._analyze_graph()
-
         no_training_input_dict = {xor_in: xor_inputs}
         input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
 
@@ -1978,8 +1971,6 @@ class TestNested:
         xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         # -----------------------------------------------------------------
-
-        xor_autodiff._analyze_graph()
 
         no_training_input_dict = {xor_in: xor_inputs}
         input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
@@ -2320,7 +2311,6 @@ class TestNested:
         input_dict = {"inputs": inputs_dict,
                       "targets": targets_dict,
                       "epochs": eps}
-        sem_net._analyze_graph()
 
         parentComposition = pnl.Composition()
         parentComposition.add_node(sem_net)

@@ -1138,7 +1138,6 @@ class State_Base(State):
 
         self.path_afferents = []
         self.mod_afferents = []
-        self.efferents = []
 
         self._path_proj_values = []
         # Create dict with entries for each ModualationParam and initialize - used in update()
@@ -1343,6 +1342,7 @@ class State_Base(State):
                          format(self.__class__.__name__,
                                 self.name))
 
+    # FIX: MOVE TO InputState AND ParameterState OR...
     # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a State and assign them to self.path_afferents
@@ -1532,11 +1532,7 @@ class State_Base(State):
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.path_afferents or mod_afferents lists
-            if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
-                warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
-                              format(Projection.__name__, repr(projection.sender.name),
-                                     projection.sender.owner.name,
-                              repr(self.name), self.owner.name, repr(projection.name)))
+            if self._check_for_duplicate_projections(projection):
                 continue
 
             # reassign default variable shape to this state and its function
@@ -1586,6 +1582,8 @@ class State_Base(State):
 
         return new_projections
 
+    # FIX: MOVE TO OutputState or...
+    # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_projection_from_state(self, projection_spec, receiver=None, context=None):
         """Instantiate outgoing projection from a State and assign it to self.efferents
 
@@ -1864,11 +1862,13 @@ class State_Base(State):
 
 
             # ASSIGN TO STATE
+            # FIX: 7/22/19 - MAKE METHOD AND USE HERE AND IN _instantiate_projection_to_state
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.efferents
-            if not projection in self.efferents:
-                self.efferents.append(projection)
+            if self._check_for_duplicate_projections(projection):
+                continue
+
             if isinstance(projection, ModulatoryProjection_Base):
                 self.owner.aux_components.append(projection)
             return projection
@@ -1995,8 +1995,9 @@ class State_Base(State):
                 projection_params = None
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
-            # Note: done here rather than in its own method in order to exploit parsing of params above
-            if isinstance(projection, LearningProjection) and self.parameters.context._get(execution_id).execution_phase != ContextFlags.LEARNING:
+            # IMPLEMENTATION NOTE: done here rather than in its own method in order to exploit parsing of params above
+            if (isinstance(projection, LearningProjection)
+                    and self.parameters.context._get(execution_id).execution_phase != ContextFlags.LEARNING):
                 projection_value = projection.defaults.value * 0.0
             else:
                 projection_value = projection.execute(variable=projection.sender.parameters.value._get(execution_id),
@@ -2143,14 +2144,25 @@ class State_Base(State):
             self._afferents_info = {}
             return self._afferents_info
 
+    @property
+    def efferents(self):
+        try:
+            return self._efferents
+        except:
+            self._efferents = []
+            return self._efferents
+
+    @efferents.setter
+    def efferents(self, proj):
+        assert False, f"Illegal attempt to directly assign {repr('efferents')} attribute of {self.name}"
+
     def _assign_default_state_name(self, context=None):
         return False
 
     def _get_input_struct_type(self, ctx):
+        # Use function input type. The shape should be the same,
+        # however, some functions still need input shape workarounds.
         return ctx.get_input_struct_type(self.function)
-
-    def _get_output_struct_type(self, ctx):
-        return ctx.get_output_struct_type(self.function)
 
     def _get_param_struct_type(self, ctx):
         return ctx.get_param_struct_type(self.function)
@@ -2167,6 +2179,10 @@ class State_Base(State):
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         main_function = ctx.get_llvm_function(self.function)
+        # OutputState returns 1D array even for scalar functions
+        if arg_out.type != main_function.args[3].type:
+            assert len(arg_out.type.pointee) == 1
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.call(main_function, [params, context, arg_in, arg_out])
 
         return builder

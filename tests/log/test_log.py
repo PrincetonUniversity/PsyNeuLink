@@ -1274,8 +1274,6 @@ class TestFiltering:
 
         comp.enable_controller = True
 
-        comp._analyze_graph()
-
         stim_list_dict = {
             Input: [0.5, 0.123],
             reward: [20, 20]

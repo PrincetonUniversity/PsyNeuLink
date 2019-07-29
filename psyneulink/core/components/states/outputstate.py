@@ -1125,6 +1125,17 @@ class OutputState(State_Base):
                                                     receiver=proj,
                                                     context=context)
 
+    def _check_for_duplicate_projections(self, projection):
+        # FIX: 7/22/19 - CHECK IF RECEIVER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_INPUT_STATE
+        assert True
+        if any(proj.receiver == projection.receiver and proj != projection for proj in self.efferents):
+            from psyneulink.core.components.projections.projection import Projection
+            warnings.warn(f'{Projection.__name__} from {projection.sender.name} of {projection.sender.owner.name} '
+                          f'to {self.name} of {self.owner.name} already exists; will ignore additional '
+                          f'one specified ({projection.name}).')
+            return True
+        return False
+
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
 
@@ -1249,12 +1260,14 @@ class OutputState(State_Base):
             except ComponentError:
                 variable = None
 
-        return super()._execute(
+        value = super()._execute(
             variable=variable,
             execution_id=execution_id,
             runtime_params=runtime_params,
             context=context,
         )
+
+        return np.atleast_1d(value)
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
