@@ -581,10 +581,10 @@ class TestBackProp:
             assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_comp.get_mod_matrix(xor_comp))
 
     @pytest.mark.parametrize('order', [
-        'color_full',
-        'word_partial',
+        # 'color_full',
+        # 'word_partial',
         'word_full',
-        'full_overlap'
+        # 'full_overlap'
     ])
     def test_stroop_model_learning(self, order):
         '''Test backpropagation learning for simple convergent/overlapping pathways'''
@@ -651,7 +651,7 @@ class TestBackProp:
                                           learning_rate=1)
         comp.add_backpropagation_pathway(pathway=word_pathway,
                                           learning_rate=1)
-        # comp.show_graph(show_learning=True)
+        comp.show_graph(show_learning=True)
 
         # RUN MODEL ---------------------------------------------------------------------------
 
