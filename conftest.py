@@ -3,6 +3,8 @@ import random
 # import time
 import numpy as np
 
+from psyneulink.core.llvm import ptx_enabled
+
 # def pytest_addoption(parser):
 #     parser.addoption(
 #         '--pnl-seed',
@@ -21,7 +23,6 @@ marks_default_skip = [mark_stress_tests]
 def pytest_addoption(parser):
     parser.addoption('--{0}'.format(mark_stress_tests), action='store_true', default=False, help='Run {0} tests (long)'.format(mark_stress_tests))
 
-
 def pytest_runtest_setup(item):
     import doctest
 
@@ -29,9 +30,7 @@ def pytest_runtest_setup(item):
         if m in item.keywords and not item.config.getvalue(m):
             pytest.skip('{0} tests not requested'.format(m))
 
-    if 'cuda' in item.keywords:
-        from psyneulink.core.llvm import ptx_enabled
-        if not ptx_enabled:
+    if 'cuda' in item.keywords and not ptx_enabled:
             pytest.skip('PTX engine not enabled/available')
 
     doctest.ELLIPSIS_MARKER = "[...]"
