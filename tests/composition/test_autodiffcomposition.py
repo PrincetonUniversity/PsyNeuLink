@@ -1895,8 +1895,6 @@ class TestNested:
 
         # -----------------------------------------------------------------
 
-        xor_autodiff._analyze_graph()
-
         no_training_input_dict = {xor_in: xor_inputs}
         input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
 
@@ -1973,8 +1971,6 @@ class TestNested:
         xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         # -----------------------------------------------------------------
-
-        xor_autodiff._analyze_graph()
 
         no_training_input_dict = {xor_in: xor_inputs}
         input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
@@ -2315,7 +2311,6 @@ class TestNested:
         input_dict = {"inputs": inputs_dict,
                       "targets": targets_dict,
                       "epochs": eps}
-        sem_net._analyze_graph()
 
         parentComposition = pnl.Composition()
         parentComposition.add_node(sem_net)

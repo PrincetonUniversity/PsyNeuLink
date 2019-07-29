@@ -1356,6 +1356,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._update_shadows_dict(node)
 
+        try:
+            node._analyze_graph()
+        except AttributeError:
+            pass
+
         if node not in [vertex.component for vertex in
                         self.graph.vertices]:  # Only add if it doesn't already exist in graph
             node.is_processing = True
@@ -2299,6 +2304,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
                                                     receiver=learning_mechanism.input_states[2])
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
+        # # MODIFIED 7/22/19 NEW:
+        # error_signal_projections = []
+        # for learning_mech in learning_mechanism.dependent_learning_mechanisms:
+        #     error_signal_projections.append(MappingProjection(sender=comparator.output_states[OUTCOME],
+        #                                                       receiver=learning_mechanism.input_states[2]))
+        return [target_projection, sample_projection, error_signal_projections, act_out_projection, act_in_projection]
+        # MODIFIED 7/22/19 END
 
     def _get_back_prop_error_sources(self, receiver_activity_mech, learning_mech=None):
         # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP
@@ -2639,36 +2651,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
          TARGET_MECHANISM: target,
          LEARNED_PROJECTION: learned_projection}
         """
-
         if not error_function:
             error_function = LinearCombination()
 
         # FIX CROSSED_PATHWAYS: NEED TO HANDLE AND TEST ALL THESE SITUATIONS:
         # New pathway
-        # 1) First mech is already a terminal 
+        # 1) First mech is already a terminal
         #      (e.g., ACT->MOTOR if REL_IN->REL_HIDDEN->ACT exists):
-        #      need to remove the the terminal's comparator and target 
+        #      need to remove the the terminal's comparator and target
         #      !! need to get rid of projection from what was terminal to output_CIM
-        #      and assign error_signal projection to LearningMechanism for projection to previous terminal (ACT) 
-        # 2) First mech is intermediate 
+        #      and assign error_signal projection to LearningMechanism for projection to previous terminal (ACT)
+        # 2) First mech is intermediate
         #      (e.g., REL_HIDDEN->ACT->MOTOR if REL_IN->REL_HIDDEN->REP exists):
-        #      need to assign additional error_signal projection to LearningMechanism for projection to intermediate  
-        # 3) Intermediate mech is already an origin 
+        #      need to assign additional error_signal projection to LearningMechanism for projection to intermediate
+        # 3) Intermediate mech is already an origin
         #      (e.g., REL_IN->REL_HIDDEN->PROP if only REL_HIDDEN->REP exists):
-        #      need to  add error_signal projection from LearningMechanism for projection from origin 
-        #      to new one for projection to the old origin 
-        # 4) Intermediate mech is already an intermediate [INTERSECTION] 
+        #      need to  add error_signal projection from LearningMechanism for projection from origin
+        #      to new one for projection to the old origin
+        # 4) Intermediate mech is already an intermediate [INTERSECTION]
         #      (e.g., REL_IN->REL_HIDDEN->PROP after REP_HIDDEN->REL_HIDDEN->REP exists):
-        #      need to 
-        # 5) Intermediate mech is already a terminal 
+        #      need to
+        # 5) Intermediate mech is already a terminal
         #      (e.g., IMAGINE->ACT->MOTOR if REL_HIDDEN->ACT exists):
         #      !! need to get rid of projection from what was terminal to output_CIM
-        # 6) Last mech is already an intermediate 
+        # 6) Last mech is already an intermediate
         #      (e.g., REL_IN->REL_HIDDEN if REP_HIDDEN->REL_HIDDEN->REP exists; also Stroop):
-        #      need to  
-        # 7) Last mech is already a terminal 
+        #      need to
+        # 7) Last mech is already a terminal
         #      (e.g., IMAGINE->ACT if REL_HIDDEN->ACT exists):
-        #      need to  
+        #      need to
 
         # Add pathway to graph and get its full specification
         processing_pathway = self.add_linear_processing_pathway(pathway)
@@ -5224,6 +5235,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(execution_id)}'
                     #       f'\n\tvalue: {node.parameters.value.get(execution_id)}')
 
+                    # # TEST PRINT 7/22/19
+                    # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(execution_id)}'
+                    #       f'\n\tvalue: {node.parameters.value.get(execution_id)}')
+
                     # Set execution_phase for node's context back to IDLE
                     node.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
@@ -6054,9 +6069,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               ctx.int32_ty(state_idx),
                                               ctx.int32_ty(projection_idx)])
 
-                if proj_in.type != proj_function.args[2].type:
-                    assert node is self.output_CIM
-                    proj_in = builder.bitcast(proj_in, proj_function.args[2].type)
                 builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
 
             idx = ctx.int32_ty(self._get_node_index(node))
