@@ -5,6 +5,11 @@ import numpy as np
 
 from psyneulink.core.llvm import ptx_enabled
 from psyneulink import clear_registry, primary_registries
+try:
+    import pytorch
+    pytorch_available = True
+except ImportError:
+    pytorch_available = False
 
 # def pytest_addoption(parser):
 #     parser.addoption(
@@ -33,6 +38,9 @@ def pytest_runtest_setup(item):
 
     if 'cuda' in item.keywords and not ptx_enabled:
             pytest.skip('PTX engine not enabled/available')
+
+    if 'pytorch' in item.keywords and not pytorch_available:
+            pytest.skip('pytorch not available')
 
     doctest.ELLIPSIS_MARKER = "[...]"
 
