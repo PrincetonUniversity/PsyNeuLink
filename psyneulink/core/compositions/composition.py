@@ -2754,21 +2754,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     Mechanism_Base._delete_mechanism(old_target)
                     for input_state in old_error_signal_input_states:
                         input_state.owner.remove_states(input_state)
-
-                    # FIX CROSS_PATHWAYS [JDC]: GET RID OF ASSOCIATED INPUTSTATES IF EMPTY
-                    #  ERROR_SIGNAL InputState HAS BEEN VACATED AND SO IS AVAILABLE FOR NEW error_signal PROJECTION;
-                    #  HOWEVER, STILL NEED TO DELETE CORRESPONDING error_matrix in old_learing_mechanism.error_matrices
-
-                    # # MODIFIED 7/28/19 CROSSED_PATHWAYS NEW:
-                    # old_learning_mechanisms.append(next((p.receiver.owner for p in pathway_mech.efferents
-                    #                                      if (isinstance(p.receiver.owner, LearningMechanism)
-                    #                                          and p.receiver.owner in self.nodes
-                    #                                          and ACTIVATION_OUTPUT in p.receiver.name )),
-                    #                                     None))
-                    # MODIFIED 7/28/19 CROSSED_PATHWAYS OLD
-
-                    # FIX CROSSED_PATHWAYS [JDC]: ADD HERE
-                    #  - get rid of output projection to output_CIM
                     del self._terminal_backprop_sequences[pathway_mech]
 
             # Create terminal_sequence
@@ -2782,16 +2767,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 COMPARATOR_MECHANISM: comparator}
-
-            # # FIX CROSSED_PATHWAYS [JDC]: THIS SHOULD BE (RE-)MOVED ONCE CONVERGENT/CROSSING PATHWAYS
-            #                      IS HANDLED IN _create_learning_related_projections
-            # # # MODIFIED 7/28/19 CROSSED_PATHWAYS NEW:
-            # if old_learning_mechanisms:
-            #     self.add_projection(sender=learning_mechanism.output_states[ERROR_SIGNAL],
-            #                         receiver=old_learning_mechanisms[0].input_states[ERROR_SIGNAL])
-            #     old_learning_mechanisms[0].error_matrices[0] = \
-            #         learning_mechanism.learned_projections[0].parameter_states[MATRIX]
-            # MODIFIED 7/28/19 CROSSED_PATHWAYS OLD
 
             sequence_end = path_length-3
 
