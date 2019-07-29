@@ -866,7 +866,7 @@ class Projection_Base(Projection):
                 receiver = receiver.input_CIM
             if isinstance(receiver, Mechanism):
                 receiver = receiver.input_state
-            assert isinstance(receiver, (InputState, ParameterState)), \
+            assert isinstance(receiver, (State)), \
                 f"Illegal receiver ({receiver}) detected in _instantiate_sender() method for {self.name}"
             if receiver._check_for_duplicate_projections(self):
                 raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
