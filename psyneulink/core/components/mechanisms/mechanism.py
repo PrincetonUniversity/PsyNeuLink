@@ -2451,17 +2451,9 @@ class Mechanism_Base(Mechanism):
             if len(input_state.defaults.value) == len(input_item):
                 input_state.parameters.value._set(input_item, execution_id)
             else:
-                raise MechanismError(
-                    "Length ({}) of input ({}) does not match "
-                    "required length ({}) for input to {} {} of {}".format(
-                        len(input_item),
-                        input_item,
-                        len(input_state.defaults.variable),
-                        input_state.name,
-                        InputState.__name__,
-                        self.name
-                    )
-                )
+                raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
+                                     f"required length ({len(input_state.defaults.variable)}) for input "
+                                     f"to {input_state.name} {InputState.__name__} of {self.name}.")
 
         return np.array(self.get_input_values(execution_id))
 

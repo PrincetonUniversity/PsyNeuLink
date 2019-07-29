@@ -1009,7 +1009,7 @@ class TestIntegratorRate:
             )
             result = I.execute(10.0)
             float(result)
-        error_msg_a = 'Length (1) of input ([10.]) does not match required length (3) for input to '
+        error_msg_a = 'Length (1) of input ([ 10.]) does not match required length (3) for input to '
         error_msg_b = 'InputState-0 InputState of IntegratorMechanism'
         assert error_msg_a in str(error_text.value)
         assert error_msg_b in str(error_text.value)
