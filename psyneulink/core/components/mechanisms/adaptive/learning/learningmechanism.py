@@ -1374,13 +1374,20 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Compute learning_signal for each error_signal (and corresponding error-Matrix):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
-            variable[ERROR_OUTPUT_INDEX] = error_signal_input
-            learning_signal, error_signal = super()._execute(variable=variable,
+
+            # MODIFIED 7/28/19 CROSSED_PATHWAYS OLD:
+            # variable[ERROR_OUTPUT_INDEX] = error_signal_input
+            # learning_signal, error_signal = super()._execute(variable=variable,
+            # MODIFIED 7/28/19 NEW: [JDC]
+            function_variable = np.array([variable[ACTIVATION_INPUT_INDEX],
+                                          variable[ACTIVATION_OUTPUT_INDEX],
+                                          error_signal_input])
+            learning_signal, error_signal = super()._execute(variable=function_variable,
+            # MODIFIED 7/28/19 END
                                                              execution_id=execution_id,
                                                              error_matrix=error_matrix,
                                                              runtime_params=runtime_params,
-                                                             context=context
-                                                             )
+                                                             context=context)
             # Sum learning_signals and error_signals
             summed_learning_signal += learning_signal
             summed_error_signal += error_signal

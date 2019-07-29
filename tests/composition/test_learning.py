@@ -772,8 +772,9 @@ class TestRumelhartSemanticNetwork:
 
         rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
         rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
-        rep_hidden = pnl.TransferMechanism(size=4, function=psyneulink.core.components.functions.transferfunctions
-                                           .Logistic, name='REP_HIDDEN')
+        rep_hidden = pnl.TransferMechanism(size=4,
+                                           function=psyneulink.core.components.functions.transferfunctions.Logistic,
+                                           name='REP_HIDDEN')
         rel_hidden = pnl.TransferMechanism(size=5, function=Logistic, name='REL_HIDDEN')
         rep_out = pnl.TransferMechanism(size=10, function=Logistic, name='REP_OUT')
         prop_out = pnl.TransferMechanism(size=12, function=Logistic, name='PROP_OUT')
