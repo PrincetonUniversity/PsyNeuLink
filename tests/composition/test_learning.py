@@ -651,7 +651,7 @@ class TestBackProp:
                                           learning_rate=1)
         comp.add_backpropagation_pathway(pathway=word_pathway,
                                           learning_rate=1)
-        comp.show_graph(show_learning=True)
+        # comp.show_graph(show_learning=True)
 
         # RUN MODEL ---------------------------------------------------------------------------
 
@@ -791,21 +791,19 @@ class TestRumelhartSemanticNetwork:
         comp.add_backpropagation_pathway(pathway=[rel_hidden, act_out])
         comp.add_backpropagation_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
 
-        comp.show_graph(show_learning=True)
+        # comp.show_graph(show_learning=True)
         # validate_learning_mechs(comp)
 
-        # print(S.orixgin_mechanisms)
-        # print(S.terminal_mechanisms)
-        # comp.run(
-        #       # num_trials=2,
-        #       inputs={rel_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        #               rep_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]},
-        #       # targets={rep_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-        #       #          prop_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-        #       #          qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-        #       #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
-        #       )
-        # print(comp.results)
+        comp.run(
+              num_trials=2,
+              inputs={rel_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                      rep_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]},
+              # targets={rep_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
+              #          prop_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
+              #          qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
+              #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
+              )
+        print(comp.results)
 
     # def test_rumelhart_semantic_network_convergent(self):
     #

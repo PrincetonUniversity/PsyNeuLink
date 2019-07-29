@@ -5219,10 +5219,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         execution_id)
 
                         node.function._runtime_params_reset[execution_id] = {}
-
-                    # TEST PRINT 7/22/19
-                    print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(execution_id)}'
-                          f'\n\tvalue: {node.parameters.value.get(execution_id)}')
+                    #
+                    # # TEST PRINT 7/22/19
+                    # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(execution_id)}'
+                    #       f'\n\tvalue: {node.parameters.value.get(execution_id)}')
 
                     # Set execution_phase for node's context back to IDLE
                     node.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE

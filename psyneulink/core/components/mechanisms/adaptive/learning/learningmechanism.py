@@ -1316,8 +1316,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         super().remove_states(states=states)
         self._error_signal_input_states = [s for s in self.input_states if ERROR_SIGNAL in s.name]
 
-        self.error_matrices
-
     def _execute(
         self,
         variable=None,
@@ -1435,19 +1433,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
     #                                      (?WITH SETTER, AND LINKED TO INPUT_STATES PROPERTY?/LIST?)
     @property
     def error_signal_input_states(self):
-        # try:
-        #     # This is maintained for efficiency (since it is called by execute method)
-        #     return self._error_signal_input_states
-        # except AttributeError:
-        #     try:
-        #         return [s for s in self.input_states if ERROR_SIGNAL in s.name]
-        #     except:
-        #         return [s for s in self.input_states if ERROR_SIGNAL in s]
         try:
-            return [s for s in self.input_states if ERROR_SIGNAL in s.name]
-        except:
-            return [s for s in self.input_states if ERROR_SIGNAL in s]
-
+            # This is maintained for efficiency (since it is called by execute method)
+            return self._error_signal_input_states
+        except AttributeError:
+            try:
+                return [s for s in self.input_states if ERROR_SIGNAL in s.name]
+            except:
+                return [s for s in self.input_states if ERROR_SIGNAL in s]
 
     @property
     def error_signal_indices(self):
