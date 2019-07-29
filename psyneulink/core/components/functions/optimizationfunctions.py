@@ -1348,14 +1348,11 @@ class GridSearch(OptimizationFunction):
             # self.objective_function may be bound method of
             # an OptimizationControlMechanism
             ocm = self.objective_function.__self__
-        except AttributeError:
-            ocm = None
-        if ocm is not None:
             ctx = pnlvm.LLVMBuilderContext.get_global()
             extra_args = [ctx.get_param_struct_type(ocm.agent_rep).as_pointer(),
                           ctx.get_context_struct_type(ocm.agent_rep).as_pointer(),
                           ctx.get_data_struct_type(ocm.agent_rep).as_pointer()]
-        else:
+        except AttributeError:
             extra_args = []
 
         f = super()._gen_llvm_function(extra_args)

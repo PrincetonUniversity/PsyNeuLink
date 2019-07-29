@@ -188,7 +188,6 @@ def test_botvinick_model(benchmark, mode, reps):
     # should be 500 and 1000
     ntrials0 = 5 * reps
     ntrials = 10 * reps
-    comp._analyze_graph()
 
     def run(bin_execute):
         results = []

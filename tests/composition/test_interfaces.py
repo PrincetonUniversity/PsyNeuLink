@@ -68,8 +68,6 @@ class TestExecuteCIM:
 
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
 
-        comp._analyze_graph()
-
         inputs_dict = {
             A: [[5.]],
         }
@@ -99,7 +97,6 @@ class TestExecuteCIM:
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp.add_projection(MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), A, B)
 
-        comp._analyze_graph()
         inputs_dict = {
             A: [[5.], [6.]],
         }
@@ -141,7 +138,6 @@ class TestConnectCompositionsViaCIMS:
 
         comp1.add_projection(MappingProjection(sender=A, receiver=B), A, B)
 
-        comp1._analyze_graph()
         inputs_dict = {
             A: [[5.]],
         }
@@ -162,7 +158,6 @@ class TestConnectCompositionsViaCIMS:
 
         comp2.add_projection(MappingProjection(sender=A2, receiver=B2), A2, B2)
 
-        comp2._analyze_graph()
         sched = Scheduler(composition=comp2)
 
         comp3 = Composition(name="outer_composition")
@@ -220,8 +215,6 @@ class TestConnectCompositionsViaCIMS:
         inner_composition_1.add_projection(MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), A,
                                            B)
 
-        inner_composition_1._analyze_graph()
-
         inner_composition_2 = Composition(name="comp2")
 
         A2 = TransferMechanism(name="A2",
@@ -239,8 +232,6 @@ class TestConnectCompositionsViaCIMS:
         inner_composition_2.add_projection(MappingProjection(sender=A2.output_states[1], receiver=B2.input_states[1]),
                                            A2, B2)
 
-        inner_composition_2._analyze_graph()
-
         outer_composition = Composition(name="outer_composition")
 
         outer_composition.add_node(inner_composition_1)
@@ -254,7 +245,6 @@ class TestConnectCompositionsViaCIMS:
             sender=inner_composition_1, receiver=inner_composition_2)
 
         sched = Scheduler(composition=outer_composition)
-        outer_composition._analyze_graph()
         output = outer_composition.run(
             inputs={inner_composition_1: [[[5.0], [50.0]]]},
             scheduler_processing=sched,
@@ -296,8 +286,6 @@ class TestConnectCompositionsViaCIMS:
         inner_composition_1.add_projection(MappingProjection(), A, C)
         inner_composition_1.add_projection(MappingProjection(), B, C)
 
-        inner_composition_1._analyze_graph()
-
         inner_composition_2 = Composition(name="inner_composition_2")
 
         A2 = TransferMechanism(name="A2",
@@ -310,8 +298,6 @@ class TestConnectCompositionsViaCIMS:
         inner_composition_2.add_node(B2)
 
         inner_composition_2.add_projection(MappingProjection(), A2, B2)
-
-        inner_composition_2._analyze_graph()
 
         mechanism_d = TransferMechanism(name="D",
                                         function=Linear(slope=3.0))
@@ -328,7 +314,6 @@ class TestConnectCompositionsViaCIMS:
                                          receiver=mechanism_d)
 
         sched = Scheduler(composition=outer_composition)
-        outer_composition._analyze_graph()
 
         # FIX: order of InputStates on inner composition 1 is not stable
         output = outer_composition.run(
@@ -382,8 +367,6 @@ class TestConnectCompositionsViaCIMS:
         inner_composition_1.add_projection(MappingProjection(), A, C)
         inner_composition_1.add_projection(MappingProjection(), B, C)
 
-        inner_composition_1._analyze_graph()
-
         inner_composition_2 = Composition(name="inner_composition_2")
 
         A2 = TransferMechanism(name="A2",
@@ -397,24 +380,32 @@ class TestConnectCompositionsViaCIMS:
 
         inner_composition_2.add_projection(MappingProjection(), A2, B2)
 
-        inner_composition_2._analyze_graph()
-
         mechanism_d = TransferMechanism(name="D",
                                         function=Linear(slope=3.0))
 
         outer_composition = Composition(name="outer_composition")
 
         outer_composition.add_node(inner_composition_1)
+
+
         outer_composition.add_node(inner_composition_2)
+
+
         outer_composition.add_node(mechanism_d)
+
+        inner_composition_1._analyze_graph()
 
         outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_1,
                                          receiver=mechanism_d)
+
+
+
+        inner_composition_2._analyze_graph()
+
         outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_2,
                                          receiver=mechanism_d)
 
         sched = Scheduler(composition=outer_composition)
-        outer_composition._analyze_graph()
 
         # FIX: order of InputStates on inner composition 1 is not stable
         output = outer_composition.run(
@@ -458,7 +449,6 @@ class TestConnectCompositionsViaCIMS:
         level_0.add_node(B0)
         level_0.add_projection(MappingProjection(), A0, B0)
         level_0.add_projection(MappingProjection(sender=A0.output_states[1], receiver=B0), A0, B0)
-        level_0._analyze_graph()
 
         # level_1 composition ---------------------------------
         level_1 = Composition(name="level_1")
@@ -473,7 +463,6 @@ class TestConnectCompositionsViaCIMS:
         level_1.add_node(B1)
         level_1.add_projection(MappingProjection(), level_0, B1)
         level_1.add_projection(MappingProjection(), A1, B1)
-        level_1._analyze_graph()
 
         # level_2 composition --------------------------------- outermost composition
         level_2 = Composition(name="level_2")
@@ -489,7 +478,6 @@ class TestConnectCompositionsViaCIMS:
         level_2.add_node(B2)
         level_2.add_projection(MappingProjection(), level_1, B2)
         level_2.add_projection(MappingProjection(), A2, B2)
-        level_2._analyze_graph()
 
         sched = Scheduler(composition=level_2)
 
@@ -680,7 +668,6 @@ class TestSimplifedNestedCompositionSyntax:
                                function=Linear(slope=3.0))
 
         inner1.add_linear_processing_pathway([A1, B1])
-        inner1._analyze_graph()
 
         inner2 = Composition(name="inner2")
 
@@ -691,7 +678,6 @@ class TestSimplifedNestedCompositionSyntax:
                                function=Linear(slope=3.0))
 
         inner2.add_linear_processing_pathway([A2, B2])
-        inner2._analyze_graph()
 
         outer = Composition(name="outer")
         outer.add_nodes([inner1, inner2])
@@ -718,7 +704,6 @@ class TestSimplifedNestedCompositionSyntax:
                                function=Linear(slope=3.0))
 
         inner1.add_linear_processing_pathway([A1, B1])
-        inner1._analyze_graph()
 
         inner2 = Composition(name="inner2")
 
@@ -729,7 +714,6 @@ class TestSimplifedNestedCompositionSyntax:
                                function=Linear(slope=3.0))
 
         inner2.add_linear_processing_pathway([A2, B2])
-        inner2._analyze_graph()
 
         outer = Composition(name="outer")
         outer.add_nodes([inner1, inner2])
@@ -758,7 +742,6 @@ class TestSimplifedNestedCompositionSyntax:
                                function=Linear(slope=3.0))
 
         inner1.add_linear_processing_pathway([A1, B1])
-        inner1._analyze_graph()
 
         inner2 = Composition(name="inner2")
 
@@ -769,7 +752,6 @@ class TestSimplifedNestedCompositionSyntax:
                                function=Linear(slope=3.0))
 
         inner2.add_linear_processing_pathway([A2, B2])
-        inner2._analyze_graph()
 
         outer = Composition(name="outer")
         outer.add_nodes([inner1, inner2])
@@ -795,7 +777,6 @@ class TestSimplifedNestedCompositionSyntax:
                                function=Linear(slope=3.0))
 
         inner1.add_linear_processing_pathway([A1, B1])
-        inner1._analyze_graph()
 
         inner2 = Composition(name="inner2")
         A2 = TransferMechanism(name="A2")
@@ -803,7 +784,6 @@ class TestSimplifedNestedCompositionSyntax:
         C2 = TransferMechanism(name="C2")
 
         inner2.add_nodes([A2, B2, C2])
-        inner2._analyze_graph()
 
         outer1 = Composition(name="outer1")
         outer1.add_nodes([inner1, inner2])
