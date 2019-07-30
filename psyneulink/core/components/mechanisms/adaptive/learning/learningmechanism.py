@@ -562,7 +562,7 @@ from psyneulink.core.globals.utilities import ContentAddressableList, is_numeric
 
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
-    'DefaultTrainingMechanism', 'ERROR_OUTPUT_INDEX', 'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCES',
+    'DefaultTrainingMechanism', 'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCES',
     'LearningMechanism', 'LearningMechanismError', 'input_state_names', 'output_state_names'
 ]
 
@@ -636,8 +636,7 @@ LEARNING_TIMING = 'learning_timing'
 # Used to index variable:
 ACTIVATION_INPUT_INDEX = 0
 ACTIVATION_OUTPUT_INDEX = 1
-ERROR_OUTPUT_INDEX = 2
-ERROR_SIGNAL_INDEX = 3
+ERROR_SIGNAL_INDEX = 2
 
 # Used to name input_states and output_states:
 ACTIVATION_INPUT = 'activation_input'     # InputState
@@ -1030,8 +1029,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         #    assign to private attribute as self.error_sources is used as a property
         #    private attribute is used for validation and in _instantiate_attribute_before_function;
         #    thereafter, self.error_sources contains actual error_sources
-        if error_sources and not isinstance(error_sources, list):
-            error_sources = [error_sources]
+        if error_sources:
+            error_sources = convert_to_list(error_sources)
         self._error_sources = error_sources
 
         self.in_composition = in_composition
@@ -1081,11 +1080,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         function_variable = np.zeros_like(
-            variable[np.array([ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_OUTPUT_INDEX])]
+            variable[np.array([ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL_INDEX])]
         )
         function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
         function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
-        function_variable[ERROR_OUTPUT_INDEX] = variable[ERROR_OUTPUT_INDEX]
+        function_variable[ERROR_SIGNAL_INDEX] = variable[ERROR_SIGNAL_INDEX]
 
         return function_variable
 
@@ -1147,12 +1146,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
             if not isinstance(error_sources, list):
                 error_sources = [error_sources]
 
-            # FIX CROSSED_PATHWAYS 7/28/19 [JDC]: VALIDATE AGAINST SIZE OF VARIABLE (AND CHECK EACH IS THE RIGHT SIZE)
-            # if not len(error_sources) == len(self.error_signal_input_states):
-            #     raise LearningMechanismError(f"Number of items specified in {repr(ERROR_SOURCES)} arg "
-            #                                  f"for {self.name} ({len(error_sources)}) must equal the number "
-            #                                  f"of its {InputState.__name__} {ERROR_SIGNAL.upper()}s "
-            #                                  f"({len(self.error_signal_input_states)}).")
+            if not len(error_sources) == len(self.defaults.variable[ERROR_SIGNAL_INDEX:]):
+                raise LearningMechanismError(f"Number of items specified in {repr(ERROR_SOURCES)} arg "
+                                             f"for {self.name} ({len(error_sources)}) must equal the number "
+                                             f"of its {InputState.__name__} {ERROR_SIGNAL.upper()}s "
+                                             f"({len(self.error_signal_input_states)}).")
 
             for error_source in error_sources:
                 if (not isinstance(error_source, (ObjectiveMechanism, LearningMechanism, OutputState))
@@ -1196,11 +1194,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         if self._error_sources:
             self.input_states = self.input_states[:2] + [ERROR_SIGNAL] * len(self._error_sources)
-
-            # # FIX CROSSED_PATHWAYS 7/22/19 [JDC]:  GET LENGTH OF ERROR_SOURCES RIGHT OR DELETE IF HANDLED W/ VARIABLE:
-            # self.defaults.variable = np.array([self.defaults.variable[0],
-            #                                    self.defaults.variable[1]] +
-            #                                    [self.defaults.variable[2]] * len(self._error_sources))
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -1309,8 +1302,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         return instantiated_input_states
 
-    # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:  REMOVE THIS ONCE error_input_states HAS SETTER OR IS OTHERWISE REFACTORED
+    # FIX 7/28/19 [JDC]:  REMOVE THIS ONCE error_input_states HAS SETTER OR IS OTHERWISE REFACTORED
     def remove_states(self, states):
+        '''Keep error_signal_input_states and error_matrices in sych with error_signals in input_states'''
         states = convert_to_list(states)
         for i, state in enumerate([s for s in states if s in self.error_signal_input_states]):
             del self.error_matrices[i]
@@ -1360,10 +1354,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
             else:
                 self.error_matrices = [[0.]]
                 error_matrices = \
-                    np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in error_signal_indices])]
+                    np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX for c in error_signal_indices])]
         else:
             error_matrices = \
-                np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in error_signal_indices])]
+                np.array(self.error_matrices)[np.array([c - ERROR_SIGNAL_INDEX for c in error_signal_indices])]
 
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterState):
@@ -1374,10 +1368,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Compute learning_signal for each error_signal (and corresponding error-Matrix):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
-            # MODIFIED CROSS_PATHWAYS 7/22/19 OLD:
-            # variable[ERROR_OUTPUT_INDEX] = error_signal_input
-            # learning_signal, error_signal = super()._execute(variable=variable,
-            # MODIFIED CROSS_PATHWAYS 7/22/19 NEW: [JDC]
             function_variable = np.array([variable[ACTIVATION_INPUT_INDEX],
                                           variable[ACTIVATION_OUTPUT_INDEX],
                                           error_signal_input])
@@ -1430,8 +1420,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         except IndexError:
             return None
 
-    # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:  PROPERLY MANAGE THIS AS A PROPERTY
-    #                                      (?WITH SETTER, AND LINKED TO INPUT_STATES PROPERTY?/LIST?)
+    # FIX 7/28/19 [JDC]:  PROPERLY MANAGE BACKGING FIELD
+    #                     (?WITH SETTER, AND LINKED TO INPUT_STATES PROPERTY?/LIST?)
     @property
     def error_signal_input_states(self):
         try:

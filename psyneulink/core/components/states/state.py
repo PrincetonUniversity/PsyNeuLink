@@ -2302,7 +2302,6 @@ def _instantiate_state_list(owner,
                          f"than the number of items ({num_constraint_items}) in the {reference_value_name} "
                          f"of the function for {repr(owner.name)}.")
 
-
     # INSTANTIATE EACH STATE
 
     states = ContentAddressableList(component_type=State_Base,
