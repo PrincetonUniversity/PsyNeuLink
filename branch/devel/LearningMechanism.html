@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Learning Mechanism &mdash; PsyNeuLink 0.5.3.2+320.g19068c7 documentation</title>
+  <title>Learning Mechanism &mdash; PsyNeuLink 0.5.3.2+321.ge07c010 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+320.g19068c7',
+              VERSION:'0.5.3.2+321.ge07c010',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+320
+                0.5.3.2+321
               </div>
             
           
@@ -614,8 +614,9 @@ being learned in the sequence.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>variable</strong> (<em>List</em><em> or </em><em>2d np.array</em>) – it must have three items that correspond to the three values required by the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  they must each be compatible (in number and type) with the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the corresponding <a class="reference internal" href="#learningmechanism-inputstates"><span class="std std-ref">InputState</span></a> (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.variable" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for additional details).</li>
-<li><strong>error_sources</strong> (<a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism"><em>ComparatorMechanism</em></a><em>, </em><a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism"><em>LearningMechanism</em></a><em> or </em><em>list of them</em>) – specifies the source(s) of the error signal(s) used by the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Each must be a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> for <a class="reference internal" href="#learningmechanism-single-layer-learning"><span class="std std-ref">single layer learning</span></a>, or for the last <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> in a learning sequence in
-<a class="reference internal" href="#learningmechanism-multilayer-learning"><span class="std std-ref">multilayer learning</span></a>;  otherwise they must be a <a class="reference internal" href="#"><span class="doc">Learning Mechanism</span></a>.</li>
+<li><strong>error_sources</strong> (<a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism"><em>ComparatorMechanism</em></a><em>, </em><a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism"><em>LearningMechanism</em></a><em>, </em><a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState" title="psyneulink.core.components.states.outputstate.OutputState"><em>OutputState</em></a><em> or </em><em>list of them</em>) – specifies the source(s) of the error signal(s) used by the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Each must be a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> for <a class="reference internal" href="#learningmechanism-single-layer-learning"><span class="std std-ref">single layer learning</span></a>, or for the last <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> in a learning sequence in
+<a class="reference internal" href="#learningmechanism-multilayer-learning"><span class="std std-ref">multilayer learning</span></a>;  otherwise they must be a <a class="reference internal" href="#"><span class="doc">Learning Mechanism</span></a>
+or the <em>ERROR_SIGNAL</em> OutputState of one.</li>
 <li><strong>function</strong> (<em>LearningFunction</em><em> or </em><em>function : default BackPropagation</em>) – specifies the function used to calculate the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.error_signal" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> attributes.  It’s
 <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> must have three items, each of which must be a list or 1d array of
 numeric values, corresponding to values provided by the LearningMechanism’s <em>ACTIVATION_INPUT</em>,
@@ -816,6 +817,12 @@ default is assigned by MechanismRegistry (see <a class="reference internal" href
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states">
+<code class="descname">add_states</code><span class="sig-paren">(</span><em>error_sources</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add error_source and error_matrix for each InputState added</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.outputStateTypes">
 <code class="descname">outputStateTypes</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.outputStateTypes" title="Permalink to this definition">¶</a></dt>
@@ -823,9 +830,9 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 </dd></dl>
 
 <dl class="method">
-<dt id="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states">
-<code class="descname">add_states</code><span class="sig-paren">(</span><em>states</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.add_states" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add error_source and error_matrix for each InputState added</p>
+<dt id="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.remove_states">
+<code class="descname">remove_states</code><span class="sig-paren">(</span><em>states</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.remove_states" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keep error_signal_input_states and error_matrices in sych with error_signals in input_states</p>
 </dd></dl>
 
 </dd></dl>
