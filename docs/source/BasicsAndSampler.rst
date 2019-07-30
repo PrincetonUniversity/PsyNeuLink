@@ -554,10 +554,10 @@ times, as specified in the Conditions described above.  The output of the `Log` 
 formats, including a `numpy <https://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html>`_ array,
 a dictionary of values for each entry, and `CSV <https://en.wikipedia.org/wiki/Comma-separated_values>`_ format.
 
-.. .. _BasicsAndSampler_Learning:
-..
-.. Learning
-.. ~~~~~~~~
+_BasicsAndSampler_Learning:
+
+Learning
+~~~~~~~~
 
 Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
 mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available in other

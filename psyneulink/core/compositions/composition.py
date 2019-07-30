@@ -687,8 +687,8 @@ from psyneulink.core.components.functions.combinationfunctions import LinearComb
 from psyneulink.core.components.mechanisms.mechanism import MechanismRegistry, Mechanism_Base
 from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
-    LearningMechanism, ACTIVATION_OUTPUT, ERROR_SIGNAL
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, \
+    ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
@@ -2090,17 +2090,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                     learning_update):
         """Create ComparatorMechanism, LearningMechanism and LearningProjection for Component in learning sequence"""
 
-        target_mechanism = ProcessingMechanism(name='Target',
-                                               default_variable=output_source.output_states[0].value)
+        # target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
+        # comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
+        # learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
 
-        comparator_mechanism = ComparatorMechanism(name='Comparator',
-                                                   target={NAME: TARGET,
-                                                           VARIABLE: target_mechanism.output_states[0].value},
-                                                   sample={NAME: SAMPLE,
-                                                           VARIABLE: output_source.output_states[0].value,
-                                                           WEIGHT: -1},
-                                                   function=error_function,
-                                                   output_states=[OUTCOME, MSE])
+        try:
+            target_mechanism = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
+            comparator_mechanism = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
+
+        except KeyError:
+            target_mechanism = ProcessingMechanism(name='Target',
+                                                   default_variable=output_source.output_states[0].value)
+            comparator_mechanism = ComparatorMechanism(name='Comparator',
+                                                       target={NAME: TARGET,
+                                                               VARIABLE: target_mechanism.output_states[0].value},
+                                                       sample={NAME: SAMPLE,
+                                                               VARIABLE: output_source.output_states[0].value,
+                                                               WEIGHT: -1},
+                                                       function=error_function,
+                                                       output_states=[OUTCOME, MSE])
 
         learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
                                                               output_source.output_states[0].value,
@@ -2249,16 +2257,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # FIX 5/29/19 [JDC]:  REPLACE INDICES BELOW WITH RELEVANT KEYWORDS;
         #                     INTEGRATE WITH _get_back_prop_error_sources (RIGHT NOW, ONLY CALLED FOR TERMINAL SEQUENCE)
-        sample_projection = MappingProjection(sender=output_source,
-                                              receiver=comparator.input_states[0])
-        target_projection = MappingProjection(sender=target,
-                                              receiver=comparator.input_states[1])
+        try:
+            sample_projection = MappingProjection(sender=output_source, receiver=comparator.input_states[SAMPLE])
+        except DuplicateProjectionError:
+            sample_projection = [p for p in output_source.efferents
+                                 if p in comparator.input_states[SAMPLE].path_afferents]
+        try:
+            target_projection = MappingProjection(sender=target, receiver=comparator.input_states[TARGET])
+        except DuplicateProjectionError:
+            target_projection = [p for p in target.efferents
+                                 if p in comparator.input_states[TARGET].path_afferents]
         act_in_projection = MappingProjection(sender=input_source.output_states[0],
-                                              receiver=learning_mechanism.input_states[0])
+                                              receiver=learning_mechanism.input_states[ACTIVATION_INPUT_INDEX])
         act_out_projection = MappingProjection(sender=output_source.output_states[0],
-                                               receiver=learning_mechanism.input_states[1])
+                                               receiver=learning_mechanism.input_states[ACTIVATION_OUTPUT_INDEX])
+        # FIX CROSS_PATHWAYS 7/28/19 [JDC]: THIS MAY NEED TO USE ADD_STATES (SINCE ONE MAY EXIST; CONSTRUCT TEST FOR IT)
         error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
-                                                    receiver=learning_mechanism.input_states[2])
+                                                    receiver=learning_mechanism.input_states[ERROR_SIGNAL_INDEX])
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
         # # MODIFIED 7/22/19 NEW:
         # error_signal_projections = []
@@ -2627,10 +2642,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # If pathway includes existing terminal_sequence for the output_source, use that
         if output_source in self._terminal_backprop_sequences:
-            target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
-            comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
-            learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
+            # target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
+            # comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
+            # learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
+            target, comparator, learning_mechanism = \
+                self._create_terminal_backprop_sequence_components(input_source,
+                                                                   output_source,
+                                                                   error_function,
+                                                                   learned_projection,
+                                                                   learning_rate,
+                                                                   learning_update)
             sequence_end = path_length-3
+
             # # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:
             # #     THE FOLLOWING SHOULD BE INTERGATED WITH SIMILAR CALLS FOR REST OF PATHWAY
             # # But still need to create or add error projection(s) to LearningMechanisms for afferent projections
@@ -2656,7 +2679,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #
             # learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
             # self.add_projection(learning_projection, feedback=True)
-            #
+
 
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
         # Otherwise, if output_source already projects to a LearningMechanism, integrate with existing sequence

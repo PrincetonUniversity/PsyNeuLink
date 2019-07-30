@@ -590,7 +590,7 @@ class TestBackProp:
         'CROSS',
         'Y UP AND DOWN',
         'BRANCH DOWN',
-        # 'EXTEND DOWN',
+        'EXTEND DOWN',
         'BOW',
         'COMPLEX'
     ])
