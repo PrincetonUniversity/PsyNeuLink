@@ -582,7 +582,7 @@ class TestBackProp:
 
 
     def test_backprop_with_various_intersecting_pathway_configurations(self):
-        '''Test add_backpropgation using various configurations of intersecting pathways
+        '''Test add_backpropgation using various configurations of intersecting pathways'''
         #
         # 1) First mech is already a terminal (EXTEND UP)
         #                  E
@@ -594,7 +594,17 @@ class TestBackProp:
         #      B
         #     /
         #    A
-        #
+        pnl.clear_registry(pnl.MechanismRegistry)
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        C = pnl.ProcessingMechanism(name='C')
+        D = pnl.ProcessingMechanism(name='D')
+        E = pnl.ProcessingMechanism(name='E')
+        extend_up = pnl.Composition(name='EXTEND UP')
+        extend_up.add_backpropagation_pathway(pathway=[A,B,C])
+        extend_up.add_backpropagation_pathway(pathway=[C,D,E])
+        # extend_up.show_graph(show_learning=True)
+
         # 2) First mech is intermediate (BRANCH UP)
         #
         #            E
@@ -604,7 +614,17 @@ class TestBackProp:
         #      B   +    B
         #     /
         #    A
-        #
+        # pnl.clear_registry(pnl.MechanismRegistry)
+        # A = pnl.ProcessingMechanism(name='A')
+        # B = pnl.ProcessingMechanism(name='B')
+        # C = pnl.ProcessingMechanism(name='C')
+        # D = pnl.ProcessingMechanism(name='D')
+        # E = pnl.ProcessingMechanism(name='E')
+        extend_up = pnl.Composition(name='BRANCH UP')
+        extend_up.add_backpropagation_pathway(pathway=[A,B,C])
+        extend_up.add_backpropagation_pathway(pathway=[B,D,E])
+        # extend_up.show_graph(show_learning=True)
+
         # 3) Intermediate mech is already an origin (Y DOWN)
         #
         #    C       D
@@ -612,6 +632,16 @@ class TestBackProp:
         #      B + B
         #         /
         #        A
+        pnl.clear_registry(pnl.MechanismRegistry)
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        C = pnl.ProcessingMechanism(name='C')
+        D = pnl.ProcessingMechanism(name='D')
+        E = pnl.ProcessingMechanism(name='E')
+        extend_up = pnl.Composition(name='Y UP')
+        extend_up.add_backpropagation_pathway(pathway=[A,B,D])
+        extend_up.add_backpropagation_pathway(pathway=[B,C])
+        # extend_up.show_graph(show_learning=True)
 
         # 4) Intermediate mech is already an intermediate (CROSS)
         #
@@ -620,8 +650,12 @@ class TestBackProp:
         #      B + B
         #     /     \
         #    A       D
-        #
-        # 5) Intermediate mech is already a terminal (Y UP)
+        extend_up = pnl.Composition(name='Y CROSS')
+        extend_up.add_backpropagation_pathway(pathway=[A,B,C])
+        extend_up.add_backpropagation_pathway(pathway=[D,E])
+        # extend_up.show_graph(show_learning=True)
+
+        # 5) Intermediate mech is already a terminal (Y DOWN)
         #
         #          D
         #          \
@@ -646,9 +680,6 @@ class TestBackProp:
         #    A           D
 
         # 8) Deep extends??
-        '''
-        pass
-
 
     @pytest.mark.parametrize('order', [
         # 'color_full',
