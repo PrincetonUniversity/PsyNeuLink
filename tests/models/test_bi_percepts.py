@@ -31,7 +31,7 @@ node_dict = {percept: None for percept in ALL_PERCEPTS}
 
 
 @pytest.mark.model
-@pytest.mark.benchmark(group="BiPercept")
+@pytest.mark.benchmark(group="Simplified Necker Cube")
 @pytest.mark.parametrize("mode", ['Python',
     pytest.param('LLVM', marks=[pytest.mark.llvm]),
     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
@@ -122,7 +122,7 @@ def test_simplified_necker_cube(benchmark, mode):
     benchmark(bp_comp.run, input_dict, num_trials=10, bin_execute=mode)
 
 @pytest.mark.model
-@pytest.mark.benchmark(group="BiPercept")
+@pytest.mark.benchmark(group="Necker Cube")
 @pytest.mark.parametrize("mode", ['Python',
     pytest.param('LLVM', marks=[pytest.mark.llvm]),
     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
