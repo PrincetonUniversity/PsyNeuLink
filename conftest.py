@@ -6,7 +6,7 @@ import numpy as np
 from psyneulink.core.llvm import ptx_enabled
 from psyneulink import clear_registry, primary_registries
 try:
-    import pytorch
+    import torch
     pytorch_available = True
 except ImportError:
     pytorch_available = False
