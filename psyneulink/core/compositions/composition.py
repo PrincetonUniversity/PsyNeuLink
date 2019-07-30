@@ -2631,35 +2631,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
             learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
             sequence_end = path_length-3
-            # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:
-            #     THE FOLLOWING SHOULD BE INTERGATED WITH SIMILAR CALLS FOR REST OF PATHWAY
-            # But still need to create or add error projection(s) to LearningMechanisms for afferent projections
-            #    since that isn't done for terminal sequences below
-            learning_mechanism = LearningMechanism(function=learning_function,
-                                                   default_variable=[input_source.output_states[0].value,
-                                                                     output_source.output_states[0].value,
-                                                                     comparator_mechanism.output_states[0].value],
-                                                   error_sources=comparator_mechanism,
-                                                   learning_enabled=learning_update,
-                                                   in_composition=True,
-                                                   name="Learning Mechanism for " + learned_projection.name)
-
-
-            self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
-
-            learning_related_projections = self._create_learning_related_projections(input_source,
-                                                                                     output_source,
-                                                                                     target_mechanism,
-                                                                                     comparator_mechanism,
-                                                                                     learning_mechanism)
-            self.add_projections(learning_related_projections)
-
-            learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-            self.add_projection(learning_projection, feedback=True)
-
-
-
-            
+            # # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:
+            # #     THE FOLLOWING SHOULD BE INTERGATED WITH SIMILAR CALLS FOR REST OF PATHWAY
+            # # But still need to create or add error projection(s) to LearningMechanisms for afferent projections
+            # #    since that isn't done for terminal sequences below
+            # learning_mechanism = LearningMechanism(function=learning_function,
+            #                                        default_variable=[input_source.output_states[0].value,
+            #                                                          output_source.output_states[0].value,
+            #                                                          comparator_mechanism.output_states[0].value],
+            #                                        error_sources=comparator_mechanism,
+            #                                        learning_enabled=learning_update,
+            #                                        in_composition=True,
+            #                                        name="Learning Mechanism for " + learned_projection.name)
+            #
+            #
+            # self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
+            #
+            # learning_related_projections = self._create_learning_related_projections(input_source,
+            #                                                                          output_source,
+            #                                                                          target_mechanism,
+            #                                                                          comparator_mechanism,
+            #                                                                          learning_mechanism)
+            # self.add_projections(learning_related_projections)
+            #
+            # learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+            # self.add_projection(learning_projection, feedback=True)
+            #
 
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
         # Otherwise, if output_source already projects to a LearningMechanism, integrate with existing sequence
