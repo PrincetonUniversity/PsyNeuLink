@@ -24,7 +24,9 @@ os: linux
 
 dist: xenial
 
-env: PYTHONWARNINGS="ignore::DeprecationWarning"
+env:
+  global:
+    - PYTHONWARNINGS="ignore::DeprecationWarning"
 
 # Cache installed python packages
 cache:
@@ -40,9 +42,7 @@ matrix:
   - os: osx
     python: 3.6
     language: minimal
-    env:
-        - PYTHON=3.6.8
-        - PYTHONWARNINGS="ignore::DeprecationWarning"
+    env: PYTHON=3.6.8
     # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
@@ -51,9 +51,7 @@ matrix:
   - os: osx
     python: 3.7
     language: minimal
-    env:
-        - PYTHON=3.7.4
-        - PYTHONWARNINGS="ignore::DeprecationWarning"
+    env: PYTHON=3.7.4
     # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
