@@ -2791,6 +2791,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
                 comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
                 learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
+
             # Otherwise, create new ones
             else:
                 target, comparator, learning_mechanism = \
