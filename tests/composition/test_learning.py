@@ -599,6 +599,7 @@ class TestBackProp:
 
         References in description are to attachment point of added pathway (always A)
         Branches created/added left to right
+
         '''
 
         if 'Y UP' == configuration:
