@@ -2104,10 +2104,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
         # learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
 
+        # If target and comparator already exist (due to overlapping pathway), use those
         try:
             target_mechanism = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
             comparator_mechanism = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
 
+        # Otherwise, create new ones
         except KeyError:
             target_mechanism = ProcessingMechanism(name='Target',
                                                    default_variable=output_source.output_states[0].value)
@@ -2781,12 +2783,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:
             #  THIS SHOULD BE INTEGRATED WITH CALL TO _create_terminal_backprop_sequence_components
+            # If learned_projection already has a LearningProjection (due to pathway overlap),
+            #    use those terminal sequence components
             if (learned_projection.has_learning_projection
                     and any([lp for lp in learned_projection.parameter_states[MATRIX].mod_afferents
                              if lp in self.projections])):
                 target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
                 comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
                 learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
+            # Otherwise, create new ones
             else:
                 target, comparator, learning_mechanism = \
                     self._create_terminal_backprop_sequence_components(input_source,
