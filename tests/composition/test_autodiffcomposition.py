@@ -13,6 +13,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.system import System
+from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 
 logger = logging.getLogger(__name__)
 
@@ -208,6 +209,7 @@ class TestMiscTrainingFunctionality:
                           "epochs": 10})
 
     def test_pytorch_loss_spec(self):
+        import torch
         ls = torch.nn.SoftMarginLoss(reduction='sum')
 
         xor_in = TransferMechanism(name='xor_in',
