@@ -2605,34 +2605,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not error_function:
             error_function = LinearCombination()
 
-        # FIX CROSSED_PATHWAYS: NEED TO HANDLE AND TEST ALL THESE SITUATIONS:
-        # New pathway
-        # 1) First mech is already a terminal
-        #      (e.g., ACT->MOTOR if REL_IN->REL_HIDDEN->ACT exists):
-        #      need to remove the the terminal's comparator and target
-        #      !! need to get rid of projection from what was terminal to output_CIM
-        #      and assign error_signal projection to LearningMechanism for projection to previous terminal (ACT)
-        # 2) First mech is intermediate
-        #      (e.g., REL_HIDDEN->ACT->MOTOR if REL_IN->REL_HIDDEN->REP exists):
-        #      need to assign additional error_signal projection to LearningMechanism for projection to intermediate
-        # 3) Intermediate mech is already an origin
-        #      (e.g., REL_IN->REL_HIDDEN->PROP if only REL_HIDDEN->REP exists):
-        #      need to  add error_signal projection from LearningMechanism for projection from origin
-        #      to new one for projection to the old origin
-        # 4) Intermediate mech is already an intermediate [INTERSECTION]
-        #      (e.g., REL_IN->REL_HIDDEN->PROP after REP_HIDDEN->REL_HIDDEN->REP exists):
-        #      need to
-        # 5) Intermediate mech is already a terminal
-        #      (e.g., IMAGINE->ACT->MOTOR if REL_HIDDEN->ACT exists):
-        #      !! need to get rid of projection from what was terminal to output_CIM
-        # 6) Last mech is already an intermediate
-        #      (e.g., REL_IN->REL_HIDDEN if REP_HIDDEN->REL_HIDDEN->REP exists; also Stroop):
-        #      need to
-        # 7) Last mech is already a terminal
-        #      (e.g., IMAGINE->ACT if REL_HIDDEN->ACT exists):
-        #      need to
-
-        # Add pathway to graph and get its full specification
+        # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         processing_pathway = self.add_linear_processing_pathway(pathway)
 
         path_length = len(processing_pathway)
@@ -2658,6 +2631,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
             learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
             sequence_end = path_length-3
+            # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:
+            #     THE FOLLOWING SHOULD BE INTERGATED WITH SIMILAR CALLS FOR REST OF PATHWAY
+            # But still need to create or add error projection(s) to LearningMechanisms for afferent projections
+            #    since that isn't done for terminal sequences below
+            learning_mechanism = self._create_multilayer_backprop_components(input_source,
+                                                                             output_source,
+                                                                             learned_projection,
+                                                                             learning_rate,
+                                                                             learning_update)
+            # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
+            if learning_mechanism.dependent_learning_mechanisms:
+                projections = self._add_error_projection_to_dependent_learning_mechs(lm)
+                self.add_projections(projections)
 
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
         # Otherwise, if output_source already projects to a LearningMechanism, integrate with existing sequence
@@ -2728,15 +2714,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             input_source = processing_pathway[i-2]
             learned_projection = processing_pathway[i-1]
             output_source = processing_pathway[i]
-            previous_learning_mechanism = learning_mechanisms[-1]
 
             learning_mechanism = self._create_multilayer_backprop_components(input_source,
                                                                              output_source,
                                                                              learned_projection,
                                                                              learning_rate,
-                                                                             learning_update,
-                                                                             # previous_learning_mechanism
-                                                                             )
+                                                                             learning_update)
 
             learning_mechanisms.append(learning_mechanism)
             learned_projections.append(learned_projection)

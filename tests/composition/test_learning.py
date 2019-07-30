@@ -584,11 +584,12 @@ class TestBackProp:
         # 'Y UP',
         # 'BRANCH UP',
         # 'EXTEND UP',
-        'EXTEND DOWN BRANCH UP',
+        # 'EXTEND DOWN BRANCH UP',
         # 'CROSS',
         # 'Y UP AND DOWN',
         # 'BRANCH DOWN',
-        # 'EXTEND DOWN',
+        'EXTEND DOWN',
+        # 'BOW',
         # 'COMPLEX'
     ])
     def test_backprop_with_various_intersecting_pathway_configurations(self, configuration):
@@ -598,26 +599,28 @@ class TestBackProp:
         Branches created/added left to right
         '''
 
-        if 'Y UP' in configuration:
+        if 'Y UP' == configuration:
             # 1) First mech is already an origin (Y UP)
+            #
             #    E            C
             #     \         /
             #      D       B
             #       \     /
             #        A + A
+            #
             pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            extend_up = pnl.Composition(name='Y UP')
-            extend_up.add_backpropagation_pathway(pathway=[A,D,E])
-            extend_up.add_backpropagation_pathway(pathway=[A,B,C])
-            # extend_up.show_graph(show_learning=True)
+            comp = pnl.Composition(name='Y UP')
+            comp.add_backpropagation_pathway(pathway=[A,D,E])
+            comp.add_backpropagation_pathway(pathway=[A,B,C])
+            # comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
-        if 'BRANCH UP' in configuration:
+        if 'BRANCH UP' == configuration:
             # 2) First mech is intermediate (BRANCH UP)
             #
             #            C
@@ -627,20 +630,22 @@ class TestBackProp:
             #      B   +    A
             #     /
             #    D
+            #
             pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            extend_up = pnl.Composition(name='BRANCH UP')
-            extend_up.add_backpropagation_pathway(pathway=[D,B,E])
-            extend_up.add_backpropagation_pathway(pathway=[A,B,C])
-            # extend_up.show_graph(show_learning=True)
+            comp = pnl.Composition(name='BRANCH UP')
+            comp.add_backpropagation_pathway(pathway=[D,B,E])
+            comp.add_backpropagation_pathway(pathway=[A,B,C])
+            # comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
-        if 'EXTEND UP' in configuration:
+        if 'EXTEND UP' == configuration:
             # 3) First mech is already a terminal (EXTEND UP)
+            #
             #                  C
             #                /
             #               B
@@ -650,19 +655,20 @@ class TestBackProp:
             #      E
             #     /
             #    D
+            #
             pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            extend_up = pnl.Composition(name='EXTEND UP')
-            extend_up.add_backpropagation_pathway(pathway=[D,E,A])
-            extend_up.add_backpropagation_pathway(pathway=[A,B,C])
-            # extend_up.show_graph(show_learning=True)
+            comp = pnl.Composition(name='EXTEND UP')
+            comp.add_backpropagation_pathway(pathway=[D,E,A])
+            comp.add_backpropagation_pathway(pathway=[A,B,C])
+            # comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
-        if 'EXTEND DOWN BRANCH UP' in configuration:
+        if 'EXTEND DOWN BRANCH UP' == configuration:
             # 4) Intermediate mech is already an origin (EXTEND DOWN BRANCH UP)
             #
             #    D       C
@@ -670,19 +676,20 @@ class TestBackProp:
             #      A + A
             #         /
             #        B
+            #
             pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            extend_up = pnl.Composition(name='EXTEND DOWN BRANCH UP')
-            extend_up.add_backpropagation_pathway(pathway=[A,D])
-            extend_up.add_backpropagation_pathway(pathway=[B,A,C])
-            # extend_up.show_graph(show_learning=True)
+            comp = pnl.Composition(name='EXTEND DOWN BRANCH UP')
+            comp.add_backpropagation_pathway(pathway=[A,D])
+            comp.add_backpropagation_pathway(pathway=[B,A,C])
+            # comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
-        if 'CROSS' in configuration:
+        if 'CROSS' == configuration:
             # 5) Intermediate mech is already an intermediate (CROSS)
             #
             #    E       C
@@ -690,19 +697,20 @@ class TestBackProp:
             #      A + A
             #     /     \
             #    D       B
+            #
             pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            extend_up = pnl.Composition(name='Y CROSS')
-            extend_up.add_backpropagation_pathway(pathway=[D,A,E])
-            extend_up.add_backpropagation_pathway(pathway=[A,B,C])
-            # extend_up.show_graph(show_learning=True)
+            comp = pnl.Composition(name='Y CROSS')
+            comp.add_backpropagation_pathway(pathway=[D,A,E])
+            comp.add_backpropagation_pathway(pathway=[A,B,C])
+            # comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
-        if 'Y UP AND DOWN' in configuration:
+        if 'Y UP AND DOWN' == configuration:
             # 6) Intermediate mech is already a terminal (Y UP AND DOWN)
             #
             #          C
@@ -710,19 +718,20 @@ class TestBackProp:
             #      A + A
             #     /     \
             #    D      B
+            #
             pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            extend_up = pnl.Composition(name='EXTEND UP AND DOWN')
-            extend_up.add_backpropagation_pathway(pathway=[D,A])
-            extend_up.add_backpropagation_pathway(pathway=[B,A,C])
-            # extend_up.show_graph(show_learning=True)
+            comp = pnl.Composition(name='EXTEND UP AND DOWN')
+            comp.add_backpropagation_pathway(pathway=[D,A])
+            comp.add_backpropagation_pathway(pathway=[B,A,C])
+            # comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
-        if 'BRANCH DOWN' in configuration:
+        if 'BRANCH DOWN' == configuration:
             # 7) Last mech is already an intermediate (BRANCH DOWN)
             #
             #    D
@@ -730,19 +739,20 @@ class TestBackProp:
             #      A + A
             #     /     \
             #    C       B
+            #
             pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            extend_up = pnl.Composition(name='BRANCH DOWN')
-            extend_up.add_backpropagation_pathway(pathway=[C,A,D])
-            extend_up.add_backpropagation_pathway(pathway=[B,A])
-            # extend_up.show_graph(show_learning=True)
+            comp = pnl.Composition(name='BRANCH DOWN')
+            comp.add_backpropagation_pathway(pathway=[C,A,D])
+            comp.add_backpropagation_pathway(pathway=[B,A])
+            # comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
-        if 'EXTEND DOWN' in configuration:
+        if 'EXTEND DOWN' == configuration:
             # 8) Last mech is already a terminal (EXTEND DOWN)
             #
             #        A + A
@@ -750,20 +760,47 @@ class TestBackProp:
             #      E       B
             #     /         \
             #    D           C
+            #
             pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            extend_up = pnl.Composition(name='EXTEND DOWN')
-            extend_up.add_backpropagation_pathway(pathway=[D,E,A])
-            extend_up.add_backpropagation_pathway(pathway=[C,B,A])
-            # extend_up.show_graph(show_learning=True)
+            comp = pnl.Composition(name='EXTEND DOWN')
+            comp.add_backpropagation_pathway(pathway=[D,E,A])
+            comp.add_backpropagation_pathway(pathway=[C,B,A])
+            # comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
-        if 'COMPLEX' in configuration:
-            # 9) Complex
+        if 'BOW' == configuration:
+            # 9) Bow
+            #
+            #            F
+            #           /
+            #      C + C
+            #     /     \
+            #    B       D
+            #     \     /
+            #      A + A
+            #     /
+            #    E
+            #
+            pnl.clear_registry(pnl.MechanismRegistry)
+            A = pnl.ProcessingMechanism(name='A')
+            B = pnl.ProcessingMechanism(name='B')
+            C = pnl.ProcessingMechanism(name='C')
+            D = pnl.ProcessingMechanism(name='D')
+            E = pnl.ProcessingMechanism(name='E')
+            F = pnl.ProcessingMechanism(name='F')
+            comp = pnl.Composition(name='BOW')
+            comp.add_backpropagation_pathway(pathway=[E,A,B,C])
+            comp.add_backpropagation_pathway(pathway=[A,D,C,F])
+            comp.show_graph(show_learning=True)
+            print(f'Completed configuration: {configuration}')
+
+        if 'COMPLEX' == configuration:
+            # 10) Complex
             #
             #          C        I
             #          \         \
@@ -772,6 +809,7 @@ class TestBackProp:
             #    D      B + B   +  D
             #              /        \
             #             E         H
+            #
             pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
@@ -782,12 +820,12 @@ class TestBackProp:
             G = pnl.ProcessingMechanism(name='G')
             H = pnl.ProcessingMechanism(name='H')
             I = pnl.ProcessingMechanism(name='I')
-            extend_up = pnl.Composition(name='COMPLEX')
-            extend_up.add_backpropagation_pathway(pathway=[D,A])
-            extend_up.add_backpropagation_pathway(pathway=[B,A,C])
-            extend_up.add_backpropagation_pathway(pathway=[E,B,F])
-            extend_up.add_backpropagation_pathway(pathway=[H,D,G,I])
-            extend_up.show_graph(show_learning=True)
+            comp = pnl.Composition(name='COMPLEX')
+            comp.add_backpropagation_pathway(pathway=[D,A])
+            comp.add_backpropagation_pathway(pathway=[B,A,C])
+            comp.add_backpropagation_pathway(pathway=[E,B,F])
+            comp.add_backpropagation_pathway(pathway=[H,D,G,I])
+            comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
     @pytest.mark.parametrize('order', [
