@@ -2635,15 +2635,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #     THE FOLLOWING SHOULD BE INTERGATED WITH SIMILAR CALLS FOR REST OF PATHWAY
             # But still need to create or add error projection(s) to LearningMechanisms for afferent projections
             #    since that isn't done for terminal sequences below
-            learning_mechanism = self._create_multilayer_backprop_components(input_source,
-                                                                             output_source,
-                                                                             learned_projection,
-                                                                             learning_rate,
-                                                                             learning_update)
-            # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
-            if learning_mechanism.dependent_learning_mechanisms:
-                projections = self._add_error_projection_to_dependent_learning_mechs(lm)
-                self.add_projections(projections)
+            learning_mechanism = LearningMechanism(function=learning_function,
+                                                   default_variable=[input_source.output_states[0].value,
+                                                                     output_source.output_states[0].value,
+                                                                     comparator_mechanism.output_states[0].value],
+                                                   error_sources=comparator_mechanism,
+                                                   learning_enabled=learning_update,
+                                                   in_composition=True,
+                                                   name="Learning Mechanism for " + learned_projection.name)
+
+
+            self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
+
+            learning_related_projections = self._create_learning_related_projections(input_source,
+                                                                                     output_source,
+                                                                                     target_mechanism,
+                                                                                     comparator_mechanism,
+                                                                                     learning_mechanism)
+            self.add_projections(learning_related_projections)
+
+            learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+            self.add_projection(learning_projection, feedback=True)
+
+
+
+            
 
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
         # Otherwise, if output_source already projects to a LearningMechanism, integrate with existing sequence
