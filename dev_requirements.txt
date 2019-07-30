@@ -2,6 +2,7 @@ pytest
 pytest-benchmark
 pytest-cov
 pytest-profiling
+pytest-pydocstyle
 pytest-helpers-namespace
 pytest-xdist
 jupyter
