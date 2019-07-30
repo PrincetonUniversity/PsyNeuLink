@@ -322,7 +322,7 @@ class TestNestedLearning:
         model.add_projection(sender=rl_agent_action, receiver=action)
         model.add_projection(sender=rl_agent, receiver=action)
 
-        model.show_graph(show_controller=True, show_nested=True, show_node_structure=True)
+        # model.show_graph(show_controller=True, show_nested=True, show_node_structure=True)
 
         stimuli = {stim_in: np.array([1] * stim_size),
                    context_in: np.array([10] * context_size)}
@@ -583,16 +583,16 @@ class TestBackProp:
             assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_comp.get_mod_matrix(xor_comp))
 
     @pytest.mark.parametrize('configuration', [
-        # 'Y UP',
-        # 'BRANCH UP',
-        # 'EXTEND UP',
-        # 'EXTEND DOWN BRANCH UP',
-        # 'CROSS',
-        # 'Y UP AND DOWN',
-        # 'BRANCH DOWN',
-        # 'EXTEND DOWN',
-        # 'BOW',
-        # 'COMPLEX'
+        'Y UP',
+        'BRANCH UP',
+        'EXTEND UP',
+        'EXTEND DOWN BRANCH UP',
+        'CROSS',
+        'Y UP AND DOWN',
+        'BRANCH DOWN',
+        'EXTEND DOWN',
+        'BOW',
+        'COMPLEX'
         'JOIN BY TERINAL'
     ])
     def test_backprop_with_various_intersecting_pathway_configurations(self, configuration):
@@ -852,14 +852,14 @@ class TestBackProp:
             comp.add_backpropagation_pathway(pathway=[D,E,A])
             comp.add_backpropagation_pathway(pathway=[C,B,F])
             comp.add_backpropagation_pathway(pathway=[B,A])
-            comp.show_graph(show_learning=True)
+            # comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
 
     @pytest.mark.parametrize('order', [
-        # 'color_full',
-        # 'word_partial',
-        # 'word_full',
+        'color_full',
+        'word_partial',
+        'word_full',
         'full_overlap'
     ])
     def test_stroop_model_learning(self, order):

@@ -1955,6 +1955,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Then, loop through and validate that the Mechanism-Projection relationships make sense
         # and add MappingProjection(s) where needed
         for c in range(1, len(pathway)):
+
             # if the current item is a Node
             if isinstance(pathway[c], (Mechanism, Composition, tuple)):
                 if isinstance(pathway[c - 1], (Mechanism, Composition, tuple)):
@@ -1964,27 +1965,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                feedback=feedback)
                     if proj:
                         projections.append(proj)
+
             # if the current item is a Projection specification
             elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
                 if c == len(pathway) - 1:
                     raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
                                            " a linear processing pathway.".format(pathway[c]))
                 # confirm that it is between two nodes, then add the projection
-                if isinstance(pathway[c - 1], (Mechanism, Composition)) \
-                        and isinstance(pathway[c + 1], (Mechanism, Composition)):
-                    proj = pathway[c]
+                proj = pathway[c]
+                sender = pathway[c - 1]
+                receiver = pathway[c + 1]
+                if isinstance(sender, (Mechanism, Composition)) \
+                        and isinstance(receiver, (Mechanism, Composition)):
                     try:
                         if isinstance(pathway[c], (np.ndarray, np.matrix, list)):
-                            proj = MappingProjection(sender=pathway[c - 1],
+                            proj = MappingProjection(sender=sender,
                                                      matrix=pathway[c],
-                                                     receiver=pathway[c + 1])
+                                                     receiver=receiver)
                     except DuplicateProjectionError:
                         # FIX: 7/22/19 ADD WARNING HERE??
-                        pass
+                        # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
+                        duplicate = [p for p in receiver.afferents if p in sender.efferents]
+                        assert len(duplicate)==1, \
+                            f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
+                                f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
+                                f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
+                        proj = duplicate[0]
 
                     proj = self.add_projection(projection=proj,
-                                               sender=pathway[c - 1],
-                                               receiver=pathway[c + 1],
+                                               sender=sender,
+                                               receiver=receiver,
                                                feedback=feedback,
                                                allow_duplicates=False)
                     if proj:
@@ -2773,7 +2783,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #  THIS SHOULD BE INTEGRATED WITH CALL TO _create_terminal_backprop_sequence_components
             if (learned_projection.has_learning_projection
                     and any([lp for lp in learned_projection.parameter_states[MATRIX].mod_afferents
-                             if lp in self.learning_components])):
+                             if lp in self.projections])):
                 target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
                 comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
                 learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
