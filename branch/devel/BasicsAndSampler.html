@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+325.g6fa6891 documentation</title>
+  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+326.geb2a8b2 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+325.g6fa6891',
+              VERSION:'0.5.3.2+326.geb2a8b2',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+325
+                0.5.3.2+326
               </div>
             
           
@@ -218,7 +218,7 @@ planned for future inclusion.  The <a class="reference internal" href="QuickRefe
 other facilities.  In the sections that follow, the Sampler provides some examples of how these are used to construct
 models in PsyNeuLink.</p>
 <div class="figure" id="id1">
-<span id="basicsandsampler-grandview-figure"></span><img alt="_static/BasicsAndSampler_GrandView_fig.svg" src="_static/BasicsAndSampler_GrandView_fig.svg" /><p class="caption"><span class="caption-text"><strong>PsyNeuLink Environment.</strong>  Full-colored items are examples of currently implemented elements; dimmed
+<span id="basicsandsampler-grandview-figure"></span><img alt="_images/BasicsAndSampler_GrandView_fig.svg" src="_images/BasicsAndSampler_GrandView_fig.svg" /><p class="caption"><span class="caption-text"><strong>PsyNeuLink Environment.</strong>  Full-colored items are examples of currently implemented elements; dimmed
 items are examples of elements planned for future implementation.</span></p>
 </div>
 </div>
@@ -255,7 +255,7 @@ with an appropriately-sized input array, for example:</p>
 </div>
 <p>The Composition connects the Mechanisms into a pathway that form a graph, which can be shown using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method:</p>
 <div class="figure" id="id2">
-<span id="basicsandsampler-simple-pathway-example-figure"></span><a class="reference internal image-reference" href="_static/BasicsAndSampler_SimplePathway_fig.svg"><img alt="_static/BasicsAndSampler_SimplePathway_fig.svg" src="_static/BasicsAndSampler_SimplePathway_fig.svg" width="30%" /></a>
+<span id="basicsandsampler-simple-pathway-example-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndSampler_SimplePathway_fig.svg"><img alt="_images/BasicsAndSampler_SimplePathway_fig.svg" src="_images/BasicsAndSampler_SimplePathway_fig.svg" width="30%" /></a>
 <p class="caption"><span class="caption-text"><strong>Composition Graph.</strong>  Representation of the graph of the simple Composition in the example above.  Note that the
 Input Mechanism for the Composition is colored green (to designate it is an <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.INPUT" title="psyneulink.core.globals.utilities.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> node), and its output
 Mechanism is colored Red (to designate it at a <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="psyneulink.core.globals.utilities.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> node).</span></p>
@@ -353,7 +353,7 @@ drift diffusion (DDM) decision mechanism responsible for determining the respons
 a more complete version of which can be found in the <a class="reference external" href="https://princetonuniversity.github.io/PsyNeuLink/Library.html">PsyNeuLink Library</a> at <code class="xref any docutils literal"><span class="pre">Stroop</span> <span class="pre">Model</span></code>.  The figure belows shows the model using the
 Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method.</p>
 <div class="figure" id="id3">
-<span id="basicsandsampler-simple-stroop-example-figure"></span><a class="reference internal image-reference" href="_static/BasicsAndSampler_Stroop_Model.svg"><img alt="_static/BasicsAndSampler_Stroop_Model.svg" src="_static/BasicsAndSampler_Stroop_Model.svg" width="50%" /></a>
+<span id="basicsandsampler-simple-stroop-example-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndSampler_Stroop_Model.svg"><img alt="_images/BasicsAndSampler_Stroop_Model.svg" src="_images/BasicsAndSampler_Stroop_Model.svg" width="50%" /></a>
 <p class="caption"><span class="caption-text"><strong>Stroop Model.</strong> Representation of the Composition in the example above.</span></p>
 </div>
 <p>Running the model is as simple as generating some inputs and then providing them to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>
@@ -520,7 +520,7 @@ MappingProjections from <code class="docutils literal"><span class="pre">output<
 is then added to the <code class="docutils literal"><span class="pre">Stroop_model</span></code> as its <code class="xref any docutils literal"><span class="pre">controller</span></code> in its constructor.
 The result is shown in the figure below, using the <strong>show_controller</strong> option of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method:</p>
 <div class="figure" id="id4">
-<span id="basicsandsampler-stroop-example-with-control-figure"></span><a class="reference internal image-reference" href="_static/BasicsAndSampler_Control.svg"><img alt="_static/BasicsAndSampler_Control.svg" src="_static/BasicsAndSampler_Control.svg" width="50%" /></a>
+<span id="basicsandsampler-stroop-example-with-control-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndSampler_Control.svg"><img alt="_images/BasicsAndSampler_Control.svg" src="_images/BasicsAndSampler_Control.svg" width="50%" /></a>
 <p class="caption"><span class="caption-text"><strong>Stroop Model with Controller.</strong> Representation of the Composition with the <code class="docutils literal"><span class="pre">control</span></code> Mechanism added, generated
 by a call to <code class="docutils literal"><span class="pre">Stroop_model.show_graph(show_controller)</span></code>.</span></p>
 </div>
@@ -656,6 +656,10 @@ since it only executed once per trial, but there are ten entries for the <code c
 times, as specified in the Conditions described above.  The output of the <a class="reference internal" href="Log.html"><span class="doc">Log</span></a> can also be reported in various other
 formats, including a <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html">numpy</a> array,
 a dictionary of values for each entry, and <a class="reference external" href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> format.</p>
+<p>_BasicsAndSampler_Learning:</p>
+</div>
+<div class="section" id="learning">
+<h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
 <p>Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
 mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available in other
 Python-based environments, such as Pytorch.  Since the latter are becoming increasingly accessible and powerful, the
