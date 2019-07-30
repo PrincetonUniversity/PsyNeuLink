@@ -742,7 +742,6 @@ SHOW_LEARNING = 'show_learning'
 
 
 logger = logging.getLogger(__name__)
-
 CompositionRegistry = {}
 
 
@@ -762,6 +761,7 @@ class RunError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
 
 class Vertex(object):
     """
@@ -1108,6 +1108,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         execution_ids : set
             stores all execution_ids used by this Composition.
+
+        enable_learning: bool : default True
+            determines whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when it is
+            executed.
+
+        learning_components : list
+            contains the learning-related components in the Composition, all or many of which may have been
+            created automatically in a call to one of its `add_<*learning_type*>_pathway' methods (see
+            `Composition_Learning` for details).  This does *not* contain the `ProcessingMechanisms
+            <ProcessingMechanism>` or `MappingProjections <MappingProjection>` in the pathway(s) being learned;
+            those are contained in `learning_pathways <Composition.learning_pathways>` attribute.
+
+        learned_components : list[list]
+            contains a list of the components subject to learning in the Composition (`ProcessingMechanisms
+            <ProcessingMechanism>` and `MappingProjections <MappingProjection>`);  this does *not* contain the
+            components used for learning; those are contained in `learning_components
+            <Composition.learning_components>` attribute.
+
+        COMMENT:
+        learning_pathways : list[list]
+            contains a list of the learning pathways specified for the Composition; each item contains a list of the
+            `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjection(s) <MappingProjection>` specified a
+            a call to one of the Composition's `add_<*learning_type*>_pathway' methods (see `Composition_Learning`
+            for details).  This does *not* contain the components used for learning; those are contained in
+            `learning_components <Composition.learning_components>` attribute.
+        COMMENT
 
         results : 3d array
             stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` Mechanisms in the Composition for
@@ -1992,10 +2018,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         target_mechanism = ProcessingMechanism(name='Target')
 
         comparator_mechanism = ComparatorMechanism(name='Comparator',
-                                                   target={NAME: TARGET,
-                                                           VARIABLE: [0.]},
+                                                   # target={NAME: TARGET,
+                                                   #         VARIABLE: [0.]},
                                                    sample={NAME: SAMPLE,
                                                            VARIABLE: [0.], WEIGHT: -1},
+                                                   target={NAME: TARGET,
+                                                           VARIABLE: [0.]},
                                                    function=error_function,
                                                    output_states=[OUTCOME, MSE])
 
@@ -2012,9 +2040,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               in_composition=True,
                               name="Learning Mechanism for " + learned_projection.name)
 
-        # FIX 5/29/19 [JDC]:  MIGHT WANT TO TEST HERE WHETHER IT IS IN A BP CHAIN AND, IF SO, AND NOT LAST, THEN
-        #  REQUIRE IT
-        learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False)
+        learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
+                                                                                                         override=True)
         self.enable_learning = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
@@ -2048,6 +2075,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                learning_enabled=learning_update,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
+
+        learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
+                                                                                                         override=True)
         self.enable_learning = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
@@ -2111,27 +2141,51 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                output_source,
                                                learned_projection,
                                                learning_rate,
-                                               learning_update,
-                                               previous_learning_mechanism):
+                                               learning_update):
 
-        learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
-                                                              output_source.output_states[0].value,
-                                                              previous_learning_mechanism.output_states[0].value],
-                                            activation_derivative_fct=output_source.function.derivative,
-                                            learning_rate=learning_rate)
+        # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
+        learning_mechanism = \
+            next((lp.receiver.owner for lp in learned_projection.parameter_states[MATRIX].mod_afferents
+                  if isinstance(lp, LearningProjection)),
+                 None)
 
-        learning_mechanism = LearningMechanism(function=learning_function,
-                                               default_variable=[input_source.output_states[0].value,
-                                                                 output_source.output_states[0].value,
-                                                                 previous_learning_mechanism.output_states[0].value],
-                                               error_sources=previous_learning_mechanism,
-                                               learning_enabled=learning_update,
-                                               in_composition=True,
-                                               name="Learning Mechanism for " + learned_projection.name)
+        # If learning_mechanism exists:
+        #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
+        #    error_projections will contain list of any created to be added to the Composition below
+        if learning_mechanism:
+            error_sources, error_projections = self._get_back_prop_error_sources(output_source, learning_mechanism)
+        # If learning_mechanism does not yet exist:
+        #    error_sources will contain ones needed to create learning_mechanism
+        #    error_projections will be empty since they can't be created until the learning_mechanism is created below;
+        #    they will be created (using error_sources) when, and determined after learning_mechanism is created below
+        else:
+            error_sources, error_projections = self._get_back_prop_error_sources(output_source)
+            error_signal_template = [error_source.output_states[ERROR_SIGNAL].value for error_source in error_sources]
+            default_variable = [input_source.output_states[0].value, output_source.output_states[0].value] + \
+                               error_signal_template
 
-        if not learning_mechanism.output_states[ERROR_SIGNAL].efferents:
-            learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
-                                                                                                            override=True)
+            learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
+                                                                  output_source.output_states[0].value,
+                                                                  error_signal_template[0]],
+                                                activation_derivative_fct=output_source.function.derivative,
+                                                learning_rate=learning_rate)
+
+            learning_mechanism = LearningMechanism(function=learning_function,
+                                                   # default_variable=[input_source.output_states[0].value,
+                                                   #                   output_source.output_states[0].value,
+                                                   #                   error_signal_template],
+                                                   default_variable=default_variable,
+                                                   error_sources=error_sources,
+                                                   learning_enabled=learning_update,
+                                                   in_composition=True,
+                                                   name="Learning Mechanism for " + learned_projection.name)
+
+            # Create MappingProjections from ERROR_SIGNAL OutputState of each error_source
+            #    to corresponding error_input_states
+            for i, error_source in enumerate(error_sources):
+                error_projection = MappingProjection(sender=error_source,
+                                                     receiver=learning_mechanism.error_signal_input_states[i])
+                error_projections.append(error_projection)
 
         self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
 
@@ -2139,18 +2193,85 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               receiver=learning_mechanism.input_states[0])
         act_out_projection = MappingProjection(sender=output_source.output_states[0],
                                                receiver=learning_mechanism.input_states[1])
-        error_projection = MappingProjection(sender=previous_learning_mechanism.output_states[0],
-                                             receiver=learning_mechanism.input_states[2])
+        self.add_projections([act_in_projection, act_out_projection] + error_projections)
 
-        self.add_projections([act_in_projection, act_out_projection, error_projection])
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
         self.add_projection(learning_projection, feedback=True)
 
         return learning_mechanism
 
+    # NOTES:
+    # Learning-type-specific creation methods should:
+    # - create ComparatorMechanism and pass in as error_source (for 1st LearningMechanism in sequence in bp)
+    # - Determine and pass error_sources (aka previous_learning_mechanism) (for bp)
+    # - construct and pass in the learning_function
+    # - do the following for last LearningMechanism in sequence:
+    #   learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
+    #                                                                                                    override=True)
+    #
+    # Create_backprop... should pass error_function (handled by kwargs below)
+    # Check for existence of Learning mechanism (or do this in creation method?);  if one exists, compare its
+    #    ERROR_SIGNAL input_states with error_sources and update/add any needed, as well as corresponding
+    #    error_matrices (from their learned_projections) -- do so using LearningMechanism's add_states method);
+    #    create projections from each
+    # Move creation of LearningProjections and learning-related projections (MappingProjections) here
+    # ?Do add_nodes and add_projections here or in Learning-type-specific creation methods
+
+    def _create_learning_components(self,
+                                    sender_activity_source,   # aka input_source
+                                    receiver_activity_source, # aka output_source
+                                    error_sources,            # aka comparator/previous_learning_mechanism
+                                    learning_function,
+                                    learned_projection,
+                                    learning_rate,
+                                    learning_update,
+                                    target_mech=None,
+                                    **kwargs                  # Use of type-specific learning arguments
+                                    ):
+
+        # ONLY DO THIS IF ONE DOESN'T ALREADY EXIST (?pass in argument determing this?)
+        learning_mechanism = LearningMechanism(function=learning_function,
+                                               default_variable=[sender_activity_source.output_states[0].value,
+                                                                 receiver_activity_source.output_states[0].value,
+                                                                 error_sources.output_states[0].value],
+                                               error_sources=error_sources,
+                                               learning_enabled=learning_update,
+                                               in_composition=True,
+                                               name="Learning Mechanism for " + learned_projection.name,
+                                               **kwargs)
+
+
+        self.enable_learning = True
+        return learning_mechanism
+
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
         # construct learning related mapping projections
-        # FIX 7/22/19 [JDC]: REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
+
+        # FIX 5/29/19 [JDC]:  REPLACE INDICES BELOW WITH RELEVANT KEYWORDS;
+        #                     INTEGRATE WITH _get_back_prop_error_sources (RIGHT NOW, ONLY CALLED FOR TERMINAL SEQUENCE)
+        sample_projection = MappingProjection(sender=output_source,
+                                              receiver=comparator.input_states[0])
+        target_projection = MappingProjection(sender=target,
+                                              receiver=comparator.input_states[1])
+        act_in_projection = MappingProjection(sender=input_source.output_states[0],
+                                              receiver=learning_mechanism.input_states[0])
+        act_out_projection = MappingProjection(sender=output_source.output_states[0],
+                                               receiver=learning_mechanism.input_states[1])
+        error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
+                                                    receiver=learning_mechanism.input_states[2])
+        return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
+        # # MODIFIED 7/22/19 NEW:
+        # error_signal_projections = []
+        # for learning_mech in learning_mechanism.dependent_learning_mechanisms:
+        #     error_signal_projections.append(MappingProjection(sender=comparator.output_states[OUTCOME],
+        #                                                       receiver=learning_mechanism.input_states[2]))
+        return [target_projection, sample_projection, error_signal_projections, act_out_projection, act_in_projection]
+        # MODIFIED 7/22/19 END
+
+    def _get_back_prop_error_sources(self, receiver_activity_mech, learning_mech=None):
+        # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP
+        #                              AND THEN TO HANDLE ALL FORMS OF LEARNING (AS BELOW)
+        #  REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
         #  1) Determine whether this is a terminal sequence:
         #     - use arg passed in or determine from context (see current implementation in add_backpropagation_pathway)
         #     - for terminal sequence, handle target and sample projections as below
@@ -2163,27 +2284,115 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     - call add_states method on LearningMechanism to add new ERROR_SIGNAL input_state to its input_states
         #       and error_matrix to its self.error_matrices attribute
         #     - add new error_signal projection
+        """Add any LearningMechanisms associated with efferent projection from receiver_activity_mech"""
+        error_sources = []
+        error_projections = []
 
-        # FIX 5/29/19 [JDC]:  REPLACE INDICES BELOW WITH RELEVANT KEYWORDS
-        sample_projection = MappingProjection(sender=output_source,
-                                              receiver=comparator.input_states[0])
-        target_projection = MappingProjection(sender=target,
-                                              receiver=comparator.input_states[1])
-        act_in_projection = MappingProjection(sender=input_source.output_states[0],
-                                              receiver=learning_mechanism.input_states[0])
-        act_out_projection = MappingProjection(sender=output_source.output_states[0],
-                                               receiver=learning_mechanism.input_states[1])
-        # MODIFIED 7/22/19 OLD:
-        error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
-                                                    receiver=learning_mechanism.input_states[2])
-        return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
-        # # MODIFIED 7/22/19 NEW:
-        # error_signal_projections = []
-        # for learning_mech in learning_mechanism.dependent_learning_mechanisms:
-        #     error_signal_projections.append(MappingProjection(sender=comparator.output_states[OUTCOME],
-        #                                                       receiver=learning_mechanism.input_states[2]))
-        return [target_projection, sample_projection, error_signal_projections, act_out_projection, act_in_projection]
-        # MODIFIED 7/22/19 END
+        # First get all efferents of receiver_activity_mech with a LearningProjection that are in current Composition
+        for efferent in [p for p in receiver_activity_mech.efferents
+                         if (hasattr(p, 'has_learning_projection')
+                             and p.has_learning_projection
+                             and p in self.projections)]:
+            # Then get any LearningProjections to that efferent that are in current Composition
+            for learning_projection in [mod_aff for mod_aff in efferent.parameter_states[MATRIX].mod_afferents
+                                        if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
+                error_source = learning_projection.sender.owner
+                if (error_source not in self.nodes  # error_source is not in the Composition
+                        or (learning_mech  # learning_mech passed in
+                            # the error_source is already associated with learning_mech
+                            and (error_source in learning_mech.error_sources)
+                            # and the error_source already sends a Projection to learning_mech
+                            and (learning_mech in [p.receiver.owner for p in error_source.efferents]))):
+                    continue  # ignore the error_source
+                error_sources.append(error_source)
+
+                # If learning_mech was passed in, add error_source to its list of error_signal_input_states
+                if learning_mech:
+                    # FIX: REPLACE WITH learning_mech._add_error_signal_input_state ONCE IMPLEMENTED
+                    error_signal_input_state = next((e for e in learning_mech.error_signal_input_states
+                                                     if not e.path_afferents), None)
+                    if error_signal_input_state is None:
+                        error_signal_input_state = learning_mech.add_states(
+                                                            InputState(projections=error_source.output_states[ERROR_SIGNAL],
+                                                                       name=ERROR_SIGNAL,
+                                                                       context=ContextFlags.METHOD),
+                                                            context=ContextFlags.METHOD)
+                    # Create Projection here so that don't have to worry about determining correct
+                    #    error_signal_input_state of learning_mech in _create_multilayer_backprop_components
+                    error_projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
+                                                               receiver=error_signal_input_state))
+
+        # Return error_sources so they can be used to create a new LearningMechanism if needed
+        # Return error_projections created to existing learning_mech
+        #    so they can be added to the Composition by _create_multilayer_backprop_components
+        return error_sources, error_projections
+
+    def _add_error_projection_to_dependent_learning_mechs(self, error_source):
+        projections = []
+        # Get all afferents to receiver_activity_mech in Composition that have LearningProjections
+        for afferent in [p for p in error_source.input_source.path_afferents
+                         if (p in self.projections
+                             and hasattr(p, 'has_learning_projection')
+                             and p.has_learning_projection)]:
+            # For each LearningProjection to that afferent, if its LearningMechanism doesn't already receiver
+            for learning_projection in [lp for lp in afferent.parameter_states[MATRIX].mod_afferents
+                                        if (isinstance(lp, LearningProjection)
+                                            and error_source not in lp.sender.owner.error_sources)]:
+                dependent_learning_mech = learning_projection.sender.owner
+                error_signal_input_state = dependent_learning_mech.add_states(
+                                                    InputState(projections=error_source.output_states[ERROR_SIGNAL],
+                                                               name=ERROR_SIGNAL,
+                                                               context=ContextFlags.METHOD),
+                                                    context=ContextFlags.METHOD)
+                projections.append(error_signal_input_state[0].path_afferents[0])
+                # projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
+                #                                      receiver=error_signal_input_state[0]))
+        return projections
+
+    def _get_backprop_error_projections(self, learning_mech, receiver_activity_mech):
+        error_sources = []
+        error_projections = []
+        # for error_source in learning_mech.error_sources:
+        #     if error_source in self.nodes:
+        #         error_sources.append(error_source)
+        # Add any LearningMechanisms associated with efferent projection from receiver_activity_mech
+        # First get all efferents of receiver_activity_mech with a LearningProjection that are in current Composition
+        for efferent in [p for p in receiver_activity_mech.efferents
+                         if (hasattr(p, 'has_learning_projection')
+                             and p.has_learning_projection
+                             and p in self.projections)]:
+            # Then any LearningProjections to that efferent that are in current Composition
+            for learning_projection in [mod_aff for mod_aff in efferent.parameter_states[MATRIX].mod_afferents
+                                        if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
+                error_source = learning_projection.sender.owner
+                if (error_source in learning_mech.error_sources
+                        and error_source in self.nodes
+                        and learning_mech in [p.receiver.owner for p in error_source.efferents]):
+                    continue
+                error_sources.append(error_source)
+                # FIX: REPLACE WITH learning_mech._add_error_signal_input_state ONCE IMPLEMENTED
+                error_signal_input_state = next((e for e in learning_mech.error_signal_input_states
+                                                 if not e.path_afferents), None)
+                if error_signal_input_state is None:
+                    error_signal_input_state = learning_mech.add_states(
+                                                        InputState(projections=error_source.output_states[ERROR_SIGNAL],
+                                                                   name=ERROR_SIGNAL,
+                                                                   context=ContextFlags.METHOD),
+                                                        context=ContextFlags.METHOD)
+                # DOES THE ABOVE GENERATE A PROJECTION?  IF SO, JUST GET AND RETURN THAT;  ELSE DO THE FOLLOWING:
+                error_projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
+                                                           receiver=error_signal_input_state))
+        return error_projections
+        #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
+        #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
+        #     - check validity of existing error_signal projections with respect to those and, if possible,
+        #       their correspondence with error_matrices
+        #     - check if any ERROR_SIGNAL input_states are empty (vacated by terminal sequence elements deleted in
+        #       add_projection)
+        #     - call add_states method on LearningMechanism to add new ERROR_SIGNAL input_state to its input_states
+        #       and error_matrix to its self.error_matrices attribute
+        #     - add new error_signal projection
+
 
     def _create_learning_projection(self, learning_mechanism, learned_projection):
 
@@ -2393,12 +2602,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
          TARGET_MECHANISM: target,
          LEARNED_PROJECTION: learned_projection}
         """
-
-
         if not error_function:
             error_function = LinearCombination()
 
-        # Add pathway to graph and get its full specification
+        # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         processing_pathway = self.add_linear_processing_pathway(pathway)
 
         path_length = len(processing_pathway)
@@ -2424,11 +2631,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
             learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
             sequence_end = path_length-3
+            # # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:
+            # #     THE FOLLOWING SHOULD BE INTERGATED WITH SIMILAR CALLS FOR REST OF PATHWAY
+            # # But still need to create or add error projection(s) to LearningMechanisms for afferent projections
+            # #    since that isn't done for terminal sequences below
+            # learning_mechanism = LearningMechanism(function=learning_function,
+            #                                        default_variable=[input_source.output_states[0].value,
+            #                                                          output_source.output_states[0].value,
+            #                                                          comparator_mechanism.output_states[0].value],
+            #                                        error_sources=comparator_mechanism,
+            #                                        learning_enabled=learning_update,
+            #                                        in_composition=True,
+            #                                        name="Learning Mechanism for " + learned_projection.name)
+            #
+            #
+            # self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
+            #
+            # learning_related_projections = self._create_learning_related_projections(input_source,
+            #                                                                          output_source,
+            #                                                                          target_mechanism,
+            #                                                                          comparator_mechanism,
+            #                                                                          learning_mechanism)
+            # self.add_projections(learning_related_projections)
+            #
+            # learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+            # self.add_projection(learning_projection, feedback=True)
+            #
 
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
-        # Otherwise, if output_source already projects to a learning Mechanism, integrate with existing sequence
+        # Otherwise, if output_source already projects to a LearningMechanism, integrate with existing sequence
         elif any(isinstance(p.receiver.owner, LearningMechanism) for p in output_source.efferents):
-            # FIX: ASSIGN target, comparator and learning_mechanism AS ABOVE?  OR CREATE NEW METHOD TO CREATE THEM?
             # Set learning_mechanism to the one to which output_source projects
             learning_mechanism = next((p.receiver.owner for p in output_source.efferents
                                        if isinstance(p.receiver.owner, LearningMechanism)))
@@ -2442,15 +2674,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Otherwise create terminal_sequence for the sequence,
         #    and eliminate existing terminal_sequences previously created for Mechanisms now in the pathway
         else:
-
-            # FIX 7/22/19 [JDC]:  NO NEED TO KEEP old_learning_mechanisms
-            #                     ONCE create_learning_related_projections has been refactored
             # Eliminate existing comparators and targets for Mechanisms now in the pathway that were output_sources
             #   (i.e., ones that belong to previously-created sequences that overlap with the current one)
-            old_learning_mechanisms = []
-            for old_output_source in [m for m in pathway[:-1:] if isinstance(m, Mechanism)]:
+            # # MODIFIED 7/28/19 CROSS_PATHWAYS OLD: [REMOVE ONCE ALL CONFIGURATION OF BACKPROP HAVE BEEN TRIED
+            # for pathway_mech in [m for m in pathway[:-1:] if isinstance(m, Mechanism)]:
+            # MODIFIED 7/28/19 CROSS_PATHWAYS NEW:
+            for pathway_mech in [m for m in pathway if isinstance(m, Mechanism)]:
+            # MODIFIED 7/28/19 CROSS_PATHWAYS END:
 
-                old_comparator = next((p.receiver.owner for p in old_output_source.efferents
+                old_comparator = next((p.receiver.owner for p in pathway_mech.efferents
                                        if (isinstance(p.receiver.owner, ComparatorMechanism)
                                            and p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING))),
                                       None)
@@ -2459,15 +2691,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        if p.sender.owner in self.get_nodes_by_role(NodeRole.TARGET)),
                                       None)
                     self.remove_nodes([old_comparator, old_target])
+                    # FIX CROSSING_PATHWAYS [JDC]: MAKE THE FOLLOWING A METHOD?
+                    # Collect InputStates that received error_signal projections from the old_comparator
+                    #    and delete after old_comparator has been deleted
+                    #    (i.e., after those InputStates have been vacated)
+                    old_error_signal_input_states = []
+                    for error_projection in old_comparator.output_state.efferents:
+                        old_error_signal_input_states.append(error_projection.receiver)
                     Mechanism_Base._delete_mechanism(old_comparator)
                     Mechanism_Base._delete_mechanism(old_target)
-                    old_learning_mechanisms.append(next((p.receiver.owner for p in old_output_source.efferents
-                                                         if (isinstance(p.receiver.owner, LearningMechanism)
-                                                             and p.receiver.owner in self.nodes
-                                                             and ACTIVATION_OUTPUT in p.receiver.name )),
-                                                        None))
+                    for input_state in old_error_signal_input_states:
+                        input_state.owner.remove_states(input_state)
+                    del self._terminal_backprop_sequences[pathway_mech]
 
-            # Create teminal_sequence
+            # Create terminal_sequence
             target, comparator, learning_mechanism = \
                 self._create_terminal_backprop_sequence_components(input_source,
                                                                    output_source,
@@ -2478,34 +2715,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 COMPARATOR_MECHANISM: comparator}
-
-            # # FIX 7/22/19 [JDC]: THIS SHOULD BE (RE-MOVED) ONCE CONVERGENT/CROSSING PATHWAYS
-            #                      IS HANDLED IN _create_learning_related_projections
-            # # MODIFIED 7/22/19 NEW:
-            if old_learning_mechanisms:
-                self.add_projection(sender=learning_mechanism.output_states[ERROR_SIGNAL],
-                                    receiver=old_learning_mechanisms[0].input_states[ERROR_SIGNAL])
-                old_learning_mechanisms[0].error_matrices[0] = \
-                    learning_mechanism.learned_projections[0].parameter_states[MATRIX]
-            # # MODIFIED 7/22/19 NEWER:
-            # # Update old_learning_mechanism
-            # for old_learning_mech in old_learning_mechanisms:
-            #     # Get LearningMechanism(s) providing new source(s) of error_signal(s) (replaces old comparator)
-            #     # FIX 7/22/19: STILL NEED TO ADD CHECK IF LEARNING PROJECTION
-            #     #              p.parameter_states[MATRIX].mod_afferents[0]IS IN COMPOSITION
-            #     for error_sources in [p.parameter_states[MATRIX].mod_afferents[0].sender.owner
-            #                           for p in old_learning_mech.output_source.efferents
-            #                           if (p.has_learning_projection and p in self.projections]:
-            #         new_error_source = old_learning_mech.input_states[ACTIVATION_OUTPUT].path_afferents[0].sender.owner
-            #         # Get index of error_signal associated with new error_source
-            #         # Add projection from that
-            #         self.add_projection(sender=new_error_source.output_states[ERROR_SIGNAL],
-            #                             receiver=old_learning_mech.input_states[ERROR_SIGNAL])
-            #         # Update old_learning_mech's error_matrices with new projection
-            #         error_matrix = \
-            #             old_learning_mech.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner.learning_signal.receiver.matrix
-            # MODIFIED 7/22/19 OLD
-
 
             sequence_end = path_length-3
 
@@ -2518,17 +2727,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             input_source = processing_pathway[i-2]
             learned_projection = processing_pathway[i-1]
             output_source = processing_pathway[i]
-            previous_learning_mechanism = learning_mechanisms[-1]
 
-            new_learning_mechanism = self._create_multilayer_backprop_components(input_source,
-                                                                                 output_source,
-                                                                                 learned_projection,
-                                                                                 learning_rate,
-                                                                                 learning_update,
-                                                                                 previous_learning_mechanism)
+            learning_mechanism = self._create_multilayer_backprop_components(input_source,
+                                                                             output_source,
+                                                                             learned_projection,
+                                                                             learning_rate,
+                                                                             learning_update)
 
-            learning_mechanisms.append(new_learning_mechanism)
+            learning_mechanisms.append(learning_mechanism)
             learned_projections.append(learned_projection)
+
+        # MODIFIED CROSSED_PATHWAYS 7/28/19 [JDC] NEW: CHECK NUMERICALLY
+        # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
+        for lm in learning_mechanisms:
+            if lm.dependent_learning_mechanisms:
+                projections = self._add_error_projection_to_dependent_learning_mechs(lm)
+                self.add_projections(projections)
+        # MODIFIED CROSSED_PATHWAYS END
+
+        # Suppress no efferent connections warning for error_signal OutputState of last LearningMechanism in sequence
+        learning_mechanisms[-1].output_states[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
+                                                                                                             override=True)
 
         learning_related_components = {LEARNING_MECHANISM: learning_mechanisms,
                                        COMPARATOR_MECHANISM: comparator,
@@ -3498,7 +3717,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._animation = [image]
         else:
             self._animation.append(image)
-        assert True
 
     @tc.typecheck
     def show_graph(self,
@@ -4946,6 +5164,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         execution_id)
 
                         node.function._runtime_params_reset[execution_id] = {}
+                    #
+                    # # TEST PRINT 7/22/19
+                    # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(execution_id)}'
+                    #       f'\n\tvalue: {node.parameters.value.get(execution_id)}')
 
                     # # TEST PRINT 7/22/19
                     # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(execution_id)}'
@@ -6244,6 +6466,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def learning_components(self):
         return [node for node in self.nodes if NodeRole.LEARNING in self.nodes_to_roles[node]]
+
+    @property
+    def learned_components(self):
+        learned_projections = [proj for proj in self.projections
+                               if hasattr(proj, 'has_learning_projection') and proj.has_learning_projection]
+        related_processing_mechanisms = [mech for mech in self.nodes
+                                         if (isinstance(mech, Mechanism)
+                                             and (any([mech in learned_projections for mech in mech.afferents])
+                                                  or any([mech in learned_projections for mech in mech.efferents])))]
+        return related_processing_mechanisms + learned_projections
 
     @property
     def afferents(self):

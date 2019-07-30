@@ -313,6 +313,8 @@ class TestNestedLearning:
         rl_agent = pnl.Composition(name='RL Agent')
         rl_learning_components = rl_agent.add_reinforcement_learning_pathway([rl_agent_state,
                                                                               rl_agent_action])
+        rl_agent._analyze_graph()
+
         model = pnl.Composition(name='Adaptive Replay Model')
         model.add_nodes([stim_in, context_in, reward_in, perceptual_state, rl_agent, action])
         model.add_projection(sender=perceptual_state, receiver=rl_agent_state)
@@ -330,6 +332,7 @@ class TestNestedLearning:
 
 class TestBackProp:
 
+    @pytest.mark.pytorch
     def test_back_prop(self):
 
         input_layer = pnl.TransferMechanism(name="input",
@@ -419,6 +422,7 @@ class TestBackProp:
         # [pnl.SYSTEM,'AUTODIFF'],
         [pnl.COMPOSITION,'AUTODIFF']
     ])
+    @pytest.mark.pytorch
     def test_xor_training_identicalness_standard_composition_vs_autodiff(self, models):
         """Test equality of results for running 3-layered xor network using System, Composition and Audodiff"""
 
@@ -578,9 +582,258 @@ class TestBackProp:
             assert np.allclose(autodiff_weights[in_to_hidden_autodiff], in_to_hidden_comp.get_mod_matrix(xor_comp))
             assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_comp.get_mod_matrix(xor_comp))
 
+    @pytest.mark.parametrize('configuration', [
+        'Y UP',
+        'BRANCH UP',
+        'EXTEND UP',
+        'EXTEND DOWN BRANCH UP',
+        'CROSS',
+        'Y UP AND DOWN',
+        'BRANCH DOWN',
+        # 'EXTEND DOWN',
+        'BOW',
+        'COMPLEX'
+    ])
+    def test_backprop_with_various_intersecting_pathway_configurations(self, configuration):
+        '''Test add_backpropgation using various configuration of intersecting pathways
+
+        References in description are to attachment point of added pathway (always A)
+        Branches created/added left to right
+
+        '''
+
+        if 'Y UP' == configuration:
+            # 1) First mech is already an origin (Y UP)
+            #
+            #    E            C
+            #     \         /
+            #      D       B
+            #       \     /
+            #        A + A
+            #
+            pnl.clear_registry(pnl.MechanismRegistry)
+            A = pnl.ProcessingMechanism(name='A')
+            B = pnl.ProcessingMechanism(name='B')
+            C = pnl.ProcessingMechanism(name='C')
+            D = pnl.ProcessingMechanism(name='D')
+            E = pnl.ProcessingMechanism(name='E')
+            comp = pnl.Composition(name='Y UP')
+            comp.add_backpropagation_pathway(pathway=[A,D,E])
+            comp.add_backpropagation_pathway(pathway=[A,B,C])
+            # comp.show_graph(show_learning=True)
+            print(f'Completed configuration: {configuration}')
+
+        if 'BRANCH UP' == configuration:
+            # 2) First mech is intermediate (BRANCH UP)
+            #
+            #            C
+            #             \
+            #         E   B
+            #       /      \
+            #      B   +    A
+            #     /
+            #    D
+            #
+            pnl.clear_registry(pnl.MechanismRegistry)
+            A = pnl.ProcessingMechanism(name='A')
+            B = pnl.ProcessingMechanism(name='B')
+            C = pnl.ProcessingMechanism(name='C')
+            D = pnl.ProcessingMechanism(name='D')
+            E = pnl.ProcessingMechanism(name='E')
+            comp = pnl.Composition(name='BRANCH UP')
+            comp.add_backpropagation_pathway(pathway=[D,B,E])
+            comp.add_backpropagation_pathway(pathway=[A,B,C])
+            # comp.show_graph(show_learning=True)
+            print(f'Completed configuration: {configuration}')
+
+        if 'EXTEND UP' == configuration:
+            # 3) First mech is already a terminal (EXTEND UP)
+            #
+            #                  C
+            #                /
+            #               B
+            #              /
+            #         A + A
+            #       /
+            #      E
+            #     /
+            #    D
+            #
+            pnl.clear_registry(pnl.MechanismRegistry)
+            A = pnl.ProcessingMechanism(name='A')
+            B = pnl.ProcessingMechanism(name='B')
+            C = pnl.ProcessingMechanism(name='C')
+            D = pnl.ProcessingMechanism(name='D')
+            E = pnl.ProcessingMechanism(name='E')
+            comp = pnl.Composition(name='EXTEND UP')
+            comp.add_backpropagation_pathway(pathway=[D,E,A])
+            comp.add_backpropagation_pathway(pathway=[A,B,C])
+            # comp.show_graph(show_learning=True)
+            print(f'Completed configuration: {configuration}')
+
+        if 'EXTEND DOWN BRANCH UP' == configuration:
+            # 4) Intermediate mech is already an origin (EXTEND DOWN BRANCH UP)
+            #
+            #    D       C
+            #     \     /
+            #      A + A
+            #         /
+            #        B
+            #
+            pnl.clear_registry(pnl.MechanismRegistry)
+            A = pnl.ProcessingMechanism(name='A')
+            B = pnl.ProcessingMechanism(name='B')
+            C = pnl.ProcessingMechanism(name='C')
+            D = pnl.ProcessingMechanism(name='D')
+            E = pnl.ProcessingMechanism(name='E')
+            comp = pnl.Composition(name='EXTEND DOWN BRANCH UP')
+            comp.add_backpropagation_pathway(pathway=[A,D])
+            comp.add_backpropagation_pathway(pathway=[B,A,C])
+            # comp.show_graph(show_learning=True)
+            print(f'Completed configuration: {configuration}')
+
+        if 'CROSS' == configuration:
+            # 5) Intermediate mech is already an intermediate (CROSS)
+            #
+            #    E       C
+            #     \     /
+            #      A + A
+            #     /     \
+            #    D       B
+            #
+            pnl.clear_registry(pnl.MechanismRegistry)
+            A = pnl.ProcessingMechanism(name='A')
+            B = pnl.ProcessingMechanism(name='B')
+            C = pnl.ProcessingMechanism(name='C')
+            D = pnl.ProcessingMechanism(name='D')
+            E = pnl.ProcessingMechanism(name='E')
+            comp = pnl.Composition(name='Y CROSS')
+            comp.add_backpropagation_pathway(pathway=[D,A,E])
+            comp.add_backpropagation_pathway(pathway=[A,B,C])
+            # comp.show_graph(show_learning=True)
+            print(f'Completed configuration: {configuration}')
+
+        if 'Y UP AND DOWN' == configuration:
+            # 6) Intermediate mech is already a terminal (Y UP AND DOWN)
+            #
+            #          C
+            #          \
+            #      A + A
+            #     /     \
+            #    D      B
+            #
+            pnl.clear_registry(pnl.MechanismRegistry)
+            A = pnl.ProcessingMechanism(name='A')
+            B = pnl.ProcessingMechanism(name='B')
+            C = pnl.ProcessingMechanism(name='C')
+            D = pnl.ProcessingMechanism(name='D')
+            E = pnl.ProcessingMechanism(name='E')
+            comp = pnl.Composition(name='EXTEND UP AND DOWN')
+            comp.add_backpropagation_pathway(pathway=[D,A])
+            comp.add_backpropagation_pathway(pathway=[B,A,C])
+            # comp.show_graph(show_learning=True)
+            print(f'Completed configuration: {configuration}')
+
+        if 'BRANCH DOWN' == configuration:
+            # 7) Last mech is already an intermediate (BRANCH DOWN)
+            #
+            #    D
+            #     \
+            #      A + A
+            #     /     \
+            #    C       B
+            #
+            pnl.clear_registry(pnl.MechanismRegistry)
+            A = pnl.ProcessingMechanism(name='A')
+            B = pnl.ProcessingMechanism(name='B')
+            C = pnl.ProcessingMechanism(name='C')
+            D = pnl.ProcessingMechanism(name='D')
+            E = pnl.ProcessingMechanism(name='E')
+            comp = pnl.Composition(name='BRANCH DOWN')
+            comp.add_backpropagation_pathway(pathway=[C,A,D])
+            comp.add_backpropagation_pathway(pathway=[B,A])
+            # comp.show_graph(show_learning=True)
+            print(f'Completed configuration: {configuration}')
+
+        if 'EXTEND DOWN' == configuration:
+            # 8) Last mech is already a terminal (EXTEND DOWN)
+            #
+            #        A + A
+            #       /     \
+            #      E       B
+            #     /         \
+            #    D           C
+            #
+            pnl.clear_registry(pnl.MechanismRegistry)
+            A = pnl.ProcessingMechanism(name='A')
+            B = pnl.ProcessingMechanism(name='B')
+            C = pnl.ProcessingMechanism(name='C')
+            D = pnl.ProcessingMechanism(name='D')
+            E = pnl.ProcessingMechanism(name='E')
+            comp = pnl.Composition(name='EXTEND DOWN')
+            comp.add_backpropagation_pathway(pathway=[D,E,A])
+            comp.add_backpropagation_pathway(pathway=[C,B,A])
+            # comp.show_graph(show_learning=True)
+            print(f'Completed configuration: {configuration}')
+
+        if 'BOW' == configuration:
+            # 9) Bow
+            #
+            #            F
+            #           /
+            #      C + C
+            #     /     \
+            #    B       D
+            #     \     /
+            #      A + A
+            #     /
+            #    E
+            #
+            pnl.clear_registry(pnl.MechanismRegistry)
+            A = pnl.ProcessingMechanism(name='A')
+            B = pnl.ProcessingMechanism(name='B')
+            C = pnl.ProcessingMechanism(name='C')
+            D = pnl.ProcessingMechanism(name='D')
+            E = pnl.ProcessingMechanism(name='E')
+            F = pnl.ProcessingMechanism(name='F')
+            comp = pnl.Composition(name='BOW')
+            comp.add_backpropagation_pathway(pathway=[E,A,B,C])
+            comp.add_backpropagation_pathway(pathway=[A,D,C,F])
+            comp.show_graph(show_learning=True)
+            print(f'Completed configuration: {configuration}')
+
+        if 'COMPLEX' == configuration:
+            # 10) Complex
+            #
+            #          C        I
+            #          \         \
+            #      A + A      F   G
+            #     /     \    /     \
+            #    D      B + B   +  D
+            #              /        \
+            #             E         H
+            #
+            pnl.clear_registry(pnl.MechanismRegistry)
+            A = pnl.ProcessingMechanism(name='A')
+            B = pnl.ProcessingMechanism(name='B')
+            C = pnl.ProcessingMechanism(name='C')
+            D = pnl.ProcessingMechanism(name='D')
+            E = pnl.ProcessingMechanism(name='E')
+            F = pnl.ProcessingMechanism(name='F')
+            G = pnl.ProcessingMechanism(name='G')
+            H = pnl.ProcessingMechanism(name='H')
+            I = pnl.ProcessingMechanism(name='I')
+            comp = pnl.Composition(name='COMPLEX')
+            comp.add_backpropagation_pathway(pathway=[D,A])
+            comp.add_backpropagation_pathway(pathway=[B,A,C])
+            comp.add_backpropagation_pathway(pathway=[E,B,F])
+            comp.add_backpropagation_pathway(pathway=[H,D,G,I])
+            comp.show_graph(show_learning=True)
+            print(f'Completed configuration: {configuration}')
+
     @pytest.mark.parametrize('order', [
-        'color_full',
-        'word_partial',
+        # 'color_full',
+        # 'word_partial',
         'word_full',
         'full_overlap'
     ])
@@ -743,23 +996,23 @@ class TestRumelhartSemanticNetwork:
     with the following structure:
 
     # Semantic Network:
-    #                         _
-    #       REP PROP QUAL ACT  |
-    #         \___\__/____/    |
-    #             |        _   | Output Processes
-    #           HIDDEN      | _|
-    #            / \        |
-    #       HIDDEN REL_IN   |  Input Processes
-    #          /            |
-    #       REP_IN         _|
+    #                        __
+    #    REP PROP QUAL ACT     |
+    #      \   \  /   /   __   | Output Processes
+    #       REL_HIDDEN      |__|
+    #          /   \        |
+    #  REP_HIDDEN  REL_IN   |  Input Processes
+    #       /               |
+    #   REP_IN           ___|
     """
 
     def test_rumelhart_semantic_network_sequential(self):
 
         rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
         rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
-        rep_hidden = pnl.TransferMechanism(size=4, function=psyneulink.core.components.functions.transferfunctions
-                                           .Logistic, name='REP_HIDDEN')
+        rep_hidden = pnl.TransferMechanism(size=4,
+                                           function=psyneulink.core.components.functions.transferfunctions.Logistic,
+                                           name='REP_HIDDEN')
         rel_hidden = pnl.TransferMechanism(size=5, function=Logistic, name='REL_HIDDEN')
         rep_out = pnl.TransferMechanism(size=10, function=Logistic, name='REP_OUT')
         prop_out = pnl.TransferMechanism(size=12, function=Logistic, name='PROP_OUT')
@@ -768,28 +1021,27 @@ class TestRumelhartSemanticNetwork:
 
         comp = Composition()
 
-        comp.add_backpropagation_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
+        # comp.add_backpropagation_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
         comp.add_backpropagation_pathway(pathway=[rel_in, rel_hidden])
         comp.add_backpropagation_pathway(pathway=[rel_hidden, rep_out])
         comp.add_backpropagation_pathway(pathway=[rel_hidden, prop_out])
         comp.add_backpropagation_pathway(pathway=[rel_hidden, qual_out])
         comp.add_backpropagation_pathway(pathway=[rel_hidden, act_out])
+        comp.add_backpropagation_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
 
-        comp.show_graph(show_learning=True)
+        # comp.show_graph(show_learning=True)
         # validate_learning_mechs(comp)
 
-        # print(S.orixgin_mechanisms)
-        # print(S.terminal_mechanisms)
-        # comp.run(
-        #       # num_trials=2,
-        #       inputs={rel_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        #               rep_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]},
-        #       # targets={rep_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-        #       #          prop_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-        #       #          qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-        #       #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
-        #       )
-        # print(comp.results)
+        comp.run(
+              num_trials=2,
+              inputs={rel_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                      rep_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]},
+              # targets={rep_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
+              #          prop_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
+              #          qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
+              #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
+              )
+        print(comp.results)
 
     # def test_rumelhart_semantic_network_convergent(self):
     #

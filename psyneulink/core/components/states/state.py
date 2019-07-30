@@ -2298,15 +2298,9 @@ def _instantiate_state_list(owner,
             comparison_string = 'more'
         else:
             comparison_string = 'fewer'
-        raise StateError("There are {} {}s specified ({}) than the number of items ({}) "
-                             "in the {} of the function for \'{}\'".
-                             format(comparison_string,
-                                    state_param_identifier,
-                                    num_states,
-                                    num_constraint_items,
-                                    reference_value_name,
-                                    owner.name))
-
+        raise StateError(f"There are {comparison_string} {state_param_identifier}s specified ({num_states}) "
+                         f"than the number of items ({num_constraint_items}) in the {reference_value_name} "
+                         f"of the function for {repr(owner.name)}.")
 
     # INSTANTIATE EACH STATE
 

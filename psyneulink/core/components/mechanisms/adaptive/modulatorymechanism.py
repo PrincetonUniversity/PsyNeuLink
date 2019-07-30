@@ -1349,9 +1349,10 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                        modulation=self.modulation,
                                                        state_spec=mod_spec,
                                                        context=context)
-            except:
+            except Exception as e:
                 raise ModulatoryMechanismError(f"PROGRAM ERROR: Unrecognized {repr(MODULATORY_SIGNAL)} "
-                                               f"specification for {self.name} ({modulatory_signal})")
+                                               f"specification for {self.name} ({modulatory_signal});"
+                                               f"ERROR MESSAGE: {e.args[0]}")
 
         modulatory_signal.owner = self
 
