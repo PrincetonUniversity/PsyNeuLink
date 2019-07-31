@@ -584,7 +584,7 @@ class TestBackProp:
 
     @pytest.mark.parametrize('configuration', [
         # 'Y UP',
-        'BRANCH UP',
+        # 'BRANCH UP',
         # 'EXTEND UP',
         # 'EXTEND DOWN BRANCH UP',
         # 'CROSS',
@@ -592,7 +592,7 @@ class TestBackProp:
         # 'BRANCH DOWN',
         # 'EXTEND DOWN',
         # 'BOW',
-        # 'COMPLEX'
+        'COMPLEX'
         # 'JOIN BY TERINAL'
     ])
     def test_backprop_with_various_intersecting_pathway_configurations(self, configuration):
