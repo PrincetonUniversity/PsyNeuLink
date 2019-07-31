@@ -593,9 +593,9 @@ class TestBackProp:
         'EXTEND DOWN',
         'BOW',
         'COMPLEX'
-        'JOIN BY TERINAL'
+        'JOIN BY TERMINAL'
     ])
-    def test_backprop_with_various_intersecting_pathway_configurations(self, configuration):
+    def test_backprop_with_various_intersecting_pathway_configurations(self, configuration, show_graph=True):
         '''Test add_backpropgation using various configuration of intersecting pathways
 
         References in description are to attachment point of added pathway (always A)
@@ -621,7 +621,8 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[A,D,E])
             comp.add_backpropagation_pathway(pathway=[A,B,C])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'BRANCH UP' == configuration:
@@ -644,7 +645,8 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[D,B,E])
             comp.add_backpropagation_pathway(pathway=[A,B,C])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'EXTEND UP' == configuration:
@@ -669,7 +671,8 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[D,E,A])
             comp.add_backpropagation_pathway(pathway=[A,B,C])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'EXTEND DOWN BRANCH UP' == configuration:
@@ -690,7 +693,8 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[A,D])
             comp.add_backpropagation_pathway(pathway=[B,A,C])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'CROSS' == configuration:
@@ -710,8 +714,9 @@ class TestBackProp:
             E = pnl.ProcessingMechanism(name='E')
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[D,A,E])
-            comp.add_backpropagation_pathway(pathway=[A,B,C])
-            # comp.show_graph(show_learning=True)
+            comp.add_backpropagation_pathway(pathway=[B,A,C])
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'Y UP AND DOWN' == configuration:
@@ -732,7 +737,8 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[D,A])
             comp.add_backpropagation_pathway(pathway=[B,A,C])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'BRANCH DOWN' == configuration:
@@ -753,7 +759,8 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[C,A,D])
             comp.add_backpropagation_pathway(pathway=[B,A])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'EXTEND DOWN' == configuration:
@@ -774,7 +781,8 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[D,E,A])
             comp.add_backpropagation_pathway(pathway=[C,B,A])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'BOW' == configuration:
@@ -800,7 +808,8 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[E,A,B,C])
             comp.add_backpropagation_pathway(pathway=[A,D,C,F])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'COMPLEX' == configuration:
@@ -829,10 +838,11 @@ class TestBackProp:
             comp.add_backpropagation_pathway(pathway=[B,A,C])
             comp.add_backpropagation_pathway(pathway=[E,B,F])
             comp.add_backpropagation_pathway(pathway=[H,D,G,I])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
-        if 'JOIN BY TERINAL' == configuration:
+        if 'JOIN BY TERMINAL' == configuration:
             # 8) Last mech is already a terminal (EXTEND DOWN)
             #
             #        A     F   A
@@ -852,7 +862,8 @@ class TestBackProp:
             comp.add_backpropagation_pathway(pathway=[D,E,A])
             comp.add_backpropagation_pathway(pathway=[C,B,F])
             comp.add_backpropagation_pathway(pathway=[B,A])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
 
