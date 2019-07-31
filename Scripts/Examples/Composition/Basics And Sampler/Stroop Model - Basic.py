@@ -44,7 +44,7 @@ green = [0,1]
 word = [0,1]
 color = [1,0]
 
-Stroop_model.show_graph(show_node_structure=True)
+Stroop_model.show_graph()
 
 Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color},
                  num_trials=2,
