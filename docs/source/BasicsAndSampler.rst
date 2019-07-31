@@ -180,17 +180,17 @@ drift diffusion (DDM) decision mechanism responsible for determining the respons
 
     # Construct the color naming pathway:
     color_input = ProcessingMechanism(name='COLOR INPUT', size=2) # note: default function is Linear
-    color_input_to_hidden_wts = np.array([[1, -1], [-1, 1]])
+    color_input_to_hidden_wts = np.array([[2, -2], [-2, 2]])
     color_hidden = ProcessingMechanism(name='COLOR HIDDEN', size=2, function=Logistic(bias=-4))
-    color_hidden_to_output_wts = np.array([[1, -1], [-1, 1]])
+    color_hidden_to_output_wts = np.array([[2, -2], [-2, 2]])
     output = ProcessingMechanism(name='OUTPUT', size=2 , function=Logistic)
     color_pathway = [color_input, color_input_to_hidden_wts, color_hidden, color_hidden_to_output_wts, output]
 
     # Construct the word reading pathway (using the same output_layer)
     word_input = ProcessingMechanism(name='WORD INPUT', size=2)
-    word_input_to_hidden_wts = np.array([[2, -2], [-2, 2]])
+    word_input_to_hidden_wts = np.array([[3, -3], [-3, 3]])
     word_hidden = ProcessingMechanism(name='WORD HIDDEN', size=2, function=Logistic(bias=-4))
-    word_hidden_to_output_wts = np.array([[2, -2], [-2, 2]])
+    word_hidden_to_output_wts = np.array([[3, -3], [-3, 3]])
     word_pathway = [word_input, word_input_to_hidden_wts, word_hidden, word_hidden_to_output_wts, output]
 
     # Construct the task specification pathways
@@ -358,7 +358,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
     # Construct control mechanism
     control = ControlMechanism(name='CONTROL',
                                objective_mechanism=ObjectiveMechanism(name='Conflict Monitor',
-                                                                      monitor=output
+                                                                      monitor=output,
                                                                       function=Energy(size=2,
                                                                                       matrix=[[0,-2.5],[-2.5,0]])),
                                default_allocation=[0.5],
@@ -369,17 +369,18 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
 
     # Print statements show state of
     np.set_printoptions(precision=2)
+    global t
     t = 0
     def print_after():
         global t
-        print(f'AFTER trial {t}:')
-        print(f'\t\t\t\t  red\tgreen')
+        print(f'\nEnd of trial {t}:')
+        print(f'\t\t\t\tcolor  word')
         print(f'\ttask:\t\t{task.value[0]}')
+        print(f'\ttask gain:\t   {task.parameter_states[GAIN].value}')
+        print(f'\t\t\t\tred   green')
         print(f'\toutput:\t\t{output.value[0]}')
-        print(f'\tdecision variable:\t{decision.variable}')
-        print(f'\tdecision:\t{decision.value[0]}\t{decision.value[1]}')
-        print(f'\tconflict:\t\t{control._objective_mechanism.value[0]}')
-        print(f'\tcontrol:\t\t{control.control_signals[0].value}')
+        print(f'\tdecision:\t{decision.value[0]}{decision.value[1]}')
+        print(f'\tconflict:\t  {control._objective_mechanism.value[0]}')
         t += 1
 
     # Set up run and then execute it
@@ -407,7 +408,7 @@ The result is shown in the figure below, using the **show_controller** option of
 
 .. _BasicsAndSampler_Stroop_Example_With_Control_Figure:
 
-.. figure:: _static/BasicsAndSampler_Control.svg
+.. figure:: _static/BasicsAndSampler_Stroop_Model_Control.svg
    :width: 50%
 
    **Stroop Model with Controller.** Representation of the Composition with the ``control`` Mechanism added, generated
@@ -428,8 +429,7 @@ the next time it executes (i.e., on the next `trial <TimeScale.TRIAL>`;  a Compo
 <Composition.controller>` can also be configured to execute at the start of a `trial <TimeScale.TRIAL>`). Finally, the
 **call_after_trial** argument of the Composition's `run <Composition.run>` method is used to print Mechanism values
 at the end of each `trial <TimeScale.TRIAL>`.  The **animate** argument of the `run <Composition.run>` method can be
-used to generate an animation of the Composition's execution, as shown below::
-
+used to generate an animation of the Composition's execution, as shown below:
 
 .. figure:: _static/BasicsAndSampler_Stroop_Model_movie.gif
    :width: 75%
@@ -554,7 +554,7 @@ times, as specified in the Conditions described above.  The output of the `Log` 
 formats, including a `numpy <https://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html>`_ array,
 a dictionary of values for each entry, and `CSV <https://en.wikipedia.org/wiki/Comma-separated_values>`_ format.
 
-_BasicsAndSampler_Learning:
+.. _BasicsAndSampler_Learning:
 
 Learning
 ~~~~~~~~
@@ -605,7 +605,6 @@ three-layered neural network that learns to compute the X-OR operation::
 
 Calling the Composition's ``show_graph`` with ``show_learning=True`` shows the network along with all of the learning
 components created by the call to ``add_backpropagation_pathway``:
-
 
 .. _BasicsAndSampler_XOR_MODEL_Figure:
 
