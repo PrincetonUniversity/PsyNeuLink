@@ -2803,10 +2803,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                        learned_projection,
                                                                        learning_rate,
                                                                        learning_update)
-            # # MODIFIED CROSSED_PATHWAYS 7/28 NEW: [JDC]
-            # FIX: MOVE TO BELOW??
-            # self.add_required_node_role(pathway[path_length-1], NodeRole.OUTPUT)
-            # MODIFIED CROSSED_PATHWAYS 7/28 END
             sequence_end = path_length-3
 
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
@@ -2854,6 +2850,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for input_state in old_error_signal_input_states:
                         input_state.owner.remove_states(input_state)
                     del self._terminal_backprop_sequences[pathway_mech]
+                    del self.required_node_roles[self.required_node_roles.index((pathway_mech, NodeRole.OUTPUT))]
 
             # Create terminal_sequence
             target, comparator, learning_mechanism = \
@@ -2866,6 +2863,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 COMPARATOR_MECHANISM: comparator}
+
+            # # MODIFIED CROSSED_PATHWAYS 7/28 NEW: [JDC]
+            self.add_required_node_role(pathway[-1], NodeRole.OUTPUT)
+            # MODIFIED CROSSED_PATHWAYS 7/28 END
 
             sequence_end = path_length-3
 
