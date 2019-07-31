@@ -2783,6 +2783,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:
             #  THIS SHOULD BE INTEGRATED WITH CALL TO _create_terminal_backprop_sequence_components
+            #  ** NEED TO CHECK WHETHER LAST NODE IN THE SEQUENCE IS TERMINAL AND IF SO:
+            #     ASSIGN USING: self.add_required_node_role(output_source, NodeRole.OUTPUT)
             # If learned_projection already has a LearningProjection (due to pathway overlap),
             #    use those terminal sequence components
             if (learned_projection.has_learning_projection
@@ -2801,6 +2803,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                        learned_projection,
                                                                        learning_rate,
                                                                        learning_update)
+            # # MODIFIED CROSSED_PATHWAYS 7/28 NEW: [JDC]
+            # FIX: MOVE TO BELOW??
+            # self.add_required_node_role(pathway[path_length-1], NodeRole.OUTPUT)
+            # MODIFIED CROSSED_PATHWAYS 7/28 END
             sequence_end = path_length-3
 
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE

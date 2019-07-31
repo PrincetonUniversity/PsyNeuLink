@@ -583,17 +583,17 @@ class TestBackProp:
             assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_comp.get_mod_matrix(xor_comp))
 
     @pytest.mark.parametrize('configuration', [
-        'Y UP',
+        # 'Y UP',
         'BRANCH UP',
-        'EXTEND UP',
-        'EXTEND DOWN BRANCH UP',
-        'CROSS',
-        'Y UP AND DOWN',
-        'BRANCH DOWN',
-        'EXTEND DOWN',
-        'BOW',
-        'COMPLEX'
-        'JOIN BY TERINAL'
+        # 'EXTEND UP',
+        # 'EXTEND DOWN BRANCH UP',
+        # 'CROSS',
+        # 'Y UP AND DOWN',
+        # 'BRANCH DOWN',
+        # 'EXTEND DOWN',
+        # 'BOW',
+        # 'COMPLEX'
+        # 'JOIN BY TERINAL'
     ])
     def test_backprop_with_various_intersecting_pathway_configurations(self, configuration):
         '''Test add_backpropgation using various configuration of intersecting pathways
