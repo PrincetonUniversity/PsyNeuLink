@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+326.geb2a8b2 documentation</title>
+  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+327.g664464c documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+326.geb2a8b2',
+              VERSION:'0.5.3.2+327.g664464c',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+326
+                0.5.3.2+327
               </div>
             
           
@@ -177,7 +177,7 @@
 <li><a class="reference internal" href="#basicsandsampler-dynamics-of-execution"><span class="std std-ref">Dynamics of Execution</span></a></li>
 <li><a class="reference internal" href="#basicsandsampler-control"><span class="std std-ref">Control</span></a></li>
 <li><a class="reference internal" href="#basicsandsampler-logging-and-animation"><span class="std std-ref">Logging and Animation</span></a></li>
-<li><code class="xref any docutils literal"><span class="pre">BasicsAndSampler_Learning</span></code></li>
+<li><a class="reference internal" href="#basicsandsampler-learning"><span class="std std-ref">Learning</span></a></li>
 </ul>
 </dd>
 </dl>
@@ -316,17 +316,17 @@ of those to perform based on a task instruction. These all converge on a common 
 drift diffusion (DDM) decision mechanism responsible for determining the response:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct the color naming pathway:</span>
 <span class="n">color_input</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;COLOR INPUT&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="c1"># note: default function is Linear</span>
-<span class="n">color_input_to_hidden_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="n">color_input_to_hidden_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
 <span class="n">color_hidden</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;COLOR HIDDEN&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
-<span class="n">color_hidden_to_output_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="n">color_hidden_to_output_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
 <span class="n">output</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;OUTPUT&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span> <span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
 <span class="n">color_pathway</span> <span class="o">=</span> <span class="p">[</span><span class="n">color_input</span><span class="p">,</span> <span class="n">color_input_to_hidden_wts</span><span class="p">,</span> <span class="n">color_hidden</span><span class="p">,</span> <span class="n">color_hidden_to_output_wts</span><span class="p">,</span> <span class="n">output</span><span class="p">]</span>
 
 <span class="c1"># Construct the word reading pathway (using the same output_layer)</span>
 <span class="n">word_input</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;WORD INPUT&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">word_input_to_hidden_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+<span class="n">word_input_to_hidden_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span>
 <span class="n">word_hidden</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;WORD HIDDEN&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
-<span class="n">word_hidden_to_output_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+<span class="n">word_hidden_to_output_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span>
 <span class="n">word_pathway</span> <span class="o">=</span> <span class="p">[</span><span class="n">word_input</span><span class="p">,</span> <span class="n">word_input_to_hidden_wts</span><span class="p">,</span> <span class="n">word_hidden</span><span class="p">,</span> <span class="n">word_hidden_to_output_wts</span><span class="p">,</span> <span class="n">output</span><span class="p">]</span>
 
 <span class="c1"># Construct the task specification pathways</span>
@@ -473,7 +473,7 @@ conflict in the <code class="docutils literal"><span class="pre">output</span></
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct control mechanism</span>
 <span class="n">control</span> <span class="o">=</span> <span class="n">ControlMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;CONTROL&#39;</span><span class="p">,</span>
                            <span class="n">objective_mechanism</span><span class="o">=</span><span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Conflict Monitor&#39;</span><span class="p">,</span>
-                                                                  <span class="n">monitor</span><span class="o">=</span><span class="n">output</span>
+                                                                  <span class="n">monitor</span><span class="o">=</span><span class="n">output</span><span class="p">,</span>
                                                                   <span class="n">function</span><span class="o">=</span><span class="n">Energy</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                                                                                   <span class="n">matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mf">2.5</span><span class="p">],[</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span><span class="mi">0</span><span class="p">]])),</span>
                            <span class="n">default_allocation</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">],</span>
@@ -484,17 +484,18 @@ conflict in the <code class="docutils literal"><span class="pre">output</span></
 
 <span class="c1"># Print statements show state of</span>
 <span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">global</span> <span class="n">t</span>
 <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="k">def</span> <span class="nf">print_after</span><span class="p">():</span>
     <span class="k">global</span> <span class="n">t</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;AFTER trial </span><span class="si">{t}</span><span class="s1">:&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t\t\t\t</span><span class="s1">  red</span><span class="se">\t</span><span class="s1">green&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">End of trial </span><span class="si">{t}</span><span class="s1">:&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t\t\t\t</span><span class="s1">color  word&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">task:</span><span class="se">\t\t</span><span class="si">{task.value[0]}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">task gain:</span><span class="se">\t</span><span class="s1">   </span><span class="si">{task.parameter_states[GAIN].value}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t\t\t\t</span><span class="s1">red   green&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">output:</span><span class="se">\t\t</span><span class="si">{output.value[0]}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">decision variable:</span><span class="se">\t</span><span class="si">{decision.variable}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">decision:</span><span class="se">\t</span><span class="si">{decision.value[0]}</span><span class="se">\t</span><span class="si">{decision.value[1]}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">conflict:</span><span class="se">\t\t</span><span class="si">{control._objective_mechanism.value[0]}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">control:</span><span class="se">\t\t</span><span class="si">{control.control_signals[0].value}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">decision:</span><span class="se">\t</span><span class="si">{decision.value[0]}{decision.value[1]}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">conflict:</span><span class="se">\t</span><span class="s1">  </span><span class="si">{control._objective_mechanism.value[0]}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span>
 
 <span class="c1"># Set up run and then execute it</span>
@@ -520,7 +521,7 @@ MappingProjections from <code class="docutils literal"><span class="pre">output<
 is then added to the <code class="docutils literal"><span class="pre">Stroop_model</span></code> as its <code class="xref any docutils literal"><span class="pre">controller</span></code> in its constructor.
 The result is shown in the figure below, using the <strong>show_controller</strong> option of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method:</p>
 <div class="figure" id="id4">
-<span id="basicsandsampler-stroop-example-with-control-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndSampler_Control.svg"><img alt="_images/BasicsAndSampler_Control.svg" src="_images/BasicsAndSampler_Control.svg" width="50%" /></a>
+<span id="basicsandsampler-stroop-example-with-control-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndSampler_Stroop_Model_Control.svg"><img alt="_images/BasicsAndSampler_Stroop_Model_Control.svg" src="_images/BasicsAndSampler_Stroop_Model_Control.svg" width="50%" /></a>
 <p class="caption"><span class="caption-text"><strong>Stroop Model with Controller.</strong> Representation of the Composition with the <code class="docutils literal"><span class="pre">control</span></code> Mechanism added, generated
 by a call to <code class="docutils literal"><span class="pre">Stroop_model.show_graph(show_controller)</span></code>.</span></p>
 </div>
@@ -537,21 +538,11 @@ the next time it executes (i.e., on the next <a class="reference internal" href=
 <strong>call_after_trial</strong> argument of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method is used to print Mechanism values
 at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>.  The <strong>animate</strong> argument of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method can be
 used to generate an animation of the Composition’s execution, as shown below:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">figure</span><span class="p">::</span> <span class="n">_static</span><span class="o">/</span><span class="n">BasicsAndSampler_Stroop_Model_movie</span><span class="o">.</span><span class="n">gif</span>
-</pre></div>
+<div class="figure" id="id5">
+<a class="reference internal image-reference" href="_images/BasicsAndSampler_Stroop_Model_movie.gif"><img alt="_images/BasicsAndSampler_Stroop_Model_movie.gif" src="_images/BasicsAndSampler_Stroop_Model_movie.gif" style="width: 75%;" /></a>
+<p class="caption"><span class="caption-text"><strong>Animation of Stroop Model with Controller.</strong> Generated by a call to <code class="docutils literal"><span class="pre">Stroop_model.show_graph(show_controller)</span>
+<span class="pre">with</span> <span class="pre">``animate={&quot;show_controller&quot;:True}</span></code> in call to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>.</span></p>
 </div>
-<blockquote>
-<div><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">width:</th><td class="field-body">75%</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Animation of Stroop Model with Controller.</strong> Generated by a call to <code class="docutils literal"><span class="pre">Stroop_model.show_graph(show_controller)</span>
-<span class="pre">with</span> <span class="pre">``animate={&quot;show_controller&quot;:True}</span></code> in call to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>.</p>
-</div></blockquote>
 <p>Running it for several <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trials</span></code></a> produces the following output:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">_Stroop_model_output</span><span class="p">:</span>
 
@@ -656,10 +647,9 @@ since it only executed once per trial, but there are ten entries for the <code c
 times, as specified in the Conditions described above.  The output of the <a class="reference internal" href="Log.html"><span class="doc">Log</span></a> can also be reported in various other
 formats, including a <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html">numpy</a> array,
 a dictionary of values for each entry, and <a class="reference external" href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> format.</p>
-<p>_BasicsAndSampler_Learning:</p>
 </div>
 <div class="section" id="learning">
-<h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
+<span id="basicsandsampler-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
 <p>Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
 mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available in other
 Python-based environments, such as Pytorch.  Since the latter are becoming increasingly accessible and powerful, the
