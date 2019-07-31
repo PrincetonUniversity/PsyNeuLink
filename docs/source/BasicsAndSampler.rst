@@ -606,7 +606,6 @@ three-layered neural network that learns to compute the X-OR operation::
 Calling the Composition's ``show_graph`` with ``show_learning=True`` shows the network along with all of the learning
 components created by the call to ``add_backpropagation_pathway``:
 
-
 .. _BasicsAndSampler_XOR_MODEL_Figure:
 
 .. figure:: _static/BasicsAndSampler_XOR_Model_fig.svg
