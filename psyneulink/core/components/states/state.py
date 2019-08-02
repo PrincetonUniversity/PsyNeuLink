@@ -729,6 +729,7 @@ Class Reference
 
 """
 
+import abc
 import inspect
 import itertools
 import numbers
@@ -2084,6 +2085,30 @@ class State_Base(State):
             function_params = None
 
         value = self.execute(execution_id=execution_id, runtime_params=function_params, context=context)
+
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+        if variable is None:
+            variable = self._get_fallback_variable(execution_id)
+
+            # if the fallback is also None
+            # return None, so that this state is ignored
+            # KDM 8/2/19: double check the relevance of this branch
+            if variable is None:
+                return None
+
+        return super()._execute(
+            variable,
+            execution_id=execution_id,
+            runtime_params=runtime_params,
+            context=context
+        )
+
+    @abc.abstractmethod
+    def _get_fallback_variable(self, execution_id=None):
+        """
+            Returns a variable to be used for self.execute when the variable passed in is None
+        """
+        pass
 
     def _get_value_label(self, labels_dict, all_states, execution_context=None):
         subdicts = False

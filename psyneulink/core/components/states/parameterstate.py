@@ -814,25 +814,13 @@ class ParameterState(State_Base):
         """Return parameter variable (since ParameterState's function never changes the form of its variable"""
         return variable
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        """Call self.function with current parameter value as the variable
-
+    def _get_fallback_variable(self, execution_id=None):
+        """
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs.
-        Update its value in call to state's function.
         """
 
-        if variable is not None:
-            return super()._execute(variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
-        else:
-            # variable = getattr(self.owner.function.parameters, self.name)._get(execution_id)
-            # FIX 3/6/19: source does not yet seem to have been assigned to owner.function
-            variable = getattr(self.source.parameters, self.name)._get(execution_id)
-            return super()._execute(
-                variable=variable,
-                execution_id=execution_id,
-                runtime_params=runtime_params,
-                context=context
-            )
+        # FIX 3/6/19: source does not yet seem to have been assigned to owner.function
+        return getattr(self.source.parameters, self.name)._get(execution_id)
 
     @property
     def pathway_projections(self):
