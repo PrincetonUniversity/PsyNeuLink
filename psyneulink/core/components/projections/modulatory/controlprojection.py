@@ -104,6 +104,7 @@ import typecheck as tc
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.processing.parameterinterfacemechanism import ParameterInterfaceMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base
@@ -384,7 +385,7 @@ class ControlProjection(ModulatoryProjection_Base):
         # If sender is specified as a Mechanism, validate that it is a ControlMechanism
         if isinstance(sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its ControlSignal projection
-            if not isinstance(sender, ControlMechanism):
+            if not isinstance(sender, (ControlMechanism, ParameterInterfaceMechanism)):
                 raise ControlProjectionError(
                     "Mechanism specified as sender for {} ({}) must be a "
                     "ControlMechanism (but it is a {})".format(
