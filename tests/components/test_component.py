@@ -27,20 +27,24 @@ class TestComponent:
         T.execute()
         assert T.current_execution_count == 1
         assert T.input_state.current_execution_count == 0
-        assert T.parameter_states[pnl.SLOPE].current_execution_count == 1
-        assert T.output_state.current_execution_count == 1
+
+        # skipped (0 executions) because we bypass execute when no afferents, and
+        # function._is_identity is satisfied (here, Linear function with slope 0 and intercept 1)
+        # This holds true for each below
+        assert T.parameter_states[pnl.SLOPE].current_execution_count == 0
+        assert T.output_state.current_execution_count == 0
 
         T.execute()
         assert T.current_execution_count == 2
         assert T.input_state.current_execution_count == 0
-        assert T.parameter_states[pnl.SLOPE].current_execution_count == 2
-        assert T.output_state.current_execution_count == 2
+        assert T.parameter_states[pnl.SLOPE].current_execution_count == 0
+        assert T.output_state.current_execution_count == 0
 
         T.execute()
         assert T.current_execution_count == 3
         assert T.input_state.current_execution_count == 0
-        assert T.parameter_states[pnl.SLOPE].current_execution_count == 3
-        assert T.output_state.current_execution_count == 3
+        assert T.parameter_states[pnl.SLOPE].current_execution_count == 0
+        assert T.output_state.current_execution_count == 0
 
     def test_component_execution_counts_for_mechanisms_in_composition(self):
 
@@ -56,17 +60,17 @@ class TestComponent:
         c.run(input_dict)
         assert T2.current_execution_count == 1
         assert T2.input_state.current_execution_count == 1
-        assert T2.parameter_states[pnl.SLOPE].current_execution_count == 1
-        assert T2.output_state.current_execution_count == 1
+        assert T2.parameter_states[pnl.SLOPE].current_execution_count == 0
+        assert T2.output_state.current_execution_count == 0
 
         c.run(input_dict)
         assert T2.current_execution_count == 2
         assert T2.input_state.current_execution_count == 2
-        assert T2.parameter_states[pnl.SLOPE].current_execution_count == 2
-        assert T2.output_state.current_execution_count == 2
+        assert T2.parameter_states[pnl.SLOPE].current_execution_count == 0
+        assert T2.output_state.current_execution_count == 0
 
         c.run(input_dict)
         assert T2.current_execution_count == 3
         assert T2.input_state.current_execution_count == 3
-        assert T2.parameter_states[pnl.SLOPE].current_execution_count == 3
-        assert T2.output_state.current_execution_count == 3
+        assert T2.parameter_states[pnl.SLOPE].current_execution_count == 0
+        assert T2.output_state.current_execution_count == 0

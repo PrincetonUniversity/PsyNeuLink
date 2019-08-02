@@ -2084,7 +2084,21 @@ class State_Base(State):
         except (KeyError, TypeError):
             function_params = None
 
-        value = self.execute(execution_id=execution_id, runtime_params=function_params, context=context)
+        if (
+            len(self.all_afferents) == 0
+            and self.function._is_identity(execution_id)
+            and function_params is None
+        ):
+            variable = self._parse_function_variable(self._get_fallback_variable(execution_id))
+            self.parameters.variable._set(variable, execution_id)
+            # below conversion really should not be happening ultimately, but it is
+            # in _validate_variable. Should be removed eventually
+            variable = convert_to_np_array(variable, 1)
+            self.parameters.value._set(variable, execution_id)
+            self.most_recent_execution_id = execution_id
+            self.function.most_recent_execution_id = execution_id
+        else:
+            self.execute(execution_id=execution_id, runtime_params=function_params, context=context)
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         if variable is None:
