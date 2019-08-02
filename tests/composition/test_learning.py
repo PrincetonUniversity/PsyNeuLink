@@ -322,7 +322,7 @@ class TestNestedLearning:
         model.add_projection(sender=rl_agent_action, receiver=action)
         model.add_projection(sender=rl_agent, receiver=action)
 
-        model.show_graph(show_controller=True, show_nested=True, show_node_structure=True)
+        # model.show_graph(show_controller=True, show_nested=True, show_node_structure=True)
 
         stimuli = {stim_in: np.array([1] * stim_size),
                    context_in: np.array([10] * context_size)}
@@ -590,11 +590,12 @@ class TestBackProp:
         'CROSS',
         'Y UP AND DOWN',
         'BRANCH DOWN',
-        # 'EXTEND DOWN',
+        'EXTEND DOWN',
         'BOW',
         'COMPLEX'
+        'JOIN BY TERMINAL'
     ])
-    def test_backprop_with_various_intersecting_pathway_configurations(self, configuration):
+    def test_backprop_with_various_intersecting_pathway_configurations(self, configuration, show_graph=True):
         '''Test add_backpropgation using various configuration of intersecting pathways
 
         References in description are to attachment point of added pathway (always A)
@@ -617,10 +618,11 @@ class TestBackProp:
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            comp = pnl.Composition(name='Y UP')
+            comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[A,D,E])
             comp.add_backpropagation_pathway(pathway=[A,B,C])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'BRANCH UP' == configuration:
@@ -640,10 +642,11 @@ class TestBackProp:
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            comp = pnl.Composition(name='BRANCH UP')
+            comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[D,B,E])
             comp.add_backpropagation_pathway(pathway=[A,B,C])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'EXTEND UP' == configuration:
@@ -665,10 +668,11 @@ class TestBackProp:
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            comp = pnl.Composition(name='EXTEND UP')
+            comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[D,E,A])
             comp.add_backpropagation_pathway(pathway=[A,B,C])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'EXTEND DOWN BRANCH UP' == configuration:
@@ -686,10 +690,11 @@ class TestBackProp:
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            comp = pnl.Composition(name='EXTEND DOWN BRANCH UP')
+            comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[A,D])
             comp.add_backpropagation_pathway(pathway=[B,A,C])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'CROSS' == configuration:
@@ -707,10 +712,11 @@ class TestBackProp:
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            comp = pnl.Composition(name='Y CROSS')
+            comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[D,A,E])
-            comp.add_backpropagation_pathway(pathway=[A,B,C])
-            # comp.show_graph(show_learning=True)
+            comp.add_backpropagation_pathway(pathway=[B,A,C])
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'Y UP AND DOWN' == configuration:
@@ -728,10 +734,11 @@ class TestBackProp:
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            comp = pnl.Composition(name='EXTEND UP AND DOWN')
+            comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[D,A])
             comp.add_backpropagation_pathway(pathway=[B,A,C])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'BRANCH DOWN' == configuration:
@@ -749,10 +756,11 @@ class TestBackProp:
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            comp = pnl.Composition(name='BRANCH DOWN')
+            comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[C,A,D])
             comp.add_backpropagation_pathway(pathway=[B,A])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'EXTEND DOWN' == configuration:
@@ -770,10 +778,11 @@ class TestBackProp:
             C = pnl.ProcessingMechanism(name='C')
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
-            comp = pnl.Composition(name='EXTEND DOWN')
+            comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[D,E,A])
             comp.add_backpropagation_pathway(pathway=[C,B,A])
-            # comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'BOW' == configuration:
@@ -796,10 +805,11 @@ class TestBackProp:
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
             F = pnl.ProcessingMechanism(name='F')
-            comp = pnl.Composition(name='BOW')
+            comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[E,A,B,C])
             comp.add_backpropagation_pathway(pathway=[A,D,C,F])
-            comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
         if 'COMPLEX' == configuration:
@@ -823,22 +833,48 @@ class TestBackProp:
             G = pnl.ProcessingMechanism(name='G')
             H = pnl.ProcessingMechanism(name='H')
             I = pnl.ProcessingMechanism(name='I')
-            comp = pnl.Composition(name='COMPLEX')
+            comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_pathway(pathway=[D,A])
             comp.add_backpropagation_pathway(pathway=[B,A,C])
             comp.add_backpropagation_pathway(pathway=[E,B,F])
             comp.add_backpropagation_pathway(pathway=[H,D,G,I])
-            comp.show_graph(show_learning=True)
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
 
+        if 'JOIN BY TERMINAL' == configuration:
+            # 8) Last mech is already a terminal (EXTEND DOWN)
+            #
+            #        A     F   A
+            #       /     /     \
+            #      E  +  B   +   B
+            #     /       \
+            #    D         C
+            #
+            pnl.clear_registry(pnl.MechanismRegistry)
+            A = pnl.ProcessingMechanism(name='A')
+            B = pnl.ProcessingMechanism(name='B')
+            C = pnl.ProcessingMechanism(name='C')
+            D = pnl.ProcessingMechanism(name='D')
+            E = pnl.ProcessingMechanism(name='E')
+            F = pnl.ProcessingMechanism(name='F')
+            comp = pnl.Composition(name=configuration)
+            comp.add_backpropagation_pathway(pathway=[D,E,A])
+            comp.add_backpropagation_pathway(pathway=[C,B,F])
+            comp.add_backpropagation_pathway(pathway=[B,A])
+            if show_graph == True:
+                comp.show_graph(show_learning=True)
+            print(f'Completed configuration: {configuration}')
+
+
     @pytest.mark.parametrize('order', [
-        # 'color_full',
-        # 'word_partial',
+        'color_full',
+        'word_partial',
         'word_full',
         'full_overlap'
     ])
     def test_stroop_model_learning(self, order):
-        '''Test backpropagation learning for simple convergent/overlapping pathways'''
+        """Test backpropagation learning for simple convergent/overlapping pathways"""
 
         # CONSTRUCT MODEL ---------------------------------------------------------------------------
 
@@ -880,7 +916,8 @@ class TestBackProp:
             word_pathway = [word_comp,
                             word_to_hidden_wts.copy(),
                             hidden_comp,
-                            response_comp
+                            # FIX: CROSSED_PATHWAYS 7/28/19 [JDC]: THE FOLLOWING LINES CRASHES:
+                            # response_comp
                             ]
         elif order == 'full_overlap':
             color_pathway = [color_comp,

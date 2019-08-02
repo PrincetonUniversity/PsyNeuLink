@@ -58,7 +58,8 @@ Stroop_model.scheduler_processing.add_condition(decision, EveryNCalls(output, 1)
 
 # SHOW_GRAPH ***********************************
 Stroop_model.show_graph(show_controller=True,
-                        show_node_structure=ALL)
+                        # show_node_structure=ALL
+                        )
 
 # RUN THE MODEL *********************************
 
@@ -87,7 +88,6 @@ task.log.set_log_conditions(VALUE)
 control.log.set_log_conditions(VALUE)
 
 task.initial_value = [0.5,0.5]
-task.reinitialize_when=AtTrialStart()
 num_trials = 5
 stimuli = {color_input:[red]*num_trials,
            word_input:[green]*num_trials,
