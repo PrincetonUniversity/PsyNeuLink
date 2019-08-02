@@ -594,6 +594,7 @@ KWTA_MECHANISM = "KWTAMechanism"
 INTEGRATOR_MECHANISM = "IntegratorMechanism"
 DDM_MECHANISM = "DDM"
 COMPOSITION_INTERFACE_MECHANISM = "CompositionInterfaceMechanism"
+PARAMETER_INTERFACE_MECHANISM = "ParameterInterfaceMechanism"
 PROCESSING_MECHANISM = "ProcessingMechanism"
 
 # Functions:
