@@ -471,7 +471,13 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
 
 
 def _setup_mt_rand_normal(ctx, state_ty, gen_float):
-    # Generate random float from Normal distribution generator
+    """
+    Generate random float from Normal distribution generator.
+
+    The implementation uses polar method [0], same as CPython and Numpy.
+    The range is -Inf to Inf.
+    [0] https://en.wikipedia.org/wiki/Marsaglia_polar_method
+    """
     gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
     gen_normal = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_normal")
     gen_normal.attributes.add('argmemonly')
@@ -505,19 +511,18 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
     builder.position_at_end(loop_block)
     tmp = builder.alloca(out.type.pointee)
 
-    # X1
+    # X1 is in (-1, 1)
     builder.call(gen_float, [state, tmp])
     x1 = builder.load(tmp)
     x1 = builder.fmul(x1, ctx.float_ty(2.0))
     x1 = builder.fsub(x1, ctx.float_ty(1.0))
 
-    # x2
+    # x2 is in (-1, 1)
     builder.call(gen_float, [state, tmp])
     x2 = builder.load(tmp)
     x2 = builder.fmul(x2, ctx.float_ty(2.0))
     x2 = builder.fsub(x2, ctx.float_ty(1.0))
 
-    # r2
     r2 = builder.fmul(x1, x1)
     r2 = builder.fadd(r2, builder.fmul(x2, x2))
 
