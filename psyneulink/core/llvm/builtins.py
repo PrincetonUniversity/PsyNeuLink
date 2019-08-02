@@ -414,6 +414,14 @@ def _setup_mt_rand_integer(ctx, state_ty):
 
 
 def _setup_mt_rand_float(ctx, state_ty, gen_int):
+    """
+    Mersenne Twister double prcision random number generation.
+
+    LLVM IR implementation of the MT19937 algorithm from [0],
+    also used by CPython and numpy.
+
+    [0] http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/CODES/mt19937ar.c
+    """
     # Generate random float number generator function
     gen_ty = ir.FunctionType(ir.VoidType(), (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
     gen_float = ir.Function(ctx.module, gen_ty, name="__pnl_builtin_mt_rand_double")
@@ -438,15 +446,24 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     a = builder.load(al)
     b = builder.load(bl)
 
-    a = builder.lshr(a, a.type(5))
-    b = builder.lshr(b, b.type(6))
+    a = builder.lshr(a, a.type(5)) # 27bit random value
+    b = builder.lshr(b, b.type(6)) # 26bit random value
 
     af = builder.uitofp(a, ctx.float_ty)
     bf = builder.uitofp(b, ctx.float_ty)
 
-    val = builder.fmul(af, ctx.float_ty(67108864.0))
-    val = builder.fadd(val, bf)
-    val = builder.fdiv(val, ctx.float_ty(9007199254740992.0))
+    # NOTE: The combination below could be implemented using bit ops,
+    # but due to floating point rounding it'd give slightly different
+    # random numbers
+    val = builder.fmul(af, ctx.float_ty(67108864.0))          # Shift left 26
+    val = builder.fadd(val, bf)                               # Combine
+    val = builder.fdiv(val, ctx.float_ty(9007199254740992.0)) # Scale
+
+    # The value is in interval [0,1)
+    lower_bound = builder.fcmp_unordered(">=", val, val.type(0.0))
+    builder.assume(lower_bound)
+    upper_bound = builder.fcmp_unordered("<", val, val.type(1.0))
+    builder.assume(upper_bound)
 
     builder.store(val, out)
     builder.ret_void()
