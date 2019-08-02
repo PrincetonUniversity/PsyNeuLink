@@ -3147,7 +3147,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if visited_compositions is NotImplemented:
             visited_compositions = [self]
         for node in self.nodes:
-            if node.componentType == 'Composition':
+            if node.componentType == 'Composition' and \
+                    node not in visited_compositions:
                 nested_compositions.append(node)
                 visited_compositions.append(node)
                 node._get_nested_compositions(nested_compositions,
