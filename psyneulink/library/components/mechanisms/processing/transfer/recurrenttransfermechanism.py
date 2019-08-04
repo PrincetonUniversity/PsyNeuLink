@@ -239,7 +239,6 @@ class RecurrentTransferError(Exception):
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class RECURRENT_OUTPUT():
-
     """
         .. _RecurrentTransferMechanism_Standard_OutputStates:
 
