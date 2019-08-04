@@ -990,9 +990,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         val = builder.fmul(val, gain)
         val = builder.fsub(offset, val)
         val = builder.call(exp_f, [val])
-        val = builder.fmul(val, scale)
         val = builder.fadd(ctx.float_ty(1), val)
         val = builder.fdiv(ctx.float_ty(1), val)
+        val = builder.fmul(val, scale)
 
         builder.store(val, ptro)
 
