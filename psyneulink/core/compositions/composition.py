@@ -4586,7 +4586,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    color=proj_color, penwidth=proj_width)
 
         def _assign_controller_components(g):
-            """Assign control nodes and edges to graph """
+            """Assign control nodes and edges to graph"""
 
             controller = self.controller
             if controller is None:

@@ -2294,10 +2294,9 @@ class Process(Process_Base):
 
     def _execute_learning(self, execution_id=None, target=None, context=None):
 
-        """ Update each LearningProjection for mechanisms in _mechs of process
+        """Update each LearningProjection for mechanisms in _mechs of process
 
         # Begin with Projection(s) to last Mechanism in _mechs, and work backwards
-
         """
 
         # FIRST, assign targets

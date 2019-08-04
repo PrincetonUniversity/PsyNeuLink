@@ -4057,7 +4057,7 @@ class System(System_Base):
         def _assign_processing_components(G, sg, rcvr,
                                           processes:tc.optional(list)=None,
                                           subgraphs:tc.optional(dict)=None):
-            """Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** """
+            """Assign nodes to graph, or subgraph for rcvr in any of the specified **processes**."""
 
             from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
@@ -4540,7 +4540,7 @@ class System(System_Base):
             return True
 
         def _assign_control_components(G, sg, show_prediction_mechanisms):
-            """Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** """
+            """Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes**."""
 
             controller = self.controller
             if controller in active_items:
