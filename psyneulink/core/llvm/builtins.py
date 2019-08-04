@@ -33,7 +33,6 @@ def setup_vxm(ctx):
         a.attributes.add('nonnull')
         a.attributes.add('noalias')
 
-    index = None
     # zero the output array
     with helpers.for_loop_zero_inc(builder, y, "zero") as (builder, index):
         ptr = builder.gep(o, [index])
