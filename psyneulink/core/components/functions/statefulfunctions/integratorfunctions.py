@@ -1788,7 +1788,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         return value + offset
 
     def reinitialize(self, short=None, long=None, execution_context=NotImplemented):
-
         """
         Effectively begins accumulation over again at the specified utilities.
 

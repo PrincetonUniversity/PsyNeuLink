@@ -1135,7 +1135,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  name=None,
                  prefs: is_pref_set=None,
                  **kwargs):
-
         """Instantiate ContrastiveHebbianMechanism
         """
 

@@ -3061,7 +3061,6 @@ class Mechanism_Base(Mechanism):
         @tc.typecheck
         def state_table(state_list:ContentAddressableList,
                         state_type:tc.enum(InputState, ParameterState, OutputState)):
-
             """Return html with table for each state in state_list, including functions and/or values as specified
 
             Each table has a header cell and and inner table with cells for each state in the list

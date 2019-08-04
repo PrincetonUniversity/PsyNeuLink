@@ -3401,7 +3401,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.required_node_roles.remove(node_role_pair)
 
     def _create_CIM_states(self, context=None):
-
         """
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
               InputStates and OutputStates are being added to the CIMs
@@ -5742,7 +5741,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_id=None,
             base_execution_id=None,
             context=None):
-
         """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.  See `Run` for details of formatting input specifications. See `Run` for details of
         formatting input specifications. Use **animate** to generate a gif of the execution sequence.

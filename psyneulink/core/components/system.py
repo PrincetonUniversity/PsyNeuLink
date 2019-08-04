@@ -3096,7 +3096,6 @@ class System(System_Base):
             base_execution_id=None,
             animate=False,
             context=None):
-
         """Run a sequence of executions
 
         Call execute method for each execution in a sequence specified by inputs.  See :doc:`Run` for details of

@@ -569,7 +569,6 @@ def _get_context(context:tc.any(ContextFlags, str)):
 
 
 def _get_time(component, context_flags, execution_id=None):
-
     """Get time from Scheduler of System in which Component is being executed.
 
     Returns tuple with (run, trial, time_step) if being executed during Processing or Learning

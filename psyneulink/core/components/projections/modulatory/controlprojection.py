@@ -355,7 +355,6 @@ class ControlProjection(ModulatoryProjection_Base):
                                                 **kwargs)
 
     def _instantiate_sender(self, sender, params=None, context=None):
-
         """Check if DefaultController is being assigned and if so configure it for the requested ControlProjection
 
         If self.sender is a Mechanism, re-assign to <Mechanism>.outputState
