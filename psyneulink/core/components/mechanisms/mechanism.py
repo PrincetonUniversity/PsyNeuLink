@@ -3000,7 +3000,8 @@ class Mechanism_Base(Mechanism):
 
         def mech_cell():
             """Return html with name of Mechanism, possibly with function and/or value
-            Inclusion of roles, function and/or value is determined by arguments of call to show_structure()"""
+            Inclusion of roles, function and/or value is determined by arguments of call to show_structure()
+            """
             header = ''
             if show_headers:
                 header = mech_header

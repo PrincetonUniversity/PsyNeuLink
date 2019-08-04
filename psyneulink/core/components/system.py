@@ -516,7 +516,8 @@ kwSystemInputState = 'SystemInputState'
 
 class MonitoredOutputStatesOption(AutoNumber):
     """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
-    (see `ObjectiveMechanism_Monitor` for a more complete description of their meanings."""
+    (see `ObjectiveMechanism_Monitor` for a more complete description of their meanings.
+    """
     ONLY_SPECIFIED_OUTPUT_STATES = ()
     """Only monitor explicitly specified Outputstates."""
     PRIMARY_OUTPUT_STATES = ()

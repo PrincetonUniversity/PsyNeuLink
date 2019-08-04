@@ -328,7 +328,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
     def _EWMA_filter(self, previous_value, rate, variable):
         """Return `exponentially weighted moving average (EWMA)
-        <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of a variable"""
+        <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of a variable.
+        """
         return (1 - rate) * previous_value + rate * variable
 
     def _logistic(self, variable, gain, bias):

@@ -3042,7 +3042,8 @@ class Component(object, metaclass=ComponentsMeta):
     @property
     def current_execution_count(self):
         """Maintains a simple count of executions over the life of the Component,
-        Incremented in the Component's execute method by call to self._increment_execution_count"""
+        Incremented in the Component's execute method by call to self._increment_execution_count
+        """
         try:
             return self._current_execution_count
         except:

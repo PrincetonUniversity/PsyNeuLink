@@ -3096,7 +3096,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
             all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
             may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry of the
-            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead. """
+            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
+        """
         for node in q[0]:
             self._add_node_role(node, NodeRole.ORIGIN)
 
@@ -3116,7 +3117,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         :return
 
-        A list of tuples in format (node, composition) containing all nodes of all nested compositions."""
+        A list of tuples in format (node, composition) containing all nodes of all nested compositions.
+        """
         if nested_nodes is NotImplemented:
             nested_nodes=[]
         if root_composition is NotImplemented:
@@ -3141,7 +3143,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         :return
 
-        A list of nested compositions."""
+        A list of nested compositions.
+        """
         if nested_compositions is NotImplemented:
             nested_compositions=[]
         if visited_compositions is NotImplemented:
@@ -3883,7 +3886,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         def mech_string(mech):
             """Return string with name of mechanism possibly with function and/or value
-            Inclusion of role, function and/or value is determined by arguments of call to show_structure """
+            Inclusion of role, function and/or value is determined by arguments of call to show_structure
+            """
             if show_headers:
                 mech_header = mechanism_header
             else:
@@ -6638,7 +6642,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            `controller <Composition.controller>` in order to return the
            `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
            `controller <Composition.controller>` under that control_allocation. All values are
-           reset to pre-simulation values at the end of the simulation. """
+           reset to pre-simulation values at the end of the simulation.
+        """
         # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
         total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
 

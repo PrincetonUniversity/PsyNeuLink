@@ -476,7 +476,8 @@ class BayesGLM(LearningFunction):
     def initialize_priors(self):
         """Set the prior parameters (`mu_prior <BayesGLM.mu_prior>`, `Lamba_prior <BayesGLM.Lambda_prior>`,
         `gamma_shape_prior <BayesGLM.gamma_shape_prior>`, and `gamma_size_prior <BayesGLM.gamma_size_prior>`)
-        to their initial (_0) values, and assign current (_n) values to the priors"""
+        to their initial (_0) values, and assign current (_n) values to the priors
+        """
 
         variable = np.array(self.defaults.variable)
         variable = self.defaults.variable
@@ -605,7 +606,8 @@ class BayesGLM(LearningFunction):
     def sample_weights(self, gamma_shape_n, gamma_size_n, mu_n, Lambda_n):
         """Draw a sample of prediction weights from the distributions parameterized by `mu_n <BayesGLM.mu_n>`,
         `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`, and `gamma_size_n
-        <BayesGLM.gamma_size_n>`."""
+        <BayesGLM.gamma_size_n>`.
+        """
         phi = np.random.gamma(gamma_shape_n / 2, gamma_size_n / 2)
         return np.random.multivariate_normal(mu_n.reshape(-1,), phi * np.linalg.inv(Lambda_n))
 
@@ -709,7 +711,8 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         `Mechanism <Mechanism>` to which the Function belongs.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
 
     componentName = KOHONEN_FUNCTION
 
@@ -988,7 +991,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         `Mechanism <Mechanism>` to which the Function belongs.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
 
     componentName = HEBBIAN_FUNCTION
 
@@ -1225,7 +1229,8 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         `Mechanism <Mechanism>` to which the Function belongs.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
 
     componentName = CONTRASTIVE_HEBBIAN_FUNCTION
 
@@ -1491,7 +1496,8 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         `Mechanism <Mechanism>` to which the Function belongs.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
 
     componentName = RL_FUNCTION
 

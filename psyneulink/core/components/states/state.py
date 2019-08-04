@@ -1173,7 +1173,8 @@ class State_Base(State):
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a State
-            is generally 1D, rather than 2D as in the case of Mechanisms"""
+            is generally 1D, rather than 2D as in the case of Mechanisms
+        """
         if size is not NotImplemented:
 
             def checkAndCastInt(x):

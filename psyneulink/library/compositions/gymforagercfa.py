@@ -126,7 +126,8 @@ class GymForagerCFA(CompositionFunctionApproximator):
 
     def adapt(self, feature_values, control_allocation, net_outcome, execution_id=None):
         """Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
-        **net_outcome** from **feature_values** and **control_allocation**."""
+        **net_outcome** from **feature_values** and **control_allocation**.
+        """
         prediction_vector = self.parameters.prediction_vector._get(execution_id)
         previous_state = self.parameters.previous_state._get(execution_id)
 
