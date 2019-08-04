@@ -432,6 +432,7 @@ class LLVMBuilderContext:
 
         if "force_runs" in debug_env:
             num = int(debug_env["force_runs"]) if debug_env["force_runs"] else 1
+            print("Forcing number of runs to: ", num)
             runs_ptr = builder.alloca(runs_ptr.type.pointee)
             builder.store(runs_ptr.type.pointee(num), runs_ptr)
 
