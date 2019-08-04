@@ -908,11 +908,11 @@ class Distance(ObjectiveFunction):
         fabs = ctx.get_builtin("fabs", [ctx.float_ty])
         diff = builder.call(fabs, [diff])
 
+        # Get maximum
         old_max = builder.load(max_diff_ptr)
-        # Maxnum for some reason needs full function prototype
         fmax = ctx.get_builtin("maxnum", [ctx.float_ty])
-
         max_diff = builder.call(fmax, [diff, old_max])
+
         builder.store(max_diff, max_diff_ptr)
 
     def __gen_llvm_pearson(self, builder, index, ctx, v1, v2, acc_x, acc_y, acc_xy, acc_x2, acc_y2):
