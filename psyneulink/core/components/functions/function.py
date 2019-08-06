@@ -897,6 +897,12 @@ class Function_Base(Function):
     def _get_param_initializer(self, execution_id):
         return pnlvm._tupleize(self._get_param_values(execution_id))
 
+    def _is_identity(self, execution_id=None):
+        # should return True in subclasses if the parameters for execution_id are such that
+        # the Function's output will be the same as its input
+        # Used to bypass execute when unnecessary
+        return False
+
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
 PROPENSITY = "PROPENSITY"

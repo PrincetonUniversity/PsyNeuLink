@@ -1253,21 +1253,21 @@ class OutputState(State_Base):
         return state_spec, params_dict
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        if variable is None:
-            # fall back to specified item(s) of owner's value
-            try:
-                variable = self.parameters.variable._get(execution_id)
-            except ComponentError:
-                variable = None
-
         value = super()._execute(
             variable=variable,
             execution_id=execution_id,
             runtime_params=runtime_params,
             context=context,
         )
-
         return np.atleast_1d(value)
+
+    def _get_fallback_variable(self, execution_id=None):
+        # fall back to specified item(s) of owner's value
+        try:
+            return self.parameters.variable._get(execution_id)
+        except ComponentError:
+            # KDM 8/2/19: double check the relevance of this branch
+            return None
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
