@@ -1697,7 +1697,7 @@ class StandardOutputStates():
     #     return [item[INDEX] for item in self.data]
 
 def _parse_output_state_function(owner, output_state_name, function, params_dict_as_variable=False):
-    """ Parse specification of function as Function, Function class, Function.function, function_type or method_type.
+    """Parse specification of function as Function, Function class, Function.function, function_type or method_type.
 
     If params_dict_as_variable is True, and function is a Function, check whether it allows params_dict as variable;
     if it is and does, leave as is,

@@ -1165,7 +1165,6 @@ def _parse_projection_spec(projection_spec,
                            state_type = None,  # Used only for default assignment
                            # socket=None,
                            **kwargs):
-
     """Return either Projection object or Projection specification dict for projection_spec
 
     All keys in kwargs must be from PROJECTION_ARGS
@@ -1729,7 +1728,6 @@ def _validate_connection_request(
         projection_spec:_is_projection_spec,     # projection specification
         projection_socket:str,                   # socket of Projection to be connected to target state
         connectee_state:tc.optional(type)=None): # State for which connection is being sought
-
     """Validate that a Projection specification is compatible with the State to which a connection is specified
 
     Carries out undirected validation (i.e., without knowing whether the connectee is the sender or receiver).

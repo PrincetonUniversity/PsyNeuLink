@@ -401,7 +401,8 @@ VECTOR='VECTOR'
 
 def decision_variable_to_array(x):
     """Generate "one-hot" 1d array designating selected action from DDM's scalar decision variable
-    (used to generate value of OutputState for action_selection Mechanism"""
+    (used to generate value of OutputState for action_selection Mechanism
+    """
     if x >= 0:
         return [x,0]
     else:

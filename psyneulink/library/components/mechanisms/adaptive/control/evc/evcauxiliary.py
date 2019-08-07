@@ -942,7 +942,7 @@ class PredictionMechanism(IntegratorMechanism):
                 prefs=prefs)
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        """Update predicted value on "real" but not simulation runs """
+        """Update predicted value on "real" but not simulation runs"""
 
         if self.parameters.context._get(execution_id).execution_phase == ContextFlags.SIMULATION:
             # Just return current value for simulation runs

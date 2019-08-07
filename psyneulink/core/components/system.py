@@ -516,7 +516,8 @@ kwSystemInputState = 'SystemInputState'
 
 class MonitoredOutputStatesOption(AutoNumber):
     """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
-    (see `ObjectiveMechanism_Monitor` for a more complete description of their meanings."""
+    (see `ObjectiveMechanism_Monitor` for a more complete description of their meanings.
+    """
     ONLY_SPECIFIED_OUTPUT_STATES = ()
     """Only monitor explicitly specified Outputstates."""
     PRIMARY_OUTPUT_STATES = ()
@@ -3095,7 +3096,6 @@ class System(System_Base):
             base_execution_id=None,
             animate=False,
             context=None):
-
         """Run a sequence of executions
 
         Call execute method for each execution in a sequence specified by inputs.  See :doc:`Run` for details of
@@ -4056,7 +4056,7 @@ class System(System_Base):
         def _assign_processing_components(G, sg, rcvr,
                                           processes:tc.optional(list)=None,
                                           subgraphs:tc.optional(dict)=None):
-            """Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** """
+            """Assign nodes to graph, or subgraph for rcvr in any of the specified **processes**."""
 
             from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
@@ -4539,7 +4539,7 @@ class System(System_Base):
             return True
 
         def _assign_control_components(G, sg, show_prediction_mechanisms):
-            """Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** """
+            """Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes**."""
 
             controller = self.controller
             if controller in active_items:
