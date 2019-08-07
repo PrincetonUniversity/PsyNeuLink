@@ -534,6 +534,12 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         return self.get_current_function_param(SLOPE, execution_id)
 
+    def _is_identity(self, execution_id=None):
+        return (
+            self.parameters.slope._get(execution_id) == 1
+            and self.parameters.intercept._get(execution_id) == 0
+        )
+
 
 class Exponential(TransferFunction):  # --------------------------------------------------------------------------------
     """

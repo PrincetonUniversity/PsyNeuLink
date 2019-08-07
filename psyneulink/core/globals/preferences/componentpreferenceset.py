@@ -116,7 +116,6 @@ def is_pref_set(pref):
 class ComponentPreferenceSet(PreferenceSet):
     # DOCUMENT: FOR EACH pref TO BE ACCESSIBLE DIRECTLY AS AN ATTRIBUTE OF AN OBJECT,
     #           MUST IMPLEMENT IT AS PROPERTY (WITH GETTER AND SETTER METHODS) IN FUNCTION MODULE
-
     """Implement and manage PreferenceSets for Component class hierarchy
 
     Description:

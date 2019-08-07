@@ -842,7 +842,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self._initialize_composition_function_approximator()
 
     def _update_input_states(self, execution_id=None, runtime_params=None, context=None):
-        """ Update value for each InputState in self.input_states:
+        """Update value for each InputState in self.input_states:
 
         Call execute method for all (MappingProjection) Projections in InputState.path_afferents
         Aggregate results (using InputState execute method)
