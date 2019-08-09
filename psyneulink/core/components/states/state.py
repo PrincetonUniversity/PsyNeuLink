@@ -729,6 +729,7 @@ Class Reference
 
 """
 
+import abc
 import inspect
 import itertools
 import numbers
@@ -1173,7 +1174,8 @@ class State_Base(State):
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a State
-            is generally 1D, rather than 2D as in the case of Mechanisms"""
+            is generally 1D, rather than 2D as in the case of Mechanisms
+        """
         if size is not NotImplemented:
 
             def checkAndCastInt(x):
@@ -2083,7 +2085,45 @@ class State_Base(State):
         except (KeyError, TypeError):
             function_params = None
 
-        value = self.execute(execution_id=execution_id, runtime_params=function_params, context=context)
+        if (
+            len(self.all_afferents) == 0
+            and self.function._is_identity(execution_id)
+            and function_params is None
+        ):
+            variable = self._parse_function_variable(self._get_fallback_variable(execution_id))
+            self.parameters.variable._set(variable, execution_id)
+            # below conversion really should not be happening ultimately, but it is
+            # in _validate_variable. Should be removed eventually
+            variable = convert_to_np_array(variable, 1)
+            self.parameters.value._set(variable, execution_id)
+            self.most_recent_execution_id = execution_id
+            self.function.most_recent_execution_id = execution_id
+        else:
+            self.execute(execution_id=execution_id, runtime_params=function_params, context=context)
+
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+        if variable is None:
+            variable = self._get_fallback_variable(execution_id)
+
+            # if the fallback is also None
+            # return None, so that this state is ignored
+            # KDM 8/2/19: double check the relevance of this branch
+            if variable is None:
+                return None
+
+        return super()._execute(
+            variable,
+            execution_id=execution_id,
+            runtime_params=runtime_params,
+            context=context
+        )
+
+    @abc.abstractmethod
+    def _get_fallback_variable(self, execution_id=None):
+        """
+            Returns a variable to be used for self.execute when the variable passed in is None
+        """
+        pass
 
     def _get_value_label(self, labels_dict, all_states, execution_context=None):
         subdicts = False
@@ -2583,7 +2623,6 @@ def _parse_state_spec(state_type=None,
                       prefs=None,
                       context=None,
                       **state_spec):
-
     """Parse State specification and return either State object or State specification dictionary
 
     If state_spec is or resolves to a State object, returns State object.

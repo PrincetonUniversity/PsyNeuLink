@@ -1253,21 +1253,21 @@ class OutputState(State_Base):
         return state_spec, params_dict
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        if variable is None:
-            # fall back to specified item(s) of owner's value
-            try:
-                variable = self.parameters.variable._get(execution_id)
-            except ComponentError:
-                variable = None
-
         value = super()._execute(
             variable=variable,
             execution_id=execution_id,
             runtime_params=runtime_params,
             context=context,
         )
-
         return np.atleast_1d(value)
+
+    def _get_fallback_variable(self, execution_id=None):
+        # fall back to specified item(s) of owner's value
+        try:
+            return self.parameters.variable._get(execution_id)
+        except ComponentError:
+            # KDM 8/2/19: double check the relevance of this branch
+            return None
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
@@ -1697,7 +1697,7 @@ class StandardOutputStates():
     #     return [item[INDEX] for item in self.data]
 
 def _parse_output_state_function(owner, output_state_name, function, params_dict_as_variable=False):
-    """ Parse specification of function as Function, Function class, Function.function, function_type or method_type.
+    """Parse specification of function as Function, Function class, Function.function, function_type or method_type.
 
     If params_dict_as_variable is True, and function is a Function, check whether it allows params_dict as variable;
     if it is and does, leave as is,

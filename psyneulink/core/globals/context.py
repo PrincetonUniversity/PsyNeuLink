@@ -452,7 +452,7 @@ class Context():
 
     @initialization_status.setter
     def initialization_status(self, flag):
-        """Check that a flag is one and only one status flag """
+        """Check that a flag is one and only one status flag"""
         flag &= ContextFlags.INITIALIZATION_MASK
         if flag in INITIALIZATION_STATUS_FLAGS:
             self.flags &= ContextFlags.UNINITIALIZED
@@ -478,7 +478,7 @@ class Context():
 
     @execution_phase.setter
     def execution_phase(self, flag):
-        """Check that a flag is one and only one execution_phase flag """
+        """Check that a flag is one and only one execution_phase flag"""
         if flag in EXECUTION_PHASE_FLAGS:
             # self.flags |= flag
             self.flags &= ContextFlags.IDLE
@@ -501,7 +501,7 @@ class Context():
 
     @source.setter
     def source(self, flag):
-        """Check that a flag is one and only one source flag """
+        """Check that a flag is one and only one source flag"""
         if flag in SOURCE_FLAGS:
             self.flags &= ContextFlags.NONE
             self.flags |= flag
@@ -569,7 +569,6 @@ def _get_context(context:tc.any(ContextFlags, str)):
 
 
 def _get_time(component, context_flags, execution_id=None):
-
     """Get time from Scheduler of System in which Component is being executed.
 
     Returns tuple with (run, trial, time_step) if being executed during Processing or Learning

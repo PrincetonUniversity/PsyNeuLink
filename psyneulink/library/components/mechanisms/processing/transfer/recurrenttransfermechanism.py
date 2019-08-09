@@ -239,7 +239,6 @@ class RecurrentTransferError(Exception):
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class RECURRENT_OUTPUT():
-
     """
         .. _RecurrentTransferMechanism_Standard_OutputStates:
 
@@ -1123,7 +1122,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # FIX: validate learning_function and learning_rate here (use Hebbian as template for learning_rate
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        """ using the `matrix` argument the user passed in (which is now stored in function_params), instantiate
+        """using the `matrix` argument the user passed in (which is now stored in function_params), instantiate
         ParameterStates for auto and hetero if they haven't already been instantiated. This is useful if auto and
         hetero were None in the initialization call.
         :param function:

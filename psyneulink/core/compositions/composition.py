@@ -3096,7 +3096,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
             all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
             may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry of the
-            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead. """
+            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
+        """
         for node in q[0]:
             self._add_node_role(node, NodeRole.ORIGIN)
 
@@ -3116,7 +3117,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         :return
 
-        A list of tuples in format (node, composition) containing all nodes of all nested compositions."""
+        A list of tuples in format (node, composition) containing all nodes of all nested compositions.
+        """
         if nested_nodes is NotImplemented:
             nested_nodes=[]
         if root_composition is NotImplemented:
@@ -3141,7 +3143,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         :return
 
-        A list of nested compositions."""
+        A list of nested compositions.
+        """
         if nested_compositions is NotImplemented:
             nested_compositions=[]
         if visited_compositions is NotImplemented:
@@ -3398,7 +3401,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.required_node_roles.remove(node_role_pair)
 
     def _create_CIM_states(self, context=None):
-
         """
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
               InputStates and OutputStates are being added to the CIMs
@@ -3883,7 +3885,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         def mech_string(mech):
             """Return string with name of mechanism possibly with function and/or value
-            Inclusion of role, function and/or value is determined by arguments of call to show_structure """
+            Inclusion of role, function and/or value is determined by arguments of call to show_structure
+            """
             if show_headers:
                 mech_header = mechanism_header
             else:
@@ -4582,7 +4585,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    color=proj_color, penwidth=proj_width)
 
         def _assign_controller_components(g):
-            """Assign control nodes and edges to graph """
+            """Assign control nodes and edges to graph"""
 
             controller = self.controller
             if controller is None:
@@ -5738,7 +5741,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_id=None,
             base_execution_id=None,
             context=None):
-
         """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.  See `Run` for details of formatting input specifications. See `Run` for details of
         formatting input specifications. Use **animate** to generate a gif of the execution sequence.
@@ -6645,7 +6647,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            `controller <Composition.controller>` in order to return the
            `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
            `controller <Composition.controller>` under that control_allocation. All values are
-           reset to pre-simulation values at the end of the simulation. """
+           reset to pre-simulation values at the end of the simulation.
+        """
         # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
         total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
 
