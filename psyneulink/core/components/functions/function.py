@@ -133,6 +133,7 @@ Class Reference
 
 """
 
+import abc
 import numbers
 import numpy as np
 import typecheck as tc
@@ -450,7 +451,6 @@ def get_param_value_for_function(owner, function):
 #         return convert_output_type(result)
 #     return wrapper
 
-
 class Function_Base(Function):
     """
     Function_Base(           \
@@ -623,6 +623,7 @@ class Function_Base(Function):
         FUNCTION_OUTPUT_TYPE: None  # Default is to not convert
     })
 
+    @abc.abstractmethod
     def __init__(self,
                  default_variable,
                  params,
@@ -644,9 +645,6 @@ class Function_Base(Function):
         :param name: (string) - optional, overrides assignment of default (componentName of subclass)
         :return:
         """
-
-        if context != ContextFlags.CONSTRUCTOR:
-            raise FunctionError("Direct call to abstract class Function() is not allowed; use a Function subclass")
 
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
@@ -694,6 +692,16 @@ class Function_Base(Function):
         self.most_recent_execution_id=execution_id
         self.parameters.value._set(value, execution_context=execution_id)
         return value
+
+    @abc.abstractmethod
+    def _function(
+        self,
+        variable=None,
+        execution_id=None,
+        params=None,
+        context=None
+    ):
+        pass
 
     def _parse_arg_generic(self, arg_val):
         if isinstance(arg_val, list):

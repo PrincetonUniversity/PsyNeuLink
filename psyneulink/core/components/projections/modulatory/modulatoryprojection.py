@@ -202,34 +202,6 @@ class ModulatoryProjection_Base(Projection_Base):
     """
     componentCategory = MODULATORY_PROJECTION
 
-    def __init__(self,
-                 receiver,
-                 sender=None,
-                 weight=None,
-                 exponent=None,
-                 function=None,
-                 params=None,
-                 name=None,
-                 prefs=None,
-                 context=None,
-                 **kwargs):
-
-        if context != ContextFlags.CONSTRUCTOR:
-            raise ModulatoryProjectionError(f"Direct call to abstract class {self.__name__} is not allowed; "
-                                            f"use projection() or one of the following subclasses: "
-                                            f"ControlProjection, GatingProjection, or LearingProjection.")
-
-        super().__init__(receiver=receiver,
-                         sender=sender,
-                         params=params,
-                         weight=weight,
-                         exponent=exponent,
-                         function=function,
-                         name=name,
-                         prefs=prefs,
-                         context=context,
-                         **kwargs)
-
     def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
 
         template = "{} for {}[{}]"

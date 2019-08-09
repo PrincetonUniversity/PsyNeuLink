@@ -68,19 +68,9 @@ COMMENT:
 
         Among other things, this is used to determine the source of call of a constructor (until someone
             proposes/implements a better method!).  This is used in several ways, for example:
-            a) to insure that any call to a _Base class is from a subclass constructor
-              rather than by the user from the command line (which is not allowed).
-            b) to determine whether an InputState or OutputState is being added as part of the construction process
+            a) to determine whether an InputState or OutputState is being added as part of the construction process
               (e.g., for LearningMechanism) or by the user from the command line (see Mechanism.add_states)
 
-        Application (a) above is implemented as follows:
-            * user-accessible subclasses do not implement a context argument in their constructors
-            * subclasses just below the _Base class call super().__init__() with context=ContextFlags.CONSTRUCTOR
-            * all lower sub-subclasses call super without context arg
-            * the constructor for all _Base classes checks that context==ContextFlags.CONSTRUCTOR
-              and assign self.context.source = context
-            * the constructor for all _Base classes do NOT pass a context arg to super (i.e., shellclasses or Component)
-              since Component.__init__() assigns context arg as CONSTRUCTOR for all of its calls
 COMMENT
 
 .. _Context_Class_Reference:

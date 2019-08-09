@@ -385,6 +385,7 @@ COMMENT
 .. _Projection_Class_Reference:
 
 """
+import abc
 import inspect
 import itertools
 import warnings
@@ -627,6 +628,7 @@ class Projection_Base(Projection):
     requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
     requiredParamClassDefaultTypes.update({PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
 
+    @abc.abstractmethod
     def __init__(self,
                  receiver,
                  sender=None,
@@ -687,11 +689,6 @@ class Projection_Base(Projection):
         """
         from psyneulink.core.components.states.parameterstate import ParameterState
         from psyneulink.core.components.states.state import State_Base
-
-        if context != ContextFlags.CONSTRUCTOR:
-            raise ProjectionError("Direct call to abstract class Projection() is not allowed; "
-                                 "use projection() or one of the following subclasses: {0}".
-                                 format(", ".join("{!s}".format(key) for (key) in ProjectionRegistry.keys())))
 
         params = self._assign_args_to_param_dicts(weight=weight,
                                                   exponent=exponent,

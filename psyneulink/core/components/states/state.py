@@ -730,6 +730,7 @@ Class Reference
 """
 
 import abc
+import abc
 import inspect
 import itertools
 import numbers
@@ -1048,6 +1049,7 @@ class State_Base(State):
     paramClassDefaults.update({STATE_TYPE: None})
 
     @tc.typecheck
+    @abc.abstractmethod
     def __init__(self,
                  owner:tc.any(Mechanism, Projection),
                  variable=None,
@@ -1108,14 +1110,6 @@ class State_Base(State):
                 self.context.string = kargs[STATE_CONTEXT]
             except (KeyError, NameError):
                 pass
-
-        # Enforce that only called from subclass
-        if (not isinstance(context, State_Base) and
-                not (self.initialization_status == ContextFlags.INITIALIZING or
-                     context & (ContextFlags.COMMAND_LINE | ContextFlags.CONSTRUCTOR))):
-            raise StateError("Direct call to abstract class State() is not allowed; "
-                                      "use state() or one of the following subclasses: {0}".
-                                      format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
 
         # Enforce that subclass must implement and _execute method
         if not hasattr(self, '_execute'):

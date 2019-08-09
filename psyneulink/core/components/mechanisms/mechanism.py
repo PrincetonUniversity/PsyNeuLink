@@ -931,6 +931,7 @@ Class Reference
 
 """
 
+import abc
 import inspect
 import itertools
 import logging
@@ -1413,6 +1414,7 @@ class Mechanism_Base(Mechanism):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
 
     @tc.typecheck
+    @abc.abstractmethod
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -1437,11 +1439,6 @@ class Mechanism_Base(Mechanism):
         * registers Mechanism with MechanismRegistry
 
         """
-
-        # Forbid direct call to base class constructor
-        if context is None or (context !=ContextFlags.CONSTRUCTOR and
-                               not self.initialization_status == ContextFlags.VALIDATING):
-            raise MechanismError("Direct call to abstract class Mechanism() is not allowed; use a subclass")
 
         # IMPLEMENT **kwargs (PER State)
 
