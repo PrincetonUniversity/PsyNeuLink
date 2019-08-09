@@ -46,6 +46,7 @@ _int32_ty = ir.IntType(32)
 _float_ty = ir.DoubleType()
 _global_context = None
 
+_printf_count = 0
 
 class LLVMBuilderContext:
     uniq_counter = 0
@@ -212,6 +213,12 @@ class LLVMBuilderContext:
 
         return ir.LiteralStructType([])
 
+    def get_autodiff_stimuli_struct_type(self, component):
+        if hasattr(component, '_get_autodiff_stimuli_struct_type'):
+            return component._get_autodiff_stimuli_struct_type(self)
+
+        return ir.LiteralStructType([])
+
     def get_param_ptr(self, component, builder, params_ptr, param_name):
         idx = self.int32_ty(component._get_param_ids().index(param_name))
         return builder.gep(params_ptr, [self.int32_ty(0), idx])
@@ -226,12 +233,33 @@ class LLVMBuilderContext:
             return builder.gep(element, [self.int32_ty(0), self.int32_ty(0)])
         return element
 
+    def inject_printf(self,llvm_func, builder,fmt,*args):
+        fmt += "\0"
+        import llvmlite.binding as llvm
+        llvm.load_library_permanently("libc.so.6")
+        printfc = llvm.address_of_symbol("printf")
+        voidptr_ty = ir.IntType(8).as_pointer()
+        printf = builder.inttoptr(pnlvm.ir.IntType(64)(printfc),ir.FunctionType(ir.IntType(32), [voidptr_ty], var_arg=True).as_pointer())
+        arr = pnlvm.ir.Constant(pnlvm.ir.ArrayType(pnlvm.ir.IntType(8), len(fmt)),
+        bytearray(fmt.encode("utf8")))
+        global _printf_count
+        global_fmt = ir.GlobalVariable(llvm_func.module, arr.type, name="fstr"+str(_printf_count))
+        _printf_count += 1
+        global_fmt.linkage = 'internal'
+        global_fmt.global_constant = True
+        global_fmt.initializer = arr
+        fmt_ptr = builder.bitcast(global_fmt,pnlvm.ir.IntType(8).as_pointer())
+        builder.call(printf,[fmt_ptr]+list(args))
+
+    def gen_autodiffcomp_learning_exec(self,composition,simulation=False):
+        return self.gen_autodiffcomp_exec(composition,simulation)
+
     def gen_autodiffcomp_exec(self,composition,simulation=False):
         """Creates llvm bin execute for autodiffcomp"""
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation._get(composition.default_execution_id)
         cond_gen = ConditionGenerator(self, composition)
-
+        
         name = 'exec_sim_wrap_' if simulation else 'exec_wrap_'
         name += composition.name
         args = [self.get_context_struct_type(composition).as_pointer(),
@@ -239,12 +267,12 @@ class LLVMBuilderContext:
                 self.get_input_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),
                 cond_gen.get_condition_struct_type().as_pointer()]
-                
         builder = self.create_llvm_function(args, composition, name)
         llvm_func = builder.function
+        
         for a in llvm_func.args:
             a.attributes.add('noalias')
-
+        
         context, params, comp_in, data_arg, cond = llvm_func.args
 
         if "const_params" in debug_env:
@@ -258,7 +286,6 @@ class LLVMBuilderContext:
             builder.store(data_vals, data)
         else:
             data = data_arg
-
         # Call input CIM
         input_cim_w = composition._get_node_wrapper(composition.input_CIM, simulation)
         input_cim_f = self.get_llvm_function(input_cim_w)
@@ -287,6 +314,8 @@ class LLVMBuilderContext:
                                         self.int32_ty(input_cim_idx)])
         model_output = builder.gep(data,[self.int32_ty(0),
                                          ])
+        
+        self.inject_printf(llvm_func,builder,"inputs: "+"%f "*4 +"\n",*[builder.load(builder.gep(model_input,[self.int32_ty(i)])) for i in range(0,3)])
         builder.call(pytorch_forward_func,[model_context,model_params,model_input,model_output])
         if simulation is False and composition.enable_controller and \
            composition.controller_mode == AFTER:
@@ -310,7 +339,7 @@ class LLVMBuilderContext:
         cond_gen.bump_ts(builder, cond, (1, 0, 0))
 
         builder.ret_void()
-
+        
         return llvm_func
 
     def gen_composition_exec(self, composition, simulation=False):

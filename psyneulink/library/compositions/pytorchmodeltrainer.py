@@ -59,34 +59,7 @@ class PytorchModelTrainer(Composition):
 
         self.autodiffcomposition = autodiffcomposition
     
-    # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
-    def _build_pytorch_representation(self, execution_id = None):
-        if self.scheduler is None:  # if learning_enabled has never been run yet
-            self.scheduler = Scheduler(graph=self.graph_processing)
-        if self.execution_sets is None:
-            self.execution_sets = list(self.scheduler.run())
-        if self.parameters.pytorch_representation._get(execution_id) is None:
-            model = PytorchModelCreator(self.graph_processing,
-                                        self.param_init_from_pnl,
-                                        self.execution_sets,
-                                        self.device,
-                                        execution_id,
-                                        composition = self)
-            self.parameters.pytorch_representation._set(model, execution_id)
-
-        # Set up optimizer function
-        old_opt = self.parameters.optimizer._get(execution_id)
-        if old_opt is not None:
-            logger.warning("Overwriting optimizer for AutodiffComposition {}! Old optimizer: {}".format(
-                self, old_opt))
-        opt = self._make_optimizer(self.optimizer_type, self.learning_rate, self.weight_decay, execution_id)
-        self.parameters.optimizer._set(opt, execution_id)
-
-        # Set up loss function
-        if self.loss is not None:
-            logger.warning("Overwriting loss function for AutodiffComposition {}! Old loss function: {}".format(
-                self, self.loss))
-        self.loss = self._get_loss(self.loss_spec)
+    
 
     def _make_optimizer(self, optimizer_type, learning_rate, weight_decay, execution_id):
         if not isinstance(learning_rate, (int, float)):
@@ -244,10 +217,10 @@ class PytorchModelTrainer(Composition):
                 optimizer.step()
 
                 # save outputs of model if this is final epoch
-                curr_output_list = []
-                for input_state in self.output_CIM.input_states:
-                    assert(len(input_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
-                    component = input_state.all_afferents[0].sender.owner
+                curr_output_list inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}= []
+                for input_state iinputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}n self.output_CIM.input_states:
+                    assert(len(ininputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}put_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
+                    component = iinputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}nput_state.all_afferents[0].sender.owner
                     curr_output_list.append(curr_tensor_outputs[component].detach().numpy().copy())
                 # for component in curr_tensor_outputs.keys():
                 #     curr_output_list.append(curr_tensor_outputs[component].detach().numpy().copy())
@@ -284,84 +257,12 @@ class PytorchModelTrainer(Composition):
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
             with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                self.__bin_exec_func = ctx.gen_autodiffcomp_exec(self)
+                self.__bin_exec_func = ctx.gen_pytorchmodeltrainer_exec(self)
         return self.__bin_exec_func
     
     def _gen_llvm_function(self):
         return self._bin_exec_func
 
-    def execute(self,
-                inputs=None,
-                autodiff_stimuli=None,
-                do_logging=False,
-                scheduler_processing=None,
-                termination_processing=None,
-                call_before_time_step=None,
-                call_before_pass=None,
-                call_after_time_step=None,
-                call_after_pass=None,
-                execution_id=None,
-                base_execution_id=None,
-                clamp_input=SOFT_CLAMP,
-                targets=None,
-                runtime_params=None,
-                skip_initialization=False,
-                bin_execute=False,
-                context=None
-                ):
-        execution_id = self._assign_execution_ids(execution_id)
-        self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
-
-        if scheduler_processing is None:
-            scheduler_processing = self.scheduler_processing
-
-        scheduler_processing._init_clock(execution_id, base_execution_id)
-
-        if self.learning_enabled:
-            # TBI: How are we supposed to use base_execution_id and statefulness here?
-            # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
-            # model may be modified between runs?
-
-            self._analyze_graph()  # ADDED by CW 12/17/18: unsure if correct here
-
-            self._build_pytorch_representation(execution_id)
-
-            autodiff_inputs = inputs["inputs"]
-            autodiff_targets = inputs["targets"]
-            autodiff_epochs = 1
-            if "epochs" in inputs:
-                autodiff_epochs = inputs["epochs"]
-
-            output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id, do_logging, scheduler_processing)
-            ctx = self.output_CIM.parameters.context._get(execution_id)
-            # new_ctx = copy.deepcopy(ctx)
-            # new_ctx.execution_phase = ContextFlags.PROCESSING
-            # self.output_CIM.parameters.context._set(new_ctx, execution_id=execution_id)
-            if ctx is not None:  # HACK: CW 12/18/18 for some reason context isn't set correctly
-                ctx.execution_phase = ContextFlags.PROCESSING
-            # note that output[-1] might not be the truly most recent value
-            # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
-            # is not having its parameters populated correctly, and this should be fixed in the long run.
-            self.output_CIM.execute(input=output[-1], execution_id=execution_id, context=ContextFlags.PROCESSING)
-
-            return output
-
-        return super(AutodiffComposition, self).execute(inputs=inputs,
-                                                        scheduler_processing=scheduler_processing,
-                                                        termination_processing=termination_processing,
-                                                        call_before_time_step=call_before_time_step,
-                                                        call_before_pass=call_before_pass,
-                                                        call_after_time_step=call_after_time_step,
-                                                        call_after_pass=call_after_pass,
-                                                        execution_id=execution_id,
-                                                        base_execution_id=base_execution_id,
-                                                        clamp_input=clamp_input,
-                                                        runtime_params=runtime_params,
-                                                        skip_initialization=skip_initialization,
-                                                        bin_execute=bin_execute,
-                                                        context=context)
-
-    # what the user calls for doing processing/training, similar to the run function of the normal composition
     def run(
         self,
         inputs=None,
@@ -437,20 +338,7 @@ class PytorchModelTrainer(Composition):
 
     # gives user weights and biases of the model (from the pytorch representation)
     def get_parameters(self, execution_id=NotImplemented):
-        if execution_id is NotImplemented:
-            execution_id = self.default_execution_id
-
-        pytorch_representation = self.parameters.pytorch_representation._get(execution_id)
-
-        if pytorch_representation is None:
-            raise AutodiffCompositionError("{0} has not been run yet so parameters have not been created "
-                                           "in Pytorch."
-                                           .format(self.name))
-
-        weights = pytorch_representation.get_weights_for_projections()
-        biases = pytorch_representation.get_biases_for_mechanisms()
-
-        return weights, biases
+        return self.autodiffcomposition.get_parameters(execution_id)
 
     def _get_param_struct_type(self, ctx):
         return self.autodiffcomposition._get_param_struct_type(ctx)
