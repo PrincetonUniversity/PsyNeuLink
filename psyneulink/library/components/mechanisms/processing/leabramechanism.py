@@ -248,7 +248,7 @@ class LeabraFunction(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         if not isinstance(variable, (list, np.ndarray, numbers.Number)):
@@ -602,7 +602,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _execute(
         self,

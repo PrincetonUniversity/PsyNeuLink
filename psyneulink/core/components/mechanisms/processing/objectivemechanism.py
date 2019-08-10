@@ -620,9 +620,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             warnings.warn(f'Use of {repr(MONITORED_OUTPUT_STATES)} as arg of {self.__class__.__name__} is deprecated;  '
                           f'use {repr(MONITOR)} instead')
             monitor = kwargs.pop(MONITORED_OUTPUT_STATES)
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         monitor = monitor or None # deal with possibility of empty list
         input_states = monitor
         if output_states is None or output_states is OUTCOME:
@@ -650,7 +647,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          **kwargs)
 
         # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is

@@ -289,9 +289,6 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_states=input_states,
@@ -306,5 +303,4 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  context=context,
                                                   **kwargs)

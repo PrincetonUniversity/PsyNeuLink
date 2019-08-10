@@ -802,9 +802,6 @@ class InputState(State_Base):
             context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
-        else:
-            context = ContextFlags.CONSTRUCTOR
-            self.context.source = ContextFlags.CONSTRUCTOR
 
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)

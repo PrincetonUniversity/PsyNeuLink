@@ -992,9 +992,6 @@ class OutputState(State_Base):
             context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
-        else:
-            context = ContextFlags.CONSTRUCTOR
-            self.context.source = ContextFlags.CONSTRUCTOR
 
         # For backward compatibility with CALCULATE, ASSIGN and INDEX
         if 'calculate' in kwargs:

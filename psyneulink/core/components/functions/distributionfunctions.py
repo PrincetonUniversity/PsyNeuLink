@@ -158,7 +158,7 @@ class NormalDist(DistributionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -312,7 +312,7 @@ class UniformToNormalDist(DistributionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
 
     def _function(self,
@@ -427,7 +427,7 @@ class ExponentialDist(DistributionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
 
     def _function(self,
@@ -545,7 +545,7 @@ class UniformDist(DistributionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
 
     def _function(self,
@@ -671,7 +671,7 @@ class GammaDist(DistributionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
 
     def _function(self,
@@ -796,7 +796,7 @@ class WaldDist(DistributionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
 
     def _function(self,
@@ -1029,7 +1029,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     @property
     def output_type(self):

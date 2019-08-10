@@ -522,9 +522,6 @@ class LearningProjection(ModulatoryProjection_Base):
         #     error function and learning function specifications from the specification of a LearningProjection (used
         #     to implement learning for a MappingProjection, e.g., in a tuple) to the LearningMechanism responsible
         #     for implementing the function; and for specifying the default LearningProjection for a Process.
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(error_function=error_function,
                                                   learning_function=learning_function,
@@ -548,7 +545,6 @@ class LearningProjection(ModulatoryProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):

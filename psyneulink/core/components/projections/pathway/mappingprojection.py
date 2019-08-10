@@ -528,9 +528,6 @@ class MappingProjection(PathwayProjection_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         # Assign args to params and functionParams dicts
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
         # (7/12/17 CW) this is a PATCH to allow the user to set matrix as an np.matrix... I still don't know why
@@ -557,7 +554,6 @@ class MappingProjection(PathwayProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          **kwargs)
 
         try:

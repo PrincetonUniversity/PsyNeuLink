@@ -560,9 +560,7 @@ class ParameterState(State_Base):
 
         # If context is not COMPONENT or CONSTRUCTOR, raise exception
         context = kwargs.pop(CONTEXT, None)
-        if context == ContextFlags.COMPONENT:
-            context = ContextFlags.CONSTRUCTOR
-        if not context == ContextFlags.CONSTRUCTOR:
+        if context is None:
             raise ParameterStateError(f"Contructor for {self.__class__.__name__} cannot be called directly"
                                       f"(context: {context}")
 

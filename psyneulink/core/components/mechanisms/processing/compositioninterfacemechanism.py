@@ -168,4 +168,4 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                                                             params=params,
                                                             name=name,
                                                             prefs=prefs,
-                                                            context=ContextFlags.CONSTRUCTOR)
+                                                            )

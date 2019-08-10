@@ -239,7 +239,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -738,7 +738,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         if self.previous_value.size != 0:
             self.parameters.key_size._set(len(self.previous_value[KEYS][0]))

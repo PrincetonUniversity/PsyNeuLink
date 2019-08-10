@@ -535,7 +535,7 @@ class DefaultAllocationFunction(Function_Base):
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _function(self,
                  variable=None,
@@ -985,9 +985,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                  prefs:is_pref_set=None,
                  **kwargs
                  ):
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         function = function or DefaultAllocationFunction
         modulatory_signals = modulatory_signals or []
         if not isinstance(modulatory_signals, list):
@@ -1015,7 +1012,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                   name=name,
                                                   function=function,
                                                   prefs=prefs,
-                                                  context=context,
                                                   **kwargs)
 
         if system is not None:

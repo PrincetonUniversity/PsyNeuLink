@@ -995,9 +995,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  prefs:is_pref_set=None,
                  **kwargs
                  ):
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         # IMPLEMENTATION NOTE:
         #    assign to private attribute as self.error_sources is used as a property
         #    private attribute is used for validation and in _instantiate_attribute_before_function;
@@ -1034,7 +1031,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          **kwargs)
 
     def _check_type_and_timing(self):

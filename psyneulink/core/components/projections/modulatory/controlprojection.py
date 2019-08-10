@@ -328,9 +328,6 @@ class ControlProjection(ModulatoryProjection_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   control_signal_params=control_signal_params,
@@ -353,7 +350,6 @@ class ControlProjection(ModulatoryProjection_Base):
                                                 params=params,
                                                 name=name,
                                                 prefs=prefs,
-                                                context=context,
                                                 **kwargs)
 
     def _instantiate_sender(self, sender, params=None, context=None):

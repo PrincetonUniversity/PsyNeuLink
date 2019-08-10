@@ -81,10 +81,10 @@ class CombinationFunction(Function_Base):
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
-                 params,
-                 owner,
-                 prefs,
-                 context):
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 context=None):
 
         if not hasattr(self, MULTIPLICATIVE_PARAM):
             raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
@@ -236,7 +236,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         """Insure that list or array is 1d and that all elements are numeric
@@ -462,7 +462,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
         if default_variable is not None:
@@ -776,7 +776,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         """Insure that list or array is 1d and that all elements are numeric
@@ -1155,7 +1155,7 @@ class LinearCombination(
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
@@ -1757,7 +1757,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
@@ -2013,7 +2013,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         self.gamma = gamma
 

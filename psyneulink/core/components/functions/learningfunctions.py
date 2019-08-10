@@ -449,7 +449,7 @@ class BayesGLM(LearningFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _handle_default_variable(self, default_variable=None, size=None):
 
@@ -769,7 +769,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
 
     def _validate_variable(self, variable, context=None):
@@ -1037,7 +1037,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
 
     def _validate_variable(self, variable, context=None):
@@ -1271,7 +1271,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
 
     def _validate_variable(self, variable, context=None):
@@ -1559,7 +1559,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     @property
     def output_type(self):
@@ -1916,7 +1916,7 @@ class BackPropagation(LearningFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     @property
     def output_type(self):

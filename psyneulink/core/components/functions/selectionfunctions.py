@@ -68,10 +68,10 @@ class SelectionFunction(Function_Base):
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
-                 params,
-                 owner,
-                 prefs,
-                 context):
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 context=None):
 
         if not hasattr(self, MULTIPLICATIVE_PARAM):
             raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
@@ -278,7 +278,7 @@ class OneHot(SelectionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         if reset_default_variable_flexibility:
             self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE

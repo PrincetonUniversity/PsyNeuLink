@@ -1817,11 +1817,6 @@ class Mechanism_Base(Mechanism):
             except AttributeError as e:
                 if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
                     pass
-        # INPUT_STATES is not specified and call is from constructor (i.e., not assign_params):
-        elif context & ContextFlags.CONSTRUCTOR:
-            # - set to None, so it is set to default (self.defaults.variable) in instantiate_inputState
-            # - warning (if in VERBOSE mode) will be issued in instantiate_inputState, where default value is known
-            params[INPUT_STATES] = None
 
         # VALIDATE FUNCTION_PARAMS
         try:
@@ -1898,14 +1893,6 @@ class Mechanism_Base(Mechanism):
                                      self.execute.__self__.name))
                 i += 1
             params[OUTPUT_STATES] = param_value
-
-        # OUTPUT_STATES is not specified and call is from construct (i.e., not assign_params)
-        elif context & ContextFlags.CONSTRUCTOR:
-            # - set to None, so that it is set to default (self.value) in instantiate_output_state
-            # - warning (if in VERBOSE mode) will be issued in instantiate_inputState, where default value is known
-            # - number of OutputStates is validated against length of owner Mechanism's execute method output (EMO)
-            #     in instantiate_output_state, where an OutputState is assigned to each item (value) of the EMO
-            params[OUTPUT_STATES] = None
 
         def validate_labels_dict(lablel_dict, type):
             for label, value in labels_dict.items():

@@ -236,7 +236,7 @@ class Stability(ObjectiveFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         # MODIFIED 6/12/19 NEW: [JDC]
         self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
@@ -788,7 +788,7 @@ class Distance(ObjectiveFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_params(self, request_set, target_set=None, variable=None, context=None):
         """Validate that variable had two items of equal length

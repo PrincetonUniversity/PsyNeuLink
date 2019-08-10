@@ -555,7 +555,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -831,7 +831,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -1055,7 +1055,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -1620,7 +1620,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -2093,7 +2093,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -2466,7 +2466,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -2819,7 +2819,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.previous_time = self.starting_point
         self.has_initializers = True
@@ -3087,7 +3087,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -3768,7 +3768,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
     @property
     def output_type(self):

@@ -936,7 +936,7 @@ class ControlMechanism(ModulatoryMechanism):
                                                params=params,
                                                name=name,
                                                prefs=prefs,
-                                               context=ContextFlags.CONSTRUCTOR,
+
                                                **kwargs)
 
     def _instantiate_output_states(self, context=None):

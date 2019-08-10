@@ -383,7 +383,7 @@ class KohonenLearningMechanism(LearningMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has only one item: activation_input.

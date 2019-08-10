@@ -92,5 +92,5 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
                                                               params=params,
                                                               name=name,
                                                               prefs=prefs,
-                                                              context=ContextFlags.CONSTRUCTOR,
+
                                                               **kwargs)

@@ -892,7 +892,7 @@ class GradientOptimization(OptimizationFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -1291,7 +1291,7 @@ class GridSearch(OptimizationFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         self.stateful_attributes = ["random_state"]
 
@@ -1940,7 +1940,7 @@ class GaussianProcess(OptimizationFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)

@@ -298,13 +298,13 @@ class ComponentPreferenceSet(PreferenceSet):
                                                     level=owner_class.classPreferenceLevel,
                                                     prefs=ComponentDefaultPrefDicts[owner_class.classPreferenceLevel],
                                                     name=name,
-                                                    context=ContextFlags.CONSTRUCTOR)
+                                                    )
         # Instantiate PreferenceSet
         super().__init__(owner=owner,
                          level=owner_class.classPreferenceLevel,
                          prefs=prefs,
                          name=name,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
         self._level = level
 
     @property

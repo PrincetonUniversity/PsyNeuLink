@@ -1044,7 +1044,7 @@ class ArgumentTherapy(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         """Validates variable and returns validated value
