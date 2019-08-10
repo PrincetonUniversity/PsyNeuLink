@@ -275,7 +275,7 @@ class LeabraFunction(Function_Base):
                               format(request_set[NETWORK], type(request_set[NETWORK])))
         super()._validate_params(request_set, target_set, context)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,

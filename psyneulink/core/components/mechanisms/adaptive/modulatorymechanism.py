@@ -537,7 +537,7 @@ class DefaultAllocationFunction(Function_Base):
                          owner=owner,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,

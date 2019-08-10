@@ -150,7 +150,7 @@ class ValueFunction(EVCAuxiliaryFunction):
         super().__init__(function=function,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def function(
+    def _function(
         self,
         controller=None,
         outcome=None,
@@ -303,7 +303,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                          owner=owner,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def function(
+    def _function(
         self,
         controller=None,
         variable=None,
