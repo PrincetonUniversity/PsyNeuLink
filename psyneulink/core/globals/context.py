@@ -81,6 +81,7 @@ Class Reference
 """
 
 import enum
+import functools
 import warnings
 
 from collections import namedtuple
@@ -97,6 +98,7 @@ __all__ = [
     'ContextFlags',
     '_get_context',
     'INITIALIZATION_STATUS_FLAGS',
+    'handle_external_context',
 ]
 
 STATUS = 'status'
@@ -612,3 +614,47 @@ def _get_time(component, context_flags, execution_id=None):
         t = None
 
     return t or no_time
+
+
+def handle_external_context(
+    source=ContextFlags.COMMAND_LINE,
+    execution_phase=ContextFlags.IDLE,
+    **context_kwargs
+):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, context=None, execution_id=None, **kwargs):
+            if context is None:
+                context = Context(
+                    source=source,
+                    execution_phase=execution_phase,
+                    execution_id=execution_id,
+                    **context_kwargs
+                )
+
+            try:
+                return func(*args, context=context, execution_id=execution_id, **kwargs)
+            except TypeError as e:
+                # we may want to decorate methods without execution_id parameter,
+                # but we should be able to handle either. additionally execution_id
+                # parameter may be passed as a non keyword arg in some cases
+                if (
+                    "unexpected keyword argument 'execution_id'" not in str(e)
+                    and "got multiple values for argument" not in str(e)
+                ):
+                    raise e
+                else:
+                    try:
+                        # context parameter may be passed as a non keyword arg in some
+                        # cases, so we assume that it's not None.
+                        # There's not really a good way to handle the situation in which
+                        # it is None, so leave this case for the developer to debug
+                        return func(*args, context=context, **kwargs)
+                    except TypeError as e:
+                        if "got multiple values for argument 'context'" not in str(e):
+                            raise e
+
+            return func(*args, **kwargs)
+
+        return wrapper
+    return decorator
