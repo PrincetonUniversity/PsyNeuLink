@@ -738,6 +738,7 @@ from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolm
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, \
     ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
@@ -2009,11 +2010,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_linear_processing_pathway(self, pathway, feedback=False, *args):
         """Add sequence of Mechanisms or Compositions possibly with intercolated Projections
         Tuples (Mechanism, NodeRole(s)) can be used to assign required_roles to Mechanisms.
+        Don't add projections for ControlMechanisms;
+            they will be handled either by its own arguments or, if it is a controller, by _add_controllert
         """
         nodes = []
+
         # First, verify that the pathway begins with a node
         if not isinstance(pathway, (list, tuple)):
-            raise CompositionError(f"First arg for add_linear_processing_pathway method of '{self.name}' "
+            raise CompositionError(f"First argument in add_linear_processing_pathway method of '{self.name}' "
                                    f"{Composition.__name__} must be a list of nodes")
 
         if isinstance(pathway[0], (Mechanism, Composition, tuple)):
@@ -2023,6 +2027,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise CompositionError("The first item in a linear processing pathway must be a Node (Mechanism or "
                                    "Composition).")
+
+        # MODIFIED 8/11/19 NEW: [JDC]
+        # Then, if there are any ControlMechanisms or ObjectiveMechanisms,
+        #    and the ControlMechanism has it monitor_for_control attribute assigned
+        #    or the ObjectiveMechanism projects to a ControlMechanism:  # FIX: ADD SAME CONDITION AS FOR CLTMECH?
+        #        add them to the Compostion
+        #        but delete them from the pathway specification as they will be handled elsewhere (see docstring)
+        for i, item in enumerate(pathway):
+            if ((isinstance(item, ControlMechanism) and item.monitor_for_control is not NotImplemented)
+                    or (isinstance(item, ObjectiveMechanism)
+                        and any(isinstance(p.receiver.owner, ControlMechanism) for p in item.efferents))):
+                self.add_node(item)
+                del pathway[i]
+        # MODIFIED 8/11/19 END
 
         # Then, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
