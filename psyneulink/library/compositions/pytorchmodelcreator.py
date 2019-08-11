@@ -260,17 +260,13 @@ class PytorchModelCreator(torch.nn.Module):
             assert len(out_t) == 1
         arg_out = builder.gep(arg_out,[ctx.int32_ty(0),
                                         ctx.int32_ty(0)])
-        frozen_values = {}
         for i in range(len(self.execution_sets)):
             current_exec_set = self.execution_sets[i]
 
             for component in current_exec_set:
-                frozen_values[component] = builder.alloca(
-                    ctx.convert_python_struct_to_llvm_ir(component.defaults.variable[0]))
-            for component in current_exec_set:
-                component_id = self._id_map[i][component]
+                component_id = self._composition._get_node_index(component)
                 biases = self.component_to_forward_info[component][1]
-                value = frozen_values[component]
+                value = self._get_output_index(ctx,builder,arg_out,component_id)
                 afferents = self.component_to_forward_info[component][3]
                 dim_x, dim_y = component.defaults.variable.shape
                 if i == 0:
@@ -290,14 +286,15 @@ class PytorchModelCreator(torch.nn.Module):
                     # is_set keeps track of if we already have valid (i.e. non-garbage) values inside the alloc'd value
                     is_set = False
                     for input_node, weights in afferents.items():
-                        input_value = frozen_values[input_node.component]
+                        input_node_idx = self._composition._get_node_index(input_node.component)
+                        input_value = self._get_output_index(ctx,builder,arg_out,input_node_idx)#frozen_values[input_node.component]
 
                         weights_np = weights.detach().numpy()
                         x, y = weights_np.shape
 
                         # We cast the ctype weights array to llvmlite pointer
                         afferent_node_id = self._afferent_id_map[component][input_node.component]
-                        weights_llvmlite = builder.gep(params,[ctx.int32_ty(0), ctx.int32_ty(i-1),ctx.int32_ty(component_id),ctx.int32_ty(afferent_node_id)])
+                        weights_llvmlite = builder.gep(params,[ctx.int32_ty(0), ctx.int32_ty(i-1),ctx.int32_ty(self._id_map[i][component]),ctx.int32_ty(afferent_node_id)])
                         if "ref_pass" in debug_env:
                             mem_addr = builder.load(weights_llvmlite)
                             weights_llvmlite = builder.inttoptr(mem_addr,ir.types.ArrayType(ir.types.ArrayType(ir.types.DoubleType(), y),x).as_pointer())
@@ -333,25 +330,28 @@ class PytorchModelCreator(torch.nn.Module):
                     #   value = value + biases
 
                 # save value in output list if we're at a node in the last execution set
-                if i == len(self.execution_sets) - 1:
-                    # We first grab which index we should insert into:
-                    # Here, arr should be an array of arrays; each index correlates to self._id_map[i][component]
-                    output_index = self._composition._get_node_index(component)
-                    output_size = len(component.defaults.value[0])
-                    # get ptr to first thing in struct (should be arr)
-                    outer_arr_ptr = builder.gep(
-                        arg_out, [ctx.int32_ty(0)])
-                    for _y in range(0, output_size):
-                        val_ptr = builder.gep(value, [ctx.int32_ty(
-                            0), ctx.int32_ty(_y)])
-                        self._output_forward_computation(
-                            ctx, builder, arg_out, output_index, _y, builder.load(val_ptr))
+                # if i == len(self.execution_sets) - 1:
+                #     # We first grab which index we should insert into:
+                #     # Here, arr should be an array of arrays; each index correlates to self._id_map[i][component]
+                #     output_index = self._composition._get_node_index(component)
+                #     output_size = len(component.defaults.value[0])
+                #     # get ptr to first thing in struct (should be arr)
+                #     outer_arr_ptr = builder.gep(
+                #         arg_out, [ctx.int32_ty(0)])
+                #     for _y in range(0, output_size):
+                #         val_ptr = builder.gep(value, [ctx.int32_ty(
+                #             0), ctx.int32_ty(_y)])
+                #         self._output_forward_computation(
+                #             ctx, builder, arg_out, output_index, _y, builder.load(val_ptr))
 
     # inserts a value into the forward computation output array struct
     def _output_forward_computation(self, ctx, builder, arg_out, index, y, value):
         loc = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(
             index), ctx.int32_ty(0),ctx.int32_ty(y)])
         builder.store(value, loc)
+
+    def _get_output_index(self, ctx, builder, arg_out, index):
+        return builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(index), ctx.int32_ty(0)])
 
     @property
     def _bin_exec_func(self):
