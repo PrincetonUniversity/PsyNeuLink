@@ -1247,7 +1247,7 @@ class Component(object, metaclass=ComponentsMeta):
     # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
     # through an override, when Composition is done. For now, only State.py overwrites _handle_size().
     def _handle_size(self, size, variable):
-        """ If variable is None, _handle_size tries to infer variable based on the **size** argument to the
+        """If variable is None, _handle_size tries to infer variable based on the **size** argument to the
             __init__() function. This method is overwritten in subclasses like Mechanism and State.
             If self is a Mechanism, it converts variable to a 2D array, (for a Mechanism, variable[i] represents
             the input from the i-th input state). If self is a State, variable is a 1D array and size is a length-1 1D
@@ -3042,7 +3042,8 @@ class Component(object, metaclass=ComponentsMeta):
     @property
     def current_execution_count(self):
         """Maintains a simple count of executions over the life of the Component,
-        Incremented in the Component's execute method by call to self._increment_execution_count"""
+        Incremented in the Component's execute method by call to self._increment_execution_count
+        """
         try:
             return self._current_execution_count
         except:

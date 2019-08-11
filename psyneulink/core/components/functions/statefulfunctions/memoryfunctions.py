@@ -245,7 +245,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
     def _initialize_previous_value(self, initializer, execution_context=None):
         initializer = initializer or []
-        previous_value = deque(initializer, maxlen=self.history)
+        previous_value = deque(initializer, maxlen=self.parameters.history.get(execution_context))
 
         self.parameters.previous_value.set(previous_value, execution_context, override=True)
 
@@ -287,7 +287,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         if reinitialization_value is None or reinitialization_value == []:
             self.get_previous_value(execution_context).clear()
-            value = deque([], maxlen=self.history)
+            value = deque([], maxlen=self.parameters.history.get(execution_context))
 
         else:
             value = self._initialize_previous_value(reinitialization_value, execution_context=execution_context)
@@ -338,7 +338,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
             if any(np.atleast_1d(noise) != 0.0):
                 previous_value = previous_value + noise
 
-        previous_value = deque(previous_value, maxlen=self.history)
+        previous_value = deque(previous_value, maxlen=self.parameters.history._get(execution_id))
 
         previous_value.append(variable)
 

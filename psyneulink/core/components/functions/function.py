@@ -704,7 +704,8 @@ class Function_Base(Function):
 
     def _validate_parameter_spec(self, param, param_name, numeric_only=True):
         """Validates function param
-        Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()'s"""
+        Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()'s
+        """
         if not parameter_spec(param, numeric_only):
             owner_name = 'of ' + self.owner_name if self.owner else ""
             raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
@@ -895,6 +896,12 @@ class Function_Base(Function):
 
     def _get_param_initializer(self, execution_id):
         return pnlvm._tupleize(self._get_param_values(execution_id))
+
+    def _is_identity(self, execution_id=None):
+        # should return True in subclasses if the parameters for execution_id are such that
+        # the Function's output will be the same as its input
+        # Used to bypass execute when unnecessary
+        return False
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 

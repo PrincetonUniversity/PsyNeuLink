@@ -978,45 +978,6 @@ class InputState(State_Base):
             return True
         return False
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        """Call self.function with self._path_proj_values
-
-        If variable is None there are no active PathwayProjections in the Composition being run,
-        return None so that it is ignored in execute method (i.e., not combined with base_value)
-        """
-
-        # Variable was passed in so use that
-        if variable is not None:
-            return super()._execute(variable,
-                                    execution_id=execution_id,
-                                    runtime_params=runtime_params,
-                                    context=context)
-
-        # Get variable from Projections
-        else:
-            path_proj_values = []
-            # Check for Projections that are active in the Composition being run
-            for proj in self.path_afferents:
-                if self.afferents_info[proj].is_active_in_composition(
-                        self.parameters.context._get(execution_id).composition
-                ):
-                    path_proj_values.append(proj.parameters.value._get(execution_id))
-            # If there are any active PathwayProjections
-            if len(path_proj_values) > 0:
-                # Combine Projection values
-                variable = np.asarray(path_proj_values)
-                combined_values = super()._execute(variable=variable,
-                                                   execution_id=execution_id,
-                                                   runtime_params=runtime_params,
-                                                   context=context)
-                return combined_values
-
-            # There were no active Projections
-            else:
-                # mark combined_values as none, so that (after being assigned to value)
-                #    it is ignored in execute method (i.e., not combined with base_value)
-                return None
-
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         variable = super()._parse_function_variable(variable, execution_id, context)
         try:
@@ -1025,6 +986,27 @@ class InputState(State_Base):
         except AttributeError:
             pass
         return variable
+
+    def _get_fallback_variable(self, execution_id=None):
+        """
+            Call self.function with self._path_proj_values
+
+            If variable is None there are no active PathwayProjections in the Composition being run,
+            return None so that it is ignored in execute method (i.e., not combined with base_value)
+        """
+        # Check for Projections that are active in the Composition being run
+        current_active_composition = self.parameters.context._get(execution_id).composition
+
+        path_proj_values = [
+            proj.parameters.value._get(execution_id)
+            for proj in self.path_afferents
+            if self.afferents_info[proj].is_active_in_composition(current_active_composition)
+        ]
+
+        if len(path_proj_values) > 0:
+            return np.asarray(path_proj_values)
+        else:
+            return None
 
     def _get_primary_state(self, mechanism):
         return mechanism.input_state

@@ -94,6 +94,54 @@ In the following script comp_0, comp_1 and comp_2 are identical, but constructed
     >>> comp_1_output = comp_1.run(inputs=input_dict)
     >>> comp_2_output = comp_2.run(inputs=input_dict)
 
+*Nested Compositions*
+=====================
+
+A Composition can be used as a node of another Composition. To do this, simply call `add_node <Composition.add_node>`
+from the parent composition using the child Composition as an argument. You can then project to and from the nested
+composition just as you would any other node.
+
+    *Create outer Composition:*
+
+    >>> outer_A = pnl.ProcessingMechanism(name='outer_A')
+    >>> outer_B = pnl.ProcessingMechanism(name='outer_B')
+    >>> outer_comp = pnl.Composition(name='outer_comp')
+    >>> outer_comp.add_nodes([outer_A, outer_B])
+
+    *Create and configure inner Composition:*
+
+    >>> inner_A = pnl.ProcessingMechanism(name='inner_A')
+    >>> inner_B = pnl.ProcessingMechanism(name='inner_B')
+    >>> inner_comp = pnl.Composition(name='inner_comp')
+    >>> inner_comp.add_linear_processing_pathway([inner_A, inner_B])
+
+    *Nest inner Composition within outer Composition using `add_node <Composition.add_node>`:*
+
+    >>> outer_comp.add_node(inner_comp)
+
+    *Create Projections:*
+
+    >>> outer_comp.add_projection(pnl.MappingProjection(), sender=outer_A, receiver=inner_comp)
+    >>> outer_comp.add_projection(pnl.MappingProjection(), sender=inner_comp, receiver=outer_B)
+    >>> input_dict = {outer_A: [[[1.0]]]}
+
+    *Run Composition:*
+
+    >>> outer_comp.run(inputs=input_dict)
+
+    *Using `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` with nested compositions for brevity:*
+
+    >>> outer_A = pnl.ProcessingMechanism(name='outer_A')
+    >>> outer_B = pnl.ProcessingMechanism(name='outer_B')
+    >>> outer_comp = pnl.Composition(name='outer_comp')
+    >>> inner_A = pnl.ProcessingMechanism(name='inner_A')
+    >>> inner_B = pnl.ProcessingMechanism(name='inner_B')
+    >>> inner_comp = pnl.Composition(name='inner_comp')
+    >>> inner_comp.add_linear_processing_pathway([inner_A, inner_B])
+    >>> outer_comp.add_linear_processing_pathway([outer_A, inner_comp, outer_B])
+    >>> input_dict = {outer_A: [[[1.0]]]}
+    >>> outer_comp.run(inputs=input_dict)
+
 .. _Running_a_Composition:
 
 Running a Composition
@@ -700,6 +748,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.registry import remove_instance_from_registry
 from psyneulink.core.globals.context import ContextFlags
@@ -1223,8 +1272,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                        composition=self)
         self.output_CIM = CompositionInterfaceMechanism(name=self.name + " Output_CIM",
                                                         composition=self)
+        self.parameter_CIM = CompositionInterfaceMechanism(name=self.name + " Parameter_CIM",
+                                                        composition=self)
         self.input_CIM_states = {}
         self.output_CIM_states = {}
+        self.parameter_CIM_states = {}
 
         self.shadows = {}
 
@@ -1334,11 +1386,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if node not in self.shadows:
             self.shadows[node] = []
 
+        nested_nodes = dict(self._get_nested_nodes())
         # If this node is shadowing another node, then add it to that node's entry in the Composition's "shadows" dict
+        # If the node it's shadowing is a nested node, add it to the entry for the composition it's nested in.
         for input_state in node.input_states:
             if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
-                if node not in self.shadows[input_state.shadow_inputs.owner]:
-                    self.shadows[input_state.shadow_inputs.owner].append(node)
+                owner = input_state.shadow_inputs.owner
+                if owner in nested_nodes:
+                    owner = nested_nodes[owner]
+                if node not in self.shadows[owner]:
+                    self.shadows[owner].append(node)
 
     def add_node(self, node, required_roles=None):
         """
@@ -1426,7 +1483,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Add all projections to the composition
             for proj_spec in projections:
-                self.add_projection(projection=proj_spec[0], feedback=proj_spec[1])
+                # The proj_spec assumes a direct connection between sender and receiver, and is therefore invalid if
+                # either are nested (i.e. projections between them need to be routed through a CIM). In these cases,
+                # we instantiate a new projection between sender and receiver instead of using the original spec.
+                # If the sender or receiver is an AutoAssociativeProjection, then the owner will be another projection
+                # instead of a mechanism, so we need to use owner_mech instead.
+                sender_node = proj_spec[0].sender.owner
+                if isinstance(sender_node, AutoAssociativeProjection):
+                    sender_node = proj_spec[0].sender.owner.owner_mech
+                receiver_node = proj_spec[0].receiver.owner
+                if isinstance(receiver_node, AutoAssociativeProjection):
+                    receiver_node = proj_spec[0].receiver.owner.owner_mech
+                if sender_node in self.nodes and \
+                        receiver_node in self.nodes:
+                    self.add_projection(projection=proj_spec[0],
+                                        feedback=proj_spec[1])
+                else:
+                    self.add_projection(sender=proj_spec[0].sender,
+                                        receiver=proj_spec[0].receiver,
+                                        feedback=proj_spec[1])
+
         if required_roles:
             if not isinstance(required_roles, list):
                 required_roles = [required_roles]
@@ -1526,18 +1602,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_shadows_dict(controller)
 
         # Skip first (OUTCOME) input_state
+        input_cims=[self.input_CIM] + [comp.input_CIM for comp in self._get_nested_compositions()]
         for input_state in controller.input_states[1:]:
             if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
                 for proj in input_state.shadow_inputs.path_afferents:
                     sender = proj.sender
-                    if sender.owner != self.input_CIM:
+                    if sender.owner not in input_cims:
                         self.add_projection(projection=MappingProjection(sender=sender, receiver=input_state),
                                             sender=sender.owner,
                                             receiver=controller)
                         shadow_proj._activate_for_compositions(self)
                     else:
-                        shadow_proj = MappingProjection(sender=proj.sender, receiver=input_state)
-                        shadow_proj._activate_for_compositions(self)
+                        try:
+                            shadow_proj = MappingProjection(sender=proj.sender, receiver=input_state)
+                            shadow_proj._activate_for_compositions(self)
+                        except DuplicateProjectionError:
+                            pass
             # MODIFIED 6/11/19 NEW: [JDC]
             for proj in input_state.path_afferents:
                 proj._activate_for_compositions(self)
@@ -2783,6 +2863,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:
             #  THIS SHOULD BE INTEGRATED WITH CALL TO _create_terminal_backprop_sequence_components
+            #  ** NEED TO CHECK WHETHER LAST NODE IN THE SEQUENCE IS TERMINAL AND IF SO:
+            #     ASSIGN USING: self.add_required_node_role(output_source, NodeRole.OUTPUT)
             # If learned_projection already has a LearningProjection (due to pathway overlap),
             #    use those terminal sequence components
             if (learned_projection.has_learning_projection
@@ -2848,6 +2930,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for input_state in old_error_signal_input_states:
                         input_state.owner.remove_states(input_state)
                     del self._terminal_backprop_sequences[pathway_mech]
+                    del self.required_node_roles[self.required_node_roles.index((pathway_mech, NodeRole.OUTPUT))]
 
             # Create terminal_sequence
             target, comparator, learning_mechanism = \
@@ -2860,6 +2943,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 COMPARATOR_MECHANISM: comparator}
+
+            # # MODIFIED CROSSED_PATHWAYS 7/28 NEW: [JDC]
+            self.add_required_node_role(pathway[-1], NodeRole.OUTPUT)
+            # MODIFIED CROSSED_PATHWAYS 7/28 END
 
             sequence_end = path_length-3
 
@@ -3009,7 +3096,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
             all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
             may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry of the
-            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead. """
+            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
+        """
         for node in q[0]:
             self._add_node_role(node, NodeRole.ORIGIN)
 
@@ -3019,6 +3107,56 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif len(q[-1]) < 2:
                 for previous_node in q[-2]:
                     self._add_node_role(previous_node, NodeRole.TERMINAL)
+
+    def _get_nested_nodes(self,
+                          nested_nodes=NotImplemented,
+                          root_composition=NotImplemented,
+                          visited_compositions=NotImplemented):
+        """Recursive search that returns all nodes of all nested compositions in a tuple with the composition they are
+            embedded in.
+
+        :return
+
+        A list of tuples in format (node, composition) containing all nodes of all nested compositions.
+        """
+        if nested_nodes is NotImplemented:
+            nested_nodes=[]
+        if root_composition is NotImplemented:
+            root_composition=self
+        if visited_compositions is NotImplemented:
+            visited_compositions = [self]
+        for node in self.nodes:
+            if node.componentType == 'Composition' and \
+                    node not in visited_compositions:
+                visited_compositions.append(node)
+                node._get_nested_nodes(nested_nodes,
+                                       root_composition,
+                                       visited_compositions)
+            elif root_composition is not self:
+                nested_nodes.append((node,self))
+        return nested_nodes
+
+    def _get_nested_compositions(self,
+                                 nested_compositions=NotImplemented,
+                                 visited_compositions=NotImplemented):
+        """Recursive search that returns all nested compositions.
+
+        :return
+
+        A list of nested compositions.
+        """
+        if nested_compositions is NotImplemented:
+            nested_compositions=[]
+        if visited_compositions is NotImplemented:
+            visited_compositions = [self]
+        for node in self.nodes:
+            if node.componentType == 'Composition' and \
+                    node not in visited_compositions:
+                nested_compositions.append(node)
+                visited_compositions.append(node)
+                node._get_nested_compositions(nested_compositions,
+                                              visited_compositions)
+        return nested_compositions
 
     def _determine_node_roles(self):
         # Clear old roles
@@ -3263,7 +3401,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.required_node_roles.remove(node_role_pair)
 
     def _create_CIM_states(self, context=None):
-
         """
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
               InputStates and OutputStates are being added to the CIMs
@@ -3287,6 +3424,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - delete all of the above for any node States which were previously, but are no longer, classified as
               INPUT/OUTPUT
 
+            - if composition has a controller, remove default InputState and OutputState of all nested compositions'
+              `parameter CIMs <Composition.parameter_CIM>` which contain nodes that will be modulated and whose default
+              states have not already been removed
+
+            - delete afferents of compositions' parameter CIMs if their sender is no longer the controller of any of
+              the composition's parent compositions
+
+            - create a corresponding InputState and ControlSignal on the `parameter_CIM <Composition.parameter_CIM>` for
+              each parameter modulated by the controller
+
+            - instantiate and activate projections from ControlSignals of controller to corresponding InputStates
+              of nested compositions' `parameter_CIMs <Composition.parameter_CIM>`
         """
 
         if not self.input_CIM.connected_to_composition:
@@ -3412,6 +3561,67 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.output_CIM.remove_states(self.output_CIM_states[output_state][0])
             self.output_CIM.remove_states(self.output_CIM_states[output_state][1])
             del self.output_CIM_states[output_state]
+
+        # PARAMETER CIMS
+        if self.controller:
+            controller = self.controller
+            nested_nodes = dict(self._get_nested_nodes())
+            nested_comps = self._get_nested_compositions()
+            for comp in nested_comps:
+                for state in comp.parameter_CIM.input_states:
+                    for afferent in state.all_afferents:
+                        if not comp in afferent.sender.owner.composition._get_nested_compositions():
+                            del state._afferents_info[afferent]
+                            if afferent in state.path_afferents:
+                                state.path_afferents.remove(afferent)
+                            if afferent in state.mod_afferents:
+                                state.mod_afferents.remove(afferent)
+
+            for modulatory_signal in controller.modulatory_signals:
+                for projection in modulatory_signal.projections:
+                    receiver = projection.receiver
+                    mech = receiver.owner
+                    if mech in nested_nodes:
+                        comp = nested_nodes[mech]
+                        pcim = comp.parameter_CIM
+                        pcim_states = comp.parameter_CIM_states
+                        if receiver not in pcim_states:
+                            if not pcim.connected_to_composition:
+                                pcim.input_states.remove(pcim.input_state)
+                                pcim.output_states.remove(pcim.output_state)
+                                pcim.connected_to_composition = True
+                            modulation = modulatory_signal.owner.modulation
+                            input_state = InputState(
+                                owner = pcim,
+                            )
+                            control_signal = ControlSignal(
+                                owner = pcim,
+                                modulation = modulation,
+                                variable = OWNER_VALUE,
+                                function = InterfaceStateMap(
+                                    corresponding_input_state = input_state
+                                ),
+                                modulates = receiver,
+                                name = 'PARAMETER_CIM_' + mech.name + "_" + receiver.name
+                            )
+                            for projection in control_signal.projections:
+                                projection._activate_for_compositions(comp)
+                            pcim_states[receiver] = (modulatory_signal, input_state)
+
+            for comp in nested_comps:
+                pcim = comp.parameter_CIM
+                connected_to_controller = False
+                for afferent in pcim.afferents:
+                    if afferent.sender.owner is controller:
+                        connected_to_controller = True
+                if not connected_to_controller:
+                    for efferent in controller.efferents:
+                        if efferent.receiver in pcim_states:
+                            input_projection = MappingProjection(
+                                sender = efferent.sender,
+                                receiver = pcim_states[efferent.receiver][1]
+                            )
+                            input_projection._activate_for_compositions(comp)
 
     def _assign_values_to_input_CIM(self, inputs, execution_id=None):
         """
@@ -3675,7 +3885,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         def mech_string(mech):
             """Return string with name of mechanism possibly with function and/or value
-            Inclusion of role, function and/or value is determined by arguments of call to show_structure """
+            Inclusion of role, function and/or value is determined by arguments of call to show_structure
+            """
             if show_headers:
                 mech_header = mechanism_header
             else:
@@ -4374,7 +4585,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    color=proj_color, penwidth=proj_width)
 
         def _assign_controller_components(g):
-            """Assign control nodes and edges to graph """
+            """Assign control nodes and edges to graph"""
 
             controller = self.controller
             if controller is None:
@@ -5045,6 +5256,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if nested:
             self.input_CIM.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
             self.input_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
+            self.parameter_CIM.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+            self.parameter_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
         else:
             inputs = self._adjust_execution_stimuli(inputs)
             self._assign_values_to_input_CIM(inputs, execution_id=execution_id)
@@ -5290,9 +5503,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         _comp_ex.execute_node(node)
                     else:
                         if node is not self.controller:
-                            node.execute(execution_id=execution_id,
-                                         runtime_params=execution_runtime_params,
-                                         context=ContextFlags.COMPOSITION)
+                            if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
+                                for state in node.input_states:
+                                    state.update(execution_id=execution_id,
+                                                 context=ContextFlags.COMPOSITION)
+                            node.execute(
+                                execution_id=execution_id,
+                                runtime_params=execution_runtime_params,
+                                context=ContextFlags.COMPOSITION
+                            )
 
                     # Reset runtime_params for node and its function if specified
                         if execution_id in node._runtime_params_reset:
@@ -5522,7 +5741,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_id=None,
             base_execution_id=None,
             context=None):
-
         """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.  See `Run` for details of formatting input specifications. See `Run` for details of
         formatting input specifications. Use **animate** to generate a gif of the execution sequence.
@@ -6391,11 +6609,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
         # If this is not a good assumption, we need another way to look up the feature InputStates
         # of the OCM and know which InputState maps to which predicted_input value
+
+        nested_nodes = dict(self._get_nested_nodes())
         for j in range(len(self.controller.input_states) - 1):
             input_state = self.controller.input_states[j + 1]
             if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
-                inputs[input_state.shadow_inputs.owner] = predicted_input[j]
-
+                owner = input_state.shadow_inputs.owner
+                if not owner in nested_nodes:
+                    inputs[input_state.shadow_inputs.owner] = predicted_input[j]
+                else:
+                    comp = nested_nodes[owner]
+                    if not comp in inputs:
+                        inputs[comp]=[[predicted_input[j]]]
+                    else:
+                        inputs[comp]=np.concatenate([[predicted_input[j]],inputs[comp][0]])
         return inputs
 
     def evaluate(
@@ -6413,7 +6640,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            `controller <Composition.controller>` in order to return the
            `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
            `controller <Composition.controller>` under that control_allocation. All values are
-           reset to pre-simulation values at the end of the simulation. """
+           reset to pre-simulation values at the end of the simulation.
+        """
         # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
         total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
 
@@ -6602,7 +6830,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             super()._dependent_components,
             self.nodes,
             self.projections,
-            [self.input_CIM, self.output_CIM],
+            [self.input_CIM, self.output_CIM, self.parameter_CIM],
             self.input_CIM.efferents,
             self.output_CIM.afferents,
             [self.controller] if self.controller is not None else []

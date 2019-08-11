@@ -66,7 +66,6 @@ def _cpu_jit_constructor():
 
     # PassManagerBuilder can be shared
     __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.inlining_threshold = 99999  # Inline all function calls
     __pass_manager_builder.loop_vectorize = True
     __pass_manager_builder.slp_vectorize = True
     __pass_manager_builder.opt_level = 3  # Most aggressive optimizations

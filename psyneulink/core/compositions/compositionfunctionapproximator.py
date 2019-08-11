@@ -90,7 +90,8 @@ class CompositionFunctionApproximator(Composition):
 
     def adapt(self, feature_values, control_allocation, net_outcome, execution_id=None, context=None):
         """Adjust parameters of `function <FunctionAppproximator.function>` to improve prediction of `target
-        <FunctionAppproximator.target>` from `input <FunctionAppproximator.input>`."""
+        <FunctionAppproximator.target>` from `input <FunctionAppproximator.input>`.
+        """
         raise CompositionFunctionApproximatorError("Subclass of {} ({}) must implement {} method.".
                                                    format(CompositionFunctionApproximator.__name__,
                                                           self.__class__.__name__, repr('adapt')))
