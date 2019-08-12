@@ -39,22 +39,18 @@ Execution <System_Execution>`).
 *A Note about the Implementation of Learning*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The implementation of learning in PsyNeuLink was designed for flexibility and "transparency" rather than efficiency.
-Unlike its implementation in most other environments -- where the learning algorithm is tightly integrated with the
+The implementation of learning in PsyNeuLink was designed for exposition rather than efficiency. Unlike its
+implementation in most other environments -- where the learning algorithm is tightly integrated with the
 elements of processing that it modifies --  PsyNeuLink separates it into three constituent components:  An
 `ObjectiveMechanism` used to evaluate the most proximal source of error, a `LearningMechanism` that uses that error
 (or one derived from it by another LearningMechanism) to calculate a learning signal;  and `LearningProjection(s)
 <LearningProjection>` that use that learning signal to modify the weight `matrix <MappingProjection.matrix>` of the
 `MappingProjection(s) <MappingProjection>` being learned.  This has the advantage of isolating and exposing the
 constituent computations, making it clearer to students what these are and how they operate, and also making each
-individually accessible for reconfiguration. However, it comes at the cost of efficiency.  Therefore, in its present
-form, PsyNeuLink is not suitable for conducting large scale learning models (e.g, deep learning networks). However,
-once trained, the parameters of such models can easily be incorporated into a PsyNeuLink model for use as part of a
-`System`.  Future extensions of PsyNeuLink will provide an interface for the direct construction and integration
-within the PsyNeuLink environment of objects created in other environments (e.g.,
-`TensorFlow <https://www.tensorflow.org/>`_, `PyTorch <https://pytorch.org>`_ or
-`Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_).
-
+individually accessible for reconfiguration. However, it comes at the cost of efficiency.  For efficient execution of
+supervised forms of learning (e.g., reinforcement learning and backpropagation), the `AutodiffComposition` can be used,
+which allows the model to be specified using PsyNeuLink, but actually executes learning using `PyTorch
+<https://pytorch.org>`.
 
 .. _LearningMechanism_Creation:
 
