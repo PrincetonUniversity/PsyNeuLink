@@ -662,6 +662,10 @@ as described for each form of learning below.
 
 **Unsupervised Learning**
 
+Generally autoassociative, based RecurrentTransferMechanism (examples:  Hebbian; ContrastiveHebbian??; Kohonen)
+As simple as implemeting that class, and specifying ??learning_mode??.  LearningMeachanism and LearningProjections
+are generated automatically ??Returns learning Components?  from add node??  from add_linear_processing_pathway??
+
 .. _Composition_Learning_Supervised:
 
 **Supervised Learning**
