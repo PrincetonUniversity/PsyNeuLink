@@ -2020,6 +2020,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"First argument in add_linear_processing_pathway method of '{self.name}' "
                                    f"{Composition.__name__} must be a list of nodes")
 
+        # MODIFIED 8/11/19 NEW: [JDC]
+        # Then, if there are any ControlMechanisms or ObjectiveMechanisms,
+        #    and the ControlMechanism has it monitor_for_control attribute assigned
+        #    or the ObjectiveMechanism projects to a ControlMechanism:  # FIX: ADD SAME CONDITION AS FOR CLTMECH?
+        #        add them to the Compostion
+        #        but delete them from the pathway specification as they will be handled elsewhere (see docstring)
+        items_to_delete = []
+        for item in pathway:
+            if ((isinstance(item, ControlMechanism) and item.monitor_for_modulation)
+                    or (isinstance(item, ObjectiveMechanism)
+                        and any((isinstance(p.receiver.owner, ControlMechanism)
+                                 and (item.monitor or p.receiver.owner.monitor_for_control is not NotImplemented)
+                                 for p in item.efferents)))):
+                self.add_node(item)
+                items_to_delete.append(item)
+        for item in items_to_delete:
+            del pathway[pathway.index(item)]
+
+        # MODIFIED 8/11/19 END
+
+        # Then make sure the first item is a node and not a Projection
         if isinstance(pathway[0], (Mechanism, Composition, tuple)):
             self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
             nodes.append(pathway[0])
@@ -2027,20 +2048,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise CompositionError("The first item in a linear processing pathway must be a Node (Mechanism or "
                                    "Composition).")
-
-        # MODIFIED 8/11/19 NEW: [JDC]
-        # Then, if there are any ControlMechanisms or ObjectiveMechanisms,
-        #    and the ControlMechanism has it monitor_for_control attribute assigned
-        #    or the ObjectiveMechanism projects to a ControlMechanism:  # FIX: ADD SAME CONDITION AS FOR CLTMECH?
-        #        add them to the Compostion
-        #        but delete them from the pathway specification as they will be handled elsewhere (see docstring)
-        for i, item in enumerate(pathway):
-            if ((isinstance(item, ControlMechanism) and item.monitor_for_control is not NotImplemented)
-                    or (isinstance(item, ObjectiveMechanism)
-                        and any(isinstance(p.receiver.owner, ControlMechanism) for p in item.efferents))):
-                self.add_node(item)
-                del pathway[i]
-        # MODIFIED 8/11/19 END
 
         # Then, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
