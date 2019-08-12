@@ -23,10 +23,9 @@ It defines a common set of attributes possessed, and methods used by all Composi
 
 Composition "Nodes" are `Mechanisms <Mechanism>` and/or nested `Compositions <Composition>`. `Projections
 <Projection>` connect two Nodes. The Composition's `graph <Composition.graph>` stores the structural relationships
-among the Nodes of a Composition and the Projections that connect them.
-
-The Composition's `scheduler <Scheduler>` generates an execution queue based on these structural dependencies,
-allowing for other user-specified scheduling and termination conditions to be mixed in.
+among the Nodes of a Composition and the Projections that connect them.  The Composition's `scheduler <Scheduler>`
+generates an execution queue based on these structural dependencies, allowing for other user-specified scheduling
+and termination conditions to be specified.
 
 .. _Composition_Creation:
 
@@ -576,6 +575,9 @@ customize when it is executed.  All three of these attributes can be specified i
 Composition's constructor, or programmatically after it is constructed by assigning the desired value to the
 attribute.
 
+
+COMMENT:
+
 For Developers
 --------------
 
@@ -624,11 +626,36 @@ with `Condition` specifications for individual Components to execute different C
 
 Runtime Params
 
+COMMENT
+
+.. _Composition_Learning
+
+Learning
+--------
+
+COMMENT:
+OUTLINE:
+- PNL implements all major forms of connectionist learning natively
+  - explain that point is exposition, not efficiency (for efficiency can use autodiff -- see below)
+  - unsupervised:  autoassociative is done using the appropriate mechanisms
+  - supervised:  three methods used to implement three class of learning:  simple RL, TD, and bp
+     explain use of targets
+     explain building up  more complicated networks from constituent pathways
+     give examples
+- Can also use autodiff
+- show_graph(show_learning=True)
+
+COMMENT
 
 .. _Visualizing_a_Composition:
 
 Visualizing a Composition
 -------------------------
+
+COMMENT:
+XXX - add discussion of show_controller and show_learning
+XXX - add example of nested composition
+COMMENT
 
 The `show_graph <Composition.show_graph>` method generates a display of the graph structure of Nodes (Mechanisms and
 Nested Compositions) and Projections in the Composition (based on the Composition's `processing graph
@@ -658,7 +685,7 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 | ...           )                                           |                                           |
 | >>> comp = Composition(                                   |                                           |
 | ...           name='Comp',                                |                                           |
-| ...           enable_controller=True           |                                           |
+| ...           enable_controller=True                      |                                           |
 | ...           )                                           |                                           |
 | >>> comp.add_linear_processing_pathway([a,c])             |                                           |
 | >>> comp.add_linear_processing_pathway([b,c])             |                                           |
@@ -669,7 +696,7 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 | ...            control_signals=(GAIN, c),                 |                                           |
 | ...            agent_rep=comp                             |                                           |
 | ...            )                                          |                                           |
-| >>> comp.add_controller(ctlr)                  |                                           |
+| >>> comp.add_controller(ctlr)                             |                                           |
 +-----------------------------------------------------------+-------------------------------------------+
 
 Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
