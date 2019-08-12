@@ -313,8 +313,8 @@ execute, simulating a situation in which the task instruction is processed befor
     task = LCAMechanism(name='TASK', size=2)
 
     # Assign conditions to scheduler:
-    Stroop_model.processing_scheduler.add_condition(color_hidden, EveryNExecutions(task, 10))
-    Stroop_model.processing_scheduler.add_condition(word_hidden, EveryNExecutions(task, 10))
+    Stroop_model.scheduler_processing.add_condition(color_hidden, EveryNExecutions(task, 10))
+    Stroop_model.scheduler_processing.add_condition(word_hidden, EveryNExecutions(task, 10))
 
     # Run with scheduler:
     Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color})
@@ -337,8 +337,8 @@ conditions for execution of the ``color_hidden`` and ``task_hidden`` Mechanism's
 
     # Add Conditions to the ``color_hidden`` and ``word_hidden`` Mechanisms that depend on the converge function:
     epsilon = 0.01
-    Stroop_model.processing_scheduler.add_condition(color_hidden, When(converge, task, epsilon)))
-    Stroop_model.processing_scheduler.add_condition(word_hidden, When(converge, task, epsilon)))
+    Stroop_model.scheduler_processing.add_condition(color_hidden, When(converge, task, epsilon)))
+    Stroop_model.scheduler_processing.add_condition(word_hidden, When(converge, task, epsilon)))
 
 PsyNeuLink provides a rich set of `pre-defined Conditions <Condition_Pre-Specified_List>` (such as ``When`` in the
 examples above), but Conditions can also be constructed using any Python function.  Together, these can be combined to
@@ -560,14 +560,16 @@ Learning
 ~~~~~~~~
 
 Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
-mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available in other
-Python-based environments, such as Pytorch.  Since the latter are becoming increasingly accessible and powerful, the
-native implementation of learning in PsyNeuLink is designed with the goals of modularity and exposition rather than
-efficiency of computation.  That is, it is better suited for "story-boarding" a model that includes learning
-components, and for illustrating process flow during learning, than it is for large scale simulations involving
-learning.  However, the specification of the learning components of a model in PsyNeuLink can easily be translated
-into a Pytorch description, which can then be integrated into the PsyNeuLink model with all the benefits of
-Pytorch execution.  Each of the two ways of specifying learning components is described below.
+mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available from other
+Python-based environments.  Currently, has builtin intregration with `PyTorch <https://pytorch.org>`_, however
+other envirnoments can be accessed using `UserDefinedFunctions <UserDefinedFunction>`.  Since such environments are
+becoming increasingly accessible and powerful, the native implementation of learning in PsyNeuLink is designed with
+a complemenatry set of the goals: modularity and exposition, rather than efficiency of computation.  That is, it is
+better suited for "story-boarding" a model that includes learning components, and for illustrating process flow
+during learning, than it is for large scale simulations involving learning.  However, the specification of the
+learning components of a model in PsyNeuLink can easily be translated into a Pytorch description, which can then be
+integrated into the PsyNeuLink model with all the benefits of Pytorch execution.  Each of the two ways of specifying
+learning components is described below.
 
 LearningMechanisms
 ^^^^^^^^^^^^^^^^^^

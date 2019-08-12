@@ -633,6 +633,24 @@ COMMENT
 Learning
 --------
 
+There are two ways of implementing learning in a Composition:  in a native form, and by using the specialized
+subclass `AutodiffComposition`, which actually executes learning using `PyTorch <https://pytorch.org>`_.
+Each of
+these approaches is described below.
+
+LearningMechanisms and
+
+of Composition
+Since the latter are becoming increasingly accessible and
+powerful, the
+native implementation of learning in PsyNeuLink is designed with the goals of modularity and exposition rather than
+efficiency of computation.  That is, it is better suited for "story-boarding" a model that includes learning
+components, and for illustrating process flow during learning, than it is for large scale simulations involving
+learning.  However, the specification of the learning components of a model in PsyNeuLink can easily be translated
+into a Pytorch description, which can then be integrated into the PsyNeuLink model with all the benefits of
+Pytorch execution.  Each of the two ways of specifying learning components is described below.
+
+
 COMMENT:
 OUTLINE:
 - PNL implements all major forms of connectionist learning natively
@@ -644,6 +662,32 @@ OUTLINE:
      give examples
 - Can also use autodiff
 - show_graph(show_learning=True)
+
+FROM LEARNINGMECHANISM: ------------------------------------------------------------------------------------------------
+
+.. _LearningMechanism_Note
+
+*A Note about the Implementation of Learning*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The implementation of learning in PsyNeuLink was designed for flexibility and "transparency" rather than efficiency.
+Unlike its implementation in most other environments -- where the learning algorithm is tightly integrated with the
+elements of processing that it modifies --  PsyNeuLink separates it into three constituent components:  An
+`ObjectiveMechanism` used to evaluate the most proximal source of error, a `LearningMechanism` that uses that error
+(or one derived from it by another LearningMechanism) to calculate a learning signal;  and `LearningProjection(s)
+<LearningProjection>` that use that learning signal to modify the weight `matrix <MappingProjection.matrix>` of the
+`MappingProjection(s) <MappingProjection>` being learned.  This has the advantage of isolating and exposing the
+constituent computations, making it clearer to students what these are and how they operate, and also making each
+individually accessible for reconfiguration. However, it comes at the cost of efficiency.  Therefore, in its present
+form, PsyNeuLink is not suitable for conducting large scale learning models (e.g, deep learning networks). However,
+once trained, the parameters of such models can easily be incorporated into a PsyNeuLink model for use as part of a
+`System`.  Future extensions of PsyNeuLink will provide an interface for the direct construction and integration
+within the PsyNeuLink environment of objects created in other environments (e.g.,
+`TensorFlow <https://www.tensorflow.org/>`_, `PyTorch <https://pytorch.org>`_ or
+`Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_).
+
+END FROM LEARNING_MECHANISM
+
 
 FROM PROCESS: ----------------------------------------------------------------------------------------------------------
 
