@@ -645,6 +645,82 @@ OUTLINE:
 - Can also use autodiff
 - show_graph(show_learning=True)
 
+FROM PROCESS: ----------------------------------------------------------------------------------------------------------
+
+.. _Process_Learning_Sequence:
+
+*Learning*
+~~~~~~~~~~
+
+Learning operates over a *learning sequence*: a contiguous sequence of `ProcessingMechanisms <ProcessingMechanism>` in
+a Process `pathway <Process.pathway>`, and the `MappingProjections <MappingProjection>` between them, that have
+been specified for learning. Learning modifies the `matrix <MappingProjection.matrix>` parameter of the
+MappingProjections in the sequence, so that the input to the first ProcessingMechanism in the sequence generates an
+output from the last ProcessingMechanism that matches as closely as possible the target specified for the sequence
+(see `Process_Execution_Learning` below for a more detailed description).
+
+.. _Process_Learning_Specification:
+
+Learning can be `specified for individual (or subsets of) MappingProjections
+<MappingProjection_Learning_Specification>`, or for the entire Process.  It is specified for the entire process by
+assigning a specification for a `LearningProjection <LearningProjection_Creation>` or `LearningSignal
+<LearningSignal_Specification>` specification, or the keyword *ENABLED*, to the **learning** argument of the
+Process' constructor.  Specifying learning for a Process implements it for all MappingProjections in the Process (except
+those that project from the `process_input_states` to the `origin_mechanism <Process.origin_mechanism>`), which
+are treated as a single learning sequence.  Mechanisms that receive MappingProjections for which learning has been
+specified must be compatible with learning (that is, their `function <Mechanism_Base.function>` must be compatible with
+the `function <LearningMechanism.function>` of the `LearningMechanism` for the MappingProjections they receive (see
+`LearningMechanism_Function`).
+
+.. _Process_Learning_Components:
+
+The following Components are created for each learning sequence specified for a Process (see figure below):
+
+    * a `TARGET` `ComparatorMechanism` (assigned to the Process' `target_nodes <Process.target_nodes>`
+      attribute), that is used to `calculate an error signal <ComparatorMechanism_Function>` for the sequence, by
+      comparing `a specified output <LearningMechanism_Activation_Output>` of the last Mechanism in the learning
+      sequence (received in the ComparatorMechanism's *SAMPLE* `InputState <ComparatorMechanism_Structure>`) with the
+      item of the **target** argument in Process' `execute <Process.execute>` or `run <Process.run>` method
+      corresponding to the learning sequence (received in the ComparatorMechanism's *TARGET* `InputState
+      <ComparatorMechanism_Structure>`).
+    ..
+    * a MappingProjection that projects from the last ProcessingMechanism in the sequence to the *SAMPLE* `InputState
+      <ComparatorMechanism_Structure>` of the `TARGET` Mechanism;
+    ..
+    * a ProcessingInputState to represent the corresponding item of the **target** argument of the Process' `execute
+      <Process.execute>` and `run <Process.run>` methods;
+    ..
+    * a MappingProjection that projects from the `ProcessInputState <ProcessInputState>` for the **target** item to the
+      *TARGET* `InputState <ComparatorMechanism_Structure>` of the `TARGET` Mechanism;
+    ..
+    * a `LearningMechanism` for each MappingProjection in the sequence that calculates the `learning_signal
+      <LearningMechanism.learning_signal>` used to modify the `matrix <MappingProjection.matrix>` parameter for that
+      MappingProjection, along with a `LearningSignal` and `LearningProjection` that convey the `learning_signal
+      <LearningMechanism.learning_signal>` to the MappingProjection's *MATRIX* `ParameterState
+      <Mapping_Matrix_ParameterState>` (additional MappingProjections are created for the LearningMechanism -- see
+      `LearningMechanism_Learning_Configurations` for details).
+
+    .. note::
+       The Components created when learning is specified for individual MappingProjections of a Process (or subsets of
+       them) take effect only if the Process is executed on its own (i.e., using its `execute <Process.execute>`
+       or `run <Process.run>` methods.  For learning to in a Process when it is `executed as part of a System
+       <System_Execution_Learning>`, learning must be specified for the *entire Process*, as described above.
+
+
+.. _Process_Learning_Figure:
+
+**Figure: Learning Components in a Process**
+
+.. figure:: _static/Process_Learning_fig.svg
+   :alt: Schematic of LearningMechanism and LearningProjections in a Process
+
+   Learning using the `BackPropagation` learning algorithm in a three-layered network, using a `TransferMechanism` for
+   each layer (capitalized labels in Mechanism components are their `designated roles
+   <Mechanism_Role_In_Processes_And_Systems>` in the Process -- see also `Process_Mechanisms` and `Keywords`).
+
+END FROM PROCESS: -----------------------------------------------------------------------------------------------------
+
+
 COMMENT
 
 .. _Visualizing_a_Composition:
