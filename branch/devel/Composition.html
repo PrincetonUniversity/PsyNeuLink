@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.5.3.2+352.g3bb26de documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.5.3.2+354.gc2d107d documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+352.g3bb26de',
+              VERSION:'0.5.3.2+354.gc2d107d',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+352
+                0.5.3.2+354
               </div>
             
           
@@ -277,9 +277,9 @@ other Nodes and/or Projections are constructed in the same script.</p>
 </div></blockquote>
 <div class="section" id="nested-compositions">
 <h3><em>Nested Compositions</em><a class="headerlink" href="#nested-compositions" title="Permalink to this headline">¶</a></h3>
-<p>A Composition can be used as a node of another Composition. To do this, simply call <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_node" title="psyneulink.core.compositions.composition.Composition.add_node"><code class="xref any py py-meth docutils literal"><span class="pre">add_node</span></code></a>
-from the parent composition using the child Composition as an argument. You can then project to and from the nested
-composition just as you would any other node.</p>
+<p>To use a Composition as a node of another Composition, simply call <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_node" title="psyneulink.core.compositions.composition.Composition.add_node"><code class="xref any py py-meth docutils literal"><span class="pre">add_node</span></code></a> from the parent
+composition, using the child Composition as the ‘node’ argument. This allows you to create projections to and from
+the nested composition just as you would another Mechanism.</p>
 <blockquote>
 <div><p><em>Create outer Composition:</em></p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">outer_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;outer_A&#39;</span><span class="p">)</span>
@@ -295,7 +295,7 @@ composition just as you would any other node.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">inner_comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">inner_A</span><span class="p">,</span> <span class="n">inner_B</span><span class="p">])</span>
 </pre></div>
 </div>
-<p><em>Nest inner Composition within outer Composition using `add_node &lt;Composition.add_node&gt;`:</em></p>
+<p><em>Nest inner Composition within outer Composition using the add_node method:</em></p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">outer_comp</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">inner_comp</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -309,7 +309,8 @@ composition just as you would any other node.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">outer_comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dict</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><em>Using `add_linear_processing_pathway &lt;Composition.add_linear_processing_pathway&gt;` with nested compositions for brevity:</em></p>
+<p><em>A less verbose implementation of the above Composition that uses the add_linear_processing_pathway method in lieu
+of add_node and add_projection:</em></p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">outer_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;outer_A&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">outer_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;outer_B&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">outer_comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;outer_comp&#39;</span><span class="p">)</span>
@@ -747,9 +748,9 @@ occurs in the <code class="xref any docutils literal"><span class="pre">None</sp
 <div class="section" id="controller">
 <span id="composition-controller"></span><h2>Controller<a class="headerlink" href="#controller" title="Permalink to this headline">¶</a></h2>
 <p>A Composition can be assigned a <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.  This is a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a>, or a subclass
-of one, that modulates the parameters of Components within the Composition.  It typically does this based on the output
-of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that evaluates the value of other Mechanisms in the Composition, and provides the result to
-the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.</p>
+of one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
+It typically does this based on the output of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that evaluates the value of other Mechanisms in
+the Composition, and provides the result to the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.</p>
 <div class="section" id="assigning-a-controller">
 <span id="composition-controller-assignment"></span><h3>Assigning a Controller<a class="headerlink" href="#assigning-a-controller" title="Permalink to this headline">¶</a></h3>
 <p>A <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> can be assigned either by specifying it in the <strong>controller</strong> argument of the
@@ -852,7 +853,7 @@ these can be shown as follows:</p>
 <span id="composition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.compositions.composition.Composition">
-<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller: psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism = None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x1200903c8&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>enable_learning=False</em>, <em>retain_old_simulation_data=None</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.composition.</code><code class="descname">Composition</code><span class="sig-paren">(</span><em>name=None</em>, <em>controller: psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism = None</em>, <em>enable_controller=None</em>, <em>controller_mode: &lt;typecheck.tc_predicates.enum object at 0x11d3ca320&gt; = 'after'</em>, <em>controller_condition: psyneulink.core.scheduling.condition.Condition = &lt;psyneulink.core.scheduling.condition.Always object&gt;</em>, <em>enable_learning=False</em>, <em>retain_old_simulation_data=None</em>, <em>**param_defaults</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1032,7 +1033,7 @@ if False, simulation values will be deleted unless otherwise specified by indivi
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_backpropagation_pathway">
-<code class="descname">add_backpropagation_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.framework.optional object at 0x1200906a0&gt; = 'after'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_backpropagation_pathway" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_backpropagation_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.framework.optional object at 0x11d3ca5f8&gt; = 'after'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_backpropagation_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add linear processing pathway with backpropogation learning</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1209,7 +1210,7 @@ already specified.  If an item in the list is a list of projections, called recu
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_reinforcement_learning_pathway">
-<code class="descname">add_reinforcement_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x120090438&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_reinforcement_learning_pathway" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_reinforcement_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x11d3ca390&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_reinforcement_learning_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1244,7 +1245,7 @@ LEARNED_PROJECTION: learned_projection}</li>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_td_learning_pathway">
-<code class="descname">add_td_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x120090518&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_td_learning_pathway" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_td_learning_pathway</code><span class="sig-paren">(</span><em>pathway</em>, <em>learning_rate=0.05</em>, <em>error_function=None</em>, <em>learning_update: &lt;typecheck.tc_predicates.any object at 0x11d3ca400&gt; = 'online'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_td_learning_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
