@@ -2037,7 +2037,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 items_to_delete.append(item)
         for item in items_to_delete:
             del pathway[pathway.index(item)]
-
         # MODIFIED 8/11/19 END
 
         # Then make sure the first item is a node and not a Projection
@@ -4903,11 +4902,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         @tc.typecheck
         def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None):
+
             proj_color = proj_color or default_node_color
+
             for sndr in senders:
 
                 # Set sndr info
-
                 sndr_label = self._get_graph_node_label(sndr, show_dimensions)
 
                 # Iterate through all Projections from all OutputStates of sndr
