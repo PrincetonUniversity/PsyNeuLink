@@ -23,7 +23,7 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.core.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_PARAMS, NOISE, PREDICTION_MECHANISM, RATE, \
     kwPreferenceSetName, kwProgressBarChar
@@ -875,6 +875,7 @@ class PredictionMechanism(IntegratorMechanism):
         rate = Parameter(1.0, modulable=True)
 
     @tc.typecheck
+    @handle_external_context(source=None)
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -893,9 +894,9 @@ class PredictionMechanism(IntegratorMechanism):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if not context in {ContextFlags.COMPONENT, ContextFlags.COMPOSITION, ContextFlags.COMMAND_LINE}:
+        if not context.source in {ContextFlags.COMPONENT, ContextFlags.COMPOSITION, ContextFlags.COMMAND_LINE}:
             warnings.warn("PredictionMechanism should not be constructed on its own.  If you insist,"
-                          "set context=ContextFlags.COMMAND_LINE, but proceed at your peril!")
+                          "set context=Context(source=ContextFlags.COMMAND_LINE), but proceed at your peril!")
             return
 
         if params and FUNCTION in params:

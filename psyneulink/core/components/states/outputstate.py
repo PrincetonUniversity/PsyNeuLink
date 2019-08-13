@@ -594,7 +594,7 @@ from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function, function_type, method_type
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ALL, ASSIGN, CALCULATE, COMMAND_LINE, CONTEXT, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, \
     MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MECHANISM_VALUE, NAME, \
@@ -975,6 +975,7 @@ class OutputState(State_Base):
     #endregion
 
     @tc.typecheck
+    @handle_external_context()
     def __init__(self,
                  owner=None,
                  reference_value=None,
@@ -988,10 +989,6 @@ class OutputState(State_Base):
                  **kwargs):
 
         context = kwargs.pop(CONTEXT, None)
-        if context is None:
-            context = ContextFlags.COMMAND_LINE
-            self.context.source = ContextFlags.COMMAND_LINE
-            self.context.string = COMMAND_LINE
 
         # For backward compatibility with CALCULATE, ASSIGN and INDEX
         if 'calculate' in kwargs:
@@ -1501,7 +1498,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
-    if context & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
+    if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
         owner.output_states.extend(state_list)
     else:
         owner._output_states = state_list

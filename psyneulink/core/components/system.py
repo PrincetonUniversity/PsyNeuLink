@@ -456,7 +456,7 @@ from psyneulink.core.components.projections.projection import Projection
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, EXECUTING, FUNCTION, FUNCTIONS, \
     INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, \
@@ -957,7 +957,7 @@ class System(System_Base):
         prefs = SystemPreferenceSet(owner=self, prefs=prefs, context=context)
 
         if not context:
-            context = ContextFlags.COMPOSITION
+            context = Context(source=ContextFlags.COMPOSITION)
             self.initialization_status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
 
@@ -2641,6 +2641,8 @@ class System(System_Base):
         for mech, value in self.initial_values.items():
             mech.initialize(value, execution_context=execution_context)
 
+    # execute previously always set source to ContextFlags.COMPOSITION
+    # @handle_external_context(source=ContextFlags.COMPOSITION, execution_phase=ContextFlags.PROCESSING)
     def execute(self,
                 input=None,
                 target=None,
@@ -2706,7 +2708,7 @@ class System(System_Base):
             self._component_execution_count = 0
 
         if not context:
-            context = ContextFlags.COMPOSITION
+            context = Context(source=ContextFlags.COMPOSITION)
             self._assign_context_values(
                 execution_id,
                 propagate=True,
@@ -2818,7 +2820,6 @@ class System(System_Base):
                 execution_phase=ContextFlags.LEARNING,
                 string=self.parameters.context._get(execution_id).string.replace(EXECUTING, LEARNING + ' ')
             )
-
             self._execute_learning(target=target, execution_id=execution_id, context=context)
 
             self._assign_context_values(
@@ -2886,7 +2887,6 @@ class System(System_Base):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
 
-                context = ContextFlags.COMPOSITION
                 mechanism._assign_context_values(
                     execution_id,
                     string="Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]",
@@ -2968,7 +2968,6 @@ class System(System_Base):
         #    (i.e., after execution of the pathways, but before learning)
         # Note:  this accomodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
-
         if not hasattr(self, "target"):
             self.target = self.targets
         if target is None or len(target) == 0:
@@ -3037,8 +3036,7 @@ class System(System_Base):
                     processes = list(component.sender.owner.processes.keys())
                     component.parameters.context._get(execution_id).string = "Updating {ParameterState.__name__} for " \
                                                                              "{component.name} in {self.name}"
-                    component._parameter_states[MATRIX]._update(execution_id=execution_id,
-                                                                context=ContextFlags.COMPOSITION)
+                    component._parameter_states[MATRIX]._update(execution_id=execution_id, context=context)
 
                 component.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
@@ -3078,6 +3076,8 @@ class System(System_Base):
                              ))
                              # process_names))
 
+    # correct here? happens in code but maybe should be COMMAND_LINE
+    @handle_external_context(source=ContextFlags.COMPOSITION)
     def run(self,
             inputs=None,
             num_trials=None,
@@ -3288,6 +3288,7 @@ class System(System_Base):
 
         logger.debug(inputs)
 
+        context.source = ContextFlags.COMPOSITION
         from psyneulink.core.globals.environment import run
         result = run(self,
                    inputs=inputs,
@@ -3304,7 +3305,7 @@ class System(System_Base):
                    termination_learning=termination_learning,
                    runtime_params=runtime_params,
                    execution_id=execution_id,
-                   context=ContextFlags.COMPOSITION)
+                   context=context)
 
         if self._animate is not False:
             # Save list of gifs in self._animation as movie file
@@ -3700,7 +3701,7 @@ class System(System_Base):
     @controller.setter
     def controller(self, control_mech_spec):
         self.context.string = 'System.controller setter'
-        self._instantiate_controller(control_mech_spec, context=ContextFlags.PROPERTY)
+        self._instantiate_controller(control_mech_spec, context=Context(source=ContextFlags.PROPERTY))
 
     @property
     def control_signals(self):

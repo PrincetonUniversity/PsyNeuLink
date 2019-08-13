@@ -329,7 +329,7 @@ class AutoAssociativeProjection(MappingProjection):
 
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
 
-        if context==ContextFlags.LEARNING:
+        if context.execution_phase == ContextFlags.LEARNING:
             self.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
         super()._update_parameter_states(execution_id, runtime_params, context)
 

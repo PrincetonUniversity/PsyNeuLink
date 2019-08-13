@@ -487,7 +487,7 @@ from psyneulink.core.components.functions.combinationfunctions import Combinatio
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
     COMBINE, COMMAND_LINE, CONTEXT, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
     LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
@@ -799,7 +799,7 @@ class InputState(State_Base):
 
         context = kwargs.pop(CONTEXT, None)
         if context is None:
-            context = ContextFlags.COMMAND_LINE
+            context = Context(source=ContextFlags.COMMAND_LINE, string=COMMAND_LINE)
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
 
@@ -1393,7 +1393,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
-    if context & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
+    if context.source & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list

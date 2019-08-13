@@ -634,7 +634,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, System_Base
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import INPUT_LABELS_DICT, MECHANISM, OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.utilities import call_with_pruned_args
@@ -652,6 +652,7 @@ class RunError(Exception):
          return repr(obj.error_value)
 
 @tc.typecheck
+@handle_external_context()
 def run(obj,
         inputs=None,
         num_trials:tc.optional(int)=None,
@@ -667,7 +668,7 @@ def run(obj,
         termination_learning=None,
         runtime_params=None,
         execution_id=None,
-        context=ContextFlags.COMMAND_LINE):
+        context=None):
     """run(                      \
     inputs,                      \
     num_trials=None,             \
@@ -862,11 +863,6 @@ def run(obj,
                 if isinstance(projection, LearningProjection):
                     projection.function_obj.learning_rate = obj.learning_rate
 
-    # Class-specific validation:
-    if not obj.parameters.context._get(execution_id).flags:
-        obj.initialization_status = ContextFlags.VALIDATING
-        obj.parameters.context._get(execution_id).string = RUN + "validating " + obj.name
-
     # INITIALIZATION
     if initialize:
         obj.initialize(execution_context=execution_id)
@@ -920,8 +916,7 @@ def run(obj,
                         obj.target = execution_targets
                         obj.current_targets = execution_targets
 
-            # if context == ContextFlags.COMMAND_LINE and not obj.context.execution_phase == ContextFlags.SIMULATION:
-            if context == ContextFlags.COMMAND_LINE or not obj.parameters.context._get(execution_id).execution_phase == ContextFlags.SIMULATION:
+            if context.source == ContextFlags.COMMAND_LINE or not obj.parameters.context._get(execution_id).execution_phase == ContextFlags.SIMULATION:
                 obj._assign_context_values(execution_id, execution_phase=ContextFlags.PROCESSING, composition=obj, propagate=True)
                 obj.parameters.context._get(execution_id).string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
 

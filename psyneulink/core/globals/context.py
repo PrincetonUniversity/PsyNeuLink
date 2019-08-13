@@ -489,7 +489,7 @@ class Context():
 
 
 @tc.typecheck
-def _get_context(context:tc.any(ContextFlags, str)):
+def _get_context(context:tc.any(ContextFlags, Context, str)):
     """Set flags based on a string of ContextFlags keywords
     If context is already a ContextFlags mask, return that
     Otherwise, return mask with flags set corresponding to keywords in context
@@ -497,6 +497,8 @@ def _get_context(context:tc.any(ContextFlags, str)):
     # FIX: 3/23/18 UPDATE WITH NEW FLAGS
     if isinstance(context, ContextFlags):
         return context
+    if isinstance(context, Context):
+        context = context.string
     context_flag = ContextFlags.UNSET
     if VALIDATE in context:
         context_flag |= ContextFlags.VALIDATING

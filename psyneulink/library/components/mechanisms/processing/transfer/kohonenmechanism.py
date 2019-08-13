@@ -71,7 +71,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, LEARNED_PROJECTION, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -485,6 +485,7 @@ class KohonenMechanism(TransferMechanism):
             self.configure_learning(context=context)
 
     # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
+    @handle_external_context()
     def configure_learning(self,
                            learning_function:tc.optional(tc.any(is_function_type))=None,
                            learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
@@ -535,7 +536,6 @@ class KohonenMechanism(TransferMechanism):
 
         self.matrix = self.learned_projection.parameter_states[MATRIX]
 
-        context = context or ContextFlags.COMMAND_LINE
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE
 
         self.learning_mechanism = self._instantiate_learning_mechanism(learning_function=self.learning_function,

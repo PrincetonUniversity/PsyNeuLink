@@ -1167,7 +1167,7 @@ class State_Base(State):
 
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
-        if context == ContextFlags.COMMAND_LINE:
+        if context.source == ContextFlags.COMMAND_LINE:
             owner.add_states([self])
 
     def _handle_size(self, size, variable):
@@ -1486,7 +1486,7 @@ class State_Base(State):
                 # If sender has been instantiated, try to complete initialization
                 # If not, assume it will be handled later (by Mechanism or Composition)
                 if isinstance(sender, State) and sender.initialization_status == ContextFlags.INITIALIZED:
-                    projection._deferred_init()
+                    projection._deferred_init(context=context)
 
 
             # VALIDATE (if initialized)
@@ -2520,8 +2520,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                 else:
                     # state.reference_value = owner.defaults.variable[0]
                     state.reference_value = state.init_args[VARIABLE]
-            state.init_args[CONTEXT]=context
-            state._deferred_init()
+            state._deferred_init(context=context)
 
         # # FIX: 10/3/17 - CHECK THE FOLLOWING BY CALLING STATE-SPECIFIC METHOD?
         # # FIX: DO THIS IN _parse_connection_specs?

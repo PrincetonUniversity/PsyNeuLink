@@ -470,7 +470,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Pro
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state, _instantiate_state_list
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SINGLETON, TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg, kwSeparator
 from psyneulink.core.globals.parameters import Defaults, Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -1948,7 +1948,7 @@ class Process(Process_Base):
 
         # For each Projection in the list
         for projection in projection_list:
-            projection._deferred_init()
+            projection._deferred_init(context=context)
 
             # FIX:  WHY DOESN'T THE PROJECTION HANDLE THIS? (I.E., IN ITS deferred_init() METHOD?)
             # For each parameter_state of the Projection
@@ -1957,7 +1957,7 @@ class Process(Process_Base):
                     # Initialize each Projection to the ParameterState (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
                     for param_projection in parameter_state.mod_afferents:
-                        param_projection._deferred_init()
+                        param_projection._deferred_init(context=context)
                         if isinstance(param_projection, LearningProjection):
                             # Get ObjectiveMechanism if there is one, and add to _learning_mechs
                             try:
@@ -2154,6 +2154,8 @@ class Process(Process_Base):
         for mech, value in self.initial_values.items():
             mech.initialize(value, execution_context)
 
+    # correct here? happens in code but maybe should be COMMAND_LINE
+    @handle_external_context(source=ContextFlags.COMPOSITION)
     def execute(
         self,
         input=None,
@@ -2226,15 +2228,11 @@ class Process(Process_Base):
         if execution_id is None:
             execution_id = self.default_execution_id
 
-        if not context:
-            context = ContextFlags.COMPOSITION
-
         if self.parameters.context._get(execution_id) is None:
             self._assign_context_values(
                 execution_id,
                 propagate=True,
                 execution_phase=ContextFlags.PROCESSING,
-                source=context,
                 string=EXECUTING + " " + PROCESS + " " + self.name,
                 composition=self
             )
@@ -2268,7 +2266,7 @@ class Process(Process_Base):
             # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             mechanism.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-            context = ContextFlags.PROCESS
+            context.source = ContextFlags.PROCESS
             mechanism.execute(execution_id=execution_id, context=context)
             mechanism.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 

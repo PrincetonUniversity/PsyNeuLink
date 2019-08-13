@@ -782,9 +782,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             else:
                 reference_value.append(projection_tuple.state.value)
 
+        context.source = ContextFlags.METHOD
         input_states = self._instantiate_input_states(monitor_specs=monitor_specs,
                                                       reference_value=reference_value,
-                                                      context = ContextFlags.METHOD)
+                                                      context=context
+                                                      )
 
         output_states = [[projection.sender for projection in state.path_afferents] for state in input_states]
 

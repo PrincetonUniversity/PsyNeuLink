@@ -1130,7 +1130,7 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, CONTROL, CONTROLLER, CONDITIONS, FUNCTIONS, \
     HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
@@ -4036,8 +4036,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         error_signal_input_state = learning_mech.add_states(
                                                             InputState(projections=error_source.output_states[ERROR_SIGNAL],
                                                                        name=ERROR_SIGNAL,
-                                                                       context=ContextFlags.METHOD),
-                                                            context=ContextFlags.METHOD)
+                                                                       context=Context(source=ContextFlags.METHOD)),
+                                                            context=Context(source=ContextFlags.METHOD))
                     # Create Projection here so that don't have to worry about determining correct
                     #    error_signal_input_state of learning_mech in _create_non_terminal_backprop_learning_components
                     error_projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
@@ -4076,8 +4076,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     error_signal_input_state = learning_mech.add_states(
                                                         InputState(projections=error_source.output_states[ERROR_SIGNAL],
                                                                    name=ERROR_SIGNAL,
-                                                                   context=ContextFlags.METHOD),
-                                                        context=ContextFlags.METHOD)
+                                                                   context=Context(source=ContextFlags.METHOD)),
+                                                        context=Context(source=ContextFlags.METHOD))
                 # DOES THE ABOVE GENERATE A PROJECTION?  IF SO, JUST GET AND RETURN THAT;  ELSE DO THE FOLLOWING:
                 error_projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
                                                            receiver=error_signal_input_state))
@@ -4107,8 +4107,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 error_signal_input_state = dependent_learning_mech.add_states(
                                                     InputState(projections=error_source.output_states[ERROR_SIGNAL],
                                                                name=ERROR_SIGNAL,
-                                                               context=ContextFlags.METHOD),
-                                                    context=ContextFlags.METHOD)
+                                                               context=Context(source=ContextFlags.METHOD)),
+                                                    context=Context(source=ContextFlags.METHOD))
                 projections.append(error_signal_input_state[0].path_afferents[0])
                 # projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
                 #                                      receiver=error_signal_input_state[0]))
@@ -5786,6 +5786,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                           EXECUTION
     # ******************************************************************************************************************
 
+    @handle_external_context()
     def run(
             self,
             inputs=None,
@@ -6228,6 +6229,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return trial_output
 
+    @handle_external_context()
     def execute(
             self,
             inputs=None,
@@ -6322,6 +6324,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         execution_scheduler = scheduler_processing or self.scheduler_processing
 
         execution_context = self.parameters.context._get(execution_id)
+        context.source = ContextFlags.COMPOSITION
+        context.execution_phase = ContextFlags.PROCESSING
 
         if termination_processing is None:
             termination_processing = self.termination_processing
@@ -6382,9 +6386,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._assign_values_to_input_CIM(inputs, execution_id=execution_id)
             else:
                 self.input_CIM.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-                self.input_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
+                self.input_CIM.execute(execution_id=execution_id, context=context)
             self.parameter_CIM.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-            self.parameter_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
+            self.parameter_CIM.execute(execution_id=execution_id, context=context)
         else:
             inputs = self._adjust_execution_stimuli(inputs)
             self._assign_values_to_input_CIM(inputs, execution_id=execution_id)
@@ -6629,11 +6633,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
                                 for state in node.input_states:
                                     state._update(execution_id=execution_id,
-                                                 context=ContextFlags.COMPOSITION)
+                                                 context=context)
                             node.execute(
                                 execution_id=execution_id,
                                 runtime_params=execution_runtime_params,
-                                context=ContextFlags.COMPOSITION
+                                context=context
                             )
 
                     # Reset runtime_params for node and its function if specified
@@ -6694,11 +6698,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if pytorch_enabled:
                         ret = node.execute(inputs=autodiff_stimuli[node],
                                            execution_id=execution_id,
-                                           context=ContextFlags.COMPOSITION)
+                                           context=context)
                     # Standard execution
                     else:
                         ret = node.execute(execution_id=execution_id,
-                                           context=ContextFlags.COMPOSITION)
+                                           context=context)
 
                     # Get output info from compiled execution
                     if bin_execute:
@@ -6753,7 +6757,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projection.parameters.context._get(execution_id).string = \
                         f"Updating {ParameterState.__name__} for {projection.name} in {self.name}"
                     matrix_parameter_state._update(execution_id=execution_id,
-                                                                context=ContextFlags.COMPOSITION)
+                                                                context=context)
                     projection.parameters.context._get(execution_id).execution_phase = execution_phase_buffer
 
         if call_after_pass:
@@ -6822,7 +6826,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return _comp_ex.extract_node_output(self.output_CIM)
 
         self.output_CIM.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-        self.output_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
+        self.output_CIM.execute(execution_id=execution_id, context=context)
 
         output_values = []
         for state in self.output_CIM.output_states:

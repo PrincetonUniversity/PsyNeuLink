@@ -183,7 +183,7 @@ from psyneulink.core.components.shellclasses import ShellClass
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, FUNCTION, FUNCTION_PARAMS, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
     MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE, ONLINE, AFTER
@@ -613,8 +613,10 @@ class LearningProjection(ModulatoryProjection_Base):
         if not isinstance(self.sender, (OutputState, LearningMechanism)):
             from psyneulink.core.components.mechanisms.adaptive.learning.learningauxiliary \
                 import _instantiate_learning_components
+            context.source = ContextFlags.METHOD
             _instantiate_learning_components(learning_projection=self,
-                                             context=ContextFlags.METHOD)
+                                             # TODO: do we need this argument?
+                                             context=context)
 
         if isinstance(self.sender, OutputState) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".

@@ -1504,7 +1504,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             self.parameters.previous_value._set(value, execution_id)
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
-        if context is ContextFlags.INSTANTIATE:
+        if context.source is ContextFlags.INSTANTIATE:
 
             return super(TransferMechanism, self)._parse_function_variable(variable=variable, execution_id=execution_id, context=context)
 

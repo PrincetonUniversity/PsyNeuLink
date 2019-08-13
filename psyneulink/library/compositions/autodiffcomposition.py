@@ -264,7 +264,7 @@ from psyneulink.core.components.mechanisms.processing.compositioninterfacemechan
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.composition import CompositionError
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -507,7 +507,7 @@ class AutodiffComposition(Composition):
         self.__learning_bin_exec_func = None
         self.__generated_learning_run = None
         self.__generated_forward_run = None
-        
+
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
 
@@ -608,7 +608,7 @@ class AutodiffComposition(Composition):
             if not self.learning_enabled and isinstance(inputs, dict) and self._has_required_keys(inputs):
                 inputs = inputs["inputs"]
             return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
-        
+
         if self.learning_enabled:
             if isinstance(inputs, dict):
                 if self._has_required_keys(inputs):
@@ -787,7 +787,7 @@ class AutodiffComposition(Composition):
                 with pnlvm.LLVMBuilderContext.get_global() as ctx:
                     self.__forward_bin_exec_func = ctx.gen_autodiffcomp_exec(self)
             return self.__forward_bin_exec_func
-    
+
     @property
     def _llvm_run(self):
         if self.learning_enabled is True:
@@ -799,10 +799,11 @@ class AutodiffComposition(Composition):
             with pnlvm.LLVMBuilderContext.get_global() as ctx:
                 self.__generated_forward_run = ctx.gen_composition_run(self)
         return self.__generated_forward_run
-    
+
     def _gen_llvm_function(self):
         return self._bin_exec_func
 
+    @handle_external_context()
     def execute(self,
                 inputs=None,
                 autodiff_stimuli=None,
@@ -854,10 +855,11 @@ class AutodiffComposition(Composition):
             # self.output_CIM.parameters.context._set(new_ctx, execution_id=execution_id)
             if ctx is not None:  # HACK: CW 12/18/18 for some reason context isn't set correctly
                 ctx.execution_phase = ContextFlags.PROCESSING
+                context.execution_phase = ContextFlags.PROCESSING
             # note that output[-1] might not be the truly most recent value
             # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
             # is not having its parameters populated correctly, and this should be fixed in the long run.
-            self.output_CIM.execute(input=output[-1], execution_id=execution_id, context=ContextFlags.PROCESSING)
+            self.output_CIM.execute(input=output[-1], execution_id=execution_id, context=context)
 
             return output
 
@@ -877,6 +879,7 @@ class AutodiffComposition(Composition):
                                                         context=context)
 
     # what the user calls for doing processing/training, similar to the run function of the normal composition
+    @handle_external_context()
     def run(
         self,
         inputs=None,
@@ -953,7 +956,7 @@ class AutodiffComposition(Composition):
                         initial_values=initial_values,
                         reinitialize_values=reinitialize_values,
                         runtime_params=runtime_params,
-                        context=context    
+                        context=context
                     ))
                 self.learning_enabled = True
                 results = [results]
@@ -1134,10 +1137,10 @@ class AutodiffComposition(Composition):
                 return tuple(node._get_param_initializer(execution_id))
             else:
                 return tuple()
-        
+
         mech_params = (_parameterize_node(m)
                        for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_params = (tuple(p._get_param_initializer(execution_id)) if (p.sender in self.input_CIM.input_states or p.receiver in self.output_CIM.input_states) 
+        proj_params = (tuple(p._get_param_initializer(execution_id)) if (p.sender in self.input_CIM.input_states or p.receiver in self.output_CIM.input_states)
                        else tuple() for p in self.projections)
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation._get(self.default_execution_id)

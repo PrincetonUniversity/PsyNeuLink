@@ -1210,7 +1210,7 @@ class OptimizationControlMechanism(ControlMechanism):
         value = [np.atleast_1d(a) for a in control_allocation]
         self.parameters.value._set(value, execution_id)
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
-                                   context=ContextFlags.COMPOSITION)
+                                   context=context)
 
     # @property
     # def feature_values(self):
@@ -1232,7 +1232,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if features:
             features = self._parse_feature_specs(features=features,
-                                                 context=ContextFlags.COMMAND_LINE)
+                                                 context=Context(source=ContextFlags.COMMAND_LINE))
         self.add_states(InputState, features)
 
     @tc.typecheck

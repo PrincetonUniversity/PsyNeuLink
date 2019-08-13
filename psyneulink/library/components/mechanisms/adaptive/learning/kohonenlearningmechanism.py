@@ -441,7 +441,9 @@ class KohonenLearningMechanism(LearningMechanism):
         super()._update_output_states(execution_id, runtime_params, context)
 
         if self.parameters.context._get(execution_id).composition is not None:
-            self.learned_projection.execute(execution_id=execution_id, context=ContextFlags.LEARNING)
+            context.execution_phase = ContextFlags.LEARNING
+            self.learned_projection.execute(execution_id=execution_id, context=context)
+            context.execution_phase = ContextFlags.IDLE
             self.learned_projection.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
     @property

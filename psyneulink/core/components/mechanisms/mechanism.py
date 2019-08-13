@@ -954,7 +954,7 @@ from psyneulink.core.components.states.modulatorysignals.modulatorysignal import
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import REMOVE_STATES, _parse_state_spec
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTROL_SIGNAL, CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
@@ -1447,12 +1447,11 @@ class Mechanism_Base(Mechanism):
         self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
         self.aux_components = []
         # Register with MechanismRegistry or create one
-        if self.initialization_status != ContextFlags.VALIDATING:
-            register_category(entry=self,
-                              base_class=Mechanism_Base,
-                              name=name,
-                              registry=MechanismRegistry,
-                              context=context)
+        register_category(entry=self,
+                          base_class=Mechanism_Base,
+                          name=name,
+                          registry=MechanismRegistry,
+                          context=context)
 
         # Create Mechanism's _stateRegistry and state type entries
         from psyneulink.core.components.states.state import State_Base
@@ -1822,7 +1821,7 @@ class Mechanism_Base(Mechanism):
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
-            if context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
+            if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
                 pass
             elif self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
@@ -2175,6 +2174,7 @@ class Mechanism_Base(Mechanism):
         except (AttributeError, TypeError):
             return getattr(self.parameters, param_name)._get(execution_id)
 
+    @handle_external_context()
     def execute(self,
                 input=None,
                 execution_id=None,
@@ -2233,20 +2233,18 @@ class Mechanism_Base(Mechanism):
             <Mechanism_OutputStates>` after either one `TIME_STEP` or a `TRIAL`.
 
         """
-        context = context or ContextFlags.COMMAND_LINE
-
         # initialize context for this execution_id if not done already
         if self.parameters.context._get(execution_id) is None:
             self._assign_context_values(execution_id)
 
-        if not self.parameters.context._get(execution_id).source or context & ContextFlags.COMMAND_LINE:
+        if not self.parameters.context._get(execution_id).source or context.source & ContextFlags.COMMAND_LINE:
             self.parameters.context._get(execution_id).source = ContextFlags.COMMAND_LINE
         if self.initialization_status == ContextFlags.INITIALIZED:
-            self.parameters.context._get(execution_id).string = "{} EXECUTING {}: {}".format(context.name,self.name,
+            self.parameters.context._get(execution_id).string = "{} EXECUTING {}: {}".format(context.source.name,self.name,
                                                                ContextFlags._get_context_string(
                                                                        self.parameters.context._get(execution_id).flags, EXECUTION_PHASE))
         else:
-            self.parameters.context._get(execution_id).string = "{} INITIALIZING {}".format(context.name, self.name)
+            self.parameters.context._get(execution_id).string = "{} INITIALIZING {}".format(context.source.name, self.name)
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
@@ -2318,7 +2316,7 @@ class Mechanism_Base(Mechanism):
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
-            if context & ContextFlags.COMMAND_LINE:
+            if context.source & ContextFlags.COMMAND_LINE:
                 self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
             if input is None:
                 input = self.defaults.variable
@@ -3252,7 +3250,7 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.states.inputstate import InputState, _instantiate_input_states
         from psyneulink.core.components.states.outputstate import OutputState, _instantiate_output_states
 
-        context = ContextFlags.METHOD
+        context = Context(source=ContextFlags.METHOD)
 
         # Put in list to standardize treatment below
         if not isinstance(states, list):
