@@ -113,6 +113,7 @@ class TestControlMechanisms:
         S.add_node(A, required_roles=pnl.NodeRole.INPUT)
         S.add_linear_processing_pathway(pathway=path)
         S.add_node(LC, required_roles=pnl.NodeRole.OUTPUT)
+        S.show_graph()
         LC.reinitialize_when = pnl.Never()
 
         gain_created_by_LC_output_state_1 = []

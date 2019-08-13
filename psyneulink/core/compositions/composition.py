@@ -2025,26 +2025,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"First argument in add_linear_processing_pathway method of '{self.name}' "
                                    f"{Composition.__name__} must be a list of nodes")
 
-        # MODIFIED 8/11/19 NEW: [JDC]
-        # FIX: INTERLEAVE WITH MAIN LOOP BELOW, AND DELETE AT END
-        #      NEEDED SINCE CONTROLMECH MAY HAVE PROJECTIONS FROM/TO NODES IN THE PATHWAY THAT HAVE NOT YET BEEN ADDED
-        # Then, if there are any ControlMechanisms or ObjectiveMechanisms,
-        #    and the ControlMechanism has it monitor_for_control attribute assigned
-        #    or the ObjectiveMechanism projects to a ControlMechanism:
-        #        add them to the Compostion
-        #        but delete them from the pathway specification as they will be handled elsewhere (see docstring)
-        items_to_delete = []
-        for item in pathway:
-            if ((isinstance(item, ControlMechanism) and item.monitor_for_modulation)
-                    or (isinstance(item, ObjectiveMechanism)
-                        and any((isinstance(p.receiver.owner, ControlMechanism)
-                                 and (item.monitor or p.receiver.owner.monitor_for_control is not NotImplemented)
-                                 for p in item.efferents)))):
-                self.add_node(item)
-                items_to_delete.append(item)
-        for item in items_to_delete:
-            del pathway[pathway.index(item)]
-        # MODIFIED 8/11/19 END
+        # # MODIFIED 8/11/19 NEW: [JDC]
+        # # FIX: INTERLEAVE WITH MAIN LOOP BELOW, AND DELETE AT END
+        # #      NEEDED SINCE CONTROLMECH MAY HAVE PROJECTIONS FROM/TO NODES IN THE PATHWAY THAT HAVE NOT YET BEEN ADDED
+        # # Then, if there are any ControlMechanisms or ObjectiveMechanisms,
+        # #    and the ControlMechanism has it monitor_for_control attribute assigned
+        # #    or the ObjectiveMechanism projects to a ControlMechanism:
+        # #        add them to the Compostion
+        # #        but delete them from the pathway specification as they will be handled elsewhere (see docstring)
+        # items_to_delete = []
+        # for item in pathway:
+        #     if ((isinstance(item, ControlMechanism) and item.monitor_for_modulation)
+        #             or (isinstance(item, ObjectiveMechanism)
+        #                 and any((isinstance(p.receiver.owner, ControlMechanism)
+        #                          and (item.monitor or p.receiver.owner.monitor_for_control is not NotImplemented)
+        #                          for p in item.efferents)))):
+        #         self.add_node(item)
+        #         items_to_delete.append(item)
+        # for item in items_to_delete:
+        #     del pathway[pathway.index(item)]
+        # # MODIFIED 8/11/19 END
 
         # Then make sure the first item is a node and not a Projection
         if isinstance(pathway[0], (Mechanism, Composition, tuple)):
@@ -2061,10 +2061,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(pathway[c], (Mechanism, Composition, tuple)):
                 self.add_nodes([pathway[c]])
                 nodes.append(pathway[c])
-        projections = []
 
-        # Then, loop through and validate that the Mechanism-Projection relationships make sense
+        # MODIFIED 8/12/19 NEW: [JDC]
+        # FIX: MAKE SURE PROJECTION FROM OBJECTIVEMECHANISM TO CONTROLMECHANISM IS LABELED AS FEEDBACK??
+        # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
+        #    and any ObjectiveMechanism that projects to a ControlMechanism
+        #    to avoid instantiating any additional projections to them;
+        #    those are handled elsewhere (see docstring)
+        items_to_delete = []
+        for item in pathway:
+            if ((isinstance(item, ControlMechanism) and item.monitor_for_modulation)
+                    or (isinstance(item, ObjectiveMechanism)
+                        and any((isinstance(p.receiver.owner, ControlMechanism)
+                                 and (item.monitor or p.receiver.owner.monitor_for_control is not NotImplemented)
+                                 for p in item.efferents)))):
+                items_to_delete.append(item)
+        for item in items_to_delete:
+            del pathway[pathway.index(item)]
+        # MODIFIED 8/12/19 END
+
+        # Then, loop through pathway and validate that the Mechanism-Projection relationships make sense
         # and add MappingProjection(s) where needed
+        projections = []
         for c in range(1, len(pathway)):
 
             # if the current item is a Node
