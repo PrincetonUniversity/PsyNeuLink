@@ -862,13 +862,16 @@ class Vertex(object):
 
 class Graph(object):
     """
-        A Graph of vertices and edges/
+        A Graph of vertices and edges.
 
         Attributes
         ----------
 
         comp_to_vertex : Dict[`Component <Component>` : `Vertex`]
             maps `Component` in the graph to the `Vertices <Vertex>` that represent them.
+
+            Used by Composition as a depdencency dictionary, in which each key is a node (vertex) and its value are the
+            other vertices that have a directed edge (`Projection`) to it.
 
         vertices : List[Vertex]
             the `Vertices <Vertex>` contained in this Graph.
@@ -1659,16 +1662,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(sender, Mechanism):
             # Mechanism spec -- update sender_output_state to reference primary OutputState
             sender_output_state = sender.output_state
+            sender_name = f'{sender.name}[{sender_output_state.name}]'
 
         elif isinstance(sender, OutputState):
             # InputState spec -- update sender_mechanism and graph_sender to reference owner Mechanism
             sender_mechanism = graph_sender = sender.owner
+            sender_name = f'{sender.owner.name}[{sender.name}]'
 
         elif isinstance(sender, Composition):
             # Nested Composition Spec -- update sender_mechanism to CIM; sender_output_state to CIM's primary O.S.
             sender_mechanism = sender.output_CIM
             sender_output_state = sender_mechanism.output_state
             nested_compositions.append(sender)
+            sender_name = sender.name
 
         else:
             raise CompositionError("sender arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
@@ -1678,7 +1684,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(sender, Composition)
                 and sender_mechanism not in self.nodes):
-            sender_name = sender.name
 
             # if the sender is IN a nested Composition AND sender is an OUTPUT Node
             # then use the corresponding CIM on the nested comp as the sender going forward
@@ -2021,9 +2026,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"{Composition.__name__} must be a list of nodes")
 
         # MODIFIED 8/11/19 NEW: [JDC]
+        # FIX: INTERLEAVE WITH MAIN LOOP BELOW, AND DELETE AT END
+        #      NEEDED SINCE CONTROLMECH MAY HAVE PROJECTIONS FROM/TO NODES IN THE PATHWAY THAT HAVE NOT YET BEEN ADDED
         # Then, if there are any ControlMechanisms or ObjectiveMechanisms,
         #    and the ControlMechanism has it monitor_for_control attribute assigned
-        #    or the ObjectiveMechanism projects to a ControlMechanism:  # FIX: ADD SAME CONDITION AS FOR CLTMECH?
+        #    or the ObjectiveMechanism projects to a ControlMechanism:
         #        add them to the Compostion
         #        but delete them from the pathway specification as they will be handled elsewhere (see docstring)
         items_to_delete = []
@@ -4457,7 +4464,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # # MODIFIED 5/29/19 END
 
             # Implement sender edges
-            sndrs = processing_graph[rcvr]
+            # MODIFIED 8/12/19 OLD:
+            # sndrs = processing_graph[rcvr]
+            # MODIFIED 8/12/19 NEW:
+            sndrs = [v.component for v in processing_graph[rcvr].parents]
+            # MODIFIED 8/12/19 END
             _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
 
         def _assign_cim_components(g, cims):
@@ -4835,7 +4846,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             rank=learning_rank, shape=mechanism_shape)
 
                 # Implement sender edges
-                sndrs = processing_graph[rcvr]
+                # MODIFIED 8/12/19 OLD:
+                # sndrs = processing_graph[rcvr]
+                # MODIFIED 8/12/19 NEW:
+                sndrs = [v.component for v in processing_graph[rcvr].parents]
+                # MODIFIED 8/12/19 END
                 _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
 
         def render_projection_as_node(g, proj, label,
@@ -5088,7 +5103,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
         if output_fmt != 'gv':
             self._analyze_graph()
-        processing_graph = self.scheduler_processing.visual_graph
+        # # MODIFIED 8/12/19 OLD:
+        # processing_graph = self.scheduler_processing.visual_graph
+        # MODIFIED 8/12/19 NEW:
+        processing_graph = self.graph_processing.comp_to_vertex
+        # MODIFIED 8/12/19 END
         rcvrs = list(processing_graph.keys())
 
         for r in rcvrs:
