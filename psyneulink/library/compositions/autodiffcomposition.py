@@ -418,8 +418,7 @@ class AutodiffComposition(Composition):
 
         """
         optimizer = None
-        # learning_rate = Parameter(.001, fallback_default=True)
-        learning_rate = .001
+        learning_rate = Parameter(.001, fallback_default=True)
         losses = None
         patience = None
         min_delta = 0
@@ -430,8 +429,7 @@ class AutodiffComposition(Composition):
                  param_init_from_pnl=True,
                  patience=None,
                  min_delta=0,
-                 learning_rate=Parameter(.001, fallback_default=True),
-                 # learning_rate=.001,
+                 learning_rate=None,
                  learning_enabled=True,
                  optimizer_type='sgd',
                  weight_decay=0,
@@ -807,6 +805,7 @@ class AutodiffComposition(Composition):
         if self.learning_enabled:
 
             self._analyze_graph()
+            self._initialize_from_context(execution_id, base_execution_context=None, override=False)
 
             if self.refresh_losses or (self.parameters.losses.get(execution_id) is None):
                 self.parameters.losses.set([], execution_id)
