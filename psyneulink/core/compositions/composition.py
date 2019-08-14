@@ -4120,9 +4120,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    input_color='green',
                    output_color='red',
                    input_and_output_color='brown',
+                   feedback_color='yellow',
                    controller_color='blue',
                    learning_color='orange',
                    composition_color='pink',
+                   cim_shape='square',
                    output_fmt:tc.enum('pdf','gv','jupyter','gif')='pdf',
                    execution_id=NotImplemented,
                    **kwargs):
@@ -4142,8 +4144,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            input_color='green',               \
            output_color='red',                \
            input_and_output_color='brown',    \
+           feedback_color='yellow',           \
            controller_color='blue',           \
            composition_color='pink',          \
+           cim_shape='square',                \
            output_fmt='pdf',                  \
            execution_id=None)
 
@@ -4256,14 +4260,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the display color of nodes that are both an `INPUT <NodeRole.INPUT>` and an `OUTPUT
             <NodeRole.OUTPUT>` Node in the Composition
 
-        input_and_output_color : keyword : default 'brown'
-            specifies the display color of nodes that represented nested Compositions.
+        feedback_color : keyword : default 'yellow'
+            specifies the display color of nodes that are assigned the `NodeRole` `FEEDBACK_SENDER`.
+
+        controller_color : keyword : default 'blue'
+            specifies the color in which the controller components are displayed
+
+        learning_color : keyword : default 'orange'
+            specifies the color in which the learning components are displayed
+
+        composition_color : keyword : default 'brown'
+            specifies the display color of nodes that represent nested Compositions.
 
         cim_shape : default 'square'
             specifies the display color input_CIM and output_CIM nodes
-
-        controller_color : keyword : default `blue`
-            specifies the color in which the controller components are displayed
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
@@ -4308,7 +4318,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 nested_comp_graph = rcvr.show_graph(**args)
                 nested_comp_graph.name = "cluster_"+rcvr.name
                 rcvr_label = rcvr.name
-                if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
+                if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
+                    nested_comp_graph.attr(color=feedback_color)
+                elif rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     nested_comp_graph.attr(color=input_and_output_color)
                 elif rcvr in self.get_nodes_by_role(NodeRole.INPUT):
@@ -4344,8 +4356,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     condition = None
 
+                # Feedback Node
+                if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
+                    if rcvr in active_items:
+                        if active_color is BOLD:
+                            rcvr_color = feedback_color
+                        else:
+                            rcvr_color = active_color
+                        rcvr_penwidth = str(bold_width + active_thicker_by)
+                        self.active_item_rendered = True
+                    else:
+                        rcvr_color = feedback_color
+                        rcvr_penwidth = str(bold_width)
+
                 # Input and Output Node
-                if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
+                elif rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     if rcvr in active_items:
                         if active_color is BOLD:

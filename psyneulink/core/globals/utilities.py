@@ -1630,7 +1630,7 @@ class NodeRole(Enum):
 
     FEEDBACK_RECEIVER
         A Node with one or more incoming projections marked as "feedback". This means that the Node is at the start of a
-         pathway which would otherwise form a cycle.
+        pathway which would otherwise form a cycle.
 
     CYCLE
         A Node that belongs to a cycle.
