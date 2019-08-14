@@ -307,25 +307,25 @@ class MappingError(Exception):
         self.error_value = error_value
 
 def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
-    """Get matrix parameter for MappingProjection
+    '''Get matrix parameter for MappingProjection
     If MappingProjection is using Identity function (for efficiency), return properly shaped identity function
     # IMPLEMENTATION NOTE:
     #  This is for consistency of interpretation of matrix parameter on MappingProjection;
     #  It is OK to do this, even though the MappingProjection's function doesn't actually have a matrix parameter
     #    since, if any attempt is made to modify it by assigning a new one, the MappingProjection's original function
     #    (stored in _original_function) is restored.
-    """
+    '''
     # # MODIFIED 5/24/19 OLD:
-    # return owning_component.function.parameters.matrix._get(execution_id)
+    # return owning_component.function.parameters.matrix.get(execution_id)
     # MODIFIED 5/24/19 NEW [JDC]:
     try:
-        return owning_component.function.parameters.matrix._get(execution_id)
+        return owning_component.function.parameters.matrix.get(execution_id)
     # If MappingProjection uses Identity function, it doesn't have a matrix parameter, so return Identity matrix
     except AttributeError:
         assert isinstance(owning_component.function, Identity),  \
             f'PROGRAM ERROR: AttributeError getting {MATRIX} parameter for {MappingProjection.__name__} ' \
                 f'({owning_component.name}) that is does not use {Identity.__name__}'
-        # return np.identity(len(owning_component.parameters.variable._get(execution_id)))
+        # return np.identity(len(owning_component.parameters.variable.get(execution_id)))
         return IDENTITY_MATRIX
     # MODIFIED 5/24/19 END
 
@@ -333,73 +333,50 @@ def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
 # # MODIFIED 5/24/19 OLD:
 # def _mapping_projection_matrix_setter(value, owning_component=None, execution_id=None):
 #     value = np.array(value)
-#     owning_component.function.parameters.matrix._set(value, execution_id)
+#     owning_component.function.parameters.matrix.set(value, execution_id)
 #     # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
 #     # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
-#     owning_component.parameter_states["matrix"].function.parameters.previous_value._set(value, execution_id)
+#     owning_component.parameter_states["matrix"].function.parameters.previous_value.set(value, execution_id)
 #     return value
 # MODIFIED 5/24/19 NEW: [JDC]
-def _mapping_projection_matrix_setter(matrix, owning_component=None, execution_id=None, **kwargs):
-    """Assign matrix parameter for MappingProjection
+def _mapping_projection_matrix_setter(value, owning_component=None, execution_id=None):
+    '''Assign matrix parameter for MappingProjection
     If value is identity matrix and MappingProjection's matrix ParameterState has no modulatory projections then,
-        for efficiency, assign Identity Function which simply passes the variable of the MappingProjection to its value.
-    If suppress_identity_function is passed in kwargs, and is set to True,
-        then use originally assigned function and IDENTITY_MATRIX
-    """
-    current_function = owning_component.parameters.function._get(execution_id)
-    current_function_variable = current_function.parameters.variable._get(execution_id)
-    num_mod_afferents = len(owning_component._parameter_states[MATRIX].mod_afferents)
-    if 'suppress_identity_function' in kwargs:
-        suppress_identity_function = kwargs['suppress_identity_function']
-    else:
-        suppress_identity_function =  owning_component.parameters.suppress_identity_function._get(execution_id)
+    for efficiency, assign Identity Function which simply pass the variable of the MappingProjection as its value.
+    '''
+    matrix = np.array(value)
+    current_function = owning_component.parameters.function.get(execution_id)
+    current_function_variable = current_function.parameters.variable.get(execution_id)
 
-    # First determine whether an identity matrix was specified
-    if not isinstance(matrix, np.ndarray):
-        matrix = get_matrix(matrix,
-                            rows=len(owning_component.sender.parameters.value._get(execution_id)),
-                            cols=len(owning_component.receiver.parameters.variable._get(execution_id)))
+    # Determine whether or not to use Identity Function
     rows, cols = matrix.shape
-    if rows==cols and (matrix == np.identity(rows)).all():
-        is_identity_matrix = True
-    else:
-        is_identity_matrix = False
-
-    # Then Determine whether or not to use Identity Function
-    _use_identity_function = is_identity_matrix and num_mod_afferents==0 and not suppress_identity_function
+    _use_identity_function = (rows==cols and (matrix == np.identity(rows)).all() and
+                              len(owning_component._parameter_states[MATRIX].mod_afferents)==0 and
+                              not owning_component.parameters.suppress_identity_function.get(execution_id))
 
     # If it should be used and it is not already, then store current function in _original_function and assign Identity
     if _use_identity_function:
         if not isinstance(current_function, Identity):
             owning_component._original_function = current_function
-            owning_component.parameters.function._set(Identity(default_variable=current_function_variable), execution_id)
+            owning_component.parameters.function.set(Identity(default_variable=current_function_variable), execution_id)
             # 5/24/19: THIS SHOULD SIMPLY ASSIGN THE IDENTITY_MATRIX STRING TO THE CORRECT EXECUTION_ID CONTEXT:
-            # owning_component.parameters.matrix._set(IDENTITY_MATRIX, execution_id)
+            # owning_component.parameters.matrix.set(IDENTITY_MATRIX, execution_id)
             # May be needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models) see below
-            # owning_component.parameter_states["matrix"].function.parameters.previous_value._set(matrix, execution_id)
-        return IDENTITY_MATRIX
+            # owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
 
     # Don't use Identity Function
     else:
         # If Identity function is currently in use, restore function to _original_function
         if  isinstance(current_function, Identity):
-            owning_component.parameters.function._set(owning_component._original_function, execution_id)
+            owning_component.parameters.function.set(owning_component._original_function, execution_id)
             owning_component._original_function = None
         # Assign matrix
-        owning_component.function.parameters.matrix._set(matrix, execution_id)
+        owning_component.function.parameters.matrix.set(matrix, execution_id)
         # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
         # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
-        owning_component.parameter_states["matrix"].function.parameters.previous_value._set(matrix, execution_id)
-        return matrix
-
-def suppress_identity_function_setter(value, owning_component=None, execution_id=None):
-    context = owning_component.context
-    if context is None or context.initialization_status in {ContextFlags.INITIALIZING, ContextFlags.UNSET}:
-        pass
-    else:
-        _mapping_projection_matrix_setter(IDENTITY_MATRIX, owning_component, execution_id,
-                                          **{'suppress_identity_function': value})
-    return value
+        owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
+    #
+    return matrix
 # MODIFIED 5/24/19 END
 
 
