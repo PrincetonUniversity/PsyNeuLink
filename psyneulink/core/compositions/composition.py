@@ -3265,17 +3265,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #                        if any([item for item in items
                     #                                if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
                     # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
-                    # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue
-                    #    and that are not ControlMechanisms or used for Learning,
-                    #    or that do not project to any other nodes
+                    # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
+                    #    - not used for Learning;
+                    #    - not ControlMechanisms;
+                    #    - do not project to any other nodes.
                     # FIX: STILL NOT ASSIGNING A1 AS TERMINAL IN SCRATCH PAD;
                     #      BUT ALSO RISKS ASSIGNING BOTH A1 AND A2 SINCE BOTH ARE IN THE SAME CONSIDERATION_SET
+                    # First, find last consideration_set in scheduler_processing
+                    #    that does not contain learning-related nodes or a ControlMechanism
                     terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
                                            if any([item for item in items if
                                                    (not NodeRole.LEARNING in self.nodes_to_roles[item]
-                                                    and (not isinstance(item, ControlMechanism) or not item.efferents))
+                                                    and not isinstance(item, ControlMechanism))
                                                    ])]
                                           )[-1]
+                    # Then, add any nodes that are not learning-related or a ControlMechanism
+                    #     and that have *no* efferent Projections
+                    # IMPLEMENTATION NOTE:
+                    #  Do this here, as the list considers entire sets in the consideration queue,
+                    #    and a node with no efferents may be in the same set as one with efferents
+                    #    if they have the same dependencies.
+                    for node in self.nodes:
+                        if (not node.efferents
+                                and not NodeRole.LEARNING in self.nodes_to_roles[node]
+                                and isinstance(node, ControlMechanism)):
+                            terminal_nodes.add(node)
                     # MODIFIED 8/12/19 END
                 except IndexError:
                     terminal_nodes = []
