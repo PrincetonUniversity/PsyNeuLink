@@ -4159,6 +4159,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    controller_color='blue',
                    learning_color='orange',
                    composition_color='pink',
+                   control_projection_arrow='box',
                    cim_shape='square',
                    output_fmt:tc.enum('pdf','gv','jupyter','gif')='pdf',
                    execution_id=NotImplemented,
@@ -4973,9 +4974,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return True
 
         @tc.typecheck
-        def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None):
+        def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None, proj_arrow=None):
 
             proj_color = proj_color or default_node_color
+            proj_arrow = default_projection_arrow
 
             for sndr in senders:
 
@@ -5059,9 +5061,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # MODIFIED 8/12/19 NEW: [JDC]
                                 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
                                 if isinstance(proj, ControlProjection):
-                                    arrowhead='box'
+                                    arrowhead=control_projection_arrow
                                 else:
-                                    arrowhead='normal'
+                                    arrowhead=proj_arrow
                                 if show_projection_labels:
                                     label = proc_mech_label
                                 else:
@@ -5132,6 +5134,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_headers': show_headers,
                                 'output_fmt': 'struct'}
 
+        # DEFAULT ATTRIBUTES ----------------------------------------------------------------
+
         default_node_color = 'black'
         mechanism_shape = 'oval'
         learning_projection_shape = 'diamond'
@@ -5139,6 +5143,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         cim_shape = 'rectangle'
         composition_shape = 'rectangle'
         agent_rep_shape = 'egg'
+        default_projection_arrow = 'normal'
 
         bold_width = 3
         default_width = 1
