@@ -1586,7 +1586,7 @@ class State_Base(State):
 
     # FIX: MOVE TO OutputState or...
     # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
-    def _instantiate_projection_from_state(self, projection_spec, receiver=None, context=None):
+    def _instantiate_projection_from_state(self, projection_spec, receiver=None, feedback=False, context=None):
         """Instantiate outgoing projection from a State and assign it to self.efferents
 
         Instantiate Projections specified in projection_list and, for each:
@@ -1872,7 +1872,7 @@ class State_Base(State):
                 continue
 
             if isinstance(projection, ModulatoryProjection_Base):
-                self.owner.aux_components.append(projection)
+                self.owner.aux_components.append((projection, feedback))
             return projection
 
     def _get_primary_state(self, mechanism):
@@ -2365,9 +2365,10 @@ def _instantiate_state_list(owner,
                                    state_spec=state_spec,
                                    # name=name,
                                    context=context)
-        # automatically generated projections (e.g. when an InputState is specified by the OutputState of another mech)
+        # automatically generate projections (e.g. when an InputState is specified by the OutputState of another mech)
         for proj in state.path_afferents:
             owner.aux_components.append(proj)
+
         # # Get name of state, and use as index to assign to states ContentAddressableList
         # default_name = state._assign_default_state_name()
         # if default_name:

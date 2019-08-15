@@ -756,8 +756,8 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, CONDITIONS, FUNCTIONS, HARD_CLAMP, \
     IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MECHANISM, MECHANISMS, NAME, NO_CLAMP, \
-    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    MATRIX, MATRIX_KEYWORD_VALUES, MECHANISM, MECHANISMS, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
+    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
@@ -870,11 +870,11 @@ class Graph(object):
         comp_to_vertex : Dict[`Component <Component>` : `Vertex`]
             maps `Component` in the graph to the `Vertices <Vertex>` that represent them.
 
-            Used by Composition as a depdencency dictionary, in which each key is a node (vertex) and its value are the
-            other vertices that have a directed edge (`Projection`) to it.
-
         vertices : List[Vertex]
             the `Vertices <Vertex>` contained in this Graph.
+
+        dependency_dict : Dict[`Component` : Set(`Compnent`)]
+            maps each Component to those from which it receives Projections
 
     """
 
@@ -1060,6 +1060,9 @@ class Graph(object):
 
         return list(self.comp_to_vertex[component].backward_sources)
 
+    @property
+    def dependency_dict(self):
+        return dict((v.component,set(d.component for d in v.parents)) for v in self.vertices)
 
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
@@ -1485,7 +1488,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            "Composition, Projection, or tuple."
                                            .format(component.name, node.name))
 
-            # Add all projections to the composition
+            # Add all Projections to the Composition
             for proj_spec in projections:
                 # The proj_spec assumes a direct connection between sender and receiver, and is therefore invalid if
                 # either are nested (i.e. projections between them need to be routed through a CIM). In these cases,
@@ -2015,8 +2018,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_linear_processing_pathway(self, pathway, feedback=False, *args):
         """Add sequence of Mechanisms or Compositions possibly with intercolated Projections
         Tuples (Mechanism, NodeRole(s)) can be used to assign required_roles to Mechanisms.
-        Don't add projections for ControlMechanisms;
-            they will be handled either by its own arguments or, if it is a controller, by _add_controllert
+        Don't add projections for ControlMechanisms or ObjectiveMechanisms that project to them;
+            those are be handled either by their constructors or, for a controller, by _add_controller()
         """
         nodes = []
 
@@ -2041,23 +2044,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.add_nodes([pathway[c]])
                 nodes.append(pathway[c])
 
-        # MODIFIED 8/12/19 NEW: [JDC]
-        # FIX: MAKE SURE PROJECTION FROM OBJECTIVEMECHANISM TO CONTROLMECHANISM IS LABELED AS FEEDBACK??
-        # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
-        #    and any ObjectiveMechanism that projects to a ControlMechanism
-        #    to avoid instantiating any additional projections to them;
-        #    those are handled elsewhere (see docstring)
-        items_to_delete = []
-        for item in pathway:
-            if ((isinstance(item, ControlMechanism) and item.monitor_for_modulation)
-                    or (isinstance(item, ObjectiveMechanism)
-                        and any((isinstance(p.receiver.owner, ControlMechanism)
-                                 and (item.monitor or p.receiver.owner.monitor_for_control is not NotImplemented)
-                                 for p in item.efferents)))):
-                items_to_delete.append(item)
-        for item in items_to_delete:
-            del pathway[pathway.index(item)]
-        # MODIFIED 8/12/19 END
+        # # MODIFIED 8/12/19 NEW: [JDC] - AVOID DUPLCIATE CONTROL_RELATED PROJECTIONS
+        # # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
+        # #    and any ObjectiveMechanism that projects to a ControlMechanism,
+        # #    as well as any projections to them specified in the pathway;
+        # #    this is to avoid instantiating projections to them that might conflict with those
+        # #    instantiated by their constructors or, for a controller, _add_controller()
+        # items_to_delete = []
+        # for i, item in enumerate(pathway):
+        #     if ((isinstance(item, ControlMechanism) and item.monitor_for_modulation)
+        #             or (isinstance(item, ObjectiveMechanism)
+        #                 and any((isinstance(p.receiver.owner, ControlMechanism)
+        #                          # and (item.monitor or p.receiver.owner.monitor_for_control is not NotImplemented)
+        #                          for p in item.efferents)))):
+        #         items_to_delete.append(item)
+        #         # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
+        #         if i>0 and isinstance(pathway[i-1], (Projection, np.ndarray, np.matrix, str, list)):
+        #             items_to_delete.append(pathway[i-1])
+        # for item in items_to_delete:
+        #     if isinstance(item, ControlMechanism):
+        #         arg_name = f'in the {repr(MONITOR_FOR_CONTROL)} of its constructor'
+        #     else:
+        #         arg_name = f'either in the {repr(MONITOR)} arg of its constructor, ' \
+        #                    f'or in the {repr(MONITOR_FOR_CONTROL)} arg of its associated {ControlMechanism.__name__}'
+        #     warnings.warn(f'No new {Projection.__name__}s were added to {item.name} that was included in '
+        #                   f'the {repr(PATHWAY)} arg of add_linear_processing_pathway for {self.name}, '
+        #                   f'since they were already specified {arg_name}.')
+        #     del pathway[pathway.index(item)]
+        # # MODIFIED 8/12/19 END
 
         # Then, loop through pathway and validate that the Mechanism-Projection relationships make sense
         # and add MappingProjection(s) where needed
@@ -3187,6 +3201,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return nested_compositions
 
     def _determine_node_roles(self):
+
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
 
@@ -3197,11 +3212,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         objective_mechanism = None
         if self.controller and self.enable_controller and self.controller.objective_mechanism:
             objective_mechanism = self.controller.objective_mechanism
-            self._add_node_role(objective_mechanism, NodeRole.OBJECTIVE)
+            self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
 
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler_processing.consideration_queue:
             self._analyze_consideration_queue(self.scheduler_processing.consideration_queue, objective_mechanism)
+
+        # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
+        # A ControlMechanism should never be the TERMINAL node of a Composition:
+        for node in self.nodes:
+            if isinstance(node, ControlMechanism):
+                self.nodes_to_roles[node].remove(NodeRole.TERMINAL)
+        # MODIFIED 8/12/19 END
 
         # Cycles
         for node in self.scheduler_processing.cycle_nodes:
@@ -3238,10 +3260,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 terminal_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
             if not terminal_nodes:
                 try:
-                    # FIX: ADD COMMENT HERE
+                    # # MODIFIED 8/12/19 OLD:
+                    # terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
+                    #                        if any([item for item in items
+                    #                                if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
+                    # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
+                    # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue
+                    #    and that are not ControlMechanisms or used for Learning,
+                    #    or that do not project to any other nodes
+                    # FIX: STILL NOT ASSIGNING A1 AS TERMINAL IN SCRATCH PAD;
+                    #      BUT ALSO RISKS ASSIGNING BOTH A1 AND A2 SINCE BOTH ARE IN THE SAME CONSIDERATION_SET
                     terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
-                                           if any([item for item in items
-                                                   if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
+                                           if any([item for item in items if
+                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item]
+                                                    and (not isinstance(item, ControlMechanism) or not item.efferents))
+                                                   ])]
+                                          )[-1]
+                    # MODIFIED 8/12/19 END
                 except IndexError:
                     terminal_nodes = []
             for node in terminal_nodes:
@@ -4487,9 +4522,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Implement sender edges
             # MODIFIED 8/12/19 OLD:
-            # sndrs = processing_graph[rcvr]
-            # MODIFIED 8/12/19 NEW:
-            sndrs = [v.component for v in processing_graph[rcvr].parents]
+            sndrs = processing_graph[rcvr]
+            # # MODIFIED 8/12/19 NEW:
+            # sndrs = [v.component for v in processing_graph[rcvr].parents]
             # MODIFIED 8/12/19 END
             _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
 
@@ -4869,9 +4904,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Implement sender edges
                 # MODIFIED 8/12/19 OLD:
-                # sndrs = processing_graph[rcvr]
-                # MODIFIED 8/12/19 NEW:
-                sndrs = [v.component for v in processing_graph[rcvr].parents]
+                sndrs = processing_graph[rcvr]
+                # # MODIFIED 8/12/19 NEW:
+                # sndrs = [v.component for v in processing_graph[rcvr].parents]
                 # MODIFIED 8/12/19 END
                 _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
 
@@ -5014,12 +5049,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     continue
 
                             else:
+                                # # MODIFIED 8/12/19 OLD:
+                                # if show_projection_labels:
+                                #     label = proc_mech_label
+                                # else:
+                                #     label = ''
+                                # g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
+                                #        color=proj_color, penwidth=proj_width)
+                                # MODIFIED 8/12/19 NEW: [JDC]
+                                from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+                                if isinstance(proj, ControlProjection):
+                                    arrowhead='box'
+                                else:
+                                    arrowhead='normal'
                                 if show_projection_labels:
                                     label = proc_mech_label
                                 else:
                                     label = ''
-                                g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
-                                       color=proj_color, penwidth=proj_width)
+                                g.edge(sndr_proj_label, proc_mech_rcvr_label,
+                                       label=label,
+                                       color=proj_color,
+                                       penwidth=proj_width,
+                                       arrowhead=arrowhead)
+                                # MODIFIED 8/12/19 END
 
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
@@ -5127,8 +5179,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._analyze_graph()
         # # MODIFIED 8/12/19 OLD:
         # processing_graph = self.scheduler_processing.visual_graph
-        # MODIFIED 8/12/19 NEW:
-        processing_graph = self.graph_processing.comp_to_vertex
+        # # MODIFIED 8/12/19 NEW:
+        # processing_graph = self.graph_processing.comp_to_vertex
+        # MODIFIED 8/12/19 NEWER:
+        processing_graph = self.graph_processing.dependency_dict
         # MODIFIED 8/12/19 END
         rcvrs = list(processing_graph.keys())
 

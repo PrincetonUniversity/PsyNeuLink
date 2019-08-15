@@ -475,10 +475,13 @@ class ModulatorySignal(OutputState):
         Call _instantiate_projection_from_state to assign ModulatoryProjections to .efferents
 
         """
-       # # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+       # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         for receiver_spec in projections:
             projection = self._instantiate_projection_from_state(projection_spec=type(self),
                                                                  receiver=receiver_spec,
+                                                                 # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
+                                                                 feedback=True,
+                                                                 # MODIFIED 8/12/19 END
                                                                  context=context)
             projection._assign_default_projection_name(state=self)
 

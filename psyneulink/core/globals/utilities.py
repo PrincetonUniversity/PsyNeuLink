@@ -1621,7 +1621,7 @@ class NodeRole(Enum):
     INTERNAL
         A Node that is neither `ORIGIN` nor `TERMINAL`
 
-    OBJECTIVE
+    CONTROLLER_OBJECTIVE
         A Node that is the ObjectiveMechanism of a controller.
 
     FEEDBACK_SENDER
@@ -1646,7 +1646,7 @@ class NodeRole(Enum):
     TERMINAL = 2
     OUTPUT = 3
     INTERNAL = 4
-    OBJECTIVE = 5
+    CONTROLLER_OBJECTIVE = 5
     FEEDBACK_SENDER = 6
     FEEDBACK_RECEIVER = 7
     CYCLE = 8

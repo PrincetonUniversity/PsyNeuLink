@@ -1226,7 +1226,11 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             input_state.internal_only = True
 
         self.aux_components.append(self.objective_mechanism)
-        self.aux_components.append((projection_from_objective, True))
+        # # MODIFIED 8/12/19 OLD:
+        # self.aux_components.append((projection_from_objective, True))
+        # # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
+        self.aux_components.append(projection_from_objective)
+        # MODIFIED 8/12/19 END
         self._objective_projection = projection_from_objective
         self.monitor_for_modulation = self.monitored_output_states
 
