@@ -9,11 +9,11 @@
 #
 # *********************************************  INTERFACE FUNCTIONS ***************************************************
 
-'''
+"""
 
 * InterfaceStateMap
 
-'''
+"""
 
 import numpy as np
 import typecheck as tc
@@ -133,7 +133,7 @@ class InterfaceStateMap(InterfaceFunction):
 
         # self.functionOutputType = None
 
-    def function(
+    def _function(
         self,
         variable=None,
         execution_id=None,
@@ -168,14 +168,12 @@ class InterfaceStateMap(InterfaceFunction):
         <InterfaceStateMap.input_states>`
 
         """
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         index = self.corresponding_input_state.position_in_mechanism
 
-        if self.corresponding_input_state.owner.parameters.value.get(execution_id) is not None:
+        if self.corresponding_input_state.owner.parameters.value._get(execution_id) is not None:
 
             # If CIM's variable does not match its value, then a new pair of states was added since the last execution
-            if not np.shape(self.corresponding_input_state.owner.get_input_values(execution_id)) == np.shape(self.corresponding_input_state.owner.parameters.value.get(execution_id)):
+            if not np.shape(self.corresponding_input_state.owner.get_input_values(execution_id)) == np.shape(self.corresponding_input_state.owner.parameters.value._get(execution_id)):
                 return self.corresponding_input_state.owner.defaults.variable[index]
 
             # If the variable is 1D (e.g. [0. , 0.], NOT [[0. , 0.]]), and the index is 0, then return whole variable

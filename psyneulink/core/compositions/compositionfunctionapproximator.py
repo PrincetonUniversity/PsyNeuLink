@@ -49,14 +49,14 @@ class CompositionFunctionApproximatorError(Exception):
 
 
 class CompositionFunctionApproximator(Composition):
-    '''Parameterizes `its function <CompositionFunctionApproximator.function>` to predict a `net_outcome
+    """Parameterizes `its function <CompositionFunctionApproximator.function>` to predict a `net_outcome
     <Controlmechanism.net_outcome>` for a set of `feature_values <OptimizationControlmechanism.feature_values>`
     and a `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimizationControlmechanism`.
 
-    '''
+    """
 
     def __init__(self, name=None, **param_defaults):
-        '''
+        """
 
         Arguments
         ---------
@@ -84,21 +84,22 @@ class CompositionFunctionApproximator(Composition):
             for a given set of `feature_values <OptimizationControlMechanism.feature_values>` and `control_allocation
             <ControlMechanism.control_allocation>`.
 
-        '''
+        """
         # self.function = function
         super().__init__(name=name, **param_defaults)
 
     def adapt(self, feature_values, control_allocation, net_outcome, execution_id=None, context=None):
-        '''Adjust parameters of `function <FunctionAppproximator.function>` to improve prediction of `target
-        <FunctionAppproximator.target>` from `input <FunctionAppproximator.input>`.'''
+        """Adjust parameters of `function <FunctionAppproximator.function>` to improve prediction of `target
+        <FunctionAppproximator.target>` from `input <FunctionAppproximator.input>`.
+        """
         raise CompositionFunctionApproximatorError("Subclass of {} ({}) must implement {} method.".
                                                    format(CompositionFunctionApproximator.__name__,
                                                           self.__class__.__name__, repr('adapt')))
 
     def evaluate(self, feature_values, control_allocation, num_estimates, base_execution_id=None, execution_id=None, context=None):
-        '''Return `target <FunctionAppproximator.target>` predicted by `function <FunctionAppproximator.function> for
+        """Return `target <FunctionAppproximator.target>` predicted by `function <FunctionAppproximator.function> for
         **input**, using current set of `prediction_parameters <FunctionAppproximator.prediction_parameters>`.
-        '''
+        """
         # FIX: AUGMENTTO USE num_estimates
         return self.function(feature_values, control_allocation, execution_id=execution_id)
 

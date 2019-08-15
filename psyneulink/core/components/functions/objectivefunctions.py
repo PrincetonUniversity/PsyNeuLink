@@ -8,14 +8,16 @@
 #
 #
 # *****************************************  OBJECTIVE FUNCTIONS *******************************************************
-'''
+"""
 
 * `Stability`
+* `Energy`
+* `Entropy`
 * `Distance`
 
 Functions that return a scalar evaluation of their input.
 
-'''
+"""
 
 import functools
 import itertools
@@ -24,21 +26,22 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import function_type, method_type
+from psyneulink.core.components.component import function_type, method_type, DefaultsFlexibility
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
 from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CORRELATION, COSINE, CROSS_ENTROPY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, \
+    CORRELATION, COSINE, CROSS_ENTROPY, \
+    DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DistanceMetrics, \
     ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, \
-    NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, STABILITY_FUNCTION
+    NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_distance_metric
 from psyneulink.core.globals.utilities import is_iterable
 
 
-__all__ = ['ObjectiveFunction', 'Stability', 'Distance']
+__all__ = ['ObjectiveFunction', 'Stability', 'Distance', 'Energy', 'Entropy']
 
 
 class ObjectiveFunction(Function_Base):
@@ -73,6 +76,7 @@ class Stability(ObjectiveFunction):
     """
     Stability(                                  \
         default_variable=None,                  \
+        size=None,                              \
         matrix=HOLLOW_MATRIX,                   \
         metric=ENERGY                           \
         transfer_fct=None                       \
@@ -82,7 +86,7 @@ class Stability(ObjectiveFunction):
         prefs=None                              \
         )
 
-    .. _Stability:
+    .. _StabilityFunction:
 
     Return the stability of `variable <Stability.variable>` based on a state transformation matrix.
 
@@ -92,42 +96,18 @@ class Stability(ObjectiveFunction):
     <Stability.normalize>` is `True`, the result is normalized by the length of (number of elements in) `variable
     <Stability.variable>`.
 
-COMMENT:
-*** 11/11/17 - DELETE THIS ONCE Stability IS STABLE:
-    Stability s is calculated according as specified by `metric <Distance.metric>`, using the formulae below,
-    where :math:`i` and :math:`j` are each elements of `variable <Stability.variable>`, *len* is its length,
-    :math:`\\bar{v}` is its mean, :math:`\\sigma_v` is its standard deviation, and :math:`w_{ij}` is the entry of the
-    weight matrix for the connection between entries :math:`i` and :math:`j` in `variable <Stability.variable>`.
-
-    *ENTROPY*:
-
-       :math:`s = -\\sum\\limits^{len}(i*log(j))`
-
-    *DIFFERENCE*:
-
-       :math:`s = \\sum\\limits^{len}(i-j)`
-
-    *EUCLIDEAN*:
-
-       :math:`s = \\sum\\limits^{len}\\sqrt{(i-j)^2}`
-
-    *CORRELATION*:
-
-       :math:`s = \\frac{\\sum\\limits^{len}(i-\\bar{i})(j-\\bar{j})}{(len-1)\\sigma_{i}\\sigma_{j}}`
-
-    **normalize**:
-
-       :math:`s = \\frac{s}{len}`
-COMMENT
-
-
     Arguments
     ---------
 
-    variable : list of numbers or 1d np.array : Default class_defaults.variable
-        the array for which stability is calculated.
+    variable : list or 1d array of numbers: Default class_defaults.variable
+        specifies shape and default value of the array for which stability is calculated.
 
-    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
+    size : int : None
+        specifies length of the array over which stability is calculated;  can be used in place of default_value,
+        in which case zeros are assigned as the value(s). An error is generated if both are specified but
+        size != len(default_value).
+
+    matrix : list, np.ndarray, np.matrix, or matrix keyword : default HOLLOW_MATRIX
         specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
         length of `variable <Stability.variable>`.
 
@@ -158,8 +138,11 @@ COMMENT
     Attributes
     ----------
 
-    variable : 1d np.array
+    variable : 1d array
         array for which stability is calculated.
+
+    size : int
+        length of array for which stability is calculated.
 
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX
         weight matrix from each element of `variable <Stability.variablity>` to each other;  if a matrix other
@@ -225,6 +208,7 @@ COMMENT
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
+                 size=None,
                  matrix=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
                  metric: tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric) = ENERGY,
@@ -233,6 +217,14 @@ COMMENT
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
+
+        if size:
+            if default_variable is None:
+                default_variable = np.zeros(size)
+            elif size != len(default_variable):
+                raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(SIZE)} ({size}) "
+                                    f"are specified for {self.name} but are {SIZE}!=len({DEFAULT_VARIABLE}).")
+
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   metric=metric,
@@ -245,6 +237,10 @@ COMMENT
                          owner=owner,
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
+
+        # MODIFIED 6/12/19 NEW: [JDC]
+        self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+        # MODIFIED 6/12/19 END
 
     def _validate_variable(self, variable, context=None):
         """Validates that variable is 1d array
@@ -305,11 +301,7 @@ COMMENT
                                     format(param_type_string, MATRIX, self.name, matrix))
             rows = matrix.shape[0]
             cols = matrix.shape[1]
-            # MODIFIED 11/25/17 OLD:
-            # size = len(np.squeeze(self.defaults.variable))
-            # MODIFIED 11/25/17 NEW:
             size = len(self.defaults.variable)
-            # MODIFIED 11/25/17 END
 
             if rows != size:
                 raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
@@ -341,7 +333,7 @@ COMMENT
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.states.parameterstate import ParameterState
 
-        matrix = self.parameters.matrix.get()
+        matrix = self.parameters.matrix._get()
 
         if isinstance(matrix, MappingProjection):
             matrix = matrix._parameter_states[MATRIX]
@@ -350,7 +342,7 @@ COMMENT
         else:
             matrix = get_matrix(matrix, size, size)
 
-        self.parameters.matrix.set(matrix)
+        self.parameters.matrix._set(matrix)
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 
@@ -387,7 +379,7 @@ COMMENT
 
         input_length = ctx.int32_ty(arg_in.type.pointee.count)
         output_length = ctx.int32_ty(arg_in.type.pointee.count)
-        builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
+        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
 
         # Prepare metric function
@@ -412,7 +404,7 @@ COMMENT
         builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
         return builder
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -430,8 +422,12 @@ COMMENT
         stability : scalar
 
         """
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+
+        # MODIFIED 6/12/19 NEW: [JDC]
+        variable = np.array(variable)
+        if variable.ndim > 1:
+            variable = np.squeeze(variable)
+        # MODIFIED 6/12/19 END
 
         matrix = self.get_current_function_param(MATRIX, execution_id)
 
@@ -441,20 +437,7 @@ COMMENT
         if self.transfer_fct is not None:
             transformed = self.transfer_fct(transformed)
 
-        # # MODIFIED 11/12/15 OLD:
-        # if self.metric is ENERGY:
-        #     result = -np.sum(current * transformed)/2
-        # else:
-        #     result = self._metric_fct(variable=[current,transformed], context=context)
-        #
-        # if self.normalize:
-        #     if self.metric is ENERGY:
-        #         result /= len(variable)**2
-        #     else:
-        #         result /= len(variable)
-        # MODIFIED 11/12/15 NEW:
         result = self._metric_fct(variable=[current, transformed], execution_id=execution_id, context=context)
-        # MODIFIED 11/12/15 END
 
         return self.convert_output_type(result)
 
@@ -465,6 +448,219 @@ COMMENT
             [self._metric_fct] if self._metric_fct is not None else [],
             [self.transfer_fct] if self.transfer_fct is not None else [],
         ))
+
+
+class Energy(Stability):
+    """
+    Energy(                           \
+        default_variable=None,        \
+        size=None,                    \
+        matrix=INVERSE_HOLLOW_MATRIX, \
+        transfer_fct=None             \
+        normalize=False,              \
+        params=None,                  \
+        owner=None,                   \
+        prefs=None                    \
+        )
+
+    .. _EnergyFunction:
+
+    Subclass of `Stability` Function that returns the energy of an array.
+
+    Arguments
+    ---------
+
+    variable : list or 1d array of numbers: Default class_defaults.variable
+        specifies shape and default value of the array for which energy is calculated.
+
+    size : int : None
+        specifies length of the array over which energy is calculated;  can be used in place of default_value,
+        in which case zeros are assigned as the value(s). An error is generated if both are specified but
+        size != len(default_value).
+
+    matrix : list, np.ndarray, np.matrix, or matrix keyword : default INVERSE_HOLLOW_MATRIX
+        specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
+        length of `variable <Stability.variable>`.
+
+    transfer_fct : function or method : Default None
+        specifies the function used to transform output of `matrix <Stability.matrix>` prior to the energy calculation
+        (see `Stablility <Stability>` for explanation).
+
+    normalize : bool : Default False
+        specifies whether to normalize the energy value by the length of `variable <Stability.variable>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 1d array
+        array for which energy is calculated.
+
+    size : int
+        length of array for which energy is calculated.
+
+    matrix : list, np.ndarray, np.matrix, or matrix keyword
+        weight matrix from each element of `variable <Energy.variablity>` to each other;  if a matrix other
+        than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from 
+        the energy calculation.
+
+    transfer_fct : function or method
+        function used to transform output of `matrix <Stability.matrix>` prior to computing energy
+        (see `Stability` for explanation).
+
+    normalize : bool
+        if `True`, result of energy calculation is normalized by the length of `variable <Energy.variable>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
+    
+    def __init__(self,
+                 default_variable=None,
+                 size=None,
+                 normalize:bool=False,
+                 # transfer_fct=None,
+                 matrix=HOLLOW_MATRIX,
+                 params=None,
+                 owner=None,
+                 prefs=None):
+
+        super().__init__(default_variable=default_variable,
+                         size=size,
+                         metric=ENERGY,
+                         matrix=matrix,
+                         # transfer_fct=transfer_fct,
+                         normalize=normalize,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs)
+
+
+class Entropy(Stability):
+    """
+    Entropy(                          \
+        default_variable=None,        \
+        size=None,                    \
+        matrix=INVERSE_HOLLOW_MATRIX, \
+        transfer_fct=None             \
+        normalize=False,              \
+        params=None,                  \
+        owner=None,                   \
+        prefs=None                    \
+        )
+
+    .. _EntropyFunction:
+
+    Subclass of `Stability` Function that returns the entropy of an array.
+
+    Arguments
+    ---------
+
+    variable : list or 1d array of numbers: Default class_defaults.variable
+        specifies shape and default value of the array for which entropy is calculated.
+
+    size : int : None
+        specifies length of the array over which entropy is calculated;  can be used in place of default_value,
+        in which case zeros are assigned as the value(s). An error is generated if both are specified but
+        size != len(default_value).
+
+    matrix : list, np.ndarray, np.matrix, or matrix keyword : default INVERSE_HOLLOW_MATRIX
+        specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
+        length of `variable <Stability.variable>`.
+
+    transfer_fct : function or method : Default None
+        specifies the function used to transform output of `matrix <Stability.matrix>` prior to the entropy calculation
+        (see `Stability` for explanation).
+
+    normalize : bool : Default False
+        specifies whether to normalize the entropy value by the length of `variable <Stability.variable>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 1d array
+        array for which entropy is calculated.
+
+    size : int
+        length of array for which energy is calculated.
+
+    matrix : list, np.ndarray, np.matrix, or matrix keyword
+        weight matrix from each element of `variable <Entropy.variablity>` to each other;  if a matrix other
+        than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from 
+        the entropy calculation.
+
+    transfer_fct : function or method
+        function used to transform output of `matrix <Stability.matrix>` prior to computing entropy
+        (see `Stability` for explanation).
+
+    normalize : bool
+        if `True`, result of entropy calculation is normalized by the length of `variable <Entropy.variable>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
+
+    def __init__(self,
+                 default_variable=None,
+                 normalize:bool=False,
+                 transfer_fct=None,
+                 params=None,
+                 owner=None,
+                 prefs=None):
+
+        super().__init__(default_variable=default_variable,
+                         # matrix=matrix,
+                         metric=ENTROPY,
+                         transfer_fct=transfer_fct,
+                         normalize=normalize,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs)
 
 
 class Distance(ObjectiveFunction):
@@ -488,7 +684,7 @@ class Distance(ObjectiveFunction):
     Arguments
     ---------
 
-    variable : 2d np.array with two items : Default class_defaults.variable
+    variable : 2d array with two items : Default class_defaults.variable
         the arrays between which the distance is calculated.
 
     metric : keyword in DistancesMetrics : Default EUCLIDEAN
@@ -515,7 +711,7 @@ class Distance(ObjectiveFunction):
     Attributes
     ----------
 
-    variable : 2d np.array with two items
+    variable : 2d array with two items
         contains the arrays between which the distance is calculated.
 
     metric : keyword in DistanceMetrics
@@ -534,7 +730,8 @@ class Distance(ObjectiveFunction):
         `component <Component>` to which to assign the Function.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
 
     componentName = DISTANCE_FUNCTION
 
@@ -714,8 +911,7 @@ class Distance(ObjectiveFunction):
 
         old_max = builder.load(max_diff_ptr)
         # Maxnum for some reason needs full function prototype
-        fmax = ctx.get_builtin("maxnum", [ctx.float_ty],
-            pnlvm.ir.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
+        fmax = ctx.get_builtin("maxnum", [ctx.float_ty])
 
         max_diff = builder.call(fmax, [diff, old_max])
         builder.store(max_diff, max_diff_ptr)
@@ -908,7 +1104,7 @@ class Distance(ObjectiveFunction):
 
         return builder
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -925,8 +1121,6 @@ class Distance(ObjectiveFunction):
         distance : scalar
 
         """
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         v1 = variable[0]
         v2 = variable[1]
@@ -962,7 +1156,7 @@ class Distance(ObjectiveFunction):
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
             # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
-            if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
                 v1 = np.where(v1 == 0, EPSILON, v1)
                 v2 = np.where(v2 == 0, EPSILON, v2)
             # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros

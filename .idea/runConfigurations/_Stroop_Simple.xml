@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="• Stroop-Simple" type="PythonConfigurationType" factoryName="Python" folderName="Examples" singleton="true">
+  <configuration default="false" factoryName="Python" folderName="Examples" name="&#8226; Stroop-Simple" singleton="true" type="PythonConfigurationType">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>

@@ -113,7 +113,7 @@ To create new Parameters, reference this example of a new class *B*
 
             def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None):
                 try:
-                    return [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in owning_component.control_signals]
+                    return [c.compute_costs(c.parameters.variable._get(execution_id), execution_id=execution_id) for c in owning_component.control_signals]
                 except TypeError:
                     return None
 
@@ -130,9 +130,9 @@ To create new Parameters, reference this example of a new class *B*
 
                 if value is not None:
                     temp_matrix = value.copy()
-                    owning_component.parameters.auto.set(np.diag(temp_matrix).copy(), execution_id)
+                    owning_component.parameters.auto._set(np.diag(temp_matrix).copy(), execution_id)
                     np.fill_diagonal(temp_matrix, 0)
-                    owning_component.parameters.hetero.set(temp_matrix, execution_id)
+                    owning_component.parameters.hetero._set(temp_matrix, execution_id)
 
                 return value
 
@@ -265,7 +265,7 @@ def get_validator_by_type_only(valid_types):
         :return: A validation method for use with Parameters classes that rejects any assignment that is not one of the **valid_types**
         :rtype: types.FunctionType
     """
-    if not isinstance(valid_types, collections.Iterable):
+    if not isinstance(valid_types, collections.abc.Iterable):
         valid_types = [valid_types]
 
     def validator(self, value):
@@ -604,6 +604,7 @@ class Parameter(types.SimpleNamespace):
         stateful=True,
         modulable=False,
         read_only=False,
+        function_arg=True,
         aliases=None,
         user=True,
         values=None,
@@ -639,6 +640,7 @@ class Parameter(types.SimpleNamespace):
             stateful=stateful,
             modulable=modulable,
             read_only=read_only,
+            function_arg=function_arg,
             aliases=aliases,
             user=user,
             values=values,
@@ -806,6 +808,12 @@ class Parameter(types.SimpleNamespace):
         else:
             execution_id = parse_execution_context(execution_context)
 
+        return self._get(execution_id, **kwargs)
+
+    def _get(self, execution_id=None, **kwargs):
+        if not self.stateful:
+            execution_id = None
+
         if self.getter is not None:
             kwargs = {**self._default_getter_kwargs, **{'execution_id': execution_id}, **kwargs}
             value = call_with_pruned_args(self.getter, **kwargs)
@@ -862,7 +870,7 @@ class Parameter(types.SimpleNamespace):
                 )
             ) from e
 
-    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
+    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=3, **kwargs):
         """
             Sets the value of this `Parameter` in the context of **execution_context**
             If no execution_context is specified, attributes on the associated `Component` will be used
@@ -889,12 +897,17 @@ class Parameter(types.SimpleNamespace):
         else:
             execution_id = parse_execution_context(execution_context)
 
+        self._set(value, execution_id, skip_history, skip_log, _ro_warning_stacklevel, **kwargs)
+
+    def _set(self, value, execution_id=None, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
+        if not self.stateful:
+            execution_id = None
+
         if self.setter is not None:
             kwargs = {
                 **self._default_setter_kwargs,
                 **{
                     'execution_id': execution_id,
-                    'override': override,
                 },
                 **kwargs
             }
@@ -937,7 +950,7 @@ class Parameter(types.SimpleNamespace):
         if context is ContextFlags.COMMAND_LINE:
             try:
                 # attempt to infer the time via this Parameters object's context if it exists
-                owner_context = self._owner.context.get(execution_id)
+                owner_context = self._owner.context._get(execution_id)
                 time = _get_time(self._owner._owner, owner_context.execution_phase, execution_id)
             except AttributeError:
                 time = time_object(None, None, None, None)
@@ -952,7 +965,7 @@ class Parameter(types.SimpleNamespace):
 
             if context is None:
                 try:
-                    context = self._owner.context.get(execution_id)
+                    context = self._owner.context._get(execution_id)
                 except AttributeError:
                     logger.warning('Attempted to log {0} but has no context attribute'.format(self))
 
@@ -1017,8 +1030,8 @@ class Parameter(types.SimpleNamespace):
                 if new_history is None:
                     raise ParameterError('history should always be a collections.deque if it exists')
                 elif new_history is not NotImplemented:
-                    new_history = copy_dict_or_list_with_shared(new_history, shared_types)
-                    self.history[execution_context] = new_history
+                    # shallow copy is OK because history should not change
+                    self.history[execution_context] = copy.copy(new_history)
 
         except ParameterError as e:
             raise ParameterError('Error when attempting to initialize from {0}: {1}'.format(base_execution_context, e))

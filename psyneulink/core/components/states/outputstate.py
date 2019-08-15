@@ -385,10 +385,12 @@ constructor, the corresponding entries (*VARIABLE* and *FUNCTION*) of an `Output
 dictionary <OutputState_Specification_Dictionary>`, or in the variable spec (2nd) item of a `3-item tuple
 <OutputState_Tuple_Specification>` for the OutputState.
 
+.. _OutputState_Variable:
+
 *OutputState* `variable <OutputState.variable>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, an OutputState uses the first (and usually only) item of the owner Mechanism's `value
+By default, an OutputState uses the first (and often only) item of the owner Mechanism's `value
 <Mechanism_Base.value>` as its `variable <OutputState.variable>`.  However, this can be customized by specifying
 any other item of its `owner <OutputState.owner>`\\s `value <Mechanism_Base.value>`, the full `value
 <Mechanism_Base.value>` itself, other attributes of the `owner <OutputState.owner>`, or any combination of these
@@ -593,7 +595,13 @@ from psyneulink.core.components.functions.function import Function, function_typ
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MECHANISM_VALUE, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, output_state_spec_to_parameter_name
+from psyneulink.core.globals.keywords import \
+    ALL, ASSIGN, CALCULATE, COMMAND_LINE, CONTEXT, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, \
+    MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MECHANISM_VALUE, NAME, \
+    OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OUTPUT_STD_DEV, OUTPUT_VARIANCE, \
+    OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
+    RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, \
+    output_state_spec_to_parameter_name
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -682,9 +690,9 @@ def _parse_output_state_variable(variable, owner, execution_id=None, output_stat
                 owner_param_name = spec[0]
 
             try:
-                return getattr(owner.parameters, owner_param_name).get(execution_id)[spec[1]]
+                return getattr(owner.parameters, owner_param_name)._get(execution_id)[spec[1]]
             except TypeError:
-                if getattr(owner.parameters, owner_param_name).get(execution_id) is None:
+                if getattr(owner.parameters, owner_param_name)._get(execution_id) is None:
                     return None
                 else:
                     # raise OutputStateError("Can't parse variable ({}) for {} of {}".
@@ -705,10 +713,10 @@ def _parse_output_state_variable(variable, owner, execution_id=None, output_stat
                 owner_param_name = spec
 
             try:
-                return getattr(owner.parameters, owner_param_name).get(execution_id)
+                return getattr(owner.parameters, owner_param_name)._get(execution_id)
             except AttributeError:
                 try:
-                    return getattr(owner.function.parameters, owner_param_name).get(execution_id)
+                    return getattr(owner.function.parameters, owner_param_name)._get(execution_id)
                 except AttributeError:
                     raise OutputStateError(
                         "Can't parse variable ({}) for {} of {}".format(
@@ -977,9 +985,9 @@ class OutputState(State_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None,
                  **kwargs):
 
+        context = kwargs.pop(CONTEXT, None)
         if context is None:
             context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE
@@ -1010,6 +1018,7 @@ class OutputState(State_Base):
             # Store args for deferred initialization
             self.init_args = locals().copy()
             del self.init_args['kwargs']
+            # self.init_args['variable'] = variable
             self.init_args['context'] = context
             self.init_args['name'] = name
             self.init_args['projections'] = projections
@@ -1115,6 +1124,17 @@ class OutputState(State_Base):
             self._instantiate_projection_from_state(projection_spec=MappingProjection,
                                                     receiver=proj,
                                                     context=context)
+
+    def _check_for_duplicate_projections(self, projection):
+        # FIX: 7/22/19 - CHECK IF RECEIVER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_INPUT_STATE
+        assert True
+        if any(proj.receiver == projection.receiver and proj != projection for proj in self.efferents):
+            from psyneulink.core.components.projections.projection import Projection
+            warnings.warn(f'{Projection.__name__} from {projection.sender.name} of {projection.sender.owner.name} '
+                          f'to {self.name} of {self.owner.name} already exists; will ignore additional '
+                          f'one specified ({projection.name}).')
+            return True
+        return False
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
@@ -1233,19 +1253,21 @@ class OutputState(State_Base):
         return state_spec, params_dict
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        if variable is None:
-            # fall back to specified item(s) of owner's value
-            try:
-                variable = self.parameters.variable.get(execution_id)
-            except ComponentError:
-                variable = None
-
-        return super()._execute(
+        value = super()._execute(
             variable=variable,
             execution_id=execution_id,
             runtime_params=runtime_params,
             context=context,
         )
+        return np.atleast_1d(value)
+
+    def _get_fallback_variable(self, execution_id=None):
+        # fall back to specified item(s) of owner's value
+        try:
+            return self.parameters.variable._get(execution_id)
+        except ComponentError:
+            # KDM 8/2/19: double check the relevance of this branch
+            return None
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
@@ -1491,7 +1513,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     for state in owner._output_states:
         # Assign True for owner's primary OutputState and the value has not already been set in OutputState constructor
         if state.require_projection_in_composition is None and owner.output_state == state:
-            state.parameters.require_projection_in_composition.set(True, override=True)
+            state.parameters.require_projection_in_composition._set(True)
 
     return state_list
 
@@ -1520,8 +1542,7 @@ class StandardOutputStates():
     output_state_dicts : list of dicts
         list of dictionaries specifying OutputStates for the Component specified by `owner`
 
-    indices : PRIMARY,
-    SEQUENTIAL, list of ints
+    indices : PRIMARY, SEQUENTIAL, list of ints
         specifies how to assign the (OWNER_VALUE, int) entry for each dict listed in `output_state_dicts`;
 
         The effects of each value of indices are as follows:
@@ -1676,7 +1697,7 @@ class StandardOutputStates():
     #     return [item[INDEX] for item in self.data]
 
 def _parse_output_state_function(owner, output_state_name, function, params_dict_as_variable=False):
-    """ Parse specification of function as Function, Function class, Function.function, function_type or method_type.
+    """Parse specification of function as Function, Function class, Function.function, function_type or method_type.
 
     If params_dict_as_variable is True, and function is a Function, check whether it allows params_dict as variable;
     if it is and does, leave as is,

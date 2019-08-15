@@ -1,9 +1,10 @@
-pytest<4
+pytest
 pytest-benchmark
 pytest-cov
 pytest-profiling
+pytest-pydocstyle
 pytest-helpers-namespace
-pytest-xdist<1.28.0
+pytest-xdist
 jupyter
 sphinx
 sphinx_rtd_theme
@@ -13,3 +14,4 @@ graphviz
 pillow
 torch
 ipython
+autograd

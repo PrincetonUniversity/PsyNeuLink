@@ -1626,13 +1626,13 @@ class Process(Process_Base):
             self.learning = LEARNING
 
     def _check_for_duplicate_projection(self, sndr_mech, rcvr_mech, proj_spec, pathway_index):
-        '''Check if there is already a projection between sndr_mech and rcvr_mech
+        """Check if there is already a projection between sndr_mech and rcvr_mech
         If so:
             - if it has just found the same project (e.g., as in case of AutoAssociativeProjection), let pass
             - otherwise:
                 - if verbosePref, warn
                 - replace proj_spec with existing projection
-        '''
+        """
 
         for input_state in rcvr_mech.input_states:
             for proj in input_state.path_afferents:
@@ -1777,8 +1777,8 @@ class Process(Process_Base):
                                        format(i, process_input[i], self.name, mechanism.name, input_state_variable))
                 # Create MappingProjection from Process input state to corresponding mechanism.input_state
                 proj = MappingProjection(sender=self.process_input_states[i],
-                                  receiver=mechanism.input_states[i],
-                                  name=self.name+'_Input Projection')
+                                         receiver=mechanism.input_states[i],
+                                         name=self.name+'_Input Projection')
                 proj._activate_for_compositions(self)
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
@@ -1828,7 +1828,7 @@ class Process(Process_Base):
         if input is None:
             input = self.first_mechanism.defaults.variable
             if (self.prefs.verbosePref and not (context == ContextFlags.COMMAND_LINE or
-                                                self.parameters.context.get(execution_id).initializaton_status == ContextFlags.INITIALIZING)):
+                                                self.parameters.context._get(execution_id).initializaton_status == ContextFlags.INITIALIZING)):
                 print("- No input provided;  default will be used: {0}")
 
         else:
@@ -1848,7 +1848,7 @@ class Process(Process_Base):
 
         # Assign items in input to value of each process_input_state
         for i in range(len(self.process_input_states)):
-            self.process_input_states[i].parameters.value.set(input[i], execution_id, override=True)
+            self.process_input_states[i].parameters.value._set(input[i], execution_id)
 
         return input
 
@@ -2223,30 +2223,27 @@ class Process(Process_Base):
         """
         from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
-        if not context:
-            context = ContextFlags.COMPOSITION
-            self._assign_context_values(
-                execution_id,
-                execution_phase=ContextFlags.PROCESSING,
-                source=context,
-                string=EXECUTING + " " + PROCESS + " " + self.name
-            )
-
         if execution_id is None:
             execution_id = self.default_execution_id
 
-        for mech in self.mechanisms:
-            mech._execution_id = self._execution_id
-            mech._assign_context_values(execution_id, composition=self)
+        if not context:
+            context = ContextFlags.COMPOSITION
 
-        for proj in self.projections:
-            proj._assign_context_values(execution_id, composition=self)
+        if self.parameters.context._get(execution_id) is None:
+            self._assign_context_values(
+                execution_id,
+                propagate=True,
+                execution_phase=ContextFlags.PROCESSING,
+                source=context,
+                string=EXECUTING + " " + PROCESS + " " + self.name,
+                composition=self
+            )
 
         # initialize from base context but don't overwrite any values already set for this execution_id
         self._initialize_from_context(execution_id, base_execution_id, override=False)
 
         # Report output if reporting preference is on and this is not an initialization run
-        report_output = self.prefs.reportOutputPref and self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZED
+        report_output = self.prefs.reportOutputPref and self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZED
 
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
@@ -2256,7 +2253,7 @@ class Process(Process_Base):
         self._check_args(variable, runtime_params)
 
         # Use Process self.input as input to first Mechanism in Pathway
-        self.parameters.input.set(variable, execution_id)
+        self.parameters.input._set(variable, execution_id)
 
         # Generate header and report input
         if report_output:
@@ -2270,10 +2267,10 @@ class Process(Process_Base):
 
             # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            mechanism.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+            mechanism.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
             context = ContextFlags.PROCESS
             mechanism.execute(execution_id=execution_id, context=context)
-            mechanism.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
+            mechanism.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
             if report_output:
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
@@ -2292,15 +2289,13 @@ class Process(Process_Base):
             self._report_process_completion(separator=True, execution_context=execution_id)
 
         # FIX:  WHICH SHOULD THIS BE?
-        return self.output_state.parameters.value.get(execution_id)
+        return self.output_state.parameters.value._get(execution_id)
         # return self.output
 
     def _execute_learning(self, execution_id=None, target=None, context=None):
-
-        """ Update each LearningProjection for mechanisms in _mechs of process
+        """Update each LearningProjection for mechanisms in _mechs of process
 
         # Begin with Projection(s) to last Mechanism in _mechs, and work backwards
-
         """
 
         # FIRST, assign targets
@@ -2327,7 +2322,7 @@ class Process(Process_Base):
         # Assign items of self.target to target_input_states
         #   (ProcessInputStates that project to corresponding target_nodes for the Process)
         for i, target_input_state in zip(range(len(self.target_input_states)), self.target_input_states):
-            target_input_state.parameters.value.set(target[i], execution_id, override=True)
+            target_input_state.parameters.value._set(target[i], execution_id)
 
         # # Zero any input from projections to target(s) from any other processes
         for target_mech in self.target_mechanisms:
@@ -2346,10 +2341,10 @@ class Process(Process_Base):
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
-            mech._assign_context_values(execution_id, execution_phase=ContextFlags.LEARNING)
             mech._assign_context_values(
                 execution_id,
-                string=self.parameters.context.get(execution_id).string.replace(EXECUTING, LEARNING + ' ')
+                string=self.parameters.context._get(execution_id).string.replace(EXECUTING, LEARNING + ' '),
+                execution_phase=ContextFlags.LEARNING
             )
 
             # IMPLEMENTATION NOTE:
@@ -2376,7 +2371,7 @@ class Process(Process_Base):
                     #       since parameter_state.update() handles parsing of LearningProjection-specific params
                     projection._assign_context_values(
                         execution_id,
-                        string=self.parameters.context.get(execution_id).string.replace(EXECUTING, LEARNING + ' '),
+                        string=self.parameters.context._get(execution_id).string.replace(EXECUTING, LEARNING + ' '),
                         execution_phase=ContextFlags.LEARNING
                     )
 
@@ -2408,7 +2403,7 @@ class Process(Process_Base):
             mech._assign_context_values(
                 execution_id,
                 execution_phase=ContextFlags.IDLE,
-                string=self.parameters.context.get(execution_id).string.replace(LEARNING, EXECUTING)
+                string=self.parameters.context._get(execution_id).string.replace(LEARNING, EXECUTING)
             )
 
     def run(self,
@@ -2650,6 +2645,7 @@ class Process(Process_Base):
         return list(itertools.chain(
             super()._dependent_components,
             self._mechs,
+            self._learning_mechs,
             self.projections,
         ))
 
@@ -2719,15 +2715,14 @@ class ProcessInputState(OutputState):
         else:
             self.name = owner.name + "_" + name
         self.prefs = prefs
-        self.efferents = []
+        self.path_afferents = []
         self.owner = owner
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
-        self.parameters.value.set(variable, override=True)
+        self.parameters.value._set(variable)
 
-        # self.path_afferents = []
         # self.index = PRIMARY
         # self.assign = None
 

@@ -729,12 +729,13 @@ Class Reference
 
 """
 
+import abc
 import inspect
 import itertools
 import numbers
 import warnings
 
-from collections import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -1048,11 +1049,11 @@ class State_Base(State):
                  variable=None,
                  size=None,
                  projections=None,
+                 function=None,
                  params=None,
                  name=None,
                  prefs=None,
                  context=None,
-                 function=None,
                  **kargs):
         """Initialize subclass that computes and represents the value of a particular State of a Mechanism
 
@@ -1138,7 +1139,6 @@ class State_Base(State):
 
         self.path_afferents = []
         self.mod_afferents = []
-        self.efferents = []
 
         self._path_proj_values = []
         # Create dict with entries for each ModualationParam and initialize - used in update()
@@ -1174,7 +1174,8 @@ class State_Base(State):
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a State
-            is generally 1D, rather than 2D as in the case of Mechanisms"""
+            is generally 1D, rather than 2D as in the case of Mechanisms
+        """
         if size is not NotImplemented:
 
             def checkAndCastInt(x):
@@ -1343,6 +1344,7 @@ class State_Base(State):
                          format(self.__class__.__name__,
                                 self.name))
 
+    # FIX: MOVE TO InputState AND ParameterState OR...
     # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a State and assign them to self.path_afferents
@@ -1532,12 +1534,7 @@ class State_Base(State):
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.path_afferents or mod_afferents lists
-            # TODO: CW 2/15/19: also should check whether proj is in same Composition?
-            if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
-                warnings.warn('{} from {} of {} to {} of {} already exists; will ignore additional one specified ({})'.
-                              format(Projection.__name__, repr(projection.sender.name),
-                                     projection.sender.owner.name,
-                              repr(self.name), self.owner.name, repr(projection.name)))
+            if self._check_for_duplicate_projections(projection):
                 continue
 
             # reassign default variable shape to this state and its function
@@ -1587,6 +1584,8 @@ class State_Base(State):
 
         return new_projections
 
+    # FIX: MOVE TO OutputState or...
+    # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_projection_from_state(self, projection_spec, receiver=None, context=None):
         """Instantiate outgoing projection from a State and assign it to self.efferents
 
@@ -1865,11 +1864,13 @@ class State_Base(State):
 
 
             # ASSIGN TO STATE
+            # FIX: 7/22/19 - MAKE METHOD AND USE HERE AND IN _instantiate_projection_to_state
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.efferents
-            if not projection in self.efferents:
-                self.efferents.append(projection)
+            if self._check_for_duplicate_projections(projection):
+                continue
+
             if isinstance(projection, ModulatoryProjection_Base):
                 self.owner.aux_components.append(projection)
             return projection
@@ -1910,10 +1911,10 @@ class State_Base(State):
         # Set context to owner's context:
         self._assign_context_values(
             execution_id,
-            execution_phase=self.owner.parameters.context.get(execution_id).execution_phase,
+            execution_phase=self.owner.parameters.context._get(execution_id).execution_phase,
         )
-        # self.parameters.context.get(execution_id).execution_phase = self.owner.parameters.context.get(execution_id).execution_phase
-        self.parameters.context.get(execution_id).string = self.owner.parameters.context.get(execution_id).string
+        # self.parameters.context._get(execution_id).execution_phase = self.owner.parameters.context._get(execution_id).execution_phase
+        self.parameters.context._get(execution_id).string = self.owner.parameters.context._get(execution_id).string
 
         # SET UP ------------------------------------------------------------------------------------------------
 
@@ -1974,10 +1975,10 @@ class State_Base(State):
                                                                                      self.owner.name))
                 continue
 
-            if not self.afferents_info[projection].is_active_in_composition(self.parameters.context.get(execution_id).composition):
+            if not self.afferents_info[projection].is_active_in_composition(self.parameters.context._get(execution_id).composition):
                 continue
 
-            projection._assign_context_values(execution_id, composition=self.parameters.context.get(execution_id).composition)
+            projection._assign_context_values(execution_id, composition=self.parameters.context._get(execution_id).composition)
             # Only accept projections from a Process to which the owner Mechanism belongs
             if isinstance(sender, ProcessInputState):
                 if not sender.owner in self.owner.processes.keys():
@@ -1996,18 +1997,19 @@ class State_Base(State):
                 projection_params = None
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
-            # Note: done here rather than in its own method in order to exploit parsing of params above
-            if isinstance(projection, LearningProjection) and self.parameters.context.get(execution_id).execution_phase != ContextFlags.LEARNING:
+            # IMPLEMENTATION NOTE: done here rather than in its own method in order to exploit parsing of params above
+            if (isinstance(projection, LearningProjection)
+                    and self.parameters.context._get(execution_id).execution_phase != ContextFlags.LEARNING):
                 projection_value = projection.defaults.value * 0.0
             else:
-                projection_value = projection.execute(variable=projection.sender.parameters.value.get(execution_id),
+                projection_value = projection.execute(variable=projection.sender.parameters.value._get(execution_id),
                                                       execution_id=execution_id,
                                                       runtime_params=projection_params,
                                                       context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
             try:
-                if projection.parameters.context.get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
+                if projection.parameters.context._get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
                     continue
             except AttributeError:
                 pass
@@ -2039,7 +2041,7 @@ class State_Base(State):
                         continue
                     # Otherwise, for efficiency, assign OVERRIDE value to State here and return
                     else:
-                        self.parameters.value.set(type_match(projection_value, type(self.defaults.value)), execution_id, override=True)
+                        self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), execution_id)
                         return
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
@@ -2051,7 +2053,7 @@ class State_Base(State):
         # Handle ModulatoryProjection OVERRIDE
         #    if there is one and it wasn't been handled above (i.e., if paramValidation is set)
         if modulatory_override:
-            self.parameters.value.set(type_match(modulatory_override[1], type(self.defaults.value)), execution_id, override=True)
+            self.parameters.value._set(type_match(modulatory_override[1], type(self.defaults.value)), execution_id)
             return
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
@@ -2064,7 +2066,7 @@ class State_Base(State):
             if value_list:
                 # KDM 12/10/18: below is confusing - why does the mod_param "enum" value refer to a class?
                 aggregated_mod_val = mod_param.value.reduce(value_list)
-                getattr(self.function.parameters, mod_param.value.attrib_name).set(aggregated_mod_val, execution_id)
+                getattr(self.function.parameters, mod_param.value.attrib_name)._set(aggregated_mod_val, execution_id)
                 function_param = self.function.params[mod_param.value.attrib_name]
                 if not FUNCTION_PARAMS in self.stateParams:
                     self.stateParams[FUNCTION_PARAMS] = {function_param: aggregated_mod_val}
@@ -2083,7 +2085,45 @@ class State_Base(State):
         except (KeyError, TypeError):
             function_params = None
 
-        value = self.execute(execution_id=execution_id, runtime_params=function_params, context=context)
+        if (
+            len(self.all_afferents) == 0
+            and self.function._is_identity(execution_id)
+            and function_params is None
+        ):
+            variable = self._parse_function_variable(self._get_fallback_variable(execution_id))
+            self.parameters.variable._set(variable, execution_id)
+            # below conversion really should not be happening ultimately, but it is
+            # in _validate_variable. Should be removed eventually
+            variable = convert_to_np_array(variable, 1)
+            self.parameters.value._set(variable, execution_id)
+            self.most_recent_execution_id = execution_id
+            self.function.most_recent_execution_id = execution_id
+        else:
+            self.execute(execution_id=execution_id, runtime_params=function_params, context=context)
+
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+        if variable is None:
+            variable = self._get_fallback_variable(execution_id)
+
+            # if the fallback is also None
+            # return None, so that this state is ignored
+            # KDM 8/2/19: double check the relevance of this branch
+            if variable is None:
+                return None
+
+        return super()._execute(
+            variable,
+            execution_id=execution_id,
+            runtime_params=runtime_params,
+            context=context
+        )
+
+    @abc.abstractmethod
+    def _get_fallback_variable(self, execution_id=None):
+        """
+            Returns a variable to be used for self.execute when the variable passed in is None
+        """
+        pass
 
     def _get_value_label(self, labels_dict, all_states, execution_context=None):
         subdicts = False
@@ -2144,14 +2184,25 @@ class State_Base(State):
             self._afferents_info = {}
             return self._afferents_info
 
+    @property
+    def efferents(self):
+        try:
+            return self._efferents
+        except:
+            self._efferents = []
+            return self._efferents
+
+    @efferents.setter
+    def efferents(self, proj):
+        assert False, f"Illegal attempt to directly assign {repr('efferents')} attribute of {self.name}"
+
     def _assign_default_state_name(self, context=None):
         return False
 
     def _get_input_struct_type(self, ctx):
+        # Use function input type. The shape should be the same,
+        # however, some functions still need input shape workarounds.
         return ctx.get_input_struct_type(self.function)
-
-    def _get_output_struct_type(self, ctx):
-        return ctx.get_output_struct_type(self.function)
 
     def _get_param_struct_type(self, ctx):
         return ctx.get_param_struct_type(self.function)
@@ -2168,6 +2219,10 @@ class State_Base(State):
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
         main_function = ctx.get_llvm_function(self.function)
+        # OutputState returns 1D array even for scalar functions
+        if arg_out.type != main_function.args[3].type:
+            assert len(arg_out.type.pointee) == 1
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.call(main_function, [params, context, arg_in, arg_out])
 
         return builder
@@ -2283,15 +2338,9 @@ def _instantiate_state_list(owner,
             comparison_string = 'more'
         else:
             comparison_string = 'fewer'
-        raise StateError("There are {} {}s specified ({}) than the number of items ({}) "
-                             "in the {} of the function for \'{}\'".
-                             format(comparison_string,
-                                    state_param_identifier,
-                                    num_states,
-                                    num_constraint_items,
-                                    reference_value_name,
-                                    owner.name))
-
+        raise StateError(f"There are {comparison_string} {state_param_identifier}s specified ({num_states}) "
+                         f"than the number of items ({num_constraint_items}) in the {reference_value_name} "
+                         f"of the function for {repr(owner.name)}.")
 
     # INSTANTIATE EACH STATE
 
@@ -2412,13 +2461,18 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         state = parsed_state_spec
 
         # State initialization was deferred (owner or reference_value was missing), so
-        #    assign owner, variable, and/or reference_value
-        #    if they were not specified in call to _instantiate_state
+        #    assign owner, variable, and/or reference_value if they were not already specified
         if state.context.initialization_status == ContextFlags.DEFERRED_INIT:
             if not state.init_args[OWNER]:
                 state.init_args[OWNER] = owner
+            # If variable was not specified by user or State's constructor:
             if not VARIABLE in state.init_args or state.init_args[VARIABLE] is None:
-                state.init_args[VARIABLE] = owner.defaults.variable[0]
+                # If call to _instantiate_state specified variable, use that
+                if variable is not None:
+                    state.init_args[VARIABLE] = variable
+                # Otherwise, use State's owner's default variable as default
+                else:
+                    state.init_args[VARIABLE] = owner.defaults.variable[0]
             if not hasattr(state, REFERENCE_VALUE):
                 if REFERENCE_VALUE in state.init_args and state.init_args[REFERENCE_VALUE] is not None:
                     state.reference_value = state.init_args[REFERENCE_VALUE]
@@ -2427,9 +2481,6 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                     state.reference_value = state.init_args[VARIABLE]
             state.init_args[CONTEXT]=context
             state._deferred_init()
-
-        if variable:
-                state.defaults.variable = variable
 
         # # FIX: 10/3/17 - CHECK THE FOLLOWING BY CALLING STATE-SPECIFIC METHOD?
         # # FIX: DO THIS IN _parse_connection_specs?
@@ -2572,7 +2623,6 @@ def _parse_state_spec(state_type=None,
                       prefs=None,
                       context=None,
                       **state_spec):
-
     """Parse State specification and return either State object or State specification dictionary
 
     If state_spec is or resolves to a State object, returns State object.

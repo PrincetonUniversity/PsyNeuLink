@@ -159,10 +159,10 @@ stabilityFlexibility.add_projection(sender = ddmCombination, receiver = decision
 
 search_range = pnl.SampleSpec(start=1.0, stop=1.3, num=3)
 
-signal = pnl.ControlSignal(projections=[(pnl.GAIN, activation)],
-                                              function=pnl.Linear,
-                                              variable=1.0,
-                                              allocation_samples=search_range)
+signal = pnl.ControlSignal(modulates=[(pnl.GAIN, activation)],
+                           function=pnl.Linear,
+                           variable=1.0,
+                           allocation_samples=search_range)
 
 objective_mech = pnl.ObjectiveMechanism(monitor = [inputLayer, stimulusInfo,
                                                            (pnl.PROBABILITY_UPPER_THRESHOLD, decisionMaker),

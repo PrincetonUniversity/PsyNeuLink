@@ -13,13 +13,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.system import System
-
-try:
-    import torch
-    from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-    torch_available = True
-except ImportError:
-    torch_available = False
+from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +25,7 @@ logger = logging.getLogger(__name__)
 # or override functions in Composition
 
 
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+@pytest.mark.pytorch
 @pytest.mark.acconstructor
 class TestACConstructor:
 
@@ -71,11 +61,7 @@ class TestACConstructor:
         assert comp.patience == 10
 
 
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+@pytest.mark.pytorch
 @pytest.mark.acmisc
 class TestMiscTrainingFunctionality:
 
@@ -223,6 +209,7 @@ class TestMiscTrainingFunctionality:
                           "epochs": 10})
 
     def test_pytorch_loss_spec(self):
+        import torch
         ls = torch.nn.SoftMarginLoss(reduction='sum')
 
         xor_in = TransferMechanism(name='xor_in',
@@ -463,11 +450,7 @@ class TestMiscTrainingFunctionality:
         assert not np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
 
 
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+@pytest.mark.pytorch
 @pytest.mark.accorrectness
 class TestTrainingCorrectness:
 
@@ -731,11 +714,7 @@ class TestTrainingCorrectness:
                 # compare model output for terminal node on current trial with target for terminal node on current trial
                 assert np.allclose(np.round(result[0][i][j]), correct_value)
 
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+@pytest.mark.pytorch
 @pytest.mark.actime
 class TestTrainingTime:
 
@@ -1309,11 +1288,7 @@ class TestTrainingTime:
         logger.info(msg)
 
 
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+@pytest.mark.pytorch
 @pytest.mark.acidenticalness
 class TestTrainingIdenticalness():
 
@@ -1408,27 +1383,22 @@ class TestTrainingIdenticalness():
                        "targets": {xor_out:xor_targets},
                        "epochs": eps}
         result = xor.run(inputs=inputs_dict)
-
         comp_weights = xor.get_parameters()[0]
 
         # SET UP SYSTEM
-
         xor_process = Process(pathway=[xor_in_sys,
                                        hid_map_sys,
                                        xor_hid_sys,
                                        out_map_sys,
                                        xor_out_sys],
                               learning=pnl.LEARNING)
-
         xor_sys = System(processes=[xor_process],
                          learning_rate=10)
 
         # TRAIN SYSTEM
-
         results_sys = xor_sys.run(inputs={xor_in_sys:xor_inputs},
                                   targets={xor_out_sys:xor_targets},
                                   num_trials=(eps*xor_inputs.shape[0]))
-
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
 
         assert np.allclose(comp_weights[hid_map], hid_map_sys.get_mod_matrix(xor_sys))
@@ -1748,11 +1718,7 @@ class TestTrainingIdenticalness():
         assert np.allclose(comp_weights[map_h2_has], map_h2_has_sys.get_mod_matrix(sem_net_sys))
         assert np.allclose(comp_weights[map_h2_can], map_h2_can_sys.get_mod_matrix(sem_net_sys))
 
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+@pytest.mark.pytorch
 @pytest.mark.aclogging
 class TestACLogging:
     def test_autodiff_logging(self):
@@ -1800,15 +1766,15 @@ class TestACLogging:
         exec_id = xor.default_execution_id
 
         in_np_dict_vals = xor_in.log.nparray_dictionary()[exec_id]['value']
-        in_np_vals = xor_in.log.nparray()[1][1][1][1:]
+        in_np_vals = xor_in.log.nparray()[1][1][4][1:]
 
         hid_map_np_dict_mats = hid_map.log.nparray_dictionary()[exec_id]['matrix']
-        hid_map_np_mats = np.array(hid_map.log.nparray()[1][1][1][1:])
+        hid_map_np_mats = np.array(hid_map.log.nparray()[1][1][4][1:])
 
         hid_np_dict_vals = xor_hid.log.nparray_dictionary()[exec_id]['value']
 
         out_map_np_dict_mats = out_map.log.nparray_dictionary()[exec_id]['matrix']
-        out_map_np_mats = np.array(out_map.log.nparray()[1][1][1][1:])
+        out_map_np_mats = np.array(out_map.log.nparray()[1][1][4][1:])
 
         out_np_dict_vals = xor_out.log.nparray_dictionary()[exec_id]['value']
 
@@ -1832,11 +1798,7 @@ class TestACLogging:
 
         xor_out.log.print_entries()
 
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+@pytest.mark.pytorch
 @pytest.mark.acnested
 class TestNested:
     @pytest.mark.parametrize(
@@ -1899,8 +1861,6 @@ class TestNested:
         xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         # -----------------------------------------------------------------
-
-        xor_autodiff._analyze_graph()
 
         no_training_input_dict = {xor_in: xor_inputs}
         input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
@@ -1978,8 +1938,6 @@ class TestNested:
         xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         # -----------------------------------------------------------------
-
-        xor_autodiff._analyze_graph()
 
         no_training_input_dict = {xor_in: xor_inputs}
         input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
@@ -2320,7 +2278,6 @@ class TestNested:
         input_dict = {"inputs": inputs_dict,
                       "targets": targets_dict,
                       "epochs": eps}
-        sem_net._analyze_graph()
 
         parentComposition = pnl.Composition()
         parentComposition.add_node(sem_net)

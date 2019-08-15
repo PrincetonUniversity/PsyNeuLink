@@ -222,7 +222,6 @@ class TestModels:
 
         bidirectional_stroop.add_linear_processing_pathway(pathway=task_word_response_pathway_2)
         bidirectional_stroop.add_required_node_role(response_layer, psyneulink.core.globals.utilities.NodeRole.TERMINAL)
-        bidirectional_stroop._analyze_graph()
 
         input_dict = {colors_input_layer: [0, 0, 0],
                       words_input_layer: [0, 0, 0],
@@ -1022,7 +1021,6 @@ class TestModels:
     #     # should be 500 and 1000
     #     ntrials0 = 50
     #     ntrials = 100
-    #     comp._analyze_graph()
     #
     #     def run():
     #         results = []

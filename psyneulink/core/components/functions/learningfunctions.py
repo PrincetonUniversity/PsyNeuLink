@@ -8,7 +8,7 @@
 #
 #
 # *******************************************   LEARNING FUNCTIONS *****************************************************
-'''
+"""
 
 * `BayesGLM`
 * `Kohonen`
@@ -20,9 +20,9 @@
 
 Functions that parameterize a function.
 
-'''
+"""
 
-from collections.__init__ import namedtuple
+from collections import namedtuple
 
 import numpy as np
 import typecheck as tc
@@ -184,10 +184,10 @@ class BayesGLM(LearningFunction):
     `function <BayesGLM.function>` uses a normal linear model:
 
      .. math::
-        dependent\ variable(s) = predictor(s)\ \Theta + \epsilon,
+        dependent\\ variable(s) = predictor(s)\\ \\Theta + \\epsilon,
 
-     with predictor(s) in `variable <BayesGLM.variable>`\[0] and dependent variable(s) in `variable
-     <BayesGLM.variable>`\[1], and a normal-gamma prior distribution of weights (:math:`\Theta`), to update
+     with predictor(s) in `variable <BayesGLM.variable>`\\[0] and dependent variable(s) in `variable
+     <BayesGLM.variable>`\\[1], and a normal-gamma prior distribution of weights (:math:`\\Theta`), to update
      the weight distribution parameters `mu_n <BayesGLM.mu_n>`, `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n
      <BayesGLM.gamma_shape_n>`, and `gamma_size_n <BayesGLM.gamma_size_n>`, and returns an array of prediction
      weights sampled from the multivariate normal-gamma distribution [based on Falk Lieder's BayesianGLM.m,
@@ -474,9 +474,10 @@ class BayesGLM(LearningFunction):
         return super()._handle_default_variable(default_variable=default_variable, size=size)
 
     def initialize_priors(self):
-        '''Set the prior parameters (`mu_prior <BayesGLM.mu_prior>`, `Lamba_prior <BayesGLM.Lambda_prior>`,
+        """Set the prior parameters (`mu_prior <BayesGLM.mu_prior>`, `Lamba_prior <BayesGLM.Lambda_prior>`,
         `gamma_shape_prior <BayesGLM.gamma_shape_prior>`, and `gamma_size_prior <BayesGLM.gamma_size_prior>`)
-        to their initial (_0) values, and assign current (_n) values to the priors'''
+        to their initial (_0) values, and assign current (_n) values to the priors
+        """
 
         variable = np.array(self.defaults.variable)
         variable = self.defaults.variable
@@ -516,13 +517,13 @@ class BayesGLM(LearningFunction):
                                                         np.zeros_like(args[0][DEFAULT_VARIABLE][1])])
             self.initialize_priors()
 
-    def function(
+    def _function(
         self,
         variable=None,
         execution_id=None,
         params=None,
         context=None):
-        '''
+        """
 
         Arguments
         ---------
@@ -545,9 +546,9 @@ class BayesGLM(LearningFunction):
         sample weights : 1d array
             array of weights drawn from updated weight distributions.
 
-        '''
+        """
 
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             self.initialize_priors()
 
         # # MODIFIED 10/26/18 OLD:
@@ -561,8 +562,14 @@ class BayesGLM(LearningFunction):
         # Today's prior is yesterday's posterior
         Lambda_prior = self.get_current_function_param('Lambda_n', execution_id)
         mu_prior = self.get_current_function_param('mu_n', execution_id)
-        gamma_shape_prior = self.get_current_function_param('gamma_shape_n', execution_id)
-        gamma_size_prior = self.get_current_function_param('gamma_size_n', execution_id)
+        # # MODIFIED 6/3/19 OLD: [JDC]: THE FOLLOWING ARE YOTAM'S ADDITION (NOT in FALK's CODE)
+        # gamma_shape_prior = self.get_current_function_param('gamma_shape_n', execution_id)
+        # gamma_size_prior = self.get_current_function_param('gamma_size_n', execution_id)
+        # MODIFIED 6/3/19 NEW:
+        gamma_shape_prior = self.parameters.gamma_shape_n.default_value
+        gamma_size_prior = self.parameters.gamma_size_n.default_value
+        # MODIFIED 6/3/19 END
+
 
         variable = self._check_args(
             [np.atleast_2d(variable[0]), np.atleast_2d(variable[1])],
@@ -571,7 +578,7 @@ class BayesGLM(LearningFunction):
             context
         )
         predictors = variable[0]
-        dependent_vars = variable[1]
+        dependent_vars = variable[1].astype(float)
 
         # online update rules as per the given reference
         Lambda_n = (predictors.T @ predictors) + Lambda_prior
@@ -581,22 +588,26 @@ class BayesGLM(LearningFunction):
             + (mu_prior.T @ Lambda_prior @ mu_prior) \
             - (mu_n.T @ Lambda_n @ mu_n)
 
-        self.parameters.Lambda_prior.set(Lambda_prior, execution_id)
-        self.parameters.mu_prior.set(mu_prior, execution_id)
-        self.parameters.gamma_shape_prior.set(gamma_shape_prior, execution_id)
-        self.parameters.gamma_size_prior.set(gamma_size_prior, execution_id)
+        self.parameters.Lambda_prior._set(Lambda_prior, execution_id)
+        self.parameters.mu_prior._set(mu_prior, execution_id)
+        self.parameters.gamma_shape_prior._set(gamma_shape_prior, execution_id)
+        self.parameters.gamma_size_prior._set(gamma_size_prior, execution_id)
 
-        self.parameters.Lambda_n.set(Lambda_n, execution_id)
-        self.parameters.mu_n.set(mu_n, execution_id)
-        self.parameters.gamma_shape_n.set(gamma_shape_n, execution_id)
-        self.parameters.gamma_size_n.set(gamma_size_n, execution_id)
+        self.parameters.Lambda_n._set(Lambda_n, execution_id)
+        self.parameters.mu_n._set(mu_n, execution_id)
+        self.parameters.gamma_shape_n._set(gamma_shape_n, execution_id)
+        self.parameters.gamma_size_n._set(gamma_size_n, execution_id)
+
+        # # TEST PRINT:
+        # print(f'MEAN WEIGHTS FOR BayesGLM:\n{mu_n}')
 
         return self.sample_weights(gamma_shape_n, gamma_size_n, mu_n, Lambda_n)
 
     def sample_weights(self, gamma_shape_n, gamma_size_n, mu_n, Lambda_n):
-        '''Draw a sample of prediction weights from the distributions parameterized by `mu_n <BayesGLM.mu_n>`,
+        """Draw a sample of prediction weights from the distributions parameterized by `mu_n <BayesGLM.mu_n>`,
         `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`, and `gamma_size_n
-        <BayesGLM.gamma_size_n>`.'''
+        <BayesGLM.gamma_size_n>`.
+        """
         phi = np.random.gamma(gamma_shape_n / 2, gamma_size_n / 2)
         return np.random.multivariate_normal(mu_n.reshape(-1,), phi * np.linalg.inv(Lambda_n))
 
@@ -620,21 +631,21 @@ class Kohonen(LearningFunction):  # --------------------------------------------
     that element from the one with the weights most similar to the current input pattern.
 
     `function <Kohonen.function>` calculates and returns a matrix of weight changes from an array of activity values
-    (in `variable <Kohonen.variable>`\[1]) and a weight matrix that generated them (in `variable
-    <Kohonen.variable>`\[2]) using the Kohonen learning rule:
+    (in `variable <Kohonen.variable>`\\[1]) and a weight matrix that generated them (in `variable
+    <Kohonen.variable>`\\[2]) using the Kohonen learning rule:
 
     .. math::
-        learning\_rate * distance_j * variable[0]-w_j
+        learning\\_rate * distance_j * variable[0]-w_j
 
-    where :math:`distance_j` is the distance of the jth element of `variable <Kohonen.variable>`\[1] from the
-    element with the weights most similar to activity array in `variable <Kohonen.variable>`\[1],
-    and :math:`w_j` is the column of the matrix in `variable <Kohonen.variable>`\[2] that corresponds to
-    the jth element of the activity array in `variable <Kohonen.variable>`\[1].
+    where :math:`distance_j` is the distance of the jth element of `variable <Kohonen.variable>`\\[1] from the
+    element with the weights most similar to activity array in `variable <Kohonen.variable>`\\[1],
+    and :math:`w_j` is the column of the matrix in `variable <Kohonen.variable>`\\[2] that corresponds to
+    the jth element of the activity array in `variable <Kohonen.variable>`\\[1].
 
     .. _note::
-       the array of activities in `variable <Kohonen.variable>`\[1] is assumed to have been generated by the
-       dot product of the input pattern in `variable <Kohonen.variable>`\[0] and the matrix in `variable
-       <Kohonen.variable>`\[2], and thus the element with the greatest value in `variable <Kohonen.variable>`\[1]
+       the array of activities in `variable <Kohonen.variable>`\\[1] is assumed to have been generated by the
+       dot product of the input pattern in `variable <Kohonen.variable>`\\[0] and the matrix in `variable
+       <Kohonen.variable>`\\[2], and thus the element with the greatest value in `variable <Kohonen.variable>`\\[1]
        can be assumed to be the one with weights most similar to the input pattern.
 
 
@@ -650,7 +661,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         <Kohonen.learning_rate>` for details).
 
     distance_measure : GAUSSIAN, LINEAR, EXPONENTIAL, SINUSOID or function
-        specifies the method used to calculate the distance of each element in `variable <Kohonen.variable>`\[2]
+        specifies the method used to calculate the distance of each element in `variable <Kohonen.variable>`\\[2]
         from the one with the greatest value.
 
     params : Dict[param keyword: param value] : default None
@@ -691,16 +702,17 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     function : function
          calculates a matrix of weight changes from: i) the difference between an input pattern (variable
-         <Kohonen.variable>`\[0]) and the weights in a weigh matrix (`variable <Kohonen.variable>`\[2]) to each
-         element of an activity array (`variable <Kohonen.variable>`\[1]); and ii) the distance of each element of
-         the activity array (variable <Kohonen.variable>`\[1])) from the one with the weights most similar to the
-         input array (variable <Kohonen.variable>`\[0])) using `distance_measure <Kohonen.distance_measure>`.
+         <Kohonen.variable>`\\[0]) and the weights in a weigh matrix (`variable <Kohonen.variable>`\\[2]) to each
+         element of an activity array (`variable <Kohonen.variable>`\\[1]); and ii) the distance of each element of
+         the activity array (variable <Kohonen.variable>`\\[1])) from the one with the weights most similar to the
+         input array (variable <Kohonen.variable>`\\[0])) using `distance_measure <Kohonen.distance_measure>`.
 
     owner : Component
         `Mechanism <Mechanism>` to which the Function belongs.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
 
     componentName = KOHONEN_FUNCTION
 
@@ -820,7 +832,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
             self.measure=self.distance_function
             self.distance_function = scalar_distance
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -843,12 +855,10 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
         weight change matrix : 2d array
             matrix of weight changes scaled by difference of the current weights from the input pattern in
-            `variable <Kohonen.variable>`\[0] and the distance of each element from the one with the weights most
+            `variable <Kohonen.variable>`\\[0] and the distance of each element from the one with the weights most
             similar to that input pattern.
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -909,7 +919,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     .. math::
 
-        \Delta w_{ij} = learning\_rate * a_ia_j\ if\ i \\neq j,\ else\ 0
+        \\Delta w_{ij} = learning\\_rate * a_ia_j\\ if\\ i \\neq j,\\ else\\ 0
 
     where :math:`a_i` and :math:`a_j` are elements of `variable <Hebbian.variable>`.
 
@@ -981,7 +991,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         `Mechanism <Mechanism>` to which the Function belongs.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
 
     componentName = HEBBIAN_FUNCTION
 
@@ -1053,7 +1064,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
             self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1145,7 +1156,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
 
     .. math::
-       \Delta w_{ij} = learning\_rate * (a_i^+a_j^+ - a_i^-a_j^-) \ if\ i \\neq j,\ else\ 0
+       \\Delta w_{ij} = learning\\_rate * (a_i^+a_j^+ - a_i^-a_j^-) \\ if\\ i \\neq j,\\ else\\ 0
 
     where :math:`a_i^+` and :math:`a_j^+` are the activites of elements of `variable <ContrastiveHebbian.variable>`
     in the `plus_phase <ContrastiveHebbian_Plus_Phase>` of execution, and :math:`a_i^-` and :math:`a_j^-` are the
@@ -1218,7 +1229,8 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         `Mechanism <Mechanism>` to which the Function belongs.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
 
     componentName = CONTRASTIVE_HEBBIAN_FUNCTION
 
@@ -1286,7 +1298,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
             self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1361,15 +1373,15 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
 
 def _activation_input_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.variable.get(execution_id)[LEARNING_ACTIVATION_INPUT]
+    return owning_component.parameters.variable._get(execution_id)[LEARNING_ACTIVATION_INPUT]
 
 
 def _activation_output_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.variable.get(execution_id)[LEARNING_ACTIVATION_OUTPUT]
+    return owning_component.parameters.variable._get(execution_id)[LEARNING_ACTIVATION_OUTPUT]
 
 
 def _error_signal_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.variable.get(execution_id)[LEARNING_ERROR_OUTPUT]
+    return owning_component.parameters.variable._get(execution_id)[LEARNING_ERROR_OUTPUT]
 
 
 
@@ -1390,7 +1402,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     <Reinforcement.learning_rate>`:
 
     .. math::
-        \\Delta w_i = learning\_rate * error\_signal_i\ if\ activation\_output_i \\neq 0,\ otherwise\ 0
+        \\Delta w_i = learning\\_rate * error\\_signal_i\\ if\\ activation\\_output_i \\neq 0,\\ otherwise\\ 0
 
     The non-zero item in `activation_output <Reinforcement.activation_output>` can be thought of as the predicted
     likelihood of a stimulus or value of an action, and the `error_signal <Reinforcement.error_signal>` as the error in
@@ -1484,7 +1496,8 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         `Mechanism <Mechanism>` to which the Function belongs.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
-        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).    """
+        the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
 
     componentName = RL_FUNCTION
 
@@ -1587,7 +1600,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
             self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1664,15 +1677,15 @@ class BackPropagation(LearningFunction):
 
     COMMENT:
         *weight_change_matrix* = `learning_rate <BackPropagation.learning_rate>` * `activation_input
-        <BackPropagation.activation_input>` * :math:`\\frac{\delta E}{\delta W}`
+        <BackPropagation.activation_input>` * :math:`\\frac{\\delta E}{\\delta W}`
 
             where:
 
-               :math:`\\frac{\delta E}{\delta W}` = :math:`\\frac{\delta E}{\delta A} * \\frac{\delta A}{\delta W}`
+               :math:`\\frac{\\delta E}{\\delta W}` = :math:`\\frac{\\delta E}{\\delta A} * \\frac{\\delta A}{\\delta W}`
 
                  is the derivative of the `error_signal <BackPropagation.error_signal>` with respect to the weights;
 
-               :math:`\\frac{\delta E}{\delta A}` = `error_matrix <BackPropagation.error_matrix>` :math:`\\bullet`
+               :math:`\\frac{\\delta E}{\\delta A}` = `error_matrix <BackPropagation.error_matrix>` :math:`\\bullet`
                `error_signal <BackPropagation.error_signal>`
 
                  is the derivative of the error with respect to `activation_output
@@ -1680,7 +1693,7 @@ class BackPropagation(LearningFunction):
                  <BackPropagation.error_signal>` of each unit that receives activity from the weight matrix being
                  learned); and
 
-               :math:`\\frac{\delta A}{\delta W}` =
+               :math:`\\frac{\\delta A}{\\delta W}` =
                `activation_derivative_fct <BackPropagation.activation_derivative_fct>`
                (*input =* `activation_input <BackPropagation.activation_input>`,
                *output =* `activation_output <BackPropagation.activation_output>`\\)
@@ -1690,21 +1703,21 @@ class BackPropagation(LearningFunction):
     COMMENT
 
         .. math::
-            weight\_change\_matrix = learning\_rate * activation\_input * \\frac{\delta E}{\delta W}
+            weight\\_change\\_matrix = learning\\_rate * activation\\_input * \\frac{\\delta E}{\\delta W}
 
         where
 
         .. math::
-            \\frac{\delta E}{\delta W} = \\frac{\delta E}{\delta A} * \\frac{\delta A}{\delta W}
+            \\frac{\\delta E}{\\delta W} = \\frac{\\delta E}{\\delta A} * \\frac{\\delta A}{\\delta W}
 
         is the derivative of the error_signal with respect to the weights, in which:
 
-          :math:`\\frac{\delta E}{\delta A} = error\_matrix \\bullet error\_signal`
+          :math:`\\frac{\\delta E}{\\delta A} = error\\_matrix \\bullet error\\_signal`
 
           is the derivative of the error with respect to activation_output (i.e., the weighted contribution to the
           error_signal of each unit that receives activity from the weight matrix being learned), and
 
-          :math:`\\frac{\delta A}{\delta W} = activation\_derivative\_fct(input=activation\_input,output=activation\_output)`
+          :math:`\\frac{\\delta A}{\\delta W} = activation\\_derivative\\_fct(input=activation\\_input,output=activation\\_output)`
 
           is the derivative of the activation function responsible for generating activation_output
           at the point that generates each of its entries.
@@ -1720,7 +1733,7 @@ class BackPropagation(LearningFunction):
     The BackPropagation `function <BackPropagation.function>` returns the *weight_change_matrix* as well as the
     `error_signal <BackPropagation.error_signal>` it receives weighted by the contribution made by each
     element of `activation_output <BackPropagation.activation_output>` as a function of the
-    `error_matrix <BackPropagation.error_matrix>` :math:`\\frac{\delta E}{\delta W}`.
+    `error_matrix <BackPropagation.error_matrix>` :math:`\\frac{\\delta E}{\\delta W}`.
 
     Arguments
     ---------
@@ -1919,8 +1932,7 @@ class BackPropagation(LearningFunction):
         variable = super()._validate_variable(variable, context)
 
         if len(variable) != 3:
-            raise ComponentError("Variable for {} ({}) must have three items: "
-                                 "{}, {}, and {})".
+            raise ComponentError("Variable for {} ({}) must have three items: {}, {}, and {})".
                                  format(self.name, variable, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL))
 
         return variable
@@ -2015,7 +2027,7 @@ class BackPropagation(LearningFunction):
                                     "length of the output {} of the activity vector being monitored ({})".
                                     format(rows, MATRIX, self.name, activity_output_len))
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  error_matrix=None,
@@ -2061,7 +2073,7 @@ class BackPropagation(LearningFunction):
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
         if error_matrix is None:
-            if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
                 error_matrix = np.zeros(
                     (len(variable[LEARNING_ACTIVATION_OUTPUT]), len(variable[LEARNING_ERROR_OUTPUT]))
                 )
@@ -2073,7 +2085,7 @@ class BackPropagation(LearningFunction):
                 raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
                                     format(self.__class__.__name__, owner_string))
 
-        self.parameters.error_matrix.set(error_matrix, execution_id, override=True)
+        self.parameters.error_matrix._set(error_matrix, execution_id)
         # self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # Manage learning_rate

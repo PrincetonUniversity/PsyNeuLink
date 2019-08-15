@@ -285,7 +285,10 @@ from psyneulink.core.components.functions.transferfunctions import LinearMatrix,
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, SYSTEM_INPUT_STATE, VALUE
+from psyneulink.core.globals.keywords import \
+    AUTO_ASSIGN_MATRIX, CONTEXT, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, \
+    HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, \
+    OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, SYSTEM_INPUT_STATE, VALUE
 from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -304,25 +307,25 @@ class MappingError(Exception):
         self.error_value = error_value
 
 def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
-    '''Get matrix parameter for MappingProjection
+    """Get matrix parameter for MappingProjection
     If MappingProjection is using Identity function (for efficiency), return properly shaped identity function
     # IMPLEMENTATION NOTE:
     #  This is for consistency of interpretation of matrix parameter on MappingProjection;
     #  It is OK to do this, even though the MappingProjection's function doesn't actually have a matrix parameter
     #    since, if any attempt is made to modify it by assigning a new one, the MappingProjection's original function
     #    (stored in _original_function) is restored.
-    '''
+    """
     # # MODIFIED 5/24/19 OLD:
-    # return owning_component.function.parameters.matrix.get(execution_id)
+    # return owning_component.function.parameters.matrix._get(execution_id)
     # MODIFIED 5/24/19 NEW [JDC]:
     try:
-        return owning_component.function.parameters.matrix.get(execution_id)
+        return owning_component.function.parameters.matrix._get(execution_id)
     # If MappingProjection uses Identity function, it doesn't have a matrix parameter, so return Identity matrix
     except AttributeError:
         assert isinstance(owning_component.function, Identity),  \
             f'PROGRAM ERROR: AttributeError getting {MATRIX} parameter for {MappingProjection.__name__} ' \
                 f'({owning_component.name}) that is does not use {Identity.__name__}'
-        # return np.identity(len(owning_component.parameters.variable.get(execution_id)))
+        # return np.identity(len(owning_component.parameters.variable._get(execution_id)))
         return IDENTITY_MATRIX
     # MODIFIED 5/24/19 END
 
@@ -330,32 +333,32 @@ def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
 # # MODIFIED 5/24/19 OLD:
 # def _mapping_projection_matrix_setter(value, owning_component=None, execution_id=None):
 #     value = np.array(value)
-#     owning_component.function.parameters.matrix.set(value, execution_id)
+#     owning_component.function.parameters.matrix._set(value, execution_id)
 #     # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
 #     # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
-#     owning_component.parameter_states["matrix"].function.parameters.previous_value.set(value, execution_id)
+#     owning_component.parameter_states["matrix"].function.parameters.previous_value._set(value, execution_id)
 #     return value
 # MODIFIED 5/24/19 NEW: [JDC]
 def _mapping_projection_matrix_setter(matrix, owning_component=None, execution_id=None, **kwargs):
-    '''Assign matrix parameter for MappingProjection
+    """Assign matrix parameter for MappingProjection
     If value is identity matrix and MappingProjection's matrix ParameterState has no modulatory projections then,
         for efficiency, assign Identity Function which simply passes the variable of the MappingProjection to its value.
     If suppress_identity_function is passed in kwargs, and is set to True,
         then use originally assigned function and IDENTITY_MATRIX
-    '''
-    current_function = owning_component.parameters.function.get(execution_id)
-    current_function_variable = current_function.parameters.variable.get(execution_id)
+    """
+    current_function = owning_component.parameters.function._get(execution_id)
+    current_function_variable = current_function.parameters.variable._get(execution_id)
     num_mod_afferents = len(owning_component._parameter_states[MATRIX].mod_afferents)
     if 'suppress_identity_function' in kwargs:
         suppress_identity_function = kwargs['suppress_identity_function']
     else:
-        suppress_identity_function =  owning_component.parameters.suppress_identity_function.get(execution_id)
+        suppress_identity_function =  owning_component.parameters.suppress_identity_function._get(execution_id)
 
     # First determine whether an identity matrix was specified
     if not isinstance(matrix, np.ndarray):
         matrix = get_matrix(matrix,
-                            rows=len(owning_component.sender.parameters.value.get(execution_id)),
-                            cols=len(owning_component.receiver.parameters.variable.get(execution_id)))
+                            rows=len(owning_component.sender.parameters.value._get(execution_id)),
+                            cols=len(owning_component.receiver.parameters.variable._get(execution_id)))
     rows, cols = matrix.shape
     if rows==cols and (matrix == np.identity(rows)).all():
         is_identity_matrix = True
@@ -369,24 +372,24 @@ def _mapping_projection_matrix_setter(matrix, owning_component=None, execution_i
     if _use_identity_function:
         if not isinstance(current_function, Identity):
             owning_component._original_function = current_function
-            owning_component.parameters.function.set(Identity(default_variable=current_function_variable), execution_id)
+            owning_component.parameters.function._set(Identity(default_variable=current_function_variable), execution_id)
             # 5/24/19: THIS SHOULD SIMPLY ASSIGN THE IDENTITY_MATRIX STRING TO THE CORRECT EXECUTION_ID CONTEXT:
-            # owning_component.parameters.matrix.set(IDENTITY_MATRIX, execution_id)
+            # owning_component.parameters.matrix._set(IDENTITY_MATRIX, execution_id)
             # May be needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models) see below
-            # owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
+            # owning_component.parameter_states["matrix"].function.parameters.previous_value._set(matrix, execution_id)
         return IDENTITY_MATRIX
 
     # Don't use Identity Function
     else:
         # If Identity function is currently in use, restore function to _original_function
         if  isinstance(current_function, Identity):
-            owning_component.parameters.function.set(owning_component._original_function, execution_id)
+            owning_component.parameters.function._set(owning_component._original_function, execution_id)
             owning_component._original_function = None
         # Assign matrix
-        owning_component.function.parameters.matrix.set(matrix, execution_id)
+        owning_component.function.parameters.matrix._set(matrix, execution_id)
         # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
         # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
-        owning_component.parameter_states["matrix"].function.parameters.previous_value.set(matrix, execution_id)
+        owning_component.parameter_states["matrix"].function.parameters.previous_value._set(matrix, execution_id)
         return matrix
 
 def suppress_identity_function_setter(value, owning_component=None, execution_id=None):
@@ -646,7 +649,10 @@ class MappingProjection(PathwayProjection_Base):
                  suppress_identity_function=False,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
+
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         # Assign args to params and functionParams dicts
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
@@ -656,6 +662,7 @@ class MappingProjection(PathwayProjection_Base):
             matrix = np.array(matrix)
 
         params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix},
+                                                  # matrix=matrix,
                                                   suppress_identity_function=suppress_identity_function,
                                                   params=params)
 
@@ -675,7 +682,13 @@ class MappingProjection(PathwayProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         context=context,
+                         **kwargs)
+
+        try:
+            self._parameter_states[MATRIX].function.reinitialize()
+        except AttributeError:
+            pass
 
     def _instantiate_parameter_states(self, function=None, context=None):
 
@@ -688,12 +701,17 @@ class MappingProjection(PathwayProjection_Base):
         matrix = get_matrix(self._parameter_states[MATRIX].value)
         initial_rate = matrix * 0.0
 
-        self._parameter_states[MATRIX].function = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
-                                                                               default_variable=matrix,
-                                                                               initializer=matrix,
-                                                                               # rate=initial_rate
-                                                                               )
-
+        # KDM 7/11/19: instead of simply setting the function, we need to reinstantiate to ensure
+        # new defaults get set properly
+        self._parameter_states[MATRIX]._instantiate_function(
+            function=AccumulatorIntegrator(
+                owner=self._parameter_states[MATRIX],
+                default_variable=matrix,
+                initializer=matrix,
+                # rate=initial_rate
+            )
+        )
+        self._parameter_states[MATRIX]._instantiate_value(context)
 
         # # Assign ParameterState the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
         # self._parameter_states[MATRIX].log = self.log
@@ -796,27 +814,20 @@ class MappingProjection(PathwayProjection_Base):
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
-        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-        self.parameters.context.get(execution_id).string = context
+        self.parameters.context._get(execution_id).execution_phase = \
+            self.receiver.owner.parameters.context._get(execution_id).execution_phase
+        self.parameters.context._get(execution_id).string = context
 
         # If function is Identity Function, no need to update ParameterStates, as matrix is not used
         if not isinstance(self.function, Identity):
-
-            if (hasattr(self.context, "composition") and
-                    hasattr(self.context.composition, "learning_enabled") and
-                    self.context.composition.learning_enabled):
-                self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
-                self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-                self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-
             self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         value = super()._execute(
                 variable=variable,
                 execution_id=execution_id,
                 runtime_params=runtime_params,
-                context=context
-        )
+                context=context)
+
         return value
 
     @property
@@ -844,8 +855,7 @@ class MappingProjection(PathwayProjection_Base):
                 (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {LEARNING, LEARNING_PROJECTION}
                  or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection) or
                      (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
-                          issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection)))
-            ):
+                          issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection)))):
             self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX,
                                                             (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]))
 

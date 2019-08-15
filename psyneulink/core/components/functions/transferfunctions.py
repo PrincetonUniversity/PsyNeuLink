@@ -51,15 +51,15 @@ from psyneulink.core.components.functions.function import \
     Function_Base, FunctionError, function_keywords, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
 from psyneulink.core.components.component import function_type
 from psyneulink.core.globals.keywords import \
-    PER_ITEM, TRANSFER_FUNCTION_TYPE, IDENTITY_FUNCTION, \
-    LINEAR_FUNCTION, SLOPE, INTERCEPT, PARAMETER_STATE_PARAMS, \
-    VARIABLE, EXPONENTIAL_FUNCTION, RATE, BIAS, SCALE, OFFSET, \
-    LOGISTIC_FUNCTION, GAIN, X_0, RELU_FUNCTION, LEAK, VARIANCE, \
-    SOFTMAX_FUNCTION, ALL, MAX_VAL, MAX_INDICATOR, PROB, OUTPUT_TYPE, PROB_INDICATOR, LINEAR_MATRIX_FUNCTION, MATRIX, \
-    RECEIVER, HAS_INITIALIZERS, MATRIX_KEYWORD_VALUES, IDENTITY_MATRIX, HOLLOW_MATRIX, \
-    MATRIX_KEYWORD_NAMES, AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX, kwPreferenceSetName, \
-    GAUSSIAN_FUNCTION, STANDARD_DEVIATION, GAUSSIAN_DISTORT_FUNCTION
-
+    ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, GAUSSIAN_DISTORT_FUNCTION, GAIN, \
+    FULL_CONNECTIVITY_MATRIX, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
+    IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, INVERSE_HOLLOW_MATRIX,\
+    LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
+    MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, OFFSET, \
+    PARAMETER_STATE_PARAMS, PER_ITEM, PROB, OUTPUT_TYPE, PROB_INDICATOR, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, \
+    STANDARD_DEVIATION, SCALE, SLOPE, SOFTMAX_FUNCTION, TRANSFER_FUNCTION_TYPE,\
+    VARIANCE, VARIABLE, X_0, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
 from psyneulink.core.globals.context import ContextFlags
@@ -67,10 +67,7 @@ from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
 
 __all__ = ['TransferFunction', 'Identity', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'Tanh', 'ReLU',
-           'Gaussian', 'GaussianDistort', 'SoftMax', 'get_matrix', 'BOUNDS', 'MODE']
-
-BOUNDS = 'bounds'
-MODE = 'mode'
+           'Gaussian', 'GaussianDistort', 'SoftMax', 'get_matrix']
 
 
 class TransferFunction(Function_Base):
@@ -148,18 +145,21 @@ class TransferFunction(Function_Base):
         # Pretend we have one huge array to work on
         # TODO: should this be invoked in parts?
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
-        if isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType):
-            assert arg_in.type == arg_out.type
-            # Array elements need all to be of the same size
-            length = arg_in.type.pointee.count * arg_in.type.pointee.element.count
-            arg_in = builder.bitcast(arg_in, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
-            arg_out = builder.bitcast(arg_out, pnlvm.ir.ArrayType(ctx.float_ty, length).as_pointer())
+        assert arg_in.type == arg_out.type
 
-        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params, "state":state}
+        is_2d = isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
 
-        assert arg_in.type.pointee.count == arg_out.type.pointee.count
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as args:
-            self._gen_llvm_transfer(*args, **kwargs)
+        assert arg_in.type == arg_out.type
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "transfer_loop") as (b, idx):
+            if is_2d:
+                vi = b.gep(arg_in, [ctx.int32_ty(0), idx])
+                vo = b.gep(arg_out, [ctx.int32_ty(0), idx])
+                with pnlvm.helpers.array_ptr_loop(b, vi, "nested_transfer_loop") as args:
+                    self._gen_llvm_transfer(ctx=ctx, vi=vi, vo=vo,
+                                            params=params, state=state, *args)
+            else:
+               self._gen_llvm_transfer(b, idx, ctx=ctx, vi=arg_in, vo=arg_out,
+                                       params=params, state=state)
 
         return builder
 
@@ -247,7 +247,7 @@ class Identity(TransferFunction):  # -------------------------------------------
 
         # self.functionOutputType = None
 
-    def function(
+    def _function(
         self,
         variable=None,
         execution_id=None,
@@ -275,8 +275,6 @@ class Identity(TransferFunction):  # -------------------------------------------
         variable : number or np.array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         # outputType = self.functionOutputType
 
         return variable
@@ -463,7 +461,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         builder.store(val, ptro)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -487,8 +485,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
         linear transformation of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         slope = self.get_current_function_param(SLOPE, execution_id)
         intercept = self.get_current_function_param(INTERCEPT, execution_id)
 
@@ -537,6 +533,12 @@ class Linear(TransferFunction):  # ---------------------------------------------
         """
 
         return self.get_current_function_param(SLOPE, execution_id)
+
+    def _is_identity(self, execution_id=None):
+        return (
+            self.parameters.slope._get(execution_id) == 1
+            and self.parameters.intercept._get(execution_id) == 0
+        )
 
 
 class Exponential(TransferFunction):  # --------------------------------------------------------------------------------
@@ -725,7 +727,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         builder.store(val, ptro)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -749,8 +751,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
         Exponential transformation of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         rate = self.get_current_function_param(RATE, execution_id)
         bias = self.get_current_function_param(BIAS, execution_id)
         scale = self.get_current_function_param(SCALE, execution_id)
@@ -1002,7 +1002,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         builder.store(val, ptro)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1026,8 +1026,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Logistic transformation of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         gain = self.get_current_function_param(GAIN, execution_id)
         bias = self.get_current_function_param(BIAS, execution_id)
         x_0 = self.get_current_function_param(X_0, execution_id)
@@ -1049,7 +1047,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         Either **input** or **ouput** must be specified.  If **output** is not specified, it is computed from **input**.
         If both are specified, **input** is ignored unless paramValidationPref is set, in which case
-        an error is generated if **output** does not correspond to `function <Logistic.function>`\(**input**).
+        an error is generated if **output** does not correspond to `function <Logistic.function>`\\(**input**).
 
         Arguments
         ---------
@@ -1107,7 +1105,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     .. math::
 
-        \\frac{1 - e^{-2(gain*(variable+bias-x\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\_0)+offset)}}
+        \\frac{1 - e^{-2(gain*(variable+bias-x\\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\\_0)+offset)}}
 
     .. note::
 
@@ -1117,8 +1115,8 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     `derivative <Tanh.derivative>` returns the derivative of the hyperbolic tangent at its **input**:
 
     .. math::
-        \\frac{gain*scale}{(\\frac{1+e^{-2(gain*(variable+bias-x\_0)+offset)}}{2e^{-(gain*(
-       variable+bias-x\_0)+offset)}})^2}
+        \\frac{gain*scale}{(\\frac{1+e^{-2(gain*(variable+bias-x\\_0)+offset)}}{2e^{-(gain*(
+       variable+bias-x\\_0)+offset)}})^2}
 
     Arguments
     ---------
@@ -1302,7 +1300,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
         builder.store(val, ptro)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1326,8 +1324,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         hyperbolic tangent of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         gain = self.get_current_function_param(GAIN, execution_id)
         bias = self.get_current_function_param(BIAS, execution_id)
         x_0 = self.get_current_function_param(X_0, execution_id)
@@ -1397,7 +1393,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     `derivative <ReLU.derivative>` returns the derivative of of the rectified linear tranform at its **input**:
 
     .. math::
-        gain\ if\ input > 0,\ gain*leak\ otherwise
+        gain\\ if\\ input > 0,\\ gain*leak\\ otherwise
 
     Arguments
     ---------
@@ -1502,7 +1498,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1524,9 +1520,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         ReLU transformation of variable : number or array
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         gain = self.get_current_function_param(GAIN, execution_id)
         bias = self.get_current_function_param(BIAS, execution_id)
         leak = self.get_current_function_param(LEAK, execution_id)
@@ -1550,8 +1543,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         leak = pnlvm.helpers.load_extract_scalar_array_one(builder, leak_ptr)
 
         # Maxnum for some reason needs full function prototype
-        max_f = ctx.get_builtin("maxnum", [ctx.float_ty],
-            pnlvm.ir.FunctionType(ctx.float_ty, [ctx.float_ty, ctx.float_ty]))
+        max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
         var = builder.load(ptri)
         val = builder.fsub(var, bias)
         val1 = builder.fmul(val, gain)
@@ -1786,7 +1778,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
         builder.store(val, ptro)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1811,8 +1803,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Gaussian transformation of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, params=params, context=context)
         standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, execution_id)
         bias = self.get_current_function_param(BIAS, execution_id)
         scale = self.get_current_function_param(SCALE, execution_id)
@@ -2066,7 +2056,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
 
         builder.store(val, ptro)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -2091,8 +2081,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         Sample from Gaussian distribution for each element of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, params=params, context=context)
         variance = self.get_current_function_param(VARIANCE, execution_id)
         bias = self.get_current_function_param(BIAS, execution_id)
         scale = self.get_current_function_param(SCALE, execution_id)
@@ -2163,7 +2151,7 @@ class SoftMax(TransferFunction):
     others):
 
     .. math::
-        D_jS_i = S_i(\\delta_{i,j} - S_j),\ where\ \\delta_{i,j}=1\ if\ i=j\ and\ \\delta_{i,j}=0\ if\ i≠j.
+        D_jS_i = S_i(\\delta_{i,j} - S_j),\\ where\\ \\delta_{i,j}=1\\ if\\ i=j\\ and\\ \\delta_{i,j}=0\\ if\\ i≠j.
 
     If *OUTPUT_TYPE* is *MAX_VAL* or *MAX_INDICATOR*, returns 1d array of the derivatives of the maximum
     value with respect to the others (calculated as above). If *OUTPUT_TYPE* is *PROB*, raises an exception
@@ -2398,13 +2386,14 @@ class SoftMax(TransferFunction):
         ptro = builder.gep(arg_out, [ctx.int32_ty(0), index])
 
         if output_type == ALL:
-            kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "gain": gain, "exp_sum": exp_sum}
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_div") as args:
-                self.__gen_llvm_exp_div(*args, **kwargs)
+                self.__gen_llvm_exp_div(ctx=ctx, vi=arg_in, vo=arg_out,
+                                        gain=gain, exp_sum=exp_sum, *args)
         elif output_type == MAX_VAL:
             # zero out the output array
             with pnlvm.helpers.array_ptr_loop(builder, arg_in, "zero_output") as (b,i):
                 b.store(ctx.float_ty(0), b.gep(arg_out, [ctx.int32_ty(0), i]))
+
             ptri = builder.gep(arg_in, [ctx.int32_ty(0), index])
             exp_f = ctx.get_builtin("exp", [ctx.float_ty])
             orig_val = builder.load(ptri)
@@ -2451,7 +2440,7 @@ class SoftMax(TransferFunction):
         else:
             return sm
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -2475,9 +2464,6 @@ class SoftMax(TransferFunction):
         SoftMax transformation of variable : number or array
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         # Assign the params and return the result
         output_type = self.get_current_function_param(OUTPUT_TYPE, execution_id)
         gain = self.get_current_function_param(GAIN, execution_id)
@@ -2596,8 +2582,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         When LinearMatrix is the `function <Projection.function>` of a projection:
 
-            - the matrix specification must be compatible with the variables of the `sender <Projection.sender>` and
-              `receiver <Projection.receiver>`
+            - the matrix specification must be compatible with the variables of the `sender <Projection_Base.sender>`
+              and `receiver <Projection_Base.receiver>`
 
             - a matrix keyword specification generates a matrix based on the sender and receiver shapes
 
@@ -2993,14 +2979,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         else:
             return np.array(specification)
 
-    def _get_output_struct_type(self, ctx):
-        # FIXME: self.defaults.value reports incorrect shape (scalar)
-        default_val = np.atleast_1d(self.defaults.value)
-        return ctx.convert_python_struct_to_llvm_ir(default_val)
-
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Restrict to 1d arrays
         assert self.defaults.variable.ndim == 1
+        assert self.defaults.value.ndim == 1
 
         matrix = ctx.get_param_ptr(self, builder, params, MATRIX)
 
@@ -3011,11 +2993,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         input_length = ctx.int32_ty(arg_in.type.pointee.count)
         output_length = ctx.int32_ty(arg_out.type.pointee.count)
-        builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
+        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
         return builder
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -3039,9 +3021,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             length of the array returned equals the number of columns of `matrix <LinearMatrix.matrix>`.
 
         """
-
-        # Note: this calls _validate_variable and _validate_params which are overridden above;
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         matrix = self.get_current_function_param(MATRIX, execution_id)
         result = np.dot(variable, matrix)
         return self.convert_output_type(result)
@@ -3097,6 +3076,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
             + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
             + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
             + HOLLOW_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
+            + INVERSE_HOLLOW_MATRIX: 0's on diagonal, -1's elsewhere (must be square matrix), otherwise generates error
             + FULL_CONNECTIVITY_MATRIX: all 1's
             + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
         + 2D list or np.ndarray of numbers
@@ -3138,6 +3118,12 @@ def get_matrix(specification, rows=1, cols=1, context=None):
             raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
         return 1-np.identity(rows)
+
+    if specification == INVERSE_HOLLOW_MATRIX:
+        if rows != cols:
+            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
+                                format(rows, cols, specification))
+        return (1-np.identity(rows)) * -1
 
     if specification == RANDOM_CONNECTIVITY_MATRIX:
         return np.random.rand(rows, cols)

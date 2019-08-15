@@ -51,8 +51,8 @@ GatingSignals
 A `GatingSignal` is created for each item listed in the **gating_signals** argument of the constructor, and all of the
 GatingSignals for a GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.
 Each GatingSignal is assigned one or more `GatingProjections <GatingProjection>` to the InputState(s) and/or
-OutputState(s) it gates. By default, the `function <GatingMechanism.function>` of GatingMechanism generates a
-a `value <GatingMechanism.value>` -- its `gating_allocation <GatingSignal.gating_allocation>` -- with a single item, that is
+OutputState(s) it gates. By default, the `function <GatingMechanism.function>` of GatingMechanism generates a `value
+<GatingMechanism.value>` -- its `gating_allocation <GatingSignal.gating_allocation>` -- with a single item, that is
 used by all of the GatingMechanism's GatingSignals.  However,  if a custom `function <GatingMechanism.function>` is
 specified that generates a `gating_allocation <GatingSignal.gating_allocation>` with more than one item, different
 GatingSignals can be assigned to the different items (see `GatingMechanism_Function` below).
@@ -89,33 +89,40 @@ as the input to the GatingMechanism's `function <GatingMechanism.function>`.
 A GatingMechanism's `function <GatingMechanism.function>` uses `outcome <GatingMechanism.outcome>`
 (the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `gating_allocation
 <GatingMechanism.gating_allocation>`.  By default, `function <GatingMechanism.function>` is assigned
-the `DefaultAllocationFunction`, which takes a single value as its input, and assigns this as the value of
+the `DefaultAllocationFunction`, which takes a single value as its input, and assigns that as the value of
 each item of `modulatory_allocation <GatingMechanism.gating_allocation>`.  Each of these items is assigned as
-the allocation for the corresponding  `GatingSignal` in `gating_signals <GatingMechanism.gating_signals>`. Thus, 
-by default, the GatingMechanism distributes its input as the allocation to each of its `gating_signals  
-<GatingMechanism.gating_signals>. However, this behavior can be modified either by specifying a different 
-`function <GatingMechanism.function>`, and/or by specifying that individual GatingSignals  reference different 
-items in `gating_allocation` as their allocation (i.e., the value of their `variable <GatingSignal.variable>`.
+the allocation for the corresponding  `GatingSignal` in `gating_signals <GatingMechanism.gating_signals>`. Thus,
+by default, the GatingMechanism distributes its input as the allocation to each of its `gating_signals
+<GatingMechanism.gating_signals>`.  This same behavior also applies to any custom function assigned to a
+GatingMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
+assigned that returns a 2d array with more than one item, and it has the same number of `gating_signals
+<GatingMechanism.gating_signals>`, then each GatingSignal is assigned to the corresponding item of the function's
+value.  However, these default behaviors can be modified by specifying that individual GatingSignals reference
+different items in `gating_allocation` as their `variable <GatingSignal.variable>` (see `OutputState_Variable`).
 
 .. _GatingMechanism_Output:
 
 *Output*
 ~~~~~~~~
 
-A GatingMechanism has a `GatingSignal` for each `InputState` and/or `OutputState` specified in its `gating_signals
-<GatingMechanism.gating_signals>` attribute, to which it sends a `GatingProjection`.  If the GatingMechanism's
-`function <GatingMechanism.function>` generates a `gating_allocation <GatingMechanism.gating_allocation>` with a single value
-(the default), then this is used as the `value <GatingSignal.value>` of all of the GatingMechanism's `gating_signals
-<GatingMechanism.gating_signals>`.  If the `gating_allocation <GatingMechanism.gating_allocation>` has multiple items, and this
-is the same as the number of GatingSignals, then each GatingSignal is assigned the value of the corresponding item in
-the `gating_allocation <GatingMechanism.gating_allocation>`.  If there is a different number of `gating_signals
-<GatingMechanism.gating_signals>` than the number of items in the `gating_allocation <GatingMechanism.gating_allocation>`,
-then the `index <GatingSignal.index>` attribute of each GatingSignal must be specified (e.g., in a `specification
-dictionary <GatingSignal_Specification>` in the **gating_signal** argument of the GatingMechanism's constructor),
-or an error is generated.  The GatingSignals of a GatingMechanism are listed in its `gating_signals
-<GatingMechanism.gating_signals>` attribute.  Since GatingSignals are a type of `OutputState`, they are also listed
-in the GatingMechanism's `output_states <Mechanism_Base.output_states>` attribute. The InputStates and/or OutputStates
-modulated by a GatingMechanism's GatingSignals can be displayed using its :func:`show <GatingMechanism.show>` method.
+A GatingMechanism has a `GatingSignal` for each `InputState` and/or `OutputState` specified in the **gating_signals**
+argument of its constructor, to which it sends a `GatingProjection`.  If the GatingMechanism's `function
+<GatingMechanism.function>` generates a `gating_allocation <GatingMechanism.gating_allocation>` with a
+single value (the default), then this is used as the `allocation <GatingSignal.alloction>` to all of the
+GatingMechanism's `gating_signals <GatingMechanism.gating_signals>`.  If the `gating_allocation
+<GatingMechanism.gating_allocation>` has multiple items, and this is the same as the number of GatingSignals,
+then each GatingSignal is assigned the value of the corresponding item in the `gating_allocation
+<GatingMechanism.gating_allocation>`.  If there is a different number of `gating_signals
+<GatingMechanism.gating_signals>` than the number of items in the `gating_allocation
+<GatingMechanism.gating_allocation>`, then the `index <GatingSignal.index>` attribute of each GatingSignal must be
+specified (e.g., in a `specification dictionary <GatingSignal_Specification>` in the **gating_signal** argument of
+the GatingMechanism's constructor), or an error is generated.  The `default_allocation
+<GatingMechanism.default_allocation>` attribute can be used to specify a  default allocation
+for GatingSignals that have not been assigned their own `default_allocation  <GatingSignal.default_allocation>`.
+The GatingSignals of a GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.
+Since GatingSignals are a type of `OutputState`, they are also listed in the GatingMechanism's `output_states
+<Mechanism_Base.output_states>` attribute. The InputStates and/or OutputStates modulated by a GatingMechanism's
+GatingSignals can be displayed using its :func:`show <GatingMechanism.show>` method.
 
 .. _GatingMechanism_Execution:
 
@@ -199,12 +206,11 @@ class GatingMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-# MODIFIED 5/18/19 NEW: [JDC]
 def _gating_allocation_getter(owning_component=None, execution_id=None):
     return owning_component.modulatory_allocation
 
 def _gating_allocation_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.modulatory_allocation.set(np.array(value), execution_id)
+    owning_component.parameters.modulatory_allocation._set(np.array(value), execution_id)
     return value
 
 def _control_allocation_getter(owning_component=None, execution_id=None):
@@ -222,7 +228,6 @@ def _control_allocation_setter(value, owning_component=None, execution_id=None, 
                                 f"consider using a {ControlMechanism.__name__} instead, "
                                 f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
                                 f"{GatingSignal.__name__}s are needed.")
-# MODIFIED 5/18/19 END
 
 
 class GatingMechanism(ModulatoryMechanism):
@@ -231,6 +236,7 @@ class GatingMechanism(ModulatoryMechanism):
         default_gating_allocation=None,             \
         size=None,                                  \
         function=Linear(slope=1, intercept=0),      \
+        default_allocation=None,                    \
         gating_signals:tc.optional(list) = None,    \
         modulation=ModulationParam.MULTIPLICATIVE,  \
         params=None,                                \
@@ -277,11 +283,16 @@ class GatingMechanism(ModulatoryMechanism):
         specifies the function used to transform the GatingMechanism's `variable <GatingMechanism.variable>`
         to a `gating_allocation`.
 
+    default_allocation : number, list or 1d array : None
+        specifies the default_allocation of any `gating_signals <GatingMechanism.gating.signals>` for
+        which the **default_allocation** was not specified in its constructor (see default_allocation
+        <GatingMechanism.default_allocation>` for additional details).
+
     gating_signals : List[GatingSignal, InputState, OutputState, Mechanism, tuple[str, Mechanism], or dict]
-        specifies the `InputStates <InputState>` and/or `OutputStates <OutputStates>`
-        to be gated by the GatingMechanism; the number of items must equal the length of the **default_gating_allocation**
-        argument; if a `Mechanism <Mechanism>` is specified, its `primary InputState <InputState_Primary>` is used
-        (see `GatingMechanism_GatingSignals for details).
+        specifies the `InputStates <InputState>` and/or `OutputStates <OutputStates>` to be gated by the
+        GatingMechanism; the number of items must equal the length of the **default_gating_allocation**
+        argument; if a `Mechanism <Mechanism>` is specified, its `primary InputState <InputState_Primary>`
+        is used (see `GatingMechanism_GatingSignals for details).
 
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
         specifies the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
@@ -313,6 +324,17 @@ class GatingMechanism(ModulatoryMechanism):
         determines the function used to transform the GatingMechanism's `variable <GatingMechanism.variable>`
         to a `gating_allocation`;  the default is an identity function that simply assigns
         `variable <GatingMechanism.variable>` as the `gating_allocation <GatingMechanism.gating_allocation>`.
+
+    default_allocation : number, list or 1d array
+        determines the default_allocation of any `gating_signals <GatingMechanism.gating.signals>` for
+        which the **default_allocation** was not specified in its constructor;  if it is None (not specified)
+        then the GatingSignal's parameters.allocation.default_value is used. See documentation for
+        **default_allocation** argument of GatingSignal constructor for additional details.
+
+    gating_allocation : 2d array
+        each item is the value assigned as the `allocation <GatingSignal.allocation>` for the corresponding
+        GatingSignal listed in the `gating_signals` attribute;  the gating_allocation is the same as the
+        GatingMechanism's `value <Mechanism_Base.value>` attribute).
 
     gating_signals : ContentAddressableList[GatingSignal]
         list of `GatingSignals <GatingSignals>` for the GatingMechanism, each of which sends
@@ -369,7 +391,6 @@ class GatingMechanism(ModulatoryMechanism):
     #     kwPreferenceSetName: 'GatingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # # MODIFIED 5/18/19 NEW: [JDC]
     # Override gating_allocatdion and suppress control_allocation
     class Parameters(ModulatoryMechanism.Parameters):
         """
@@ -385,8 +406,8 @@ class GatingMechanism(ModulatoryMechanism):
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        value = Parameter(np.array(defaultGatingAllocation), aliases='modulatory_allocation')
-        gating_allocation = Parameter(np.array(defaultGatingAllocation),
+        value = Parameter(np.array([defaultGatingAllocation]), aliases='modulatory_allocation')
+        gating_allocation = Parameter(np.array([defaultGatingAllocation]),
                                       getter=_gating_allocation_getter,
                                       setter=_gating_allocation_setter,
                                       read_only=True)
@@ -394,18 +415,19 @@ class GatingMechanism(ModulatoryMechanism):
                                       getter=_control_allocation_getter,
                                       setter=_control_allocation_setter,
                                       read_only=True)
-    # MODIFIED 5/18/19 END
 
     @tc.typecheck
     def __init__(self,
                  default_gating_allocation=None,
                  size=None,
                  function=None,
+                 default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
                  gating_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
@@ -414,12 +436,18 @@ class GatingMechanism(ModulatoryMechanism):
         super().__init__(default_variable=default_gating_allocation,
                          size=size,
                          function=function,
+                         default_allocation=default_allocation,
                          modulatory_signals=gating_signals,
                          modulation=modulation,
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         context=ContextFlags.CONSTRUCTOR,
+                         **kwargs)
+
+    def _instantiate_output_states(self, context=None):
+        self._register_modulatory_signal_type(GatingSignal,context)
+        super()._instantiate_output_states(context)
 
     def _instantiate_gating_signal(self, gating_signal, context=None):
         """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection

@@ -16,7 +16,7 @@ class ConnectionInfo(types.SimpleNamespace):
 
     def __init__(self, compositions=None, active_context=None):
         if compositions is not None and compositions is not self.ALL:
-            if isinstance(compositions, collections.Iterable):
+            if isinstance(compositions, collections.abc.Iterable):
                 compositions = set(compositions)
             else:
                 compositions = {compositions}

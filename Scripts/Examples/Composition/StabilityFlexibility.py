@@ -163,11 +163,11 @@ stabilityFlexibility.add_projection(sender = ddmCombination, receiver = decision
 search_range = pnl.SampleSpec(start=0.1, stop=0.3, num=3)
 
 
-signal = pnl.ControlSignal(projections=[(pnl.GAIN, activation)],
-                                   function=pnl.Linear,
-                                   variable=1.0,
-                                   intensity_cost_function=pnl.Linear(slope=0.),
-                                   allocation_samples=search_range)
+signal = pnl.ControlSignal(modulates=[(pnl.GAIN, activation)],
+                           function=pnl.Linear,
+                           variable=1.0,
+                           intensity_cost_function=pnl.Linear(slope=0.),
+                           allocation_samples=search_range)
 
 
 

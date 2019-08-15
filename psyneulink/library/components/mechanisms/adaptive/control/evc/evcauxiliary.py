@@ -201,7 +201,7 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         """
 
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
             return (np.array([0]), np.array([0]), np.array([0]))
 
         # remove this in favor of attribute or parameter?
@@ -333,9 +333,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         """
 
-        if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING or
-                self.owner.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING):
-            return defaultControlAllocation
+        if (self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING or
+                self.owner.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
+            return [defaultControlAllocation]
 
         # Get value of, or set default for standard args
         if controller is None:
@@ -349,8 +349,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
         # FIX 3/30/18 - IS controller CORRECT FOR THIS, OR SHOULD IT BE System (controller.system)??
-        controller.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
-        controller.parameters.context.get(execution_id).string = "{0} EXECUTING {1} of {2}".format(controller.name,
+        controller.parameters.context._get(execution_id).execution_phase = ContextFlags.SIMULATION
+        controller.parameters.context._get(execution_id).string = "{0} EXECUTING {1} of {2}".format(controller.name,
                                                                       EVC_SIMULATION,
                                                                       controller.system.name)
         # Get allocation_samples for all ControlSignals
@@ -494,12 +494,12 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     EVC_values = np.concatenate(Comm.allgather(EVC_values), axis=0)
                     EVC_policies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
 
-            controller.parameters.EVC_max.set(EVC_max, execution_id, override=True)
-            controller.parameters.EVC_max_state_values.set(EVC_max_state_values, execution_id, override=True)
-            controller.parameters.EVC_max_policy.set(EVC_max_policy, execution_id, override=True)
+            controller.parameters.EVC_max._set(EVC_max, execution_id)
+            controller.parameters.EVC_max_state_values._set(EVC_max_state_values, execution_id)
+            controller.parameters.EVC_max_policy._set(EVC_max_policy, execution_id)
             if controller.save_all_values_and_policies:
-                controller.parameters.EVC_values.set(EVC_values, execution_id, override=True)
-                controller.parameters.EVC_policies.set(EVC_policies, execution_id, override=True)
+                controller.parameters.EVC_values._set(EVC_values, execution_id)
+                controller.parameters.EVC_policies._set(EVC_policies, execution_id)
             # # TEST PRINT:
             # import re
             # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
@@ -526,7 +526,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         # Assign max values for optimal allocation policy to controller.input_states (for reference only)
         for i in range(len(controller.input_states)):
-            controller.input_states[controller.input_states.names[i]].parameters.value.set(np.atleast_1d(next(EVC_maxStateValue)), execution_id, override=True)
+            controller.input_states[controller.input_states.names[i]].parameters.value._set(np.atleast_1d(next(EVC_maxStateValue)), execution_id)
 
 
         # Report EVC max info
@@ -548,7 +548,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #     assign to controller.control_allocation, and return (where it will be assigned to controller.value).
         #     (note:  the conversion is to be consistent with use of controller.value for assignments to control_signals.value)
         allocation_policy = np.array(EVC_max_policy).reshape(len(EVC_max_policy), -1)
-        controller.parameters.value.set(allocation_policy, execution_id, override=True)
+        controller.parameters.value._set(allocation_policy, execution_id)
         return allocation_policy
         #endregion
 
@@ -579,7 +579,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
 
 
     # Run one simulation and get EVC for each trial's worth of inputs in predicted_input
-    predicted_input = ctlr.parameters.predicted_input.get(execution_id)
+    predicted_input = ctlr.parameters.predicted_input._get(execution_id)
 
     origin_mechs = list(predicted_input.keys())
     # number of trials' worth of inputs in predicted_input should be the same for all ORIGIN Mechanisms, so use first:
@@ -611,9 +611,9 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
     for i in range(num_trials):
         sim_execution_id = ctlr.get_next_sim_id(execution_id)
         try:
-            ctlr.parameters.simulation_ids.get(execution_id).append(sim_execution_id)
+            ctlr.parameters.simulation_ids._get(execution_id).append(sim_execution_id)
         except AttributeError:
-            ctlr.parameters.simulation_ids.set([sim_execution_id], execution_id)
+            ctlr.parameters.simulation_ids._set([sim_execution_id], execution_id)
 
         ctlr.system._initialize_from_context(sim_execution_id, execution_id)
 
@@ -631,7 +631,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
             ctlr.value_function(
                 controller=ctlr,
                 outcome=outcome,
-                costs=ctlr.parameters.control_signal_costs.get(sim_execution_id),
+                costs=ctlr.parameters.control_signal_costs._get(sim_execution_id),
                 execution_id=sim_execution_id,
                 context=context
             )
@@ -942,11 +942,11 @@ class PredictionMechanism(IntegratorMechanism):
                 prefs=prefs)
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        '''Update predicted value on "real" but not simulation runs '''
+        """Update predicted value on "real" but not simulation runs"""
 
-        if self.parameters.context.get(execution_id).execution_phase == ContextFlags.SIMULATION:
+        if self.parameters.context._get(execution_id).execution_phase == ContextFlags.SIMULATION:
             # Just return current value for simulation runs
-            value = self.parameters.value.get(execution_id)
+            value = self.parameters.value._get(execution_id)
         else:
             # Update deque with new input for any other type of run
             value = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)

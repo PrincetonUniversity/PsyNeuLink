@@ -24,11 +24,11 @@ ACTION = AGENT_ACTION
 ACTION_REPORTING = 3
 SIMULATION_REPORTING = 2
 STANDARD_REPORTING = 1
-VERBOSE = SIMULATION_REPORTING
+VERBOSE = ACTION_REPORTING
 
 # ControlSignal parameters
 COST_RATE = -.05
-COST_BIAS = -3
+COST_BIAS = -5
 ALLOCATION_SAMPLES = [0, 500]
 
 
@@ -147,7 +147,7 @@ difference = Distance(metric=DIFFERENCE)
 #   function for ObjectiveMechanism
 
 def objective_function(variable):
-    '''Return difference between optimal and actual actions'''
+    """Return difference between optimal and actual actions"""
     actual_action = variable[0]
     optimal_action = variable[1]
     similarity = 1-difference([optimal_action, actual_action])/4
@@ -162,15 +162,15 @@ ocm = OptimizationControlMechanism(name='EVC',
                                                                           function=objective_function,
                                                                           monitor=[action_mech, optimal_action_mech]),
                                    # compute_reconfiguration_cost=Distance(metric=EUCLIDEAN, normalize=True),
-                                   control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
+                                   control_signals=[ControlSignal(modulates=(VARIANCE, player_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
                                                                                                       bias=COST_BIAS)),
-                                                    ControlSignal(projections=(VARIANCE,predator_percept),
+                                                    ControlSignal(modulates=(VARIANCE, predator_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
                                                                                                       bias=COST_BIAS)),
-                                                    ControlSignal(projections=(VARIANCE,prey_percept),
+                                                    ControlSignal(modulates=(VARIANCE, prey_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
                                                                                                       bias=COST_BIAS))])
@@ -178,13 +178,13 @@ ocm = OptimizationControlMechanism(name='EVC',
 agent_comp.add_controller(ocm)
 agent_comp.enable_controller = True
 agent_comp.controller_mode = BEFORE
-agent_comp.controller_condition=All(AtRun(0), AtTrial(0))
+# agent_comp.controller_condition=All(AtRun(0), AtTrial(0))
 
 if SHOW_GRAPH:
     # agent_comp.show_graph()
-    agent_comp.show_graph(show_model_based_optimizer=True, show_cim=True)
-    # agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
-    # agent_comp.show_graph(show_model_based_optimizer=True,
+    agent_comp.show_graph(show_controller=True, show_cim=True)
+    # agent_comp.show_graph(show_controller=True, show_node_structure=True, show_cim=True)
+    # agent_comp.show_graph(show_controller=True,
     #                       show_cim=True,
     #                       show_node_structure=ALL,
     #                       show_headers=True,

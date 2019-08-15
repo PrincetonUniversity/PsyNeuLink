@@ -102,21 +102,21 @@ Umemoto_comp.add_node(Decision,
                       )
 
 # COMPOSITION
-Target_Rep_Control_Signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Target_Rep)],
-                                     function=pnl.Linear,
-                                     variable=1.0,
-                                     cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
-                                     intensity_cost_function=pnl.Exponential(scale=1, rate=1),
-                                     adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),
-                                     allocation_samples=signalSearchRange)
+Target_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Target_Rep)],
+                                              function=pnl.Linear,
+                                              variable=1.0,
+                                              cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
+                                              intensity_cost_function=pnl.Exponential(scale=1, rate=1),
+                                              adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),
+                                              allocation_samples=signalSearchRange)
 
-Distractor_Rep_Control_Signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Distractor_Rep)],
-                                     function=pnl.Linear,
-                                     variable=1.0,
-                                     cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
-                                     intensity_cost_function=pnl.Exponential(rate=0.8046),
-                                     adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),
-                                     allocation_samples=signalSearchRange)
+Distractor_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Distractor_Rep)],
+                                                  function=pnl.Linear,
+                                                  variable=1.0,
+                                                  cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
+                                                  intensity_cost_function=pnl.Exponential(rate=0.8046),
+                                                  adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),
+                                                  allocation_samples=signalSearchRange)
 
 Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=Umemoto_comp,
                                                                                   features=[Target_Stim.input_state, Distractor_Stim.input_state, Reward.input_state],

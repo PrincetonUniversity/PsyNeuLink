@@ -8,7 +8,7 @@
 #
 #
 # *******************************************  SELECTION FUNCTIONS *****************************************************
-'''
+"""
 
 * `OneHot`
 
@@ -20,7 +20,7 @@ COMMENT
 
 Functions that selects a subset of elements to maintain or transform, while nulling the others.
 
-'''
+"""
 
 __all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_NEXT', 'MAX_VS_AVG']
 
@@ -31,11 +31,11 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import \
     Function, Function_Base, MULTIPLICATIVE_PARAM, FunctionError, ADDITIVE_PARAM
-from psyneulink.core.components.functions.transferfunctions import MODE
 from psyneulink.core.globals.keywords import \
     SELECTION_FUNCTION_TYPE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, \
-    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR, kwPreferenceSetName, MIN_VAL, \
-    MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR
+    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, \
+    MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
+    MODE, PROB, PROB_INDICATOR, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
@@ -404,7 +404,7 @@ class OneHot(SelectionFunction):
 
         return builder
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -431,8 +431,6 @@ class OneHot(SelectionFunction):
 
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         if self.mode is MAX_VAL:
             max_value = np.max(variable)

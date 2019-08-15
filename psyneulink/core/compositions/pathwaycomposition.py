@@ -19,7 +19,7 @@ class PathwayCompositionError(Exception):
         return repr(self.error_value)
 
 class PathwayComposition(Composition):
-    '''
+    """
 
             Arguments
             ----------
@@ -29,7 +29,7 @@ class PathwayComposition(Composition):
 
             Returns
             ----------
-    '''
+    """
 
     def __init__(self):
         super(PathwayComposition, self).__init__()

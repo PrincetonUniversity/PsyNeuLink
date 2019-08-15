@@ -307,12 +307,10 @@ should project to the InputState. Each of these is described below:
         InputStates belonging to any Mechanisms specified, along with Projections to them that parallel those of the
         one(s) specified (see below).
       |
-      For each InputState specified, and all of the InputStates belonging to any Mechanisms specified using the formats
-      above, a new InputState is created along with Projections to it that parallel those received by the
-      corresponding InputState --  that is, that have the same `senders <Projection.sender>` as those that project to
-      the specified InputState, but that project to the one being created.  Thus, for each InputState specified,
-      a new one is created that receives exactly the same inputs; that is, "shadows" it.
-
+      For each InputState specified, and all of the InputStates belonging to any Mechanisms specified, a new InputState
+      is created along with Projections to it that parallel those received by the corresponding InputState in the
+      list.  In other words, for each InputState specified, a new one is created that receives exactly the same inputs
+      from the same `senders  <Projection_Base.sender>` as the ones specified.
 
 .. _InputState_Compatability_and_Constraints:
 
@@ -491,15 +489,14 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
+    COMBINE, COMMAND_LINE, CONTEXT, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
     LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
     PARAMS, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
     SENDER, SIZE, STATE_TYPE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import \
-    append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityType
+from psyneulink.core.globals.utilities import append_type_to_name, is_numeric, iscompatible, kwCompatibilityLength
 
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords', 'SHADOW_INPUTS',
@@ -587,7 +584,7 @@ class InputState(State_Base):
         `mod_afferents <InputState.mod_afferents>` attributes, respectively (see
         `InputState_Compatability_and_Constraints` for additional details).  If **projections** but neither
         **variable** nor **size** are specified, then the `value <Projection.value>` of the Projection(s) or their
-        `senders <Projection.sender>` specified in **projections** argument are used to determine the InputState's
+        `senders <Projection_Base.sender>` specified in **projections** argument are used to determine the InputState's
         `variable <InputState.variable>`.
 
     weight : number : default 1
@@ -634,7 +631,7 @@ class InputState(State_Base):
         each of which must match the format (number and types of elements) of the InputState's
         `variable <InputState.variable>`.  If neither the **variable** or **size** argument is specified, and
         **projections** is specified, then `variable <InputState.variable>` is assigned the `value
-        <Projection.value>` of the Projection(s) or its `sender <Projection.sender>`.
+        <Projection.value>` of the Projection(s) or its `sender <Projection_Base.sender>`.
 
     function : Function
         If it is a `CombinationFunction`, it combines the `values <Projection_Base.value>` of the `PathwayProjections
@@ -798,8 +795,9 @@ class InputState(State_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 **kwargs):
 
+        context = kwargs.pop(CONTEXT, None)
         if context is None:
             context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE
@@ -847,11 +845,11 @@ class InputState(State_Base):
                                          variable=variable,
                                          size=size,
                                          projections=projections,
+                                         function=function,
                                          params=params,
                                          name=name,
                                          prefs=prefs,
                                          context=context,
-                                         function=function,
                                          )
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
@@ -969,52 +967,46 @@ class InputState(State_Base):
         """
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        """Call self.function with self._path_proj_values
-
-        If variable is None there are no active PathwayProjections in the Composition being run,
-        return None so that it is ignored in execute method (i.e., not combined with base_value)
-        """
-
-        # Variable was passed in so use that
-        if variable is not None:
-            return super()._execute(variable,
-                                    execution_id=execution_id,
-                                    runtime_params=runtime_params,
-                                    context=context)
-
-        # Get variable from Projections
-        else:
-            path_proj_values = []
-            # Check for Projections that are active in the Composition being run
-            for proj in self.path_afferents:
-                if self.afferents_info[proj].is_active_in_composition(self.parameters.context.get(
-                        execution_id).composition):
-                    path_proj_values.append(proj.parameters.value.get(execution_id))
-            # If there are any active PathwayProjections
-            if len(path_proj_values) > 0:
-                # Combine Projection values
-                variable = np.asarray(path_proj_values)
-                combined_values = super()._execute(variable=variable,
-                                                   execution_id=execution_id,
-                                                   runtime_params=runtime_params,
-                                                   context=context)
-                return combined_values
-
-            # There were no active Projections
-            else:
-                # mark combined_values as none, so that (after being assigned to value)
-                #    it is ignored in execute method (i.e., not combined with base_value)
-                return None
+    def _check_for_duplicate_projections(self, projection):
+        # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_STATE
+        assert True
+        if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+            from psyneulink.core.components.projections.projection import Projection
+            warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
+                          f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
+                          f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
+            return True
+        return False
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         variable = super()._parse_function_variable(variable, execution_id, context)
         try:
-            if self._use_1d_variable:
+            if self._use_1d_variable and variable.ndim > 1:
                 return np.array(variable[0])
-        except:
+        except AttributeError:
             pass
         return variable
+
+    def _get_fallback_variable(self, execution_id=None):
+        """
+            Call self.function with self._path_proj_values
+
+            If variable is None there are no active PathwayProjections in the Composition being run,
+            return None so that it is ignored in execute method (i.e., not combined with base_value)
+        """
+        # Check for Projections that are active in the Composition being run
+        current_active_composition = self.parameters.context._get(execution_id).composition
+
+        path_proj_values = [
+            proj.parameters.value._get(execution_id)
+            for proj in self.path_afferents
+            if self.afferents_info[proj].is_active_in_composition(current_active_composition)
+        ]
+
+        if len(path_proj_values) > 0:
+            return np.asarray(path_proj_values)
+        else:
+            return None
 
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
@@ -1247,10 +1239,10 @@ class InputState(State_Base):
         return state_spec, params_dict
 
     def _parse_self_state_type_spec(self, owner, input_state, context=None):
-        '''Return InputState specification dictionary with projections that shadow inputs to input_state
+        """Return InputState specification dictionary with projections that shadow inputs to input_state
 
         Called by _parse_state_spec if InputState specified for a Mechanism belongs to a different Mechanism
-        '''
+        """
 
         if not isinstance(input_state, InputState):
             raise InputStateError("PROGRAM ERROR: "
@@ -1268,7 +1260,7 @@ class InputState(State_Base):
 
     @staticmethod
     def _state_spec_allows_override_variable(spec):
-        '''
+        """
         Returns
         -------
             True - if **spec** outlines a spec for creating an InputState whose variable can be
@@ -1276,19 +1268,19 @@ class InputState(State_Base):
             False - otherwise
 
             ex: specifying an InputState with a Mechanism allows overriding
-        '''
+        """
         from psyneulink.core.components.mechanisms.mechanism import Mechanism
 
         if isinstance(spec, Mechanism):
             return True
-        if isinstance(spec, collections.Iterable):
+        if isinstance(spec, collections.abc.Iterable):
             # generally 2-4 tuple spec, but allows list spec
             for item in spec:
                 if isinstance(item, Mechanism):
                     return True
                 # handles tuple spec where first item of tuple is itself a (name, Mechanism) tuple
                 elif (
-                    isinstance(item, collections.Iterable)
+                    isinstance(item, collections.abc.Iterable)
                     and len(item) >= 2
                     and isinstance(item[1], Mechanism)
                 ):
@@ -1414,7 +1406,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     for state in owner._input_states:
         # Assign True for owner's primary InputState and the value has not already been set in InputState constructor
         if state.require_projection_in_composition is None and owner.input_state == state:
-            state.parameters.require_projection_in_composition.set(True, override=True)
+            state.parameters.require_projection_in_composition._set(True)
 
     # Check that number of input_states and their variables are consistent with owner.defaults.variable,
     #    and adjust the latter if not
@@ -1444,7 +1436,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     return state_list
 
 def _parse_shadow_inputs(owner, input_states):
-    '''Parses any {SHADOW_INPUTS:[InputState or Mechaism,...]} items in input_states into InputState specif. dict.'''
+    """Parses any {SHADOW_INPUTS:[InputState or Mechaism,...]} items in input_states into InputState specif. dict."""
 
     input_states_to_shadow_specs=[]
     for spec_idx, spec in enumerate(input_states):

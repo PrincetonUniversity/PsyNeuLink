@@ -8,40 +8,45 @@
 
 # ********************************************* LLVM bindings **************************************************************
 
-import ctypes, os, sys
+import ctypes
+import functools
 import numpy as np
 
 from llvmlite import ir
 
 from . import builtins
 from .builder_context import *
-from .builder_context import _type_cache, _all_modules
+from .builder_context import _all_modules
 from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
 from .jit_engine import *
 
-__all__ = ['LLVMBinaryFunction', 'LLVMBuilderContext']
+__all__ = ['LLVMBuilderContext']
+
 
 _compiled_modules = set()
 _binary_generation = 0
 
-def _llvm_build():
+
+def _llvm_build(target_generation=_binary_generation + 1):
+    global _binary_generation
+    if target_generation <= _binary_generation:
+        if "compile" in debug_env:
+            print("SKIPPING COMPILATION: {} -> {}".format(_binary_generation, target_generation))
+        return
+
+    if "compile" in debug_env:
+        print("COMPILING GENERATION: {} -> {}".format(_binary_generation, target_generation))
+
     _cpu_engine.compile_modules(_modules, _compiled_modules)
     if ptx_enabled:
         _ptx_engine.compile_modules(_modules, set())
     _modules.clear()
 
-    global _binary_generation
-    if "compile" in debug_env:
-        global _binary_generation
-        print("COMPILING GENERATION: {} -> {}".format(_binary_generation, LLVMBuilderContext._llvm_generation))
-
     # update binary generation
-    _binary_generation = LLVMBuilderContext._llvm_generation
+    _binary_generation = target_generation
 
-
-_binaries = {}
 
 class LLVMBinaryFunction:
     def __init__(self, name):
@@ -61,12 +66,11 @@ class LLVMBinaryFunction:
         params = []
         self.__byref_arg_types = []
         for a in f.args:
+            param_type = _convert_llvm_ir_to_ctype(a.type)
             if type(a.type) is ir.PointerType:
                 # remember pointee type for easier initialization
                 byref_type = _convert_llvm_ir_to_ctype(a.type.pointee)
-                param_type = ctypes.POINTER(byref_type)
             else:
-                param_type = _convert_llvm_ir_to_ctype(a.type)
                 byref_type = None
 
             self.__byref_arg_types.append(byref_type)
@@ -115,50 +119,39 @@ class LLVMBinaryFunction:
         self.cuda_call(*wrap_args)
 
     @staticmethod
+    def from_obj(obj):
+        name = LLVMBuilderContext.get_global().gen_llvm_function(obj).name
+        return LLVMBinaryFunction.get(name)
+
+    @staticmethod
+    @functools.lru_cache(maxsize=32)
     def get(name):
-        if LLVMBuilderContext._llvm_generation > _binary_generation:
-            _llvm_build()
-        if name not in _binaries.keys():
-            _binaries[name] = LLVMBinaryFunction(name)
-        return _binaries[name]
+        _llvm_build(LLVMBuilderContext._llvm_generation)
+        return LLVMBinaryFunction(name)
 
     def get_multi_run(self):
         try:
             multirun_llvm = _find_llvm_function(self.name + "_multirun")
         except ValueError:
-            function = _find_llvm_function(self.name);
-            with LLVMBuilderContext() as ctx:
+            function = _find_llvm_function(self.name)
+            with LLVMBuilderContext.get_global() as ctx:
                 multirun_llvm = ctx.gen_multirun_wrapper(function)
 
         return LLVMBinaryFunction.get(multirun_llvm.name)
 
 
-def _updateNativeBinaries(module, buffer):
-    to_delete = []
-    # update all pointers that might have been modified
-    for k, v in _binaries.items():
-        # One reference is held by the _binaries dict, second is held
-        # by the k, v tuple here, third by this function, and 4th is the
-        # one passed to getrefcount function
-        if sys.getrefcount(v) == 4:
-            to_delete.append(k)
-        else:
-            new_ptr = _cpu_engine._engine.get_function_address(k)
-            v.ptr = new_ptr
-
-    for d in to_delete:
-        del _binaries[d]
-
-_cpu_engine = cpu_jit_engine(_updateNativeBinaries)
+_cpu_engine = cpu_jit_engine()
 if ptx_enabled:
     _ptx_engine = ptx_jit_engine()
 
+
 # Initialize builtins
 def init_builtins():
-    with LLVMBuilderContext() as ctx:
+    with LLVMBuilderContext.get_global() as ctx:
         builtins.setup_pnl_intrinsics(ctx)
         builtins.setup_vxm(ctx)
         builtins.setup_mersenne_twister(ctx)
+
 
 def cleanup():
     _cpu_engine.clean_module()
@@ -168,7 +161,8 @@ def cleanup():
     _modules.clear()
     _compiled_modules.clear()
     _all_modules.clear()
-    _type_cache.clear()
+    LLVMBinaryFunction.get.cache_clear()
     init_builtins()
+
 
 init_builtins()

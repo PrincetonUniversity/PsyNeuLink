@@ -111,7 +111,7 @@ ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_input, predat
                                                     prey_input, prey_obs
                                                     ]
                                    ),
-                                   control_signals=[ControlSignal(projections=(CTL_PARAM,player_obs),
+                                   control_signals=[ControlSignal(modulates=(CTL_PARAM, player_obs),
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
@@ -119,7 +119,7 @@ ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_input, predat
                                                                   intensity_cost_function=Exponential(rate=-.1,
                                                                                                       bias=5),
                                                                   ),
-                                                    ControlSignal(projections=(CTL_PARAM,predator_obs),
+                                                    ControlSignal(modulates=(CTL_PARAM, predator_obs),
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
@@ -127,7 +127,7 @@ ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_input, predat
                                                                   intensity_cost_function=Exponential(rate=-.1,
                                                                                                       bias=5),
                                                                   ),
-                                                    ControlSignal(projections=(CTL_PARAM,prey_obs),
+                                                    ControlSignal(modulates=(CTL_PARAM, prey_obs),
                                                                   # allocation_samples=[0, 1, 10, 100]),
                                                                   # allocation_samples=[0, 10, 100]),
                                                                   # allocation_samples=[10, 1]),
