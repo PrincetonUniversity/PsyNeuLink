@@ -9,218 +9,10 @@ from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 
 class TestLog:
 
-    def test_log_with_identity_matrix(self):
+    def test_log(self):
 
         T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
         T_2 = pnl.TransferMechanism(name='log_test_T_2', size=2)
-        PS = pnl.Process(name='log_test_PS', pathway=[T_1, T_2])
-        PJ = T_2.path_afferents[0]
-
-        assert T_1.loggable_items == {
-            'InputState-0': 'OFF',
-            'RESULTS': 'OFF',
-            'clip': 'OFF',
-            'convergence_criterion': 'OFF',
-            'func_additive_param': 'OFF',
-            'func_bounds': 'OFF',
-            'func_has_initializers': 'OFF',
-            'func_intercept': 'OFF',
-            'func_multiplicative_param': 'OFF',
-            'func_slope': 'OFF',
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'function': 'OFF',
-            'has_initializers': 'OFF',
-            'initial_value': 'OFF',
-            'integration_rate': 'OFF',
-            'integrator_function_value': 'OFF',
-            'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
-            'mod_integration_rate': 'OFF',
-            'mod_intercept': 'OFF',
-            'mod_noise': 'OFF',
-            'mod_slope': 'OFF',
-            'noise': 'OFF',
-            'previous_value': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF'
-        }
-        assert T_2.loggable_items == {
-            'InputState-0': 'OFF',
-            'RESULTS': 'OFF',
-            'clip': 'OFF',
-            'convergence_criterion': 'OFF',
-            'func_additive_param': 'OFF',
-            'func_bounds': 'OFF',
-            'func_has_initializers': 'OFF',
-            'func_intercept': 'OFF',
-            'func_multiplicative_param': 'OFF',
-            'func_slope': 'OFF',
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'function': 'OFF',
-            'has_initializers': 'OFF',
-            'initial_value': 'OFF',
-            'integration_rate': 'OFF',
-            'integrator_function_value': 'OFF',
-            'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
-            'mod_integration_rate': 'OFF',
-            'mod_intercept': 'OFF',
-            'mod_noise': 'OFF',
-            'mod_slope': 'OFF',
-            'noise': 'OFF',
-            'previous_value': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF'
-        }
-        assert PJ.loggable_items == {
-            'exponent': 'OFF',
-            'func_bounds': 'OFF',
-            'func_has_initializers': 'OFF',
-            # 'func_matrix': 'OFF', # Uses Identity function, so no func_matrix
-            'func_value': 'OFF',
-            'has_initializers': 'OFF',
-            'func_variable': 'OFF',
-            'matrix': 'OFF',
-            'mod_matrix': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF',
-            'weight': 'OFF'
-        }
-
-        T_1.set_log_conditions('mod_noise')
-        T_1.set_log_conditions(pnl.RESULTS)
-        # PJ.set_log_conditions('mod_matrix')
-
-        assert T_1.loggable_items == {
-            'InputState-0': 'OFF',
-            'RESULTS': 'EXECUTION',
-            'clip': 'OFF',
-            'convergence_criterion': 'OFF',
-            'func_additive_param': 'OFF',
-            'func_bounds': 'OFF',
-            'func_has_initializers': 'OFF',
-            'func_intercept': 'OFF',
-            'func_multiplicative_param': 'OFF',
-            'func_slope': 'OFF',
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'function': 'OFF',
-            'has_initializers': 'OFF',
-            'initial_value': 'OFF',
-            'integration_rate': 'OFF',
-            'integrator_function_value': 'OFF',
-            'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
-            'mod_integration_rate': 'OFF',
-            'mod_intercept': 'OFF',
-            'mod_noise': 'EXECUTION',
-            'mod_slope': 'OFF',
-            'noise': 'OFF',
-            'previous_value': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF'
-        }
-        assert T_2.loggable_items == {
-            'InputState-0': 'OFF',
-            'RESULTS': 'OFF',
-            'clip': 'OFF',
-            'convergence_criterion': 'OFF',
-            'func_additive_param': 'OFF',
-            'func_bounds': 'OFF',
-            'func_has_initializers': 'OFF',
-            'func_intercept': 'OFF',
-            'func_multiplicative_param': 'OFF',
-            'func_slope': 'OFF',
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'function': 'OFF',
-            'has_initializers': 'OFF',
-            'initial_value': 'OFF',
-            'integration_rate': 'OFF',
-            'integrator_function_value': 'OFF',
-            'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
-            'mod_integration_rate': 'OFF',
-            'mod_intercept': 'OFF',
-            'mod_noise': 'OFF',
-            'mod_slope': 'OFF',
-            'noise': 'OFF',
-            'previous_value': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF'
-        }
-        assert PJ.loggable_items == {
-            'exponent': 'OFF',
-            'func_bounds': 'OFF',
-            'func_has_initializers': 'OFF',
-            # 'func_matrix': 'OFF', # Uses Identity function, so no func_matrix
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'has_initializers': 'OFF',
-            'matrix': 'OFF',
-            'mod_matrix': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF',
-            'weight': 'OFF'
-        }
-
-        PS.execute()
-        PS.execute()
-        PS.execute()
-
-        assert T_1.logged_items == {'RESULTS': 'EXECUTION', 'mod_noise': 'EXECUTION'}
-        # assert PJ.logged_items == {}
-
-        T_1.log.print_entries(execution_contexts=PS)
-
-        # assert T_1.log.print_entries() ==
-        # # Log for mech_A:
-        # #
-        # # Index     Variable:                                          Context                                                                  Value
-        # # 0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # #
-        # #
-        # # 0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        #
-        # assert T_2.log.print_entries() ==
-        # # Log for mech_A:
-        # #
-        # # Index     Variable:                                          Context                                                                  Value
-        # # 0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # #
-        # #
-        # # 0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-
-        T_1_csv = T_1.log.csv(entries=['mod_noise', 'RESULTS'], owner_name=False, quotes=None)
-        print(T_1_csv)
-        assert T_1_csv == \
-            "'Execution Context', 'Data'\n" \
-            + "'{0}', \'Index\', \'mod_noise\', \'RESULTS\'\n".format(PS.default_execution_id) \
-            + ", 0, 0.0, 0.0 0.0\n" \
-            + ", 1, 0.0, 0.0 0.0\n" \
-            + ", 2, 0.0, 0.0 0.0\n"
-
-        result = T_1.log.nparray(entries=['mod_noise', 'RESULTS'], header=False, owner_name=True)
-        np.testing.assert_array_equal(result[1][0],
-                                      np.array([[[0], [1], [2]],
-                                                [[ 0.], [ 0.], [ 0.]],
-                                                [[ 0.,  0.], [ 0.,  0.],[ 0., 0.]]]))
-
-
-    def test_log_without_identity_matrix(self):
-
-        T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
-        T_2 = pnl.TransferMechanism(name='log_test_T_2', size=3)
         PS = pnl.Process(name='log_test_PS', pathway=[T_1, T_2])
         PJ = T_2.path_afferents[0]
 
@@ -367,7 +159,7 @@ class TestLog:
             'exponent': 'OFF',
             'func_bounds': 'OFF',
             'func_has_initializers': 'OFF',
-            'func_matrix': 'OFF', # Uses Identity function, so no func_matrix
+            'func_matrix': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
             'has_initializers': 'OFF',
@@ -421,9 +213,9 @@ class TestLog:
         assert PJ.log.csv(entries='mod_matrix', owner_name=True, quotes=True) == \
             "'Execution Context', 'Data'\n" \
             + "'{0}', \'Index\', \'MappingProjection from log_test_T_1 to log_test_T_2[mod_matrix]\'\n".format(PS.default_execution_id) \
-            + ", \'0\', \'1.0 1.0 1.0\' \'1.0 1.0 1.0\'\n" \
-            + ", \'1\', \'1.0 1.0 1.0\' \'1.0 1.0 1.0\'\n" \
-            + ", \'2\', \'1.0 1.0 1.0\' \'1.0 1.0 1.0\'\n" \
+            + ", \'0\', \'1.0 0.0\' \'0.0 1.0\'\n" \
+            + ", \'1\', \'1.0 0.0\' \'0.0 1.0\'\n" \
+            + ", \'2\', \'1.0 0.0\' \'0.0 1.0\'\n"
 
         result = T_1.log.nparray(entries=['mod_noise', 'RESULTS'], header=False, owner_name=True)
         assert result[0] == PS.default_execution_id
@@ -431,8 +223,6 @@ class TestLog:
                                       np.array([[[0], [1], [2]],
                                                 [[ 0.], [ 0.], [ 0.]],
                                                 [[ 0.,  0.], [ 0.,  0.],[ 0., 0.]]]))
-
-        assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
 
     def test_log_initialization(self):
         T = pnl.TransferMechanism(
@@ -445,7 +235,7 @@ class TestLog:
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                     size=2)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                    size=3)
+                                    size=2)
         PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
         PJ = T2.path_afferents[0]
 
@@ -1101,7 +891,7 @@ class TestClearLog:
 
         # Create System
         T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
-        T_2 = pnl.TransferMechanism(name='log_test_T_2', size=3)
+        T_2 = pnl.TransferMechanism(name='log_test_T_2', size=2)
         PS = pnl.Process(name='log_test_PS', pathway=[T_1, T_2])
         PJ = T_2.path_afferents[0]
         SYS = pnl.System(name="log_test_SYS", processes=[PS])
@@ -1131,12 +921,11 @@ class TestClearLog:
         assert np.allclose(sys_log_dict['mod_noise'], np.array([[0.0]]))
 
         sys_log_dict = log_dict_T_2[SYS.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULTS'], np.array([[2., 2., 2.]]))
+        assert np.allclose(sys_log_dict['RESULTS'], np.array([[1.0, 1.0]]))
         assert np.allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
 
         sys_log_dict = log_dict_PJ[SYS.default_execution_id]
-        assert np.allclose(sys_log_dict['mod_matrix'],
-                           np.array([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]))
+        assert np.allclose(sys_log_dict['mod_matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
 
         # KDM 10/3/18: below was changed to delete_entry=True because it's not implemented in Parameter logs,
         # and it's not clear this option results in much difference than just deleting the entries and
@@ -1159,8 +948,7 @@ class TestClearLog:
         assert log_dict_T_2 == OrderedDict()
 
         # Confirm that PJ log values were not affected by changes to T_1 and T_2's logs
-        assert np.allclose(log_dict_PJ[SYS.default_execution_id]['mod_matrix'],
-                           np.array([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]))
+        assert np.allclose(log_dict_PJ[SYS.default_execution_id]['mod_matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
 
         # Run system again
         SYS.run(inputs={T_1: [2.0, 2.0]})
@@ -1179,15 +967,13 @@ class TestClearLog:
 
         # Confirm that T_2 log values only include most recent run
         sys_log_dict = log_dict_T_2[SYS.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULTS'], np.array([[4., 4., 4.]]))
+        assert np.allclose(sys_log_dict['RESULTS'], np.array([[2.0, 2.0]]))
         assert np.allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
         assert np.allclose(sys_log_dict['Run'], np.array([[1]]))
 
         # Confirm that PJ log values include all runs
         sys_log_dict = log_dict_PJ[SYS.default_execution_id]
-        assert np.allclose(sys_log_dict['mod_matrix'],
-                           np.array([[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
-                                     [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]))
+        assert np.allclose(sys_log_dict['mod_matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]]))
         assert np.allclose(sys_log_dict['Run'], np.array([[0], [1]]))
 
     @pytest.mark.parametrize(
