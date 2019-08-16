@@ -998,6 +998,8 @@ class Graph(object):
             Returns
             -------
 
+            # FIX 8/12/19:  MODIFIED FEEDBACK -
+            #  IS THIS A CORRECT DESCRIPTION? (SAME AS get_forward_parents_from_component)
             A list[Vertex] of the parent `Vertices <Vertex>` of the Vertex associated with **component**: list[`Vertex`]
         """
         forward_children = []
@@ -1016,7 +1018,8 @@ class Graph(object):
 
             Returns
             -------
-
+            # FIX 8/12/19:  MODIFIED FEEDBACK -
+            #  IS THIS A CORRECT DESCRIPTION? (SAME AS get_forward_children_from_component)
             A list[Vertex] of the parent `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
         """
         forward_parents = []
@@ -2071,7 +2074,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           f'the {repr(PATHWAY)} arg of add_linear_processing_pathway for {self.name}, '
                           f'since they were already specified {arg_name}.')
             del pathway[pathway.index(item)]
-        # # MODIFIED 8/12/19 END
+        # MODIFIED 8/12/19 END
+
 
         # Then, loop through pathway and validate that the Mechanism-Projection relationships make sense
         # and add MappingProjection(s) where needed
@@ -3288,7 +3292,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for node in self.nodes:
                         if (not node.efferents
                                 and not NodeRole.LEARNING in self.nodes_to_roles[node]
-                                and isinstance(node, ControlMechanism)):
+                                and not isinstance(node, ControlMechanism)):
                             terminal_nodes.add(node)
                     # MODIFIED 8/12/19 END
                 except IndexError:
