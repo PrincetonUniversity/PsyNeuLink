@@ -44,7 +44,7 @@ class TestLCControlMechanism:
         # P = pnl.Process(pathway=[A, B])
         # P2 = pnl.Process(pathway=[LC])
         # S = pnl.System(processes=[P, P2])
-        # S.show_graph()
+        S.show_graph()
 
         gain_created_by_LC_output_state_1 = []
         mod_gain_assigned_to_A = []

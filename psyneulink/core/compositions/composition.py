@@ -3226,7 +3226,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # A ControlMechanism should never be the TERMINAL node of a Composition:
         for node in self.nodes:
             if isinstance(node, ControlMechanism):
-                self.nodes_to_roles[node].remove(NodeRole.TERMINAL)
+                if NodeRole.TERMINAL in self.nodes_to_roles[node]:
+                    self.nodes_to_roles[node].remove(NodeRole.TERMINAL)
+                if NodeRole.OUTPUT in self.nodes_to_roles[node]:
+                    self.nodes_to_roles[node].remove(NodeRole.OUTPUT)
         # MODIFIED 8/12/19 END
 
         # Cycles
