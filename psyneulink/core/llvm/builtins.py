@@ -16,6 +16,12 @@ from .builder_context import LLVMBuilderContext
 def setup_vxm(ctx):
     # Setup types
     double_ptr_ty = ctx.float_ty.as_pointer()
+    # Arguments (given a vector of size X, and X by Y matrix):
+    # 1) Vector ptr
+    # 2) Matrix ptr
+    # 3) X dimension size
+    # 4) Y dimension size
+    # 5) Output vector pointer
     func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
 
     # Create function
@@ -110,6 +116,109 @@ def setup_vxm(ctx):
     with builder.goto_block(outer_out_block):
         builder.ret_void()
 
+def setup_vxm_transposed(ctx):
+    # Setup types
+    double_ptr_ty = ctx.float_ty.as_pointer()
+    # Arguments (given a vector of size Y, and X by Y matrix):
+    # 1) Vector ptr
+    # 2) Matrix ptr
+    # 3) X dimension size
+    # 4) Y dimension size
+    # 5) Output vector pointer
+    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
+
+    # Create function
+    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_vxm_transposed")
+    function.attributes.add('argmemonly')
+    function.attributes.add('alwaysinline')
+
+    block = function.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
+    v, m, x, y, o = function.args
+
+    # Add function arg attributes
+    for a in v, m, o:
+        a.attributes.add('nonnull')
+        a.attributes.add('noalias')
+
+    index = None
+    # zero the output array
+    with helpers.for_loop_zero_inc(builder, x, "zero") as (builder, index):
+        ptr = builder.gep(o, [index])
+        builder.store(ctx.float_ty(0), ptr)
+
+    # Multiplication
+
+    # Initialize outer loop variable
+    index_i_var = builder.alloca(ctx.int32_ty)
+    builder.store(ctx.int32_ty(0), index_i_var)
+
+    # Outer loop cond BB
+    outer_cond_block = builder.append_basic_block("outer-cond")
+    outer_body_block = builder.append_basic_block("outer-body")
+    outer_out_block = builder.append_basic_block("outer-out")
+
+    # Loop condition
+    builder.branch(outer_cond_block)
+    with builder.goto_block(outer_cond_block):
+        tmp = builder.load(index_i_var)
+        cond = builder.icmp_signed("<", tmp, y)
+        builder.cbranch(cond, outer_body_block, outer_out_block).set_weights([99, 1])
+
+    # Loop body
+    with builder.goto_block(outer_body_block):
+        index_i = builder.load(index_i_var)
+
+        # Initialize outer loop variable
+        index_j_var = builder.alloca(ctx.int32_ty)
+        builder.store(ctx.int32_ty(0), index_j_var)
+
+        # Outer loop cond BB
+        inner_cond_block = builder.append_basic_block("inner-cond")
+        inner_body_block = builder.append_basic_block("inner-body")
+        inner_out_block = builder.append_basic_block("inner-out")
+
+        # Loop condition
+        builder.branch(inner_cond_block)
+        with builder.goto_block(inner_cond_block):
+            tmp = builder.load(index_j_var)
+            cond = builder.icmp_signed("<", tmp, x)
+            builder.cbranch(cond, inner_body_block, inner_out_block).set_weights([99, 1])
+
+        # Loop body
+        with builder.goto_block(inner_body_block):
+            index_j = builder.load(index_j_var)
+            
+            # Multiplication and accumulation
+            vector_ptr = builder.gep(v, [index_i])
+            matrix_index = builder.mul(index_j, y)
+            matrix_index = builder.add(matrix_index, index_i)
+            matrix_ptr = builder.gep(m, [matrix_index])
+            out_ptr = builder.gep(o, [index_j])
+
+            vector_el = builder.load(vector_ptr)
+            matrix_el = builder.load(matrix_ptr)
+            out_el = builder.load(out_ptr)
+
+            new_el = builder.fmul(vector_el, matrix_el)
+            new_el = builder.fadd(new_el, out_el)
+
+            builder.store(new_el, out_ptr)
+
+            next_index_j = builder.add(index_j, ctx.int32_ty(1))
+            builder.store(next_index_j, index_j_var)
+            builder.branch(inner_cond_block)
+
+        with builder.goto_block(inner_out_block):
+            next_index_i = builder.add(index_i, ctx.int32_ty(1))
+            builder.store(next_index_i, index_i_var)
+            builder.branch(outer_cond_block)
+
+    # Return
+    with builder.goto_block(outer_out_block):
+        builder.ret_void()
+
 # Setup vector addition builtin
 def setup_vec_add(ctx):
      # Setup types
@@ -151,6 +260,131 @@ def setup_vec_add(ctx):
         builder.store(u_v_sum, o_ptr)
 
     builder.ret_void()
+
+# Setup vector subtraction builtin
+def setup_vec_sub(ctx):
+    # Setup types
+   double_ptr_ty = ctx.float_ty.as_pointer()
+   
+   # builtin vector addition func
+   # param1: ptr to vector 1
+   # param2: ptr to vector 2
+   # param3: sizeof vectors (must be the same)
+   # param4: ptr to output vector (make sure this is same size as param3)
+   func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, ctx.int32_ty, double_ptr_ty))
+
+   # Create function
+   function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_vec_sub")
+   function.attributes.add('argmemonly')
+   function.attributes.add('alwaysinline')
+
+   block = function.append_basic_block(name="entry")
+   builder = ir.IRBuilder(block)
+   builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
+   u, v, x, o = function.args
+
+   # Add function arg attributes
+   for a in u,v, o:
+       a.attributes.add('nonnull')
+       a.attributes.add('noalias')
+
+   index = None
+
+   # Addition
+   with helpers.for_loop_zero_inc(builder, x, "zero") as (builder, index):
+       u_ptr = builder.gep(u,[index])
+       v_ptr = builder.gep(v,[index])
+       o_ptr = builder.gep(o, [index])
+       u_val = builder.load(u_ptr)
+       v_val = builder.load(v_ptr)
+       
+       u_v_sum = builder.fsub(u_val,v_val)
+       builder.store(u_v_sum, o_ptr)
+
+   builder.ret_void()
+
+# Setup vector hadamard product (ie elementwise product)
+def setup_vec_hadamard(ctx):
+    # Setup types
+   double_ptr_ty = ctx.float_ty.as_pointer()
+   
+   # builtin vector addition func
+   # param1: ptr to vector 1
+   # param2: ptr to vector 2
+   # param3: sizeof vectors (must be the same)
+   # param4: ptr to output vector (make sure this is same size as param3)
+   func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, ctx.int32_ty, double_ptr_ty))
+
+   # Create function
+   function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_vec_hadamard")
+   function.attributes.add('argmemonly')
+   function.attributes.add('alwaysinline')
+
+   block = function.append_basic_block(name="entry")
+   builder = ir.IRBuilder(block)
+   builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
+   u, v, x, o = function.args
+
+   # Add function arg attributes
+   for a in u,v, o:
+       a.attributes.add('nonnull')
+       a.attributes.add('noalias')
+
+   index = None
+
+   # Addition
+   with helpers.for_loop_zero_inc(builder, x, "zero") as (builder, index):
+       u_ptr = builder.gep(u,[index])
+       v_ptr = builder.gep(v,[index])
+       o_ptr = builder.gep(o, [index])
+       u_val = builder.load(u_ptr)
+       v_val = builder.load(v_ptr)
+       
+       u_v_product = builder.fmul(u_val,v_val)
+       builder.store(u_v_product, o_ptr)
+
+   builder.ret_void()
+
+# returns squared vector magnitude
+def setup_vec_sqr_mag(ctx):
+    # Setup types
+    double_ptr_ty = ctx.float_ty.as_pointer()
+
+    # builtin vector magnitude func
+    # param1: ptr to vector
+    # param2: sizeof vector
+    # param3: double ptr for output
+    func_ty = ir.FunctionType(ir.DoubleType(), (double_ptr_ty, ctx.int32_ty))
+
+    # Create function
+    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_vec_sqr_mag")
+    function.attributes.add('argmemonly')
+    function.attributes.add('alwaysinline')
+
+    block = function.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(
+        function, None)
+    u, x  = function.args
+
+    # Add function arg attributes
+    u.attributes.add('nonnull')
+    u.attributes.add('noalias')
+
+    index = None
+
+    curr_sum = builder.alloca(ir.DoubleType())
+    builder.store(ir.DoubleType()(0),curr_sum)
+    with helpers.for_loop_zero_inc(builder, x, "zero") as (builder, index):
+        u_ptr = builder.gep(u, [index])
+        u_val = builder.load(u_ptr)
+
+        sqr = builder.fmul(u_val,u_val)
+        val = builder.fadd(builder.load(curr_sum),sqr)
+        builder.store(val,curr_sum)
+    
+    #builder.store(builder.load(curr_sum),o)
+    builder.ret(builder.load(curr_sum))
 
 def setup_pnl_intrinsics(ctx):
     # Setup types

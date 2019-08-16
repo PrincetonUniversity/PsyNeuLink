@@ -151,8 +151,12 @@ def init_builtins():
     with LLVMBuilderContext.get_global() as ctx:
         builtins.setup_pnl_intrinsics(ctx)
         builtins.setup_vxm(ctx)
+        builtins.setup_vxm_transposed(ctx)
         builtins.setup_mersenne_twister(ctx)
         builtins.setup_vec_add(ctx)
+        builtins.setup_vec_sub(ctx)
+        builtins.setup_vec_hadamard(ctx)
+        builtins.setup_vec_sqr_mag(ctx)
 def cleanup():
     _cpu_engine.clean_module()
     if ptx_enabled:
