@@ -29,6 +29,7 @@
 # "clear_run_data" -- use clean slate to run trials instead of reusing data
 # "force_runs" -- set number of runs to be fixed ('1' if no other value is specified)
 # "ref_pass" -- Pass arguments to llvm functions by reference, instead of copying structs (SHOULD BE FASTER)
+# "print_values" -- Enabled injected printfs in llvm code
 import os
 
 debug_env = dict()

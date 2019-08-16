@@ -235,6 +235,8 @@ class LLVMBuilderContext:
         return element
 
     def inject_printf(self, builder,fmt,*args):
+        if "print_values" not in debug_env:
+            return
         fmt += "\0"
         llvm_func = builder.function
         import llvmlite.binding as llvm
