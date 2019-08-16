@@ -2056,10 +2056,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         items_to_delete = []
         for i, item in enumerate(pathway):
             if ((isinstance(item, ControlMechanism) and item.monitor_for_modulation)
-                    or (isinstance(item, ObjectiveMechanism)
-                        and any((isinstance(p.receiver.owner, ControlMechanism)
-                                 # and (item.monitor or p.receiver.owner.monitor_for_control is not NotImplemented)
-                                 for p in item.efferents)))):
+                    or (isinstance(item, ObjectiveMechanism) and item._role == CONTROL)):
                 items_to_delete.append(item)
                 # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
                 if i>0 and isinstance(pathway[i-1], (Projection, np.ndarray, np.matrix, str, list)):
