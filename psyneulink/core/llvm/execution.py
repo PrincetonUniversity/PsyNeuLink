@@ -515,16 +515,18 @@ class CompExecution(CUDAExecution):
        
         value_struct_ir_ty = pnlvm.ir.LiteralStructType([
             pnlvm.ir.IntType(32), # idx of the node
+            pnlvm.ir.IntType(32), # dimensionality of value
             pnlvm.ir.IntType(64) # int memaddr of beginning of input/output list
         ]
         )
-        value_struct_c_ty = _convert_llvm_ir_to_ctype(value_struct_ir_ty) * len(targets)
+        value_struct_c_ty = _convert_llvm_ir_to_ctype(value_struct_ir_ty) * len(self._composition.nodes)
         
         # autodiff_values keeps the ctype values on the stack, so it doesn't get gc'd TODO: Make sure this works as intended
         autodiff_values = []
         def make_val_arr(dictionary):
-            value_struct_array = []
+            value_struct_array = [()] * len(self._composition.nodes)
             for node,values in dictionary.items():
+                dimensionality = len(values[0])
                 idx = self._composition._get_node_index(node)
                 values_ir_ty = ctx.convert_python_struct_to_llvm_ir(values)
                 values_c_ty = _convert_llvm_ir_to_ctype(values_ir_ty)
@@ -533,9 +535,10 @@ class CompExecution(CUDAExecution):
 
                 value_struct = tuple([
                     idx,
+                    dimensionality,
                     ctypes.cast(values,ctypes.c_void_p).value
                 ])
-                value_struct_array.append(value_struct)
+                value_struct_array[idx] = value_struct
             return value_struct_array
         
    

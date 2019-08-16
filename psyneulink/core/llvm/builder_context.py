@@ -21,6 +21,7 @@ import weakref
 import torch
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.keywords import AFTER, BEFORE
+from psyneulink.core.globals.utilities import NodeRole
 
 from psyneulink.core import llvm as pnlvm
 from .debug import debug_env
@@ -233,8 +234,9 @@ class LLVMBuilderContext:
             return builder.gep(element, [self.int32_ty(0), self.int32_ty(0)])
         return element
 
-    def inject_printf(self,llvm_func, builder,fmt,*args):
+    def inject_printf(self, builder,fmt,*args):
         fmt += "\0"
+        llvm_func = builder.function
         import llvmlite.binding as llvm
         llvm.load_library_permanently("libc.so.6")
         printfc = llvm.address_of_symbol("printf")
@@ -252,7 +254,54 @@ class LLVMBuilderContext:
         builder.call(printf,[fmt_ptr]+list(args))
 
     def gen_autodiffcomp_learning_exec(self,composition,simulation=False):
-        return self.gen_autodiffcomp_exec(composition,simulation)
+        composition._build_pytorch_representation(composition.default_execution_id)
+        pytorch_model = composition.parameters.pytorch_representation._get(composition.default_execution_id)
+        cond_gen = ConditionGenerator(self, composition)
+        
+        name = 'exec_learning_sim_wrap_' if simulation else 'exec_learning_wrap_'
+        name += composition.name
+        args = [self.get_context_struct_type(composition).as_pointer(),
+                self.get_param_struct_type(composition).as_pointer(),
+                self.get_input_struct_type(composition).as_pointer(),
+                self.get_data_struct_type(composition).as_pointer(),
+                cond_gen.get_condition_struct_type().as_pointer()]
+        builder = self.create_llvm_function(args, composition, name)
+        llvm_func = builder.function
+        
+        for a in llvm_func.args:
+            a.attributes.add('noalias')
+        
+        context, params, comp_in, data_arg, cond = llvm_func.args
+        pytorch_model._gen_llvm_training_function_body(self,composition, builder, context, params, comp_in, data_arg, cond)
+        # Call output CIM
+
+        if "const_params" in debug_env:
+            const_params = params.type.pointee(composition._get_param_initializer(None))
+            params = builder.alloca(const_params.type, name="const_params_loc")
+            builder.store(const_params, params)
+
+        if "alloca_data" in debug_env:
+            data = builder.alloca(data_arg.type.pointee)
+            data_vals = builder.load(data_arg)
+            builder.store(data_vals, data)
+        else:
+            data = data_arg
+
+        output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation)
+        output_cim_f = self.get_llvm_function(output_cim_w)
+        builder.block.name = "invoke_" + output_cim_f.name
+        builder.call(output_cim_f, [context, params, comp_in, data, data])
+
+        if "alloca_data" in debug_env:
+            data_vals = builder.load(data)
+            builder.store(data_vals, data_arg)
+
+        # Bump run counter
+        cond_gen.bump_ts(builder, cond, (1, 0, 0))
+
+        builder.ret_void()
+        
+        return llvm_func
 
     def gen_autodiffcomp_exec(self,composition,simulation=False):
         """Creates llvm bin execute for autodiffcomp"""
@@ -315,7 +364,6 @@ class LLVMBuilderContext:
         model_output = builder.gep(data,[self.int32_ty(0),
                                          ])
         
-        self.inject_printf(llvm_func,builder,"inputs: "+"%f "*4 +"\n",*[builder.load(builder.gep(model_input,[self.int32_ty(i)])) for i in range(0,3)])
         builder.call(pytorch_forward_func,[model_context,model_params,model_input,model_output])
         if simulation is False and composition.enable_controller and \
            composition.controller_mode == AFTER:
