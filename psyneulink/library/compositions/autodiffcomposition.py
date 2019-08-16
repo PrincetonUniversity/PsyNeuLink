@@ -569,7 +569,7 @@ class AutodiffComposition(Composition):
 
     def _adjust_stimulus_dict(self, inputs, bin_execute=False):
         # for bin executes, we manually parse out the autodiff stimuli
-        if bin_execute is True or bin_execute.startswith('LLVM'):
+        if bin_execute is True or str(bin_execute).startswith('LLVM'):
             return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
         if self.learning_enabled:
             if isinstance(inputs, dict):
@@ -1028,6 +1028,20 @@ class AutodiffComposition(Composition):
         model = self.parameters.pytorch_representation._get(self.default_execution_id)
         pytorch_params = model._get_param_struct()
         param_args = [tuple(mech_params),tuple(proj_params),pytorch_params]
+        if self.learning_enabled is True:
+            learning_targets = pnlvm.ir.LiteralStructType([
+                pnlvm.ir.IntType(32), # idx of the node
+                pnlvm.ir.IntType(64) 
+            ])
+            learning_params = (
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            )
+            param_args += [learning_params]
         return tuple(param_args)
 
 class EarlyStopping(object):
