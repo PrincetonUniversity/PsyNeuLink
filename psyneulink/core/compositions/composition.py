@@ -2044,34 +2044,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.add_nodes([pathway[c]])
                 nodes.append(pathway[c])
 
-        # # MODIFIED 8/12/19 NEW: [JDC] - AVOID DUPLCIATE CONTROL_RELATED PROJECTIONS
-        # # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
-        # #    and any ObjectiveMechanism that projects to a ControlMechanism,
-        # #    as well as any projections to them specified in the pathway;
-        # #    this is to avoid instantiating projections to them that might conflict with those
-        # #    instantiated by their constructors or, for a controller, _add_controller()
-        # items_to_delete = []
-        # for i, item in enumerate(pathway):
-        #     if ((isinstance(item, ControlMechanism) and item.monitor_for_modulation)
-        #             or (isinstance(item, ObjectiveMechanism)
-        #                 and any((isinstance(p.receiver.owner, ControlMechanism)
-        #                          # and (item.monitor or p.receiver.owner.monitor_for_control is not NotImplemented)
-        #                          for p in item.efferents)))):
-        #         items_to_delete.append(item)
-        #         # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
-        #         if i>0 and isinstance(pathway[i-1], (Projection, np.ndarray, np.matrix, str, list)):
-        #             items_to_delete.append(pathway[i-1])
-        # for item in items_to_delete:
-        #     if isinstance(item, ControlMechanism):
-        #         arg_name = f'in the {repr(MONITOR_FOR_CONTROL)} of its constructor'
-        #     else:
-        #         arg_name = f'either in the {repr(MONITOR)} arg of its constructor, ' \
-        #                    f'or in the {repr(MONITOR_FOR_CONTROL)} arg of its associated {ControlMechanism.__name__}'
-        #     warnings.warn(f'No new {Projection.__name__}s were added to {item.name} that was included in '
-        #                   f'the {repr(PATHWAY)} arg of add_linear_processing_pathway for {self.name}, '
-        #                   f'since they were already specified {arg_name}.')
-        #     del pathway[pathway.index(item)]
-        # # MODIFIED 8/12/19 END
+        # MODIFIED 8/12/19 NEW: [JDC] - AVOID DUPLCIATE CONTROL_RELATED PROJECTIONS
+        # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
+        #    and any ObjectiveMechanism that projects to a ControlMechanism,
+        #    as well as any projections to them specified in the pathway;
+        #    this is to avoid instantiating projections to them that might conflict with those
+        #    instantiated by their constructors or, for a controller, _add_controller()
+        items_to_delete = []
+        for i, item in enumerate(pathway):
+            if ((isinstance(item, ControlMechanism) and item.monitor_for_modulation)
+                    or (isinstance(item, ObjectiveMechanism)
+                        and any((isinstance(p.receiver.owner, ControlMechanism)
+                                 # and (item.monitor or p.receiver.owner.monitor_for_control is not NotImplemented)
+                                 for p in item.efferents)))):
+                items_to_delete.append(item)
+                # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
+                if i>0 and isinstance(pathway[i-1], (Projection, np.ndarray, np.matrix, str, list)):
+                    items_to_delete.append(pathway[i-1])
+        for item in items_to_delete:
+            if isinstance(item, ControlMechanism):
+                arg_name = f'in the {repr(MONITOR_FOR_CONTROL)} of its constructor'
+            else:
+                arg_name = f'either in the {repr(MONITOR)} arg of its constructor, ' \
+                           f'or in the {repr(MONITOR_FOR_CONTROL)} arg of its associated {ControlMechanism.__name__}'
+            warnings.warn(f'No new {Projection.__name__}s were added to {item.name} that was included in '
+                          f'the {repr(PATHWAY)} arg of add_linear_processing_pathway for {self.name}, '
+                          f'since they were already specified {arg_name}.')
+            del pathway[pathway.index(item)]
+        # MODIFIED 8/12/19 END
 
         # Then, loop through pathway and validate that the Mechanism-Projection relationships make sense
         # and add MappingProjection(s) where needed
