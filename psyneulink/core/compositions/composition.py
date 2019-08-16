@@ -3251,19 +3251,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in origin_nodes:
                 self._add_node_role(node, NodeRole.INPUT)
 
-        # If OUTPUT nodes were not specified by user, TERMINAL nodes become OUTPUT nodes.
-        # If there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
-        # If there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
+        # If OUTPUT nodes were not specified by user, assign them:
+        # FIX: MODIFIED FEEDBACK - NEED MORE COMPLEMENT COMMENTING HERE
+        # - if there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
+        # - if there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
         if not self.get_nodes_by_role(NodeRole.OUTPUT):
             if self.get_nodes_by_role(NodeRole.LEARNING):
                 # FIX: ADD COMMENT HERE
                 # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
-                terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
+                output_nodes = list([items for items in self.scheduler_processing.consideration_queue
                                        if any([item for item in items
                                                if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
             else:
-                terminal_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
-            if not terminal_nodes:
+                output_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
+            if not output_nodes:
                 try:
                     # # MODIFIED 8/12/19 OLD:
                     # terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
@@ -3278,7 +3279,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #      BUT ALSO RISKS ASSIGNING BOTH A1 AND A2 SINCE BOTH ARE IN THE SAME CONSIDERATION_SET
                     # First, find last consideration_set in scheduler_processing that does not contain
                     #    learning-related nodes or a ControlMechanism
-                    terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
+                    output_nodes = list([items for items in self.scheduler_processing.consideration_queue
                                            if any([item for item in items if
                                                    (not NodeRole.LEARNING in self.nodes_to_roles[item]
                                                     and not isinstance(item, ControlMechanism)
@@ -3296,12 +3297,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if (not node.efferents
                                 and not NodeRole.LEARNING in self.nodes_to_roles[node]
                                 and not isinstance(node, ControlMechanism)):
-                            terminal_nodes.add(node)
+                            output_nodes.add(node)
                     # MODIFIED 8/12/19 END
                 except IndexError:
-                    terminal_nodes = []
-            for node in terminal_nodes:
+                    output_nodes = []
+            for node in output_nodes:
                 self._add_node_role(node, NodeRole.OUTPUT)
+            # MODIFIED 8/16/19 NEW:
+            # Finally, assign TERMINAL nodes
+            for node in self.nodes:
+                if not node.efferents or NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]:
+                    self._add_node_role(node, NodeRole.TERMINAL)
+            # MODIFIED 8/16/19 END
 
     def _analyze_graph(self):
         """
