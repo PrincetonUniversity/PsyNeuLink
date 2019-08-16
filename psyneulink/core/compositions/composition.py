@@ -754,8 +754,8 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.globals.registry import remove_instance_from_registry
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, CONDITIONS, FUNCTIONS, HARD_CLAMP, \
-    IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
+    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, CONDITIONS, CONTROL, \
+    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
     MATRIX, MATRIX_KEYWORD_VALUES, MECHANISM, MECHANISMS, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
     ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
@@ -3223,7 +3223,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._analyze_consideration_queue(self.scheduler_processing.consideration_queue, objective_mechanism)
 
         # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
-        # A ControlMechanism should never be the TERMINAL node of a Composition:
+        # A ControlMechanism should not be the TERMINAL node of a Composition
+        #    (unless it is specifed as a required_role, in which case it is reassigned below)
         for node in self.nodes:
             if isinstance(node, ControlMechanism):
                 if NodeRole.TERMINAL in self.nodes_to_roles[node]:
@@ -3274,20 +3275,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
                     # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
                     #    - not used for Learning;
-                    #    - not ControlMechanisms;
+                    #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
                     #    - do not project to any other nodes.
                     # FIX: STILL NOT ASSIGNING A1 AS TERMINAL IN SCRATCH PAD;
                     #      BUT ALSO RISKS ASSIGNING BOTH A1 AND A2 SINCE BOTH ARE IN THE SAME CONSIDERATION_SET
-                    # First, find last consideration_set in scheduler_processing
-                    #    that does not contain learning-related nodes or a ControlMechanism
+                    # First, find last consideration_set in scheduler_processing that does not contain
+                    #    learning-related nodes or a ControlMechanism
                     terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
                                            if any([item for item in items if
                                                    (not NodeRole.LEARNING in self.nodes_to_roles[item]
-                                                    and not isinstance(item, ControlMechanism))
+                                                    and not isinstance(item, ControlMechanism)
+                                                    and not (isinstance(item, ObjectiveMechanism)
+                                                             and item._role == CONTROL))
                                                    ])]
                                           )[-1]
-                    # Then, add any nodes that are not learning-related or a ControlMechanism
-                    #     and that have *no* efferent Projections
+                    # Then, add any nodes that are not learning-related or a ControlMechanism,
+                    #    and that have *no* efferent Projections
                     # IMPLEMENTATION NOTE:
                     #  Do this here, as the list considers entire sets in the consideration queue,
                     #    and a node with no efferents may be in the same set as one with efferents
