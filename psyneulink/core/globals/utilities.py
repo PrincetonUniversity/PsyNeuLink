@@ -822,6 +822,22 @@ def copy_dict_or_list_with_shared(obj, shared_types=None):
 
 
 def get_alias_property_getter(name, attr=None):
+    """
+        Arguments
+        ---------
+            name : str
+
+            attr : str : default None
+
+        Returns
+        -------
+            a property getter method that
+
+            if **attr** is None, returns the **name** attribute of an object
+
+            if **attr** is not None, returns the **name** attribute of the
+            **attr** attribute of an object
+    """
     if attr is not None:
         def getter(obj):
             return getattr(getattr(obj, attr), name)
@@ -833,6 +849,22 @@ def get_alias_property_getter(name, attr=None):
 
 
 def get_alias_property_setter(name, attr=None):
+    """
+        Arguments
+        ---------
+            name : str
+
+            attr : str : default None
+
+        Returns
+        -------
+            a property setter method that
+
+            if **attr** is None, sets the **name** attribute of an object
+
+            if **attr** is not None, sets the **name** attribute of the
+            **attr** attribute of an object
+    """
     if attr is not None:
         def setter(obj, value):
             setattr(getattr(obj, attr), name, value)
@@ -1486,6 +1518,23 @@ _unused_args_sig_cache = weakref.WeakKeyDictionary()
 
 
 def prune_unused_args(func, args=None, kwargs=None):
+    """
+        Arguments
+        ---------
+            func : function
+
+            args : *args
+
+            kwargs : **kwargs
+
+
+        Returns
+        -------
+            a tuple such that the first item is the intersection of **args** and the
+            positional arguments of **func**, and the second item is the intersection
+            of **kwargs** and the keyword arguments of **func**
+
+    """
     # use the func signature to filter out arguments that aren't compatible
     try:
         sig = _unused_args_sig_cache[func]
@@ -1541,6 +1590,10 @@ def prune_unused_args(func, args=None, kwargs=None):
 
 
 def call_with_pruned_args(func, *args, **kwargs):
+    """
+        Calls **func** with only the **args** and **kwargs** that
+        exist in its signature
+    """
     args, kwargs = prune_unused_args(func, args, kwargs)
     return func(*args, **kwargs)
 
