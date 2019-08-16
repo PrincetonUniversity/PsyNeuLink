@@ -1098,37 +1098,38 @@ class TestExecutionOrder:
                                       ])
     def test_3_mechanisms_2_origins_1_additive_control_1_terminal(self, benchmark, mode):
         #
-        #   B--A
+        #   A--LC
         #  /    \
-        # C------D
+        # B------C
         #  \     |
-        #   -----+-> E
+        #   -----+-> D
         #
-        # C: 4 x 5 = 20
-        # B: 20 x 1 = 20
-        # A: f(20)[0] = 0.50838675
-        # D: 20 x 5 + 0.50838675 = 100.50838675
-        # E: (20 + 100.50838675) x 5 = 650.83865743
+        # B: 4 x 5 = 20
+        # A: 20 x 1 = 20
+        # LC: f(20)[0] = 0.50838675
+        # C: 20 x 5 + 0.50838675 = 100.50838675
+        # D: (20 + 100.50838675) x 5 = 650.83865743
 
         comp = Composition()
+        B = TransferMechanism(name="B", function=Linear(slope=5.0))
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        A = ObjectiveMechanism(function=Linear,
+                               monitor=[B],
+                               name="A")
+        LC = LCControlMechanism(name="LC", modulation=ModulationParam.ADDITIVE,
+                               modulated_mechanisms=C,
+                               objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
-        B = ObjectiveMechanism(function=Linear,
-                               monitor=[C],
-                               name="B")
-        A = LCControlMechanism(name="A", modulation=ModulationParam.ADDITIVE,
-                               modulated_mechanisms=D,
-                               objective_mechanism=B)
-        E = TransferMechanism(name="E", function=Linear(slope=5.0))
-        comp.add_linear_processing_pathway([C, D, E])
-        comp.add_linear_processing_pathway([C, E])
-        comp.add_node(B)
+        comp.add_linear_processing_pathway([B, C, D])
+        comp.add_linear_processing_pathway([B, D])
         comp.add_node(A)
+        comp.add_node(LC)
 
 
-        inputs_dict = {C: [4.0]}
+        inputs_dict = {B: [4.0]}
         sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        comp.show_graph()
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode, num_trials=2)
         assert np.allclose(output, 650.83865743)
         benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
