@@ -3328,6 +3328,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         :param context:
         :return:
         """
+        # MODIFIED 8/16/19 NEW: [JDC] - MODIFIED FEEDBACK
+        # Check for cycles caused by ModulatoryProjection and, if present, assign ModulatoryProjection as feedback
+        from toposort import toposort_flatten
+        vertex = True
+        while vertex:
+            vertex = next(iter([v for v in self.graph.vertices if v.feedback]), None)
+            vertex.feedback = False
+            try:
+                self._update_processing_graph()
+                # toposort_flatten(self.graph_processing.dependency_dict)
+                toposort_flatten(self.scheduler_processing.dependency_dict)
+            except ValueError:
+                vertex.feedback = True
+        # MODIFIED 8/16/19 END
 
         self._determine_node_roles()
         self._create_CIM_states()
