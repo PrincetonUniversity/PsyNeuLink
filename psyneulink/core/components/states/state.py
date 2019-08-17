@@ -1871,6 +1871,7 @@ class State_Base(State):
             if self._check_for_duplicate_projections(projection):
                 continue
 
+            # FIX: MODIFIED FEEDBACK - CHECK THAT THAT THIS IS STILL NEEDED (RE: ASSIGNMENT IN ModulatorySignal)
             if isinstance(projection, ModulatoryProjection_Base):
                 self.owner.aux_components.append((projection, feedback))
             return projection

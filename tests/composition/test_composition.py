@@ -1081,10 +1081,14 @@ class TestExecutionOrder:
 
 
         inputs_dict = {B: [4.0]}
-        sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        # sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict,
+                          # scheduler_processing=sched,
+                          bin_execute=mode)
         assert np.allclose(output, 354.19328716)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        benchmark(comp.run, inputs=inputs_dict,
+                  # scheduler_processing=sched,
+                  bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1125,13 +1129,16 @@ class TestExecutionOrder:
         comp.add_node(A)
         comp.add_node(LC)
 
-
         inputs_dict = {B: [4.0]}
-        sched = Scheduler(composition=comp)
+        # sched = Scheduler(composition=comp)
         comp.show_graph()
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        output = comp.run(inputs=inputs_dict,
+                          # scheduler_processing=sched,
+                          bin_execute=mode)
         assert np.allclose(output, 650.83865743)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        benchmark(comp.run, inputs=inputs_dict,
+                  # scheduler_processing=sched,
+                  bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1174,10 +1181,14 @@ class TestExecutionOrder:
 
 
         inputs_dict = {B: [4.0]}
-        sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        # sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict,
+                          # scheduler_processing=sched,
+                          bin_execute=mode)
         assert np.allclose(output, 150.83865743)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        benchmark(comp.run, inputs=inputs_dict,
+                  # scheduler_processing=sched,
+                  bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition

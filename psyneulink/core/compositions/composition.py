@@ -3201,6 +3201,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               visited_compositions)
         return nested_compositions
 
+    # MODIFIED 8/16/19 NEW: [JDC] - MODIFIED FEEDBACK
+    def _check_feedback(self):
+        '''Check that feedback specification is required for projections to which it has been assigned
+        Note:
+        - graph_processing and graph_processing.dependency_dict are used as indications of structural dependencies
+        - scheduler.dependency_dict is used as indication of execution dependencies
+        '''
+        # FIX: 8/16/19 - MODIFIED FEEDBACK -
+        #  ADD ARG FOR SCHEDULER, AND USE THAT (TO PROPERLY MODIFY ANY SCHEDULERS ASSIGNED AT RUNTIME)
+        #  ONCE DONE, RESTORE TESTS THAT DO SO IN TestExecutionOrder
+        scheduler = self.scheduler_processing
+        for vertex in [v for v in self.graph.vertices if v.feedback==True]:
+            projection = vertex.component
+            assert isinstance(projection, Projection), \
+                f'PROGRAM ERROR: vertex identified with feedback=True that is not a Projection'
+            vertex.feedback = False
+            # Update Composition's graph_processing and resulting consideration_queue for scheduler
+            self._update_processing_graph()
+            scheduler._init_consideration_queue_from_graph(self.graph_processing)
+            # If, when vertex is False, the dependency_dicts for the structural and execution are the same,
+            #    then no need for feedback specification, so leave as False
+            #       and remove assignments of sender and receiver to corresponding feedback entries of Composition
+            if self.graph_processing.dependency_dict == scheduler.dependency_dict:
+                self.feedback_senders.remove(projection.sender.owner)
+                self.feedback_receivers.remove(projection.receiver.owner)
+            # Otherwise, restore assignment
+            else:
+                vertex.feedback = True
+                self._update_processing_graph()
+                scheduler._init_consideration_queue_from_graph(self.graph_processing)
+    # MODIFIED 8/16/19 END
+
     def _determine_node_roles(self):
 
         # Clear old roles
@@ -3329,20 +3361,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         :return:
         """
         # MODIFIED 8/16/19 NEW: [JDC] - MODIFIED FEEDBACK
-        # Check for cycles caused by ModulatoryProjection and, if present, assign ModulatoryProjection as feedback
-        from toposort import toposort_flatten
-        vertex = True
-        while vertex:
-            vertex = next(iter([v for v in self.graph.vertices if v.feedback]), None)
-            vertex.feedback = False
-            try:
-                self._update_processing_graph()
-                # toposort_flatten(self.graph_processing.dependency_dict)
-                toposort_flatten(self.scheduler_processing.dependency_dict)
-            except ValueError:
-                vertex.feedback = True
+        self._check_feedback()
         # MODIFIED 8/16/19 END
-
         self._determine_node_roles()
         self._create_CIM_states()
         self._update_shadow_projections()
