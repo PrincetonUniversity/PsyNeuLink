@@ -446,22 +446,24 @@ class AutodiffComposition(Composition):
             raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
                                            '`pip install torch` or `pip3 install torch`')
 
-        params = self._assign_args_to_param_dicts(learning_rate=learning_rate)
-
-        super(AutodiffComposition, self).__init__(params=params, name=name)
+        # params = self._assign_args_to_param_dicts(learning_rate=learning_rate)
+        #
+        # super(AutodiffComposition, self).__init__(params=params, name=name)
+        super(AutodiffComposition, self).__init__(name = name,
+                                                  patience = patience,
+                                                  min_delta = min_delta,
+                                                  learning_rate = learning_rate,
+                                                  learning_enabled = learning_enabled,
+                                                  optimizer_type = optimizer_type,
+                                                  weight_decay = weight_decay,
+                                                  loss_spec = loss_spec,
+                                                  randomize = randomize)
 
         self.learning_enabled = learning_enabled
         self.optimizer_type = optimizer_type
         self.loss_spec = loss_spec
         self.randomize = randomize
         self.refresh_losses = refresh_losses
-
-        # pytorch representation of model and associated training parameters
-        self.pytorch_representation = None
-        self.weight_decay = weight_decay
-        self.optimizer = None
-        self.loss = None
-        self.force_no_retain_graph = force_no_retain_graph
 
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
@@ -684,7 +686,8 @@ class AutodiffComposition(Composition):
                 outputs.append(curr_output_list)
 
                 if epoch == epochs - 1 and not do_logging:
-                    pytorch_rep.copy_outputs_to_psyneulink(curr_tensor_outputs, execution_id)
+                    self.parameters.pytorch_representation._get(execution_id).\
+                        copy_outputs_to_psyneulink(curr_tensor_outputs, execution_id)
 
                 scheduler.get_clock(execution_id)._increment_time(TimeScale.TRIAL)
 
