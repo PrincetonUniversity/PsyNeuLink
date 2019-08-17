@@ -1392,7 +1392,6 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          state_param_identifier=INPUT_STATE,
                                          reference_value=reference_value if reference_value is not None
                                                                          else owner.defaults.variable,
-                                         # reference_value=reference_value,
                                          reference_value_name=VALUE,
                                          context=context)
 

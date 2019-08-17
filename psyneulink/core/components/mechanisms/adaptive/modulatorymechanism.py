@@ -1210,23 +1210,30 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # Assign ObjectiveMechanism's role as CONTROL
         self.objective_mechanism._role = CONTROL
 
-        # If ModulatoryMechanism is a System controller, name Projection from
-        # ObjectiveMechanism based on the System
-        if self.system is not None:
-            name = self.system.name + ' outcome signal'
-        # Otherwise, name it based on the ObjectiveMechanism
-        else:
-            name = self.objective_mechanism.name + ' outcome signal'
+        # MODIFIED 8/16/19 OLD:
+        # # If ModulatoryMechanism is a System controller, name Projection from
+        # # ObjectiveMechanism based on the System
+        # if self.system is not None:
+        #     name = self.system.name + ' outcome signal'
+        # # Otherwise, name it based on the ObjectiveMechanism
+        # else:
+        #     # name = self.objective_mechanism.name + ' outcome signal'
+        # MODIFIED 8/16/19 END
 
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
                                                       receiver=self,
                                                       matrix=AUTO_ASSIGN_MATRIX,
-                                                      name=name)
+                                                      # name=name
+                                                      )
         for input_state in self.objective_mechanism.input_states:
             input_state.internal_only = True
 
         self.aux_components.append(self.objective_mechanism)
-        self.aux_components.append((projection_from_objective, True))
+        # # MODIFIED 8/12/19 OLD:
+        # self.aux_components.append((projection_from_objective, True))
+        # # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
+        self.aux_components.append(projection_from_objective)
+        # MODIFIED 8/12/19 END
         self._objective_projection = projection_from_objective
         self.monitor_for_modulation = self.monitored_output_states
 
