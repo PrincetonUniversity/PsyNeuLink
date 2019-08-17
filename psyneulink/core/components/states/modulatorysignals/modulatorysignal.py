@@ -479,8 +479,8 @@ class ModulatorySignal(OutputState):
         for receiver_spec in projections:
             projection = self._instantiate_projection_from_state(projection_spec=type(self),
                                                                  receiver=receiver_spec,
-                                                                 # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
-                                                                 feedback=True,
+                                                                 # # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
+                                                                 # feedback=True,
                                                                  # MODIFIED 8/12/19 END
                                                                  context=context)
             projection._assign_default_projection_name(state=self)

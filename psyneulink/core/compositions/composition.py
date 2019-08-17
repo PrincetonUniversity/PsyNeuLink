@@ -3338,7 +3338,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _update_processing_graph(self):
         """
         Constructs the processing graph (the graph that contains only Nodes as vertices)
-        from the composition's full graph
+        from the Composition's full graph
         """
         logger.debug('Updating processing graph')
 
