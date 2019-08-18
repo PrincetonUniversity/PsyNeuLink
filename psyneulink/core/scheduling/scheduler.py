@@ -521,20 +521,6 @@ class Scheduler(object):
                 structural_dependencies[child.component].add(vert.component)
             self.dependency_dict = execution_dependencies
 
-        # # MODIFIED 8/16/19 NEW: [JDC] - MODIFIED FEEDBACK
-        # # Check for cycles caused by ModulatoryProjection and, if present, assign ModulatoryProjection as feedback
-        # vertex = True
-        # while vertex:
-        #     vertex = next(iter([v for v in graph.vertices if v.feedback]), None)
-        #     if vertex:
-        #         vertex.feedback = False
-        #         try:
-        #             # self._update_processing_graph()
-        #             toposort_flatten(execution_dependencies)
-        #         except ValueError:
-        #             vertex.feedback = True
-        # # MODIFIED 8/16/19 END
-
         return list(toposort(execution_dependencies)), removed_dependencies, structural_dependencies
 
     def _get_all_connected_cycles(self, connected_cycles, original_key, visited_keys, flattened_cycles):

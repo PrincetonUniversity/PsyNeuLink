@@ -3217,7 +3217,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        # FIX: CONSTRAIN TO ControlProjections FOR NOW,
                        #  AS OVERIDES OTHER CASES THAT ARE GENERATED ON COMMAND LINE.
                        #  SHOULD IMPLEMENT TEST FOR WHETHER feedback WAS SPECIFIED ON COMMAND LINE
-                       #  OR ALLOW "MAYBE" SPEC
+                       #  OR ALLOW "MAYBE" SPEC (e.g., 2=ENFORCE, 1=OPTIONAL, 0=FALSE
                        if isinstance(v.component, ControlProjection) and v.feedback==True]:
             projection = vertex.component
             # assert isinstance(projection, Projection), \

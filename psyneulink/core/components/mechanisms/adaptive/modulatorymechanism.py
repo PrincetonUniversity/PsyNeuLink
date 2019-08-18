@@ -1219,7 +1219,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # else:
         #     # name = self.objective_mechanism.name + ' outcome signal'
         # MODIFIED 8/16/19 END
-
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
                                                       receiver=self,
                                                       matrix=AUTO_ASSIGN_MATRIX,
