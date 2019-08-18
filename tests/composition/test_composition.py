@@ -604,7 +604,8 @@ class TestExecutionOrder:
 
         comp = Composition()
         comp.add_linear_processing_pathway([A, B, MappingProjection(matrix=2.0), C, MappingProjection(matrix=3.0), D, E])
-        comp.add_linear_processing_pathway([D, MappingProjection(matrix=4.0), B], feedback=True)
+        # comp.add_linear_processing_pathway([D, MappingProjection(matrix=4.0), B], feedback=True)
+        comp.add_linear_processing_pathway([D, (MappingProjection(matrix=4.0), True), B])
 
         comp.run(inputs={A: 1.0})
 

@@ -2014,21 +2014,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._analyze_graph()
 
-    def add_linear_processing_pathway(self, pathway, feedback=False, *args):
+    def add_linear_processing_pathway(self, pathway, *args):
         """Add sequence of Mechanisms or Compositions possibly with intercolated Projections
         Tuples (Mechanism, NodeRole(s)) can be used to assign required_roles to Mechanisms.
         Don't add projections for ControlMechanisms or ObjectiveMechanisms that project to them;
             those are be handled either by their constructors or, for a controller, by _add_controller()
         """
         nodes = []
-
+        
+        from psyneulink.core.globals.keywords import PROJECTION, NODE
+        def is_spec(entry, desired_type:tc.enum(NODE, PROJECTION)):
+            '''Test whether pathway entry is specified type (NODE or PROJECTION)'''
+            node_specs = (Mechanism, Composition)
+            proj_specs = (Projection, np.ndarray, np.matrix, str, list)
+            if desired_type == NODE:
+                if (isinstance(entry, node_specs) 
+                        or (isinstance(entry, tuple) 
+                            and isinstance(entry[0], node_specs)
+                            and isinstance(entry[1], NodeRole))):
+                    return True
+            elif desired_type == PROJECTION:
+                if (isinstance(entry, proj_specs)
+                        or (isinstance(entry, tuple)
+                            and isinstance(entry[0], proj_specs)
+                            and entry[1] in {True, False, MAYBE})):
+                    return True
+            else:
+                return False
+            
         # First, verify that the pathway begins with a node
         if not isinstance(pathway, (list, tuple)):
             raise CompositionError(f"First argument in add_linear_processing_pathway method of '{self.name}' "
                                    f"{Composition.__name__} must be a list of nodes")
 
         # Then make sure the first item is a node and not a Projection
-        if isinstance(pathway[0], (Mechanism, Composition, tuple)):
+        if is_spec(pathway[0], NODE):
             self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
             nodes.append(pathway[0])
         else:
@@ -2039,7 +2059,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Then, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
-            if isinstance(pathway[c], (Mechanism, Composition, tuple)):
+            if is_spec(pathway[c], NODE):
                 self.add_nodes([pathway[c]])
                 nodes.append(pathway[c])
 
@@ -2055,7 +2075,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     or (isinstance(item, ObjectiveMechanism) and item._role == CONTROL)):
                 items_to_delete.append(item)
                 # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
-                if i>0 and isinstance(pathway[i-1], (Projection, np.ndarray, np.matrix, str, list)):
+                if i>0 and is_spec(pathway[i-1],PROJECTION):
                     items_to_delete.append(pathway[i-1])
         for item in items_to_delete:
             if isinstance(item, ControlMechanism):
@@ -2069,37 +2089,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             del pathway[pathway.index(item)]
         # MODIFIED 8/12/19 END
 
-
         # Then, loop through pathway and validate that the Mechanism-Projection relationships make sense
         # and add MappingProjection(s) where needed
         projections = []
         for c in range(1, len(pathway)):
 
             # if the current item is a Node
-            if isinstance(pathway[c], (Mechanism, Composition, tuple)):
-                if isinstance(pathway[c - 1], (Mechanism, Composition, tuple)):
-                    # if the previous item was also a Composition Node, add a mapping projection between them
+            if is_spec(pathway[c], NODE):
+                if is_spec(pathway[c-1], NODE):
+                    # if the previous item was also a node, add a MappingProjection between them
                     proj = self.add_projection(sender=pathway[c - 1],
-                                               receiver=pathway[c],
-                                               feedback=feedback)
+                                               receiver=pathway[c])
                     if proj:
                         projections.append(proj)
 
             # if the current item is a Projection specification
-            elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
+            elif is_spec(pathway[c], PROJECTION):
                 if c == len(pathway) - 1:
                     raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
                                            " a linear processing pathway.".format(pathway[c]))
                 # confirm that it is between two nodes, then add the projection
-                proj = pathway[c]
-                sender = pathway[c - 1]
-                receiver = pathway[c + 1]
+                if isinstance(pathway[c], tuple):
+                    proj = pathway[c][0]
+                    feedback = pathway[c][1]
+                else:
+                    proj = pathway[c]
+                    feedback = False
+                sender = pathway[c-1]
+                receiver = pathway[c+1]
                 if isinstance(sender, (Mechanism, Composition)) \
                         and isinstance(receiver, (Mechanism, Composition)):
                     try:
-                        if isinstance(pathway[c], (np.ndarray, np.matrix, list)):
+                        if isinstance(proj, (np.ndarray, np.matrix, list)):
                             proj = MappingProjection(sender=sender,
-                                                     matrix=pathway[c],
+                                                     matrix=proj,
                                                      receiver=receiver)
                     except DuplicateProjectionError:
                         # FIX: 7/22/19 ADD WARNING HERE??
