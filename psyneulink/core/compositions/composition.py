@@ -757,7 +757,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, CONDITIONS, CONTROL, \
     FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MECHANISM, MECHANISMS, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
+    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISMS, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
     ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
@@ -1459,7 +1459,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projections.append((component, False))
                 elif isinstance(component, tuple):
                     if isinstance(component[0], Projection):
-                        if isinstance(component[1], bool):
+                        if isinstance(component[1], bool) or component[1]==MAYBE:
                             projections.append(component)
                         else:
                             raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a "
@@ -3217,11 +3217,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             scheduler = self.scheduler_processing
 
         for vertex in [v for v in self.graph.vertices
-                       # FIX: CONSTRAIN TO ControlProjections FOR NOW,
+                       # FIX: MODIFIED FEEDBACK
+                       #   CONSTRAIN TO ControlProjections FOR NOW,
                        #  AS OVERIDES OTHER CASES THAT ARE GENERATED ON COMMAND LINE.
                        #  SHOULD IMPLEMENT TEST FOR WHETHER feedback WAS SPECIFIED ON COMMAND LINE
                        #  OR ALLOW "MAYBE" SPEC (e.g., 2=ENFORCE, 1=OPTIONAL, 0=FALSE
-                       if isinstance(v.component, ControlProjection) and v.feedback==True]:
+                       # if isinstance(v.component, ControlProjection) and v.feedback==True]:
+                       if v.feedback==MAYBE]:
             projection = vertex.component
             # assert isinstance(projection, Projection), \
             #     f'PROGRAM ERROR: vertex identified with feedback=True that is not a Projection'
