@@ -442,10 +442,6 @@ class AutodiffComposition(Composition):
                  force_no_retain_graph=False,
                  name="autodiff_composition"):
 
-        # DCW 8/17/19: this is a hack, please remove this when the Parameter stuff is appropriately fixed!
-        if learning_rate is None:
-            learning_rate = 0.001
-
         if not torch_available:
             raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
                                            '`pip install torch` or `pip3 install torch`')
