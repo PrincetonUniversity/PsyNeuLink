@@ -97,9 +97,9 @@ In the following script comp_0, comp_1 and comp_2 are identical, but constructed
 *Nested Compositions*
 =====================
 
-A Composition can be used as a node of another Composition. To do this, simply call `add_node <Composition.add_node>`
-from the parent composition using the child Composition as an argument. You can then project to and from the nested
-composition just as you would any other node.
+To use a Composition as a node of another Composition, simply call `add_node <Composition.add_node>` from the parent
+composition, using the child Composition as the 'node' argument. This allows you to create projections to and from
+the nested composition just as you would another Mechanism.
 
     *Create outer Composition:*
 
@@ -115,7 +115,7 @@ composition just as you would any other node.
     >>> inner_comp = pnl.Composition(name='inner_comp')
     >>> inner_comp.add_linear_processing_pathway([inner_A, inner_B])
 
-    *Nest inner Composition within outer Composition using `add_node <Composition.add_node>`:*
+    *Nest inner Composition within outer Composition using the add_node method:*
 
     >>> outer_comp.add_node(inner_comp)
 
@@ -129,7 +129,8 @@ composition just as you would any other node.
 
     >>> outer_comp.run(inputs=input_dict)
 
-    *Using `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` with nested compositions for brevity:*
+    *A less verbose implementation of the above Composition that uses the add_linear_processing_pathway method in lieu
+    of add_node and add_projection:*
 
     >>> outer_A = pnl.ProcessingMechanism(name='outer_A')
     >>> outer_B = pnl.ProcessingMechanism(name='outer_B')
@@ -499,9 +500,9 @@ Controller
 ----------
 
 A Composition can be assigned a `controller <Composition.controller>`.  This is a `ModulatoryMechanism`, or a subclass
-of one, that modulates the parameters of Components within the Composition.  It typically does this based on the output
-of an `ObjectiveMechanism` that evaluates the value of other Mechanisms in the Composition, and provides the result to
-the `controller <Composition.controller>`.
+of one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
+It typically does this based on the output of an `ObjectiveMechanism` that evaluates the value of other Mechanisms in
+the Composition, and provides the result to the `controller <Composition.controller>`.
 
 .. _Composition_Controller_Assignment:
 
@@ -1317,13 +1318,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.feedback_senders = set()
         self.feedback_receivers = set()
 
-        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
-        self.defaults = Defaults(
-            owner=self,
-            retain_old_simulation_data=retain_old_simulation_data,
-            **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)}
-        )
-        self._initialize_parameters()
+        self._initialize_parameters(**param_defaults, retain_old_simulation_data=retain_old_simulation_data)
 
         # Compiled resources
         self.__generated_node_wrappers = {}
