@@ -6143,7 +6143,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If a scheduler was passed in, first call _analyze_graph with default scheduler
         if scheduler_processing is not self.scheduler_processing:
             self._analyze_graph()
-
+        # Then call _analyze graph with scheduler actually being used (passed in or default)
         try:
             if self.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
                 self._analyze_graph(scheduler_processing)
