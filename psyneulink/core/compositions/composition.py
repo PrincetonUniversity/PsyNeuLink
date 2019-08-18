@@ -1307,13 +1307,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.feedback_senders = set()
         self.feedback_receivers = set()
 
-        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
-        self.defaults = Defaults(
-            owner=self,
-            retain_old_simulation_data=retain_old_simulation_data,
-            **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)}
-        )
-        self._initialize_parameters()
+        self._initialize_parameters(**param_defaults, retain_old_simulation_data=retain_old_simulation_data)
 
         # Compiled resources
         self.__generated_node_wrappers = {}
