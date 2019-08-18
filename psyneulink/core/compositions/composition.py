@@ -3210,19 +3210,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         - scheduler.dependency_dict is used as indication of execution dependencies
         '''
 
-        # If an external scheduler is provided, update it with current processing graph
+        # MODIFIED 8/18/19 OLD:
         if scheduler:
-            scheduler._init_consideration_queue_from_graph(self.graph_processing)
+            # If an external scheduler is provided, update it with current processing graph
+            try:
+                scheduler._init_consideration_queue_from_graph(self.graph_processing)
+            # Ignore any cycles at this point
+            except ValueError:
+                pass
         else:
             scheduler = self.scheduler_processing
+        # MODIFIED 8/18/19 NEW: [JDC]
+        # scheduler = scheduler or self.scheduler_processing
+        # # FIX: IS THIS SAFE?  IT WILL CRASH IF THERE IS A CYCLE
+        # scheduler._init_consideration_queue_from_graph(self.graph_processing)
+        # MODIFIED 8/18/19 END
 
         for vertex in [v for v in self.graph.vertices
                        # FIX: MODIFIED FEEDBACK
                        #   CONSTRAIN TO ControlProjections FOR NOW,
                        #  AS OVERIDES OTHER CASES THAT ARE GENERATED ON COMMAND LINE.
-                       #  SHOULD IMPLEMENT TEST FOR WHETHER feedback WAS SPECIFIED ON COMMAND LINE
-                       #  OR ALLOW "MAYBE" SPEC (e.g., 2=ENFORCE, 1=OPTIONAL, 0=FALSE
                        # if isinstance(v.component, ControlProjection) and v.feedback==True]:
+                       #  ALTERNATIVE: TRUE=ENFORCE FEEDBACK, MAYBE=REMOVE IF NO EFFECT,FALSE=NO FEEDBACK
                        if v.feedback==MAYBE]:
             projection = vertex.component
             # assert isinstance(projection, Projection), \
@@ -3377,6 +3386,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <NodeRole.INPUT>` by default. If the required_roles argument of `add_node <Composition.add_node>` is used
         to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
         nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
+
+        scheduler arg is needed for _check_feedback() to update consideration_queue of that scheduler
+            in accord any modifications made to graph_processing (structural graph) based on changes to feedback
 
         :param graph:
         :param context:
@@ -6126,12 +6138,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in reinitialize_values:
             node.reinitialize(*reinitialize_values[node], execution_context=execution_id)
 
+        # FIX: MODIFIED FEEDBACK -
+        #      THIS IS NEEDED HERE (AND NO LATER) TO WORK WITH test_3_mechanisms_2_origins_1_additive_control_1_terminal
+        # If a scheduler was passed in, first call _analyze_graph with default scheduler
+        if scheduler_processing is not self.scheduler_processing:
+            self._analyze_graph()
+
         try:
             if self.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
                 self._analyze_graph(scheduler_processing)
         except AttributeError:
-            # if context is None, it has not been created for this execution_id yet, so it is not
-            # in a simulation
+            # if context is None, it has not been created for this execution_id yet,
+            # so it is not in a simulation
             self._analyze_graph(scheduler_processing)
 
         # set auto logging if it's not already set, and if log argument is True
@@ -6194,15 +6212,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
         execution_context = self.parameters.context._get(execution_id)
-
         # KDM 3/29/19: run the following not only during LLVM Run compilation, due to bug where TimeScale.RUN
         # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
         # called repeatedly (this init is repeated in Composition.execute)
         # initialize from base context but don't overwrite any values already set for this execution_id
-        if (
-            not skip_initialization
-            and (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION)
-        ):
+        if (not skip_initialization
+                and (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION)):
             self._initialize_from_context(execution_id, base_execution_id, override=False)
             self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
 

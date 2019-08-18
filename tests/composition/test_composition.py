@@ -1131,7 +1131,6 @@ class TestExecutionOrder:
 
         inputs_dict = {B: [4.0]}
         sched = Scheduler(composition=comp)
-        # comp.show_graph()
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, 650.83865743)
         benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
@@ -4581,7 +4580,6 @@ class TestAuxComponents:
 
         comp = Composition(name='composition')
         comp.add_node(A)
-        # comp.show_graph()
 
         comp.run(inputs={A: [[1.0]],
                          B: [[2.0]]})
@@ -4750,7 +4748,6 @@ class TestShadowInputs:
         assert B.value == [[1.0]]
         assert C.value == [[1.0]]
 
-        # comp.show_graph()
         input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert A in input_nodes
