@@ -1130,15 +1130,11 @@ class TestExecutionOrder:
         comp.add_node(LC)
 
         inputs_dict = {B: [4.0]}
-        # sched = Scheduler(composition=comp)
-        comp.show_graph()
-        output = comp.run(inputs=inputs_dict,
-                          # scheduler_processing=sched,
-                          bin_execute=mode)
+        sched = Scheduler(composition=comp)
+        # comp.show_graph()
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, 650.83865743)
-        benchmark(comp.run, inputs=inputs_dict,
-                  # scheduler_processing=sched,
-                  bin_execute=mode)
+        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1558,11 +1554,7 @@ class TestRun:
         comp.add_projection(P, A, B)
         inputs_dict = {A: [5, 4]}
         sched = Scheduler(composition=comp)
-        output = comp.run(
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
-        )
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, [[225, 225, 225]])
 
     @pytest.mark.projection
@@ -1584,10 +1576,7 @@ class TestRun:
         comp.add_projection(P, A, B)
         inputs_dict = {A: [5, 4, 3]}
         sched = Scheduler(composition=comp)
-        output = comp.run(
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode
         )
         assert np.allclose(output, [[300, 300]])
 
@@ -1836,11 +1825,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: 3}
         sched = Scheduler(composition=comp)
-        output = comp.execute(
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
-        )
+        output = comp.execute(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose([75], output)
 
     @pytest.mark.composition
@@ -1864,11 +1849,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
-        output = benchmark(comp.execute,
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
-        )
+        output = benchmark(comp.execute, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(89., output)
 
     @pytest.mark.composition
@@ -1892,11 +1873,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
-        output = comp.execute(
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
-        )
+        output = comp.execute(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(32., output)
 
     def test_LPP_end_with_projection(self):
@@ -4604,7 +4581,7 @@ class TestAuxComponents:
 
         comp = Composition(name='composition')
         comp.add_node(A)
-        comp.show_graph()
+        # comp.show_graph()
 
         comp.run(inputs={A: [[1.0]],
                          B: [[2.0]]})

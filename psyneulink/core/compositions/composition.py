@@ -741,9 +741,10 @@ from psyneulink.core.components.mechanisms.processing.compositioninterfacemechan
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
-from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
-from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.inputstate import InputState
@@ -3202,17 +3203,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return nested_compositions
 
     # MODIFIED 8/16/19 NEW: [JDC] - MODIFIED FEEDBACK
-    def _check_feedback(self):
+    def _check_feedback(self, scheduler):
         '''Check that feedback specification is required for projections to which it has been assigned
         Note:
         - graph_processing and graph_processing.dependency_dict are used as indications of structural dependencies
         - scheduler.dependency_dict is used as indication of execution dependencies
         '''
-        # FIX: 8/16/19 - MODIFIED FEEDBACK -
-        #  ADD ARG FOR SCHEDULER, AND USE THAT (TO PROPERLY MODIFY ANY SCHEDULERS ASSIGNED AT RUNTIME)
-        #  ONCE DONE, RESTORE TESTS THAT DO SO IN TestExecutionOrder
-        from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-        scheduler = self.scheduler_processing
+
+        # If an external scheduler is provided, update it with current processing graph
+        if scheduler:
+            scheduler._init_consideration_queue_from_graph(self.graph_processing)
+        else:
+            scheduler = self.scheduler_processing
+
         for vertex in [v for v in self.graph.vertices
                        # FIX: CONSTRAIN TO ControlProjections FOR NOW,
                        #  AS OVERIDES OTHER CASES THAT ARE GENERATED ON COMMAND LINE.
@@ -3359,7 +3362,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._add_node_role(node, NodeRole.TERMINAL)
             # MODIFIED 8/16/19 END
 
-    def _analyze_graph(self):
+    def _analyze_graph(self, scheduler=None):
         """
         Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
 
@@ -3378,7 +3381,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         :return:
         """
         # MODIFIED 8/16/19 NEW: [JDC] - MODIFIED FEEDBACK
-        self._check_feedback()
+        self._check_feedback(scheduler)
         # MODIFIED 8/16/19 END
         self._determine_node_roles()
         self._create_CIM_states()
@@ -4262,7 +4265,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            input_and_output_color='brown',    \
            controller_color='blue',           \
            composition_color='pink',          \
-           feedback_shape = 'doubleoctagon',  \
+           feedback_shape = 'septagon',       \
            cim_shape='square',                \
            output_fmt='pdf',                  \
            execution_id=None)
@@ -4390,7 +4393,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         composition_color : keyword : default 'brown'
             specifies the display color of nodes that represent nested Compositions.
 
-        feedback_shape : keyword : default 'doubleoctagor'
+        feedback_shape : keyword : default 'septagon'
             specifies the display shape of nodes that are assigned the `NodeRole` `FEEDBACK_SENDER`.
 
         cim_shape : default 'square'
@@ -6123,11 +6126,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         try:
             if self.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
-                self._analyze_graph()
+                self._analyze_graph(scheduler_processing)
         except AttributeError:
             # if context is None, it has not been created for this execution_id yet, so it is not
             # in a simulation
-            self._analyze_graph()
+            self._analyze_graph(scheduler_processing)
 
         # set auto logging if it's not already set, and if log argument is True
         if log:
