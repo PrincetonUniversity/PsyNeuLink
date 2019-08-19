@@ -268,7 +268,7 @@ class PytorchModelCreator(torch.nn.Module):
         # create output vec
         if output_vec is None:
             output_vec = builder.alloca(
-                ir.types.ArrayType(ir.types.DoubleType(), y))
+                ir.types.ArrayType(ctx.float_ty, y))
         builtin = ctx.get_llvm_function("__pnl_builtin_vxm_transposed")
         builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()), builder.bitcast(m2, ctx.float_ty.as_pointer(
         )), ctx.int32_ty(y), ctx.int32_ty(z), builder.bitcast(output_vec, ctx.float_ty.as_pointer())])
@@ -369,12 +369,326 @@ class PytorchModelCreator(torch.nn.Module):
                     # TODO: Add bias to value
                     # if biases is not None:
                     #   value = value + biases
+                ctx.inject_printf_float_array(builder,value,dim_y,prefix="FORWARD NODE "+str(component_id)+" :\t")
         if store_z_values is True:
             return z_values
 
+    # generates a function responsible for a single epoch of the training
+    def _gen_llvm_training_epoch_function(self, composition, extra_args=[], name="autodiff_training_epoch"):
+        learning_targets = pnlvm.ir.LiteralStructType([
+            pnlvm.ir.IntType(32),  # idx of the node
+            pnlvm.ir.IntType(32),  # idx of the node
+            pnlvm.ir.IntType(64)
+        ])
+        llvm_func = None
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            args = [ctx.get_context_struct_type(self).as_pointer(),
+                    ctx.get_param_struct_type(self).as_pointer(),
+                    ctx.get_input_struct_type(self).as_pointer(),
+                    ctx.get_data_struct_type(self).as_pointer(),
+                    learning_targets.as_pointer(),  # inputs
+                    learning_targets.as_pointer(),  # targets
+                    ctx.int32_ty.as_pointer()  # num_inputs
+                    ]
+            builder = ctx.create_llvm_function(args+extra_args, self, name)
+            llvm_func = builder.function
+            for a in llvm_func.args:
+                a.attributes.add('noalias')
+        
+            model_context, model_params, model_input, model_output,input_struct_ptr,target_struct_ptr,num_inputs = llvm_func.args[:len(
+                args)]
+            num_inputs = builder.load(num_inputs)
+            # setup builtins
+            vec_sub = ctx.get_llvm_function(
+                "__pnl_builtin_vec_sub")
+            vec_hadamard = ctx.get_llvm_function(
+                "__pnl_builtin_vec_hadamard")
+            vxm_transposed = ctx.get_llvm_function(
+                "__pnl_builtin_vxm_transposed")
+
+            # setup useful mappings
+            input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
+            output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
+
+            node_value_ir_types = dict([(node, pnlvm.ir.ArrayType(
+                pnlvm.ir.ArrayType(
+                    ctx.float_ty,
+                    len(node.value[0])
+                ),
+                1
+            )) for node in composition.nodes])
+
+            def _get_node_array_ptr(node, struct_ptr):
+                node_idx = composition._get_node_index(node)
+                array_ptr = builder.gep(
+                    struct_ptr, [ctx.int32_ty(node_idx), ctx.int32_ty(2)])
+                array_ptr = builder.load(array_ptr)
+                return builder.inttoptr(
+                    array_ptr, node_value_ir_types[node].as_pointer())
+
+            node_input_arrays = dict([
+                (node, _get_node_array_ptr(node, input_struct_ptr))
+                for node in input_nodes
+            ])
+
+            node_target_arrays = dict([
+                (node, _get_node_array_ptr(node, target_struct_ptr))
+                for node in output_nodes
+            ])
+
+            delta_w = {}
+            for node in composition.nodes:
+                delta_w[node] = {}
+                _, dim_x = node.defaults.variable.shape
+                afferent_nodes = [
+                    proj.sender._owner for proj in node.afferents]
+                for afferent_node in afferent_nodes:
+                    if afferent_node is composition.input_CIM:
+                        continue
+                    _, dim_y = afferent_node.defaults.value.shape
+                    delta_w[afferent_node][node] = builder.alloca(pnlvm.ir.ArrayType(
+                        pnlvm.ir.ArrayType(
+                            ctx.float_ty,
+                            dim_y
+                        ),
+                        dim_x
+                    ))
+                    # zero weight array
+                    weight_row = None
+                    with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim_x), "weight_zero_loop_outer") as (builder, weight_row):
+                        weight_column = None
+                        with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim_y), "weight_zero_loop_inner") as (builder, weight_column):
+                            builder.store(ctx.float_ty(0), builder.gep(delta_w[afferent_node][node], [
+                                          ctx.int32_ty(0), weight_row, weight_column]))
+
+            input_idx = None
+            with pnlvm.helpers.for_loop_zero_inc(builder, num_inputs, "input_loop") as (builder, input_idx):
+                ctx.inject_printf(builder, "INPUT %d\n", input_idx)
+                # first we copy input values to data struct of input_CIM
+                for node in input_nodes:
+                    node_idx = composition._get_node_index(node)
+                    _, node_dim = node.defaults.variable.shape
+                    node_dim_ir = ctx.int32_ty(node_dim)
+                    node_input_array_ptr = builder.gep(node_input_arrays[node], [
+                                                       input_idx, ctx.int32_ty(0)])
+                    loop_iterator = None
+                    with pnlvm.helpers.for_loop_zero_inc(builder, node_dim_ir, "copy_loop") as (builder, loop_iterator):
+                        copy_from = builder.gep(
+                            node_input_array_ptr, [ctx.int32_ty(0), loop_iterator])
+                        copy_to = builder.gep(
+                            model_input, [ctx.int32_ty(0), ctx.int32_ty(node_idx),loop_iterator])
+                        builder.store(builder.load(copy_from), copy_to)
+                    ctx.inject_printf_float_array(builder,node_input_array_ptr,node_dim,prefix="NODE INPUT:")
+
+                # 2) call forward computation
+                ctx.inject_printf(builder, "\tCALL FORWARD %d\n", input_idx)
+                z_values = self._gen_llvm_forward_function_body(
+                    ctx, builder, model_context, model_params, model_input, model_output, store_z_values=True)
+                # 3) compute errors
+
+                ctx.inject_printf(builder, "\tCOMPUTE ERR %d\n", input_idx)
+
+                def compute_logistic_derivative(builder, node, vector, dim, output):
+                    logistic_idx = None
+                    with pnlvm.helpers.for_loop_zero_inc(builder, dim, "logistic_loop") as (builder, logistic_idx):
+                        curr_ptr = builder.gep(
+                            vector, [ctx.int32_ty(0), logistic_idx])
+                        res = self.bin_function_creator(
+                            ctx, builder, node, builder.load(curr_ptr), execution_id=None)
+                        one_minus_res = builder.fsub(ctx.float_ty(1), res)
+                        res = builder.fmul(res, one_minus_res)
+                        builder.store(res, builder.gep(
+                            output, [ctx.int32_ty(0), logistic_idx]))
+                    return output
+
+                error_dict = {}
+                backprop_queue = deque()
+                for node in output_nodes:
+                    backprop_queue.append(node)
+
+                while(len(backprop_queue) > 0):
+                    node = backprop_queue.pop()
+                    if node in error_dict or not hasattr(node, "afferents") or node == composition.input_CIM:
+                        continue
+                    afferents = [
+                        proj.sender._owner for proj in node.afferents if proj.sender._owner not in error_dict]
+                    for afferent_node in afferents:
+                        backprop_queue.append(afferent_node)
+
+                    node_idx = composition._get_node_index(node)
+                    _, node_dim = node.defaults.value.shape
+                    node_dim_ir = ctx.int32_ty(node_dim)
+
+                    # compute da/dz = dσ/dz = σ(z)(1-σ(z))    -- for logistic
+                    activation_func_derivative = builder.alloca(
+                        pnlvm.ir.ArrayType(ctx.float_ty, node_dim))
+                    compute_logistic_derivative(
+                        builder, node, z_values[node], node_dim_ir, activation_func_derivative)
+
+                    if node in output_nodes:
+                        # We handle output layer here
+                        # compute  dC/da = a_l - y(x)
+
+                        node_target = builder.gep(node_target_arrays[node], [
+                                                  input_idx, ctx.int32_ty(0)])
+                        node_output = builder.gep(model_output, [ctx.int32_ty(
+                            0), ctx.int32_ty(0), ctx.int32_ty(node_idx)])
+                        node_output_target_diff = builder.alloca(
+                            pnlvm.ir.ArrayType(ctx.float_ty, node_dim))
+
+                        node_output_ptr = builder.bitcast(
+                            node_output, ctx.float_ty.as_pointer())
+                        node_target_ptr = builder.bitcast(
+                            node_target, ctx.float_ty.as_pointer())
+                        node_output_target_diff_ptr = builder.bitcast(
+                            node_output_target_diff, ctx.float_ty.as_pointer())
+
+                        builder.call(
+                            vec_sub, [node_output_ptr, node_target_ptr, node_dim_ir, node_output_target_diff_ptr])
+
+                        # compute δ_l = (a_l - y(x)) ⊙ (σ(z)(1-σ(z)))
+                        ctx.inject_printf(builder, "\t\td_l %d\n", input_idx)
+                        activation_func_derivative_ptr = builder.bitcast(
+                            activation_func_derivative, ctx.float_ty.as_pointer())
+                        error_val = builder.alloca(
+                            pnlvm.ir.ArrayType(ctx.float_ty, node_dim))
+                        error_val_ptr = builder.bitcast(
+                            error_val, ctx.float_ty.as_pointer())
+
+                        builder.call(vec_hadamard, [
+                                     activation_func_derivative_ptr, node_output_target_diff_ptr, node_dim_ir, error_val_ptr])
+
+                        error_dict[node] = error_val
+                    else:
+                        ctx.inject_printf(
+                            builder, "\t\tALLOC ERR %d\n", input_idx)
+
+                        error_val = builder.alloca(
+                            pnlvm.ir.ArrayType(ctx.float_ty, node_dim))
+                        is_set = False
+                        # We propagate error backwards from next layer
+                        i = 0
+                        for j in range(0, len(self.execution_sets)):
+                            if node in self.execution_sets[j]:
+                                i = j
+                                break
+                        efferents = [
+                            proj.receiver._owner for proj in node.efferents]
+                        for efferent_node in efferents:
+                            efferent_node_error = error_dict[efferent_node]
+                            _, efferent_node_dim = efferent_node.defaults.variable.shape
+                            efferent_node_dim_ir = ctx.int32_ty(
+                                efferent_node_dim)
+
+                            afferent_node_id = self._afferent_id_map[efferent_node][node]
+                            weights_llvmlite = builder.gep(model_params, [ctx.int32_ty(0), ctx.int32_ty(
+                                i), ctx.int32_ty(afferent_node_id), ctx.int32_ty(self._id_map[i][node])])
+
+                            if "ref_pass" in debug_env:
+                                mem_addr = builder.load(weights_llvmlite)
+                                weights_llvmlite = builder.inttoptr(mem_addr, ir.types.ArrayType(
+                                    ir.types.ArrayType(ir.types.DoubleType(), efferent_node_dim), node_dim).as_pointer())
+
+                            if is_set is False:
+                                self._gen_inject_vxm_transposed(
+                                    ctx, builder, efferent_node_error, weights_llvmlite, node_dim, efferent_node_dim, error_val)
+                                is_set = True
+                            else:
+                                new_val = self._gen_inject_vxm_transposed(
+                                    ctx, builder, efferent_node_error, weights_llvmlite, node_dim, efferent_node_dim)
+
+                                for j in range(0, node_dim):
+                                    to_add = builder.gep(
+                                        new_val, [ctx.int32_ty(0), ctx.int32_ty(j)])
+                                    to_add = builder.load(to_add)
+                                    old_val = builder.gep(
+                                        error_val, [ctx.int32_ty(0), ctx.int32_ty(j)])
+                                    builder.store(builder.fadd(
+                                        to_add, builder.load(old_val)), old_val)
+
+                        activation_func_derivative_ptr = builder.bitcast(
+                            activation_func_derivative, ctx.float_ty.as_pointer())
+                        error_val_ptr = builder.bitcast(
+                            error_val, ctx.float_ty.as_pointer())
+
+                        builder.call(vec_hadamard, [
+                                     activation_func_derivative_ptr, error_val_ptr, node_dim_ir, error_val_ptr])
+                        error_dict[node] = error_val
+                    ctx.inject_printf_float_array(builder,error_val,node_dim,"ERROR VAL "+str(node)+" : ")
+                # 4) compute weight errors
+                ctx.inject_printf(builder, "\tCOMPUTE WEIGHT %d\n", input_idx)
+
+                for (node, err_val) in error_dict.items():
+                    if node in input_nodes:
+                        # we don't care about errors of input (TODO: get rid of them)
+                        continue
+                    _, node_dim = node.defaults.value.shape
+
+                    afferent_nodes = [
+                        proj.sender._owner for proj in node.afferents]
+                    for afferent_node in afferent_nodes:
+                        _, afferent_node_dim = afferent_node.defaults.variable.shape
+                        # get a_(l-1)
+                        afferent_node_idx = composition._get_node_index(
+                            afferent_node)
+                        afferent_node_activation = builder.gep(model_output, [ctx.int32_ty(
+                            0), ctx.int32_ty(0), ctx.int32_ty(afferent_node_idx)])
+
+                        # update delta_W
+                        weight_row = None
+                        with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(node_dim), "weight_update_loop_outer") as (builder, weight_row):
+                            weight_column = None
+                            with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(afferent_node_dim), "weight_update_loop_inner") as (builder, weight_column):
+                                a_val = builder.load(builder.gep(afferent_node_activation, [
+                                                     ctx.int32_ty(0), ctx.int32_ty(0), weight_column]))
+                                d_val = builder.load(builder.gep(
+                                    err_val, [ctx.int32_ty(0), weight_row]))
+                                old_val = builder.load(builder.gep(delta_w[afferent_node][node], [
+                                                       ctx.int32_ty(0), weight_row, weight_column]))
+                                new_val = builder.fadd(
+                                    old_val, builder.fmul(a_val, d_val))
+                                builder.store(new_val, builder.gep(delta_w[afferent_node][node], [
+                                              ctx.int32_ty(0), weight_row, weight_column]))
+            # now we update the weights
+
+            for node in delta_w:
+                _, node_dim = node.defaults.value.shape
+                i = 0
+                for j in range(0, len(self.execution_sets)):
+                    if node in self.execution_sets[j]:
+                        i = j
+                        break
+                for (efferent_node, weight_matrix) in delta_w[node].items():
+                    _, efferent_dim = efferent_node.defaults.variable.shape
+                    efferent_node_id = self._afferent_id_map[efferent_node][node]
+                    weights_llvmlite = builder.gep(model_params, [ctx.int32_ty(0), ctx.int32_ty(
+                        i), ctx.int32_ty(efferent_node_id), ctx.int32_ty(self._id_map[i][node])])
+                    if "ref_pass" in debug_env:
+                        mem_addr = builder.load(weights_llvmlite)
+                        weights_llvmlite = builder.inttoptr(mem_addr, ir.types.ArrayType(
+                            ir.types.ArrayType(ir.types.DoubleType(), node_dim), efferent_dim).as_pointer())
+
+                    weight_row = None
+                    with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(efferent_dim), "delta_w_loop_outer") as (builder, weight_row):
+                        weight_column = None
+                        with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(node_dim), "delta_w_loop_inner") as (builder, weight_column):
+                            old_val = builder.load(builder.gep(
+                                weights_llvmlite, [ctx.int32_ty(0), weight_row, weight_column]))
+                            new_val = builder.load(builder.gep(
+                                weight_matrix, [ctx.int32_ty(0), weight_row, weight_column]))
+                            # HACK: temporarily hardcoded learning rate
+                            new_val = builder.fmul(ctx.float_ty(10), new_val)
+                            new_val = builder.fsub(old_val, new_val)
+                            builder.store(new_val, builder.gep(weights_llvmlite, [
+                                          ctx.int32_ty(0), weight_row, weight_column]))
+            builder.ret_void()
+            llvm_func = builder.function
+        return llvm_func
+
     def _gen_llvm_training_function_body(self, ctx, composition, builder, context, params, comp_in, data_arg, cond):
         # 1) Setup autodiff learning stuff
-
+        #if "ref_pass" not in debug_env:
+        #    raise Exception("ref_pass must be enabled in debug!")
         # gets a reference to the autodiff_stimuli_struct from params
         autodiff_stimuli_struct = builder.gep(
             params, [ctx.int32_ty(0), ctx.int32_ty(3)])
@@ -395,8 +709,8 @@ class PytorchModelCreator(torch.nn.Module):
 
         epochs = builder.load(builder.gep(autodiff_stimuli_struct, [
                               ctx.int32_ty(0), ctx.int32_ty(0)]))
-        num_inputs = builder.load(builder.gep(autodiff_stimuli_struct, [
-                                  ctx.int32_ty(0), ctx.int32_ty(1)]))
+        num_inputs = builder.gep(autodiff_stimuli_struct, [
+                                  ctx.int32_ty(0), ctx.int32_ty(1)])
 
         num_target_structs = builder.load(builder.gep(
             autodiff_stimuli_struct, [ctx.int32_ty(0), ctx.int32_ty(2)]))
@@ -438,324 +752,14 @@ class PytorchModelCreator(torch.nn.Module):
                                           ])
         epoch_idx = None
 
-        node_value_ir_types = {}
-        for node in composition.nodes:
-            node_value_ir_types[node] = pnlvm.ir.ArrayType(
-                pnlvm.ir.ArrayType(
-                    pnlvm.ir.DoubleType(),
-                    len(node.value[0])
-                ),
-                1
-            )
-
-        def _get_node_target(builder, node, input_idx):
-            node_idx = composition._get_node_index(node)
-            node_target_struct = builder.gep(
-                target_struct_ptr, [ctx.int32_ty(node_idx)])
-            target_dim = builder.load(builder.gep(
-                node_target_struct, [ctx.int32_ty(0), ctx.int32_ty(1)]))
-            target_array_ptr = builder.load(builder.gep(
-                node_target_struct, [ctx.int32_ty(0), ctx.int32_ty(2)]))
-            target_array_ptr = builder.inttoptr(
-                target_array_ptr, node_value_ir_types[node].as_pointer())
-            target_array_ptr = builder.gep(
-                target_array_ptr, [input_idx, ctx.int32_ty(0)])
-            return target_array_ptr
-        delta_w = {}
-        for node in composition.nodes:
-            delta_w[node] = {}
-            _,node_dim = node.defaults.variable.shape
-            afferent_nodes = [proj.sender._owner for proj in node.afferents]
-            for afferent_node in afferent_nodes:
-                if afferent_node is composition.input_CIM:
-                    continue
-                _,afferent_node_dim = afferent_node.defaults.value.shape
-                delta_w[afferent_node][node] = builder.alloca(pnlvm.ir.ArrayType(
-                    pnlvm.ir.ArrayType(
-                        ctx.float_ty,
-                        afferent_node_dim
-                    ),
-                    node_dim
-                ))
-                # zero weight array
-                weight_row = None
-                with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(node_dim), "weight_zero_loop_outer") as (builder, weight_row):
-                    weight_column = None
-                    with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(afferent_node_dim), "weight_zero_loop_inner") as (builder, weight_column):
-                        builder.store(ctx.float_ty(0),builder.gep(delta_w[afferent_node][node],[ctx.int32_ty(0),weight_row,weight_column]))
+        epoch_func = self._gen_llvm_training_epoch_function(composition)
+        epoch_func = ctx.get_llvm_function(epoch_func.name)
         with pnlvm.helpers.for_loop_zero_inc(builder, epochs, "epoch_loop") as (builder, epoch_idx):
-            ctx.inject_printf(builder,"EPOCH %d\n",epoch_idx)
-            for node in composition.nodes:
-                _,node_dim = node.defaults.variable.shape
-                afferent_nodes = [proj.sender._owner for proj in node.afferents]
-                for afferent_node in afferent_nodes:
-                    if afferent_node is composition.input_CIM:
-                        continue
-                    _,afferent_node_dim = afferent_node.defaults.value.shape
-
-                    # zero weight array
-                    weight_row = None
-                    with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(node_dim), "weight_zero_loop_outer") as (builder, weight_row):
-                        weight_column = None
-                        with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(afferent_node_dim), "weight_zero_loop_inner") as (builder, weight_column):
-                            builder.store(ctx.float_ty(0),builder.gep(delta_w[afferent_node][node],[ctx.int32_ty(0),weight_row,weight_column]))
+            ctx.inject_printf(builder, "EPOCH %d\n", epoch_idx)
+            builder.call(epoch_func, [model_context, model_params, model_input,
+                                      model_output,input_struct_ptr,target_struct_ptr,num_inputs])
             # iterate over each set of targets/inputs
-            input_idx = None
-            with pnlvm.helpers.for_loop_zero_inc(builder, num_inputs, "input_loop") as (builder, input_idx):
-                ctx.inject_printf(builder,"INPUT %d\n",input_idx)
-                input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
-                output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
-                # first we copy input values to data struct of input_CIM
-                for node in input_nodes:
-                    node_idx = composition._get_node_index(node)
-                    input_cim_ptr = builder.gep(
-                        model_input, [ctx.int32_ty(0), ctx.int32_ty(node_idx)])
-                    node_input_struct = builder.gep(
-                        input_struct_ptr, [ctx.int32_ty(node_idx)])
-                    node_dim = builder.load(builder.gep(
-                        node_input_struct, [ctx.int32_ty(0), ctx.int32_ty(1)]))
 
-                    input_array_ptr = builder.load(builder.gep(
-                        node_input_struct, [ctx.int32_ty(0), ctx.int32_ty(2)]))
-                    input_array_ptr = builder.inttoptr(
-                        input_array_ptr, node_value_ir_types[node].as_pointer())
-                    input_array_ptr = builder.gep(input_array_ptr, [input_idx])
-
-                    loop_iterator = None
-                    with pnlvm.helpers.for_loop_zero_inc(builder, node_dim, "copy_loop") as (builder, loop_iterator):
-                        copy_from = builder.gep(
-                            input_array_ptr, [ctx.int32_ty(0), ctx.int32_ty(0), loop_iterator])
-                        copy_to = builder.gep(
-                            input_cim_ptr, [ctx.int32_ty(0), loop_iterator])
-                        builder.store(builder.load(copy_from), copy_to)
-
-                # 2) call forward computation
-                ctx.inject_printf(builder,"\tCALL FORWARD %d\n",input_idx)
-                z_values = self._gen_llvm_forward_function_body(
-                    ctx, builder, model_context, model_params, model_input, model_output, store_z_values=True)
-                # 3) compute errors
-
-                ctx.inject_printf(builder,"\tCOMPUTE ERR %d\n",input_idx)
-                def compute_MSE(builder, node):
-                    curr_loss = builder.alloca(pnlvm.ir.DoubleType())
-                    builder.store(pnlvm.ir.DoubleType()(0), curr_loss)
-
-                    node_idx = composition._get_node_index(node)
-                    node_output = builder.gep(model_output, [ctx.int32_ty(
-                        0), ctx.int32_ty(0), ctx.int32_ty(node_idx)])
-
-                    node_target_struct = builder.gep(
-                        target_struct_ptr, [ctx.int32_ty(node_idx)])
-                    target_dim = builder.load(builder.gep(
-                        node_target_struct, [ctx.int32_ty(0), ctx.int32_ty(1)]))
-                    target_array_ptr = builder.load(builder.gep(
-                        node_target_struct, [ctx.int32_ty(0), ctx.int32_ty(2)]))
-                    target_array_ptr = builder.inttoptr(
-                        target_array_ptr, node_value_ir_types[node].as_pointer())
-                    target_array_ptr = builder.gep(
-                        target_array_ptr, [input_idx, ctx.int32_ty(0)])
-
-                    node_output_vector = builder.bitcast(
-                        node_output, ctx.float_ty.as_pointer())
-                    target_vector = builder.bitcast(
-                        target_array_ptr, ctx.float_ty.as_pointer())
-
-                    vec_sub = ctx.get_llvm_function("__pnl_builtin_vec_sub")
-                    builder.call(
-                        vec_sub, [node_output_vector, target_vector, target_dim, node_output_vector])
-
-                    vec_sqr_mag = ctx.get_llvm_function(
-                        "__pnl_builtin_vec_sqr_mag")
-                    node_magnitude = builder.call(
-                        vec_sqr_mag, [node_output_vector, target_dim])
-                    builder.store(builder.fmul(ctx.float_ty(.5), builder.fadd(
-                        node_magnitude, builder.load(curr_loss))), curr_loss)
-                    return curr_loss
-
-                def compute_logistic_derivative(builder, node, vector, dim, output):
-                    logistic_idx = None
-                    with pnlvm.helpers.for_loop_zero_inc(builder, dim, "logistic_loop") as (builder, logistic_idx):
-                        curr_ptr = builder.gep(
-                            vector, [ctx.int32_ty(0), logistic_idx])
-                        res = self.bin_function_creator(
-                            ctx, builder, node, builder.load(curr_ptr), execution_id=None)
-                        one_minus_res = builder.fsub(ctx.float_ty(1), res)
-                        res = builder.fmul(res, one_minus_res)
-                        builder.store(res, builder.gep(
-                            output, [ctx.int32_ty(0), logistic_idx]))
-                    return output
-
-                error_dict = {}
-                backprop_queue = deque()
-                for node in output_nodes:
-                    backprop_queue.append(node)
-                while(len(backprop_queue) > 0):
-                    curr_node = backprop_queue.pop()
-                    if curr_node in error_dict or not hasattr(curr_node, "afferents") or curr_node == composition.input_CIM:
-                        continue
-                    afferents = curr_node.afferents
-                    for proj in afferents:
-                        sender = proj.sender._owner
-                        if sender not in error_dict:
-                            backprop_queue.append(sender)
-                    node_idx = composition._get_node_index(curr_node)
-                    _, node_dim = curr_node.defaults.value.shape
-                    dim = ctx.int32_ty(node_dim)
-
-                    # compute da/dz = dσ/dz = σ(z)(1-σ(z))    -- for logistic
-                    activation_func_derivative = builder.alloca(
-                        pnlvm.ir.ArrayType(ctx.float_ty, node_dim))
-                    compute_logistic_derivative(
-                        builder, node, z_values[curr_node], dim, activation_func_derivative)
-
-                    if curr_node in output_nodes:
-                        # We handle output layer here
-                        # compute  dC/da = a_l - y(x)
-                        ctx.inject_printf(builder,"\t\tdcda %d\n",input_idx)
-                        node_target = _get_node_target(
-                            builder, curr_node, input_idx)
-                        node_output = builder.gep(model_output, [ctx.int32_ty(
-                            0), ctx.int32_ty(0), ctx.int32_ty(node_idx)])
-                        node_output_target_diff = builder.alloca(
-                            pnlvm.ir.ArrayType(ctx.float_ty, node_dim))
-
-                        node_output_ptr = builder.bitcast(
-                            node_output, ctx.float_ty.as_pointer())
-                        node_target_ptr = builder.bitcast(
-                            node_target, ctx.float_ty.as_pointer())
-                        node_output_target_diff_ptr = builder.bitcast(
-                            node_output_target_diff, ctx.float_ty.as_pointer())
-                        vec_sub = ctx.get_llvm_function(
-                            "__pnl_builtin_vec_sub")
-                        builder.call(
-                            vec_sub, [node_output_ptr, node_target_ptr, dim, node_output_target_diff_ptr])
-
-                        # compute δ_l = (a_l - y(x)) ⊙ (σ(z)(1-σ(z)))
-                        ctx.inject_printf(builder,"\t\td_l %d\n",input_idx)
-                        activation_func_derivative_ptr = builder.bitcast(
-                            activation_func_derivative, ctx.float_ty.as_pointer())
-                        error_val = builder.alloca(
-                            pnlvm.ir.ArrayType(ctx.float_ty, node_dim))
-                        error_val_ptr = builder.bitcast(
-                            error_val, ctx.float_ty.as_pointer())
-                        hadamard_mult = ctx.get_llvm_function(
-                            "__pnl_builtin_vec_hadamard")
-                        builder.call(hadamard_mult, [
-                                     activation_func_derivative_ptr, node_output_target_diff_ptr, dim, error_val_ptr])
-
-                        error_dict[curr_node] = error_val
-                    else:
-                        ctx.inject_printf(builder,"\t\tALLOC ERR %d\n",input_idx)
-
-                        error_val = builder.alloca(
-                            pnlvm.ir.ArrayType(ctx.float_ty, node_dim))
-                        is_set = False
-                        # We propagate error backwards from next layer
-                        i = 0
-                        for j in range(0, len(self.execution_sets)):
-                            if curr_node in self.execution_sets[j]:
-                                i = j
-                                break
-                        for proj in curr_node.efferents:
-                            receiving_node = proj.receiver._owner
-                            receiving_node_error = error_dict[receiving_node]
-                            x = node_dim
-                            _, y = receiving_node.defaults.variable.shape
-
-                            afferent_node_id = self._afferent_id_map[receiving_node][curr_node]
-                            weights_llvmlite = builder.gep(model_params, [ctx.int32_ty(0), ctx.int32_ty(
-                                i), ctx.int32_ty(afferent_node_id), ctx.int32_ty(self._id_map[i][curr_node])])
-
-                            if "ref_pass" in debug_env:
-                                mem_addr = builder.load(weights_llvmlite)
-                                weights_llvmlite = builder.inttoptr(mem_addr, ir.types.ArrayType(
-                                    ir.types.ArrayType(ir.types.DoubleType(), y), x).as_pointer())
-
-                            if is_set is False:
-                                self._gen_inject_vxm_transposed(
-                                    ctx, builder, receiving_node_error, weights_llvmlite, x, y, error_val)
-                                is_set = True
-                            else:
-                                new_val = self._gen_inject_vxm_transposed(
-                                    ctx, builder, receiving_node_error, weights_llvmlite, x, y)
-                                for j in range(0, x):
-                                    to_add = builder.gep(
-                                        new_val, [ctx.int32_ty(0), ctx.int32_ty(j)])
-                                    to_add = builder.load(to_add)
-                                    old_val = builder.gep(
-                                        error_val, [ctx.int32_ty(0), ctx.int32_ty(j)])
-                                    builder.store(builder.fadd(
-                                        to_add, builder.load(old_val)), old_val)
-
-                        hadamard_mult = ctx.get_llvm_function(
-                            "__pnl_builtin_vec_hadamard")
-                        activation_func_derivative_ptr = builder.bitcast(
-                            activation_func_derivative, ctx.float_ty.as_pointer())
-                        error_val_ptr = builder.bitcast(
-                            error_val, ctx.float_ty.as_pointer())
-
-                        builder.call(hadamard_mult, [
-                                     activation_func_derivative_ptr, error_val_ptr, dim, error_val_ptr])
-                        error_dict[curr_node] = error_val
-
-                # 4) compute weight errors
-                ctx.inject_printf(builder,"\tCOMPUTE WEIGHT %d\n",input_idx)
-
-                for (node,err_val) in error_dict.items():
-                    if node in input_nodes:
-                        # we don't care about errors of input (TODO: get rid of them)
-                        continue
-                    _,node_dim = node.defaults.value.shape
-
-                    afferent_nodes = [proj.sender._owner for proj in node.afferents]
-                    for afferent_node in afferent_nodes:
-                        _,afferent_node_dim = afferent_node.defaults.variable.shape
-                        
-                        
-                        #get a_(l-1)
-                        afferent_node_idx = composition._get_node_index(afferent_node)
-                        afferent_node_activation = builder.gep(model_output, [ctx.int32_ty(
-                        0), ctx.int32_ty(0), ctx.int32_ty(afferent_node_idx)])
-                        
-                        # update delta_W
-                        weight_row = None
-                        with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(node_dim), "weight_update_loop_outer") as (builder, weight_row):
-                            weight_column = None
-                            with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(afferent_node_dim), "weight_update_loop_inner") as (builder, weight_column):
-                                a_val = builder.load(builder.gep(afferent_node_activation,[ctx.int32_ty(0),ctx.int32_ty(0),weight_column]))
-                                d_val = builder.load(builder.gep(err_val,[ctx.int32_ty(0),weight_row]))
-                                old_val = builder.load(builder.gep(delta_w[afferent_node][node],[ctx.int32_ty(0),weight_row,weight_column]))
-                                new_val = builder.fadd(old_val,builder.fmul(a_val,d_val))
-                                builder.store(new_val,builder.gep(delta_w[afferent_node][node],[ctx.int32_ty(0),weight_row,weight_column]))
-            # now we update the weights
-
-            for node in delta_w:
-                _,dim_y = node.defaults.value.shape
-                i = 0
-                for j in range(0, len(self.execution_sets)):
-                    if node in self.execution_sets[j]:
-                        i = j
-                        break
-                for (efferent_node, weight_matrix) in delta_w[node].items():
-                    _,dim_x = efferent_node.defaults.variable.shape
-                    efferent_node_id = self._afferent_id_map[efferent_node][node]
-                    weights_llvmlite = builder.gep(model_params, [ctx.int32_ty(0), ctx.int32_ty(
-                                i), ctx.int32_ty(efferent_node_id), ctx.int32_ty(self._id_map[i][node])]) 
-                    if "ref_pass" in debug_env:
-                        mem_addr = builder.load(weights_llvmlite)
-                        weights_llvmlite = builder.inttoptr(mem_addr, ir.types.ArrayType(
-                            ir.types.ArrayType(ir.types.DoubleType(), dim_y), dim_x).as_pointer())
-                    
-                    weight_row = None
-                    with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim_x), "delta_w_loop_outer") as (builder, weight_row):
-                        weight_column = None
-                        with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim_y), "delta_w_loop_inner") as (builder, weight_column):
-                            old_val = builder.load(builder.gep(weights_llvmlite,[ctx.int32_ty(0),weight_row,weight_column]))
-                            
-                            new_val = builder.load(builder.gep(weight_matrix,[ctx.int32_ty(0),weight_row,weight_column]))
-                            new_val = builder.fmul(ctx.float_ty(10),new_val) #HACK: temporarily hardcoded learning rate
-                            new_val = builder.fsub(old_val,new_val)
-                            builder.store(new_val,builder.gep(weights_llvmlite,[ctx.int32_ty(0),weight_row,weight_column]))
     # inserts a value into the forward computation output array struct
     def _output_forward_computation(self, ctx, builder, arg_out, index, y, value):
         loc = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(

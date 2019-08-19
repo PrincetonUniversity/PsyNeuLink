@@ -255,6 +255,15 @@ class LLVMBuilderContext:
         fmt_ptr = builder.bitcast(global_fmt,pnlvm.ir.IntType(8).as_pointer())
         builder.call(printf,[fmt_ptr]+list(args))
 
+
+    def inject_printf_float_array(self,builder,array,dim,prefix=""):
+        if "print_values" not in debug_env:
+            return
+        self.inject_printf(builder,prefix)
+        for i in range(0,dim):
+            self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[self.int32_ty(0),self.int32_ty(i)])))
+        self.inject_printf(builder,"\n")
+
     def gen_autodiffcomp_learning_exec(self,composition,simulation=False):
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation._get(composition.default_execution_id)
