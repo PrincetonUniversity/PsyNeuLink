@@ -700,10 +700,6 @@ Mechanisms and any Projections specified), and then additionally constructs and 
 the last Mechanism specified in the **pathway** argument with the input to the `target <Component.target>` Mechanism
 in the Compositon's `run <Composition.run>` method.
 
-
-
-
-
 COMMENT:
 METHODS RETURN LEARNING_COMPONENTS (MAKE THIS A KEYWORD CLASS
 EXPLAIN COMPARATORMECHANISM, TARGET MECHANISM, PROJECTIONS BETWEEN THEM, and TARGET INPUT
