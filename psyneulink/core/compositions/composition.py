@@ -689,20 +689,22 @@ COMMENT
 COMMENT:
 TBI:  Supervised learning is implemented using a Composition's `add_learning_pathway` method, and specifying an
 appropriate `LearningFunction` in its **learning_function** argument.  XXXMORE HERE ABOUT TYPES OF FUNCTIONS
-COMMENT
 
+FIRST DRAFT:
 Supervised learning is implemented using a Composition's method for the desired type of learning.  There are currently
 three such methods:  `add_reinforcement_learinng_pathway`, `add_td_learning_pathway`, and `add_backpropagation_pathway`.
 Each uses the Composition's `add_linear_processing_pathway` method to create the processing pathway (using the
 Mechanisms and any Projections specified), and then additionally constructs and adds the relevant `LearningMechanism(s)
 <LearningMechanism>`, `LearningProjections <LearningProjection>`, `ComparatorMechanism` and a corresponding `target
-<Composition.target>` Mechanism.  The last two Mechanisms are used to calculate the error, by comparing the output of
-the last Mechanism specified in the **pathway** argument with the input to the `target <Component.target>` Mechanism
-in the Compositon's `run <Composition.run>` method.
+<REF TO SECTION>` Mechanism. The last two Mechanisms are used to calculate the error on each `TRIAL`, by comparing the
+output of the last Mechanism specified in the **pathway** argument of the learning method, with the input to the
+`target <REF TO SECTION>` mechanism specified in the Composition's `run <Composition.run>` method.  This is passed
+to the LearningMechanism, which calculates the modifications to make to the `matrix <MappingProjection.matrix`
+parameter of the `MappingProjection(s) <MappingProjection>` between the last two Mechanisms specified in the
+**pathway** argument of the learning method.  If the pathway is longer than two Mechanisms, then additional
 
-COMMENT:
 METHODS RETURN LEARNING_COMPONENTS (MAKE THIS A KEYWORD CLASS
-EXPLAIN COMPARATORMECHANISM, TARGET MECHANISM, PROJECTIONS BETWEEN THEM, and TARGET INPUT
+EXPLAIN COMPARATOR_MECHANISM, TARGET_MECHANISM, PROJECTIONS BETWEEN THEM, and TARGET INPUT
 EXPLAIN DIFFERENCE BETWEEN RL AND BP
 EXPLAIN BUILDING UP OF MORE COMPLICATED BP NETWORKS USING CONSTITUENT PATHWAYS (INCLUDING RL & BP MIXES?)
 GIVE EXAMPLES
@@ -712,6 +714,69 @@ GIVE EXAMPLES
      explain building up  more complicated networks from constituent pathways
      give examples
 COMMENT
+
+Supervised learning is implemented using a Composition's method for the desired type of learning.  There are currently
+three such methods:
+
+.. _Composition_Learning_Methods:
+
+    • `add_reinforcement_learinng_pathway`
+    • `add_td_learning_pathway`
+    • `add_backpropagation_pathway`.
+
+Each uses the Composition's `add_linear_processing_pathway` method to create a  *learning sequence* specified in their
+**pathway** argument: a contiguous sequence of `ProcessingMechanisms <ProcessingMechanism>` and the `MappingProjections
+<MappingProjection>` between them, in which learning modifies the `matrix <MappingProjection.matrix>` parameter of the
+MappingProjections in the sequence, so that the input to the first ProcessingMechanism in the sequence generates an
+output from the last ProcessingMechanism that matches as closely as possible the value specified for the `target
+mechanism <Process_Learning_Components>` in the **inputs** argument of the Composition's `run <Composition.run>` method.
+The Mechanisms in the pathway must be compatible with learning (that is, their `function <Mechanism_Base.function>` must
+be compatible with the `function <LearningMechanism.function>` of the `LearningMechanism` for the MappingProjections
+they receive (see `LearningMechanism_Function`).  The Composition's `learning methods <_Composition_Learning_Methods>`
+return the set of learning components generates for the pathway, as described below.
+
+.. _Composition_Learning_Components:
+
+The following Components are created for each learning sequence specified by a
+`learning method <Composition_Learning_Methods>`, and returned by the call to the method:
+
+
+    * a `COMPARATOR_MECHANISM` `ComparatorMechanism` (assigned to the Process' `target_nodes <Process.target_nodes>`
+      attribute), that is used to `calculate an error signal <ComparatorMechanism_Function>` for the sequence, by
+      comparing `a specified output <LearningMechanism_Activation_Output>` of the last Mechanism in the learning
+      sequence (received in the ComparatorMechanism's *SAMPLE* `InputState <ComparatorMechanism_Structure>`) with the
+      item of the **target** argument in Process' `execute <Process.execute>` or `run <Process.run>` method
+      corresponding to the learning sequence (received in the ComparatorMechanism's *TARGET* `InputState
+      <ComparatorMechanism_Structure>`).
+    ..
+    * a `TARGET_MECHANISM` to represent the corresponding item of the **target** argument of the Composition's `run
+      <Composition.run>` method;
+    ..
+    * a MappingProjection that projects from the last ProcessingMechanism in the sequence to the *SAMPLE* `InputState
+      <ComparatorMechanism_Structure>` of the `COMPARATOR_MECHANISM`;
+    ..
+    * a MappingProjection that projects from the `TARGET_MECHANISM` to the *TARGET* `InputState
+      <ComparatorMechanism_Structure>` of the `COMPARATOR_MECHANISM`;
+    ..
+    * a `LEARNING_MECHANISM for each MappingProjection in the sequence, that calculates the `learning_signal
+      <LearningMechanism.learning_signal>` used to modify the `matrix <MappingProjection.matrix>` parameter for that
+      MappingProjection, along with a `LearningSignal` and `LearningProjection` that convey the `learning_signal
+      <LearningMechanism.learning_signal>` to the MappingProjection's *MATRIX* `ParameterState
+      <Mapping_Matrix_ParameterState>` (additional MappingProjections are created for the LearningMechanism -- see
+      `LearningMechanism_Learning_Configurations` for details).
+      XXX EXPLAIN PROJECTIONS TO AND FROM LEARNING_MECHANISM, DEPENDENT ON LENGTH OF PATHWAY
+
+    * the `LEARNED_PROJECTION` for each MappingProjection in the pathway being learned (and for which a
+      `LearningProjection` was created).
+
+    XXX EXPLAIN THAT SOME CAN BE LISTS
+    XXX?VERIFY FOR COMPOSITION:
+    .. note::
+       The Components created when learning is specified for individual MappingProjections of a Process (or subsets of
+       them) take effect only if the Process is executed on its own (i.e., using its `execute <Process.execute>`
+       or `run <Process.run>` methods.  For learning to in a Process when it is `executed as part of a System
+       <System_Execution_Learning>`, learning must be specified for the *entire Process*, as described above.
+
 
 
 FROM PROCESS: ----------------------------------------------------------------------------------------------------------
