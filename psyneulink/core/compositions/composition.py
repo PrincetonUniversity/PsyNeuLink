@@ -666,16 +666,16 @@ or modified by assigning values to their attributes.
 
 **Unsupervised Learning**
 
-Undersupervised learning is generally implemented using a `RecurrentTransferMechanism`, setting its
-**enable_learning** argument to True, and specifying the desired `LearningFunction` in its **learning_function**
-argument.  The default is `Hebbian`, however others can be specified (such as `ContrastiveHebbian` or `Kohonen`). When
-a RecurrentTransferMechanism with learning enabled is added to a Composition, an `AutoassociativeLearningMechanism`
-that is appropriate for the specified learning_function is automatically constructured and added to the Composition,
-as is a `LearningProjection` from the AutoassociativeLearningMechanism to the RecurrentTransferMechanism's
-`recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.  When the Composition is run and the
-RecurrentTransferMechanism is executed, its AutoassociativeLearningMechanism is also executed, which updates the
-`matrix <AutoassociativeProjection.matrix>` of its `recurrent_projection
-<RecurrentTransferMechanism.recurrent_projection>` in response to its input.
+Undersupervised learning is implemented using a `RecurrentTransferMechanism`, setting its **enable_learning** argument
+to True, and specifying the desired `LearningFunction` in its **learning_function** argument.  The default is `Hebbian`,
+however others can be specified (such as `ContrastiveHebbian` or `Kohonen`). When a RecurrentTransferMechanism with
+learning enabled is added to a Composition, an `AutoassociativeLearningMechanism` that is appropriate for the specified
+learning_function is automatically constructured and added to the Composition, as is a `LearningProjection` from the
+AutoassociativeLearningMechanism to the RecurrentTransferMechanism's `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>`.  When the Composition is run and the RecurrentTransferMechanism is
+executed, its AutoassociativeLearningMechanism is also executed, which updates the `matrix
+<AutoassociativeProjection.matrix>` of its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
+in response to its input.
 
 COMMENT:
 XXX ??Returns learning Components?  from add node??  from add_linear_processing_pathway??
@@ -686,17 +686,36 @@ COMMENT
 
 **Supervised Learning**
 
+COMMENT:
+TBI:  Supervised learning is implemented using a Composition's `add_learning_pathway` method, and specifying an
+appropriate `LearningFunction` in its **learning_function** argument.  XXXMORE HERE ABOUT TYPES OF FUNCTIONS
+COMMENT
+
+Supervised learning is implemented using a Composition's method for the desired type of learning.  There are currently
+three such methods:  `add_reinforcement_learinng_pathway`, `add_td_learning_pathway`, and `add_backpropagation_pathway`.
+Each uses the Composition's `add_linear_processing_pathway` method to create the processing pathway (using the
+Mechanisms and any Projections specified), and then additionally constructs and adds the relevant `LearningMechanism(s)
+<LearningMechanism>`, `LearningProjections <LearningProjection>`, `ComparatorMechanism` and a corresponding `target
+<Composition.target>` Mechanism.  The last two Mechanisms are used to calculate the error, by comparing the output of
+the last Mechanism specified in the **pathway** argument with the input to the `target <Component.target>` Mechanism
+in the Compositon's `run <Composition.run>` method.
+
+
+
+
 
 COMMENT:
-OUTLINE:
-- PNL implements all major forms of connectionist learning natively
-  - unsupervised:  autoassociative is done using the appropriate mechanisms
+METHODS RETURN LEARNING_COMPONENTS (MAKE THIS A KEYWORD CLASS
+EXPLAIN COMPARATORMECHANISM, TARGET MECHANISM, PROJECTIONS BETWEEN THEM, and TARGET INPUT
+EXPLAIN DIFFERENCE BETWEEN RL AND BP
+EXPLAIN BUILDING UP OF MORE COMPLICATED BP NETWORKS USING CONSTITUENT PATHWAYS (INCLUDING RL & BP MIXES?)
+GIVE EXAMPLES
+
   - supervised:  three methods used to implement three class of learning:  simple RL, TD, and bp
      explain use of targets
      explain building up  more complicated networks from constituent pathways
      give examples
-- Can also use autodiff
-- show_graph(show_learning=True)
+COMMENT
 
 
 FROM PROCESS: ----------------------------------------------------------------------------------------------------------
@@ -774,10 +793,12 @@ The following Components are created for each learning sequence specified for a 
 
 END FROM PROCESS: -----------------------------------------------------------------------------------------------------
 
+COMMENT
+
 .. _Composition_Learning_Autodiff
 
-
-COMMENT
+Learning Using PyTorch and the AutodiffComposition
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _Visualizing_a_Composition:
 
