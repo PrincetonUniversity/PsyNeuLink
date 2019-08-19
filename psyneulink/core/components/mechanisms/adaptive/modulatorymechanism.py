@@ -1210,18 +1210,20 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # Assign ObjectiveMechanism's role as CONTROL
         self.objective_mechanism._role = CONTROL
 
-        # If ModulatoryMechanism is a System controller, name Projection from
-        # ObjectiveMechanism based on the System
-        if self.system is not None:
-            name = self.system.name + ' outcome signal'
-        # Otherwise, name it based on the ObjectiveMechanism
-        else:
-            name = self.objective_mechanism.name + ' outcome signal'
-
+        # MODIFIED 8/16/19 OLD:
+        # # If ModulatoryMechanism is a System controller, name Projection from
+        # # ObjectiveMechanism based on the System
+        # if self.system is not None:
+        #     name = self.system.name + ' outcome signal'
+        # # Otherwise, name it based on the ObjectiveMechanism
+        # else:
+        #     # name = self.objective_mechanism.name + ' outcome signal'
+        # MODIFIED 8/16/19 END
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
                                                       receiver=self,
                                                       matrix=AUTO_ASSIGN_MATRIX,
-                                                      name=name)
+                                                      # name=name
+                                                      )
         for input_state in self.objective_mechanism.input_states:
             input_state.internal_only = True
 

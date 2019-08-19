@@ -274,7 +274,7 @@ import logging
 import uuid
 import warnings
 
-from toposort import toposort
+from toposort import toposort, toposort_flatten
 
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never
 from psyneulink.core.scheduling.time import Clock, TimeScale
@@ -447,28 +447,32 @@ class Scheduler(object):
             return self._dfs_for_cycles(dependencies, next_node, loop_start_set, visited, loop)
 
     def _call_toposort(self, graph):
+        '''
+        execution_depenencies stored in self.depdency_sets
+        :return:
+        '''
 
-        dependencies = {}                   # stores  a modified version of the graph in which cycles are "flattened"
+        execution_dependencies = {}         # stores  a modified version of the graph in which cycles are "flattened"
         removed_dependencies = {}           # stores dependencies that were removed in order to flatten cycles
         flattened_cycles = {}               # flattened_cycles[node] = [all cycles to which node belongs]
-        visual_graph = collections.OrderedDict()
+        structural_dependencies = collections.OrderedDict()
         self.cycle_nodes = set()
         # Loop through the existing composition graph, considering "forward" projections only
         # If a cycle is found, "flatten" it by bringing all nodes into the same execution set
         for vert in graph.vertices:
 
-            if vert.component not in dependencies:
-                dependencies[vert.component] = set()
-                visual_graph[vert.component] = set()
+            if vert.component not in execution_dependencies:
+                execution_dependencies[vert.component] = set()
+                structural_dependencies[vert.component] = set()
 
             # use "get_forward_children_from_component" to ignore any projections that were marked as "feedback"
             # "feedback" projections, we've already determined, happen after all forward projections, but when "forward"
             # projections cause cycles, we need to execute them all at once
             for child in graph.get_forward_children_from_component(vert.component):
-                if child.component not in dependencies:
-                    dependencies[child.component] = set()
-                    visual_graph[child.component] = set()
-                dependencies[child.component].add(vert.component)
+                if child.component not in execution_dependencies:
+                    execution_dependencies[child.component] = set()
+                    structural_dependencies[child.component] = set()
+                execution_dependencies[child.component].add(vert.component)
 
                 # loop_start_set contains the current starting point and any cycles it is already connected to
                 # if the new dependency introduces any paths that lead back to a node in loop_start_set, then
@@ -480,7 +484,7 @@ class Scheduler(object):
                     loop_start_set.add(node)
 
                 # if the new dependency created a cycle, return that cycle
-                cycle = self._dfs_for_cycles(dependencies, vert.component, loop_start_set, None, [child.component])
+                cycle = self._dfs_for_cycles(execution_dependencies, vert.component, loop_start_set, None, [child.component])
 
                 if cycle:
                     # loop over all nodes in the cycle in order to:
@@ -494,14 +498,14 @@ class Scheduler(object):
                         if node_a not in flattened_cycles:
                             flattened_cycles[node_a] = []
                         flattened_cycles[node_a].append(cycle)
-                        dependencies[node_a].remove(node_b)
+                        execution_dependencies[node_a].remove(node_b)
                         if node_a not in removed_dependencies:
                             removed_dependencies[node_a] = set()
                         removed_dependencies[node_a].add(node_b)
 
                         if i != 0:
-                            for dependency in dependencies[cycle[0]]:
-                                dependencies[cycle[i]].add(dependency)
+                            for dependency in execution_dependencies[cycle[0]]:
+                                execution_dependencies[cycle[i]].add(dependency)
                 else:
                     # necessary for the case where you want to add a projection that terminates at a node in a loop
                     # AFTER the loop has already been created.
@@ -509,14 +513,15 @@ class Scheduler(object):
                     # NEW: new_node --> A <--> B <--> C -- > D
                     # (otherwise, the order in which a user adds components to a composition would affect the graph)
                     for cycle_node in connected_cycles:
-                        dependencies[cycle_node].add(vert.component)
-                visual_graph[child.component].add(vert.component)
+                        execution_dependencies[cycle_node].add(vert.component)
+                structural_dependencies[child.component].add(vert.component)
             for child in graph.get_backward_children_from_component(vert.component):
-                if child.component not in dependencies:
-                    visual_graph[child.component] = set()
-                visual_graph[child.component].add(vert.component)
-            self.dependency_sets = dependencies
-        return list(toposort(dependencies)), removed_dependencies, visual_graph
+                if child.component not in execution_dependencies:
+                    structural_dependencies[child.component] = set()
+                structural_dependencies[child.component].add(vert.component)
+            self.dependency_dict = execution_dependencies
+
+        return list(toposort(execution_dependencies)), removed_dependencies, structural_dependencies
 
     def _get_all_connected_cycles(self, connected_cycles, original_key, visited_keys, flattened_cycles):
         if original_key in flattened_cycles:
@@ -530,7 +535,7 @@ class Scheduler(object):
                     self._get_all_connected_cycles(connected_cycles, cycle_node, visited_keys, flattened_cycles)
 
     def _init_consideration_queue_from_graph(self, graph):
-        self.consideration_queue, self.removed_dependencies, self.visual_graph = self._call_toposort(graph)
+        self.consideration_queue, self.removed_dependencies, self.structural_dependencies = self._call_toposort(graph)
 
     def _init_counts(self, execution_id=None, base_execution_id=None):
         """

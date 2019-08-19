@@ -1871,6 +1871,7 @@ class State_Base(State):
             if self._check_for_duplicate_projections(projection):
                 continue
 
+            # FIX: MODIFIED FEEDBACK - CHECK THAT THAT THIS IS STILL NEEDED (RE: ASSIGNMENT IN ModulatorySignal)
             if isinstance(projection, ModulatoryProjection_Base):
                 self.owner.aux_components.append((projection, feedback))
             return projection
@@ -1955,6 +1956,7 @@ class State_Base(State):
         from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
         from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
         from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
+        from psyneulink.library.components.projections.pathway.maskedmappingprojection import MaskedMappingProjection
 
         modulatory_override = False
 
@@ -1998,9 +2000,42 @@ class State_Base(State):
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # IMPLEMENTATION NOTE: done here rather than in its own method in order to exploit parsing of params above
-            if (isinstance(projection, LearningProjection)
+            is_learning_projection = isinstance(projection, LearningProjection)
+            if (is_learning_projection
                     and self.parameters.context._get(execution_id).execution_phase != ContextFlags.LEARNING):
                 projection_value = projection.defaults.value * 0.0
+            elif (
+                # learning projections add extra behavior in _execute that invalidates identity function
+                not is_learning_projection
+                # masked mapping projections apply a mask separate from their function - consider replacing it
+                # with a masked linear matrix and removing this special class?
+                and not isinstance(projection, MaskedMappingProjection)
+                and projection.function._is_identity(execution_id)
+                # has no parameter states with afferents (these can modulate parameters and make it non-identity)
+                and len(list(itertools.chain.from_iterable([p.all_afferents for p in projection.parameter_states]))) == 0
+                # matrix parameter state may be a non identity Accumulator integrator
+                and all(pstate.function._is_identity(execution_id) for pstate in projection.parameter_states)
+            ):
+                projection_variable = projection.sender.parameters.value._get(execution_id)
+                # KDM 8/14/19: this fallback seems to always happen on the first execution
+                # of the Projection's function (LinearMatrix). Unsure if this is intended or not
+                if projection_variable is None:
+                    projection_variable = projection.function.defaults.value
+
+                projection.parameters.variable._set(projection_variable, execution_id)
+
+                projection_value = projection._parse_function_variable(projection_variable)
+                projection.parameters.value._set(projection_value, execution_id)
+
+                # KDM 8/14/19: a caveat about the dot notation/most_recent_execution_id here!
+                # should these be manually set despite it not actually being executed?
+                # explicitly getting/setting based on execution_context will be more clear
+                projection.most_recent_execution_id = execution_id
+                projection.function.most_recent_execution_id = execution_id
+                for pstate in projection.parameter_states:
+                    pstate.most_recent_execution_id = execution_id
+                    pstate.function.most_recent_execution_id = execution_id
+
             else:
                 projection_value = projection.execute(variable=projection.sender.parameters.value._get(execution_id),
                                                       execution_id=execution_id,

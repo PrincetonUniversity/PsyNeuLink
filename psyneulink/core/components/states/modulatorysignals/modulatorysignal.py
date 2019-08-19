@@ -209,7 +209,7 @@ from psyneulink.core.components.component import component_keywords
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL, VARIABLE, PROJECTIONS
+from psyneulink.core.globals.keywords import MAYBE, MECHANISM, MODULATION, MODULATORY_SIGNAL, VARIABLE, PROJECTIONS
 from psyneulink.core.globals.defaults import defaultModulatoryAllocation
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -480,7 +480,8 @@ class ModulatorySignal(OutputState):
             projection = self._instantiate_projection_from_state(projection_spec=type(self),
                                                                  receiver=receiver_spec,
                                                                  # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
-                                                                 feedback=True,
+                                                                 # feedback=True,
+                                                                 feedback=MAYBE,
                                                                  # MODIFIED 8/12/19 END
                                                                  context=context)
             projection._assign_default_projection_name(state=self)
