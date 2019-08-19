@@ -1338,7 +1338,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
            ModulatorySignal; reassign modulatory_signal.variable to actual OWNER_VALUE below,
            once value has been expanded
         """
-        from psyneulink.core.components.states.state import _instantiate_state
+        from psyneulink.core.components.states.state import _instantiate_state, StateError
         from psyneulink.core.components.projections.projection import ProjectionError
 
         if self._output_states is None:
@@ -1360,7 +1360,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             if not type(modulatory_signal) in convert_to_list(self.outputStateTypes):
                 raise ProjectionError(f'{type(modulatory_signal)} inappropriate for {self.name}')
 
-        except:
+        except (StateError, ProjectionError):
             try:
                 modulatory_signal = _instantiate_state(state_type=GatingSignal,
                                                        owner=self,
@@ -1370,7 +1370,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                        modulation=self.modulation,
                                                        state_spec=mod_spec,
                                                        context=context)
-            except Exception as e:
+            except StateError as e:
                 raise ModulatoryMechanismError(f"PROGRAM ERROR: Unrecognized {repr(MODULATORY_SIGNAL)} "
                                                f"specification for {self.name} ({modulatory_signal});"
                                                f"ERROR MESSAGE: {e.args[0]}")
