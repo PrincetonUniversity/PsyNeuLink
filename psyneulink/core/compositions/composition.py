@@ -758,6 +758,14 @@ such sqeuences that diverge, converge, intersect, or any combination of those (s
 method automatically creates and configures the relevant learning components.
 
 COMMENT:
+XXX ADD DESCRIPTION OF OTHER LEARNING-RELATED ATTRBUTES
+XXX ADD DESCRIPTION OF LEARNING-RELATED NodeRoles:
+    LEARNING; ALSO OUTPUT REMAINS LAST MECHANISM IN PROCESSING PATHWAY
+       (EVEN THOUGH IF IT WAS A TERMINAL IT MAY NO LONGER BE SO)
+XXX ADD DESCRIPTION OF EXECUTION:
+    FIRST PROCESING MECHANISM, THEN LEARNING COMPONENTS
+    LAZY UPDATING OF WEIGHTS
+
     XXX?EXPLAIN IF TRUE FOR COMPOSITION:
     .. note::
        The Components created when learning is specified for individual MappingProjections of a Process (or subsets of
@@ -777,13 +785,16 @@ FIGURES FROM PROCESS:
    Learning using the `BackPropagation` learning algorithm in a three-layered network, using a `TransferMechanism` for
    each layer (capitalized labels in Mechanism components are their `designated roles
    <Mechanism_Role_In_Processes_And_Systems>` in the Process -- see also `Process_Mechanisms` and `Keywords`).
-
 COMMENT
 
 .. _Composition_Learning_Autodiff
 
 Learning Using PyTorch and the AutodiffComposition
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When learning is `implemented using standard PsyNeuLink Components <Composition_Learning_Standard>`, those are executed
+in the standard manner.  This can be inefficient, given the "oeverhead" incurred by distributing the calaculations
+over many different components.  If large scale model, can use PyTorch.
 
 COMMENT:
 - MAIN WAY:  USING PNL SYNTAX
