@@ -787,14 +787,30 @@ FIGURES FROM PROCESS:
    <Mechanism_Role_In_Processes_And_Systems>` in the Process -- see also `Process_Mechanisms` and `Keywords`).
 COMMENT
 
-.. _Composition_Learning_Autodiff
+.. _Composition_Learning_PyTorch
 
-Learning Using PyTorch and the AutodiffComposition
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Learning Using PyTorch
+~~~~~~~~~~~~~~~~~~~~~~
 
-When learning is `implemented using standard PsyNeuLink Components <Composition_Learning_Standard>`, those are executed
-in the standard manner.  This can be inefficient, given the "oeverhead" incurred by distributing the calaculations
-over many different components.  If large scale model, can use PyTorch.
+When learning is `implemented using standard PsyNeuLink Components <Composition_Learning_Standard>`, each calculation
+and/or operation involved in learning is assigned to a different PsyNeuLink Component (i.e., ProcessingMechanisms,
+MappingProjections, LearningMechanisms, LearningProjections, etc., as outlined `above <Composition_Learning_Standard>`).
+This helps make clear exactly what those operations are, the sequence in which they are carried out, and how they
+interact with one another.  However, this can also make execution inefficient, due to the "oeverhead" incurred by
+distributing the calaculations over different components.  Environments dedicated to implementing learning,
+such as PyTorch, achieve efficiency by consolidating those calculations as much as possible, and keeping them as
+close to the place where they are used as possible (i.e., the functions and matrices used for processing).
+PsyNeuLink provides two ways to exploit such efficiency.  The first uses `AutodiffComposition`, a special subclass of
+`Composition` that implements and can execute learning sequences specified in PsyNeuLink using `PyTorch
+<https://pytorch.org>`_.  The second assigns `forward <XXX>`_  and `backward <XXX>` method in PyTorch each as a
+`UserDefinedFunction` in PsyNeuLink.  Each of these appraoches is described below.
+
+**AutodiffComoposition**
+
+
+**Pytorch Methods as UserDefinedFunctions**
+
+
 
 COMMENT:
 - MAIN WAY:  USING PNL SYNTAX
