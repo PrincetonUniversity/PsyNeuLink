@@ -760,7 +760,9 @@ by the learning method.
 
 The description above pertains to linear sequences.  However, more complex ones can be created by specifying multiple
 such sqeuences that diverge, converge, intersect, or any combination of those (see XXX for an example).  The learning
-method automatically creates and configures the relevant learning components.
+method automatically creates and configures the relevant learning components so that the error terms are properly
+computed and propagated by each LearningMechanism in the network.
+XXX
 
 COMMENT:
 XXX ADD DESCRIPTION OF OTHER LEARNING-RELATED ATTRBUTES
@@ -839,11 +841,26 @@ such as PyTorch, achieve efficiency by consolidating those calculations as much 
 close to the place where they are used as possible (i.e., the functions and matrices used for processing).
 PsyNeuLink provides two ways to exploit such efficiency.  The first uses `AutodiffComposition`, a special subclass of
 `Composition` that implements and can execute learning sequences specified in PsyNeuLink using `PyTorch
-<https://pytorch.org>`_.  The second assigns `forward <XXX>`_  and `backward <XXX>` method in PyTorch each as a
+<https://pytorch.org>`_.  The second assigns the `forward <XXX>`_  and `backward <XXX>`_ methods in PyTorch each as a
 `UserDefinedFunction` in PsyNeuLink.  Each of these appraoches is described below.
 
 **AutodiffComoposition**
 
+    def autodiff_processing(self, inputs, execution_id=None, do_logging=False, scheduler=None):
+        pytorch_representation = self.parameters.pytorch_representation._get(execution_id)
+        # run the model on inputs - switch autograd off for this (we don't need it)
+        with torch.no_grad():
+            tensor_outputs = pytorch_representation.forward(inputs, execution_id=execution_id, do_logging=do_logging, scheduler=scheduler)
+
+        # get outputs back into numpy
+        outputs = []
+        for i in range(len(tensor_outputs)):
+            outputs.append(tensor_outputs[i].numpy().copy())
+
+        return outputs
+
+    # performs learning/training on all input-target pairs it recieves for given number of epochs
+    def autodiff_training(self, inputs, targets, epochs, execution_id=None, do_logging=False, scheduler=None):
 
 **Pytorch Methods as UserDefinedFunctions**
 
