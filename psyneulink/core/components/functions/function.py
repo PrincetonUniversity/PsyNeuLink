@@ -857,7 +857,7 @@ class Function_Base(Function):
     def _get_context_values(self, execution_id=None):
         return tuple(sp._get(execution_id) for sp in self._get_compilation_context())
 
-    def _get_context_initializer(self, execution_id):
+    def _get_state_initializer(self, execution_id):
         stateful = self._get_context_values(execution_id)
         # Skip first element of random state (id string)
         lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)

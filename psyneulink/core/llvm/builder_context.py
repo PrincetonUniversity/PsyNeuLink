@@ -250,7 +250,7 @@ class LLVMBuilderContext:
             builder.store(const_params, params)
 
         if "const_state" in debug_env:
-            const_state = context.type.pointee(composition._get_context_initializer(None))
+            const_state = context.type.pointee(composition._get_state_initializer(None))
             context = builder.alloca(const_state.type, name="const_state_loc")
             builder.store(const_state, context)
 

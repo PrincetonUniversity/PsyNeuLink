@@ -1028,8 +1028,8 @@ class Projection_Base(Projection):
     def _get_param_initializer(self, execution_id):
         return self.function._get_param_initializer(execution_id)
 
-    def _get_context_initializer(self, execution_id):
-        return self.function._get_context_initializer(execution_id)
+    def _get_state_initializer(self, execution_id):
+        return self.function._get_state_initializer(execution_id)
 
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):

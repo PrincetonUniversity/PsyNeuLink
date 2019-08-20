@@ -995,8 +995,8 @@ class OptimizationControlMechanism(ControlMechanism):
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
         return pnlvm.ir.LiteralStructType([intensity_cost_struct])
 
-    def _get_evaluate_context_initializer(self, execution_id):
-        intensity_cost = tuple((os.intensity_cost_function._get_context_initializer(execution_id) for os in self.output_states))
+    def _get_evaluate_state_initializer(self, execution_id):
+        intensity_cost = tuple((os.intensity_cost_function._get_state_initializer(execution_id) for os in self.output_states))
         return (intensity_cost,)
 
     def _get_evaluate_input_struct_type(self, ctx):

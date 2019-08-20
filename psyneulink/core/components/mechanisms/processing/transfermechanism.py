@@ -1369,11 +1369,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             function_param_list.append(self.integrator_function._get_param_initializer(execution_id))
         return tuple(function_param_list)
 
-    def _get_function_context_initializer(self, execution_id):
-        context_list = [self.function._get_context_initializer(execution_id)]
+    def _get_function_state_initializer(self, execution_id):
+        context_list = [self.function._get_state_initializer(execution_id)]
         if self.integrator_mode:
             assert self.integrator_function is not None
-            context_list.append(self.integrator_function._get_context_initializer(execution_id))
+            context_list.append(self.integrator_function._get_state_initializer(execution_id))
         return tuple(context_list)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):

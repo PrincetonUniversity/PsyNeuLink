@@ -6178,10 +6178,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             data.append(nested_data)
         return pnlvm.ir.LiteralStructType(data)
 
-    def _get_context_initializer(self, execution_id=None, simulation=False):
-        mech_contexts = (tuple(m._get_context_initializer(execution_id=execution_id))
+    def _get_state_initializer(self, execution_id=None, simulation=False):
+        mech_contexts = (tuple(m._get_state_initializer(execution_id=execution_id))
                          for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_contexts = (tuple(p._get_context_initializer(execution_id=execution_id)) for p in self.projections)
+        proj_contexts = (tuple(p._get_state_initializer(execution_id=execution_id)) for p in self.projections)
         return (tuple(mech_contexts), tuple(proj_contexts))
 
     def _get_param_initializer(self, execution_id, simulation=False):

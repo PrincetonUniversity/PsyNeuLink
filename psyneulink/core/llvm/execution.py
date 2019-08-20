@@ -138,7 +138,7 @@ class FuncExecution(CUDAExecution):
             vi_ty = vi_ty * len(execution_ids)
 
             par_initializer = (component._get_param_initializer(ex_id) for ex_id in execution_ids)
-            ctx_initializer = (component._get_context_initializer(ex_id) for ex_id in execution_ids)
+            ctx_initializer = (component._get_state_initializer(ex_id) for ex_id in execution_ids)
             self.__param_struct = par_struct_ty(*par_initializer)
             self.__state_struct = ctx_struct_ty(*ctx_initializer)
             self._ct_len = ctypes.c_int(len(execution_ids))
@@ -169,7 +169,7 @@ class FuncExecution(CUDAExecution):
         if len(self._execution_ids) > 1:
             return self.__state_struct
 
-        return self._get_compilation_param('state_struct', '_get_context_initializer', 1, self._execution_ids[0])
+        return self._get_compilation_param('state_struct', '_get_state_initializer', 1, self._execution_ids[0])
 
     def execute(self, variable):
         new_variable = np.asfarray(variable)
@@ -231,7 +231,7 @@ class CompExecution(CUDAExecution):
             c_param = c_param * len(execution_ids)
             c_data = c_data * len(execution_ids)
 
-            ctx_initializer = (composition._get_context_initializer(ex_id) for ex_id in execution_ids)
+            ctx_initializer = (composition._get_state_initializer(ex_id) for ex_id in execution_ids)
             par_initializer = (composition._get_param_initializer(ex_id) for ex_id in execution_ids)
             data_initializer = (composition._get_data_initializer(ex_id) for ex_id in execution_ids)
             # Instantiate structures
@@ -300,7 +300,7 @@ class CompExecution(CUDAExecution):
         if len(self._execution_ids) > 1:
             return self.__state_struct
 
-        return self._get_compilation_param('state_struct', '_get_context_initializer', 0, self._execution_ids[0])
+        return self._get_compilation_param('state_struct', '_get_state_initializer', 0, self._execution_ids[0])
 
     @property
     def _data_struct(self):
