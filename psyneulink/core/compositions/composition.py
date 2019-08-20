@@ -703,7 +703,7 @@ three such methods:
 
     • `add_reinforcement_learning_pathway`
     • `add_td_learning_pathway`
-    • `back_propagation_learning_pathway`.
+    • `add_backpropagation_learning_pathway`.
 
 Each uses the Composition's `add_linear_processing_pathway` method to create a  *learning sequence* specified in their
 **pathway** argument: a contiguous sequence of `ProcessingMechanisms <ProcessingMechanism>` and the `MappingProjections
@@ -749,11 +749,11 @@ name of the item as the key for each entry, and the object(s) as its value):
       <Mapping_Matrix_ParameterState>`;  depending on learning method, additional MappingProjections may be created to
       and/or from the LearningMechanism -- see `LearningMechanism_Learning_Configurations` for details).
 
-If the learning sequence involves more than two ProcessingMechanisms (e.g. using `back_propagation_learning_pathway` for a
-multilayered neural network), then additional LearningMechanisms are created, along with a MappingProjection through
-which each receives an `error_signal <LearningMechanism.error_signal>` from the LearningMechanism preceding it, and a
-`LearningProjection` that modifies the MappingProjection (`LEARNED_PROJECTION`) for which it is responsible in the
-sequence.  These are listed in the `LEARNING_MECHANISM` and `LEARNED_PROJECTION` entries of the dictionary returned
+If the learning sequence involves more than two ProcessingMechanisms (e.g. using `add_backpropagation_learning_pathway`
+for a multilayered neural network), then additional LearningMechanisms are created, along with a MappingProjection
+through which each receives an `error_signal <LearningMechanism.error_signal>` from the LearningMechanism preceding it,
+and a `LearningProjection` that modifies the MappingProjection (`LEARNED_PROJECTION`) for which it is responsible in
+the sequence.  These are listed in the `LEARNING_MECHANISM` and `LEARNED_PROJECTION` entries of the dictionary returned
 by the learning method.
 
 The description above pertains to linear sequences.  However, more complex ones can be created by specifying multiple
@@ -2589,7 +2589,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                              AND THEN TO HANDLE ALL FORMS OF LEARNING (AS BELOW)
         #  REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
         #  1) Determine whether this is a terminal sequence:
-        #     - use arg passed in or determine from context (see current implementation in back_propagation_learning_pathway)
+        #     - use arg passed in or determine from context (see current implementation in add_backpropagation_learning_pathway)
         #     - for terminal sequence, handle target and sample projections as below
         #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
         #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
@@ -2715,7 +2715,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                              AND THEN TO HANDLE ALL FORMS OF LEARNING (AS BELOW)
         #  REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
         #  1) Determine whether this is a terminal sequence:
-        #     - use arg passed in or determine from context (see current implementation in back_propagation_learning_pathway)
+        #     - use arg passed in or determine from context (see current implementation in add_backpropagation_learning_pathway)
         #     - for terminal sequence, handle target and sample projections as below
         #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
         #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
@@ -3004,8 +3004,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_related_components
 
-    def back_propagation_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                     learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
+    def add_backpropagation_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
+                                             learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
         """Add linear processing pathway with backpropogation learning
 
         Arguments

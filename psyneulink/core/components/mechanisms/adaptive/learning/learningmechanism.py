@@ -401,17 +401,17 @@ is created or assigned to the LearningMechanism's *ERROR_SIGNAL* `OutputState <L
 
 Multilayer learning
 ^^^^^^^^^^^^^^^^^^^
-This configuration occurs when a `learning method <Composition_Learning_Methods>` of a Composition is used to specify
-a pathway that has three or more ProcessingMechanisms (i.e., two or more MappingProjections that are being learned;
-see the `figure <LearningMechanism_Multilayer_Learning_Figure>` below).  At present, this is supported only by
-`back_propagation_learning_pathway`
-
-In such cases, a LearningMechanism
-is created for each Projection in the pathway.  they must use a `LearningFunction` that can calculate the influence
-that each MappingProjection and its output have on the error that the LearningMechanism receives from the next one(
-s) in the sequence (e.g., `BackPropagation`).  In multilayer learning, the Components created along with a
-LearningMechanism depend on the position of its `primary_learned_projection` and `output_source
-<LearningMechanism.output_source>` in the sequence.  If these are the last ones in the sequence, they are treated in
+This to learning in a pathway that has three or more Mechanisms in a sequence, and therefore two or more
+MappingProjections that are being learned.  The learning components for such a configuration are created
+automatically when a `learning method <Composition_Learning_Methods>` of a Composition is used that supports
+multilayer learning (at present, this is only `add_backpropagation_learning_pathway`).  If the learning components
+are `constructed explicitly <LearningMechanism_Explicit_Creation>` for a multilayer learning
+configuration, then each LearningMechanism must use a `LearningFunction` that can calculate the influence
+that each MappingProjection and its output have on the error that the LearningMechanism receives from the previous
+one(s) in the sequence (e.g., `BackPropagation`).  Furthermore, for each LearningMechanism, the construction of the
+other learning-related Components associated with it depend on the position of its `primary_learned_projection` and
+`output_source <LearningMechanism.output_source>` in the sequence.  If these are the last ones in the sequence,
+they are treated in
 the same way as `single layer learning <LearningMechanism_Single_Layer_Learning>`.  This is the case if the
 `output_source` is a standalone Mechanism or the `TERMINAL` Mechanism of a Composition. In these cases, as for single
 layer learning, a `ComparatorMechanism` is created that receives the output of the `output_source` as well as the
