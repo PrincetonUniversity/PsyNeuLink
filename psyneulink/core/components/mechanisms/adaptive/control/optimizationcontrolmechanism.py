@@ -990,8 +990,8 @@ class OptimizationControlMechanism(ControlMechanism):
         intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
         return (intensity_cost, num_estimates)
 
-    def _get_evaluate_context_struct_type(self, ctx):
-        intensity_cost = [ctx.get_context_struct_type(os.intensity_cost_function) for os in self.output_states]
+    def _get_evaluate_state_struct_type(self, ctx):
+        intensity_cost = [ctx.get_state_struct_type(os.intensity_cost_function) for os in self.output_states]
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
         return pnlvm.ir.LiteralStructType([intensity_cost_struct])
 
@@ -1013,7 +1013,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _gen_llvm_net_outcome_function(self, ctx):
         args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
-                self._get_evaluate_context_struct_type(ctx).as_pointer(),
+                self._get_evaluate_state_struct_type(ctx).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                 ctx.float_ty.as_pointer(),
                 ctx.float_ty.as_pointer()]
@@ -1067,12 +1067,12 @@ class OptimizationControlMechanism(ControlMechanism):
     def _gen_llvm_evaluate_function(self):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
-                    self._get_evaluate_context_struct_type(ctx).as_pointer(),
+                    self._get_evaluate_state_struct_type(ctx).as_pointer(),
                     self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                     self._get_evaluate_output_struct_type(ctx).as_pointer(),
                     self._get_evaluate_input_struct_type(ctx).as_pointer(),
                     ctx.get_param_struct_type(self.agent_rep).as_pointer(),
-                    ctx.get_context_struct_type(self.agent_rep).as_pointer(),
+                    ctx.get_state_struct_type(self.agent_rep).as_pointer(),
                     ctx.get_data_struct_type(self.agent_rep).as_pointer()]
 
             builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
@@ -1164,7 +1164,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if is_comp:
             ctx = pnlvm.LLVMBuilderContext.get_global()
             extra_args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
-                          ctx.get_context_struct_type(self.agent_rep).as_pointer(),
+                          ctx.get_state_struct_type(self.agent_rep).as_pointer(),
                           ctx.get_data_struct_type(self.agent_rep).as_pointer()]
         else:
             extra_args = []

@@ -1576,9 +1576,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         projection_t = ctx.get_param_struct_type(self.recurrent_projection)
         return pnlvm.ir.LiteralStructType([transfer_t, projection_t])
 
-    def _get_context_struct_type(self, ctx):
-        transfer_t = ctx.get_context_struct_type(super())
-        projection_t = ctx.get_context_struct_type(self.recurrent_projection)
+    def _get_state_struct_type(self, ctx):
+        transfer_t = ctx.get_state_struct_type(super())
+        projection_t = ctx.get_state_struct_type(self.recurrent_projection)
         return_t = ctx.get_output_struct_type(self)
         return pnlvm.ir.LiteralStructType([transfer_t, projection_t, return_t])
 

@@ -196,9 +196,9 @@ class LLVMBuilderContext:
         params = component._get_param_values()
         return self.convert_python_struct_to_llvm_ir(params)
 
-    def get_context_struct_type(self, component):
-        if hasattr(component, '_get_context_struct_type'):
-            return component._get_context_struct_type(self)
+    def get_state_struct_type(self, component):
+        if hasattr(component, '_get_state_struct_type'):
+            return component._get_state_struct_type(self)
 
         try:
             stateful = component._get_context_values()
@@ -232,7 +232,7 @@ class LLVMBuilderContext:
 
         name = 'exec_sim_wrap_' if simulation else 'exec_wrap_'
         name += composition.name
-        args = [self.get_context_struct_type(composition).as_pointer(),
+        args = [self.get_state_struct_type(composition).as_pointer(),
                 self.get_param_struct_type(composition).as_pointer(),
                 self.get_input_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),
@@ -397,7 +397,7 @@ class LLVMBuilderContext:
     def gen_composition_run(self, composition, simulation=False):
         name = 'run_sim_wrap_' if simulation else 'run_wrap_'
         name += composition.name
-        args = [self.get_context_struct_type(composition).as_pointer(),
+        args = [self.get_state_struct_type(composition).as_pointer(),
                 self.get_param_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),
                 self.get_input_struct_type(composition).as_pointer(),

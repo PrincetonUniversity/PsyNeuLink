@@ -2552,29 +2552,29 @@ class Mechanism_Base(Mechanism):
     def _get_mech_params_type(self, ctx):
         pass
 
-    def _get_input_context_struct_type(self, ctx):
-        gen = (ctx.get_context_struct_type(state) for state in self.input_states)
+    def _get_input_state_struct_type(self, ctx):
+        gen = (ctx.get_state_struct_type(state) for state in self.input_states)
         return pnlvm.ir.LiteralStructType(gen)
 
-    def _get_param_context_struct_type(self, ctx):
-        gen = (ctx.get_context_struct_type(state) for state in self.parameter_states)
+    def _get_param_state_struct_type(self, ctx):
+        gen = (ctx.get_state_struct_type(state) for state in self.parameter_states)
         return pnlvm.ir.LiteralStructType(gen)
 
-    def _get_output_context_struct_type(self, ctx):
-        gen = (ctx.get_context_struct_type(state) for state in self.output_states)
+    def _get_output_state_struct_type(self, ctx):
+        gen = (ctx.get_state_struct_type(state) for state in self.output_states)
         return pnlvm.ir.LiteralStructType(gen)
 
-    def _get_function_context_struct_type(self, ctx):
-        return ctx.get_context_struct_type(self.function)
+    def _get_function_state_struct_type(self, ctx):
+        return ctx.get_state_struct_type(self.function)
 
-    def _get_context_struct_type(self, ctx):
-        input_context_struct = self._get_input_context_struct_type(ctx)
-        output_context_struct = self._get_output_context_struct_type(ctx)
-        param_context_struct = self._get_param_context_struct_type(ctx)
-        function_context_struct = self._get_function_context_struct_type(ctx)
+    def _get_state_struct_type(self, ctx):
+        input_state_struct = self._get_input_state_struct_type(ctx)
+        output_state_struct = self._get_output_state_struct_type(ctx)
+        param_state_struct = self._get_param_state_struct_type(ctx)
+        function_state_struct = self._get_function_state_struct_type(ctx)
 
-        context_list = [input_context_struct, function_context_struct,
-                        output_context_struct, param_context_struct]
+        context_list = [input_state_struct, function_state_struct,
+                        output_state_struct, param_state_struct]
 
         mech_context = self._get_mech_context_type(ctx)
         if mech_context is not None:

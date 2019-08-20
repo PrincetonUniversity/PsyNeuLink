@@ -1022,8 +1022,8 @@ class Projection_Base(Projection):
     def _get_param_struct_type(self, ctx):
         return ctx.get_param_struct_type(self.function)
 
-    def _get_context_struct_type(self, ctx):
-        return ctx.get_context_struct_type(self.function)
+    def _get_state_struct_type(self, ctx):
+        return ctx.get_state_struct_type(self.function)
 
     def _get_param_initializer(self, execution_id):
         return self.function._get_param_initializer(execution_id)

@@ -747,9 +747,9 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
 
-    def _get_context_struct_type(self, ctx):
-        distance_state = ctx.get_context_struct_type(self.distance_function)
-        selection_state = ctx.get_context_struct_type(self.selection_function)
+    def _get_state_struct_type(self, ctx):
+        distance_state = ctx.get_state_struct_type(self.distance_function)
+        selection_state = ctx.get_state_struct_type(self.selection_function)
         # Get random state
         random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state"))
         # Construct a ring buffer
