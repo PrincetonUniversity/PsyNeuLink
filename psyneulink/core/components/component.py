@@ -906,9 +906,6 @@ class Component(object, metaclass=ComponentsMeta):
     #     kwPreferenceSetName: 'ComponentCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # Determines whether class_defaults.variable can be changed (to match an variable in __init__ method)
-    variableClassDefault_locked = False
-
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
     # Notes:
     # *  entry values here do NOT implement the param; they are simply used as type specs for checking (in __init__)
@@ -2457,13 +2454,6 @@ class Component(object, metaclass=ComponentsMeta):
         # Note: this insures that variable will be AT LEAST 1D;  however, can also be higher:
         #       e.g., given a list specification of [[0],[0]], it will return a 2D np.array
         variable = convert_to_np_array(variable, 1)
-
-        # If self.class_defaults.variable is locked, then check that variable matches it
-        if self.variableClassDefault_locked:
-            if not variable.dtype is self.class_defaults.variable.dtype:
-                message = f"Variable for {self.componentName} (in {context}) " \
-                    f"must be a {self.class_defaults.variable.__class__.__name__}."
-                raise ComponentError(message)
 
         return variable
 

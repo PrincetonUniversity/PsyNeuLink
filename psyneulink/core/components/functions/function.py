@@ -599,8 +599,6 @@ class Function_Base(Function):
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
-    variableClassDefault_locked = False
-
     class Parameters(Function.Parameters):
         """
             Attributes
@@ -998,10 +996,6 @@ class ArgumentTherapy(Function_Base):
         kwPreferenceSetName: 'ExampleClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
-
-    # Variable class default
-    # This is used both to type-cast the variable, and to initialize defaults.variable
-    variableClassDefault_locked = False
 
     # Mode indicators
     class Manner(Enum):
