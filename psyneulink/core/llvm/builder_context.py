@@ -201,7 +201,7 @@ class LLVMBuilderContext:
             return component._get_context_struct_type(self)
 
         try:
-            stateful = tuple(getattr(component, sa) for sa in component.stateful_attributes)
+            stateful = component._get_context_values()
             return self.convert_python_struct_to_llvm_ir(stateful)
         except AttributeError:
             return ir.LiteralStructType([])
