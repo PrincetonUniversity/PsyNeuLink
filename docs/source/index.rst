@@ -237,6 +237,7 @@ Contributors
 * **Justin Junge**, Department of Psychology, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Katherine Mantel**, Princeton Neuroscience Institute, Princeton University
+* **Dillon Smith**, Princeton Neuroscience Institute, Princeton University
 * **Markus Spitzer**, Princeton Neuroscience Institute, Princeton University
 * **Jan Vesely**, Department of Computer Science, Rutgers University
 * **Changyan Wang**, Princeton Neuroscience Institute, Princeton University
@@ -247,6 +248,7 @@ With substantial and greatly appreciated assistance from:
 * **Abhishek Bhattacharjee**, Department of Computer Science, Rutgers University
 * **Mihai Capota**, Intel Labs, Intel Corporation
 * **Bryn Keller**, Intel Labs, Intel Corporation
+* **Susan Liu**, Princeton Neuroscience Institute, Princeton University
 * **Garrett McGrath**, Princeton Neuroscience Institute, Princeton University
 * **Sebastian Musslick**, Princeton Neuroscience Institute, Princeton University
 * **Amitai Shenhav**, Cognitive, Linguistic, & Psychological Sciences, Brown University
