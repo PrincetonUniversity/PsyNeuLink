@@ -844,11 +844,18 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
-    def _get_context_values(self, execution_id=None):
+    def _get_compilation_context(self):
         try:
-            return tuple(getattr(self.parameters, sa)._get(execution_id) for sa in self.stateful_attributes)
+            stateful = self.stateful_attributes
         except AttributeError:
-            return tuple()
+            return ()
+        return (getattr(self.parameters, sa) for sa in stateful)
+
+    def _get_context_ids(self):
+        return [sp.name for sp in self._get_compilation_context()]
+
+    def _get_context_values(self, execution_id=None):
+        return tuple(sp._get(execution_id) for sp in self._get_compilation_context())
 
     def _get_context_initializer(self, execution_id):
         stateful = self._get_context_values(execution_id)
