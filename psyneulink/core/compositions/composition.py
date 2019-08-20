@@ -93,6 +93,8 @@ In the following script comp_0, comp_1 and comp_2 are identical, but constructed
     >>> comp_1_output = comp_1.run(inputs=input_dict)
     >>> comp_2_output = comp_2.run(inputs=input_dict)
 
+.. _Composition_Nested:
+
 *Nested Compositions*
 =====================
 
@@ -634,22 +636,30 @@ Learning
 --------
 
 Learning is used to modify the `Projections <Projection>` between Mechanisms in a Composition.  More specifically,
-it modifies the `matrix <MappingProjection.matrix>` parameter of those `MappingProjections
-<MappingProjection>`, which repesent the strengths ("weights") of the associations between representations in
-the Mechanisms they connect.  There are two ways of implementing learning in a Composition:  using standard
-PsyNeuLink Components, or by using `AutodiffComposition` -- a specialized subclass
-of Composition that executes learning using `PyTorch <https://pytorch.org>`_.  The advantage of the latter is that
-it executes more quickly. However, implementing learning using standard PsyNeuLink Components provides a more fully
-exposed view of the operations involved in learning, including those responsible for computing errors, and for
-using those to modify the Projections between Mechanisms (see `LearningMechanisms_Note` for further discussion).
-Each of these approaches is described below.
+it modifies the `matrix <MappingProjection.matrix>` parameter of those `MappingProjections <MappingProjection>`,
+which implements the strengths ("weights") of the associations between representations in the Mechanisms they connect.
+There are three ways of implementing learning in a Composition:  i) using `standard PsyNeuLink Components
+<Composition_Learning_Standard>`; ii) using the `AutodiffComposition <Composition_Learning_Autodiff>` -- a
+specialized subclass of Composition that executes learning using `PyTorch <https://pytorch.org>`_; and iii) by using
+`UserDefinedFunctions <UserDefinedFunctions>`.  The advantage of using standard PsyNeuLink compoments is that it
+assigns each operation involved in learning to a dedicated Component. This helps make clear exactly what those
+operations are, the sequence in which they are carried out, and how they interact with one another.  However,
+this can also make execution inefficient, due to the "overhead" incurred by distributing the calculations over
+different Components.  If more efficient computation is critical, then the `AutodiffComposition` can be used to
+execute a compatible PsyNeuLink Composition in PyTorch, or one or more `UserDefinedFunctions <UserDefinedFunctions>`
+can be assigned to either PyTorch functions or those in any other Python environment that implements learning and
+accepts and returns tensors. Each of these approaches is described in more detail below.
 
 .. _Composition_Learning_Standard
 
 Learning Using PsyNeuLink Components
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Learning is generally divided into two broad classes:  *unsupervised*, in which associative strenghts are modified
+When learning is `implemented using standard PsyNeuLink Components <Composition_Learning_Standard>`, each calculation
+and/or operation involved in learning -- including those responsible for computing errors, and for using those to
+modify the Projections between Mechanisms, is assigned to a different PsyNeuLink `learning-related Component
+<Composition_Learning_Components>`.  These can be used to implement any form of learning.  Learning is generally
+considered to fall into two broad classes:  *unsupervised*, in which associative strenghts are modified
 by mere exposure to the inputs, in order to capture structure and/or relationships among them;  and *supervised*,
 which in which the associative strengths are modified so that each input generates a desired output (see
 `<https://www.geeksforgeeks.org/supervised-unsupervised-learning/>`_ for a useful summary).  Both forms of
@@ -678,8 +688,8 @@ executed, its AutoassociativeLearningMechanism is also executed, which updates t
 in response to its input.
 
 COMMENT:
-XXX DISCUSS learning components WHEN add_node AND add_linear_processing_pathway RETURN THEM
-XXX ADD EXAMPLE HERE
+• DISCUSS LEARNING COMPONENTS RETURNED WHEN add_node AND add_linear_processing_pathway RETURN THEM
+• ADD EXAMPLE HERE
 COMMENT
 
 .. _Composition_Learning_Supervised:
@@ -690,9 +700,9 @@ COMMENT:
 TBI:  Supervised learning is implemented using a Composition's `add_learning_pathway` method, and specifying an
 appropriate `LearningFunction` in its **learning_function** argument.  XXXMORE HERE ABOUT TYPES OF FUNCTIONS
 
-MODIFY WHEN LEARNING COMPONENTS ARE IMPLEMENTED AS AN ENUM CLASS
-EXPLAIN BUILDING UP OF MORE COMPLICATED BP NETWORKS USING CONSTITUENT PATHWAYS (INCLUDING RL & BP MIXES?)
-GIVE EXAMPLES
+• MODIFY WHEN LEARNING COMPONENTS ARE IMPLEMENTED AS AN ENUM CLASS
+• EXPLAIN BUILDING UP OF MORE COMPLICATED BP NETWORKS USING CONSTITUENT PATHWAYS (INCLUDING RL & BP MIXES?)
+• GIVE EXAMPLES
 
 COMMENT
 
@@ -765,8 +775,8 @@ computed and propagated by each LearningMechanism in the network.
 XXX
 
 COMMENT:
-XXX ADD DESCRIPTION OF OTHER LEARNING-RELATED ATTRBUTES
-XXX ADD DESCRIPTION OF LEARNING-RELATED NodeRoles:
+• ADD DESCRIPTION OF OTHER LEARNING-RELATED ATTRBUTES
+• ADD DESCRIPTION OF LEARNING-RELATED NodeRoles:
     LEARNING;
     ALSO OUTPUT REMAINS LAST MECHANISM IN PROCESSING PATHWAY
        (EVEN THOUGH IF IT WAS A TERMINAL IT MAY NO LONGER BE SO)
@@ -799,8 +809,6 @@ than one learning pathway specified for a Composition (that is, those pathways c
        Mechanism. As a consequence, if `BackPropagation` is used for learning, then Mechanism 4 will project to a
        `TARGET` Mechanism of the System, while Mechanism 3 will not.
 
-
-
 XXX ADD DESCRIPTION OF EXECUTION:
     FIRST PROCESING MECHANISM, THEN LEARNING COMPONENTS
     LAZY UPDATING OF WEIGHTS
@@ -826,44 +834,51 @@ FIGURES FROM PROCESS:
    <Mechanism_Role_In_Processes_And_Systems>` in the Process -- see also `Process_Mechanisms` and `Keywords`).
 COMMENT
 
-.. _Composition_Learning_PyTorch
+.. _Composition_Learning_AutodiffComposition:
 
-Learning Using PyTorch
-~~~~~~~~~~~~~~~~~~~~~~
+Learning Using AutodiffCompositon
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When learning is `implemented using standard PsyNeuLink Components <Composition_Learning_Standard>`, each calculation
-and/or operation involved in learning is assigned to a different PsyNeuLink Component (i.e., ProcessingMechanisms,
-MappingProjections, LearningMechanisms, LearningProjections, etc., as outlined `above <Composition_Learning_Standard>`).
-This helps make clear exactly what those operations are, the sequence in which they are carried out, and how they
-interact with one another.  However, this can also make execution inefficient, due to the "oeverhead" incurred by
-distributing the calaculations over different components.  Environments dedicated to implementing learning,
-such as PyTorch, achieve efficiency by consolidating those calculations as much as possible, and keeping them as
-close to the place where they are used as possible (i.e., the functions and matrices used for processing).
-PsyNeuLink provides two ways to exploit such efficiency.  The first uses `AutodiffComposition`, a special subclass of
-`Composition` that implements and can execute learning sequences specified in PsyNeuLink using `PyTorch
-<https://pytorch.org>`_.  The second assigns the `forward <XXX>`_  and `backward <XXX>`_ methods in PyTorch each as a
-`UserDefinedFunction` in PsyNeuLink.  Each of these appraoches is described below.
+The `AutodiffComposition` can be used to implement a Composition in PsyNeuLink, which is then executed using `PyTorch
+<https://pytorch.org>`_.  The AutodiffComposition constructor provides arguments for configuring the PyTorch
+implementation in various ways; the Composition is then built using the same methods (e.g., `add_node`,
+`add_projection`, `add_linear_processing_pathway`, etc.) as any other Composition, and it is executed using its `run
+<AutodiffComposition.run>` method.   Note that there is no need to use any `learning methods
+<Composition_Learning_Methods>` — the Composition is translated into PyTorch objects and functions, which are called
+when it is run.  It can be run in training mode (during which learning occurs) or test mode (which runs the
+Composition without learning).
 
-**AutodiffComoposition**
+The advantage of this approach is that it allows the Composition to be implemented in PsyNeuLink, while exploiting
+the efficiency of execution in PyTorch (which can yield as much as three orders of magnitude improvement).  However,
+a disadvantage is that there are restrictions on the kinds of Compositions that be implemented in this way.
+First, because it relies on PyTorch, it is best suited for use with `supervised
+learning <Composition_Learning_Supervised>`, although it can be used for some forms of `unsupervised learning
+<Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized maps
+<https://github.com/giannisnik/som>`).  Second, at present, all of the Components in the Composition will be subject
+to and must be compatible with learning.  This means that it cannot be used with a Composition that contains any
+`modulatory components <ModulatorySignal_Anatomy_Figure>` or that are modulated by them, whether by
+ModulatoryMechanisms within or outside the Composition;  this includes a `controller <Composition_Controller>`
+or any LearningMechanisms.  However, an AutodiffComposition *can* be `nested in a Composition <Composition_Nested>`
+that has such Components, so long as they do not project to the AutodiffComposition
 
-    def autodiff_processing(self, inputs, execution_id=None, do_logging=False, scheduler=None):
-        pytorch_representation = self.parameters.pytorch_representation._get(execution_id)
-        # run the model on inputs - switch autograd off for this (we don't need it)
-        with torch.no_grad():
-            tensor_outputs = pytorch_representation.forward(inputs, execution_id=execution_id, do_logging=do_logging, scheduler=scheduler)
+.. _Composition_Learning_UDF:
 
-        # get outputs back into numpy
-        outputs = []
-        for i in range(len(tensor_outputs)):
-            outputs.append(tensor_outputs[i].numpy().copy())
+Learning Using UserDefinedFunctions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        return outputs
+If execution efficiency is critical and the `AutodiffComposition` is too restrictive, then
 
-    # performs learning/training on all input-target pairs it recieves for given number of epochs
-    def autodiff_training(self, inputs, targets, epochs, execution_id=None, do_logging=False, scheduler=None):
+ADVANTGE:  FULLY GENERAL (TO ANY PYTHON ENVIRONMENT)
+DISADVANTGES:
+- CAN"T BE COMPILED, SO EFFICIENCY MAY BE COMPROMISED
+- REQUIRES ADHERENCE TO THE API OF THE UDF
+- MUST BE CAREFULLY COORDINATED WITH THE SCHEDULRE TO INSURE THAT THE APPROPRIATE FUNCTIONS (E.G., FORWARD AND
+BACKWARD) ARE CALLED AT THE RELEVANT POINTS IN EXECUTION OF THE COMPOSITION
 
-**Pytorch Methods as UserDefinedFunctions**
-
+the Auto
+FOR EXAMPLE, WITH PYTORCH:
+https://pytorch.org/docs/master/_modules/torch/autograd/function.html#Function.forward
+https://pytorch.org/docs/stable/_modules/torch/autograd.html#backward
 
 
 COMMENT:
