@@ -201,7 +201,7 @@ class LLVMBuilderContext:
             return component._get_state_struct_type(self)
 
         try:
-            stateful = component._get_context_values()
+            stateful = component._get_state_values()
             return self.convert_python_struct_to_llvm_ir(stateful)
         except AttributeError:
             return ir.LiteralStructType([])
@@ -217,7 +217,7 @@ class LLVMBuilderContext:
         return builder.gep(params_ptr, [self.int32_ty(0), idx])
 
     def get_state_ptr(self, component, builder, state_ptr, state_name):
-        idx = self.int32_ty(component._get_context_ids().index(state_name))
+        idx = self.int32_ty(component._get_state_ids().index(state_name))
         return builder.gep(state_ptr, [self.int32_ty(0), idx])
 
     def unwrap_2d_array(self, builder, element):
