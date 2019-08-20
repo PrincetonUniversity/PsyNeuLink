@@ -1355,12 +1355,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         return pnlvm.ir.LiteralStructType(param_type_list)
 
     def _get_function_state_struct_type(self, ctx):
-        context_type_list = [ctx.get_state_struct_type(self.function)]
+        state_struct_type_list = [ctx.get_state_struct_type(self.function)]
         if self.integrator_mode:
            assert self.integrator_function is not None
-           context_type_list.append(ctx.get_state_struct_type(self.integrator_function))
+           state_struct_type_list.append(ctx.get_state_struct_type(self.integrator_function))
 
-        return pnlvm.ir.LiteralStructType(context_type_list)
+        return pnlvm.ir.LiteralStructType(state_struct_type_list)
 
     def _get_function_param_initializer(self, execution_id):
         function_param_list = [self.function._get_param_initializer(execution_id)]

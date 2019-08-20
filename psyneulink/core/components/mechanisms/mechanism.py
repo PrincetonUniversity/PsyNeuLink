@@ -2576,13 +2576,13 @@ class Mechanism_Base(Mechanism):
         context_list = [input_state_struct, function_state_struct,
                         output_state_struct, param_state_struct]
 
-        mech_context = self._get_mech_context_type(ctx)
+        mech_context = self._get_mech_state_struct_type(ctx)
         if mech_context is not None:
             context_list.append(mech_context)
 
         return pnlvm.ir.LiteralStructType(context_list)
 
-    def _get_mech_context_type(self, ctx):
+    def _get_mech_state_struct_type(self, ctx):
         pass
 
     def _get_output_struct_type(self, ctx):
