@@ -160,7 +160,7 @@ The `Mechanisms <Mechanism>` in a System are assigned designations based on the 
        Any `ORIGIN` and `TERMINAL` Mechanisms of a System must be, respectively, the `ORIGIN` or `TERMINAL` of any
        Process(es) to which they belong.  However, it is not necessarily the case that the `ORIGIN` and/or `TERMINAL`
        Mechanism of a Process is also the `ORIGIN` and/or `TERMINAL` of a System to which the Process belongs (see
-       `example <LearningProjection_Target_vs_Terminal_Figure>`).
+       `example <LearningProjection_Output_vs_Terminal_Figure>`).
 
     .. note:: designations are stored in the `systems <Mechanism.systems>` attribute of a `Mechanism <Mechanism>`.
     COMMENT:
