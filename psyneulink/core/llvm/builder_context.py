@@ -407,9 +407,10 @@ class LLVMBuilderContext:
         if simulation:
             data_out.attributes.remove('nonnull')
 
-        if not simulation and "clear_run_data" in debug_env:
+        if not simulation and "const_data" in debug_env:
+            const_data = data.type.pointee(composition._get_data_initializer(None))
             data = builder.alloca(data.type.pointee)
-            builder.store(data.type.pointee(None), data)
+            builder.store(const_data, data)
 
         # Hardcode stateful parameters if set in the environment
         if not simulation and "const_state" in debug_env:

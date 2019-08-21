@@ -24,12 +24,13 @@ Increased debug output:
 Compilation modifiers:
  * "alloca_data" -- use alloca'd storage for composition data (exposes data flow)
  * "debug_info" -- emit line debugging information when generating LLVM IR
+ * "const_data" -- hardcode initial output values into generated code,
+                instead of loading them from the data argument
  * "const_input" -- hardcode input values for composition runs
  * "const_params" -- hardcode base parameter values into generated code,
                   instead of loading them from the param argument
  * "const_state" -- hardcode base context values into generate code,
                  instead of laoding them from the context argument
- * "clear_run_data" -- use clean slate to run trials instead of reusing data
  * "force_runs" -- set number of runs to be fixed ('1' if no other value is specified)
 
 Compiled code dump:

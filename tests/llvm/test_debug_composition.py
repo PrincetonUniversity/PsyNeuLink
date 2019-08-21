@@ -13,7 +13,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.scheduler import Scheduler
 
-debug_options=["const_input=[[[7]]]", "const_params", "const_data", "const_state", "clear_run_data", "force_runs=3"]
+debug_options=["const_input=[[[7]]]", "const_data", "const_params", "const_data", "const_state", "force_runs=3"]
 
 @pytest.mark.composition
 @pytest.mark.parametrize("mode", [
