@@ -728,9 +728,9 @@ return the set of learning components generates for the pathway, as described be
 
 .. _Composition_Learning_Components:
 
-The following Components are created for each learning sequence specified by a `learning method
-<Composition_Learning_Methods>`;  the named items are returned in a dictionary when the method is called (with the
-name of the item as the key for each entry, and the object(s) as its value):
+For each learning sequence specified in a `learning method <Composition_Learning_Methods>`, it creates the following
+Components, assigns them the `NodeRoles <NodeRole>` indicated, and returns the items below with names in a dictionary
+(in each name as the key of an entry and the object(s) created of that type as its value):
 
     .. _COMPARATOR_MECHANISM:
     * *COMPARATOR_MECHANISM* `ComparatorMechanism` -- used to `calculate an error signal
@@ -763,38 +763,32 @@ name of the item as the key for each entry, and the object(s) as its value):
 
 If the learning sequence involves more than two ProcessingMechanisms (e.g. using `add_backpropagation_learning_pathway`
 for a multilayered neural network), then additional LearningMechanisms are created, along with a MappingProjection
-through which each receives an `error_signal <LearningMechanism.error_signal>` from the LearningMechanism preceding it,
+that provides it with the `error_signal <LearningMechanism.error_signal>` from the LearningMechanism preceding it,
 and a `LearningProjection` that modifies the MappingProjection (`LEARNED_PROJECTION`) for which it is responsible in
 the sequence.  These are listed in the `LEARNING_MECHANISM` and `LEARNED_PROJECTION` entries of the dictionary returned
 by the learning method.
 
-The description above pertains to linear sequences.  However, more complex ones can be created by specifying multiple
-such sqeuences that diverge, converge, intersect, or any combination of those (see XXX for an example).  The learning
-method automatically creates and configures the relevant learning components so that the error terms are properly
-computed and propagated by each LearningMechanism in the network.
-XXX
-
-COMMENT:
-• ADD DESCRIPTION OF OTHER LEARNING-RELATED ATTRBUTES
-• ADD DESCRIPTION OF LEARNING-RELATED NodeRoles:
-    LEARNING;
-    ALSO OUTPUT REMAINS LAST MECHANISM IN PROCESSING PATHWAY
-       (EVEN THOUGH IF IT WAS A TERMINAL IT MAY NO LONGER BE SO)
-
-If a `TERMINAL` Mechanism of a Composition receives a MappingProjection that is specified for learning,
-then it always projects to a `COMPARATOR_MECHANISM` in that
-Composition. It is important to note, in this context, the status of a Mechanism in the overall Composition takes
-precedence over its status in any of the pathways specified when creating the Composition. This means that even if a
-Mechanism is the last one specified in the **pathway** argument of a `learning method <Composition_Learning_Methods>`,
-if: i) that pathway is contiguous (i.e., abuts or intersects) with others in the Composition, ii) the Mechanism
-appears in any of those  other pathways and, iii) it is not the `TERMINAL` of *all* of them, then it will *not* be
-the `TERMINAL` for the  Composition.  As a consequence, although it would project to a `COMPARATOR_MECHANISM` in the
-pathway for which it is the `TERMINAL` if that pathway was isolated from any other learning pathways, it will not do so if that pathway
-is continguous with any others, and its LearningMechanism will receive its error_signal from another
-LearningMechanism rather than the `COMPARATOR_MECHANISM` (see `figure below
-<LearningProjection_Target_vs_Terminal_Figure>` for an example).  Finally, if a Mechanisms is the `TERMINAL` for more
-than one learning pathway specified for a Composition (that is, those pathways converge on that Mechanism), only one
-`COMPARATOR_MECHANISM` will be created for it in the Composition.
+The description above pertains to simple linear sequences.  However, more complex configurtions, with convergent,
+divergent and/or intersecting sequences can be built using multiple calls to the learning method (see XXX for an
+example).  In each call, the learning method determines how the sequence to be added relates to any existing ones with
+which it abuts or intersects, and automatically creates and configures the relevant learning components so that the
+error terms are properly computed and propagated by each LearningMechanism to the next in the configuration.
+It is important to note that, in doing so, the status of a Mechanism in the final configuration takes precedence
+over its status in any of the individual sequences specified in the `learning methods <Composition_Learning_Methods>`
+when building the Composition.  In particular, whereas ordinarily the last ProcessingMechanism of a sequence specified
+in a learning method projects to a `COMPARATOR_MECHANISM`, this may be superceded if multiple sequences are created.
+This is the case if: i) the Mechanism is in a seqence that is contiguous (i.e., abuts or intersects) with others
+already in the Composition, ii) the Mechanism appears in any of those other sequences and, iii) it is not the last
+Mechanism in *all* of them;  in that in that case, it will not project to a `COMPARATOR_MECHANISM` (see `figure below
+<LearningProjection_Target_vs_Terminal_Figure>` for an example).  Furthermore, if it *is* the last Mechanism in all of
+them (that is, all of the specified pathways converge on that Mechanism), only one `COMPARATOR_MECHANISM` is created
+for that Mechanism (i.e., not one for each sequence).  Finally, it should be noted that, by default, learning components
+are *not* assigned the `NodeRole` of `OUTPUT` even though they may be the `TERMINAL` Mechanism of a Composition;
+conversely, even though the last Mechanism of a learning sequence projects to a `COMPARATOR_MECHANISM`, and thus is not
+the `TERMINAL` node of a Composition, if it does not project to any other Mechanisms in the Composition it is
+nevertheless assigned as an `OUTPUT` of the Composition.  That is, Mechanisms that would otherwise have been the
+`TERMINAL` Mechanism of a Composition preserve their role as an `OUTPUT` of the Composition if they are part of a
+learning sequence even though they project to another Mechanism (the `COMPARATOR_MECHANISM`) in the Composition.
 
 .. _LearningProjection_Target_vs_Terminal_Figure:
 
@@ -813,12 +807,6 @@ XXX ADD DESCRIPTION OF EXECUTION:
     FIRST PROCESING MECHANISM, THEN LEARNING COMPONENTS
     LAZY UPDATING OF WEIGHTS
 
-    XXX?EXPLAIN IF TRUE FOR COMPOSITION:
-    .. note::
-       The Components created when learning is specified for individual MappingProjections of a Process (or subsets of
-       them) take effect only if the Process is executed on its own (i.e., using its `execute <Process.execute>`
-       or `run <Process.run>` methods.  For learning to in a Process when it is `executed as part of a System
-       <System_Execution_Learning>`, learning must be specified for the *entire Process*, as described above.
 
 FIGURES FROM PROCESS:
 
