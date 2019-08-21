@@ -854,46 +854,33 @@ a disadvantage is that there are restrictions on the kinds of Compositions that 
 First, because it relies on PyTorch, it is best suited for use with `supervised
 learning <Composition_Learning_Supervised>`, although it can be used for some forms of `unsupervised learning
 <Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized maps
-<https://github.com/giannisnik/som>`).  Second, at present, all of the Components in the Composition will be subject
-to and must be compatible with learning.  This means that it cannot be used with a Composition that contains any
-`modulatory components <ModulatorySignal_Anatomy_Figure>` or that are modulated by them, whether by
+<https://github.com/giannisnik/som>`).  Second, all of the Components in the Composition are be subject to and must
+be with compatible with learning.   This means that it cannot be used with a Composition that contains any
+`modulatory components <ModulatorySignal_Anatomy_Figure>` or that are subject to modulation, whether by
 ModulatoryMechanisms within or outside the Composition;  this includes a `controller <Composition_Controller>`
-or any LearningMechanisms.  However, an AutodiffComposition *can* be `nested in a Composition <Composition_Nested>`
-that has such Components, so long as they do not project to the AutodiffComposition
+or any LearningMechanisms.  An AutodiffComposition can be `nested in a Composition <Composition_Nested>`
+that has such other Components.  During learning, none of the internal Components of the AutodiffComposition (e.g.,
+intermediate layers of a neural network model) are accessible to the other Components of the outer Composition,
+(e.g., as sources of information, or for modulation).  However, when learning turned off, then the  AutodiffComposition
+functions like any other, and all of its internal  Components accessible to other Components of the outer Composition.
+Thus, as long as access to its internal Components is not needed during learning, an `AutodiffComposition` can be
+trained, and then used to execute the trained Composition like any other.
 
 .. _Composition_Learning_UDF:
 
 Learning Using UserDefinedFunctions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If execution efficiency is critical and the `AutodiffComposition` is too restrictive, then
-
-ADVANTGE:  FULLY GENERAL (TO ANY PYTHON ENVIRONMENT)
-DISADVANTGES:
-- CAN"T BE COMPILED, SO EFFICIENCY MAY BE COMPROMISED
-- REQUIRES ADHERENCE TO THE API OF THE UDF
-- MUST BE CAREFULLY COORDINATED WITH THE SCHEDULRE TO INSURE THAT THE APPROPRIATE FUNCTIONS (E.G., FORWARD AND
-BACKWARD) ARE CALLED AT THE RELEVANT POINTS IN EXECUTION OF THE COMPOSITION
-
-the Auto
-FOR EXAMPLE, WITH PYTORCH:
-https://pytorch.org/docs/master/_modules/torch/autograd/function.html#Function.forward
-https://pytorch.org/docs/stable/_modules/torch/autograd.html#backward
-
-
-COMMENT:
-- MAIN WAY:  USING PNL SYNTAX
-   - CONVERTS PNL COMPOSITION INTO PYTORCH
-   - LEARNING IS RUN IN PYTORCH
-   - EXECUTION CAN BE IN EITHER
-   - WEIGHTS (PARAMETERS) LEARNED IN PYTORCH CAN BE ASSIGNED TO PNL IMPLEMENTATION FOR EXECUTION
-     (E.G., ALLLOWING COMPONENTS TO BE CONTROLLED DURING EXECUTION)
-   - RESTRICTED TO?
-- SEONCDARY WAY:  ASSIGN FWD & BACK METHODS AS UDF
-   - ADVANTAGE:  FULLY FLEXIBLE
-   - DISADVANTAGE:  OPAQUE TO REST OF PNL (E.G., NO EASY WAY TO MODULATE COMPONENTS, ACCESS WEIGHTS, ETC.)
-COMMENT
-
+If execution efficiency is critical and the `AutodiffComposition` is too restrictive, a function from any Python
+environment that supports learning can be assigned as the `function <Mechanism_Base.function>` of a `Mechanism`,
+in which case it is automatically  wrapped as `UserDefinedFunction`.  For example, the `forward and backward methods
+<https://pytorch.org/docs/master/notes/extending.html>`_ of a PyTorch object can be assigned in this way.  The
+advanatage of this approach is that it can be applied to any Python function that adheres to the requirements of a
+`UserDefinedFunction`.  The disadvantage is that it can't be `compiled`, so efficiency may be compromised.  It must
+also be carefully coordinated with the execution of other learning-related Components in the Composition, to insure
+that each function is called at the appropriate times during execution.  Furthermore, as with an `AutodiffComposition`,
+the internal constituents of the object (e.g., intermediates layers of a neural network model) are not accessible to
+other Components in the Composition (e.g., as a source of information or for modulation).
 
 .. _Visualizing_a_Composition:
 
