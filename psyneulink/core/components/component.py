@@ -963,48 +963,21 @@ class Component(object, metaclass=ComponentsMeta):
             raise ComponentError(f"Unrecognized argument{plural} in constructor for {self.name} "
                                  f"(type: {self.__class__.__name__}): {repr(', '.join(illegal_args))}")
 
-        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
-
         context = ContextFlags.COMPONENT
 
-        # assign defaults based on pass in params and class defaults
-        defaults = self.class_defaults.values(show_all=True).copy()
         try:
             function_params = param_defaults[FUNCTION_PARAMS]
         except KeyError:
             function_params = None
 
-        if param_defaults is not None:
-            # Exclude any function_params from the items to set on this Component
-            # because these should just be pointers to the parameters of the same
-            # name on this Component's function
-            # Exclude any pass parameters whose value is None (assume this means "use the normal default")
-            d = {
-                k: v for (k, v) in param_defaults.items()
-                if (
-                    k not in defaults
-                    or (
-                        (function_params is None or k not in function_params)
-                        and v is not None
-                    )
-                )
-            }
-            for p in d:
-                try:
-                    getattr(self.parameters, p)._user_specified = True
-                except AttributeError:
-                    pass
-            defaults.update(d)
+        self._initialize_parameters(**param_defaults)
 
         v = self._handle_default_variable(default_variable, size)
         if v is None:
-            default_variable = defaults[VARIABLE]
+            default_variable = self.defaults.variable
         else:
             default_variable = v
-            defaults[VARIABLE] = default_variable
-
-        self.defaults = Defaults(owner=self, **defaults)
-        self._initialize_parameters()
+            self.defaults.variable = default_variable
 
         self._assign_context_values(
             None,
@@ -2118,7 +2091,40 @@ class Component(object, metaclass=ComponentsMeta):
                                       target_set=target_set,
                                       context=context)
 
-    def _initialize_parameters(self):
+    def _initialize_parameters(self, **param_defaults):
+        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
+
+        # assign defaults based on pass in params and class defaults
+        defaults = self.class_defaults.values(show_all=True).copy()
+        try:
+            function_params = param_defaults[FUNCTION_PARAMS]
+        except KeyError:
+            function_params = None
+
+        if param_defaults is not None:
+            # Exclude any function_params from the items to set on this Component
+            # because these should just be pointers to the parameters of the same
+            # name on this Component's function
+            # Exclude any pass parameters whose value is None (assume this means "use the normal default")
+            d = {
+                k: v for (k, v) in param_defaults.items()
+                if (
+                    k not in defaults
+                    or (
+                        (function_params is None or k not in function_params)
+                        and v is not None
+                    )
+                )
+            }
+            for p in d:
+                try:
+                    getattr(self.parameters, p)._user_specified = True
+                except AttributeError:
+                    pass
+            defaults.update(d)
+
+        self.defaults = Defaults(owner=self, **defaults)
+
         for p in self.parameters:
             # set default to None context to ensure it exists
             if p.getter is None and p._get() is None:

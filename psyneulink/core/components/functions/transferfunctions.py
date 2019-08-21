@@ -3054,6 +3054,25 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         receiver_len = len(owner.receiver.defaults.variable)
         return function(sender_len, receiver_len)
 
+    def _is_identity(self, execution_id=None):
+        matrix = self.parameters.matrix._get(execution_id)
+
+        # if matrix is not an np array with at least one dimension,
+        # this isn't an identity matrix
+        try:
+            size = matrix.shape[0]
+        except (AttributeError, IndexError):
+            return False
+
+        # check if the matrix is the same as the identity matrix
+        # note that we can use the first dimension size to create the identity matrix
+        # because if the matrix is not square, this comparison will fail anyway
+        identity_matrix = np.identity(size)
+        # numpy has deprecated == comparisons of arrays
+        try:
+            return np.array_equal(matrix, identity_matrix)
+        except TypeError:
+            return matrix == identity_matrix
 
 # def is_matrix_spec(m):
 #     if m is None:
