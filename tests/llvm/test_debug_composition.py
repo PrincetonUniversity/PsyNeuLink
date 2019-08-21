@@ -38,6 +38,7 @@ def test_debug_comp(mode, debug_env):
 
     inputs_dict = {A: [5]}
     output1 = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+    output2 = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
     # restore old debug env var and cleanup the debug configuration
     if old_env is None:
         del os.environ["PNL_LLVM_DEBUG"]
@@ -45,20 +46,24 @@ def test_debug_comp(mode, debug_env):
         os.environ["PNL_LLVM_DEBUG"] = old_env
     pnlvm.debug._update()
 
-    assert len(comp.results) == (3 if  "force_runs" in debug_env else 1)
+    assert len(comp.results) == 6 if  "force_runs" in debug_env else 2
+
+    if "force_runs" in debug_env and "const_input" in debug_env:
+        expected1 = 153.125
+        expected2 = 172.265
+    elif "force_runs" in debug_env:
+        expected1 = 109.375
+        expected2 = 123.046
+    elif "const_input" in debug_env:
+        expected1 = 87.5
+        expected2 = 131.25
+    else:
+        expected1 = 62.5
+        expected2 = 93.75
 
     if "const_state" in debug_env:
-        if "const_input" in debug_env:
-            expected1 = 87.5
-        else:
-            expected1 = 62.5
-    else:
-        if "force_runs" in debug_env and "const_input" in debug_env:
-            expected1 = 153.125
-        elif "force_runs" in debug_env:
-            expected1 = 109.375
-        elif "const_input" in debug_env:
-            expected1 = 87.5
-        else:
-            expected1 = 62.5
+        expected2 = expected1
+
+
     assert np.allclose(expected1, output1[0][0])
+    assert np.allclose(expected2, output2[0][0])

@@ -246,11 +246,6 @@ class LLVMBuilderContext:
             params = builder.alloca(const_params.type, name="const_params_loc")
             builder.store(const_params, params)
 
-        if "const_state" in debug_env:
-            const_state = context.type.pointee(composition._get_state_initializer(None))
-            context = builder.alloca(const_state.type, name="const_state_loc")
-            builder.store(const_state, context)
-
         if "alloca_data" in debug_env:
             data = builder.alloca(data_arg.type.pointee)
             data_vals = builder.load(data_arg)
@@ -415,6 +410,12 @@ class LLVMBuilderContext:
         if not simulation and "clear_run_data" in debug_env:
             data = builder.alloca(data.type.pointee)
             builder.store(data.type.pointee(None), data)
+
+        # Hardcode stateful parameters if set in the environment
+        if not simulation and "const_state" in debug_env:
+            const_state = context.type.pointee(composition._get_state_initializer(None))
+            context = builder.alloca(const_state.type, name="const_state_loc")
+            builder.store(const_state, context)
 
         if not simulation and "const_input" in debug_env:
             if not debug_env["const_input"]:
