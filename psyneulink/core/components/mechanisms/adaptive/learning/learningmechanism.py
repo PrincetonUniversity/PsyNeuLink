@@ -382,7 +382,7 @@ is created or assigned to the LearningMechanism's *ERROR_SIGNAL* `OutputState <L
 
     **Components for Single Layer Learning**
 
-    .. figure:: _static/LearningMechanism_Single_Layer_Learning_Figure.svg
+    .. figure:: _static/LearningMechanism_Single_Layer_Learning_fig.svg
        :alt: Schematic of Mechanisms and Projections involved in learning for a single MappingProjection
        :scale: 50 %
 
