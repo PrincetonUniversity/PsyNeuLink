@@ -1090,10 +1090,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # Create a simulation copy of composition data
             comp_data = builder.alloca(base_comp_data.type.pointee, name="data_copy")
-            if "clear_run_data" in pnlvm.debug.debug_env:
-                builder.store(comp_data.type.pointee(None), comp_data)
-            else:
-                builder.store(builder.load(base_comp_data), comp_data)
+            builder.store(builder.load(base_comp_data), comp_data)
 
             # Apply allocation sample to simulation data
             assert len(self.output_states) == len(allocation_sample.type.pointee)
