@@ -239,7 +239,7 @@ class LLVMBuilderContext:
         for a in llvm_func.args:
             a.attributes.add('noalias')
 
-        context, params, comp_in, data_arg, cond = llvm_func.args
+        state, params, comp_in, data_arg, cond = llvm_func.args
 
         if "const_params" in debug_env:
             const_params = params.type.pointee(composition._get_param_initializer(None))
@@ -256,14 +256,14 @@ class LLVMBuilderContext:
         # Call input CIM
         input_cim_w = composition._get_node_wrapper(composition.input_CIM, simulation)
         input_cim_f = self.get_llvm_function(input_cim_w)
-        builder.call(input_cim_f, [context, params, comp_in, data, data])
+        builder.call(input_cim_f, [state, params, comp_in, data, data])
 
         if simulation is False and composition.enable_controller and \
            composition.controller_mode == BEFORE:
             assert composition.controller is not None
             controller = composition._get_node_wrapper(composition.controller, simulation)
             controller_f = self.get_llvm_function(controller)
-            builder.call(controller_f, [context, params, comp_in, data, data])
+            builder.call(controller_f, [state, params, comp_in, data, data])
 
         # Allocate run set structure
         run_set_type = ir.ArrayType(ir.IntType(1), len(composition.nodes))
@@ -319,9 +319,9 @@ class LLVMBuilderContext:
                 builder.block.name = "invoke_" + mech_f.name
                 # Wrappers do proper indexing of all structures
                 if len(mech_f.args) == 5:  # Mechanism wrappers have 5 inputs
-                    builder.call(mech_f, [context, params, comp_in, data, output_storage])
+                    builder.call(mech_f, [state, params, comp_in, data, output_storage])
                 else:
-                    builder.call(mech_f, [context, params, comp_in, data, output_storage, cond])
+                    builder.call(mech_f, [state, params, comp_in, data, output_storage, cond])
 
                 cond_gen.generate_update_after_run(builder, cond, mech)
             builder.block.name = "post_invoke_" + mech_f.name
@@ -367,13 +367,13 @@ class LLVMBuilderContext:
             assert composition.controller is not None
             controller = composition._get_node_wrapper(composition.controller, simulation)
             controller_f = self.get_llvm_function(controller)
-            builder.call(controller_f, [context, params, comp_in, data, data])
+            builder.call(controller_f, [state, params, comp_in, data, data])
 
         # Call output CIM
         output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation)
         output_cim_f = self.get_llvm_function(output_cim_w)
         builder.block.name = "invoke_" + output_cim_f.name
-        builder.call(output_cim_f, [context, params, comp_in, data, data])
+        builder.call(output_cim_f, [state, params, comp_in, data, data])
 
         if "alloca_data" in debug_env:
             data_vals = builder.load(data)
@@ -401,7 +401,7 @@ class LLVMBuilderContext:
         for a in llvm_func.args:
             a.attributes.add('noalias')
 
-        context, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
+        state, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
         # simulation does not care about the output
         # it extracts results of the controller objective mechanism
         if simulation:
@@ -413,9 +413,9 @@ class LLVMBuilderContext:
 
         # Hardcode stateful parameters if set in the environment
         if not simulation and "const_state" in debug_env:
-            const_state = context.type.pointee(composition._get_state_initializer(None))
-            context = builder.alloca(const_state.type, name="const_state_loc")
-            builder.store(const_state, context)
+            const_state = state.type.pointee(composition._get_state_initializer(None))
+            state = builder.alloca(const_state.type, name="const_state_loc")
+            builder.store(const_state, state)
 
         if not simulation and "const_input" in debug_env:
             if not debug_env["const_input"]:
@@ -472,7 +472,7 @@ class LLVMBuilderContext:
             exec_f = self.get_llvm_function(composition._llvm_simulation.name)
         else:
             exec_f = self.get_llvm_function(composition)
-        builder.call(exec_f, [context, params, data_in_ptr, data, cond])
+        builder.call(exec_f, [state, params, data_in_ptr, data, cond])
 
         if not simulation:
             # Extract output_CIM result
