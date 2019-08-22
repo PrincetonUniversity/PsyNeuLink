@@ -10,16 +10,16 @@
 
 """
 ..
-    Sections:
-      * `Composition_Overview`
-      * `Composition_Creation`
-      * `Composition_Run`
-      * `Composition_Controller`
-      * `Composition_Controller`
-      * `Composition_Learning`
-      * `Composition_Learning`
-      * `Visualizing_a_Composition`
-      * `Composition_Class_Reference`
+**Sections:
+  * `Composition_Overview`
+  * `Composition_Creation`
+  * `Composition_Run`
+  * `Composition_Controller`
+  * `Composition_Controller`
+  * `Composition_Learning`
+  * `Composition_Learning`
+  * `Visualizing_a_Composition`
+  * `Composition_Class_Reference`
 
 .. _Composition_Overview:
 
@@ -724,7 +724,7 @@ COMMENT:
 TBI:  Supervised learning is implemented using a Composition's `add_learning_pathway` method, and specifying an
 appropriate `LearningFunction` in its **learning_function** argument.  XXXMORE HERE ABOUT TYPES OF FUNCTIONS
 • MODIFY WHEN LEARNING COMPONENT NAMES ARE IMPLEMENTED AS AN ENUM CLASS
-• ADD EXAMPLES
+• ADD EXAMPLES - POINT TO ONES IN BasicsAndSampler
 COMMENT
 
 Supervised learning is implemented using a Composition's method for the desired type of learning.  There are currently
@@ -804,6 +804,10 @@ in the sequence, as shown for an example in the figure below.  These additional 
    Composition's `graph <Composition.graph>` (in italics below Mechanism type) and the names of the learning
    components (capitalized in italics) returned by the learning method.
 
+COMMENT:
+• POINT TO EXAMPLE(S) OF MORE COMPLEX CONFIGURATIONS IN BasicsAndSampler
+COMMENT
+
 The description above pertains to simple linear sequences.  However, more complex configurtions, with convergent,
 divergent and/or intersecting sequences can be built using multiple calls to the learning method (see XXX for an
 example).  In each call, the learning method determines how the sequence to be added relates to any existing ones with
@@ -845,7 +849,8 @@ learning sequence even though they project to another Mechanism (the `COMPARATOR
 
 COMMENT:
 • ADD DESCRIPTION OF EXECUTION:
-    FIRST PROCESING MECHANISM, THEN LEARNING COMPONENTS
+    FIRST PROCESING MECHANISM, THEN LEARNING COMPONENTS -
+    • POINT TO ANIMATION IN BasicsAndSampler
     LAZY UPDATING OF WEIGHTS
 COMMENT
 
@@ -881,6 +886,9 @@ functions like any other, and all of its internal  Components accessible to othe
 Thus, as long as access to its internal Components is not needed during learning, an `AutodiffComposition` can be
 trained, and then used to execute the trained Composition like any other.
 
+COMMENT:
+• POINT TO EXAMPLE(S) IN BasicsAndSampler
+COMMENT
 .. _Composition_Learning_UDF:
 
 *Learning Using UserDefinedFunctions*
