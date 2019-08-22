@@ -2,10 +2,7 @@ Composition
 ===========
 
 .. toctree::
-   :maxdepth: 1
-
-   System
-   Process
+   :maxdepth: 2
 
 .. automodule:: psyneulink.core.compositions.composition
    :members:
