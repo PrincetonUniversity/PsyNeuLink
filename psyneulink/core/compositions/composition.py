@@ -579,7 +579,6 @@ attribute.
 
 
 COMMENT:
-
 For Developers
 --------------
 
@@ -627,7 +626,6 @@ another `termination condition <Scheduler_Termination_Conditions>` is met.  The 
 with `Condition` specifications for individual Components to execute different Components at different time scales.
 
 Runtime Params
-
 COMMENT
 
 .. _Composition_Learning
@@ -701,10 +699,8 @@ Supervised Learning
 COMMENT:
 TBI:  Supervised learning is implemented using a Composition's `add_learning_pathway` method, and specifying an
 appropriate `LearningFunction` in its **learning_function** argument.  XXXMORE HERE ABOUT TYPES OF FUNCTIONS
-
-• MODIFY WHEN LEARNING COMPONENTS ARE IMPLEMENTED AS AN ENUM CLASS
-• EXPLAIN BUILDING UP OF MORE COMPLICATED BP NETWORKS USING CONSTITUENT PATHWAYS (INCLUDING RL & BP MIXES?)
-• GIVE EXAMPLES
+• MODIFY WHEN LEARNING COMPONENT NAMES ARE IMPLEMENTED AS AN ENUM CLASS
+• ADD EXAMPLES
 COMMENT
 
 Supervised learning is implemented using a Composition's method for the desired type of learning.  There are currently
@@ -726,10 +722,6 @@ The Mechanisms in the pathway must be compatible with learning (that is, their `
 be compatible with the `function <LearningMechanism.function>` of the `LearningMechanism` for the MappingProjections
 they receive (see `LearningMechanism_Function`).  The Composition's `learning methods <Composition_Learning_Methods>`
 return the set of learning components generates for the pathway, as described below.
-
-COMMENT:
-• REFERENCE TO FIGS IN LEARNINGMECHANISM
-COMMENT
 
 .. _Composition_Learning_Components:
 
