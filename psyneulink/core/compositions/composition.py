@@ -156,6 +156,7 @@ Running a Composition
 The :keyword:`run` method presents the inputs for each `TRIAL` to the input_states of the INPUT Nodes in
 the `scope of execution <Run_Scope_of_Execution>`. These input values are specified in the **inputs** argument of a
 Composition's :keyword:`execute` or :keyword:`run` method.
+
 COMMENT:
     From KAM 2/7/19 - not sure "scope of execution" is the right phrase. To me, it implies that only a subset of the
     nodes in the Composition belong to the "scope of execution". What we want to convey (I think) is that ALL of the
@@ -446,7 +447,6 @@ Environment.
         return {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
 
     comp.run(inputs=input_dictionary)
-
 COMMENT
 
 
