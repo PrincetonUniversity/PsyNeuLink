@@ -200,7 +200,7 @@ def test_botvinick_model(benchmark, mode, reps):
 
         return results
 
-    res = benchmark(run, mode)
+    res = run(mode)
     if reps == 1:
         res2d = [x[0] for r in res for x in r]
         # NOTE: The formatting below provides visual split between
@@ -287,3 +287,4 @@ def test_botvinick_model(benchmark, mode, reps):
         assert np.allclose(res[2][ntrials0 - 1][1], [0.94524311])
         assert np.allclose(res[2][-1][1], [0.89963791])
 
+    benchmark(run, mode)
