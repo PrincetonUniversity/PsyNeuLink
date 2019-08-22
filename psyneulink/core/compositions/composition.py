@@ -12,6 +12,14 @@
 ..
     Sections:
       * `Composition_Overview`
+      * `Composition_Creation`
+      * `Composition_Run`
+      * `Composition_Controller`
+      * `Composition_Controller`
+      * `Composition_Learning`
+      * `Composition_Learning`
+      * `Visualizing_a_Composition`
+      * `Composition_Class_Reference`
 
 .. _Composition_Overview:
 
@@ -36,29 +44,29 @@ A generic Composition can be created by calling the constructor, and then adding
 following Composition methods:
 
     - `add_node <Composition.add_node>`
-        Adds a node to the Composition
+        adds a node to the Composition
     - `add_nodes <Composition.add_nodes>`
-        Adds mutiple nodes to the Composition
+        adds mutiple nodes to the Composition
     - `add_projection <Composition.add_projection>`
-        Adds a connection between a pair of nodes in the Composition
+        adds a connection between a pair of nodes in the Composition
     - `add_projections <Composition.add_projections>`
-        Adds connection between multiple pairs of nodes in the Composition
+        adds connection between multiple pairs of nodes in the Composition
     - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
-        Adds and connects a list of nodes and/or Projections to the Composition;
-        Inserts a default Projection between any adjacent Nodes
+        adds and connects a list of nodes and/or Projections to the Composition;
+        Inserts a default Projection between any adjacent Nodes.
 
 In addition, a Composition has the following set of `learning methods <Composition_Learning_Methods>` that can also
 be used to create a Composition from (or add) pathways that implement `learning <Composition_Learning>`:
 
     - `add_reinforcement_learning_pathway <Composition.add_reinforcement_learning_pathway>`
-        Adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
-        needed to implement `reinforcement learning` in a specified pathway;
+        adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
+        needed to implement `reinforcement learning` in the specified pathway;
     - `add_td_learning_pathway <Composition.add_td_learning_pathway>`
-        Adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
-        needed to implement the `temporal differences` method of reinforcement learning` in a specified pathway;
+        adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
+        needed to implement the `temporal differences` method of reinforcement learning` in the specified pathway;
     - `add_backpopagation_learning_pathway <Composition.add_backpopagation_learning_pathway>`
-        Adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
-        needed to implement the `backpropagation learning algorithm` in a specified pathway;
+        adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
+        needed to implement the `backpropagation learning algorithm` in the specified pathway.
 
 .. note::
   Only Mechanisms and Projections added to a Composition via the methods above constitute a Composition, even if
@@ -114,9 +122,9 @@ In the following script comp_0, comp_1 and comp_2 are identical, but constructed
 *Nested Compositions*
 =====================
 
-A Composition can be used as a node of another Composition. To do this, simply call `add_node <Composition.add_node>`
-from the parent composition using the child Composition as an argument. You can then project to and from the nested
-composition just as you would any other node.
+A Composition can be used as a node of another Composition, by calling `add_node <Composition.add_node>`
+from the parent composition using the child Composition as an argument. Projections can then be specifed to and from 
+the nested composition just as for any other node.
 
     *Create outer Composition:*
 
@@ -159,7 +167,7 @@ composition just as you would any other node.
     >>> input_dict = {outer_A: [[[1.0]]]}
     >>> outer_comp.run(inputs=input_dict)
 
-.. _Running_a_Composition:
+.. _Composition_Run:
 
 Running a Composition
 ---------------------
@@ -169,9 +177,9 @@ Running a Composition
 *Inputs*
 ========
 
-The :keyword:`run` method presents the inputs for each `TRIAL` to the input_states of the INPUT Nodes in
+The `run <Composition.run>` method presents the inputs for each `TRIAL` to the input_states of the INPUT Nodes in
 the `scope of execution <Run_Scope_of_Execution>`. These input values are specified in the **inputs** argument of a
-Composition's :keyword:`execute` or :keyword:`run` method.
+Composition's `execute <Composition.execute>` or `run <Composition.run>` methods.
 
 COMMENT:
     From KAM 2/7/19 - not sure "scope of execution" is the right phrase. To me, it implies that only a subset of the
@@ -180,7 +188,7 @@ COMMENT:
 COMMENT
 
 The standard way to specificy inputs is a Python dictionary in which each key is an `INPUT <NodeRole.INPUT>` Node and
-each value is a list. The lists represent the inputs to the key `INPUT <NodeRole.INPUT>` Nodes, such that the i-th
+each value is a list. The lists represent the inputs to the key `INPUT <NodeRole.INPUT>` Nodes, in which the i-th
 element of the list represents the input value to the key Node on trial i.
 
 .. _Run_Inputs_Fig_States:
@@ -512,8 +520,8 @@ occurs in the `None` execution context.
 
 .. _Composition_Controller:
 
-Controller
-----------
+Controlling a Composition
+-------------------------
 
 A Composition can be assigned a `controller <Composition.controller>`.  This is a `ModulatoryMechanism`, or a subclass
 of one, that modulates the parameters of Components within the Composition.  It typically does this based on the output
@@ -644,10 +652,10 @@ with `Condition` specifications for individual Components to execute different C
 Runtime Params
 COMMENT
 
-.. _Composition_Learning
+.. _Composition_Learning:
 
-Learning
---------
+Learning in a Composition
+-------------------------
 
 Learning is used to modify the `Projections <Projection>` between Mechanisms in a Composition.  More specifically,
 it modifies the `matrix <MappingProjection.matrix>` parameter of those `MappingProjections <MappingProjection>`,
