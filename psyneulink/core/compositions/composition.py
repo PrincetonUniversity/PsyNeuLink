@@ -652,8 +652,8 @@ accepts and returns tensors. Each of these approaches is described in more detai
 
 .. _Composition_Learning_Standard
 
-Learning Using PsyNeuLink Components
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Learning Using PsyNeuLink Components*
+======================================
 
 When learning is `implemented using standard PsyNeuLink Components <Composition_Learning_Standard>`, each calculation
 and/or operation involved in learning -- including those responsible for computing errors, and for using those to
@@ -674,7 +674,8 @@ or modified by assigning values to their attributes.
 
 .. _Composition_Learning_Unsupervised:
 
-**Unsupervised Learning**
+Unsupervised Learning
+~~~~~~~~~~~~~~~~~~~~~
 
 Undersupervised learning is implemented using a `RecurrentTransferMechanism`, setting its **enable_learning** argument
 to True, and specifying the desired `LearningFunction` in its **learning_function** argument.  The default is `Hebbian`,
@@ -694,7 +695,8 @@ COMMENT
 
 .. _Composition_Learning_Supervised:
 
-**Supervised Learning**
+Supervised Learning
+~~~~~~~~~~~~~~~~~~~
 
 COMMENT:
 TBI:  Supervised learning is implemented using a Composition's `add_learning_pathway` method, and specifying an
@@ -833,8 +835,8 @@ COMMENT
 
 .. _Composition_Learning_AutodiffComposition:
 
-Learning Using AutodiffCompositon
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Learning Using AutodiffCompositon*
+===================================
 
 The `AutodiffComposition` can be used to implement a Composition in PsyNeuLink, which is then executed using `PyTorch
 <https://pytorch.org>`_.  The AutodiffComposition constructor provides arguments for configuring the PyTorch
@@ -865,8 +867,8 @@ trained, and then used to execute the trained Composition like any other.
 
 .. _Composition_Learning_UDF:
 
-Learning Using UserDefinedFunctions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Learning Using UserDefinedFunctions*
+=====================================
 
 If execution efficiency is critical and the `AutodiffComposition` is too restrictive, a function from any Python
 environment that supports learning can be assigned as the `function <Mechanism_Base.function>` of a `Mechanism`,
