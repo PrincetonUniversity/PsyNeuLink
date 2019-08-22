@@ -47,10 +47,26 @@ following Composition methods:
         Adds and connects a list of nodes and/or Projections to the Composition;
         Inserts a default Projection between any adjacent Nodes
 
-.. note::
-  Only Nodes and Projections added to a Composition via the methods above constitute a Composition, even if
-  other Nodes and/or Projections are constructed in the same script.
+In addition, a Composition has the following set of `learning methods <Composition_Learning_Methods>` that can also
+be used to create a Composition from (or add) pathways that implement `learning <Composition_Learning>`:
 
+    - `add_reinforcement_learning_pathway <Composition.add_reinforcement_learning_pathway>`
+        Adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
+        needed to implement `reinforcement learning` in a specified pathway;
+    - `add_td_learning_pathway <Composition.add_td_learning_pathway>`
+        Adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
+        needed to implement the `temporal differences` method of reinforcement learning` in a specified pathway;
+    - `add_backpopagation_learning_pathway <Composition.add_backpopagation_learning_pathway>`
+        Adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
+        needed to implement the `backpropagation learning algorithm` in a specified pathway;
+
+.. note::
+  Only Mechanisms and Projections added to a Composition via the methods above constitute a Composition, even if
+  other Mechanism and/or Projections are constructed in the same script.
+
+COMMENT:
+• MOVE THE EXAPLES BELOW TO AN "Examples" SECTION
+COMMENT
 In the following script comp_0, comp_1 and comp_2 are identical, but constructed using different methods.
 
     *Create Mechanisms:*
