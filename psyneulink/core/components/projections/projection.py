@@ -10,14 +10,14 @@
 
 """
 ..
-    Sections of this document:
-      * :ref:`Projection_Overview`
-      * :ref:`Projection_Creation`
-      * :ref:`Projection_Structure`
-         * :ref:`Projection_Sender`
-         * :ref:`Projection_Receiver`
-      * :ref:`Projection_Execution`
-      * :ref:`Projection_Class_Reference`
+    Sections:
+      * `Projection_Overview`
+      * `Projection_Creation`
+      * `Projection_Structure`
+         * `Projection_Sender`
+         * `Projection_Receiver`
+      * `Projection_Execution`
+      * `Projection_Class_Reference`
 
 .. _Projection_Overview:
 

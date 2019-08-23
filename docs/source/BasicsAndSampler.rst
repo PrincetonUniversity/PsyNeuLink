@@ -586,24 +586,22 @@ become complex; PsyNeuLink provides methods for implementing these automatically
 flow of signals and errors implemented by the algorithm.  The example below implements learning in a simple
 three-layered neural network that learns to compute the X-OR operation::
 
-    input_mech = pnl.TransferMechanism(name='INPUT', size=2)
-    hidden_mech = pnl.TransferMechanism(name='HIDDEN', size=10, function=Logistic)
-    output_mech = pnl.TransferMechanism(name='OUTPUT', size=1, function=Logistic)
-    input_to_hidden_projection = MappingProjection(name='INPUT_TO_HIDDEN',
-                                                   matrix=np.random.rand(2,10),
-                                                   sender=input_mech,
-                                                   receiver=hidden_mech)
-    hidden_to_output_projection = MappingProjection(name='HIDDEN_TO_OUTPUT',
-                                                    matrix=np.random.rand(10,1),
-                                                    sender=hidden_mech,
-                                                    receiver=output_mech)
-    xor_model = Composition()
-    learning_components = xor_model.add_backpropagation_pathway([input_mech,
-                                                                 input_to_hidden_projection,
-                                                                 hidden_mech,
-                                                                 hidden_to_output_projection,
-                                                                 output_mech],
-                                                                 learning_rate=10)
+    # Construct Processing Mechanisms and Projections:
+    input = TransferMechanism(name='Input', default_variable=np.zeros(2))
+    hidden = TransferMechanism(name='Hidden', default_variable=np.zeros(10), function=Logistic())
+    output = TransferMechanism(name='Output', default_variable=np.zeros(1), function=Logistic())
+    input_weights = MappingProjection(name='Input Weights', matrix=np.random.rand(2,10))
+    output_weights = MappingProjection(name='Output Weights', matrix=np.random.rand(10,1))
+    xor_comp = Composition('XOR Composition')
+    learning_components = xor_comp.add_backpropagation_learning_pathway(
+                          pathway=[input, input_weights, hidden, output_weights, output])
+    target = learning_components[TARGET_MECHANISM]
+
+    # Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4
+    xor_inputs = {'stimuli':[[0, 0],  [0, 1],  [1, 0],  [1, 1]],
+                  'targets':[  [0],     [1],     [1],     [0] ]}
+    xor_comp.run(inputs={input:xor_inputs['stimuli'],
+                         target:xor_inputs['targets']})
 
 Calling the Composition's ``show_graph`` with ``show_learning=True`` shows the network along with all of the learning
 components created by the call to ``add_backpropagation_pathway``:
@@ -634,14 +632,15 @@ target Mechanism (that receives the target responses)::
 
 It can also be run without learning by calling the run method with ``enable_learning=False``.
 
-XXX STROOP MODEL EXAMPLE:  MORE THAN ONE PATHWAY
-XXX RUMELHART MODEL:  EVEN MORE COMPLEX EXAMPLE -> AUTODIFF
-
-AutodiffComposition
-^^^^^^^^^^^^^^^^^^^
-
-
-
+.. .. _BasicsAndSampler_AutodiffComposition:
+..
+.. AutodiffComposition
+.. ^^^^^^^^^^^^^^^^^^^
+.. • Much more complex models can be constructed:  Example, Rumelhart Network
+.. • However, these can be inefficient to run (cf discussion in Composition_Learning)
+.. • Therefore, can be implemented as an autodiff comopsition
+..
+..
 .. Impelements all major forms of learning (autoassociative, RL and BP)
 .. Implementation favors modulariziation / depiction of process flow (pedagogical tool, e.g., animation - SHOW EXAMPLE)
 .. But integrates PyTorch for efficiency and generality: Autodiff EXAMPLE (Rumelhart network)
