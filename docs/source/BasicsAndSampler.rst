@@ -682,18 +682,13 @@ The figure below shows this network with all of its `learning components <Compos
 
 .. ADD REFERENCE TO Rumelhart Semantic Network Model once implemented
 
-.. _BasicsAndSampler_AutodiffComposition:
-
-AutodiffComposition
-^^^^^^^^^^^^^^^^^^^
-
 Given the number of learning components, training the model above using standard PsyNeuLink components can take a
-considerable amount of time.  However, using the same description, it can be implemented in an `AutodiffComposition`,
-which allows it to be run considerably faster using `PyTorch <https://pytorch.org>`_::
-
-    XXX AUTODIFF VERSION OF RUMELHART
-
-.. ADD REFERENCE TO Rumelhart Semantic Network Model once implemented
+considerable amount of time.  However, the same Composition can be implemented using the `AutodiffComposition`, by
+replacing the relevant line in the example above with ``comp = AutoComposition(name='Rumelhart Semantic Network')``).
+The AutodiffComposition uses `PyTorch <https://pytorch.org>`_ to execute learning, which runs considerably (as much as
+three orders of magnitude) faster (see `Composition_Learning`, as well as `Composition_Learning_AutodiffComposition`
+for comparisons of the advantages and disadvantages of using a standard `Composition` vs. `AutodiffComposition` for
+learning).
 
 .. ADD FINAL STATEMENT HERE
 .. The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,

@@ -670,7 +670,7 @@ execute a compatible PsyNeuLink Composition in PyTorch, or one or more `UserDefi
 can be assigned to either PyTorch functions or those in any other Python environment that implements learning and
 accepts and returns tensors. Each of these approaches is described in more detail below.
 
-.. _Composition_Learning_Standard
+.. _Composition_Learning_Standard:
 
 *Learning Using PsyNeuLink Components*
 ======================================
@@ -906,7 +906,7 @@ Change reference to example below to point to Rumelhart Semantic Network Model S
 COMMENT
 
 The `AutodiffComposition` can be used to implement a Composition in PsyNeuLink, which is then executed using `PyTorch
-<https://pytorch.org>`_ (see `example <BasicsAndSampler_AutodiffComposition>` in `BasicsAndSampler`).  The
+<https://pytorch.org>`_ (see `example <BasicsAndSampler_Rumelhart_Model>` in `BasicsAndSampler`).  The
 AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
 Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
 etc.) as any other Composition, and it is executed using its `run <AutodiffComposition.run>` method.   Note that
