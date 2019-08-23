@@ -901,14 +901,17 @@ they are next executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of 
 *Learning Using AutodiffCompositon*
 ===================================
 
+COMMENT:
+Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
+COMMENT
 The `AutodiffComposition` can be used to implement a Composition in PsyNeuLink, which is then executed using `PyTorch
-<https://pytorch.org>`_ (see `BasicsAndSampler_AutodiffComposition` for an example).  The AutodiffComposition
-constructor provides arguments for configuring the PyTorch implementation in various ways; the Composition is then
-built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`, etc.) as any other
-Composition, and it is executed using its `run <AutodiffComposition.run>` method.   Note that there is no need to use
-any `learning methods <Composition_Learning_Methods>` — the Composition is translated into PyTorch objects and
-functions, which are called when it is run.  It can be run in training mode (during which learning occurs) or test
-mode (which runs the Composition without learning).
+<https://pytorch.org>`_ (see `example <BasicsAndSampler_AutodiffComposition>` in `BasicsAndSampler`).  The
+AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
+Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
+etc.) as any other Composition, and it is executed using its `run <AutodiffComposition.run>` method.   Note that
+there is no need to use any `learning methods <Composition_Learning_Methods>` — the Composition is translated into
+PyTorch objects and functions, which are called when it is run.  It can be run in training mode (during which
+learning occurs) or test mode (which runs the Composition without learning).
 
 The advantage of this approach is that it allows the Composition to be implemented in PsyNeuLink, while exploiting
 the efficiency of execution in PyTorch (which can yield as much as three orders of magnitude improvement).  However,

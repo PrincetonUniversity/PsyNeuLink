@@ -680,6 +680,8 @@ The figure below shows this network with all of its `learning components <Compos
     ``add_backpropagation_pathway``; diamonds represent MappingProjections, shown as nodes so that the
     `LearningProjections` to them can be shown.
 
+.. ADD REFERENCE TO Rumelhart Semantic Network Model once implemented
+
 .. _BasicsAndSampler_AutodiffComposition:
 
 AutodiffComposition
@@ -690,6 +692,8 @@ considerable amount of time.  However, using the same description, it can be imp
 which allows it to be run considerably faster using `PyTorch <https://pytorch.org>`_::
 
     XXX AUTODIFF VERSION OF RUMELHART
+
+.. ADD REFERENCE TO Rumelhart Semantic Network Model once implemented
 
 .. ADD FINAL STATEMENT HERE
 .. The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,
