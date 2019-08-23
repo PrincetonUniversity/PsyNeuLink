@@ -10,7 +10,8 @@
 
 """
 ..
-    Sections:
+Sections
+--------
       * `Projection_Overview`
       * `Projection_Creation`
       * `Projection_Structure`

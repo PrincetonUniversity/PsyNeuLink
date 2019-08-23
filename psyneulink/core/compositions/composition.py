@@ -9,7 +9,7 @@
 # ********************************************* Composition ************************************************************
 
 """
-..
+
 Sections
 --------
 
@@ -44,14 +44,23 @@ A generic Composition can be created by calling the constructor, and then adding
 following Composition methods:
 
     - `add_node <Composition.add_node>`
+
         adds a node to the Composition
+
     - `add_nodes <Composition.add_nodes>`
+
         adds mutiple nodes to the Composition
+
     - `add_projection <Composition.add_projection>`
+
         adds a connection between a pair of nodes in the Composition
+
     - `add_projections <Composition.add_projections>`
+
         adds connection between multiple pairs of nodes in the Composition
+
     - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
+
         adds and connects a list of nodes and/or Projections to the Composition;
         Inserts a default Projection between any adjacent Nodes.
 
@@ -59,12 +68,17 @@ In addition, a Composition has the following set of `learning methods <Compositi
 be used to create a Composition from (or add) pathways that implement `learning <Composition_Learning>`:
 
     - `add_reinforcement_learning_pathway <Composition.add_reinforcement_learning_pathway>`
+
         adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
         needed to implement `reinforcement learning` in the specified pathway;
+
     - `add_td_learning_pathway <Composition.add_td_learning_pathway>`
+
         adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
         needed to implement the `temporal differences` method of reinforcement learning` in the specified pathway;
+
     - `add_backpopagation_learning_pathway <Composition.add_backpopagation_learning_pathway>`
+
         adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
         needed to implement the `backpropagation learning algorithm` in the specified pathway.
 
@@ -657,6 +671,10 @@ COMMENT
 Learning in a Composition
 -------------------------
 
+* `Composition_Learning_Standard`
+* `Composition_Learning_AutodiffComposition`
+* `Composition_Learning_UDF`
+
 Learning is used to modify the `Projections <Projection>` between Mechanisms in a Composition.  More specifically,
 it modifies the `matrix <MappingProjection.matrix>` parameter of those `MappingProjections <MappingProjection>`,
 which implements the strengths ("weights") of the associations between representations in the Mechanisms they connect.
@@ -676,6 +694,9 @@ accepts and returns tensors. Each of these approaches is described in more detai
 
 *Learning Using PsyNeuLink Components*
 ======================================
+
+* `Composition_Learning_Unsupervised`
+* `Composition_Learning_Supervised`
 
 When learning is `implemented using standard PsyNeuLink Components <Composition_Learning_Standard>`, each calculation
 and/or operation involved in learning -- including those responsible for computing errors, and for using those to
@@ -720,6 +741,10 @@ COMMENT
 Supervised Learning
 ~~~~~~~~~~~~~~~~~~~
 
+* `Composition_Learning_Methods`
+* `Composition_Learning_Components`
+* `Compositon_Learning_Execution`
+
 COMMENT:
 TBI:  Supervised learning is implemented using a Composition's `add_learning_pathway` method, and specifying an
 appropriate `LearningFunction` in its **learning_function** argument.  XXXMORE HERE ABOUT TYPES OF FUNCTIONS
@@ -729,8 +754,8 @@ COMMENT
 
 .. _Composition_Learning_Methods:
 
-Learning Methods
-^^^^^^^^^^^^^^^^
+*Learning Methods*
+^^^^^^^^^^^^^^^^^^
 
 Supervised learning is implemented using a Composition's method for the desired type of learning.  There are currently
 three such methods:
@@ -752,8 +777,8 @@ return the set of learning components generates for the pathway, as described be
 
 .. _Composition_Learning_Components:
 
-Learning Components
-^^^^^^^^^^^^^^^^^^^
+*Learning Components*
+^^^^^^^^^^^^^^^^^^^^^
 
 For each learning sequence specified in a `learning method <Composition_Learning_Methods>`, it creates the
 following Components, and assigns to them the `NodeRoles <NodeRole>` indicated:
@@ -875,8 +900,10 @@ learning sequence even though they project to another Mechanism (the `COMPARATOR
        project to a ComparatorMechanism, and is relegated to being an `INTERNAL` node of the Composition
        Mechanism C is now the one that projects to the ComparatorMechanism and assigned as the `OUTPUT` node.
 
-Execution of Learning
-^^^^^^^^^^^^^^^^^^^^^
+.. _Compositon_Learning_Execution:
+
+*Execution of Learning*
+^^^^^^^^^^^^^^^^^^^^^^^
 When a Composition is run that contains one or more learning sequences, all of the ProcessingMechanisms for a
 sequence are executed first, and then its LearningComponents. This is shown in an animation of the XOR network
 from the `example above <Composition_XOR_Example>`:
