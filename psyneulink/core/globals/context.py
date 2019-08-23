@@ -263,35 +263,6 @@ SOURCE_FLAGS = {ContextFlags.CONSTRUCTOR,
                 ContextFlags.COMPONENT,
                 ContextFlags.COMPOSITION}
 
-# For backward compatibility
-class ContextStatus(enum.IntFlag):
-    """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
-    Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
-    """
-    OFF = 0
-    # """No recording."""
-    INITIALIZATION = ContextFlags.INITIALIZING
-    """Set during execution of the Component's constructor."""
-    VALIDATION =  ContextFlags.VALIDATING
-    """Set during validation of the value of a Component or its attribute."""
-    EXECUTION =  ContextFlags.EXECUTING
-    """Set during any execution of the Component."""
-    PROCESSING = ContextFlags.PROCESSING
-    """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
-    LEARNING = ContextFlags.LEARNING
-    """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
-    CONTROL = ContextFlags.CONTROL
-    """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    SIMULATION = ContextFlags.SIMULATION
-    # Set during simulation by Composition.controller
-    COMMAND_LINE = ContextFlags.COMMAND_LINE
-    # Component accessed by user
-    CONSTRUCTOR = ContextFlags.CONSTRUCTOR
-    # Component being constructor (used in call to super.__init__)
-    ALL_ASSIGNMENTS = \
-        INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
-    """Specifies all contexts."""
-
 
 class Context():
     """Used to indicate the state of initialization and phase of execution of a Component, as well as the source of

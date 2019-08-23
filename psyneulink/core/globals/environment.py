@@ -102,7 +102,7 @@ If you receive an error like below, while checking for a context value for examp
 
 ::
 
-    self.parameters.context._get(execution_id).execution_phase == ContextStatus.PROCESSING
+    self.parameters.context._get(execution_id).execution_phase == ContextFlags.PROCESSING
     AttributeError: 'NoneType' object has no attribute 'execution_phase'
 
 this means that there was no context value found for execution_id, and can be indicative that execution_id
