@@ -10,7 +10,9 @@
 
 """
 ..
-**Sections:
+Sections
+--------
+
   * `Composition_Overview`
   * `Composition_Creation`
   * `Composition_Run`
