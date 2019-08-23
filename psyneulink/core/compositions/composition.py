@@ -811,9 +811,10 @@ in the sequence, as shown for an example in the figure below.  These additional 
 
 .. _Composition_XOR_Example:
 
-The example below implements a simple three-layered network that learns the XOR function (see `figure <FIGURE>`)::
+The following example implements a simple three-layered network that learns the XOR function
+(see `figure <Composition_Learning_Output_vs_Terminal_Figure>` below)::
 
-    *Construct Processing Mechanisms and Projections:*
+    # Construct Composition:
     >>> input = TransferMechanism(name='Input', default_variable=np.zeros(2))
     >>> hidden = TransferMechanism(name='Hidden', default_variable=np.zeros(10), function=Logistic())
     >>> output = TransferMechanism(name='Output', default_variable=np.zeros(1), function=Logistic())
@@ -878,17 +879,16 @@ When a Composition is run that contains one or more learning sequences, all of t
 sequence are executed first, and then its LearningComponents. This is shown in an animation of the XOR network
 from the `example above <Composition_XOR_Example>`:
 
-**Composition with Learning**
 .. _Composition_Learning_Animation_Figure:
 
-    **OUTPUT** vs. **TERMINAL** Roles in Learning Configuration
+    **Composition with Learning**
 
-    .. figure:: _static/Composition_XOR_animation.gif.gif
+    .. figure:: _static/Composition_XOR_animation.gif
        :alt: Animation of Composition with learning
        :scale: 50 %
 
-       Animation of XOR Composition in example above when its `run <Composition.run>` method is called with the
-       argument ``animate={'show_learning':True}``.
+       Animation of XOR Composition in example above when it is executed by calling its `run <Composition.run>`
+       method with the argument ``animate={'show_learning':True}``.
 
 Note that, since the `learning components <Composition_Learning_Components>` are not executed until after the
 processing components, the change to the weights of the MappingProjections in the processing pathway are not
