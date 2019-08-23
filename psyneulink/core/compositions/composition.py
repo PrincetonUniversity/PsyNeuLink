@@ -904,6 +904,7 @@ they are next executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of 
 COMMENT:
 Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
 COMMENT
+
 The `AutodiffComposition` can be used to implement a Composition in PsyNeuLink, which is then executed using `PyTorch
 <https://pytorch.org>`_ (see `example <BasicsAndSampler_AutodiffComposition>` in `BasicsAndSampler`).  The
 AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
