@@ -835,7 +835,7 @@ The following example implements a simple three-layered network that learns the 
 
 The description and example above pertain to simple linear sequences.  However, more complex configurations,
 with convergent, divergent and/or intersecting sequences can be built using multiple calls to the learning method
-(see `BasicsAndSampler_AutodiffComposition` for an example).  In each call, the learning method determines how the
+(see `BasicsAndSampler_Rumelhart_Model` for an example).  In each call, the learning method determines how the
 sequence to be added relates to any existing ones with which it abuts or intersects, and automatically creates and
 configures the relevant learning components so that the error terms are properly computed and propagated by each
 LearningMechanism to the next in the configuration. It is important to note that, in doing so, the status of a

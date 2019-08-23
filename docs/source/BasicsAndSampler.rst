@@ -594,7 +594,7 @@ three-layered neural network that learns to compute the X-OR operation::
     output_weights = MappingProjection(name='Output Weights', matrix=np.random.rand(10,1))
     xor_comp = Composition('XOR Composition')
     learning_components = xor_comp.add_backpropagation_learning_pathway(
-                          pathway=[input, input_weights, hidden, output_weights, output])
+                                                    pathway=[input, input_weights, hidden, output_weights, output])
     target = learning_components[TARGET_MECHANISM]
 
     # Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4
@@ -608,7 +608,7 @@ components created by the call to ``add_backpropagation_pathway``:
 
 .. _BasicsAndSampler_XOR_MODEL_Figure:
 
-.. figure:: _static/BasicsAndSampler_XOR_Model_fig.svg
+n.. figure:: _static/BasicsAndSampler_XOR_Model_fig.svg
    :width: 75%
 
     **XOR Model.**  Items in orange are learning components implemented by the call to ``add_backpropagation_pathway``;
@@ -632,20 +632,44 @@ target Mechanism (that receives the target responses)::
 
 It can also be run without learning by calling the run method with ``enable_learning=False``.
 
-.. .. _BasicsAndSampler_AutodiffComposition:
+.. _BasicsAndSampler_Rumelhart_Model:
+
+The model shown above implements learning for a simple linear path.  However, virtually any model can be created
+using calls to a Composition's `learning methods <Composition_Learning_Methods>` to build up more complex pathways.
+For example, following model implements a network for learning semantic representations described in
+`Rumelhart et al., 19XX <>`_::
+
+     XXX RUMHELHART MODEL HERE
+
+The figure below shows this network with all of its `learning components <Composition_Learning_Components>`:
+
+     XXX RUMELHART FIGURE HERE
+
+.. _BasicsAndSampler_AutodiffComposition:
+
+AutodiffComposition
+^^^^^^^^^^^^^^^^^^^
+
+Given the number of learning components, training the model above using standard PsyNeuLink components can take a
+considerable amount of time.  However, using the same description, it can be implemented in an `AutodiffComposition`,
+which allows it to be run considerably faster using `PyTorch <https://pytorch.org>`_::
+
+    XXX AUTODIFF VERSION OF RUMELHART
+
+.. ADD FINAL STATEMENT HERE
+.. The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,
+.. and the `Tutorial` provides an interactive introduction to its use.
+
+.. STUFF TO ADD -------------------------------------------------------------------------------------------------------
 ..
-.. AutodiffComposition
-.. ^^^^^^^^^^^^^^^^^^^
-.. • Much more complex models can be constructed:  Example, Rumelhart Network
-.. • However, these can be inefficient to run (cf discussion in Composition_Learning)
-.. • Therefore, can be implemented as an autodiff comopsition
+.. One of the most useful applications for PsyNeuLink is the design of models that include control processes.
+.. XXX USER DEFINED FUNCTIONS
+.. XXX RL LEARNING??
+.. XXX NESTED COMPOSITIONS
+.. XXX COMPILATION
 ..
-..
-.. Impelements all major forms of learning (autoassociative, RL and BP)
-.. Implementation favors modulariziation / depiction of process flow (pedagogical tool, e.g., animation - SHOW EXAMPLE)
-.. But integrates PyTorch for efficiency and generality: Autodiff EXAMPLE (Rumelhart network)
-..
-.. OLD:
+
+.. OLD: --------------------------------------------------------------------------------------------------------------
 .. For example, the feedforward network above can be
 .. trained using backpropagation simply by adding the **learning** argument to the constructor for the Process::
 ..
@@ -661,17 +685,4 @@ It can also be run without learning by calling the run method with ``enable_lear
 .. `Reinforcement Learning <Reinforcement>`, and others are currently being implemented (including Hebbian, Temporal
 .. Differences, and supervised learning for recurrent networks).
 ..
-.. -----------------
 ..
-.. STUFF TO ADD:
-..
-.. One of the most useful applications for PsyNeuLink is the design of models that include control processes.
-.. XXX USER DEFINED FUNCTIONS
-.. XXX CONTROL (STROOP)
-.. XXX HETEROGENOUS TYPES: ADD DECISION MAKING USING DDM;  FitzHugh-Nagumo Mechanism
-.. XXX LEARNING:  USING RL AND BP
-.. XXX NESTED COMPOSITIONS: AUTODIFF
-.. XXX COMPILATION
-..
-.. The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,
-.. and the `Tutorial` provides an interactive introduction to its use.
