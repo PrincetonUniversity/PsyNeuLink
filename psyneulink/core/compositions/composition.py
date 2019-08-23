@@ -5247,10 +5247,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # EXECUTE INPUT CIM ********************************************************************************************
 
         # FIX: 6/12/19 MOVE TO EXECUTE BELOW? (i.e., with bin_execute / _comp_ex.execute_node(self.input_CIM, inputs))
-        # Execute input_CIMs
+        # Handles Input CIM and Parameter CIM execution.
+        #
+        # FIX: 8/21/19
+        # If self is a nested composition, its input CIM will obtain its value in one of two ways,
+        # depending on whether or not it is being executed within a simulation.
+        # If it is a simulation, then we need to use the _assign_values_to_input_CIM method, which parses the inputs
+        # argument of the execute method into a suitable shape for the input states of the input_CIM.
+        # If it is not a simulation, we can simply execute the input CIM.
+        #
+        # If self is an unnested composition, we must update the input states for any input nodes that are Compositions.
+        # This is done to update the variable for their input CIMs, which allows the _adjust_execution_stimuli
+        # method to properly validate input for those nodes.
+        # -DS
         if nested:
-            self.input_CIM.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-            self.input_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
+            if execution_context.execution_phase == ContextFlags.SIMULATION:
+                inputs = self._adjust_execution_stimuli(inputs)
+                self._assign_values_to_input_CIM(inputs, execution_id=execution_id)
+            else:
+                self.input_CIM.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+                self.input_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
             self.parameter_CIM.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
             self.parameter_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
         else:
@@ -6538,7 +6554,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         adjusted_stimuli = {}
         for node, stimulus in stimuli.items():
             if isinstance(node, Composition):
-                input_must_match = node.external_input_values
+                input_must_match = node.default_external_input_values
                 if isinstance(stimulus, dict):
                     adjusted_stimulus_dict = node._adjust_stimulus_dict(stimulus)
                     adjusted_stimuli[node] = adjusted_stimulus_dict
@@ -6555,7 +6571,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     adjusted_stimuli[node] = np.atleast_2d(stimulus)
                 else:
                     adjusted_stimuli[node] = stimulus
-
             else:
                 raise CompositionError("Input stimulus ({}) for {} is incompatible with its variable ({})."
                                        .format(stimulus, node.name, input_must_match))
