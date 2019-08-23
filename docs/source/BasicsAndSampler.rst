@@ -608,11 +608,11 @@ components created by the call to ``add_backpropagation_pathway``:
 
 .. _BasicsAndSampler_XOR_MODEL_Figure:
 
-n.. figure:: _static/BasicsAndSampler_XOR_Model_fig.svg
-   :width: 75%
+.. figure:: _static/BasicsAndSampler_XOR_Model_fig.svg
+   :width: 100%
 
     **XOR Model.**  Items in orange are learning components implemented by the call to ``add_backpropagation_pathway``;
-    diamonds represent Projections, shown as nodes so that the `LearningProjections` to them can be shown.
+    diamonds represent MappingProjections, shown as nodes so that the `LearningProjections` to them can be shown.
 
 
 Training the model requires specifying a set of inputs and targets to use as training stimuli, and identifying the
@@ -639,11 +639,46 @@ using calls to a Composition's `learning methods <Composition_Learning_Methods>`
 For example, following model implements a network for learning semantic representations described in
 `Rumelhart et al., 19XX <>`_::
 
-     XXX RUMHELHART MODEL HERE
+    #  Represention  Property  Quality  Action
+    #           \________\_______/_______/
+    #                        |
+    #                 Relations_Hidden
+    #                   _____|_____
+    #                  /           \
+    #   Representation_Hidden  Relations_Input
+    #               /
+    #   Representation_Input
+
+    # Construct Mechanisms
+    rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
+    rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
+    rep_hidden = pnl.TransferMechanism(size=4, function=Logistic, name='REP_HIDDEN')
+    rel_hidden = pnl.TransferMechanism(size=5, function=Logistic, name='REL_HIDDEN')
+    rep_out = pnl.TransferMechanism(size=10, function=Logistic, name='REP_OUT')
+    prop_out = pnl.TransferMechanism(size=12, function=Logistic, name='PROP_OUT')
+    qual_out = pnl.TransferMechanism(size=13, function=Logistic, name='QUAL_OUT')
+    act_out = pnl.TransferMechanism(size=14, function=Logistic, name='ACT_OUT')
+
+    # Construct Composition
+    comp = Composition(name='Rumelhart Semantic Network')
+    comp.add_backpropagation_learning_pathway(pathway=[rel_in, rel_hidden])
+    comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, rep_out])
+    comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, prop_out])
+    comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, qual_out])
+    comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, act_out])
+    comp.add_backpropagation_learning_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
+    comp.show_graph(show_learning=True)
 
 The figure below shows this network with all of its `learning components <Composition_Learning_Components>`:
 
-     XXX RUMELHART FIGURE HERE
+.. _BasicsAndSampler_Rumelhart_Network_Figure:
+
+.. figure:: _static/BasicsAndSampler_Rumelhart_Network.svg
+   :width: 75%
+
+    **Rumelhart Semantic Network.**  Items in orange are learning components implemented by the calls to
+    ``add_backpropagation_pathway``; diamonds represent MappingProjections, shown as nodes so that the
+    `LearningProjections` to them can be shown.
 
 .. _BasicsAndSampler_AutodiffComposition:
 
