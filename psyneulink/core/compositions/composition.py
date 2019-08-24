@@ -137,7 +137,7 @@ In the following script comp_0, comp_1 and comp_2 are identical, but constructed
 =====================
 
 A Composition can be used as a node of another Composition, by calling `add_node <Composition.add_node>`
-from the parent composition using the child Composition as an argument. Projections can then be specifed to and from 
+from the parent composition using the child Composition as an argument. Projections can then be specifed to and from
 the nested composition just as for any other node.
 
     *Create outer Composition:*
@@ -538,9 +538,9 @@ Controlling a Composition
 -------------------------
 
 A Composition can be assigned a `controller <Composition.controller>`.  This is a `ModulatoryMechanism`, or a subclass
-of one, that modulates the parameters of Components within the Composition.  It typically does this based on the output
-of an `ObjectiveMechanism` that evaluates the value of other Mechanisms in the Composition, and provides the result to
-the `controller <Composition.controller>`.
+of one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
+It typically does this based on the output of an `ObjectiveMechanism` that evaluates the value of other Mechanisms in
+the Composition, and provides the result to the `controller <Composition.controller>`.
 
 .. _Composition_Controller_Assignment:
 
@@ -1664,13 +1664,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.feedback_senders = set()
         self.feedback_receivers = set()
 
-        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
-        self.defaults = Defaults(
-            owner=self,
-            retain_old_simulation_data=retain_old_simulation_data,
-            **{k: v for (k, v) in param_defaults.items() if hasattr(self.parameters, k)}
-        )
-        self._initialize_parameters()
+        self._initialize_parameters(**param_defaults, retain_old_simulation_data=retain_old_simulation_data)
 
         # Compiled resources
         self.__generated_node_wrappers = {}
@@ -3027,7 +3021,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             the output (`value <Mechanism_Base.value>`) of the `TARGET` Mechanism in the **pathway**).
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
-            specifies when the `matrix <MappingProjection.matrix>` parameter of the *LEARNED_PROJECTION* is updated
+            specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
             in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
             `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
@@ -3101,7 +3095,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             the output (`value <Mechanism_Base.value>`) of the `TARGET` Mechanism in the **pathway**).
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
-            specifies when the `matrix <MappingProjection.matrix>` parameter of the *LEARNED_PROJECTION* is updated
+            specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
             in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
             `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
@@ -5612,10 +5606,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # EXECUTE INPUT CIM ********************************************************************************************
 
         # FIX: 6/12/19 MOVE TO EXECUTE BELOW? (i.e., with bin_execute / _comp_ex.execute_node(self.input_CIM, inputs))
-        # Execute input_CIMs
+        # Handles Input CIM and Parameter CIM execution.
+        #
+        # FIX: 8/21/19
+        # If self is a nested composition, its input CIM will obtain its value in one of two ways,
+        # depending on whether or not it is being executed within a simulation.
+        # If it is a simulation, then we need to use the _assign_values_to_input_CIM method, which parses the inputs
+        # argument of the execute method into a suitable shape for the input states of the input_CIM.
+        # If it is not a simulation, we can simply execute the input CIM.
+        #
+        # If self is an unnested composition, we must update the input states for any input nodes that are Compositions.
+        # This is done to update the variable for their input CIMs, which allows the _adjust_execution_stimuli
+        # method to properly validate input for those nodes.
+        # -DS
         if nested:
-            self.input_CIM.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-            self.input_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
+            if execution_context.execution_phase == ContextFlags.SIMULATION:
+                inputs = self._adjust_execution_stimuli(inputs)
+                self._assign_values_to_input_CIM(inputs, execution_id=execution_id)
+            else:
+                self.input_CIM.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+                self.input_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
             self.parameter_CIM.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
             self.parameter_CIM.execute(execution_id=execution_id, context=ContextFlags.PROCESSING)
         else:
@@ -6904,7 +6914,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         adjusted_stimuli = {}
         for node, stimulus in stimuli.items():
             if isinstance(node, Composition):
-                input_must_match = node.external_input_values
+                input_must_match = node.default_external_input_values
                 if isinstance(stimulus, dict):
                     adjusted_stimulus_dict = node._adjust_stimulus_dict(stimulus)
                     adjusted_stimuli[node] = adjusted_stimulus_dict
@@ -6921,7 +6931,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     adjusted_stimuli[node] = np.atleast_2d(stimulus)
                 else:
                     adjusted_stimuli[node] = stimulus
-
             else:
                 raise CompositionError("Input stimulus ({}) for {} is incompatible with its variable ({})."
                                        .format(stimulus, node.name, input_must_match))
