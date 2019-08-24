@@ -1092,7 +1092,7 @@ from PIL import Image
 from os import path, remove
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import Component, ComponentsMeta, function_type
+from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
 from psyneulink.core.components.functions.learningfunctions import \
@@ -1600,7 +1600,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     class _CompilationData(ParametersBase):
         ptx_execution = None
         parameter_struct = None
-        context_struct = None
+        state_struct = None
         data_struct = None
         scheduler_conditions = None
 
@@ -2937,8 +2937,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return False
 
 
-
-   # ******************************************************************************************************************
+    # ******************************************************************************************************************
     #                                            PATHWAYS
     # ******************************************************************************************************************
 
@@ -4449,7 +4448,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if show_node_structure and isinstance(rcvr, Mechanism):
                     g.node(rcvr_label,
-                           rcvr.show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
+                           rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
                            shape=struct_shape,
                            color=rcvr_color,
                            rank=rcvr_rank,
@@ -4538,7 +4537,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if show_node_structure:
                     g.node(cim_label,
-                           cim.show_structure(**node_struct_args, node_border=cim_penwidth, compact_cim=True),
+                           cim._show_structure(**node_struct_args, node_border=cim_penwidth, compact_cim=True),
                            shape=struct_shape,
                            color=cim_color,
                            rank=cim_rank,
@@ -4669,7 +4668,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             ctlr_label = self._get_graph_node_label(controller, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
-                       controller.show_structure(**node_struct_args, node_border=ctlr_width,
+                       controller._show_structure(**node_struct_args, node_border=ctlr_width,
                                                  condition=self.controller_condition),
                        shape=struct_shape,
                        color=ctlr_color,
@@ -4748,7 +4747,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         condition = None
                     g.node(objmech_label,
-                           objmech.show_structure(**node_struct_args, node_border=ctlr_width, condition=condition),
+                           objmech._show_structure(**node_struct_args, node_border=ctlr_width, condition=condition),
                            shape=struct_shape,
                            color=objmech_color,
                            penwidth=ctlr_width,
@@ -4863,7 +4862,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Implement node for Mechanism
                 if show_node_structure:
                     g.node(rcvr_label,
-                            rcvr.show_structure(**node_struct_args),
+                            rcvr._show_structure(**node_struct_args),
                             rank=learning_rank, color=rcvr_color, penwidth=rcvr_width)
                 else:
                     g.node(rcvr_label,
@@ -5054,7 +5053,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.active_item_rendered = False
 
-        # Argument values used to call Mechanism.show_structure()
+        # Argument values used to call Mechanism._show_structure()
         if isinstance(show_node_structure, (list, tuple, set)):
             node_struct_args = {'composition': self,
                                 'show_roles': any(key in show_node_structure for key in {ROLES, ALL}),
@@ -5180,7 +5179,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return G
 
     @tc.typecheck
-    def show_structure(self,
+    def _show_structure(self,
                        # direction = 'BT',
                        show_functions:bool=False,
                        show_values:bool=False,
@@ -5266,7 +5265,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         def mech_string(mech):
             """Return string with name of mechanism possibly with function and/or value
-            Inclusion of role, function and/or value is determined by arguments of call to show_structure
+            Inclusion of role, function and/or value is determined by arguments of call to _show_structure
             """
             if show_headers:
                 mech_header = mechanism_header
@@ -5555,7 +5554,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ******************************************************************************************************************
     #                                           EXECUTION
     # ******************************************************************************************************************
-
 
     def run(
             self,
@@ -6860,7 +6858,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                           LLVM
     # ******************************************************************************************************************
 
-
     def _get_param_struct_type(self, ctx):
         mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
         proj_param_type_list = (ctx.get_param_struct_type(p) for p in self.projections)
@@ -6868,9 +6865,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pnlvm.ir.LiteralStructType(mech_param_type_list),
             pnlvm.ir.LiteralStructType(proj_param_type_list)))
 
-    def _get_context_struct_type(self, ctx):
-        mech_ctx_type_list = (ctx.get_context_struct_type(m) for m in self._all_nodes)
-        proj_ctx_type_list = (ctx.get_context_struct_type(p) for p in self.projections)
+    def _get_state_struct_type(self, ctx):
+        mech_ctx_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
+        proj_ctx_type_list = (ctx.get_state_struct_type(p) for p in self.projections)
         return pnlvm.ir.LiteralStructType((
             pnlvm.ir.LiteralStructType(mech_ctx_type_list),
             pnlvm.ir.LiteralStructType(proj_ctx_type_list)))
@@ -6890,10 +6887,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             data.append(nested_data)
         return pnlvm.ir.LiteralStructType(data)
 
-    def _get_context_initializer(self, execution_id=None, simulation=False):
-        mech_contexts = (tuple(m._get_context_initializer(execution_id=execution_id))
+    def _get_state_initializer(self, execution_id=None, simulation=False):
+        mech_contexts = (tuple(m._get_state_initializer(execution_id=execution_id))
                          for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_contexts = (tuple(p._get_context_initializer(execution_id=execution_id)) for p in self.projections)
+        proj_contexts = (tuple(p._get_state_initializer(execution_id=execution_id)) for p in self.projections)
         return (tuple(mech_contexts), tuple(proj_contexts))
 
     def _get_param_initializer(self, execution_id, simulation=False):
@@ -6972,7 +6969,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._compilation_data.ptx_execution.set(None, execution_context)
         self._compilation_data.parameter_struct.set(None, execution_context)
-        self._compilation_data.context_struct.set(None, execution_context)
+        self._compilation_data.state_struct.set(None, execution_context)
         self._compilation_data.data_struct.set(None, execution_context)
         self._compilation_data.scheduler_conditions.set(None, execution_context)
 
@@ -6988,7 +6985,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [
-                ctx.get_context_struct_type(self).as_pointer(),
+                ctx.get_state_struct_type(self).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 data_struct_ptr, data_struct_ptr]
@@ -7131,7 +7128,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ******************************************************************************************************************
     #                                           PROPERTIES
     # ******************************************************************************************************************
-
 
     @property
     def input_states(self):

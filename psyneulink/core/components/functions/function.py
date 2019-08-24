@@ -842,15 +842,25 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
-    def _get_context_initializer(self, execution_id):
+    def _get_compilation_state(self):
         try:
-            stateful = (getattr(self.parameters, sa)._get(execution_id) for sa in self.stateful_attributes)
-            # Skip first element of random state (id string)
-            lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
-
-            return pnlvm._tupleize(lists)
+            stateful = self.stateful_attributes
         except AttributeError:
-            return tuple()
+            return ()
+        return (getattr(self.parameters, sa) for sa in stateful)
+
+    def _get_state_ids(self):
+        return [sp.name for sp in self._get_compilation_state()]
+
+    def _get_state_values(self, execution_id=None):
+        return tuple(sp._get(execution_id) for sp in self._get_compilation_state())
+
+    def _get_state_initializer(self, execution_id):
+        stateful = self._get_state_values(execution_id)
+        # Skip first element of random state (id string)
+        lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
+
+        return pnlvm._tupleize(lists)
 
     def _get_compilation_params(self, execution_id=None):
         # Filter out known unused/invalid params

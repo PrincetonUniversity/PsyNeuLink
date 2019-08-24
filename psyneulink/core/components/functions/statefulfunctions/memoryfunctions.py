@@ -747,9 +747,9 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
 
-    def _get_context_struct_type(self, ctx):
-        distance_state = ctx.get_context_struct_type(self.distance_function)
-        selection_state = ctx.get_context_struct_type(self.selection_function)
+    def _get_state_struct_type(self, ctx):
+        distance_state = ctx.get_state_struct_type(self.distance_function)
+        selection_state = ctx.get_state_struct_type(self.selection_function)
         # Get random state
         random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state"))
         # Construct a ring buffer
@@ -781,9 +781,9 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         my_init = super()._get_param_initializer(execution_id)
         return (*my_init, distance_init, selection_init)
 
-    def _get_context_initializer(self, execution_id):
-        distance_init = self.distance_function._get_context_initializer(execution_id)
-        selection_init = self.selection_function._get_context_initializer(execution_id)
+    def _get_state_initializer(self, execution_id):
+        distance_init = self.distance_function._get_state_initializer(execution_id)
+        selection_init = self.selection_function._get_state_initializer(execution_id)
         random_state = self.get_current_function_param("random_state", execution_id).get_state()[1:]
         memory = self.get_previous_value(execution_id)
         my_init = pnlvm._tupleize([random_state, [memory[0], memory[1], 0, 0]])
