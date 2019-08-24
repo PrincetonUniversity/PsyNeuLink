@@ -10,14 +10,15 @@
 
 """
 ..
-    Sections of this document:
-      * :ref:`Projection_Overview`
-      * :ref:`Projection_Creation`
-      * :ref:`Projection_Structure`
-         * :ref:`Projection_Sender`
-         * :ref:`Projection_Receiver`
-      * :ref:`Projection_Execution`
-      * :ref:`Projection_Class_Reference`
+Sections
+--------
+      * `Projection_Overview`
+      * `Projection_Creation`
+      * `Projection_Structure`
+         * `Projection_Sender`
+         * `Projection_Receiver`
+      * `Projection_Execution`
+      * `Projection_Class_Reference`
 
 .. _Projection_Overview:
 
@@ -107,6 +108,7 @@ Projection in context:
         determined (e.g., it is used in the specification of a `pathway <Process.pathway>` for a `Process`). For
         MappingProjections, a `matrix specification <Mapping_Matrix_Specification>` can also be used to specify the
         projection (see **value** below).
+      COMMENT:
       |
       * *LEARNING_PROJECTION*  (or *LEARNING*) -- this can only be used in the specification of a `MappingProjection`
         (see `tuple <Mapping_Matrix_Specification>` format).  If the `receiver <MappingProjection.receiver>` of the
@@ -115,6 +117,7 @@ Projection in context:
         <LearningProjection.sender>`;  otherwise, a LearningMechanism is `automatically created
         <LearningMechanism_Creation>`, along with a LearningSignal that is assigned as the LearningProjection's `sender
         <LearningProjection.sender>`. See `LearningMechanism_Learning_Configurations` for additional details.
+      COMMENT
       |
       * *CONTROL_PROJECTION* (or *CONTROL*) -- this can be used when specifying a parameter using the `tuple format
         <ParameterState_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterState` for that

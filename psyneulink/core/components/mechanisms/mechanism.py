@@ -834,7 +834,7 @@ the `output <Process.output>` of that Process, and similarly for any System to w
 
 .. note::
    A Mechanism that is the `ORIGIN` or `TERMINAL` of a Process does not necessarily have the same role in the
-   System(s) to which the Mechanism or Process belongs (see `example <LearningProjection_Target_vs_Terminal_Figure>`).
+   System(s) to which the Mechanism or Process belongs (see `example <LearningProjection_Output_vs_Terminal_Figure>`).
 
 
 .. _Mechanism_Execution:

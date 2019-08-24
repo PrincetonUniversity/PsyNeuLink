@@ -4,8 +4,9 @@ Composition
 .. toctree::
    :maxdepth: 1
 
-   System
-   Process
+   *Subclasses:*
+   CompositionFunctionApproximator
+   AutodiffComposition
 
 .. automodule:: psyneulink.core.compositions.composition
    :members:
