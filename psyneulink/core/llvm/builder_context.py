@@ -58,7 +58,7 @@ class LLVMBuilderContext:
         self.float_ty = _float_ty
         self._modules = []
         self._cache = weakref.WeakKeyDictionary()
-
+        self._learningcache = weakref.WeakKeyDictionary()
     def __enter__(self):
         module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
         self._modules.append(module)
@@ -118,6 +118,12 @@ class LLVMBuilderContext:
         return builder
 
     def gen_llvm_function(self, obj):
+        # HACK: allows for learning bin func and non-learning to differ
+        if hasattr(obj,"learning_enabled") and obj.learning_enabled is True:
+            if obj not in self._learningcache:
+                self._learningcache[obj] = obj._gen_llvm_function()
+            return self._learningcache[obj]
+        print("GEN LLVM FUNCTION FOR",obj)
         if obj not in self._cache:
             self._cache[obj] = obj._gen_llvm_function()
         return self._cache[obj]
@@ -256,13 +262,22 @@ class LLVMBuilderContext:
         builder.call(printf,[fmt_ptr]+list(args))
 
 
-    def inject_printf_float_array(self,builder,array,dim,prefix=""):
+    def inject_printf_float_array(self,builder,array,dim,prefix="",suffix="\n",ctype_dimension=False):
         if "print_values" not in debug_env:
             return
         self.inject_printf(builder,prefix)
-        for i in range(0,dim):
-            self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[self.int32_ty(0),self.int32_ty(i)])))
-        self.inject_printf(builder,"\n")
+
+        if ctype_dimension:
+            loop_iterator = None
+            with pnlvm.helpers.for_loop_zero_inc(builder, dim, "print_vector_loop") as (builder, loop_iterator):
+                if array.type == self.float_ty.as_pointer():
+                    self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[loop_iterator])))
+                else:
+                    self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[self.int32_ty(0),loop_iterator])))
+        else:
+            for i in range(0,dim):
+                self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[self.int32_ty(0),self.int32_ty(i)])))
+        self.inject_printf(builder,suffix)
 
     def gen_autodiffcomp_learning_exec(self,composition,simulation=False):
         composition._build_pytorch_representation(composition.default_execution_id)

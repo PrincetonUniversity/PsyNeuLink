@@ -11,7 +11,9 @@
 from llvmlite import ir
 from . import helpers
 from .builder_context import LLVMBuilderContext
-
+from psyneulink.core import llvm as pnlvm
+debug = pnlvm.debug
+debug_env = debug.debug_env
 
 def setup_vxm(ctx):
     # Setup types

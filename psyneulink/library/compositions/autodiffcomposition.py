@@ -472,7 +472,7 @@ class AutodiffComposition(Composition):
         # stores compiled binary execute function
         self.__forward_bin_exec_func = None
         self.__learning_bin_exec_func = None
-
+        self.__generated_learning_run = None
 
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
@@ -736,6 +736,18 @@ class AutodiffComposition(Composition):
                     self.__forward_bin_exec_func = ctx.gen_autodiffcomp_exec(self)
             return self.__forward_bin_exec_func
     
+    @property
+    def _llvm_run(self):
+        if self.learning_enabled is True:
+            if self.__generated_learning_run is None:
+                with pnlvm.LLVMBuilderContext.get_global() as ctx:
+                    self.__generated_learning_run = ctx.gen_composition_run(self)
+            return self.__generated_learning_run
+        if self.__generated_run is None:
+            with pnlvm.LLVMBuilderContext.get_global() as ctx:
+                self.__generated_run = ctx.gen_composition_run(self)
+
+        return self.__generated_run
     def _gen_llvm_function(self):
         return self._bin_exec_func
 

@@ -525,6 +525,8 @@ class TestTrainingCorrectness:
             for i in range(len(results[eps-1])):
                 assert np.allclose(np.round(results[eps-1][i][0]), xor_targets[i])
 
+
+    @pytest.mark.benchmark(group="Recurrent")
     # tests whether semantic network created as autodiff composition learns properly
     @pytest.mark.parametrize(
         'eps, opt, from_pnl_or_no', [
@@ -532,7 +534,14 @@ class TestTrainingCorrectness:
             # (1000, 'adam', False)
         ]
     )
-    def test_semantic_net_training_correctness(self, eps, opt, from_pnl_or_no):
+    @pytest.mark.parametrize("mode", ['Python',
+                                    #pytest.param('LLVM', marks=pytest.mark.llvm),
+                                    #pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                    #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                    ])
+    def test_semantic_net_training_correctness(self, eps, opt, from_pnl_or_no,mode,benchmark):
 
         # MECHANISMS FOR SEMANTIC NET:
 
@@ -694,9 +703,9 @@ class TestTrainingCorrectness:
                 targets_dict[out_sig_can].append(truth_can[i])
 
         # TRAIN THE MODEL
-        result = sem_net.run(inputs=[{'inputs': inputs_dict,
+        result = sem_net.run(inputs={'inputs': inputs_dict,
                                       'targets': targets_dict,
-                                      'epochs': eps}])
+                                      'epochs': eps}, bin_execute=mode)
 
         # CHECK CORRECTNESS
 
@@ -713,7 +722,10 @@ class TestTrainingCorrectness:
 
                 # compare model output for terminal node on current trial with target for terminal node on current trial
                 assert np.allclose(np.round(result[0][i][j]), correct_value)
-
+        
+        benchmark(sem_net.run,inputs={'inputs': inputs_dict,
+                                      'targets': targets_dict,
+                                      'epochs': eps}, bin_execute=mode)
 @pytest.mark.pytorch
 @pytest.mark.actime
 class TestTrainingTime:
