@@ -4122,7 +4122,7 @@ class System(System_Base):
             rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
             if show_mechanism_structure:
                 sg.node(rcvr_label,
-                        rcvr.show_structure(**mech_struct_args),
+                        rcvr._show_structure(**mech_struct_args),
                         color=rcvr_color,
                         rank=rcvr_rank,
                         penwidth=rcvr_penwidth)
@@ -4341,7 +4341,7 @@ class System(System_Base):
             # Implement node for Mechanism
             if show_mechanism_structure:
                 sg.node(rcvr_label,
-                        rcvr.show_structure(**mech_struct_args),
+                        rcvr._show_structure(**mech_struct_args),
                         rank=obj_mech_rank, color=rcvr_color, penwidth=rcvr_width)
             else:
                 sg.node(rcvr_label,
@@ -4588,13 +4588,13 @@ class System(System_Base):
             objmech_label = self._get_label(objmech, show_dimensions, show_roles)
             if show_mechanism_structure:
                 sg.node(ctlr_label,
-                        controller.show_structure(**mech_struct_args),
+                        controller._show_structure(**mech_struct_args),
                         color=ctlr_color,
                         penwidth=ctlr_width,
                         rank = control_rank
                        )
                 sg.node(objmech_label,
-                        objmech.show_structure(**mech_struct_args),
+                        objmech._show_structure(**mech_struct_args),
                         color=objmech_color,
                         penwidth=ctlr_width,
                         rank = control_rank
@@ -4723,7 +4723,7 @@ class System(System_Base):
                                 pred_proj_color = prediction_mechanism_color
                                 pred_proj_width = str(default_width)
                             sg.node(mech.name,
-                                    shape=mech.show_structure(**mech_struct_args),
+                                    shape=mech._show_structure(**mech_struct_args),
                                     color=pred_mech_color,
                                     penwidth=pred_mech_width)
 
