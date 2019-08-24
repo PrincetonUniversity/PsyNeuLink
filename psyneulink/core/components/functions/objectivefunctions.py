@@ -366,6 +366,18 @@ class Stability(ObjectiveFunction):
         transfer_params = self.transfer_fct._get_param_initializer(execution_id) if self.transfer_fct is not None else tuple()
         return (my_params, metric_params, transfer_params)
 
+    def _get_state_struct_type(self, ctx):
+        my_state = ctx.get_state_struct_type(super())
+        metric_state = ctx.get_state_struct_type(self._metric_fct)
+        transfer_state = ctx.get_state_struct_type(self.transfer_fct) if self.transfer_fct is not None else pnlvm.ir.LiteralStructType([])
+        return pnlvm.ir.LiteralStructType([my_state, metric_state, transfer_state])
+
+    def _get_state_initializer(self, execution_id):
+        my_state = super()._get_state_initializer(execution_id)
+        metric_state = self._metric_fct._get_state_initializer(execution_id)
+        transfer_state = self.transfer_fct._get_state_initializer(execution_id) if self.transfer_fct is not None else tuple()
+        return (my_state, metric_state, transfer_state)
+
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
@@ -390,7 +402,7 @@ class Stability(ObjectiveFunction):
         trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
         if self.transfer_fct is not None:
             #FIXME: implement this
-            assert False
+            assert False, "Support for transfer functions is not implemented"
         else:
             builder.store(builder.load(dot_out), trans_out)
 
@@ -399,7 +411,7 @@ class Stability(ObjectiveFunction):
 
         # Distance Function
         metric_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        metric_state = state
+        metric_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
         metric_out = arg_out
         builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
         return builder
