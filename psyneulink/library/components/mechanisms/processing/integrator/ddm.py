@@ -10,11 +10,12 @@
 
 """
 ..
-    Sections:
-      * :ref:`DDM_Overview`
-      * :ref:`DDM_Creation`
-      * :ref:`DDM_Execution`
-      * :ref:`DDM_Class_Reference`
+Sections
+--------
+  * `DDM_Overview`
+  * `DDM_Creation`
+  * `DDM_Execution`
+  * `DDM_Class_Reference`
 
 .. _DDM_Overview:
 

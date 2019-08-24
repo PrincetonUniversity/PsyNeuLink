@@ -317,18 +317,16 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
     """
 
     from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+    from psyneulink.core.globals.parameters import parse_execution_context
 
     if not isinstance(mod_proj, ModulatoryProjection_Base):
         raise FunctionError('mod_proj ({0}) is not a ModulatoryProjection_Base'.format(mod_proj))
 
-    # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
-    function_mod_meta_param_obj = mod_proj.sender.modulation
+    execution_id = parse_execution_context(execution_context)
 
-    # # MODIFIED 6/27/18 OLD
-    # # Get the actual parameter of owner.function to be modulated
-    # function_param_name = owner.function.params[function_mod_meta_param_obj.value.attrib_name]
-    # # Get the function parameter's value
-    # function_param_value = owner.function.params[function_param_name]
+    # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
+    function_mod_meta_param_obj = mod_proj.sender.parameters.modulation._get(execution_id)
+
     # # MODIFIED 6/27/18 NEW:
     if function_mod_meta_param_obj in {OVERRIDE, DISABLE}:
         # function_param_name = function_mod_meta_param_obj

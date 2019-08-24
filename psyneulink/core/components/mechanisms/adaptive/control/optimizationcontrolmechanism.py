@@ -105,10 +105,13 @@ Creating an OptimizationControlMechanism
 An OptimizationControlMechanism is created in the same was as any `ControlMechanism <ControlMechanism>`.
 The following arguments of its constructor are specific to the OptimizationControlMechanism:
 
-* **features** -- takes the place of the standard **input_states** argument in the constructor for a
-  Mechanism`, and specifies the values used by the OptimizationControlMechanism, together with a `control_allocation
-  <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  Features can be
-  specified using any of the following, singly or combined in a list:
+* **features** -- takes the place of the standard **input_states** argument in the constructor for a Mechanism`,
+  and specifies the values used by the OptimizationControlMechanism, together with a `control_allocation
+  <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  For
+  `model-based optimzation <OptimizationControlMechanism_Model_Based>` these are also used as the inputs to the
+  Compositoin (i.e., `agent_rep <OptimizationControlMechanism.agent_rep>`) when it's `evaluate <Composition.evaluate>`
+  method is called (see `OptimizationControlMechanism_Features` below).  Features can be specified using any of the
+  following, singly or combined in a list:
 
   * *InputState specification* -- this can be any form of `InputState specification <InputState_Specification>`
     that resolves to an OutputState from which the InputState receives a Projection;  the `value
@@ -132,9 +135,9 @@ The following arguments of its constructor are specific to the OptimizationContr
   <ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>` (see `below
   <OptimizationControlMechanism_Agent_Rep>` for additional details). If it is not specified, the
   `Composition` to which the OptimizationControlMechanism belongs is assigned, and the OptimizationControlMechanism
-  is assigned as that Composition's `controller <Composition.controller>`, implementing `model-based
+  is assigned as that Composition's `controller <Composition.controller>`, implementing fully `model-based
   <OptimizationControlMechanism_Model_Based>` optimization.  If that Composition already has a `controller
-  <Composition.controller>` specified, the OptimizationControlMechanism is disable. If another Composition is
+  <Composition.controller>` specified, the OptimizationControlMechanism is disabled. If another Composition is
   specified, it must conform to the specifications for an `agent_rep <OptimizationControlMechanism.agent_rep>` as
   described `below <OptimizationControlMechanism_Agent_Rep>`.
 

@@ -1521,6 +1521,7 @@ class GridSearch(OptimizationFunction):
             # This will also set 'replace' if min_value is NaN.
             value = b.load(value_ptr)
             min_value = b.load(min_value_ptr)
+            # KDM 8/22/19: nonstateful direction here - OK?
             direction = "<" if self.direction is MINIMIZE else ">"
             replace = b.fcmp_unordered(direction, value, min_value)
             b.store(replace, replace_ptr)
@@ -1589,6 +1590,8 @@ class GridSearch(OptimizationFunction):
         self.reset_grid()
         return_all_samples = return_all_values = []
 
+        direction = self.parameters.direction._get(execution_id)
+
         if MPI_IMPLEMENTATION:
 
             from mpi4py import MPI
@@ -1646,13 +1649,13 @@ class GridSearch(OptimizationFunction):
                 value = self.objective_function(sample, execution_id=execution_id)
 
                 # Evaluate for optimal value
-                if self.direction is MAXIMIZE:
+                if direction is MAXIMIZE:
                     value_optimal = max(value, value_optimal)
-                elif self.direction is MINIMIZE:
+                elif direction is MINIMIZE:
                     value_optimal = min(value, value_optimal)
                 else:
                     assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}".\
-                        format(repr(DIRECTION),self.name,self.direction)
+                        format(repr(DIRECTION),self.name,direction)
 
                 # FIX: PUT ERROR HERE IF value AND/OR value_max ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
                 # If value is optimal, store corresponing sample
@@ -1686,9 +1689,9 @@ class GridSearch(OptimizationFunction):
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
-            assert self.direction is MAXIMIZE or self.direction is MINIMIZE, \
+            assert direction is MAXIMIZE or direction is MINIMIZE, \
                 "PROGRAM ERROR: bad value for {} arg of {}: {}". \
-                    format(repr(DIRECTION), self.name, self.direction)
+                    format(repr(DIRECTION), self.name, direction)
 
             last_sample, last_value, all_samples, all_values = super()._function(
                 variable=variable,
@@ -1714,8 +1717,8 @@ class GridSearch(OptimizationFunction):
                     if random_value < probability:
                         value_optimal, sample_optimal = value, sample
 
-                elif (value > value_optimal and self.direction is MAXIMIZE) or \
-                        (value < value_optimal and self.direction is MINIMIZE):
+                elif (value > value_optimal and direction is MAXIMIZE) or \
+                        (value < value_optimal and direction is MINIMIZE):
                     value_optimal, sample_optimal = value, sample
                     optimal_value_count = 1
 
@@ -1730,7 +1733,8 @@ class GridSearch(OptimizationFunction):
         """Get next sample from grid.
         This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
         """
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        initialization_status = self.parameters.context._get(execution_id).initialization_status
+        if initialization_status == ContextFlags.INITIALIZING:
             return [signal.start for signal in self.search_space]
         try:
             sample = next(self.grid)
