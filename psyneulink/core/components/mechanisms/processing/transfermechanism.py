@@ -15,11 +15,12 @@
 
 """
 ..
-    Sections:
-      * :ref:`Transfer_Overview`
-      * :ref:`Transfer_Creation`
-      * :ref:`Transfer_Execution`
-      * :ref:`Transfer_Class_Reference`
+Sections
+--------
+  * `Transfer_Overview`
+  * `Transfer_Creation`
+  * `Transfer_Execution`
+  * `Transfer_Class_Reference`
 
 .. _Transfer_Overview:
 

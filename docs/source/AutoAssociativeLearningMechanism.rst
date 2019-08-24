@@ -1,5 +1,5 @@
-AutoAssociativeMechanism
-========================
+AutoAssociativeLearningMechanism
+================================
 
 .. automodule:: psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism
    :members:

@@ -121,7 +121,7 @@ are designated as `INTERNAL`.
 .. note::
    The `origin_mechanism <Process.origin_mechanism>` and `terminal_mechanism <Process.terminal_mechanism>`
    of a Process are not necessarily the `ORIGIN` and/or `TERMINAL` Mechanisms of the System(s)to which the Process
-   belongs (see `example <LearningProjection_Target_vs_Terminal_Figure>`).  The designations of a Mechanism's status
+   belongs (see `example <LearningProjection_Output_vs_Terminal_Figure>`).  The designations of a Mechanism's status
    in the Process(es) to which it belongs are listed in its `processes <Mechanism_Base.processes>` attribute.
 
 .. _Process_Mechanism_Specification:
