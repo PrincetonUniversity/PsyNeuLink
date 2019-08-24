@@ -348,7 +348,7 @@ class TestBackProp:
                                              function=pnl.Logistic())
 
         comp = pnl.Composition(name="backprop-composition")
-        learning_components = comp.add_backpropagation_pathway(pathway=[input_layer, hidden_layer, output_layer],
+        learning_components = comp.add_backpropagation_learning_pathway(pathway=[input_layer, hidden_layer, output_layer],
                                                                 learning_rate=0.5)
         # learned_projection = learning_components[pnl.LEARNED_PROJECTION]
         # learned_projection.log.set_log_conditions(pnl.MATRIX)
@@ -404,7 +404,7 @@ class TestBackProp:
         comp = pnl.Composition(name='multilayer')
 
         p = [input_layer, input_weights, hidden_layer_1, middle_weights, hidden_layer_2, output_weights, output_layer]
-        learning_components = comp.add_backpropagation_pathway(pathway=p,
+        learning_components = comp.add_backpropagation_learning_pathway(pathway=p,
                                                                 learning_rate=1.)
 
         target_node = learning_components[pnl.TARGET_MECHANISM]
@@ -505,7 +505,7 @@ class TestBackProp:
     
             xor_comp = pnl.Composition()
     
-            learning_components = xor_comp.add_backpropagation_pathway([input_comp,
+            learning_components = xor_comp.add_backpropagation_learning_pathway([input_comp,
                                                                          in_to_hidden_comp,
                                                                          hidden_comp,
                                                                          hidden_to_out_comp,
@@ -619,8 +619,8 @@ class TestBackProp:
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
             comp = pnl.Composition(name=configuration)
-            comp.add_backpropagation_pathway(pathway=[A,D,E])
-            comp.add_backpropagation_pathway(pathway=[A,B,C])
+            comp.add_backpropagation_learning_pathway(pathway=[A,D,E])
+            comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
@@ -643,8 +643,8 @@ class TestBackProp:
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
             comp = pnl.Composition(name=configuration)
-            comp.add_backpropagation_pathway(pathway=[D,B,E])
-            comp.add_backpropagation_pathway(pathway=[A,B,C])
+            comp.add_backpropagation_learning_pathway(pathway=[D,B,E])
+            comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
@@ -669,8 +669,8 @@ class TestBackProp:
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
             comp = pnl.Composition(name=configuration)
-            comp.add_backpropagation_pathway(pathway=[D,E,A])
-            comp.add_backpropagation_pathway(pathway=[A,B,C])
+            comp.add_backpropagation_learning_pathway(pathway=[D,E,A])
+            comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
@@ -691,8 +691,8 @@ class TestBackProp:
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
             comp = pnl.Composition(name=configuration)
-            comp.add_backpropagation_pathway(pathway=[A,D])
-            comp.add_backpropagation_pathway(pathway=[B,A,C])
+            comp.add_backpropagation_learning_pathway(pathway=[A,D])
+            comp.add_backpropagation_learning_pathway(pathway=[B,A,C])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
@@ -713,8 +713,8 @@ class TestBackProp:
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
             comp = pnl.Composition(name=configuration)
-            comp.add_backpropagation_pathway(pathway=[D,A,E])
-            comp.add_backpropagation_pathway(pathway=[B,A,C])
+            comp.add_backpropagation_learning_pathway(pathway=[D,A,E])
+            comp.add_backpropagation_learning_pathway(pathway=[B,A,C])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
@@ -735,8 +735,8 @@ class TestBackProp:
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
             comp = pnl.Composition(name=configuration)
-            comp.add_backpropagation_pathway(pathway=[D,A])
-            comp.add_backpropagation_pathway(pathway=[B,A,C])
+            comp.add_backpropagation_learning_pathway(pathway=[D,A])
+            comp.add_backpropagation_learning_pathway(pathway=[B,A,C])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
@@ -757,8 +757,8 @@ class TestBackProp:
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
             comp = pnl.Composition(name=configuration)
-            comp.add_backpropagation_pathway(pathway=[C,A,D])
-            comp.add_backpropagation_pathway(pathway=[B,A])
+            comp.add_backpropagation_learning_pathway(pathway=[C,A,D])
+            comp.add_backpropagation_learning_pathway(pathway=[B,A])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
@@ -779,8 +779,8 @@ class TestBackProp:
             D = pnl.ProcessingMechanism(name='D')
             E = pnl.ProcessingMechanism(name='E')
             comp = pnl.Composition(name=configuration)
-            comp.add_backpropagation_pathway(pathway=[D,E,A])
-            comp.add_backpropagation_pathway(pathway=[C,B,A])
+            comp.add_backpropagation_learning_pathway(pathway=[D,E,A])
+            comp.add_backpropagation_learning_pathway(pathway=[C,B,A])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
@@ -806,8 +806,8 @@ class TestBackProp:
             E = pnl.ProcessingMechanism(name='E')
             F = pnl.ProcessingMechanism(name='F')
             comp = pnl.Composition(name=configuration)
-            comp.add_backpropagation_pathway(pathway=[E,A,B,C])
-            comp.add_backpropagation_pathway(pathway=[A,D,C,F])
+            comp.add_backpropagation_learning_pathway(pathway=[E,A,B,C])
+            comp.add_backpropagation_learning_pathway(pathway=[A,D,C,F])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
@@ -834,10 +834,10 @@ class TestBackProp:
             H = pnl.ProcessingMechanism(name='H')
             I = pnl.ProcessingMechanism(name='I')
             comp = pnl.Composition(name=configuration)
-            comp.add_backpropagation_pathway(pathway=[D,A])
-            comp.add_backpropagation_pathway(pathway=[B,A,C])
-            comp.add_backpropagation_pathway(pathway=[E,B,F])
-            comp.add_backpropagation_pathway(pathway=[H,D,G,I])
+            comp.add_backpropagation_learning_pathway(pathway=[D,A])
+            comp.add_backpropagation_learning_pathway(pathway=[B,A,C])
+            comp.add_backpropagation_learning_pathway(pathway=[E,B,F])
+            comp.add_backpropagation_learning_pathway(pathway=[H,D,G,I])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
@@ -859,9 +859,9 @@ class TestBackProp:
             E = pnl.ProcessingMechanism(name='E')
             F = pnl.ProcessingMechanism(name='F')
             comp = pnl.Composition(name=configuration)
-            comp.add_backpropagation_pathway(pathway=[D,E,A])
-            comp.add_backpropagation_pathway(pathway=[C,B,F])
-            comp.add_backpropagation_pathway(pathway=[B,A])
+            comp.add_backpropagation_learning_pathway(pathway=[D,E,A])
+            comp.add_backpropagation_learning_pathway(pathway=[C,B,F])
+            comp.add_backpropagation_learning_pathway(pathway=[B,A])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
             print(f'Completed configuration: {configuration}')
@@ -935,9 +935,9 @@ class TestBackProp:
             assert False, 'Bad order specified for test_stroop_model_learning'
 
         comp = pnl.Composition(name='Stroop Model - Composition')
-        comp.add_backpropagation_pathway(pathway=color_pathway,
+        comp.add_backpropagation_learning_pathway(pathway=color_pathway,
                                           learning_rate=1)
-        comp.add_backpropagation_pathway(pathway=word_pathway,
+        comp.add_backpropagation_learning_pathway(pathway=word_pathway,
                                           learning_rate=1)
         # comp.show_graph(show_learning=True)
 
@@ -1058,13 +1058,13 @@ class TestRumelhartSemanticNetwork:
 
         comp = Composition()
 
-        # comp.add_backpropagation_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
-        comp.add_backpropagation_pathway(pathway=[rel_in, rel_hidden])
-        comp.add_backpropagation_pathway(pathway=[rel_hidden, rep_out])
-        comp.add_backpropagation_pathway(pathway=[rel_hidden, prop_out])
-        comp.add_backpropagation_pathway(pathway=[rel_hidden, qual_out])
-        comp.add_backpropagation_pathway(pathway=[rel_hidden, act_out])
-        comp.add_backpropagation_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
+        # comp.add_backpropagation_learning_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
+        comp.add_backpropagation_learning_pathway(pathway=[rel_in, rel_hidden])
+        comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, rep_out])
+        comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, prop_out])
+        comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, qual_out])
+        comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, act_out])
+        comp.add_backpropagation_learning_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
 
         # comp.show_graph(show_learning=True)
         # validate_learning_mechs(comp)

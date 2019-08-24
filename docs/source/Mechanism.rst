@@ -4,6 +4,7 @@ Mechanisms
 .. toctree::
    :maxdepth: 1
 
+   *Subclasses:*
    Processing Mechanisms <ProcessingMechanism>
    Adaptive Mechanisms <AdaptiveMechanism>
 
