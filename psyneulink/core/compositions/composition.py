@@ -9,9 +9,17 @@
 # ********************************************* Composition ************************************************************
 
 """
-..
-    Sections:
-      * `Composition_Overview`
+
+Sections
+--------
+
+  * `Composition_Overview`
+  * `Composition_Creation`
+  * `Composition_Run`
+  * `Composition_Controller`
+  * `Composition_Learning`
+  * `Visualizing_a_Composition`
+  * `Composition_Class_Reference`
 
 .. _Composition_Overview:
 
@@ -23,10 +31,9 @@ It defines a common set of attributes possessed, and methods used by all Composi
 
 Composition "Nodes" are `Mechanisms <Mechanism>` and/or nested `Compositions <Composition>`. `Projections
 <Projection>` connect two Nodes. The Composition's `graph <Composition.graph>` stores the structural relationships
-among the Nodes of a Composition and the Projections that connect them.
-
-The Composition's `scheduler <Scheduler>` generates an execution queue based on these structural dependencies,
-allowing for other user-specified scheduling and termination conditions to be mixed in.
+among the Nodes of a Composition and the Projections that connect them.  The Composition's `scheduler <Scheduler>`
+generates an execution queue based on these structural dependencies, allowing for other user-specified scheduling
+and termination conditions to be specified.
 
 .. _Composition_Creation:
 
@@ -37,21 +44,51 @@ A generic Composition can be created by calling the constructor, and then adding
 following Composition methods:
 
     - `add_node <Composition.add_node>`
-        Adds a node to the Composition
+
+        adds a node to the Composition
+
     - `add_nodes <Composition.add_nodes>`
-        Adds mutiple nodes to the Composition
+
+        adds mutiple nodes to the Composition
+
     - `add_projection <Composition.add_projection>`
-        Adds a connection between a pair of nodes in the Composition
+
+        adds a connection between a pair of nodes in the Composition
+
     - `add_projections <Composition.add_projections>`
-        Adds connection between multiple pairs of nodes in the Composition
+
+        adds connection between multiple pairs of nodes in the Composition
+
     - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
-        Adds and connects a list of nodes and/or Projections to the Composition;
-        Inserts a default Projection between any adjacent Nodes
+
+        adds and connects a list of nodes and/or Projections to the Composition;
+        Inserts a default Projection between any adjacent Nodes.
+
+In addition, a Composition has the following set of `learning methods <Composition_Learning_Methods>` that can also
+be used to create a Composition from (or add) pathways that implement `learning <Composition_Learning>`:
+
+    - `add_reinforcement_learning_pathway <Composition.add_reinforcement_learning_pathway>`
+
+        adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
+        needed to implement `reinforcement learning` in the specified pathway;
+
+    - `add_td_learning_pathway <Composition.add_td_learning_pathway>`
+
+        adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
+        needed to implement the `temporal differences` method of reinforcement learning` in the specified pathway;
+
+    - `add_backpopagation_learning_pathway <Composition.add_backpopagation_learning_pathway>`
+
+        adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
+        needed to implement the `backpropagation learning algorithm` in the specified pathway.
 
 .. note::
-  Only Nodes and Projections added to a Composition via the methods above constitute a Composition, even if
-  other Nodes and/or Projections are constructed in the same script.
+  Only Mechanisms and Projections added to a Composition via the methods above constitute a Composition, even if
+  other Mechanism and/or Projections are constructed in the same script.
 
+COMMENT:
+• MOVE THE EXAPLES BELOW TO AN "Examples" SECTION
+COMMENT
 In the following script comp_0, comp_1 and comp_2 are identical, but constructed using different methods.
 
     *Create Mechanisms:*
@@ -94,12 +131,14 @@ In the following script comp_0, comp_1 and comp_2 are identical, but constructed
     >>> comp_1_output = comp_1.run(inputs=input_dict)
     >>> comp_2_output = comp_2.run(inputs=input_dict)
 
+.. _Composition_Nested:
+
 *Nested Compositions*
 =====================
 
-To use a Composition as a node of another Composition, simply call `add_node <Composition.add_node>` from the parent
-composition, using the child Composition as the 'node' argument. This allows you to create projections to and from
-the nested composition just as you would another Mechanism.
+A Composition can be used as a node of another Composition, by calling `add_node <Composition.add_node>`
+from the parent composition using the child Composition as an argument. Projections can then be specifed to and from
+the nested composition just as for any other node.
 
     *Create outer Composition:*
 
@@ -115,7 +154,7 @@ the nested composition just as you would another Mechanism.
     >>> inner_comp = pnl.Composition(name='inner_comp')
     >>> inner_comp.add_linear_processing_pathway([inner_A, inner_B])
 
-    *Nest inner Composition within outer Composition using the add_node method:*
+    *Nest inner Composition within outer Composition using `add_node <Composition.add_node>`:*
 
     >>> outer_comp.add_node(inner_comp)
 
@@ -129,8 +168,7 @@ the nested composition just as you would another Mechanism.
 
     >>> outer_comp.run(inputs=input_dict)
 
-    *A less verbose implementation of the above Composition that uses the add_linear_processing_pathway method in lieu
-    of add_node and add_projection:*
+    *Using `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` with nested compositions for brevity:*
 
     >>> outer_A = pnl.ProcessingMechanism(name='outer_A')
     >>> outer_B = pnl.ProcessingMechanism(name='outer_B')
@@ -143,7 +181,7 @@ the nested composition just as you would another Mechanism.
     >>> input_dict = {outer_A: [[[1.0]]]}
     >>> outer_comp.run(inputs=input_dict)
 
-.. _Running_a_Composition:
+.. _Composition_Run:
 
 Running a Composition
 ---------------------
@@ -153,9 +191,10 @@ Running a Composition
 *Inputs*
 ========
 
-The :keyword:`run` method presents the inputs for each `TRIAL` to the input_states of the INPUT Nodes in
+The `run <Composition.run>` method presents the inputs for each `TRIAL` to the input_states of the INPUT Nodes in
 the `scope of execution <Run_Scope_of_Execution>`. These input values are specified in the **inputs** argument of a
-Composition's :keyword:`execute` or :keyword:`run` method.
+Composition's `execute <Composition.execute>` or `run <Composition.run>` methods.
+
 COMMENT:
     From KAM 2/7/19 - not sure "scope of execution" is the right phrase. To me, it implies that only a subset of the
     nodes in the Composition belong to the "scope of execution". What we want to convey (I think) is that ALL of the
@@ -163,7 +202,7 @@ COMMENT:
 COMMENT
 
 The standard way to specificy inputs is a Python dictionary in which each key is an `INPUT <NodeRole.INPUT>` Node and
-each value is a list. The lists represent the inputs to the key `INPUT <NodeRole.INPUT>` Nodes, such that the i-th
+each value is a list. The lists represent the inputs to the key `INPUT <NodeRole.INPUT>` Nodes, in which the i-th
 element of the list represents the input value to the key Node on trial i.
 
 .. _Run_Inputs_Fig_States:
@@ -446,7 +485,6 @@ Environment.
         return {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
 
     comp.run(inputs=input_dictionary)
-
 COMMENT
 
 
@@ -496,8 +534,8 @@ occurs in the `None` execution context.
 
 .. _Composition_Controller:
 
-Controller
-----------
+Controlling a Composition
+-------------------------
 
 A Composition can be assigned a `controller <Composition.controller>`.  This is a `ModulatoryMechanism`, or a subclass
 of one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
@@ -577,6 +615,8 @@ customize when it is executed.  All three of these attributes can be specified i
 Composition's constructor, or programmatically after it is constructed by assigning the desired value to the
 attribute.
 
+
+COMMENT:
 For Developers
 --------------
 
@@ -624,12 +664,329 @@ another `termination condition <Scheduler_Termination_Conditions>` is met.  The 
 with `Condition` specifications for individual Components to execute different Components at different time scales.
 
 Runtime Params
+COMMENT
 
+.. _Composition_Learning:
+
+Learning in a Composition
+-------------------------
+
+* `Composition_Learning_Standard`
+* `Composition_Learning_AutodiffComposition`
+* `Composition_Learning_UDF`
+
+Learning is used to modify the `Projections <Projection>` between Mechanisms in a Composition.  More specifically,
+it modifies the `matrix <MappingProjection.matrix>` parameter of those `MappingProjections <MappingProjection>`,
+which implements the strengths ("weights") of the associations between representations in the Mechanisms they connect.
+There are three ways of implementing learning in a Composition:  i) using `standard PsyNeuLink Components
+<Composition_Learning_Standard>`; ii) using the `AutodiffComposition <Composition_Learning_AutodiffComposition>` -- a
+specialized subclass of Composition that executes learning using `PyTorch <https://pytorch.org>`_; and iii) by using
+`UserDefinedFunctions <UserDefinedFunction>`.  The advantage of using standard PsyNeuLink compoments is that it
+assigns each operation involved in learning to a dedicated Component. This helps make clear exactly what those
+operations are, the sequence in which they are carried out, and how they interact with one another.  However,
+this can also make execution inefficient, due to the "overhead" incurred by distributing the calculations over
+different Components.  If more efficient computation is critical, then the `AutodiffComposition` can be used to
+execute a compatible PsyNeuLink Composition in PyTorch, or one or more `UserDefinedFunctions <UserDefinedFunction>`
+can be assigned to either PyTorch functions or those in any other Python environment that implements learning and
+accepts and returns tensors. Each of these approaches is described in more detail below.
+
+.. _Composition_Learning_Standard:
+
+*Learning Using PsyNeuLink Components*
+======================================
+
+* `Composition_Learning_Unsupervised`
+* `Composition_Learning_Supervised`
+
+When learning is `implemented using standard PsyNeuLink Components <Composition_Learning_Standard>`, each calculation
+and/or operation involved in learning -- including those responsible for computing errors, and for using those to
+modify the Projections between Mechanisms, is assigned to a different PsyNeuLink `learning-related Component
+<Composition_Learning_Components>`.  These can be used to implement any form of learning.  Learning is generally
+considered to fall into two broad classes:  *unsupervised*, in which associative strenghts are modified
+by mere exposure to the inputs, in order to capture structure and/or relationships among them;  and *supervised*,
+which in which the associative strengths are modified so that each input generates a desired output (see
+`<https://www.geeksforgeeks.org/supervised-unsupervised-learning/>`_ for a useful summary).  Both forms of
+learning can be implemented in a Composition, using `LearningMechanisms <LearningMechanism>` that compute the
+changes to make to the `matrix <MappingProjection.matrix>` parameter of `MappingProjections <MappingProjection>`
+being learned, and `LearningProjections <LearningProjection>` that apply those changes to the MappingProjections).
+In addition, supervised learning uses a `ComparatorMechanism` to compute the error between the response generated by
+the Composition to the input stimulus, and the target stimulus used to designate the desired response.  In most
+cases, the LearningMechanisms, LearningProjections and, where needed, ComparatorMechanism are generated automatically,
+as described for each form of learning below.  However, these can also be configured manually using their constructors,
+or modified by assigning values to their attributes.
+
+.. _Composition_Learning_Unsupervised:
+
+Unsupervised Learning
+~~~~~~~~~~~~~~~~~~~~~
+
+Undersupervised learning is implemented using a `RecurrentTransferMechanism`, setting its **enable_learning** argument
+to True, and specifying the desired `LearningFunction <LearningFunctions>` in its **learning_function** argument.  The
+default is `Hebbian`, however others can be specified (such as `ContrastiveHebbian` or `Kohonen`). When a
+RecurrentTransferMechanism with learning enabled is added to a Composition, an `AutoAssociativeLearningMechanism` that
+that is appropriate for the specified learning_function is automatically constructured and added to the Composition,
+as is a `LearningProjection` from the AutoAssociativeLearningMechanism to the RecurrentTransferMechanism's
+`recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.  When the Composition is run and the
+RecurrentTransferMechanism is executed, its AutoAssociativeLearningMechanism is also executed, which updates the `matrix
+<AutoAssociativeProjection.matrix>` of its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
+in response to its input.
+
+COMMENT:
+• DISCUSS LEARNING COMPONENTS RETURNED ONCE add_node AND add_linear_processing_pathway RETURN THEM
+• ADD EXAMPLE HERE
+COMMENT
+
+.. _Composition_Learning_Supervised:
+
+Supervised Learning
+~~~~~~~~~~~~~~~~~~~
+
+* `Composition_Learning_Methods`
+* `Composition_Learning_Components`
+* `Compositon_Learning_Execution`
+
+COMMENT:
+TBI:  Supervised learning is implemented using a Composition's `add_learning_pathway` method, and specifying an
+appropriate `LearningFunction <LearningFunctions>` in its **learning_function** argument.
+XXXMORE HERE ABOUT TYPES OF FUNCTIONS
+• MODIFY REFERENCE TO LEARNING COMPONENT NAMES WHEN THEY ARE IMPLEMENTED AS AN ENUM CLASS
+• ADD EXAMPLES - POINT TO ONES IN BasicsAndSampler
+COMMENT
+
+.. _Composition_Learning_Methods:
+
+*Learning Methods*
+^^^^^^^^^^^^^^^^^^
+
+Supervised learning is implemented using a Composition's method for the desired type of learning.  There are currently
+three such methods:
+
+    • `add_reinforcement_learning_pathway`
+    • `add_td_learning_pathway`
+    • `add_backpropagation_learning_pathway`.
+
+Each uses the Composition's `add_linear_processing_pathway` method to create a  *learning sequence* specified in their
+**pathway** argument: a contiguous sequence of `ProcessingMechanisms <ProcessingMechanism>` and the `MappingProjections
+<MappingProjection>` between them, in which learning modifies the `matrix <MappingProjection.matrix>` parameter of the
+MappingProjections in the sequence, so that the input to the first ProcessingMechanism in the sequence generates an
+output from the last ProcessingMechanism that matches as closely as possible the value specified for the `target
+mechanism <Process_Learning_Components>` in the **inputs** argument of the Composition's `run <Composition.run>` method.
+The Mechanisms in the pathway must be compatible with learning (that is, their `function <Mechanism_Base.function>` must
+be compatible with the `function <LearningMechanism.function>` of the `LearningMechanism` for the MappingProjections
+they receive (see `LearningMechanism_Function`).  The Composition's `learning methods <Composition_Learning_Methods>`
+return the set of learning components generates for the pathway, as described below.
+
+.. _Composition_Learning_Components:
+
+*Learning Components*
+^^^^^^^^^^^^^^^^^^^^^
+
+For each learning sequence specified in a `learning method <Composition_Learning_Methods>`, it creates the
+following Components, and assigns to them the `NodeRoles <NodeRole>` indicated:
+
+    .. _COMPARATOR_MECHANISM:
+    * *COMPARATOR_MECHANISM* `ComparatorMechanism` -- used to `calculate an error signal
+      <ComparatorMechanism_Function>` for the sequence by comparing the value received by the ComparatorMechanism's
+      *SAMPLE* `InputState <ComparatorMechanism_Structure>` (from the `output <LearningMechanism_Activation_Output>` of
+      the last Processing Mechanism in the learning sequence) with the value received in the *COMPARATOR_MECHANISM*'s
+      *TARGET* `InputState <ComparatorMechanism_Structure>` (from the *TARGET_MECHANISM* generated by the method --
+      see below); this is assigned the `NodeRole` `LEARNING` in the Composition.
+    ..
+    .. _TARGET_MECHANISM:
+    * *TARGET_MECHANISM* -- receives the value to be used by the *COMPARATOR_MECHANISM* as the target in
+      computing the error signal (see above);  that value must be specified in the **inputs** argument of the
+      Composition's `run <Composition.run>` method (as the input to the *TARGET_MECHANISM*; this is assigned the
+      `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition;
+    ..
+    * a MappingProjection that projects from the last ProcessingMechanism in the learning sequence to the *SAMPLE*
+      `InputState  <ComparatorMechanism_Structure>` of the *COMPARATOR_MECHANISM*;
+    ..
+    * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputState
+      <ComparatorMechanism_Structure>` of the *COMPARATOR_MECHANISM*;
+    ..
+    .. _LEARNING_MECHANISM:
+    * a *LEARNING_MECHANISM* for each MappingProjection in the sequence, each of which calculates the `learning_signal
+      <LearningMechanism.learning_signal>` used to modify the `matrix <MappingProjection.matrix>` parameter for the
+      coresponding MappingProjection, along with a `LearningSignal` and `LearningProjection` that convey the
+      `learning_signal <LearningMechanism.learning_signal>` to the MappingProjection's *MATRIX* `ParameterState
+      <Mapping_Matrix_ParameterState>`;  depending on learning method, additional MappingProjections may be created to
+      and/or from the LearningMechanism -- see `LearningMechanism_Learning_Configurations` for details);
+      these are assigned the `NodeRole` `LEARNING` in the Composition.
+
+The items with names in the list above are returned by the learning method in a dictionary, in which each name is the
+key of an entry, and the object(s) created of that type are its value.  See `LearningMechanism_Single_Layer_Learning`
+for a more detailed description and figure showing these Components.
+
+If the learning sequence involves more than two ProcessingMechanisms (e.g. using `add_backpropagation_learning_pathway`
+for a multilayered neural network), then additional LearningMechanisms are created, along with MappingProjections
+that provides them with the `error_signal <LearningMechanism.error_signal>` from the preceding LearningMechanism,
+and `LearningProjections <LearningProjection>` that modify the additional MappingProjections (*LEARNED_PROJECTION*\s)
+in the sequence, as shown for an example in the figure below.  These additional learning components are listed in the
+*LEARNING_MECHANISM* and *LEARNED_PROJECTION* entries of the dictionary returned by the learning method.
+
+.. _Composition_MultilayerLearning_Figure:
+
+**Learning Components**
+
+.. figure:: _static/Composition_Multilayer_Learning_fig.svg
+   :alt: Schematic of LearningMechanism and LearningProjections in a Process
+   :scale: 50 %
+
+   Components for sequence of three Mechanisms generated by a call to a learning method (e.g.,
+   ``add_backpropagation_learning_pathway(pathway=[A,B,C])``), with `NodeRole` assigned to each node in the
+   Composition's `graph <Composition.graph>` (in italics below Mechanism type) and the names of the learning
+   components (capitalized in italics) returned by the learning method.
+
+.. _Composition_XOR_Example:
+
+The following example implements a simple three-layered network that learns the XOR function
+(see `figure <Composition_Learning_Output_vs_Terminal_Figure>` below)::
+
+    # Construct Composition:
+    >>> input = TransferMechanism(name='Input', default_variable=np.zeros(2))
+    >>> hidden = TransferMechanism(name='Hidden', default_variable=np.zeros(10), function=Logistic())
+    >>> output = TransferMechanism(name='Output', default_variable=np.zeros(1), function=Logistic())
+    >>> input_weights = MappingProjection(name='Input Weights', matrix=np.random.rand(2,10))
+    >>> output_weights = MappingProjection(name='Output Weights', matrix=np.random.rand(10,1))
+    >>> xor_comp = Composition('XOR Composition')
+    >>> learning_components = xor_comp.add_backpropagation_learning_pathway(
+    >>>                       pathway=[input, input_weights, hidden, output_weights, output])
+    >>> target = learning_components[TARGET_MECHANISM]
+
+    # Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4
+    >>> xor_inputs = {'stimuli':[[0, 0],  [0, 1],  [1, 0],  [1, 1]],
+    >>>               'targets':[  [0],     [1],     [1],     [0] ]}
+    >>> xor_comp.run(inputs={input:xor_inputs['stimuli'],
+    >>>                      target:xor_inputs['targets']},
+    >>>              num_trials=1,
+    >>>              animate={'show_learning':True})
+
+The description and example above pertain to simple linear sequences.  However, more complex configurations,
+with convergent, divergent and/or intersecting sequences can be built using multiple calls to the learning method
+(see `example <BasicsAndSampler_Rumelhart_Model>` in `BasicsAndSampler`).  In each call, the learning method determines
+how the sequence to be added relates to any existing ones with which it abuts or intersects, and automatically creates
+andconfigures the relevant learning components so that the error terms are properly computed and propagated by each
+LearningMechanism to the next in the configuration. It is important to note that, in doing so, the status of a
+Mechanism in the final configuration takes precedence over its status in any of the individual sequences specified
+in the `learning methods <Composition_Learning_Methods>` when building the Composition.  In particular,
+whereas ordinarily the last ProcessingMechanism of a sequence specified in a learning method projects to a
+*COMPARATOR_MECHANISM*, this may be superceded if multiple sequences are created. This is the case if: i) the
+Mechanism is in a seqence that is contiguous (i.e., abuts or intersects) with others already in the Composition,
+ii) the Mechanism appears in any of those other sequences and, iii) it is not the last Mechanism in *all* of them;
+in that in that case, it will not project to a *COMPARATOR_MECHANISM* (see `figure below
+<Composition_Learning_Output_vs_Terminal_Figure>` for an example).  Furthermore, if it *is* the last Mechanism in all of
+them (that is, all of the specified pathways converge on that Mechanism), only one *COMPARATOR_MECHANISM* is created
+for that Mechanism (i.e., not one for each sequence).  Finally, it should be noted that, by default, learning components
+are *not* assigned the `NodeRole` of `OUTPUT` even though they may be the `TERMINAL` Mechanism of a Composition;
+conversely, even though the last Mechanism of a learning sequence projects to a *COMPARATOR_MECHANISM*, and thus is not
+the `TERMINAL` node of a Composition, if it does not project to any other Mechanisms in the Composition it is
+nevertheless assigned as an `OUTPUT` of the Composition.  That is, Mechanisms that would otherwise have been the
+`TERMINAL` Mechanism of a Composition preserve their role as an `OUTPUT` of the Composition if they are part of a
+learning sequence even though they project to another Mechanism (the *COMPARATOR_MECHANISM*) in the Composition.
+
+.. _Composition_Learning_Output_vs_Terminal_Figure:
+
+    **OUTPUT** vs. **TERMINAL** Roles in Learning Configuration
+
+    .. figure:: _static/Composition_Learning_OUTPUT_vs_TERMINAL_fig.svg
+       :alt: Schematic of Mechanisms and Projections involved in learning
+       :scale: 50 %
+
+       Configuration of Components generated by the creation of two intersecting learning sequences
+       (e.g., ``add_backpropagation_learning_pathway(pathway=[A,B])`` and
+       ``add_backpropagation_learning_pathway(pathway=[D,B,C])``).  Mechanism B is the last Mechanism of the
+       sequence specified for the first pathway, and so would project to a `ComparatorMechanism`, and would be
+       assigned as an `OUTPUT` node of the Composition, if that pathway was created on its own.  However,
+       since Mechanims B is also in the middle of the sequence specified for the second pathway, it does not
+       project to a ComparatorMechanism, and is relegated to being an `INTERNAL` node of the Composition
+       Mechanism C is now the one that projects to the ComparatorMechanism and assigned as the `OUTPUT` node.
+
+.. _Compositon_Learning_Execution:
+
+*Execution of Learning*
+^^^^^^^^^^^^^^^^^^^^^^^
+When a Composition is run that contains one or more learning sequences, all of the ProcessingMechanisms for a
+sequence are executed first, and then its LearningComponents. This is shown in an animation of the XOR network
+from the `example above <Composition_XOR_Example>`:
+
+.. _Composition_Learning_Animation_Figure:
+
+    **Composition with Learning**
+
+    .. figure:: _static/Composition_XOR_animation.gif
+       :alt: Animation of Composition with learning
+       :scale: 50 %
+
+       Animation of XOR Composition in example above when it is executed by calling its `run <Composition.run>`
+       method with the argument ``animate={'show_learning':True}``.
+
+Note that, since the `learning components <Composition_Learning_Components>` are not executed until after the
+processing components, the change to the weights of the MappingProjections in the processing pathway are not
+made until after it has executed.  Thus, as with `execution of a Projection <Projection_Execution>`, those
+changes will not be observed in the values of their `matrix <MappingProjection.matrix>` parameters until after
+they are next executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+
+.. _Composition_Learning_AutodiffComposition:
+
+*Learning Using AutodiffCompositon*
+===================================
+
+COMMENT:
+Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
+COMMENT
+
+The `AutodiffComposition` can be used to implement a Composition in PsyNeuLink, which is then executed using `PyTorch
+<https://pytorch.org>`_ (see `example <BasicsAndSampler_Rumelhart_Model>` in `BasicsAndSampler`).  The
+AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
+Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
+etc.) as any other Composition, and it is executed using its `run <AutodiffComposition.run>` method.   Note that
+there is no need to use any `learning methods <Composition_Learning_Methods>` — the Composition is translated into
+PyTorch objects and functions, which are called when it is run.  It can be run in training mode (during which
+learning occurs) or test mode (which runs the Composition without learning).
+
+The advantage of this approach is that it allows the Composition to be implemented in PsyNeuLink, while exploiting
+the efficiency of execution in PyTorch (which can yield as much as three orders of magnitude improvement).  However,
+a disadvantage is that there are restrictions on the kinds of Compositions that be implemented in this way.
+First, because it relies on PyTorch, it is best suited for use with `supervised
+learning <Composition_Learning_Supervised>`, although it can be used for some forms of `unsupervised learning
+<Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized maps
+<https://github.com/giannisnik/som>`_).  Second, all of the Components in the Composition are be subject to and must
+be with compatible with learning.   This means that it cannot be used with a Composition that contains any
+`modulatory components <ModulatorySignal_Anatomy_Figure>` or that are subject to modulation, whether by
+ModulatoryMechanisms within or outside the Composition;  this includes a `controller <Composition_Controller>`
+or any LearningMechanisms.  An AutodiffComposition can be `nested in a Composition <Composition_Nested>`
+that has such other Components.  During learning, none of the internal Components of the AutodiffComposition (e.g.,
+intermediate layers of a neural network model) are accessible to the other Components of the outer Composition,
+(e.g., as sources of information, or for modulation).  However, when learning turned off, then the  AutodiffComposition
+functions like any other, and all of its internal  Components accessible to other Components of the outer Composition.
+Thus, as long as access to its internal Components is not needed during learning, an `AutodiffComposition` can be
+trained, and then used to execute the trained Composition like any other.
+
+.. _Composition_Learning_UDF:
+
+*Learning Using UserDefinedFunctions*
+=====================================
+
+If execution efficiency is critical and the `AutodiffComposition` is too restrictive, a function from any Python
+environment that supports learning can be assigned as the `function <Mechanism_Base.function>` of a `Mechanism`,
+in which case it is automatically  wrapped as `UserDefinedFunction`.  For example, the `forward and backward methods
+<https://pytorch.org/docs/master/notes/extending.html>`_ of a PyTorch object can be assigned in this way.  The
+advanatage of this approach is that it can be applied to any Python function that adheres to the requirements of a
+`UserDefinedFunction`.  The disadvantage is that it can't be `compiled`, so efficiency may be compromised.  It must
+also be carefully coordinated with the execution of other learning-related Components in the Composition, to insure
+that each function is called at the appropriate times during execution.  Furthermore, as with an `AutodiffComposition`,
+the internal constituents of the object (e.g., intermediates layers of a neural network model) are not accessible to
+other Components in the Composition (e.g., as a source of information or for modulation).
 
 .. _Visualizing_a_Composition:
 
 Visualizing a Composition
 -------------------------
+
+COMMENT:
+XXX - ADD EXAMPLE OF NESTED COMPOSITION
+XXX - ADD DISCUSSION OF show_controller AND show_learning
+COMMENT
 
 The `show_graph <Composition.show_graph>` method generates a display of the graph structure of Nodes (Mechanisms and
 Nested Compositions) and Projections in the Composition (based on the Composition's `processing graph
@@ -659,7 +1016,7 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 | ...           )                                           |                                           |
 | >>> comp = Composition(                                   |                                           |
 | ...           name='Comp',                                |                                           |
-| ...           enable_controller=True           |                                           |
+| ...           enable_controller=True                      |                                           |
 | ...           )                                           |                                           |
 | >>> comp.add_linear_processing_pathway([a,c])             |                                           |
 | >>> comp.add_linear_processing_pathway([b,c])             |                                           |
@@ -670,7 +1027,7 @@ shown as unlabeled arrows, as illustrated for the Composition in the example bel
 | ...            control_signals=(GAIN, c),                 |                                           |
 | ...            agent_rep=comp                             |                                           |
 | ...            )                                          |                                           |
-| >>> comp.add_controller(ctlr)                  |                                           |
+| >>> comp.add_controller(ctlr)                             |                                           |
 +-----------------------------------------------------------+-------------------------------------------+
 
 Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
@@ -2375,7 +2732,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                              AND THEN TO HANDLE ALL FORMS OF LEARNING (AS BELOW)
         #  REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
         #  1) Determine whether this is a terminal sequence:
-        #     - use arg passed in or determine from context (see current implementation in add_backpropagation_pathway)
+        #     - use arg passed in or determine from context (see current implementation in add_backpropagation_learning_pathway)
         #     - for terminal sequence, handle target and sample projections as below
         #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
         #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
@@ -2501,7 +2858,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                              AND THEN TO HANDLE ALL FORMS OF LEARNING (AS BELOW)
         #  REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
         #  1) Determine whether this is a terminal sequence:
-        #     - use arg passed in or determine from context (see current implementation in add_backpropagation_pathway)
+        #     - use arg passed in or determine from context (see current implementation in add_backpropagation_learning_pathway)
         #     - for terminal sequence, handle target and sample projections as below
         #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
         #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
@@ -2790,8 +3147,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_related_components
 
-    def add_backpropagation_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                     learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
+    def add_backpropagation_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
+                                             learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
         """Add linear processing pathway with backpropogation learning
 
         Arguments
@@ -4906,11 +5263,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 has_learning = None
 
                             edge_label = self._get_graph_node_label(proj, show_dimensions)
+                            is_learning_component = rcvr in self.learning_components or sndr in self.learning_components
 
                             # Check if Projection or its receiver is active
                             if any(item in active_items for item in {proj, proj.receiver.owner}):
                                 if active_color is BOLD:
-                                    if (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
+                                    # if (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
+                                    if is_learning_component:
                                         proj_color = learning_color
                                     else:
                                         pass
@@ -6141,7 +6500,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     append_images=self._animation[1:],
                                     duration=self._image_duration*1000,
                                     loop=0)
-            print('\nSaved movie for {}: {}'.format(self.name, self._movie_filename))
+            # print(f'\nSaved movie for {self.name} in {self._animation_directory}/{self._movie_filename}')
+            print(f"\nSaved movie for '{self.name}' in '{self._movie_filename}'")
             if self._show_animation:
                 movie = Image.open(movie_path)
                 movie.show()
