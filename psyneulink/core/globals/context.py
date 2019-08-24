@@ -517,7 +517,7 @@ def _get_context(context:tc.any(ContextFlags, Context, str)):
     return context_flag
 
 
-def _get_time(component, context_flags, execution_id=None):
+def _get_time(component, context, execution_id=None):
     """Get time from Scheduler of System in which Component is being executed.
 
     Returns tuple with (run, trial, time_step) if being executed during Processing or Learning
@@ -554,18 +554,13 @@ def _get_time(component, context_flags, execution_id=None):
     # FIX: Modify to use component.owner.context.composition once that is implemented
     # Get System in which it is being (or was last) executed (if any):
 
-    # If called from COMMAND_LINE, get context for last time value was assigned:
-    if context_flags & ContextFlags.COMMAND_LINE:
-    # if context_flags & (ContextFlags.COMMAND_LINE | ContextFlags.RUN | ContextFlags.TRIAL):
-        if component.prev_context:
-            context_flags = component.prev_context.flags
-        else:
-            context_flags = ContextFlags.UNSET
-
-    system = ref_mech.parameters.context._get(execution_id).composition
+    system = context.composition
+    if system is None:
+        # If called from COMMAND_LINE, get context for last time value was assigned:
+        system = component.most_recent_context.composition
 
     if system and hasattr(system, 'scheduler_processing'):
-        execution_flags = context_flags & ContextFlags.EXECUTION_PHASE_MASK
+        execution_flags = context.execution_phase
         # # MODIFIED 7/15/19 OLD:
         # try:
         #     if execution_flags == ContextFlags.PROCESSING or not execution_flags:
@@ -586,10 +581,10 @@ def _get_time(component, context_flags, execution_id=None):
         #         t = None
         # MODIFIED 7/15/19 NEW:  ACCOMODATE LEARNING IN COMPOSITION DONE WITH scheduler_processing
         try:
-            if execution_flags in {ContextFlags.PROCESSING, ContextFlags.LEARNING, ContextFlags.IDLE}:
+            if execution_flags & (ContextFlags.PROCESSING | ContextFlags.LEARNING | ContextFlags.IDLE):
                 t = system.scheduler_processing.clocks[execution_id].time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
-            elif execution_flags == ContextFlags.CONTROL:
+            elif execution_flags & ContextFlags.CONTROL:
                 t = system.scheduler_processing.clocks[execution_id].time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
             # elif execution_flags == ContextFlags.LEARNING:

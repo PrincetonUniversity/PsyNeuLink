@@ -48,7 +48,7 @@ from psyneulink.core.globals.keywords import \
     INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
 
@@ -1787,7 +1787,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
         return value + offset
 
-    def reinitialize(self, short=None, long=None, execution_context=NotImplemented):
+    @handle_external_context()
+    def reinitialize(self, short=None, long=None, execution_context=NotImplemented, context=None):
         """
         Effectively begins accumulation over again at the specified utilities.
 
@@ -1804,7 +1805,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         <DualAdaptiveIntegrator.initial_long_term_avg>` are used.
         """
         if execution_context is NotImplemented:
-            execution_context = self.most_recent_execution_id
+            execution_context = self.most_recent_context.execution_id
 
         if short is None:
             short = self.get_current_function_param("initial_short_term_avg", execution_context)

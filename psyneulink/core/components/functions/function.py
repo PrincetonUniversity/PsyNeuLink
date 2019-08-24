@@ -146,7 +146,7 @@ from random import randint
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.shellclasses import Function, Mechanism
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
     MODULATORY_PROJECTION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
@@ -671,6 +671,7 @@ class Function_Base(Function):
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
 
+    @handle_external_context()
     def function(self,
                  variable=None,
                  execution_id=None,
@@ -689,7 +690,7 @@ class Function_Base(Function):
                                params=params,
                                context=context,
                                **kwargs)
-        self.most_recent_execution_id=execution_id
+        self.most_recent_context.execution_id=execution_id
         self.parameters.value._set(value, execution_context=execution_id)
         return value
 

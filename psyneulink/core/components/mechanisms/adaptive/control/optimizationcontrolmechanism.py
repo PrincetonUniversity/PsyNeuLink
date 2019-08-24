@@ -935,7 +935,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if not self.agent_rep.parameters.retain_old_simulation_data._get():
             self.agent_rep._delete_contexts(sim_execution_id, check_simulation_storage=True)
 
-    def evaluation_function(self, control_allocation, execution_id=None):
+    def evaluation_function(self, control_allocation, execution_id=None, context=None):
         """Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
         <ControlMechanism.control_allocation>`.
@@ -960,14 +960,20 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 new_execution_id = execution_id
 
+            old_composition = context.composition
+            context.composition = self.agent_rep
+
             result = self.agent_rep.evaluate(self.parameters.feature_values._get(execution_id),
                                              control_allocation,
                                              self.parameters.num_estimates._get(execution_id),
                                              base_execution_id=execution_id,
                                              execution_id=new_execution_id,
-                                             context=self.function.parameters.context._get(execution_id),
+                                             context=context,
                                              execution_mode=self.parameters.comp_execution_mode._get(execution_id)
             )
+            context.composition = old_composition
+            context.execution_id = execution_id
+
             if self.defaults.search_statefulness:
                 self._tear_down_simulation(new_execution_id)
         # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
@@ -976,7 +982,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                              control_allocation,
                                              self.parameters.num_estimates._get(execution_id),
                                              execution_id=execution_id,
-                                             context=self.function.parameters.context._get(execution_id)
+                                             context=context
             )
 
         return result

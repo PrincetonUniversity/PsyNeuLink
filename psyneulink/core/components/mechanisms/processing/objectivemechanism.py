@@ -987,7 +987,7 @@ def _parse_monitor_specs(monitor_specs):
 #                                                          projection_spec,
 #                                                          receiver.path_afferents[0].function_params[MATRIX]))
 #                 receiver.path_afferents[0].init_args[SENDER] = sender
-#                 receiver.path_afferents[0]._deferred_init()
+#                 receiver.path_afferents[0]._deferred_init(context=context)
 #             else:
 #                 projection_spec = MappingProjection(sender=sender,
 #                                                     receiver=receiver,

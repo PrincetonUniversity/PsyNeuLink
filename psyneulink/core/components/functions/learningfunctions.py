@@ -35,7 +35,7 @@ from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_FUNCTION, DEFAULT_VARIABLE, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import is_numeric, scalar_distance
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
@@ -509,7 +509,8 @@ class BayesGLM(LearningFunction):
         self.gamma_shape_n = self.gamma_shape_0
         self.gamma_size_n = self.gamma_size_0
 
-    def reinitialize(self, *args):
+    @handle_external_context()
+    def reinitialize(self, *args, context=None):
         # If variable passed during execution does not match default assigned during initialization,
         #    reassign default and re-initialize priors
         if DEFAULT_VARIABLE in args[0]:

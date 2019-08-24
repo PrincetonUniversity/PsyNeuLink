@@ -1255,7 +1255,7 @@ class OutputState(State_Base):
         )
         return np.atleast_1d(value)
 
-    def _get_fallback_variable(self, execution_id=None):
+    def _get_fallback_variable(self, execution_id=None, context=None):
         # fall back to specified item(s) of owner's value
         try:
             return self.parameters.variable._get(execution_id)

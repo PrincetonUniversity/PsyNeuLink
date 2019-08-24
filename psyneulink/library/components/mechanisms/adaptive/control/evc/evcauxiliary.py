@@ -212,15 +212,15 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         # Aggregate costs
         if isinstance(cost_function, UserDefinedFunction):
-            cost = cost_function._execute(controller=controller, costs=costs, execution_id=execution_id)
+            cost = cost_function._execute(controller=controller, costs=costs, execution_id=execution_id, context=context)
         else:
             cost = cost_function._execute(variable=costs, execution_id=execution_id, context=context)
 
         # Combine outcome and cost to determine value
         if isinstance(combine_function, UserDefinedFunction):
-            value = combine_function._execute(controller=controller, outcome=outcome, cost=cost, execution_id=execution_id)
+            value = combine_function._execute(controller=controller, outcome=outcome, cost=cost, execution_id=execution_id, context=context)
         else:
-            value = combine_function._execute(variable=[outcome, -cost], execution_id=execution_id)
+            value = combine_function._execute(variable=[outcome, -cost], execution_id=execution_id, context=context)
 
         return (value, outcome, cost)
 
@@ -352,6 +352,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         controller.parameters.context._get(execution_id).string = "{0} EXECUTING {1} of {2}".format(controller.name,
                                                                       EVC_SIMULATION,
                                                                       controller.system.name)
+        context.execution_phase = ContextFlags.SIMULATION
         # Get allocation_samples for all ControlSignals
         num_control_signals = len(controller.control_signals)
         control_signal_sample_lists = []
@@ -643,7 +644,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
 
     # Re-assign values of reinitialization attributes to their value at entry
     for mechanism in reinitialization_values:
-        mechanism.reinitialize(*reinitialization_values[mechanism], execution_context=execution_id)
+        mechanism.reinitialize(*reinitialization_values[mechanism], execution_context=execution_id, context=context)
 
     EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
 
@@ -944,9 +945,10 @@ class PredictionMechanism(IntegratorMechanism):
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         """Update predicted value on "real" but not simulation runs"""
 
-        if self.parameters.context._get(execution_id).execution_phase == ContextFlags.SIMULATION:
+        if ContextFlags.SIMULATION in context.execution_phase:
             # Just return current value for simulation runs
             value = self.parameters.value._get(execution_id)
+
         else:
             # Update deque with new input for any other type of run
             value = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)

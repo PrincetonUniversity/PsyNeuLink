@@ -90,6 +90,7 @@ class PathwayComposition(Composition):
         runtime_params=None,
         skip_initialization=False,
         bin_execute=False,
+        context=None,
     ):
 
         if isinstance(inputs, list):
@@ -104,6 +105,7 @@ class PathwayComposition(Composition):
                                                          clamp_input=clamp_input,
                                                          runtime_params=runtime_params,
                                                          skip_initialization=skip_initialization,
-                                                         bin_execute=bin_execute
+                                                         bin_execute=bin_execute,
+                                                         context=context,
         )
         return output

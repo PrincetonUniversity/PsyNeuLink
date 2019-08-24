@@ -812,7 +812,7 @@ class ParameterState(State_Base):
         """Return parameter variable (since ParameterState's function never changes the form of its variable"""
         return variable
 
-    def _get_fallback_variable(self, execution_id=None):
+    def _get_fallback_variable(self, execution_id=None, context=None):
         """
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs.
         """

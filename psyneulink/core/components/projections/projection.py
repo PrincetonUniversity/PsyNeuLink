@@ -940,10 +940,10 @@ class Projection_Base(Projection):
             # params['matrix'] to state.value, calls setattr(state.owner, 'matrix', state.value), which sets the
             # 'matrix' parameter state's variable to ALSO be equal to state.value! If this is unintended, please change.
             value = state.parameters.value._get(execution_id)
-            getattr(self.parameters, state_name)._set(value, execution_id)
+            getattr(self.parameters, state_name)._set(value, execution_id, context)
             # manual setting of previous value to matrix value (happens in above param['matrix'] setting
             if state_name == MATRIX:
-                state.function.parameters.previous_value._set(value, execution_id)
+                state.function.parameters.previous_value._set(value, execution_id, context)
 
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)

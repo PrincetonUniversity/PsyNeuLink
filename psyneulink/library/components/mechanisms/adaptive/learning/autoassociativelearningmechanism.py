@@ -449,11 +449,12 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         super()._update_output_states(execution_id, runtime_params, context)
 
         from psyneulink.core.components.process import Process
-        if self.parameters.learning_enabled._get(execution_id) and self.parameters.context._get(execution_id).composition and not isinstance(self.parameters.context._get(execution_id).composition, Process):
+        if self.parameters.learning_enabled._get(execution_id) and context.composition and not isinstance(context.composition, Process):
             learned_projection = self.activity_source.recurrent_projection
+            old_exec_phase = context.execution_phase
             context.execution_phase = ContextFlags.LEARNING
             learned_projection.execute(execution_id=execution_id, context=context)
-            context.execution_phase = ContextFlags.IDLE
+            context.execution_phase = old_exec_phase
             learned_projection.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
     @property

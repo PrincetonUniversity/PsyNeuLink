@@ -984,7 +984,7 @@ class InputState(State_Base):
             pass
         return variable
 
-    def _get_fallback_variable(self, execution_id=None):
+    def _get_fallback_variable(self, execution_id=None, context=None):
         """
             Call self.function with self._path_proj_values
 
@@ -992,12 +992,10 @@ class InputState(State_Base):
             return None so that it is ignored in execute method (i.e., not combined with base_value)
         """
         # Check for Projections that are active in the Composition being run
-        current_active_composition = self.parameters.context._get(execution_id).composition
-
         path_proj_values = [
             proj.parameters.value._get(execution_id)
             for proj in self.path_afferents
-            if self.afferents_info[proj].is_active_in_composition(current_active_composition)
+            if self.afferents_info[proj].is_active_in_composition(context.composition)
         ]
 
         if len(path_proj_values) > 0:

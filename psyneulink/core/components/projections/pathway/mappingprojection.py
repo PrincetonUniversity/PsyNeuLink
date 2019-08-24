@@ -580,7 +580,8 @@ class MappingProjection(PathwayProjection_Base):
                 default_variable=matrix,
                 initializer=matrix,
                 # rate=initial_rate
-            )
+            ),
+            context=context
         )
         self._parameter_states[MATRIX]._instantiate_value(context)
 

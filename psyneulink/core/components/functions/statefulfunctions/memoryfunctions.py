@@ -40,7 +40,7 @@ from psyneulink.core.globals.keywords import \
     BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, ContentAddressableMemory_FUNCTION, \
     MIN_INDICATOR, NOISE, OVERWRITE, RATE, RANDOM, OLDEST, NEWEST
 from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
@@ -255,7 +255,8 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         self.has_initializers = True
 
-    def reinitialize(self, *args, execution_context=NotImplemented):
+    @handle_external_context()
+    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
         """
 
         Clears the `previous_value <Buffer.previous_value>` deque.
@@ -268,7 +269,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         """
         if execution_context is NotImplemented:
-            execution_context = self.most_recent_execution_id
+            execution_context = self.most_recent_context.execution_id
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
@@ -1044,7 +1045,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         if isinstance(self.selection_function, type):
             self.selection_function = self.selection_function()
 
-    def reinitialize(self, *args, execution_context=NotImplemented):
+    @handle_external_context()
+    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
         """
         reinitialize(<new_dictionary> default={})
 
@@ -1059,7 +1061,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         `previous_value <ContentAddressableMemory.previous_value>`.
         """
         if execution_context is NotImplemented:
-            execution_context = self.most_recent_execution_id
+            execution_context = self.most_recent_context.execution_id
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:

@@ -865,7 +865,7 @@ def run(obj,
 
     # INITIALIZATION
     if initialize:
-        obj.initialize(execution_context=execution_id)
+        obj.initialize(execution_context=execution_id, context=context)
 
     # SET UP TIMING
     if object_type == MECHANISM:
@@ -892,7 +892,7 @@ def run(obj,
             for mechanism in obj.mechanisms:
                 if hasattr(mechanism, "reinitialize_when") and mechanism.parameters.has_initializers._get(execution_id):
                     if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing, execution_context=execution_id):
-                        mechanism.reinitialize(None, execution_context=execution_id)
+                        mechanism.reinitialize(None, execution_context=execution_id, context=context)
 
             input_num = execution%num_inputs_sets
 
@@ -916,7 +916,9 @@ def run(obj,
                         obj.target = execution_targets
                         obj.current_targets = execution_targets
 
-            if context.source == ContextFlags.COMMAND_LINE or not obj.parameters.context._get(execution_id).execution_phase == ContextFlags.SIMULATION:
+            if context.source == ContextFlags.COMMAND_LINE or ContextFlags.SIMULATION not in context.execution_phase:
+                context.execution_phase = ContextFlags.PROCESSING
+                context.composition = obj
                 obj._assign_context_values(execution_id, execution_phase=ContextFlags.PROCESSING, composition=obj, propagate=True)
                 obj.parameters.context._get(execution_id).string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
 
@@ -933,7 +935,7 @@ def run(obj,
             if call_after_time_step:
                 call_with_pruned_args(call_after_time_step, execution_context=execution_id)
 
-        if obj.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
+        if ContextFlags.SIMULATION not in context.execution_phase:
             if isinstance(result, Iterable):
                 result_copy = result.copy()
             else:

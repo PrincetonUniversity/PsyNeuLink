@@ -624,7 +624,7 @@ def make_parameter_property(name):
             # would refer to class parameters before an instance of Parameters is created for self
             return getattr(self, backing_field)
         else:
-            return getattr(self.parameters, name)._get(self.most_recent_execution_id)
+            return getattr(self.parameters, name)._get(self.most_recent_context.execution_id)
 
     def setter(self, value):
         if not _parameters_belongs_to_obj(self):
@@ -632,7 +632,7 @@ def make_parameter_property(name):
             setattr(self, backing_field, value)
         else:
             # stack level 3 instead of normal 2 to properly show source when setting using dot notation
-            getattr(self.parameters, name)._set(value, self.most_recent_execution_id, _ro_warning_stacklevel=3)
+            getattr(self.parameters, name)._set(value, self.most_recent_context.execution_id, _ro_warning_stacklevel=3)
 
     return property(getter).setter(setter)
 
@@ -762,11 +762,6 @@ class Component(object, metaclass=ComponentsMeta):
         + componentType - type of Component within a category
                              (e.g., TransferMechanism, MappingProjection, ControlProjection, etc.)
         + requiredParamClassDefaultTypes - dict of param names & types that all subclasses of Component must implement;
-        + prev_context - str (primarily used to track and prevent recursive calls to assign_params from setters)
-
-        # Prevent recursive calls from setters
-        if self.prev_context == context:
-            return
 
     Class methods:
         - _handle_size(size, variable)
@@ -933,9 +928,6 @@ class Component(object, metaclass=ComponentsMeta):
     #                      insuring that assignment by one instance will not affect the value of others.
     name = None
 
-    # IMPLEMENTATION NOTE: Primarily used to track and prevent recursive calls to assign_params from setters.
-    prev_context = None
-
     _deepcopy_shared_keys = frozenset([
         'init_args',
     ])
@@ -970,7 +962,10 @@ class Component(object, metaclass=ComponentsMeta):
             raise ComponentError(f"Unrecognized argument{plural} in constructor for {self.name} "
                                  f"(type: {self.__class__.__name__}): {repr(', '.join(illegal_args))}")
 
-        context = Context(source=ContextFlags.COMPONENT)
+        context = Context(
+            source=ContextFlags.COMPONENT,
+            execution_phase=ContextFlags.IDLE,
+        )
 
         try:
             function_params = param_defaults[FUNCTION_PARAMS]
@@ -991,11 +986,6 @@ class Component(object, metaclass=ComponentsMeta):
             propagate=False,
             execution_phase=None,
         )
-
-        context_param_value = self.parameters.context._get()
-        if not context_param_value.source:
-            context_param_value.source = ContextFlags.COMPONENT
-        context_param_value.string = "{}: {} {}".format(COMPONENT_INIT, INITIALIZING, self.name)
 
         # These ensure that subclass values are preserved, while allowing them to be referred to below
         self.paramInstanceDefaults = {}
@@ -1801,14 +1791,7 @@ class Component(object, metaclass=ComponentsMeta):
             variable = variable()
 
         # Validate variable if parameter_validation is set and the function was called with a variable
-        # IMPLEMENTATION NOTE:  context is used here just for reporting;  it is not tested in any of the methods called
         if self.prefs.paramValidationPref and variable is not None:
-            try:
-                self.parameters.context._get(execution_id).add_to_string(FUNCTION_CHECK_ARGS)
-            except AttributeError:
-                self._assign_context_values(execution_id)
-                self.parameters.context._get(execution_id).add_to_string(FUNCTION_CHECK_ARGS)
-
             variable = self._validate_variable(variable, context=context)
 
         # PARAMS ------------------------------------------------------------
@@ -2164,28 +2147,6 @@ class Component(object, metaclass=ComponentsMeta):
     @handle_external_context()
     def _assign_params(self, request_set:tc.optional(dict)=None, context=None):
         from psyneulink.core.components.functions.function import Function
-
-        # FIX: Hack to prevent recursion in calls to setter and assign_params
-        # MODIFIED 5/6/17 NEW:
-        # Prevent recursive calls from setters
-        # (7/31/17 CW): This causes bugs when you try to set some parameter twice in a script: The second time,
-        # sometimes prev_context is equal to context and that causes the setting to fail to set.
-        # I see two options: one is to set self.prev_context to a nonsense value BEFORE attempting to call
-        # _assign_params(): this could be done in the default property setter; the other option is to get rid of this
-        # check entirely (all tests currently pass regardless)
-        # (8/10/17 CW): Note that the bug was quick-patched for `auto` and `hetero` but not truly solved.
-        # Thus, I have decided to comment out these three lines below. If recursion problems exist, please uncomment
-        # if self.prev_context == context:
-        #     return
-        # self.prev_context = context
-        # MODIFIED 5/6/17 END
-        # import uuid
-        # try:
-        #     if self.prev_id == self.curr_id:
-        #         return
-        # except AttributeError:
-        #     pass
-        # self.curr_id = uuid.uuid4()
 
         if not request_set:
             if self.verbosePref:
@@ -2935,7 +2896,7 @@ class Component(object, metaclass=ComponentsMeta):
         if value is None:
             raise ComponentError(f"PROGRAM ERROR: Execute method for {self.name} must return a value.")
 
-        self.parameters.value._set(value, skip_history=True)
+        self.parameters.value._set(value, context=context, skip_history=True)
         try:
             # Could be mutable, so assign copy
             self.defaults.value = value.copy()
@@ -2946,7 +2907,8 @@ class Component(object, metaclass=ComponentsMeta):
     def initialize(self, execution_context=None):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
-    def reinitialize(self, *args, execution_context=NotImplemented):
+    @handle_external_context()
+    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
         """
             If the component's execute method involves execution of an `IntegratorFunction` Function, this method
             effectively begins the function's accumulation over again at the specified value, and may update related
@@ -2956,31 +2918,32 @@ class Component(object, metaclass=ComponentsMeta):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
         if isinstance(self.function, IntegratorFunction):
             if execution_context is NotImplemented:
-                execution_context = self.most_recent_execution_id
-            new_value = self.function.reinitialize(*args, execution_context=execution_context)
+                execution_context = self.most_recent_context.execution_id
+            new_value = self.function.reinitialize(*args, execution_context=execution_context, context=context)
             self.parameters.value.set(np.atleast_2d(new_value), execution_context, override=True)
         else:
             raise ComponentError(f"Reinitializing {self.name} is not allowed because this Component is not stateful. "
                                  "(It does not have an accumulator to reinitialize).")
 
+    @handle_external_context()
     def execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         if execution_id is None:
             try:
                 owner = self.owner
-                owner_parameters = self.owner.parameters.context._get(self.most_recent_execution_id)
+                owner_parameters = self.owner.parameters.context._get(self.most_recent_context.execution_id)
                 if owner is not None and owner_parameters is None:
-                    execution_id = owner.most_recent_execution_id
+                    execution_id = owner.most_recent_context.execution_id
                 else:
                     raise AttributeError
             except AttributeError:
-                execution_id = self.most_recent_execution_id
+                execution_id = self.most_recent_context.execution_id
 
         # initialize context for this execution_id if not done already
         if self.parameters.context._get(execution_id) is None:
             self._assign_context_values(execution_id, propagate=True)
 
         value = self._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
-        self.parameters.value._set(value, execution_id=execution_id)
+        self.parameters.value._set(value, execution_id=execution_id, context=context)
         return value
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None, **kwargs):
@@ -3040,7 +3003,7 @@ class Component(object, metaclass=ComponentsMeta):
 
         function_context.execution_phase = ContextFlags.IDLE
 
-        self.most_recent_execution_id = execution_id
+        self.most_recent_context = context
         return value
 
     def _parse_param_state_sources(self):
@@ -3098,7 +3061,7 @@ class Component(object, metaclass=ComponentsMeta):
 
     def _get_current_execution_time(self, context, execution_id=None):
         from psyneulink.core.globals.context import _get_context
-        return _get_time(self, context_flags=_get_context(context), execution_id=execution_id)
+        return _get_time(self, context=context, execution_id=execution_id)
 
     def _update_current_execution_time(self, context, execution_id=None):
         self._current_execution_time = self._get_current_execution_time(context=context, execution_id=execution_id)
@@ -3253,7 +3216,7 @@ class Component(object, metaclass=ComponentsMeta):
                 # ensure parameters is not class_parameters
                 raise ValueError
 
-            return self.parameters.context._get(self.most_recent_execution_id)
+            return self.parameters.context._get(self.most_recent_context.execution_id)
         except (AttributeError, ValueError):
             try:
                 return self._context
@@ -3265,7 +3228,7 @@ class Component(object, metaclass=ComponentsMeta):
     def context(self, context):
         if isinstance(context, Context):
             try:
-                self.parameters.context._set(context, self.most_recent_execution_id)
+                self.parameters.context._set(context, self.most_recent_context.execution_id)
             except AttributeError:
                 self._context = context
         else:
@@ -3361,7 +3324,7 @@ class Component(object, metaclass=ComponentsMeta):
 
         for p in self.parameters:
             if p.user and p.name not in parameter_black_list:
-                val = p._get(self.most_recent_execution_id)
+                val = p._get(self.most_recent_context.execution_id)
 
                 if isinstance(val, np.ndarray):
                     val = f'numpy.array({val})'
@@ -3503,19 +3466,19 @@ class Component(object, metaclass=ComponentsMeta):
         return []
 
     @property
-    def most_recent_execution_id(self):
+    def most_recent_context(self):
         """
             used to set a default behavior for attributes that correspond to parameters
         """
         try:
-            return self._most_recent_execution_id
+            return self._most_recent_context
         except AttributeError:
-            self._most_recent_execution_id = None
-            return self._most_recent_execution_id
+            self._most_recent_context = Context(source=ContextFlags.COMMAND_LINE)
+            return self._most_recent_context
 
-    @most_recent_execution_id.setter
-    def most_recent_execution_id(self, value):
-        self._most_recent_execution_id = value
+    @most_recent_context.setter
+    def most_recent_context(self, value):
+        self._most_recent_context = value
 
 
 COMPONENT_BASE_CLASS = Component

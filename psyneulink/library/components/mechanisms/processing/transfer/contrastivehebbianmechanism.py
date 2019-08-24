@@ -1348,7 +1348,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 self.parameters.current_termination_criterion._get(execution_id),
                 execution_id
             )
-            self.parameters.phase_terminated._set(self.is_converged(np.atleast_2d(current_activity), execution_id), execution_id)
+            self.parameters.phase_terminated._set(self.is_converged(np.atleast_2d(current_activity), execution_id, context), execution_id)
         elif current_termination_condition is COUNT:
             self.parameters.phase_terminated._set(
                 (self.parameters.phase_execution_count._get(execution_id) == self.parameters.current_termination_criterion._get(execution_id)),
@@ -1383,7 +1383,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 #    both the integrator_function's previous_value
                 #    and the Mechanism's current activity (which is returned as its input)
                 if not self.continuous:
-                    self.reinitialize(self.initial_value, execution_context=execution_id)
+                    self.reinitialize(self.initial_value, execution_context=execution_id, context=context)
                     self.parameters.current_activity._set(self.parameters.initial_value._get(execution_id), execution_id)
                 self.parameters.current_termination_criterion._set(self.plus_phase_termination_criterion, execution_id)
                 self.parameters.current_termination_condition._set(self.plus_phase_termination_condition, execution_id)

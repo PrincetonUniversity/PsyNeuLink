@@ -2629,7 +2629,7 @@ class System(System_Base):
                     runtime_params[mechanism][param] = (runtime_params[mechanism][param], Always())
         return runtime_params
 
-    def initialize(self, execution_context=None):
+    def initialize(self, execution_context=None, context=None):
         """Assign `initial_values <System.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and
         contained in recurrent_init_mechanisms.
         """
@@ -2639,7 +2639,7 @@ class System(System_Base):
         # FIX: ADD SOFT_CLAMP AND HARD_CLAMP OPTIONS
         # FIX: ONLY ASSIGN ONES THAT RECEIVE PROJECTIONS
         for mech, value in self.initial_values.items():
-            mech.initialize(value, execution_context=execution_context)
+            mech.initialize(value, execution_context=execution_context, context=context)
 
     # execute previously always set source to ContextFlags.COMPOSITION
     # @handle_external_context(source=ContextFlags.COMPOSITION, execution_phase=ContextFlags.PROCESSING)
@@ -2708,7 +2708,11 @@ class System(System_Base):
             self._component_execution_count = 0
 
         if not context:
-            context = Context(source=ContextFlags.COMPOSITION)
+            context = Context(
+                source=ContextFlags.COMPOSITION,
+                execution_phase=ContextFlags.PROCESSING,
+                composition=self
+            )
             self._assign_context_values(
                 execution_id,
                 propagate=True,
@@ -2717,8 +2721,13 @@ class System(System_Base):
                 composition=self
             )
 
-        self._report_system_output = (self.prefs.reportOutputPref and
-                                      self.parameters.context._get(execution_id).execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING))
+        context.execution_id = execution_id
+        context.composition = self
+
+        self._report_system_output = (
+            self.prefs.reportOutputPref
+            and context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING)
+        )
 
         if self._report_system_output:
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
@@ -2729,8 +2738,13 @@ class System(System_Base):
         num_origin_mechs = len(list(self.origin_mechanisms))
 
         if input is None:
-            if (self.prefs.verbosePref and not (self.parameters.context._get(execution_id).source == ContextFlags.COMMAND_LINE or
-                                                self.initialization_status == ContextFlags.INITIALIZING)):
+            if (
+                self.prefs.verbosePref
+                and not (
+                    context.source == ContextFlags.COMMAND_LINE
+                    or self.initialization_status == ContextFlags.INITIALIZING
+                )
+            ):
                 print("- No input provided;  default will be used: {0}")
             input = np.zeros_like(self.defaults.variable)
             for i in range(num_origin_mechs):
@@ -2788,9 +2802,9 @@ class System(System_Base):
         if self._animate is not False:
             # if this fails, the scheduler has no data for execution_id yet. It also may be the first, so fall back to default execution_id
             try:
-                self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif', execution_id=execution_id)
+                self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif', execution_id=execution_id, context=context)
             except KeyError:
-                self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif', execution_id=self.default_execution_id)
+                self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif', execution_id=self.default_execution_id, context=context)
 
         # EXECUTE MECHANISMS
 
@@ -2800,21 +2814,25 @@ class System(System_Base):
         # sorted_list = list(object_item[0].name for object_item in self.execution_list)
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
+        context.add_flag(ContextFlags.PROCESSING)
         self._execute_processing(
             execution_id=execution_id,
             runtime_params=runtime_params,
             termination_processing=termination_processing,
             context=context
         )
+        context.remove_flag(ContextFlags.PROCESSING)
+
         outcome = self.terminal_mechanisms.get_output_state_values(execution_id)
 
-        if self.recordSimulationPref and self.parameters.context._get(execution_id).execution_phase == ContextFlags.SIMULATION:
+        if self.recordSimulationPref and ContextFlags.SIMULATION in context.execution_phase:
             self.simulation_results.append(outcome)
 
         # EXECUTE LEARNING FOR EACH PROCESS
 
         # Execute learning except for simulation runs
-        if self.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION and self.learning:
+        if ContextFlags.SIMULATION not in context.execution_phase and self.learning:
+            context.add_flag(ContextFlags.LEARNING)
             self._assign_context_values(
                 execution_id,
                 execution_phase=ContextFlags.LEARNING,
@@ -2822,6 +2840,7 @@ class System(System_Base):
             )
             self._execute_learning(target=target, execution_id=execution_id, context=context)
 
+            context.remove_flag(ContextFlags.LEARNING)
             self._assign_context_values(
                 execution_id,
                 execution_phase=ContextFlags.IDLE,
@@ -2833,9 +2852,11 @@ class System(System_Base):
         # FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-        if self.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION and self.enable_controller:
+        if ContextFlags.SIMULATION not in context.execution_phase and self.enable_controller:
             self.parameters.context._get(execution_id).execution_phase = ContextFlags.CONTROL
             self.controller.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+            context.add_flag(ContextFlags.CONTROL)
+            context.add_flag(ContextFlags.PROCESSING)
             try:
                 self.controller.execute(
                     execution_id=execution_id,
@@ -2844,7 +2865,7 @@ class System(System_Base):
                 )
 
                 if self._animate != False and SHOW_CONTROL in self._animate and self._animate[SHOW_CONTROL]:
-                    self.show_graph(active_items=self.controller, **self._animate, output_fmt='gif')
+                    self.show_graph(active_items=self.controller, **self._animate, output_fmt='gif', context=context)
                 self._component_execution_count += 1
 
                 if self._report_system_output:
@@ -2856,6 +2877,8 @@ class System(System_Base):
                     raise
 
             self.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
+            context.remove_flag(ContextFlags.CONTROL)
+            context.remove_flag(ContextFlags.PROCESSING)
 
         # Report completion of system execution and value of designated outputs
         if self._report_system_output:
@@ -2878,7 +2901,7 @@ class System(System_Base):
             i = 0
 
             if not self._animate is False and self._animate_unit is EXECUTION_SET:
-                self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
+                self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif', context=context)
 
             for mechanism in next_execution_set:
                 logger.debug('\tRunning Mechanism {0}'.format(mechanism))
@@ -2905,6 +2928,7 @@ class System(System_Base):
                 # FIX: DO THIS LOCALLY IN LearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
                 if (isinstance(mechanism, LearningMechanism) and
                         mechanism.learning_timing is LearningTiming.EXECUTION_PHASE):
+                    context.execution_phase = ContextFlags.LEARNING
                     mechanism.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
 
                 # Execute
@@ -2913,7 +2937,7 @@ class System(System_Base):
                 mechanism.execute(execution_id=execution_id, runtime_params=execution_runtime_params, context=context)
 
                 if not self._animate is False and self._animate_unit is COMPONENT:
-                    self.show_graph(active_items=mechanism, **self._animate, output_fmt='gif')
+                    self.show_graph(active_items=mechanism, **self._animate, output_fmt='gif', context=context)
                 self._component_execution_count += 1
 
                 # Reset runtime params and context
@@ -3000,13 +3024,15 @@ class System(System_Base):
                     self._animate_unit is EXECUTION_SET and
                     SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
                 # mech = [mech for mech in next_execution_set if isinstance(mech, Mechanism)]
-                self.show_graph(active_items=list(next_execution_set), **self._animate, output_fmt='gif')
+                self.show_graph(active_items=list(next_execution_set), **self._animate, output_fmt='gif', context=context)
 
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
 
                 component.parameters.context._get(execution_id).composition = self
                 component.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
+
+                context.execution_phase = ContextFlags.LEARNING
 
                 if isinstance(component, Mechanism):
                     params = None
@@ -3225,13 +3251,16 @@ class System(System_Base):
 
         if execution_id is None:
             execution_id = self.default_execution_id
+            context.execution_id = execution_id
+
+        context.composition = self
 
         # initialize from base context but don't overwrite any values already set for this execution_id
-        if self.parameters.context._get(execution_id) is None or not (ContextFlags.SIMULATION & self.parameters.context._get(execution_id).flags):
+        if ContextFlags.SIMULATION not in context.execution_phase:
             self._initialize_from_context(execution_id, base_execution_id, override=False)
 
         for mechanism in reinitialize_values:
-            mechanism.reinitialize(*reinitialize_values[mechanism], execution_context=execution_id)
+            mechanism.reinitialize(*reinitialize_values[mechanism], execution_context=execution_id, context=context)
 
         self.initial_values = initial_values
 
@@ -3779,6 +3808,7 @@ class System(System_Base):
             [self.controller] if self.controller is not None else [],
         ))
 
+    @handle_external_context()
     def show_graph(self,
                    show_processes = False,
                    show_learning = False,
@@ -3801,6 +3831,7 @@ class System(System_Base):
                    system_color = 'purple',
                    output_fmt='pdf',
                    execution_id=NotImplemented,
+                   context=None,
                    ):
         """Generate a display of the graph structure of Mechanisms and Projections in the System.
 
@@ -4945,11 +4976,11 @@ class System(System_Base):
         elif output_fmt == 'gif':
             if self.active_item_rendered or INITIAL_FRAME in active_items:
                 G.format = 'gif'
-                execution_phase = self.parameters.context._get(execution_id).execution_phase
+                execution_phase = context.execution_phase
                 if INITIAL_FRAME in active_items:
                     time_string = ''
                     phase_string = ''
-                elif execution_phase == ContextFlags.PROCESSING:
+                elif execution_phase & (ContextFlags.PROCESSING | ContextFlags.IDLE):
                     # time_string = repr(self.scheduler_processing.clock.simple_time)
                     time = self.scheduler_processing.get_clock(execution_id).time
                     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\

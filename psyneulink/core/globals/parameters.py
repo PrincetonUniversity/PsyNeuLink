@@ -243,7 +243,7 @@ import types
 import warnings
 import weakref
 
-from psyneulink.core.globals.context import ContextFlags, _get_time
+from psyneulink.core.globals.context import ContextError, ContextFlags, _get_time
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
 from psyneulink.core.globals.utilities import call_with_pruned_args, copy_dict_or_list_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy
@@ -870,7 +870,7 @@ class Parameter(types.SimpleNamespace):
                 )
             ) from e
 
-    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=3, **kwargs):
+    def set(self, value, execution_context=None, context=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=3, **kwargs):
         """
             Sets the value of this `Parameter` in the context of **execution_context**
             If no execution_context is specified, attributes on the associated `Component` will be used
@@ -897,9 +897,9 @@ class Parameter(types.SimpleNamespace):
         else:
             execution_id = parse_execution_context(execution_context)
 
-        self._set(value, execution_id, skip_history, skip_log, _ro_warning_stacklevel, **kwargs)
+        self._set(value, execution_id, context, skip_history, skip_log, _ro_warning_stacklevel, **kwargs)
 
-    def _set(self, value, execution_id=None, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
+    def _set(self, value, execution_id=None, context=None, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
         if not self.stateful:
             execution_id = None
 
@@ -908,14 +908,15 @@ class Parameter(types.SimpleNamespace):
                 **self._default_setter_kwargs,
                 **{
                     'execution_id': execution_id,
+                    'context': context,
                 },
                 **kwargs
             }
             value = call_with_pruned_args(self.setter, value, **kwargs)
 
-        self._set_value(value, execution_id, skip_history=skip_history, skip_log=skip_log)
+        self._set_value(value, execution_id, context, skip_history=skip_history, skip_log=skip_log)
 
-    def _set_value(self, value, execution_id=None, skip_history=False, skip_log=False):
+    def _set_value(self, value, execution_id=None, context=None, skip_history=False, skip_log=False):
         # store history
         if not skip_history:
             if execution_id in self.values:
@@ -926,7 +927,7 @@ class Parameter(types.SimpleNamespace):
 
         # log value
         if not skip_log and self.loggable:
-            self._log_value(value, execution_id)
+            self._log_value(value, execution_id, context)
 
         # set value
         self.values[execution_id] = value
@@ -947,15 +948,14 @@ class Parameter(types.SimpleNamespace):
 
     def _log_value(self, value, execution_id=None, context=None):
         # manual logging
-        if context is ContextFlags.COMMAND_LINE:
+        if context is not None and context.source is ContextFlags.COMMAND_LINE:
             try:
-                # attempt to infer the time via this Parameters object's context if it exists
-                owner_context = self._owner.context._get(execution_id)
-                time = _get_time(self._owner._owner, owner_context.execution_phase, execution_id)
-            except AttributeError:
+                time = _get_time(self._owner._owner, context, execution_id)
+            except (AttributeError, ContextError):
                 time = time_object(None, None, None, None)
 
-            context_str = ContextFlags._get_context_string(context)
+            # this branch only ran previously when context was ContextFlags.COMMAND_LINE
+            context_str = ContextFlags._get_context_string(ContextFlags.COMMAND_LINE)
             log_condition_satisfied = True
 
         # standard logging
@@ -964,12 +964,9 @@ class Parameter(types.SimpleNamespace):
                 return
 
             if context is None:
-                try:
-                    context = self._owner.context._get(execution_id)
-                except AttributeError:
-                    logger.warning('Attempted to log {0} but has no context attribute'.format(self))
+                context = self._owner._owner.most_recent_context
 
-            time = _get_time(self._owner._owner, context.execution_phase, execution_id)
+            time = _get_time(self._owner._owner, context, execution_id)
             context_str = ContextFlags._get_context_string(context.flags)
             log_condition_satisfied = self.log_condition & context.flags
 

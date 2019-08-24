@@ -1559,7 +1559,7 @@ class Process(Process_Base):
                             self.learning = True
 
                         # Complete initialization of Projection
-                        item._deferred_init()
+                        item._deferred_init(context=context)
 
                     if item.sender.owner is not sender_mech:
                         raise ProcessError("Sender of Projection ({}) specified in item {} of pathway for {} "
@@ -1827,8 +1827,13 @@ class Process(Process_Base):
         # Validate input
         if input is None:
             input = self.first_mechanism.defaults.variable
-            if (self.prefs.verbosePref and not (context == ContextFlags.COMMAND_LINE or
-                                                self.parameters.context._get(execution_id).initializaton_status == ContextFlags.INITIALIZING)):
+            if (
+                self.prefs.verbosePref
+                and not (
+                    context.source == ContextFlags.COMMAND_LINE
+                    or self.initializaton_status == ContextFlags.INITIALIZING
+                )
+            ):
                 print("- No input provided;  default will be used: {0}")
 
         else:
@@ -1878,11 +1883,11 @@ class Process(Process_Base):
         # For each mechanism in the Process, in backwards order through its _mechs
         for item in reversed(self._mechs):
             mech = item
-            mech._deferred_init()
+            mech._deferred_init(context=context)
 
             # For each inputState of the mechanism
             for input_state in mech.input_states:
-                input_state._deferred_init()
+                input_state._deferred_init(context=context)
                 # Restrict projections to those from mechanisms in the current process
                 projections = []
                 for projection in input_state.all_afferents:
@@ -1896,7 +1901,7 @@ class Process(Process_Base):
 
             # For each ParameterState of the mechanism
             for parameter_state in mech._parameter_states:
-                parameter_state._deferred_init()
+                parameter_state._deferred_init(context=context)
                 # MODIFIED 5/2/17 OLD:
                 # self._instantiate__deferred_init_projections(parameter_state.path_afferents)
                 # MODIFIED 5/2/17 NEW:
@@ -2228,6 +2233,8 @@ class Process(Process_Base):
         if execution_id is None:
             execution_id = self.default_execution_id
 
+        context.composition = self
+        context.execution_id = execution_id
         if self.parameters.context._get(execution_id) is None:
             self._assign_context_values(
                 execution_id,
@@ -2267,7 +2274,9 @@ class Process(Process_Base):
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             mechanism.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
             context.source = ContextFlags.PROCESS
+            context.execution_phase = ContextFlags.PROCESSING
             mechanism.execute(execution_id=execution_id, context=context)
+            context.execution_phase = ContextFlags.IDLE
             mechanism.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
             if report_output:
@@ -2331,7 +2340,7 @@ class Process(Process_Base):
                     target_input_state.value *= 0
 
         # THEN, execute ComparatorMechanism and LearningMechanism
-
+        context.add_flag(ContextFlags.LEARNING)
         for mechanism in self._learning_mechs:
             mechanism._assign_context_values(execution_id, execution_phase=ContextFlags.LEARNING)
             mechanism.execute(execution_id=execution_id, context=context)
@@ -2403,6 +2412,7 @@ class Process(Process_Base):
                 execution_phase=ContextFlags.IDLE,
                 string=self.parameters.context._get(execution_id).string.replace(LEARNING, EXECUTING)
             )
+        context.remove_flag(ContextFlags.LEARNING)
 
     def run(self,
             inputs,
