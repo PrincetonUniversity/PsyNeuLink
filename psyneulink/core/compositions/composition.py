@@ -2514,6 +2514,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return target_mechanism, comparator_mechanism, learning_mechanism
 
+
+
+
     def _create_learning_related_mechanisms(self,
                                             input_source,
                                             output_source,
@@ -3210,39 +3213,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
          LEARNED_PROJECTION: learned_projection}
         """
 
-        if not error_function:
-            error_function = LinearCombination()
+        return self.add_linear_learning_pathway(pathway,
+                                                learning_rate=learning_rate,
+                                                learning_function=TDLearning,
+                                                learning_update=learning_update)
 
-        # Processing Components
-        input_source, output_source, learned_projection = \
-            self._unpack_processing_components_of_learning_pathway(pathway)
-        self.add_linear_processing_pathway([input_source, learned_projection, output_source])
 
-        # Learning Components
-        target, comparator, learning_mechanism = self._create_td_related_mechanisms(input_source,
-                                                                                    output_source,
-                                                                                    error_function,
-                                                                                    learned_projection,
-                                                                                    learning_rate,
-                                                                                    learning_update)
-        self.add_nodes([(target, NodeRole.TARGET), comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
-
-        learning_related_projections = self._create_learning_related_projections(input_source,
-                                                                                 output_source,
-                                                                                 target,
-                                                                                 comparator,
-                                                                                 learning_mechanism)
-        self.add_projections(learning_related_projections)
-
-        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection, learning_projection=True)
-
-        learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
-                                       COMPARATOR_MECHANISM: comparator,
-                                       TARGET_MECHANISM: target,
-                                       LEARNED_PROJECTION: learned_projection}
-
-        return learning_related_components
+        # # Processing Components
+        # input_source, output_source, learned_projection = \
+        #     self._unpack_processing_components_of_learning_pathway(pathway)
+        # self.add_linear_processing_pathway([input_source, learned_projection, output_source])
+        #
+        # # Learning Components
+        # target, comparator, learning_mechanism = self._create_td_related_mechanisms(input_source,
+        #                                                                             output_source,
+        #                                                                             error_function,
+        #                                                                             learned_projection,
+        #                                                                             learning_rate,
+        #                                                                             learning_update)
+        # self.add_nodes([(target, NodeRole.TARGET), comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
+        #
+        # learning_related_projections = self._create_learning_related_projections(input_source,
+        #                                                                          output_source,
+        #                                                                          target,
+        #                                                                          comparator,
+        #                                                                          learning_mechanism)
+        # self.add_projections(learning_related_projections)
+        #
+        # learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        # self.add_projection(learning_projection, learning_projection=True)
+        #
+        # learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
+        #                                COMPARATOR_MECHANISM: comparator,
+        #                                TARGET_MECHANISM: target,
+        #                                LEARNED_PROJECTION: learned_projection}
+        #
+        # return learning_related_components
 
     def add_backpropagation_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
                                              learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
