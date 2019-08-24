@@ -15,9 +15,9 @@ Overview
 A KohonenMechanism is a subclass of `RecurrentTransferMechanism` that implements a `Kohonen network
 <http://www.scholarpedia.org/article/Kohonen_network>`_ (`brief explanation
 <https://www.cs.bham.ac.uk/~jlw/sem2a2/Web/Kohonen.htm>`_; `nice demo <https://www.youtube.com/watch?v=QvI6L-KqsT4>`_),
-which is a particular form of `self-organized map (SOM) <https://en.wikipedia.org/wiki/Self-organizing_map>`_.
-By default, a KohonenMechanism uses a `KohonenLearningMechanism` and the `Kohonen` `LearningFunction` to implement
-implement a form of unsupervised learning that produces the self-organized map.
+which is a particular form of `self-organized map (SOM) <https://en.wikipedia.org/wiki/Self-organizing_map>`_. By
+default, a KohonenMechanism uses a `KohonenLearningMechanism` and the `Kohonen` `LearningFunction <LearningFunctions>`
+to implement implement a form of unsupervised learning that produces the self-organized map.
 
 .. _Kohonen_Creation:
 

@@ -471,7 +471,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         Description
         -----------
             ContrastiveHebbianMechanism is a Subtype of RecurrentTransferMechanism customized to implement a
-            the `ContrastiveHebbian` `LearningFunction`.
+            the `ContrastiveHebbian` `LearningFunction <LearningFunctions>`.
     COMMENT
 
     Arguments

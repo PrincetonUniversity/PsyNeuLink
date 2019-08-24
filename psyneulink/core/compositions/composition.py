@@ -679,14 +679,14 @@ Learning is used to modify the `Projections <Projection>` between Mechanisms in 
 it modifies the `matrix <MappingProjection.matrix>` parameter of those `MappingProjections <MappingProjection>`,
 which implements the strengths ("weights") of the associations between representations in the Mechanisms they connect.
 There are three ways of implementing learning in a Composition:  i) using `standard PsyNeuLink Components
-<Composition_Learning_Standard>`; ii) using the `AutodiffComposition <Composition_Learning_Autodiff>` -- a
+<Composition_Learning_Standard>`; ii) using the `AutodiffComposition <Composition_Learning_AutodiffComposition>` -- a
 specialized subclass of Composition that executes learning using `PyTorch <https://pytorch.org>`_; and iii) by using
-`UserDefinedFunctions <UserDefinedFunctions>`.  The advantage of using standard PsyNeuLink compoments is that it
+`UserDefinedFunctions <UserDefinedFunction>`.  The advantage of using standard PsyNeuLink compoments is that it
 assigns each operation involved in learning to a dedicated Component. This helps make clear exactly what those
 operations are, the sequence in which they are carried out, and how they interact with one another.  However,
 this can also make execution inefficient, due to the "overhead" incurred by distributing the calculations over
 different Components.  If more efficient computation is critical, then the `AutodiffComposition` can be used to
-execute a compatible PsyNeuLink Composition in PyTorch, or one or more `UserDefinedFunctions <UserDefinedFunctions>`
+execute a compatible PsyNeuLink Composition in PyTorch, or one or more `UserDefinedFunctions <UserDefinedFunction>`
 can be assigned to either PyTorch functions or those in any other Python environment that implements learning and
 accepts and returns tensors. Each of these approaches is described in more detail below.
 
@@ -721,14 +721,14 @@ Unsupervised Learning
 ~~~~~~~~~~~~~~~~~~~~~
 
 Undersupervised learning is implemented using a `RecurrentTransferMechanism`, setting its **enable_learning** argument
-to True, and specifying the desired `LearningFunction` in its **learning_function** argument.  The default is `Hebbian`,
-however others can be specified (such as `ContrastiveHebbian` or `Kohonen`). When a RecurrentTransferMechanism with
-learning enabled is added to a Composition, an `AutoassociativeLearningMechanism` that is appropriate for the specified
-learning_function is automatically constructured and added to the Composition, as is a `LearningProjection` from the
-AutoassociativeLearningMechanism to the RecurrentTransferMechanism's `recurrent_projection
-<RecurrentTransferMechanism.recurrent_projection>`.  When the Composition is run and the RecurrentTransferMechanism is
-executed, its AutoassociativeLearningMechanism is also executed, which updates the `matrix
-<AutoassociativeProjection.matrix>` of its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
+to True, and specifying the desired `LearningFunction <LearningFunctions>` in its **learning_function** argument.  The
+default is `Hebbian`, however others can be specified (such as `ContrastiveHebbian` or `Kohonen`). When a
+RecurrentTransferMechanism with learning enabled is added to a Composition, an `AutoAssociativeLearningMechanism` that
+that is appropriate for the specified learning_function is automatically constructured and added to the Composition,
+as is a `LearningProjection` from the AutoAssociativeLearningMechanism to the RecurrentTransferMechanism's
+`recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.  When the Composition is run and the
+RecurrentTransferMechanism is executed, its AutoAssociativeLearningMechanism is also executed, which updates the `matrix
+<AutoAssociativeProjection.matrix>` of its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
 in response to its input.
 
 COMMENT:
@@ -747,7 +747,8 @@ Supervised Learning
 
 COMMENT:
 TBI:  Supervised learning is implemented using a Composition's `add_learning_pathway` method, and specifying an
-appropriate `LearningFunction` in its **learning_function** argument.  XXXMORE HERE ABOUT TYPES OF FUNCTIONS
+appropriate `LearningFunction <LearningFunctions>` in its **learning_function** argument.
+XXXMORE HERE ABOUT TYPES OF FUNCTIONS
 • MODIFY REFERENCE TO LEARNING COMPONENT NAMES WHEN THEY ARE IMPLEMENTED AS AN ENUM CLASS
 • ADD EXAMPLES - POINT TO ONES IN BasicsAndSampler
 COMMENT
@@ -787,21 +788,21 @@ following Components, and assigns to them the `NodeRoles <NodeRole>` indicated:
     * *COMPARATOR_MECHANISM* `ComparatorMechanism` -- used to `calculate an error signal
       <ComparatorMechanism_Function>` for the sequence by comparing the value received by the ComparatorMechanism's
       *SAMPLE* `InputState <ComparatorMechanism_Structure>` (from the `output <LearningMechanism_Activation_Output>` of
-      the last Processing Mechanism in the learning sequence) with the value received in the COMPARATOR_MECHANISM's
-      *TARGET* `InputState <ComparatorMechanism_Structure>` (from the `TARGET_MECHANISM` generated by the method --
+      the last Processing Mechanism in the learning sequence) with the value received in the *COMPARATOR_MECHANISM*'s
+      *TARGET* `InputState <ComparatorMechanism_Structure>` (from the *TARGET_MECHANISM* generated by the method --
       see below); this is assigned the `NodeRole` `LEARNING` in the Composition.
     ..
     .. _TARGET_MECHANISM:
-    * *TARGET_MECHANISM* -- receives the value to be used by the `COMPARATOR_MECHANISM` as the target in
+    * *TARGET_MECHANISM* -- receives the value to be used by the *COMPARATOR_MECHANISM* as the target in
       computing the error signal (see above);  that value must be specified in the **inputs** argument of the
-      Composition's `run <Composition.run>` method (as the input to the TARGET_MECHANISM; this is assigned the
+      Composition's `run <Composition.run>` method (as the input to the *TARGET_MECHANISM*; this is assigned the
       `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition;
     ..
     * a MappingProjection that projects from the last ProcessingMechanism in the learning sequence to the *SAMPLE*
-      `InputState  <ComparatorMechanism_Structure>` of the `COMPARATOR_MECHANISM`;
+      `InputState  <ComparatorMechanism_Structure>` of the *COMPARATOR_MECHANISM*;
     ..
-    * a MappingProjection that projects from the `TARGET_MECHANISM` to the *TARGET* `InputState
-      <ComparatorMechanism_Structure>` of the `COMPARATOR_MECHANISM`;
+    * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputState
+      <ComparatorMechanism_Structure>` of the *COMPARATOR_MECHANISM*;
     ..
     .. _LEARNING_MECHANISM:
     * a *LEARNING_MECHANISM* for each MappingProjection in the sequence, each of which calculates the `learning_signal
@@ -819,9 +820,9 @@ for a more detailed description and figure showing these Components.
 If the learning sequence involves more than two ProcessingMechanisms (e.g. using `add_backpropagation_learning_pathway`
 for a multilayered neural network), then additional LearningMechanisms are created, along with MappingProjections
 that provides them with the `error_signal <LearningMechanism.error_signal>` from the preceding LearningMechanism,
-and `LearningProjections <LearningProjection>` that modify the additional MappingProjections (`LEARNED_PROJECTION`\s)
+and `LearningProjections <LearningProjection>` that modify the additional MappingProjections (*LEARNED_PROJECTION*\s)
 in the sequence, as shown for an example in the figure below.  These additional learning components are listed in the
-`LEARNING_MECHANISM` and `LEARNED_PROJECTION` entries of the dictionary returned by the learning method.
+*LEARNING_MECHANISM* and *LEARNED_PROJECTION* entries of the dictionary returned by the learning method.
 
 .. _Composition_MultilayerLearning_Figure:
 
@@ -862,26 +863,26 @@ The following example implements a simple three-layered network that learns the 
 
 The description and example above pertain to simple linear sequences.  However, more complex configurations,
 with convergent, divergent and/or intersecting sequences can be built using multiple calls to the learning method
-(see `BasicsAndSampler_Rumelhart_Model` for an example).  In each call, the learning method determines how the
-sequence to be added relates to any existing ones with which it abuts or intersects, and automatically creates and
-configures the relevant learning components so that the error terms are properly computed and propagated by each
+(see `example <BasicsAndSampler_Rumelhart_Model>` in `BasicsAndSampler`).  In each call, the learning method determines
+how the sequence to be added relates to any existing ones with which it abuts or intersects, and automatically creates
+andconfigures the relevant learning components so that the error terms are properly computed and propagated by each
 LearningMechanism to the next in the configuration. It is important to note that, in doing so, the status of a
 Mechanism in the final configuration takes precedence over its status in any of the individual sequences specified
 in the `learning methods <Composition_Learning_Methods>` when building the Composition.  In particular,
 whereas ordinarily the last ProcessingMechanism of a sequence specified in a learning method projects to a
-`COMPARATOR_MECHANISM`, this may be superceded if multiple sequences are created. This is the case if: i) the
+*COMPARATOR_MECHANISM*, this may be superceded if multiple sequences are created. This is the case if: i) the
 Mechanism is in a seqence that is contiguous (i.e., abuts or intersects) with others already in the Composition,
 ii) the Mechanism appears in any of those other sequences and, iii) it is not the last Mechanism in *all* of them;
-in that in that case, it will not project to a `COMPARATOR_MECHANISM` (see `figure below
+in that in that case, it will not project to a *COMPARATOR_MECHANISM* (see `figure below
 <Composition_Learning_Output_vs_Terminal_Figure>` for an example).  Furthermore, if it *is* the last Mechanism in all of
-them (that is, all of the specified pathways converge on that Mechanism), only one `COMPARATOR_MECHANISM` is created
+them (that is, all of the specified pathways converge on that Mechanism), only one *COMPARATOR_MECHANISM* is created
 for that Mechanism (i.e., not one for each sequence).  Finally, it should be noted that, by default, learning components
 are *not* assigned the `NodeRole` of `OUTPUT` even though they may be the `TERMINAL` Mechanism of a Composition;
-conversely, even though the last Mechanism of a learning sequence projects to a `COMPARATOR_MECHANISM`, and thus is not
+conversely, even though the last Mechanism of a learning sequence projects to a *COMPARATOR_MECHANISM*, and thus is not
 the `TERMINAL` node of a Composition, if it does not project to any other Mechanisms in the Composition it is
 nevertheless assigned as an `OUTPUT` of the Composition.  That is, Mechanisms that would otherwise have been the
 `TERMINAL` Mechanism of a Composition preserve their role as an `OUTPUT` of the Composition if they are part of a
-learning sequence even though they project to another Mechanism (the `COMPARATOR_MECHANISM`) in the Composition.
+learning sequence even though they project to another Mechanism (the *COMPARATOR_MECHANISM*) in the Composition.
 
 .. _Composition_Learning_Output_vs_Terminal_Figure:
 
@@ -949,7 +950,7 @@ a disadvantage is that there are restrictions on the kinds of Compositions that 
 First, because it relies on PyTorch, it is best suited for use with `supervised
 learning <Composition_Learning_Supervised>`, although it can be used for some forms of `unsupervised learning
 <Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized maps
-<https://github.com/giannisnik/som>`).  Second, all of the Components in the Composition are be subject to and must
+<https://github.com/giannisnik/som>`_).  Second, all of the Components in the Composition are be subject to and must
 be with compatible with learning.   This means that it cannot be used with a Composition that contains any
 `modulatory components <ModulatorySignal_Anatomy_Figure>` or that are subject to modulation, whether by
 ModulatoryMechanisms within or outside the Composition;  this includes a `controller <Composition_Controller>`
@@ -3026,7 +3027,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             the output (`value <Mechanism_Base.value>`) of the `TARGET` Mechanism in the **pathway**).
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
-            specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
+            specifies when the `matrix <MappingProjection.matrix>` parameter of the *LEARNED_PROJECTION* is updated
             in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
             `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
@@ -3100,7 +3101,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             the output (`value <Mechanism_Base.value>`) of the `TARGET` Mechanism in the **pathway**).
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
-            specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
+            specifies when the `matrix <MappingProjection.matrix>` parameter of the *LEARNED_PROJECTION* is updated
             in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
             `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled

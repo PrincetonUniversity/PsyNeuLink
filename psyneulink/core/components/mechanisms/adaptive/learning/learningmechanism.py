@@ -177,9 +177,9 @@ InputStates (described `above <LearningMechanism_InputStates>`) to calculate the
   error_signal(s) received by the LearningMechanism's *ERROR_SIGNAL* `InputState(s)
   <LearningMechanism_Input_Error_Signal>`. It is used by the LearningMechanism's `function <LearningMechanism.function>`
   to calculate the `learning_signal <LearningMechanism.learning_signal>`. Depending upon the context and specific
-  `LearningFunction` used, it may also take account of the `value <Mechanism_Base.value>` of its `output_source`,
-  as well as the `matrix <MappingProjection.matrix>` parameter of any of the `output_source`'s outgoing Projections
-  that are also being learned (these are listed in the LearningMechanism's `error_matrices
+  `LearningFunction <LearningFunctions>` used, it may also take account of the `value <Mechanism_Base.value>` of its
+  `output_source`, as well as the `matrix <MappingProjection.matrix>` parameter of any of the `output_source`'s
+  outgoing Projections that are also being learned (these are listed in the LearningMechanism's `error_matrices
   <LearningMechanism.error_matrices>` attribute).  The value of the `error_signal <LearningMechanism.error_signal>`
   is assigned as the value of the LearningMechanism's *ERROR_SIGNAL* `OutputState
   <LearningMechanism_Output_Error_Signal>`.
@@ -198,11 +198,11 @@ InputStates (described `above <LearningMechanism_InputStates>`) to calculate the
 The default `function <LearningMechanism.function>` of a LearningMechanism is `BackPropagation` (also known as the
 *Generalized Delta Rule*; see
 `Rumelhart et al., 1986 <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_).  However, it can be
-assigned any other PsyNeuLink `LearningFunction`, or any other Python function that takes as its input a list or
-np.array containing three lists or 1d np.arrays of numeric values, and returns two lists or 1d np.arrays.  The two
-values it returns are assigned to the LearningMechanism's `learning_signal <LearningMechanism.learning_signal>` and
-`error_signal <LearningSignal.error_signal>` attributes, respectively, as well as to its two OutputStates,
-as described below.
+assigned any other PsyNeuLink `LearningFunction <LearningFunctions>`, or any other Python function that takes as its
+input a list or np.array containing three lists or 1d np.arrays of numeric values, and returns two lists or 1d
+np.arrays.  The two values it returns are assigned to the LearningMechanism's `learning_signal
+<LearningMechanism.learning_signal>` and `error_signal <LearningSignal.error_signal>` attributes, respectively,
+as well as to its two OutputStates, as described below.
 
 .. _LearningMechanism_OutputStates:
 
@@ -402,8 +402,8 @@ This refers to learning in a pathway that has three or more Mechanisms in a sequ
 MappingProjections that are being learned.  The learning components for such a configuration are created
 automatically when a `learning method <Composition_Learning_Methods>` of a Composition is used that supports
 multilayer learning (at present, this is only `add_backpropagation_learning_pathway`).  If the learning components
-are `constructed explicitly <LearningMechanism_Explicit_Creation>` for a multilayer learning
-configuration, then each LearningMechanism must use a `LearningFunction` that can calculate the influence
+are `constructed explicitly <LearningMechanism_Explicit_Creation>` for a multilayer learning configuration,
+then each LearningMechanism must use a `LearningFunction <LearningFunctions>` that can calculate the influence
 that each MappingProjection and its output have on the error that the LearningMechanism receives from the previous
 one(s) in the sequence (e.g., `BackPropagation`).  Furthermore, the construction of the other `learning-related
 Components <Composition_Learning_Components>` associated with each LearningMechanism depend on the position of its
@@ -466,7 +466,7 @@ Execution
 ---------
 
 LearningMechanisms that implement `unsupervised learning <Composition_Learning_Unsupervised>`
-(`AutoassociativeLearningMechanisms <AutoassociativeLearningMechanism>`) execute when the `RecurrentTransferMechanism`
+(`AutoassociativeLearningMechanisms <AutoAssociativeLearningMechanism>`) execute when the `RecurrentTransferMechanism`
 with which they are associated executes.  LearningMechanisms that are part of a `supervised learning sequence
 <Composition_Learning_Supervised>` execute after all of the ProcessingMechanisms in the `Composition` to which they
 belong have executed.  When a LearningMechanism is executed, it uses the `value <InputState.value>`(s) of its

@@ -7,6 +7,7 @@ States
 .. toctree::
    :maxdepth: 1
 
+   *Subclasses:*
    InputState
    ParameterState
    OutputState

@@ -2,7 +2,11 @@ Composition
 ===========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+
+   *Subclasses:*
+   CompositionFunctionApproximator
+   AutodiffComposition
 
 .. automodule:: psyneulink.core.compositions.composition
    :members:

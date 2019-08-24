@@ -1442,7 +1442,7 @@ class System(System_Base):
                             #    include it
                             if (isinstance(receiver, LearningMechanism) and
                                     receiver.learning_timing is LearningTiming.EXECUTION_PHASE):
-                                # If it is an AutoassociativeLearningMechanism, check that it projects to itself
+                                # If it is an AutoAssociativeLearningMechanism, check that it projects to itself
                                 if isinstance(receiver, AutoAssociativeLearningMechanism):
                                     if not receiver == sender_mech.learning_mechanism:
                                         raise SystemError("PROGRAM ERROR: {} is an {} that receives a projection "

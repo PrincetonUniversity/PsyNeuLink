@@ -580,11 +580,11 @@ backpropagation). LearningMechanisms take as their input a target and/or an erro
 `MappingProjection` from the source of the error signal (either a ComparatorMechanism or another LearningMechanism).
 LearningMechanisms use `LearningSignals` (a type of `OutputState`) to send a `LearningProjection` to the
 `MappingProjection` that is being learned.  The type of learning implemented by a LearningMechanism is determined by
-the class of `LearningFunction` assigned as its `function <LearningMechanism.function>`.  In some cases (such as
-multilayered backpropagation networks), configuration of the LearningMechanisms and corresponding Projections can
-become complex; PsyNeuLink provides methods for implementing these automatically, which also serves to illustrate the
-flow of signals and errors implemented by the algorithm.  The example below implements learning in a simple
-three-layered neural network that learns to compute the X-OR operation::
+the class of `LearningFunction <LearningFunctions>` assigned as its `function <LearningMechanism.function>`.  In some
+cases (such as multilayered backpropagation networks), configuration of the LearningMechanisms and corresponding
+Projections can become complex; PsyNeuLink provides methods for implementing these automatically, which also serves
+to illustrate the flow of signals and errors implemented by the algorithm.  The example below implements learning in
+a simple three-layered neural network that learns to compute the X-OR operation::
 
     # Construct Processing Mechanisms and Projections:
     input = TransferMechanism(name='Input', default_variable=np.zeros(2))
@@ -636,8 +636,10 @@ It can also be run without learning by calling the run method with ``enable_lear
 
 The model shown above implements learning for a simple linear path.  However, virtually any model can be created
 using calls to a Composition's `learning methods <Composition_Learning_Methods>` to build up more complex pathways.
-For example, following model implements a network for learning semantic representations described in
-`Rumelhart et al., 19XX <>`_::
+For example, the following implements a network for learning semantic representations described in
+`Rumelhart & Todd, 1993 <https://psycnet.apa.org/record/1993-97600-001>`_ (`pdf <https://web.stanford
+.edu/class/psych209a/ReadingsByDate/02_08/RumelhartTodd93.pdf>`_)::
+
 
     #  Represention  Property  Quality  Action
     #           \________\_______/_______/
