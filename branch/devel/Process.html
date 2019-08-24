@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Process &mdash; PsyNeuLink 0.5.3.2+365.gfa04528 documentation</title>
+  <title>Process &mdash; PsyNeuLink 0.5.3.2+366.g80cd8c8 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+365.gfa04528',
+              VERSION:'0.5.3.2+366.g80cd8c8',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -44,9 +44,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Scheduling" href="Scheduling.html" />
-    <link rel="prev" title="System" href="System.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -70,7 +68,7 @@
             
             
               <div class="version">
-                0.5.3.2+365
+                0.5.3.2+366
               </div>
             
           
@@ -94,20 +92,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Component.html">Components</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="Composition.html">Compositions</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Process</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -154,10 +143,6 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="index.html">Docs</a> &raquo;</li>
-        
-          <li><a href="Core.html">Core</a> &raquo;</li>
-        
-          <li><a href="Composition.html">Composition</a> &raquo;</li>
         
       <li>Process</li>
     
@@ -241,7 +226,7 @@ are designated as <a class="reference internal" href="Utilities.html#psyneulink.
 <p class="first admonition-title">Note</p>
 <p class="last">The <a class="reference internal" href="#psyneulink.core.components.process.Process.origin_mechanism" title="psyneulink.core.components.process.Process.origin_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">origin_mechanism</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.process.Process.terminal_mechanism" title="psyneulink.core.components.process.Process.terminal_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">terminal_mechanism</span></code></a>
 of a Process are not necessarily the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and/or <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms of the System(s)to which the Process
-belongs (see <a class="reference internal" href="LearningMechanism.html#learningprojection-target-vs-terminal-figure"><span class="std std-ref">example</span></a>).  The designations of a Mechanism’s status
+belongs (see <code class="xref any docutils literal"><span class="pre">example</span></code>).  The designations of a Mechanism’s status
 in the Process(es) to which it belongs are listed in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.processes" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">processes</span></code></a> attribute.</p>
 </div>
 <p id="process-mechanism-specification">Mechanisms can be specified in the <strong>pathway</strong> argument of the <a class="reference internal" href="#"><span class="doc">Process</span></a> class in one of two ways:</p>
@@ -520,7 +505,7 @@ that conform to the format for the <a class="reference internal" href="#psyneuli
 
 <dl class="class">
 <dt id="psyneulink.core.components.process.Process">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.process.</code><code class="descname">Process</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>pathway=None</em>, <em>initial_values=None</em>, <em>clamp_input=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning=None</em>, <em>learning_rate=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x116744158&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.process.Process" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.process.</code><code class="descname">Process</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>pathway=None</em>, <em>initial_values=None</em>, <em>clamp_input=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning=None</em>, <em>learning_rate=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10cdab158&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.process.Process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Process(process_spec=None,                               default_variable=None,                                   pathway=None,                                            initial_values={},                                       clamp_input:=None,                                       default_projection_matrix=DEFAULT_PROJECTION_MATRIX,     learning=None,                                           learning_rate=None                                       target=None,                                             params=None,                                             name=None,                                               prefs=None</p>
 <p>Base class for Process.</p>
 <dl class="attribute">
@@ -826,15 +811,6 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="Scheduling.html" class="btn btn-neutral float-right" title="Scheduling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="System.html" class="btn btn-neutral float-left" title="System" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

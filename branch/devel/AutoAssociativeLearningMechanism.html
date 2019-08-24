@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutoAssociativeMechanism &mdash; PsyNeuLink 0.5.3.2+365.gfa04528 documentation</title>
+  <title>AutoAssociativeLearningMechanism &mdash; PsyNeuLink 0.5.3.2+366.g80cd8c8 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+365.gfa04528',
+              VERSION:'0.5.3.2+366.g80cd8c8',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+365
+                0.5.3.2+366
               </div>
             
           
@@ -176,7 +176,7 @@
         
           <li><a href="LearningMechanisms.html">Learning Mechanisms</a> &raquo;</li>
         
-      <li>AutoAssociativeMechanism</li>
+      <li>AutoAssociativeLearningMechanism</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -196,7 +196,7 @@
            <div itemprop="articleBody">
             
   <div class="section" id="module-psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism">
-<span id="autoassociativemechanism"></span><h1>AutoAssociativeMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism" title="Permalink to this headline">¶</a></h1>
+<span id="autoassociativelearningmechanism"></span><h1>AutoAssociativeLearningMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <span id="autoassociativelearningmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An AutoAssociativeLearningMechanism is a subclass of <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, modified for use with a
@@ -273,7 +273,7 @@ with the <a class="reference internal" href="InputState.html#psyneulink.core.com
 <li><strong>learning_signals</strong> (<em>List</em><em>[</em><em>parameter of Projection</em><em>, </em><a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState" title="psyneulink.core.components.states.parameterstate.ParameterState"><em>ParameterState</em></a><em>, </em><em>Projection</em><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><em>Projection</em><em>] or </em><em>dict</em><em>]     </em><em>: default None</em>) – specifies the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> to be learned (see <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signals" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signals"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signals</span></code></a> for details of specification).</li>
 <li><strong>modulation</strong> (<em>ModulationParam : default ModulationParam.ADDITIVE</em>) – specifies the default form of modulation used by the AutoAssociativeLearningMechanism’s LearningSignals,
 unless they are <a class="reference internal" href="LearningSignal.html#learningsignal-specification"><span class="std std-ref">individually specified</span></a>.</li>
-<li><strong>function</strong> (<em>LearningFunction</em><em> or </em><em>function : default Hebbian</em>) – specifies the function used to calculate the AutoAssociativeLearningMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal" title="psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> attribute.  It must take as its <strong>variable</strong> argument a
+<li><strong>function</strong> (<a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="psyneulink.core.components.functions.learningfunctions.LearningFunction"><em>LearningFunction</em></a><em> or </em><em>function : default Hebbian</em>) – specifies the function used to calculate the AutoAssociativeLearningMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal" title="psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> attribute.  It must take as its <strong>variable</strong> argument a
 list or 1d array of numeric values (the “activity vector”) and return a list, 2d np.array or np.matrix
 representing a square matrix with dimensions that equal the length of its variable (the “weight change
 matrix”).</li>
@@ -346,7 +346,7 @@ allowing the contribution of individual <em>units</em> to be scaled). If specifi
 learning_rate assigned to any <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which the AutoAssociativeLearningMechanism belongs.
 If it is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.learning_rate" title="psyneulink.core.components.process.Process.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> specified for the Process to which the
 AutoAssociativeLearningMechanism belongs belongs is used;  and, if that is <code class="xref any docutils literal"><span class="pre">None</span></code>, then the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.learning_rate" title="psyneulink.core.components.system.System.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for the System to which it belongs is used. If all are <code class="xref any docutils literal"><span class="pre">None</span></code>, then the
-<code class="xref any docutils literal"><span class="pre">default_learning_rate</span></code> for the <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is used (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-rate"><span class="std std-ref">learning_rate</span></a>
+<a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate" title="psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">default_learning_rate</span></code></a> for the <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is used (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-rate"><span class="std std-ref">learning_rate</span></a>
 for additional details).</p>
 </dd></dl>
 

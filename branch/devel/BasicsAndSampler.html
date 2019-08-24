@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+365.gfa04528 documentation</title>
+  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+366.g80cd8c8 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+365.gfa04528',
+              VERSION:'0.5.3.2+366.g80cd8c8',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+365
+                0.5.3.2+366
               </div>
             
           
@@ -217,7 +217,7 @@ system.  The figure below provides an example of the kinds of elements available
 planned for future inclusion.  The <a class="reference internal" href="QuickReference.html"><span class="doc">Quick Reference</span></a> provides a more detailed overview of PsyNeuLink objects and its
 other facilities.  In the sections that follow, the Sampler provides some examples of how these are used to construct
 models in PsyNeuLink.</p>
-<div class="figure" id="id1">
+<div class="figure" id="id2">
 <span id="basicsandsampler-grandview-figure"></span><img alt="_images/BasicsAndSampler_GrandView_fig.svg" src="_images/BasicsAndSampler_GrandView_fig.svg" /><p class="caption"><span class="caption-text"><strong>PsyNeuLink Environment.</strong>  Full-colored items are examples of currently implemented elements; dimmed
 items are examples of elements planned for future implementation.</span></p>
 </div>
@@ -254,7 +254,7 @@ with an appropriately-sized input array, for example:</p>
 </pre></div>
 </div>
 <p>The Composition connects the Mechanisms into a pathway that form a graph, which can be shown using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method:</p>
-<div class="figure" id="id2">
+<div class="figure" id="id3">
 <span id="basicsandsampler-simple-pathway-example-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndSampler_SimplePathway_fig.svg"><img alt="_images/BasicsAndSampler_SimplePathway_fig.svg" src="_images/BasicsAndSampler_SimplePathway_fig.svg" width="30%" /></a>
 <p class="caption"><span class="caption-text"><strong>Composition Graph.</strong>  Representation of the graph of the simple Composition in the example above.  Note that the
 Input Mechanism for the Composition is colored green (to designate it is an <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.INPUT" title="psyneulink.core.globals.utilities.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> node), and its output
@@ -352,7 +352,7 @@ drift diffusion (DDM) decision mechanism responsible for determining the respons
 <p>This is a simplified version the model described in <a class="reference external" href="https://www.researchgate.net/publication/20956134_Cohen_JD_McClelland_JL_Dunbar_K_On_the_control_of_automatic_processes_a_parallel_distributed_processing_account_of_the_Stroop_effect_Psychol_Rev_97_332-361">Cohen et al. (1990)</a>,
 a more complete version of which can be found in the <a class="reference external" href="https://princetonuniversity.github.io/PsyNeuLink/Library.html">PsyNeuLink Library</a> at <code class="xref any docutils literal"><span class="pre">Stroop</span> <span class="pre">Model</span></code>.  The figure belows shows the model using the
 Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method.</p>
-<div class="figure" id="id3">
+<div class="figure" id="id4">
 <span id="basicsandsampler-simple-stroop-example-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndSampler_Stroop_Model.svg"><img alt="_images/BasicsAndSampler_Stroop_Model.svg" src="_images/BasicsAndSampler_Stroop_Model.svg" width="50%" /></a>
 <p class="caption"><span class="caption-text"><strong>Stroop Model.</strong> Representation of the Composition in the example above.</span></p>
 </div>
@@ -431,8 +431,8 @@ execute, simulating a situation in which the task instruction is processed befor
 <span class="n">task</span> <span class="o">=</span> <span class="n">LCAMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;TASK&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
 <span class="c1"># Assign conditions to scheduler:</span>
-<span class="n">Stroop_model</span><span class="o">.</span><span class="n">processing_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">color_hidden</span><span class="p">,</span> <span class="n">EveryNExecutions</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
-<span class="n">Stroop_model</span><span class="o">.</span><span class="n">processing_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">word_hidden</span><span class="p">,</span> <span class="n">EveryNExecutions</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">color_hidden</span><span class="p">,</span> <span class="n">EveryNExecutions</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">scheduler_processing</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">word_hidden</span><span class="p">,</span> <span class="n">EveryNExecutions</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
 
 <span class="c1"># Run with scheduler:</span>
 <span class="n">Stroop_model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">color_input</span><span class="p">:</span><span class="n">red</span><span class="p">,</span> <span class="n">word_input</span><span class="p">:</span><span class="n">green</span><span class="p">,</span> <span class="n">task_input</span><span class="p">:</span><span class="n">color</span><span class="p">})</span>
@@ -455,8 +455,8 @@ def converge(mech, thresh):
 
 # Add Conditions to the ``color_hidden`` and ``word_hidden`` Mechanisms that depend on the converge function:
 epsilon = 0.01
-Stroop_model.processing_scheduler.add_condition(color_hidden, When(converge, task, epsilon)))
-Stroop_model.processing_scheduler.add_condition(word_hidden, When(converge, task, epsilon)))
+Stroop_model.scheduler_processing.add_condition(color_hidden, When(converge, task, epsilon)))
+Stroop_model.scheduler_processing.add_condition(word_hidden, When(converge, task, epsilon)))
 </pre></div>
 </div>
 <p>PsyNeuLink provides a rich set of <a class="reference internal" href="Condition.html#condition-pre-specified-list"><span class="std std-ref">pre-defined Conditions</span></a> (such as <code class="docutils literal"><span class="pre">When</span></code> in the
@@ -520,7 +520,7 @@ the <strong>control_signals</strong> argument specifies the parameters of the Me
 MappingProjections from <code class="docutils literal"><span class="pre">output</span></code> to the ObjectiveMechanism, and from the latter to the ControlMechanism.  The latter
 is then added to the <code class="docutils literal"><span class="pre">Stroop_model</span></code> as its <code class="xref any docutils literal"><span class="pre">controller</span></code> in its constructor.
 The result is shown in the figure below, using the <strong>show_controller</strong> option of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method:</p>
-<div class="figure" id="id4">
+<div class="figure" id="id5">
 <span id="basicsandsampler-stroop-example-with-control-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndSampler_Stroop_Model_Control.svg"><img alt="_images/BasicsAndSampler_Stroop_Model_Control.svg" src="_images/BasicsAndSampler_Stroop_Model_Control.svg" width="50%" /></a>
 <p class="caption"><span class="caption-text"><strong>Stroop Model with Controller.</strong> Representation of the Composition with the <code class="docutils literal"><span class="pre">control</span></code> Mechanism added, generated
 by a call to <code class="docutils literal"><span class="pre">Stroop_model.show_graph(show_controller)</span></code>.</span></p>
@@ -538,7 +538,7 @@ the next time it executes (i.e., on the next <a class="reference internal" href=
 <strong>call_after_trial</strong> argument of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method is used to print Mechanism values
 at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>.  The <strong>animate</strong> argument of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method can be
 used to generate an animation of the Composition’s execution, as shown below:</p>
-<div class="figure" id="id5">
+<div class="figure" id="id6">
 <a class="reference internal image-reference" href="_images/BasicsAndSampler_Stroop_Model_movie.gif"><img alt="_images/BasicsAndSampler_Stroop_Model_movie.gif" src="_images/BasicsAndSampler_Stroop_Model_movie.gif" style="width: 75%;" /></a>
 <p class="caption"><span class="caption-text"><strong>Animation of Stroop Model with Controller.</strong> Generated by a call to <code class="docutils literal"><span class="pre">Stroop_model.show_graph(show_controller)</span>
 <span class="pre">with</span> <span class="pre">``animate={&quot;show_controller&quot;:True}</span></code> in call to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>.</span></p>
@@ -651,14 +651,16 @@ a dictionary of values for each entry, and <a class="reference external" href="h
 <div class="section" id="learning">
 <span id="basicsandsampler-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
 <p>Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
-mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available in other
-Python-based environments, such as Pytorch.  Since the latter are becoming increasingly accessible and powerful, the
-native implementation of learning in PsyNeuLink is designed with the goals of modularity and exposition rather than
-efficiency of computation.  That is, it is better suited for “story-boarding” a model that includes learning
-components, and for illustrating process flow during learning, than it is for large scale simulations involving
-learning.  However, the specification of the learning components of a model in PsyNeuLink can easily be translated
-into a Pytorch description, which can then be integrated into the PsyNeuLink model with all the benefits of
-Pytorch execution.  Each of the two ways of specifying learning components is described below.</p>
+mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available from other
+Python-based environments.  Currently, has builtin intregration with <a class="reference external" href="https://pytorch.org">PyTorch</a>, however
+other envirnoments can be accessed using <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunctions</span></a>.  Since such environments are
+becoming increasingly accessible and powerful, the native implementation of learning in PsyNeuLink is designed with
+a complemenatry set of the goals: modularity and exposition, rather than efficiency of computation.  That is, it is
+better suited for “story-boarding” a model that includes learning components, and for illustrating process flow
+during learning, than it is for large scale simulations involving learning.  However, the specification of the
+learning components of a model in PsyNeuLink can easily be translated into a Pytorch description, which can then be
+integrated into the PsyNeuLink model with all the benefits of Pytorch execution.  Each of the two ways of specifying
+learning components is described below.</p>
 <div class="section" id="learningmechanisms">
 <h4>LearningMechanisms<a class="headerlink" href="#learningmechanisms" title="Permalink to this headline">¶</a></h4>
 <p>PsyNeuLink has a native class – <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> – that can be used to implement various forms of learning,
@@ -667,35 +669,33 @@ backpropagation). LearningMechanisms take as their input a target and/or an erro
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the source of the error signal (either a ComparatorMechanism or another LearningMechanism).
 LearningMechanisms use <code class="xref any docutils literal"><span class="pre">LearningSignals</span></code> (a type of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>) to send a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> to the
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that is being learned.  The type of learning implemented by a LearningMechanism is determined by
-the class of <code class="xref any docutils literal"><span class="pre">LearningFunction</span></code> assigned as its <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  In some cases (such as
-multilayered backpropagation networks), configuration of the LearningMechanisms and corresponding Projections can
-become complex; PsyNeuLink provides methods for implementing these automatically, which also serves to illustrate the
-flow of signals and errors implemented by the algorithm.  The example below implements learning in a simple
-three-layered neural network that learns to compute the X-OR operation:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;INPUT&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">hidden_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;HIDDEN&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
-<span class="n">output_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;OUTPUT&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
-<span class="n">input_to_hidden_projection</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;INPUT_TO_HIDDEN&#39;</span><span class="p">,</span>
-                                               <span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span>
-                                               <span class="n">sender</span><span class="o">=</span><span class="n">input_mech</span><span class="p">,</span>
-                                               <span class="n">receiver</span><span class="o">=</span><span class="n">hidden_mech</span><span class="p">)</span>
-<span class="n">hidden_to_output_projection</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;HIDDEN_TO_OUTPUT&#39;</span><span class="p">,</span>
-                                                <span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
-                                                <span class="n">sender</span><span class="o">=</span><span class="n">hidden_mech</span><span class="p">,</span>
-                                                <span class="n">receiver</span><span class="o">=</span><span class="n">output_mech</span><span class="p">)</span>
-<span class="n">xor_model</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">()</span>
-<span class="n">learning_components</span> <span class="o">=</span> <span class="n">xor_model</span><span class="o">.</span><span class="n">add_backpropagation_pathway</span><span class="p">([</span><span class="n">input_mech</span><span class="p">,</span>
-                                                             <span class="n">input_to_hidden_projection</span><span class="p">,</span>
-                                                             <span class="n">hidden_mech</span><span class="p">,</span>
-                                                             <span class="n">hidden_to_output_projection</span><span class="p">,</span>
-                                                             <span class="n">output_mech</span><span class="p">],</span>
-                                                             <span class="n">learning_rate</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+the class of <a class="reference internal" href="LearningFunctions.html"><span class="doc">LearningFunction</span></a> assigned as its <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  In some
+cases (such as multilayered backpropagation networks), configuration of the LearningMechanisms and corresponding
+Projections can become complex; PsyNeuLink provides methods for implementing these automatically, which also serves
+to illustrate the flow of signals and errors implemented by the algorithm.  The example below implements learning in
+a simple three-layered neural network that learns to compute the X-OR operation:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct Processing Mechanisms and Projections:</span>
+<span class="nb">input</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">hidden</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Hidden&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Output&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
+<span class="n">input_weights</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input Weights&#39;</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">output_weights</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Output Weights&#39;</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">xor_comp</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="s1">&#39;XOR Composition&#39;</span><span class="p">)</span>
+<span class="n">learning_components</span> <span class="o">=</span> <span class="n">xor_comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span>
+                                                <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="nb">input</span><span class="p">,</span> <span class="n">input_weights</span><span class="p">,</span> <span class="n">hidden</span><span class="p">,</span> <span class="n">output_weights</span><span class="p">,</span> <span class="n">output</span><span class="p">])</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">learning_components</span><span class="p">[</span><span class="n">TARGET_MECHANISM</span><span class="p">]</span>
+
+<span class="c1"># Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4</span>
+<span class="n">xor_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;stimuli&#39;</span><span class="p">:[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
+              <span class="s1">&#39;targets&#39;</span><span class="p">:[</span>  <span class="p">[</span><span class="mi">0</span><span class="p">],</span>     <span class="p">[</span><span class="mi">1</span><span class="p">],</span>     <span class="p">[</span><span class="mi">1</span><span class="p">],</span>     <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">]}</span>
+<span class="n">xor_comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="nb">input</span><span class="p">:</span><span class="n">xor_inputs</span><span class="p">[</span><span class="s1">&#39;stimuli&#39;</span><span class="p">],</span>
+                     <span class="n">target</span><span class="p">:</span><span class="n">xor_inputs</span><span class="p">[</span><span class="s1">&#39;targets&#39;</span><span class="p">]})</span>
 </pre></div>
 </div>
 <p>Calling the Composition’s <code class="docutils literal"><span class="pre">show_graph</span></code> with <code class="docutils literal"><span class="pre">show_learning=True</span></code> shows the network along with all of the learning
 components created by the call to <code class="docutils literal"><span class="pre">add_backpropagation_pathway</span></code>:</p>
 <div class="figure" id="basicsandsampler-xor-model-figure">
-<a class="reference internal image-reference" href="_images/BasicsAndSampler_XOR_Model_fig.svg"><img alt="_images/BasicsAndSampler_XOR_Model_fig.svg" src="_images/BasicsAndSampler_XOR_Model_fig.svg" width="75%" /></a>
+<a class="reference internal image-reference" href="_images/BasicsAndSampler_XOR_Model_fig.svg"><img alt="_images/BasicsAndSampler_XOR_Model_fig.svg" src="_images/BasicsAndSampler_XOR_Model_fig.svg" width="100%" /></a>
 </div>
 <p>Training the model requires specifying a set of inputs and targets to use as training stimuli, and identifying the
 target Mechanism (that receives the target responses):</p>
@@ -713,11 +713,52 @@ target Mechanism (that receives the target responses):</p>
 </pre></div>
 </div>
 <p>It can also be run without learning by calling the run method with <code class="docutils literal"><span class="pre">enable_learning=False</span></code>.</p>
-<p>XXX STROOP MODEL EXAMPLE:  MORE THAN ONE PATHWAY
-XXX RUMELHART MODEL:  EVEN MORE COMPLEX EXAMPLE -&gt; AUTODIFF</p>
+<p id="basicsandsampler-rumelhart-model">The model shown above implements learning for a simple linear path.  However, virtually any model can be created
+using calls to a Composition’s <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning methods</span></a> to build up more complex pathways.
+For example, the following implements a network for learning semantic representations described in
+<a class="reference external" href="https://psycnet.apa.org/record/1993-97600-001">Rumelhart &amp; Todd, 1993</a> (<a class="reference external" href="https://web.stanford.edu/class/psych209a/ReadingsByDate/02_08/RumelhartTodd93.pdf">pdf</a>):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#  Represention  Property  Quality  Action</span>
+<span class="c1">#           \________\_______/_______/</span>
+<span class="c1">#                        |</span>
+<span class="c1">#                 Relations_Hidden</span>
+<span class="c1">#                   _____|_____</span>
+<span class="c1">#                  /           \</span>
+<span class="c1">#   Representation_Hidden  Relations_Input</span>
+<span class="c1">#               /</span>
+<span class="c1">#   Representation_Input</span>
+
+<span class="c1"># Construct Mechanisms</span>
+<span class="n">rep_in</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REP_IN&#39;</span><span class="p">)</span>
+<span class="n">rel_in</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REL_IN&#39;</span><span class="p">)</span>
+<span class="n">rep_hidden</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REP_HIDDEN&#39;</span><span class="p">)</span>
+<span class="n">rel_hidden</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REL_HIDDEN&#39;</span><span class="p">)</span>
+<span class="n">rep_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REP_OUT&#39;</span><span class="p">)</span>
+<span class="n">prop_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;PROP_OUT&#39;</span><span class="p">)</span>
+<span class="n">qual_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;QUAL_OUT&#39;</span><span class="p">)</span>
+<span class="n">act_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ACT_OUT&#39;</span><span class="p">)</span>
+
+<span class="c1"># Construct Composition</span>
+<span class="n">comp</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Rumelhart Semantic Network&#39;</span><span class="p">)</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">rel_in</span><span class="p">,</span> <span class="n">rel_hidden</span><span class="p">])</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">rel_hidden</span><span class="p">,</span> <span class="n">rep_out</span><span class="p">])</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">rel_hidden</span><span class="p">,</span> <span class="n">prop_out</span><span class="p">])</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">rel_hidden</span><span class="p">,</span> <span class="n">qual_out</span><span class="p">])</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">rel_hidden</span><span class="p">,</span> <span class="n">act_out</span><span class="p">])</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">rep_in</span><span class="p">,</span> <span class="n">rep_hidden</span><span class="p">,</span> <span class="n">rel_hidden</span><span class="p">])</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">show_graph</span><span class="p">(</span><span class="n">show_learning</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
 </div>
-<div class="section" id="autodiffcomposition">
-<h4>AutodiffComposition<a class="headerlink" href="#autodiffcomposition" title="Permalink to this headline">¶</a></h4>
+<p>The figure below shows this network with all of its <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning components</span></a>:</p>
+<div class="figure" id="basicsandsampler-rumelhart-network-figure">
+<a class="reference internal image-reference" href="_images/BasicsAndSampler_Rumelhart_Network.svg"><img alt="_images/BasicsAndSampler_Rumelhart_Network.svg" src="_images/BasicsAndSampler_Rumelhart_Network.svg" width="75%" /></a>
+</div>
+<p>Given the number of learning components, training the model above using standard PsyNeuLink components can take a
+considerable amount of time.  However, the same Composition can be implemented using the <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>, by
+replacing the relevant line in the example above with <code class="docutils literal"><span class="pre">comp</span> <span class="pre">=</span> <span class="pre">AutoComposition(name='Rumelhart</span> <span class="pre">Semantic</span> <span class="pre">Network')</span></code>).
+The AutodiffComposition uses <a class="reference external" href="https://pytorch.org">PyTorch</a> to execute learning, which runs considerably (as much as
+three orders of magnitude) faster (see <a class="reference internal" href="Composition.html#composition-learning"><span class="std std-ref">Learning in a Composition</span></a>, as well as <a class="reference internal" href="Composition.html#composition-learning-autodiffcomposition"><span class="std std-ref">Learning Using AutodiffCompositon</span></a>
+for comparisons of the advantages and disadvantages of using a standard <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> vs. <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> for
+learning).</p>
 </div>
 </div>
 </div>

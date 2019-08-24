@@ -4,6 +4,7 @@ Component
 .. toctree::
    :maxdepth: 1
 
+   *Subclasses:*
    Mechanisms <Mechanism>
    Projections <Projection>
    States <State>

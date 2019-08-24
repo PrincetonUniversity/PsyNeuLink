@@ -313,8 +313,8 @@ execute, simulating a situation in which the task instruction is processed befor
     task = LCAMechanism(name='TASK', size=2)
 
     # Assign conditions to scheduler:
-    Stroop_model.processing_scheduler.add_condition(color_hidden, EveryNExecutions(task, 10))
-    Stroop_model.processing_scheduler.add_condition(word_hidden, EveryNExecutions(task, 10))
+    Stroop_model.scheduler_processing.add_condition(color_hidden, EveryNExecutions(task, 10))
+    Stroop_model.scheduler_processing.add_condition(word_hidden, EveryNExecutions(task, 10))
 
     # Run with scheduler:
     Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color})
@@ -337,8 +337,8 @@ conditions for execution of the ``color_hidden`` and ``task_hidden`` Mechanism's
 
     # Add Conditions to the ``color_hidden`` and ``word_hidden`` Mechanisms that depend on the converge function:
     epsilon = 0.01
-    Stroop_model.processing_scheduler.add_condition(color_hidden, When(converge, task, epsilon)))
-    Stroop_model.processing_scheduler.add_condition(word_hidden, When(converge, task, epsilon)))
+    Stroop_model.scheduler_processing.add_condition(color_hidden, When(converge, task, epsilon)))
+    Stroop_model.scheduler_processing.add_condition(word_hidden, When(converge, task, epsilon)))
 
 PsyNeuLink provides a rich set of `pre-defined Conditions <Condition_Pre-Specified_List>` (such as ``When`` in the
 examples above), but Conditions can also be constructed using any Python function.  Together, these can be combined to
@@ -560,14 +560,16 @@ Learning
 ~~~~~~~~
 
 Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
-mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available in other
-Python-based environments, such as Pytorch.  Since the latter are becoming increasingly accessible and powerful, the
-native implementation of learning in PsyNeuLink is designed with the goals of modularity and exposition rather than
-efficiency of computation.  That is, it is better suited for "story-boarding" a model that includes learning
-components, and for illustrating process flow during learning, than it is for large scale simulations involving
-learning.  However, the specification of the learning components of a model in PsyNeuLink can easily be translated
-into a Pytorch description, which can then be integrated into the PsyNeuLink model with all the benefits of
-Pytorch execution.  Each of the two ways of specifying learning components is described below.
+mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available from other
+Python-based environments.  Currently, has builtin intregration with `PyTorch <https://pytorch.org>`_, however
+other envirnoments can be accessed using `UserDefinedFunctions <UserDefinedFunction>`.  Since such environments are
+becoming increasingly accessible and powerful, the native implementation of learning in PsyNeuLink is designed with
+a complemenatry set of the goals: modularity and exposition, rather than efficiency of computation.  That is, it is
+better suited for "story-boarding" a model that includes learning components, and for illustrating process flow
+during learning, than it is for large scale simulations involving learning.  However, the specification of the
+learning components of a model in PsyNeuLink can easily be translated into a Pytorch description, which can then be
+integrated into the PsyNeuLink model with all the benefits of Pytorch execution.  Each of the two ways of specifying
+learning components is described below.
 
 LearningMechanisms
 ^^^^^^^^^^^^^^^^^^
@@ -578,30 +580,28 @@ backpropagation). LearningMechanisms take as their input a target and/or an erro
 `MappingProjection` from the source of the error signal (either a ComparatorMechanism or another LearningMechanism).
 LearningMechanisms use `LearningSignals` (a type of `OutputState`) to send a `LearningProjection` to the
 `MappingProjection` that is being learned.  The type of learning implemented by a LearningMechanism is determined by
-the class of `LearningFunction` assigned as its `function <LearningMechanism.function>`.  In some cases (such as
-multilayered backpropagation networks), configuration of the LearningMechanisms and corresponding Projections can
-become complex; PsyNeuLink provides methods for implementing these automatically, which also serves to illustrate the
-flow of signals and errors implemented by the algorithm.  The example below implements learning in a simple
-three-layered neural network that learns to compute the X-OR operation::
+the class of `LearningFunction <LearningFunctions>` assigned as its `function <LearningMechanism.function>`.  In some
+cases (such as multilayered backpropagation networks), configuration of the LearningMechanisms and corresponding
+Projections can become complex; PsyNeuLink provides methods for implementing these automatically, which also serves
+to illustrate the flow of signals and errors implemented by the algorithm.  The example below implements learning in
+a simple three-layered neural network that learns to compute the X-OR operation::
 
-    input_mech = pnl.TransferMechanism(name='INPUT', size=2)
-    hidden_mech = pnl.TransferMechanism(name='HIDDEN', size=10, function=Logistic)
-    output_mech = pnl.TransferMechanism(name='OUTPUT', size=1, function=Logistic)
-    input_to_hidden_projection = MappingProjection(name='INPUT_TO_HIDDEN',
-                                                   matrix=np.random.rand(2,10),
-                                                   sender=input_mech,
-                                                   receiver=hidden_mech)
-    hidden_to_output_projection = MappingProjection(name='HIDDEN_TO_OUTPUT',
-                                                    matrix=np.random.rand(10,1),
-                                                    sender=hidden_mech,
-                                                    receiver=output_mech)
-    xor_model = Composition()
-    learning_components = xor_model.add_backpropagation_pathway([input_mech,
-                                                                 input_to_hidden_projection,
-                                                                 hidden_mech,
-                                                                 hidden_to_output_projection,
-                                                                 output_mech],
-                                                                 learning_rate=10)
+    # Construct Processing Mechanisms and Projections:
+    input = TransferMechanism(name='Input', default_variable=np.zeros(2))
+    hidden = TransferMechanism(name='Hidden', default_variable=np.zeros(10), function=Logistic())
+    output = TransferMechanism(name='Output', default_variable=np.zeros(1), function=Logistic())
+    input_weights = MappingProjection(name='Input Weights', matrix=np.random.rand(2,10))
+    output_weights = MappingProjection(name='Output Weights', matrix=np.random.rand(10,1))
+    xor_comp = Composition('XOR Composition')
+    learning_components = xor_comp.add_backpropagation_learning_pathway(
+                                                    pathway=[input, input_weights, hidden, output_weights, output])
+    target = learning_components[TARGET_MECHANISM]
+
+    # Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4
+    xor_inputs = {'stimuli':[[0, 0],  [0, 1],  [1, 0],  [1, 1]],
+                  'targets':[  [0],     [1],     [1],     [0] ]}
+    xor_comp.run(inputs={input:xor_inputs['stimuli'],
+                         target:xor_inputs['targets']})
 
 Calling the Composition's ``show_graph`` with ``show_learning=True`` shows the network along with all of the learning
 components created by the call to ``add_backpropagation_pathway``:
@@ -609,10 +609,10 @@ components created by the call to ``add_backpropagation_pathway``:
 .. _BasicsAndSampler_XOR_MODEL_Figure:
 
 .. figure:: _static/BasicsAndSampler_XOR_Model_fig.svg
-   :width: 75%
+   :width: 100%
 
     **XOR Model.**  Items in orange are learning components implemented by the call to ``add_backpropagation_pathway``;
-    diamonds represent Projections, shown as nodes so that the `LearningProjections` to them can be shown.
+    diamonds represent MappingProjections, shown as nodes so that the `LearningProjections` to them can be shown.
 
 
 Training the model requires specifying a set of inputs and targets to use as training stimuli, and identifying the
@@ -632,19 +632,80 @@ target Mechanism (that receives the target responses)::
 
 It can also be run without learning by calling the run method with ``enable_learning=False``.
 
-XXX STROOP MODEL EXAMPLE:  MORE THAN ONE PATHWAY
-XXX RUMELHART MODEL:  EVEN MORE COMPLEX EXAMPLE -> AUTODIFF
+.. _BasicsAndSampler_Rumelhart_Model:
 
-AutodiffComposition
-^^^^^^^^^^^^^^^^^^^
+The model shown above implements learning for a simple linear path.  However, virtually any model can be created
+using calls to a Composition's `learning methods <Composition_Learning_Methods>` to build up more complex pathways.
+For example, the following implements a network for learning semantic representations described in
+`Rumelhart & Todd, 1993 <https://psycnet.apa.org/record/1993-97600-001>`_ (`pdf <https://web.stanford
+.edu/class/psych209a/ReadingsByDate/02_08/RumelhartTodd93.pdf>`_)::
 
 
+    #  Represention  Property  Quality  Action
+    #           \________\_______/_______/
+    #                        |
+    #                 Relations_Hidden
+    #                   _____|_____
+    #                  /           \
+    #   Representation_Hidden  Relations_Input
+    #               /
+    #   Representation_Input
 
-.. Impelements all major forms of learning (autoassociative, RL and BP)
-.. Implementation favors modulariziation / depiction of process flow (pedagogical tool, e.g., animation - SHOW EXAMPLE)
-.. But integrates PyTorch for efficiency and generality: Autodiff EXAMPLE (Rumelhart network)
+    # Construct Mechanisms
+    rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
+    rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
+    rep_hidden = pnl.TransferMechanism(size=4, function=Logistic, name='REP_HIDDEN')
+    rel_hidden = pnl.TransferMechanism(size=5, function=Logistic, name='REL_HIDDEN')
+    rep_out = pnl.TransferMechanism(size=10, function=Logistic, name='REP_OUT')
+    prop_out = pnl.TransferMechanism(size=12, function=Logistic, name='PROP_OUT')
+    qual_out = pnl.TransferMechanism(size=13, function=Logistic, name='QUAL_OUT')
+    act_out = pnl.TransferMechanism(size=14, function=Logistic, name='ACT_OUT')
+
+    # Construct Composition
+    comp = Composition(name='Rumelhart Semantic Network')
+    comp.add_backpropagation_learning_pathway(pathway=[rel_in, rel_hidden])
+    comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, rep_out])
+    comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, prop_out])
+    comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, qual_out])
+    comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, act_out])
+    comp.add_backpropagation_learning_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
+    comp.show_graph(show_learning=True)
+
+The figure below shows this network with all of its `learning components <Composition_Learning_Components>`:
+
+.. _BasicsAndSampler_Rumelhart_Network_Figure:
+
+.. figure:: _static/BasicsAndSampler_Rumelhart_Network.svg
+   :width: 75%
+
+    **Rumelhart Semantic Network.**  Items in orange are learning components implemented by the calls to
+    ``add_backpropagation_pathway``; diamonds represent MappingProjections, shown as nodes so that the
+    `LearningProjections` to them can be shown.
+
+.. ADD REFERENCE TO Rumelhart Semantic Network Model once implemented
+
+Given the number of learning components, training the model above using standard PsyNeuLink components can take a
+considerable amount of time.  However, the same Composition can be implemented using the `AutodiffComposition`, by
+replacing the relevant line in the example above with ``comp = AutoComposition(name='Rumelhart Semantic Network')``).
+The AutodiffComposition uses `PyTorch <https://pytorch.org>`_ to execute learning, which runs considerably (as much as
+three orders of magnitude) faster (see `Composition_Learning`, as well as `Composition_Learning_AutodiffComposition`
+for comparisons of the advantages and disadvantages of using a standard `Composition` vs. `AutodiffComposition` for
+learning).
+
+.. ADD FINAL STATEMENT HERE
+.. The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,
+.. and the `Tutorial` provides an interactive introduction to its use.
+
+.. STUFF TO ADD -------------------------------------------------------------------------------------------------------
 ..
-.. OLD:
+.. One of the most useful applications for PsyNeuLink is the design of models that include control processes.
+.. XXX USER DEFINED FUNCTIONS
+.. XXX RL LEARNING??
+.. XXX NESTED COMPOSITIONS
+.. XXX COMPILATION
+..
+
+.. OLD: --------------------------------------------------------------------------------------------------------------
 .. For example, the feedforward network above can be
 .. trained using backpropagation simply by adding the **learning** argument to the constructor for the Process::
 ..
@@ -660,17 +721,4 @@ AutodiffComposition
 .. `Reinforcement Learning <Reinforcement>`, and others are currently being implemented (including Hebbian, Temporal
 .. Differences, and supervised learning for recurrent networks).
 ..
-.. -----------------
 ..
-.. STUFF TO ADD:
-..
-.. One of the most useful applications for PsyNeuLink is the design of models that include control processes.
-.. XXX USER DEFINED FUNCTIONS
-.. XXX CONTROL (STROOP)
-.. XXX HETEROGENOUS TYPES: ADD DECISION MAKING USING DDM;  FitzHugh-Nagumo Mechanism
-.. XXX LEARNING:  USING RL AND BP
-.. XXX NESTED COMPOSITIONS: AUTODIFF
-.. XXX COMPILATION
-..
-.. The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,
-.. and the `Tutorial` provides an interactive introduction to its use.

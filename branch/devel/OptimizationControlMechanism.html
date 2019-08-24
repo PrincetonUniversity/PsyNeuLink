@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.5.3.2+365.gfa04528 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.5.3.2+366.g80cd8c8 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+365.gfa04528',
+              VERSION:'0.5.3.2+366.g80cd8c8',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+365
+                0.5.3.2+366
               </div>
             
           
@@ -247,9 +247,12 @@ the OptimizationControlMechanism belongs (and for which it is the <a class="refe
 <p>An OptimizationControlMechanism is created in the same was as any <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.
 The following arguments of its constructor are specific to the OptimizationControlMechanism:</p>
 <ul>
-<li><p class="first"><strong>features</strong> – takes the place of the standard <strong>input_states</strong> argument in the constructor for a
-Mechanism`, and specifies the values used by the OptimizationControlMechanism, together with a <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>, to calculate a <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a>.  Features can be
-specified using any of the following, singly or combined in a list:</p>
+<li><p class="first"><strong>features</strong> – takes the place of the standard <strong>input_states</strong> argument in the constructor for a Mechanism`,
+and specifies the values used by the OptimizationControlMechanism, together with a <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>, to calculate a <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a>.  For
+<a class="reference internal" href="#optimizationcontrolmechanism-model-based"><span class="std std-ref">model-based optimzation</span></a> these are also used as the inputs to the
+Compositoin (i.e., <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal"><span class="pre">agent_rep</span></code></a>) when it’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a>
+method is called (see <a class="reference internal" href="#optimizationcontrolmechanism-features"><span class="std std-ref">Features</span></a> below).  Features can be specified using any of the
+following, singly or combined in a list:</p>
 <ul class="simple">
 <li><em>InputState specification</em> – this can be any form of <a class="reference internal" href="InputState.html#inputstate-specification"><span class="std std-ref">InputState specification</span></a>
 that resolves to an OutputState from which the InputState receives a Projection;  the <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of that OutputState is used as the feature. Each of these InputStates is marked as
@@ -270,7 +273,7 @@ trials.</li>
 <ul class="simple">
 <li><strong>agent_rep</strong> – specifies the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> used by the OptimizationControlMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function"><code class="xref any py py-attr docutils literal"><span class="pre">evaluation_function</span></code></a> to calculate the predicted <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> for a given <a class="reference internal" href="#optimizationcontrolmechanism-state"><span class="std std-ref">state</span></a> (see <a class="reference internal" href="#optimizationcontrolmechanism-agent-rep"><span class="std std-ref">below</span></a> for additional details). If it is not specified, the
 <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to which the OptimizationControlMechanism belongs is assigned, and the OptimizationControlMechanism
-is assigned as that Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>, implementing <a class="reference internal" href="#optimizationcontrolmechanism-model-based"><span class="std std-ref">model-based</span></a> optimization.  If that Composition already has a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> specified, the OptimizationControlMechanism is disable. If another Composition is
+is assigned as that Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>, implementing fully <a class="reference internal" href="#optimizationcontrolmechanism-model-based"><span class="std std-ref">model-based</span></a> optimization.  If that Composition already has a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> specified, the OptimizationControlMechanism is disabled. If another Composition is
 specified, it must conform to the specifications for an <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal"><span class="pre">agent_rep</span></code></a> as
 described <a class="reference internal" href="#optimizationcontrolmechanism-agent-rep"><span class="std std-ref">below</span></a>.</li>
 </ul>
@@ -391,7 +394,7 @@ thus implementing a computation of <a class="reference internal" href="#optimiza
 <p>When an OptimizationControlMechanism is executed, it carries out the following steps:</p>
 <blockquote>
 <div><ul class="simple">
-<li>Calls <code class="xref any docutils literal"><span class="pre">adapt</span></code> method of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal"><span class="pre">agent_rep</span></code></a> to give that a chance to
+<li>Calls <a class="reference internal" href="CompositionFunctionApproximator.html#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt" title="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt"><code class="xref any py py-meth docutils literal"><span class="pre">adapt</span></code></a> method of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal"><span class="pre">agent_rep</span></code></a> to give that a chance to
 modify its parameters in order to better predict the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> for a given <a class="reference internal" href="#optimizationcontrolmechanism-state"><span class="std std-ref">state</span></a>, based the state and <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> of the
 previous trial.</li>
 </ul>

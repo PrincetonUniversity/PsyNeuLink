@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningFunctions &mdash; PsyNeuLink 0.5.3.2+365.gfa04528 documentation</title>
+  <title>LearningFunctions &mdash; PsyNeuLink 0.5.3.2+366.g80cd8c8 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+365.gfa04528',
+              VERSION:'0.5.3.2+366.g80cd8c8',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+365
+                0.5.3.2+366
               </div>
             
           
@@ -185,6 +185,53 @@
 <li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.TDLearning" title="psyneulink.core.components.functions.learningfunctions.TDLearning"><code class="xref any py py-class docutils literal"><span class="pre">TDLearning</span></code></a></li>
 </ul>
 <p>Functions that parameterize a function.</p>
+<dl class="class">
+<dt id="psyneulink.core.components.functions.learningfunctions.LearningFunction">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>function=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> used for learning.</p>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.LearningFunction.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list or array</em> – most LearningFunctions take a list or 2d array that must contain three items:</p>
+<ul class="simple">
+<li>the input to the parameter being modified (variable[LEARNING_ACTIVATION_INPUT]);</li>
+<li>the output of the parameter being modified (variable[LEARNING_ACTIVATION_OUTPUT]);</li>
+<li>the error associated with the output (variable[LEARNING_ERROR_OUTPUT]).</li>
+</ul>
+<p>However, the exact specification depends on the funtion’s type.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate">
+<code class="descname">default_learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numeric</em> – the value used for the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate" title="psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> parameter if none of the
+following are specified:  the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to
+which the function has been assigned, the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.learning_rate" title="psyneulink.core.components.process.Process.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for any <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or
+the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.learning_rate" title="psyneulink.core.components.system.System.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for any <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which that LearningMechanism belongs.
+The exact form of the value (i.e., whether it is a scalar or array) depends on the function’s type.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate">
+<code class="descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numeric</em> – generally used to multiply the result of the function before it is returned;  however, both the form of the
+value (i.e., whether it is a scalar or array) and how it is used depend on the function’s type.</p>
+</dd></dl>
+
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><em>The number of items returned and their format depend on the function’s type.</em></li>
+<li>Most return an array (used as the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> by a     <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>), and some also return a similarly formatted array containing either the     error received (in the third item of the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.variable" title="psyneulink.core.components.functions.learningfunctions.LearningFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) or a     version of it modified by the function.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="class">
 <dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">BayesGLM</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>mu_0=0</em>, <em>sigma_0=1</em>, <em>gamma_shape_0=1</em>, <em>gamma_size_0=1</em>, <em>params=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM" title="Permalink to this definition">¶</a></dt>
