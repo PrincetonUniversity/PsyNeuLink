@@ -473,7 +473,8 @@ class AutodiffComposition(Composition):
         self.__forward_bin_exec_func = None
         self.__learning_bin_exec_func = None
         self.__generated_learning_run = None
-
+        self.__generated_forward_run = None
+        
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
 
@@ -743,11 +744,11 @@ class AutodiffComposition(Composition):
                 with pnlvm.LLVMBuilderContext.get_global() as ctx:
                     self.__generated_learning_run = ctx.gen_composition_run(self)
             return self.__generated_learning_run
-        if self.__generated_run is None:
+        if self.__generated_forward_run is None:
             with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                self.__generated_run = ctx.gen_composition_run(self)
-
-        return self.__generated_run
+                self.__generated_forward_run = ctx.gen_composition_run(self)
+        return self.__generated_forward_run
+    
     def _gen_llvm_function(self):
         return self._bin_exec_func
 
@@ -1009,20 +1010,20 @@ class AutodiffComposition(Composition):
         param_args = [pnlvm.ir.LiteralStructType(mech_param_type_list),
                       pnlvm.ir.LiteralStructType(proj_param_type_list), 
                       pytorch_params]
-        if self.learning_enabled is True:
-            learning_targets = pnlvm.ir.LiteralStructType([
-                pnlvm.ir.IntType(32), # idx of the node
-                pnlvm.ir.IntType(64) 
-            ])
-            learning_params = pnlvm.ir.LiteralStructType([
-                pnlvm.ir.IntType(32), # epochs
-                pnlvm.ir.IntType(32), # number of targets/inputs to train with
-                pnlvm.ir.IntType(32), # number target nodes
-                pnlvm.ir.IntType(64), # addr of beginning of target struct arr
-                pnlvm.ir.IntType(32), # number input nodes
-                pnlvm.ir.IntType(64), # addr of beginning of input struct arr
-            ])
-            param_args += [learning_params]
+        #if self.learning_enabled is True:
+        learning_targets = pnlvm.ir.LiteralStructType([
+            pnlvm.ir.IntType(32), # idx of the node
+            pnlvm.ir.IntType(64) 
+        ])
+        learning_params = pnlvm.ir.LiteralStructType([
+            pnlvm.ir.IntType(32), # epochs
+            pnlvm.ir.IntType(32), # number of targets/inputs to train with
+            pnlvm.ir.IntType(32), # number target nodes
+            pnlvm.ir.IntType(64), # addr of beginning of target struct arr
+            pnlvm.ir.IntType(32), # number input nodes
+            pnlvm.ir.IntType(64), # addr of beginning of input struct arr
+        ])
+        param_args += [learning_params]
         return pnlvm.ir.LiteralStructType(param_args)
 
     def _get_param_initializer(self, execution_id, simulation=False):
@@ -1045,15 +1046,15 @@ class AutodiffComposition(Composition):
                 pnlvm.ir.IntType(32), # idx of the node
                 pnlvm.ir.IntType(64) 
             ])
-            learning_params = (
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-            )
-            param_args += [learning_params]
+        learning_params = (
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        )
+        param_args += [learning_params]
         return tuple(param_args)
 
 class EarlyStopping(object):
