@@ -2491,6 +2491,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       learning_rate,
                                       learning_update):
 
+        # FIX: CHECK THAT COMMENTED-OUT LINE PASSES AND, IF IT DOES, THEN MOVE BACK TO _create_learning_related_mechanism
         # target_mechanism = ProcessingMechanism(name='Target')
         target_mechanism = ProcessingMechanism(name='Target',
                                                default_variable=output_source.defaults.value)
@@ -2502,10 +2503,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 VARIABLE: output_source.defaults.value},
                                                         function=PredictionErrorDeltaFunction(gamma=1.0))
 
-        learning_mechanism = LearningMechanism(function=TDLearning(default_variable=[input_source.output_states[0].defaults.value,
-                                                                                     output_source.output_states[0].defaults.value,
-                                                                                     comparator_mechanism.output_states[0].defaults.value],
-                                                                   learning_rate=learning_rate),
+        learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
+                                               default_variable=[input_source.output_states[0].defaults.value,
+                                                                 output_source.output_states[0].defaults.value,
+                                                                 comparator_mechanism.output_states[0].defaults.value],
                                                error_sources=comparator_mechanism,
                                                learning_enabled=learning_update,
                                                in_composition=True,
