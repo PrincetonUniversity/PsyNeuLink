@@ -1739,8 +1739,97 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_unique_id(self):
         return uuid.uuid4()
 
+
     # ******************************************************************************************************************
-    #                                               GRAPH
+    #                                              GRAPH
+    # ******************************************************************************************************************
+
+    def _analyze_graph(self):
+        """
+        Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
+
+        By default, if _analyze_graph determines that a node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
+        `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
+        <NodeRole.TERMINAL>`, it is also given the role `OUTPUT <NodeRole.OUTPUT>`.
+
+        However, if the required_roles argument of `add_node <Composition.add_node>` is used to set any node in the
+        Composition to `INPUT <NodeRole.INPUT>`, then the `ORIGIN <NodeRole.ORIGIN>` nodes are not set to `INPUT
+        <NodeRole.INPUT>` by default. If the required_roles argument of `add_node <Composition.add_node>` is used
+        to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
+        nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
+
+        :param graph:
+        :param context:
+        :return:
+        """
+
+        self._determine_node_roles()
+        self._create_CIM_states()
+        self._update_shadow_projections()
+        self._check_for_projection_assignments()
+        self.needs_update_graph = False
+
+    def _update_processing_graph(self):
+        """
+        Constructs the processing graph (the graph that contains only Nodes as vertices)
+        from the composition's full graph
+        """
+        logger.debug('Updating processing graph')
+
+        self._graph_processing = self.graph.copy()
+
+        def remove_vertex(vertex):
+            logger.debug('Removing', vertex)
+            for parent in vertex.parents:
+                for child in vertex.children:
+                    if vertex.feedback:
+                        child.backward_sources.add(parent.component)
+                    self._graph_processing.connect_vertices(parent, child)
+            # ensure that children get handled
+            if len(vertex.parents) == 0:
+                for child in vertex.children:
+                    if vertex.feedback:
+                        child.backward_sources.add(parent.component)
+
+            for node in cur_vertex.parents + cur_vertex.children:
+                logger.debug(
+                    'New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(
+                        node, node.parents, node.children
+                    )
+                )
+
+            logger.debug('Removing vertex {0}'.format(cur_vertex))
+
+            self._graph_processing.remove_vertex(vertex)
+
+        # copy to avoid iteration problems when deleting
+        vert_list = self._graph_processing.vertices.copy()
+        for cur_vertex in vert_list:
+            logger.debug('Examining', cur_vertex)
+            if not cur_vertex.component.is_processing:
+                remove_vertex(cur_vertex)
+
+        self.needs_update_graph_processing = False
+
+    def _analyze_consideration_queue(self, q, objective_mechanism):
+        """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
+            all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
+            may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry of the
+            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
+        """
+        for node in q[0]:
+            self._add_node_role(node, NodeRole.ORIGIN)
+
+        for node in list(q)[-1]:
+            if node != objective_mechanism:
+                self._add_node_role(node, NodeRole.TERMINAL)
+            elif len(q[-1]) < 2:
+                for previous_node in q[-2]:
+                    self._add_node_role(previous_node, NodeRole.TERMINAL)
+
+
+    # ******************************************************************************************************************
+    #                                               NODES
     # ******************************************************************************************************************
 
     def add_node(self, node, required_roles=None):
@@ -1939,88 +2028,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if node_role_pair in self.required_node_roles:
             self.required_node_roles.remove(node_role_pair)
 
-    def _analyze_graph(self):
+    def get_roles_by_node(self, node):
+        try:
+            return self.nodes_to_roles[node]
+        except KeyError:
+            raise CompositionError('Node {0} not found in {1}.nodes_to_roles'.format(node, self))
+
+    def get_nodes_by_role(self, role):
         """
-        Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
+            Returns a List of Composition Nodes in this Composition that have the *role* specified
 
-        By default, if _analyze_graph determines that a node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
-        `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
-        <NodeRole.TERMINAL>`, it is also given the role `OUTPUT <NodeRole.OUTPUT>`.
+            Arguments
+            _________
 
-        However, if the required_roles argument of `add_node <Composition.add_node>` is used to set any node in the
-        Composition to `INPUT <NodeRole.INPUT>`, then the `ORIGIN <NodeRole.ORIGIN>` nodes are not set to `INPUT
-        <NodeRole.INPUT>` by default. If the required_roles argument of `add_node <Composition.add_node>` is used
-        to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
-        nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
+            role : NodeRole
+                the List of nodes having this role to return
 
-        :param graph:
-        :param context:
-        :return:
+            Returns
+            -------
+
+            List of Composition Nodes with `NodeRole` *role* : List(`Mechanisms <Mechanism>` and
+            `Compositions <Composition>`)
         """
+        if role not in NodeRole:
+            raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
-        self._determine_node_roles()
-        self._create_CIM_states()
-        self._update_shadow_projections()
-        self._check_for_projection_assignments()
-        self.needs_update_graph = False
+        try:
+            return [node for node in self.nodes if role in self.nodes_to_roles[node]]
 
-    def _update_processing_graph(self):
-        """
-        Constructs the processing graph (the graph that contains only Nodes as vertices)
-        from the composition's full graph
-        """
-        logger.debug('Updating processing graph')
-
-        self._graph_processing = self.graph.copy()
-
-        def remove_vertex(vertex):
-            logger.debug('Removing', vertex)
-            for parent in vertex.parents:
-                for child in vertex.children:
-                    if vertex.feedback:
-                        child.backward_sources.add(parent.component)
-                    self._graph_processing.connect_vertices(parent, child)
-            # ensure that children get handled
-            if len(vertex.parents) == 0:
-                for child in vertex.children:
-                    if vertex.feedback:
-                        child.backward_sources.add(parent.component)
-
-            for node in cur_vertex.parents + cur_vertex.children:
-                logger.debug(
-                    'New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(
-                        node, node.parents, node.children
-                    )
-                )
-
-            logger.debug('Removing vertex {0}'.format(cur_vertex))
-
-            self._graph_processing.remove_vertex(vertex)
-
-        # copy to avoid iteration problems when deleting
-        vert_list = self._graph_processing.vertices.copy()
-        for cur_vertex in vert_list:
-            logger.debug('Examining', cur_vertex)
-            if not cur_vertex.component.is_processing:
-                remove_vertex(cur_vertex)
-
-        self.needs_update_graph_processing = False
-
-    def _analyze_consideration_queue(self, q, objective_mechanism):
-        """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
-            all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
-            may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry of the
-            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
-        """
-        for node in q[0]:
-            self._add_node_role(node, NodeRole.ORIGIN)
-
-        for node in list(q)[-1]:
-            if node != objective_mechanism:
-                self._add_node_role(node, NodeRole.TERMINAL)
-            elif len(q[-1]) < 2:
-                for previous_node in q[-2]:
-                    self._add_node_role(previous_node, NodeRole.TERMINAL)
+        except KeyError as e:
+            raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
 
     def _get_nested_nodes(self,
                           nested_nodes=NotImplemented,
@@ -2132,37 +2169,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     terminal_nodes = []
             for node in terminal_nodes:
                 self._add_node_role(node, NodeRole.OUTPUT)
-
-    def get_nodes_by_role(self, role):
-        """
-            Returns a List of Composition Nodes in this Composition that have the *role* specified
-
-            Arguments
-            _________
-
-            role : NodeRole
-                the List of nodes having this role to return
-
-            Returns
-            -------
-
-            List of Composition Nodes with `NodeRole` *role* : List(`Mechanisms <Mechanism>` and
-            `Compositions <Composition>`)
-        """
-        if role not in NodeRole:
-            raise CompositionError('Invalid NodeRole: {0}'.format(role))
-
-        try:
-            return [node for node in self.nodes if role in self.nodes_to_roles[node]]
-
-        except KeyError as e:
-            raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
-
-    def get_roles_by_node(self, node):
-        try:
-            return self.nodes_to_roles[node]
-        except KeyError:
-            raise CompositionError('Node {0} not found in {1}.nodes_to_roles'.format(node, self))
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
@@ -2471,182 +2477,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if node not in self.shadows[owner]:
                     self.shadows[owner].append(node)
 
-
-    # ******************************************************************************************************************
-    #                                              CONTROL
-    # ******************************************************************************************************************
-
-    def add_controller(self, controller:ModulatoryMechanism):
-        """
-        Add an `OptimizationControlMechanism` as the `controller
-        <Composition.controller>` of the Composition, which gives the OCM access to the
-        `Composition`'s `evaluate <Composition.evaluate>` method. This allows the OCM to use simulations to determine
-        an optimal Control policy.
-        """
-
-        if not isinstance(controller, ModulatoryMechanism):
-            raise CompositionError(f"Specification of {repr(CONTROLLER)} arg for {self.name} "
-                                   f"must be a {repr(ModulatoryMechanism.__name__)} ")
-
-        self.controller = controller
-        self.controller.composition = self
-
-        if self.controller.objective_mechanism:
-            self.add_node(self.controller.objective_mechanism)
-
-        self.enable_controller = True
-
-        controller._activate_projections_for_compositions(self)
-        self._analyze_graph()
-        self._update_shadows_dict(controller)
-
-        # Skip first (OUTCOME) input_state
-        input_cims=[self.input_CIM] + [comp.input_CIM for comp in self._get_nested_compositions()]
-        for input_state in controller.input_states[1:]:
-            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
-                for proj in input_state.shadow_inputs.path_afferents:
-                    sender = proj.sender
-                    if sender.owner not in input_cims:
-                        self.add_projection(projection=MappingProjection(sender=sender, receiver=input_state),
-                                            sender=sender.owner,
-                                            receiver=controller)
-                        shadow_proj._activate_for_compositions(self)
-                    else:
-                        try:
-                            shadow_proj = MappingProjection(sender=proj.sender, receiver=input_state)
-                            shadow_proj._activate_for_compositions(self)
-                        except DuplicateProjectionError:
-                            pass
-            # MODIFIED 6/11/19 NEW: [JDC]
-            for proj in input_state.path_afferents:
-                proj._activate_for_compositions(self)
-            # MODIFIED 6/11/19 END
-
-    def _build_predicted_inputs_dict(self, predicted_input):
-        inputs = {}
-        # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
-        # If this is not a good assumption, we need another way to look up the feature InputStates
-        # of the OCM and know which InputState maps to which predicted_input value
-
-        nested_nodes = dict(self._get_nested_nodes())
-        for j in range(len(self.controller.input_states) - 1):
-            input_state = self.controller.input_states[j + 1]
-            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
-                owner = input_state.shadow_inputs.owner
-                if not owner in nested_nodes:
-                    inputs[input_state.shadow_inputs.owner] = predicted_input[j]
-                else:
-                    comp = nested_nodes[owner]
-                    if not comp in inputs:
-                        inputs[comp]=[[predicted_input[j]]]
-                    else:
-                        inputs[comp]=np.concatenate([[predicted_input[j]],inputs[comp][0]])
-        return inputs
-
-    def reshape_control_signal(self, arr):
-
-        current_shape = np.shape(arr)
-        if len(current_shape) > 2:
-            newshape = (current_shape[0], current_shape[1])
-            newarr = np.reshape(arr, newshape)
-            arr = tuple(newarr[i].item() for i in range(len(newarr)))
-
-        return np.array(arr)
-
-    def _get_total_cost_of_control_allocation(self, control_allocation, execution_id, runtime_params, context):
-        total_cost = 0.
-        if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
-
-            base_control_allocation = self.reshape_control_signal(self.controller.parameters.value._get(execution_id))
-
-            candidate_control_allocation = self.reshape_control_signal(control_allocation)
-
-            # Get reconfiguration cost for candidate control signal
-            reconfiguration_cost = 0.
-            if callable(self.controller.compute_reconfiguration_cost):
-                reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
-                                                                                     base_control_allocation])
-                self.controller.reconfiguration_cost.set(reconfiguration_cost, execution_id)
-
-            # Apply candidate control signal
-            self.controller._apply_control_allocation(candidate_control_allocation,
-                                                                execution_id=execution_id,
-                                                                runtime_params=runtime_params,
-                                                                context=context)
-
-            # Get control signal costs
-            all_costs = self.controller.parameters.costs._get(execution_id) + [reconfiguration_cost]
-            # Compute a total for the candidate control signal(s)
-            total_cost = self.controller.combine_costs(all_costs)
-        return total_cost
-
-    def evaluate(
-            self,
-            predicted_input=None,
-            control_allocation=None,
-            num_simulation_trials=None,
-            runtime_params=None,
-            base_execution_id=None,
-            execution_id=None,
-            context=None,
-            execution_mode=False,
-    ):
-        """Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
-           `controller <Composition.controller>` in order to return the
-           `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
-           `controller <Composition.controller>` under that control_allocation. All values are
-           reset to pre-simulation values at the end of the simulation.
-        """
-        # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
-        total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
-
-        # Build input dictionary for simulation
-        inputs = self._build_predicted_inputs_dict(predicted_input)
-
-        # Run Composition in "SIMULATION" context
-        # MODIFIED 6/12/19 NEW: [JDC]
-        if self._animate is not False and self._animate_simulations is not False:
-            animate = self._animate
-            buffer_animate_state = None
-        else:
-            animate = False
-            buffer_animate_state = self._animate
-        entry_execution_phase = self.parameters.context._get(execution_id).execution_phase
-        # MODIFIED 6/12/19 END
-        self.parameters.context._get(execution_id).execution_phase = ContextFlags.SIMULATION
-        self.run(inputs=inputs,
-                 execution_id=execution_id,
-                 runtime_params=runtime_params,
-                 num_trials=num_simulation_trials,
-                 animate=animate,
-                 context=context,
-                 bin_execute=execution_mode,
-                 skip_initialization=True,
-                 )
-        # # MODIFIED 6/12/19 OLD:
-        # self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-        # MODIFIED 6/12/19 NEW: [JDC]
-        self.parameters.context._get(execution_id).execution_phase = entry_execution_phase
-        if buffer_animate_state:
-            self._animate = buffer_animate_state
-        # MODIFIED 6/12/19 END
-
-        # Store simulation results on "base" composition
-        if context.initialization_status != ContextFlags.INITIALIZING:
-            try:
-                self.parameters.simulation_results._get(base_execution_id).append(
-                    self.get_output_values(execution_id))
-            except AttributeError:
-                self.parameters.simulation_results._set([self.get_output_values(execution_id)], base_execution_id)
-
-        # Update input states in order to get correct value for "outcome" (from objective mech)
-        self.controller._update_input_states(execution_id, runtime_params, context.flags_string)
-        outcome = self.controller.input_state.parameters.value._get(execution_id)
-
-        # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
-        net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
-
-        return net_outcome
 
     # ******************************************************************************************************************
     #                                            PROJECTIONS
@@ -3107,7 +2937,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return False
 
 
-    # ******************************************************************************************************************
+
+   # ******************************************************************************************************************
     #                                            PATHWAYS
     # ******************************************************************************************************************
 
@@ -4120,6 +3951,183 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
                 #                                      receiver=error_signal_input_state[0]))
         return projections
+
+
+    # ******************************************************************************************************************
+    #                                              CONTROL
+    # ******************************************************************************************************************
+
+    def add_controller(self, controller:ModulatoryMechanism):
+        """
+        Add an `OptimizationControlMechanism` as the `controller
+        <Composition.controller>` of the Composition, which gives the OCM access to the
+        `Composition`'s `evaluate <Composition.evaluate>` method. This allows the OCM to use simulations to determine
+        an optimal Control policy.
+        """
+
+        if not isinstance(controller, ModulatoryMechanism):
+            raise CompositionError(f"Specification of {repr(CONTROLLER)} arg for {self.name} "
+                                   f"must be a {repr(ModulatoryMechanism.__name__)} ")
+
+        self.controller = controller
+        self.controller.composition = self
+
+        if self.controller.objective_mechanism:
+            self.add_node(self.controller.objective_mechanism)
+
+        self.enable_controller = True
+
+        controller._activate_projections_for_compositions(self)
+        self._analyze_graph()
+        self._update_shadows_dict(controller)
+
+        # Skip first (OUTCOME) input_state
+        input_cims=[self.input_CIM] + [comp.input_CIM for comp in self._get_nested_compositions()]
+        for input_state in controller.input_states[1:]:
+            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+                for proj in input_state.shadow_inputs.path_afferents:
+                    sender = proj.sender
+                    if sender.owner not in input_cims:
+                        self.add_projection(projection=MappingProjection(sender=sender, receiver=input_state),
+                                            sender=sender.owner,
+                                            receiver=controller)
+                        shadow_proj._activate_for_compositions(self)
+                    else:
+                        try:
+                            shadow_proj = MappingProjection(sender=proj.sender, receiver=input_state)
+                            shadow_proj._activate_for_compositions(self)
+                        except DuplicateProjectionError:
+                            pass
+            # MODIFIED 6/11/19 NEW: [JDC]
+            for proj in input_state.path_afferents:
+                proj._activate_for_compositions(self)
+            # MODIFIED 6/11/19 END
+
+    def _build_predicted_inputs_dict(self, predicted_input):
+        inputs = {}
+        # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
+        # If this is not a good assumption, we need another way to look up the feature InputStates
+        # of the OCM and know which InputState maps to which predicted_input value
+
+        nested_nodes = dict(self._get_nested_nodes())
+        for j in range(len(self.controller.input_states) - 1):
+            input_state = self.controller.input_states[j + 1]
+            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+                owner = input_state.shadow_inputs.owner
+                if not owner in nested_nodes:
+                    inputs[input_state.shadow_inputs.owner] = predicted_input[j]
+                else:
+                    comp = nested_nodes[owner]
+                    if not comp in inputs:
+                        inputs[comp]=[[predicted_input[j]]]
+                    else:
+                        inputs[comp]=np.concatenate([[predicted_input[j]],inputs[comp][0]])
+        return inputs
+
+    def reshape_control_signal(self, arr):
+
+        current_shape = np.shape(arr)
+        if len(current_shape) > 2:
+            newshape = (current_shape[0], current_shape[1])
+            newarr = np.reshape(arr, newshape)
+            arr = tuple(newarr[i].item() for i in range(len(newarr)))
+
+        return np.array(arr)
+
+    def _get_total_cost_of_control_allocation(self, control_allocation, execution_id, runtime_params, context):
+        total_cost = 0.
+        if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
+
+            base_control_allocation = self.reshape_control_signal(self.controller.parameters.value._get(execution_id))
+
+            candidate_control_allocation = self.reshape_control_signal(control_allocation)
+
+            # Get reconfiguration cost for candidate control signal
+            reconfiguration_cost = 0.
+            if callable(self.controller.compute_reconfiguration_cost):
+                reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
+                                                                                     base_control_allocation])
+                self.controller.reconfiguration_cost.set(reconfiguration_cost, execution_id)
+
+            # Apply candidate control signal
+            self.controller._apply_control_allocation(candidate_control_allocation,
+                                                                execution_id=execution_id,
+                                                                runtime_params=runtime_params,
+                                                                context=context)
+
+            # Get control signal costs
+            all_costs = self.controller.parameters.costs._get(execution_id) + [reconfiguration_cost]
+            # Compute a total for the candidate control signal(s)
+            total_cost = self.controller.combine_costs(all_costs)
+        return total_cost
+
+    def evaluate(
+            self,
+            predicted_input=None,
+            control_allocation=None,
+            num_simulation_trials=None,
+            runtime_params=None,
+            base_execution_id=None,
+            execution_id=None,
+            context=None,
+            execution_mode=False,
+    ):
+        """Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
+           `controller <Composition.controller>` in order to return the
+           `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
+           `controller <Composition.controller>` under that control_allocation. All values are
+           reset to pre-simulation values at the end of the simulation.
+        """
+        # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
+        total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
+
+        # Build input dictionary for simulation
+        inputs = self._build_predicted_inputs_dict(predicted_input)
+
+        # Run Composition in "SIMULATION" context
+        # MODIFIED 6/12/19 NEW: [JDC]
+        if self._animate is not False and self._animate_simulations is not False:
+            animate = self._animate
+            buffer_animate_state = None
+        else:
+            animate = False
+            buffer_animate_state = self._animate
+        entry_execution_phase = self.parameters.context._get(execution_id).execution_phase
+        # MODIFIED 6/12/19 END
+        self.parameters.context._get(execution_id).execution_phase = ContextFlags.SIMULATION
+        self.run(inputs=inputs,
+                 execution_id=execution_id,
+                 runtime_params=runtime_params,
+                 num_trials=num_simulation_trials,
+                 animate=animate,
+                 context=context,
+                 bin_execute=execution_mode,
+                 skip_initialization=True,
+                 )
+        # # MODIFIED 6/12/19 OLD:
+        # self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+        # MODIFIED 6/12/19 NEW: [JDC]
+        self.parameters.context._get(execution_id).execution_phase = entry_execution_phase
+        if buffer_animate_state:
+            self._animate = buffer_animate_state
+        # MODIFIED 6/12/19 END
+
+        # Store simulation results on "base" composition
+        if context.initialization_status != ContextFlags.INITIALIZING:
+            try:
+                self.parameters.simulation_results._get(base_execution_id).append(
+                    self.get_output_values(execution_id))
+            except AttributeError:
+                self.parameters.simulation_results._set([self.get_output_values(execution_id)], base_execution_id)
+
+        # Update input states in order to get correct value for "outcome" (from objective mech)
+        self.controller._update_input_states(execution_id, runtime_params, context.flags_string)
+        outcome = self.controller.input_state.parameters.value._get(execution_id)
+
+        # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
+        net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
+
+        return net_outcome
 
 
     # ******************************************************************************************************************
