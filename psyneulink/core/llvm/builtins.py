@@ -33,7 +33,6 @@ def setup_vxm(ctx):
         a.attributes.add('nonnull')
         a.attributes.add('noalias')
 
-    index = None
     # zero the output array
     with helpers.for_loop_zero_inc(builder, y, "zero") as (builder, index):
         ptr = builder.gep(o, [index])
@@ -460,9 +459,9 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     val = builder.fdiv(val, ctx.float_ty(9007199254740992.0)) # Scale
 
     # The value is in interval [0,1)
-    lower_bound = builder.fcmp_unordered(">=", val, val.type(0.0))
+    lower_bound = builder.fcmp_ordered(">=", val, val.type(0.0))
     builder.assume(lower_bound)
-    upper_bound = builder.fcmp_unordered("<", val, val.type(1.0))
+    upper_bound = builder.fcmp_ordered("<", val, val.type(1.0))
     builder.assume(upper_bound)
 
     builder.store(val, out)

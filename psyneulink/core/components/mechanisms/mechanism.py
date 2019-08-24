@@ -2552,37 +2552,37 @@ class Mechanism_Base(Mechanism):
     def _get_mech_params_type(self, ctx):
         pass
 
-    def _get_input_context_struct_type(self, ctx):
-        gen = (ctx.get_context_struct_type(state) for state in self.input_states)
+    def _get_input_state_struct_type(self, ctx):
+        gen = (ctx.get_state_struct_type(state) for state in self.input_states)
         return pnlvm.ir.LiteralStructType(gen)
 
-    def _get_param_context_struct_type(self, ctx):
-        gen = (ctx.get_context_struct_type(state) for state in self.parameter_states)
+    def _get_param_state_struct_type(self, ctx):
+        gen = (ctx.get_state_struct_type(state) for state in self.parameter_states)
         return pnlvm.ir.LiteralStructType(gen)
 
-    def _get_output_context_struct_type(self, ctx):
-        gen = (ctx.get_context_struct_type(state) for state in self.output_states)
+    def _get_output_state_struct_type(self, ctx):
+        gen = (ctx.get_state_struct_type(state) for state in self.output_states)
         return pnlvm.ir.LiteralStructType(gen)
 
-    def _get_function_context_struct_type(self, ctx):
-        return ctx.get_context_struct_type(self.function)
+    def _get_function_state_struct_type(self, ctx):
+        return ctx.get_state_struct_type(self.function)
 
-    def _get_context_struct_type(self, ctx):
-        input_context_struct = self._get_input_context_struct_type(ctx)
-        output_context_struct = self._get_output_context_struct_type(ctx)
-        param_context_struct = self._get_param_context_struct_type(ctx)
-        function_context_struct = self._get_function_context_struct_type(ctx)
+    def _get_state_struct_type(self, ctx):
+        input_state_struct = self._get_input_state_struct_type(ctx)
+        output_state_struct = self._get_output_state_struct_type(ctx)
+        param_state_struct = self._get_param_state_struct_type(ctx)
+        function_state_struct = self._get_function_state_struct_type(ctx)
 
-        context_list = [input_context_struct, function_context_struct,
-                        output_context_struct, param_context_struct]
+        context_list = [input_state_struct, function_state_struct,
+                        output_state_struct, param_state_struct]
 
-        mech_context = self._get_mech_context_type(ctx)
+        mech_context = self._get_mech_state_struct_type(ctx)
         if mech_context is not None:
             context_list.append(mech_context)
 
         return pnlvm.ir.LiteralStructType(context_list)
 
-    def _get_mech_context_type(self, ctx):
+    def _get_mech_state_struct_type(self, ctx):
         pass
 
     def _get_output_struct_type(self, ctx):
@@ -2635,31 +2635,31 @@ class Mechanism_Base(Mechanism):
     def _get_mech_params_init(self):
         pass
 
-    def _get_input_context_initializer(self, execution_id):
-        gen = (state._get_context_initializer(execution_id) for state in self.input_states)
+    def _get_input_state_initializer(self, execution_id):
+        gen = (state._get_state_initializer(execution_id) for state in self.input_states)
         return tuple(gen)
 
-    def _get_param_context_initializer(self, execution_id):
-        gen = (state._get_context_initializer(execution_id) for state in self.parameter_states)
+    def _get_param_state_initializer(self, execution_id):
+        gen = (state._get_state_initializer(execution_id) for state in self.parameter_states)
         return tuple(gen)
 
-    def _get_output_context_initializer(self, execution_id):
-        gen = (state._get_context_initializer(execution_id) for state in self.output_states)
+    def _get_output_state_initializer(self, execution_id):
+        gen = (state._get_state_initializer(execution_id) for state in self.output_states)
         return tuple(gen)
 
-    def _get_function_context_initializer(self, execution_id):
-        return self.function._get_context_initializer(execution_id)
+    def _get_function_state_initializer(self, execution_id):
+        return self.function._get_state_initializer(execution_id)
 
-    def _get_context_initializer(self, execution_id):
-        input_context_init = self._get_input_context_initializer(execution_id)
-        function_context_init = self._get_function_context_initializer(execution_id)
-        output_context_init = self._get_output_context_initializer(execution_id)
-        param_context_init = self._get_param_context_initializer(execution_id)
+    def _get_state_initializer(self, execution_id):
+        input_state_init = self._get_input_state_initializer(execution_id)
+        function_state_init = self._get_function_state_initializer(execution_id)
+        output_state_init = self._get_output_state_initializer(execution_id)
+        param_state_init = self._get_param_state_initializer(execution_id)
 
-        context_init_list = [input_context_init, function_context_init,
-                             output_context_init, param_context_init]
+        state_init_list = [input_state_init, function_state_init,
+                             output_state_init, param_state_init]
 
-        return tuple(context_init_list)
+        return tuple(state_init_list)
 
     def _gen_llvm_input_states(self, ctx, builder, params, context, si):
         # Allocate temporary storage. We rely on the fact that series
