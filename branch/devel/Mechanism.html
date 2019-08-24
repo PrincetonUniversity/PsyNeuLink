@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+395.g5663bed documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+396.g3101d3d documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+395.g5663bed',
+              VERSION:'0.5.3.2+396.g3101d3d',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+395
+                0.5.3.2+396
               </div>
             
           
@@ -1456,128 +1456,6 @@ description of formatting requirements and options).</li>
 <dt>
 <code class="descname">senders</code></dt>
 <dd><p>Return all Mechanisms that send Projections to self</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.show_structure">
-<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions: bool = False</em>, <em>show_mech_function_params: bool = False</em>, <em>show_state_function_params: bool = False</em>, <em>show_values: bool = False</em>, <em>use_labels: bool = False</em>, <em>show_headers: bool = False</em>, <em>show_roles: bool = False</em>, <em>show_conditions: bool = False</em>, <em>composition=None</em>, <em>compact_cim: bool = False</em>, <em>condition: &lt;typecheck.framework.optional object at 0x11390ff98&gt; = None</em>, <em>node_border: str = '1'</em>, <em>output_fmt: &lt;typecheck.tc_predicates.enum object at 0x11390ff60&gt; = 'pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.show_structure" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a detailed display of a the structure of a Mechanism.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">This method relies on <a class="reference external" href="http://www.graphviz.org">graphviz</a>, which must be installed and imported
-(standard with PsyNeuLink pip install)</p>
-</div>
-<p>Displays the structure of a Mechanism using html table format and shape=’plaintext’.
-This method is called by <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">Composition.show_graph</span></code></a> if its <strong>show_mechanism_structure</strong> argument is specified as
-<code class="xref any docutils literal"><span class="pre">True</span></code> when it is called.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>show_functions</strong> (<em>bool : default False</em>) – show the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and each of its States.</li>
-<li><strong>show_mech_function_params</strong> (<em>bool : default False</em>) – show the parameters of the Mechanism’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> if <strong>show_functions</strong> is True.</li>
-<li><strong>show_state_function_params</strong> (<em>bool : default False</em>) – show parameters for the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism’s States if <strong>show_functions</strong> is
-True).</li>
-<li><strong>show_values</strong> (<em>bool : default False</em>) – show the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and each of its States (prefixed by “=”).</li>
-<li><strong>use_labels</strong> (<em>bool : default False</em>) – use labels for values if <strong>show_values</strong> is <code class="xref any docutils literal"><span class="pre">True</span></code>; labels must be specified in the <code class="xref any docutils literal"><span class="pre">input_labels_dict</span></code> (for InputState values) and <code class="xref any docutils literal"><span class="pre">output_labels_dict</span></code> (for OutputState values), otherwise the value is used.</li>
-<li><strong>show_headers</strong> (<em>bool : default False</em>) – <p>show the Mechanism, InputState, ParameterState and OutputState headers.</p>
-<p><strong>composition</strong> argument (if <strong>composition</strong> is not specified, show_roles is ignored).</p>
-</li>
-<li><strong>show_conditions</strong> (<em>bool : default False</em>) – show the <a class="reference internal" href="Condition.html"><span class="doc">conditions</span></a> used by <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to determine whether/when to execute each Mechanism
-(if <strong>composition</strong> is not specified, show_conditions is ignored).</li>
-<li><strong>composition</strong> (<em>Composition : default None</em>) – specifies the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> (to which the Mechanism must belong) for which to show its role (see <strong>roles</strong>);
-if this is not specified, the <strong>show_roles</strong> argument is ignored.</li>
-<li><strong>compact_cim</strong> (<em>bool : default False</em>) – specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM</li>
-<li><strong>output_fmt</strong> (<em>keyword : default 'pdf'</em>) – <p>‘pdf’: generate and open a pdf with the visualization;</p>
-<p>’jupyter’: return the object (ideal for working in jupyter/ipython notebooks)</p>
-<p>’struct’: return a string that specifies the structure of the Mechanism using html table format
-for use in a GraphViz node specification.</p>
-</li>
-<li><strong>HTML for structure</strong> (<em>Example</em>) – </li>
-<li><strong>border=&quot;1&quot; cellborder=&quot;0&quot; cellspacing=&quot;0&quot; bgcolor=&quot;tan&quot;&gt;          &lt;- MAIN TABLE</strong> (<em>&lt;&lt;table</em>) – </li>
-<li><strong>&lt;- BEGIN OUTPUTSTATES</strong> (<em>&lt;tr&gt;</em>) – <dl class="docutils">
-<dt>&lt;td colspan=”2”&gt;&lt;table border=”0” cellborder=”0” BGCOLOR=”bisque”&gt;    &lt;- OUTPUTSTATES OUTER TABLE</dt>
-<dd><dl class="first docutils">
-<dt>&lt;tr&gt;</dt>
-<dd>&lt;td colspan=”1”&gt;&lt;b&gt;OutputStates&lt;/b&gt;&lt;/td&gt;                      &lt;- OUTPUTSTATES HEADER</dd>
-</dl>
-<p>&lt;/tr&gt;
-&lt;tr&gt;</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>&lt;td&gt;&lt;table border=”0” cellborder=”1”&gt;                         &lt;- OUTPUTSTATE CELLS TABLE</dt>
-<dd><dl class="first docutils">
-<dt>&lt;tr&gt;</dt>
-<dd>&lt;td port=”OutputStatePort1”&gt;OutputState 1&lt;br/&gt;&lt;i&gt;function 1&lt;/i&gt;&lt;br/&gt;&lt;i&gt;=value&lt;/i&gt;&lt;/td&gt;
-&lt;td port=”OutputStatePort2”&gt;OutputState 2&lt;br/&gt;&lt;i&gt;function 2&lt;/i&gt;&lt;br/&gt;&lt;i&gt;=value&lt;/i&gt;&lt;/td&gt;</dd>
-</dl>
-<p class="last">&lt;/tr&gt;</p>
-</dd>
-</dl>
-<p>&lt;/table&gt;&lt;/td&gt;</p>
-</div></blockquote>
-<p class="last">&lt;/tr&gt;</p>
-</dd>
-</dl>
-<p>&lt;/table&gt;&lt;/td&gt;</p>
-</li>
-<li><strong>&lt;/tr&gt;</strong> – </li>
-<li><strong>&lt;- BEGIN MECHANISM &amp; PARAMETERSTATES</strong> (<em>&lt;tr&gt;</em>) – <p>&lt;td port=”Mech name”&gt;&lt;b&gt;Mech name&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Roles&lt;/i&gt;&lt;/td&gt;           &lt;- MECHANISM CELL (OUTERMOST TABLE)
-&lt;td&gt;&lt;table border=”0” cellborder=”0” BGCOLOR=”bisque”&gt;                &lt;- PARAMETERSTATES OUTER TABLE</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>&lt;tr&gt;</dt>
-<dd>&lt;td&gt;&lt;b&gt;ParameterStates&lt;/b&gt;&lt;/td&gt;                               &lt;- PARAMETERSTATES HEADER</dd>
-</dl>
-<p>&lt;/tr&gt;
-&lt;tr&gt;</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>&lt;td&gt;&lt;table border=”0” cellborder=”1”&gt;                         &lt;- PARAMETERSTATE CELLS TABLE</dt>
-<dd>&lt;tr&gt;&lt;td port=”ParamPort1”&gt;Param 1&lt;br/&gt;&lt;i&gt;function 1&lt;/i&gt;&lt;br/&gt;&lt;i&gt;= value&lt;/i&gt;&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td port=”ParamPort1”&gt;Param 2&lt;br/&gt;&lt;i&gt;function 2&lt;/i&gt;&lt;br/&gt;&lt;i&gt;= value&lt;/i&gt;&lt;/td&gt;&lt;/tr&gt;</dd>
-</dl>
-<p>&lt;/table&gt;&lt;/td&gt;</p>
-</div></blockquote>
-<p>&lt;/tr&gt;</p>
-</div></blockquote>
-<p>&lt;/table&gt;&lt;/td&gt;</p>
-</li>
-<li><strong>&lt;/tr&gt;</strong> – </li>
-<li><strong>&lt;- BEGIN INPUTSTATES</strong> (<em>&lt;tr&gt;</em>) – <dl class="docutils">
-<dt>&lt;td colspan=”2”&gt;&lt;table border=”0” cellborder=”0” BGCOLOR=”bisque”&gt;    &lt;- INPUTSTATES OUTER TABLE</dt>
-<dd><dl class="first docutils">
-<dt>&lt;tr&gt;</dt>
-<dd>&lt;td colspan=”1”&gt;&lt;b&gt;InputStates&lt;/b&gt;&lt;/td&gt;                       &lt;- INPUTSTATES HEADER</dd>
-</dl>
-<p>&lt;/tr&gt;
-&lt;tr&gt;</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>&lt;td&gt;&lt;table border=”0” cellborder=”1”&gt;                         &lt;- INPUTSTATE CELLS TABLE</dt>
-<dd><dl class="first docutils">
-<dt>&lt;tr&gt;</dt>
-<dd>&lt;td port=”InputStatePort1”&gt;InputState 1&lt;br/&gt;&lt;i&gt;function 1&lt;/i&gt;&lt;br/&gt;&lt;i&gt;= value&lt;/i&gt;&lt;/td&gt;
-&lt;td port=”InputStatePort2”&gt;InputState 2&lt;br/&gt;&lt;i&gt;function 2&lt;/i&gt;&lt;br/&gt;&lt;i&gt;= value&lt;/i&gt;&lt;/td&gt;</dd>
-</dl>
-<p class="last">&lt;/tr&gt;</p>
-</dd>
-</dl>
-<p>&lt;/table&gt;&lt;/td&gt;</p>
-</div></blockquote>
-<p class="last">&lt;/tr&gt;</p>
-</dd>
-</dl>
-<p>&lt;/table&gt;&lt;/td&gt;</p>
-</li>
-<li><strong>&lt;/tr&gt;</strong> – </li>
-<li><strong>&lt;/table&gt;&gt;</strong> – </li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="attribute">
