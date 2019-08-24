@@ -2856,7 +2856,7 @@ class Mechanism_Base(Mechanism):
         print("- output: {}".format(output_string))
 
     @tc.typecheck
-    def show_structure(self,
+    def _show_structure(self,
                        show_functions:bool=False,
                        show_mech_function_params:bool=False,
                        show_state_function_params:bool=False,
@@ -3000,7 +3000,7 @@ class Mechanism_Base(Mechanism):
 
         def mech_cell():
             """Return html with name of Mechanism, possibly with function and/or value
-            Inclusion of roles, function and/or value is determined by arguments of call to show_structure()
+            Inclusion of roles, function and/or value is determined by arguments of call to _show_structure()
             """
             header = ''
             if show_headers:
@@ -3065,8 +3065,8 @@ class Mechanism_Base(Mechanism):
 
             Each table has a header cell and and inner table with cells for each state in the list
             InputState and OutputState cells are aligned horizontally;  ParameterState cells are aligned vertically.
-            Use show_functions, show_values and include_labels arguments from call to show_structure()
-            See show_structure docstring for full template.
+            Use show_functions, show_values and include_labels arguments from call to _show_structure()
+            See _show_structure docstring for full template.
             """
 
             def state_cell(state, include_function:bool=False, include_value:bool=False, use_label:bool=False):
