@@ -597,7 +597,6 @@ class LLVMBuilderContext:
         llvm_func = builder.function
         for a in llvm_func.args:
             a.attributes.add('noalias')
-
         context, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
         # simulation does not care about the output
         # it extracts results of the controller objective mechanism
@@ -656,7 +655,6 @@ class LLVMBuilderContext:
         # Get the right input stimulus
         input_idx = builder.urem(iters, builder.load(inputs_ptr))
         data_in_ptr = builder.gep(data_in, [input_idx])
-
         # Call execution
         if simulation:
             exec_f = self.get_llvm_function(composition._llvm_simulation.name)

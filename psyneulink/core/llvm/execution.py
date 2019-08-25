@@ -476,7 +476,6 @@ class CompExecution(CUDAExecution):
                 for m in origins:
                     # Since the input to each input state needs to be a 2-d array, we need to pack v into an array
                     run_inputs[i] += [[v] for v in inputs[m][i]]
-
         return c_input(*_tupleize(run_inputs))
 
     @property
@@ -493,7 +492,8 @@ class CompExecution(CUDAExecution):
 
         return self.__bin_run_multi_func
 
-    def inject_autodiff_params(self,autodiff_stimuli):
+    # inserts autodiff params into the param struct (this unfortunately needs to be done dynamically, as we don't know autodiff inputs ahead of time)
+    def _initialize_autodiff_param_struct(self,autodiff_stimuli):
         param_struct = self._param_struct
             
         inputs = {}
@@ -573,10 +573,9 @@ class CompExecution(CUDAExecution):
         return autodiff_values
     def run(self, inputs, runs, num_input_sets,autodiff_stimuli = {"targets" : {}, "epochs": 0}):
         inputs = self._get_run_input_struct(inputs, num_input_sets)
-        
-        # Special casing for autodiff (TODO: Find a better way)
+        # Special casing for autodiff
         if hasattr(self._composition,"learning_enabled") and self._composition.learning_enabled is True:
-            keep_on_stack = self.inject_autodiff_params(autodiff_stimuli)
+            keep_on_stack = self._initialize_autodiff_param_struct(autodiff_stimuli)
 
         if "force_runs" in debug_env:
             runs = max(runs, int(debug_env["force_runs"]))
