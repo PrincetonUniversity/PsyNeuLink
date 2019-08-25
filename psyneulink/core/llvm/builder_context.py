@@ -205,15 +205,12 @@ class LLVMBuilderContext:
         params = component._get_param_values()
         return self.convert_python_struct_to_llvm_ir(params)
 
-    def get_context_struct_type(self, component):
-        if hasattr(component, '_get_context_struct_type'):
-            return component._get_context_struct_type(self)
+    def get_state_struct_type(self, component):
+        if hasattr(component, '_get_state_struct_type'):
+            return component._get_state_struct_type(self)
 
-        try:
-            stateful = tuple(getattr(component, sa) for sa in component.stateful_attributes)
-            return self.convert_python_struct_to_llvm_ir(stateful)
-        except AttributeError:
-            return ir.LiteralStructType([])
+        stateful = component._get_state_values()
+        return self.convert_python_struct_to_llvm_ir(stateful)
 
     def get_data_struct_type(self, component):
         if hasattr(component, '_get_data_struct_type'):
@@ -232,7 +229,7 @@ class LLVMBuilderContext:
         return builder.gep(params_ptr, [self.int32_ty(0), idx])
 
     def get_state_ptr(self, component, builder, state_ptr, state_name):
-        idx = self.int32_ty(component.stateful_attributes.index(state_name))
+        idx = self.int32_ty(component._get_state_ids().index(state_name))
         return builder.gep(state_ptr, [self.int32_ty(0), idx])
 
     def unwrap_2d_array(self, builder, element):
@@ -287,7 +284,7 @@ class LLVMBuilderContext:
         
         name = 'exec_learning_sim_wrap_' if simulation else 'exec_learning_wrap_'
         name += composition.name
-        args = [self.get_context_struct_type(composition).as_pointer(),
+        args = [self.get_state_struct_type(composition).as_pointer(),
                 self.get_param_struct_type(composition).as_pointer(),
                 self.get_input_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),
@@ -338,7 +335,7 @@ class LLVMBuilderContext:
         
         name = 'exec_sim_wrap_' if simulation else 'exec_wrap_'
         name += composition.name
-        args = [self.get_context_struct_type(composition).as_pointer(),
+        args = [self.get_state_struct_type(composition).as_pointer(),
                 self.get_param_struct_type(composition).as_pointer(),
                 self.get_input_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),
@@ -423,7 +420,7 @@ class LLVMBuilderContext:
 
         name = 'exec_sim_wrap_' if simulation else 'exec_wrap_'
         name += composition.name
-        args = [self.get_context_struct_type(composition).as_pointer(),
+        args = [self.get_state_struct_type(composition).as_pointer(),
                 self.get_param_struct_type(composition).as_pointer(),
                 self.get_input_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),
@@ -434,17 +431,12 @@ class LLVMBuilderContext:
         for a in llvm_func.args:
             a.attributes.add('noalias')
 
-        context, params, comp_in, data_arg, cond = llvm_func.args
+        state, params, comp_in, data_arg, cond = llvm_func.args
 
         if "const_params" in debug_env:
             const_params = params.type.pointee(composition._get_param_initializer(None))
             params = builder.alloca(const_params.type, name="const_params_loc")
             builder.store(const_params, params)
-
-        if "const_state" in debug_env:
-            const_state = context.type.pointee(composition._get_context_initializer(None))
-            context = builder.alloca(const_state.type, name="const_state_loc")
-            builder.store(const_state, context)
 
         if "alloca_data" in debug_env:
             data = builder.alloca(data_arg.type.pointee)
@@ -456,13 +448,14 @@ class LLVMBuilderContext:
         # Call input CIM
         input_cim_w = composition._get_node_wrapper(composition.input_CIM, simulation)
         input_cim_f = self.get_llvm_function(input_cim_w)
-        builder.call(input_cim_f, [context, params, comp_in, data, data])
+        builder.call(input_cim_f, [state, params, comp_in, data, data])
+
         if simulation is False and composition.enable_controller and \
            composition.controller_mode == BEFORE:
             assert composition.controller is not None
             controller = composition._get_node_wrapper(composition.controller, simulation)
             controller_f = self.get_llvm_function(controller)
-            builder.call(controller_f, [context, params, comp_in, data, data])
+            builder.call(controller_f, [state, params, comp_in, data, data])
 
         # Allocate run set structure
         run_set_type = ir.ArrayType(ir.IntType(1), len(composition.nodes))
@@ -518,9 +511,9 @@ class LLVMBuilderContext:
                 builder.block.name = "invoke_" + mech_f.name
                 # Wrappers do proper indexing of all structures
                 if len(mech_f.args) == 5:  # Mechanism wrappers have 5 inputs
-                    builder.call(mech_f, [context, params, comp_in, data, output_storage])
+                    builder.call(mech_f, [state, params, comp_in, data, output_storage])
                 else:
-                    builder.call(mech_f, [context, params, comp_in, data, output_storage, cond])
+                    builder.call(mech_f, [state, params, comp_in, data, output_storage, cond])
 
                 cond_gen.generate_update_after_run(builder, cond, mech)
             builder.block.name = "post_invoke_" + mech_f.name
@@ -566,13 +559,13 @@ class LLVMBuilderContext:
             assert composition.controller is not None
             controller = composition._get_node_wrapper(composition.controller, simulation)
             controller_f = self.get_llvm_function(controller)
-            builder.call(controller_f, [context, params, comp_in, data, data])
+            builder.call(controller_f, [state, params, comp_in, data, data])
 
         # Call output CIM
         output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation)
         output_cim_f = self.get_llvm_function(output_cim_w)
         builder.block.name = "invoke_" + output_cim_f.name
-        builder.call(output_cim_f, [context, params, comp_in, data, data])
+        builder.call(output_cim_f, [state, params, comp_in, data, data])
 
         if "alloca_data" in debug_env:
             data_vals = builder.load(data)
@@ -588,7 +581,7 @@ class LLVMBuilderContext:
     def gen_composition_run(self, composition, simulation=False):
         name = 'run_sim_wrap_' if simulation else 'run_wrap_'
         name += composition.name
-        args = [self.get_context_struct_type(composition).as_pointer(),
+        args = [self.get_state_struct_type(composition).as_pointer(),
                 self.get_param_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),
                 self.get_input_struct_type(composition).as_pointer(),
@@ -599,18 +592,25 @@ class LLVMBuilderContext:
         llvm_func = builder.function
         for a in llvm_func.args:
             a.attributes.add('noalias')
-        context, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
+
+        state, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
         # simulation does not care about the output
         # it extracts results of the controller objective mechanism
         if simulation:
             data_out.attributes.remove('nonnull')
 
-        if not simulation and "clear_run_data" in debug_env:
+        if not simulation and "const_data" in debug_env:
+            const_data = data.type.pointee(composition._get_data_initializer(None))
             data = builder.alloca(data.type.pointee)
-            builder.store(data.type.pointee(None), data)
+            builder.store(const_data, data)
+
+        # Hardcode stateful parameters if set in the environment
+        if not simulation and "const_state" in debug_env:
+            const_state = state.type.pointee(composition._get_state_initializer(None))
+            state = builder.alloca(const_state.type, name="const_state_loc")
+            builder.store(const_state, state)
 
         if not simulation and "const_input" in debug_env:
-            builder.store(inputs_ptr.type.pointee(None), inputs_ptr)
             if not debug_env["const_input"]:
                 input_init = pnlvm._tupleize([[os.defaults.variable] for os in composition.input_CIM.input_states])
                 print("Setting default input: ", input_init)
@@ -619,9 +619,11 @@ class LLVMBuilderContext:
                 print("Setting user input: ", input_init)
 
             builder.store(data_in.type.pointee(input_init), data_in)
+            builder.store(inputs_ptr.type.pointee(1), inputs_ptr)
 
         if "force_runs" in debug_env:
             num = int(debug_env["force_runs"]) if debug_env["force_runs"] else 1
+            print("Forcing number of runs to: ", num)
             runs_ptr = builder.alloca(runs_ptr.type.pointee)
             builder.store(runs_ptr.type.pointee(num), runs_ptr)
 
@@ -662,7 +664,7 @@ class LLVMBuilderContext:
             exec_f = self.get_llvm_function(composition._llvm_simulation.name)
         else:
             exec_f = self.get_llvm_function(composition)
-        builder.call(exec_f, [context, params, data_in_ptr, data, cond])
+        builder.call(exec_f, [state, params, data_in_ptr, data, cond])
 
         if not simulation:
             # Extract output_CIM result

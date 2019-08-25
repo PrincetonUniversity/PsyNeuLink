@@ -260,19 +260,19 @@ class PytorchModelCreator(torch.nn.Module):
 
         return params
 
-    def _get_context_struct(self):
+    def _get_state_struct(self):
         bin_func = self._bin_exec_func
         context_cty = bin_func.byref_arg_types[0]
         return context_cty(*(1,))
 
-    def _get_context_struct_type(self, ctx):
-        return self._composition._get_context_struct_type(ctx)
+    def _get_state_struct_type(self, ctx):
+        return self._composition._get_state_struct_type(ctx)
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, extra_args=[], name=None):
         llvm_func = None
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            args = [ctx.get_context_struct_type(self).as_pointer(),
+            args = [ctx.get_state_struct_type(self).as_pointer(),
                     ctx.get_param_struct_type(self).as_pointer(),
                     ctx.get_input_struct_type(self).as_pointer(),
                     ctx.get_data_struct_type(self).as_pointer()
@@ -455,7 +455,7 @@ class PytorchModelCreator(torch.nn.Module):
             pnlvm.ir.IntType(32),  # idx of the node
             pnlvm.ir.IntType(64)
         ])
-        args = [ctx.get_context_struct_type(self).as_pointer(),
+        args = [ctx.get_state_struct_type(self).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 ctx.get_data_struct_type(self).as_pointer(),

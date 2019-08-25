@@ -698,7 +698,6 @@ learning).
 
 .. STUFF TO ADD -------------------------------------------------------------------------------------------------------
 ..
-.. One of the most useful applications for PsyNeuLink is the design of models that include control processes.
 .. XXX USER DEFINED FUNCTIONS
 .. XXX RL LEARNING??
 .. XXX NESTED COMPOSITIONS
