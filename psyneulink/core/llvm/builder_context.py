@@ -103,6 +103,8 @@ class LLVMBuilderContext:
         llvm_func = pnlvm.ir.Function(self.module, func_ty, name=func_name)
         llvm_func.attributes.add('argmemonly')
         for a in llvm_func.args:
+            if isinstance(a.type,type(self.int32_ty)):
+                continue
             a.attributes.add('nonnull')
 
         metadata = self.get_debug_location(llvm_func, component)
