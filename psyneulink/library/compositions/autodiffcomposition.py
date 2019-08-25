@@ -236,6 +236,7 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import SOFT_CLAMP
+from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core import llvm as pnlvm
@@ -873,6 +874,36 @@ class AutodiffComposition(Composition):
                                                     reinitialize_values=reinitialize_values,
                                                     runtime_params=runtime_params,
                                                     context=context)
+                # HACK: manually call forward function to get final outputs
+                results = []
+                self.learning_enabled = False
+                input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+                forward_inputs = inputs["inputs"]
+                for input_num in range(0,len(forward_inputs[input_nodes[0]])):
+                    curr_input_dict = {}
+                    for node in input_nodes:
+                        curr_input_dict[node] = [forward_inputs[node][input_num]]
+                    results.append(self.run(
+                        inputs=curr_input_dict,
+                        scheduler_processing=scheduler_processing,
+                        termination_processing=termination_processing,
+                        execution_id=execution_id,
+                        num_trials=num_trials,
+                        call_before_time_step=call_before_time_step,
+                        call_after_time_step=call_after_time_step,
+                        call_before_pass=call_before_pass,
+                        call_after_pass=call_after_pass,
+                        call_before_trial=call_before_trial,
+                        call_after_trial=call_after_trial,
+                        clamp_input=clamp_input,
+                        bin_execute=bin_execute,
+                        initial_values=initial_values,
+                        reinitialize_values=reinitialize_values,
+                        runtime_params=runtime_params,
+                        context=context    
+                    ))
+                self.learning_enabled = True
+
             else:
                 self._analyze_graph()
 

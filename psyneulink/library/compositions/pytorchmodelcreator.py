@@ -744,8 +744,7 @@ class PytorchModelCreator(torch.nn.Module):
                                 weights_llvmlite, [ctx.int32_ty(0), weight_row, weight_column]))
                             new_val = builder.load(builder.gep(
                                 delta_w_matrix, [ctx.int32_ty(0), weight_row, weight_column]))
-                            # HACK: temporarily hardcoded learning rate
-                            new_val = builder.fmul(ctx.float_ty(10), new_val)
+                            new_val = builder.fmul(ctx.float_ty(self._composition.learning_rate), new_val)
                             ctx.inject_printf(builder,"%f ",new_val)
                             new_val = builder.fsub(old_val, new_val)
                             builder.store(new_val, builder.gep(weights_llvmlite, [
