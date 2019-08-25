@@ -239,8 +239,8 @@ class LLVMBuilderContext:
             return builder.gep(element, [self.int32_ty(0), self.int32_ty(0)])
         return element
 
-    def inject_printf(self, builder,fmt,*args):
-        if "print_values" not in debug_env:
+    def inject_printf(self, builder,fmt,*args,override_debug=False):
+        if "print_values" not in debug_env and override_debug is False:
             return
         fmt += "\0"
         llvm_func = builder.function
@@ -261,22 +261,22 @@ class LLVMBuilderContext:
         builder.call(printf,[fmt_ptr]+list(args))
 
 
-    def inject_printf_float_array(self,builder,array,dim,prefix="",suffix="\n",ctype_dimension=False):
+    def inject_printf_float_array(self,builder,array,dim,prefix="",suffix="\n",ctype_dimension=False,override_debug=False):
         if "print_values" not in debug_env:
             return
-        self.inject_printf(builder,prefix)
+        self.inject_printf(builder,prefix,override_debug=override_debug)
 
         if ctype_dimension:
             loop_iterator = None
             with pnlvm.helpers.for_loop_zero_inc(builder, dim, "print_vector_loop") as (builder, loop_iterator):
                 if array.type == self.float_ty.as_pointer():
-                    self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[loop_iterator])))
+                    self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[loop_iterator])),override_debug=override_debug)
                 else:
-                    self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[self.int32_ty(0),loop_iterator])))
+                    self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[self.int32_ty(0),loop_iterator])),override_debug=override_debug)
         else:
             for i in range(0,dim):
-                self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[self.int32_ty(0),self.int32_ty(i)])))
-        self.inject_printf(builder,suffix)
+                self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[self.int32_ty(0),self.int32_ty(i)])),override_debug=override_debug)
+        self.inject_printf(builder,suffix,override_debug=override_debug)
 
     def gen_autodiffcomp_learning_exec(self,composition,simulation=False):
         composition._build_pytorch_representation(composition.default_execution_id)
