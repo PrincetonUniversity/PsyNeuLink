@@ -263,6 +263,43 @@ def setup_vec_add(ctx):
 
     builder.ret_void()
 
+# Setup vector copy builtin
+def setup_vec_copy(ctx):
+     # Setup types
+    double_ptr_ty = ctx.float_ty.as_pointer()
+    
+    # builtin vector copy func
+    # param1: ptr to vector 1
+    # param2: sizeof vector 
+    # param3: ptr to output vector (make sure this is same size as param3)
+    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.int32_ty, double_ptr_ty))
+
+    # Create function
+    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_vec_copy")
+    function.attributes.add('argmemonly')
+    function.attributes.add('alwaysinline')
+
+    block = function.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
+    u, x, o = function.args
+
+    # Add function arg attributes
+    for a in u, o:
+        a.attributes.add('nonnull')
+        a.attributes.add('noalias')
+
+    index = None
+
+    # Addition
+    with helpers.for_loop_zero_inc(builder, x, "zero") as (builder, index):
+        u_ptr = builder.gep(u,[index])
+        o_ptr = builder.gep(o, [index])
+        u_val = builder.load(u_ptr)
+        
+        builder.store(u_val, o_ptr)
+
+    builder.ret_void()
 # Setup vector subtraction builtin
 def setup_vec_sub(ctx):
     # Setup types

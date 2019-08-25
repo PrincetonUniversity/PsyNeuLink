@@ -155,6 +155,7 @@ def init_builtins():
         builtins.setup_mersenne_twister(ctx)
         builtins.setup_vec_add(ctx)
         builtins.setup_vec_sub(ctx)
+        builtins.setup_vec_copy(ctx)
         builtins.setup_vec_hadamard(ctx)
         builtins.setup_vec_sqr_mag(ctx)
 def cleanup():
