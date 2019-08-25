@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+396.g3101d3d documentation</title>
+  <title>Basics and Sampler &mdash; PsyNeuLink 0.5.3.2+397.g482bc91 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+396.g3101d3d',
+              VERSION:'0.5.3.2+397.g482bc91',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+396
+                0.5.3.2+397
               </div>
             
           
@@ -178,6 +178,7 @@
 <li><a class="reference internal" href="#basicsandsampler-control"><span class="std std-ref">Control</span></a></li>
 <li><a class="reference internal" href="#basicsandsampler-logging-and-animation"><span class="std std-ref">Logging and Animation</span></a></li>
 <li><a class="reference internal" href="#basicsandsampler-learning"><span class="std std-ref">Learning</span></a></li>
+<li><a class="reference internal" href="#basicsandsampler-customization"><span class="std std-ref">Customization</span></a></li>
 </ul>
 </dd>
 </dl>
@@ -207,8 +208,11 @@ or <em>modulate</em> the transmission and transformation of information, by way 
 each type.  For example, there is a variety of ProcessingMechanisms that can be used to transform, integrate, and
 evaluate information in various ways (e.g., to implement layers of a feedforward or recurrent neural network, or a
 drift diffusion decision process); and there are <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a> and <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> that can be used to modulate the functioning of ProcessingMechanisms and modify Projections,
-respectively.  Since Mechanisms can implement any function, Projections ensure that they can “communicate” with
-each other seamlessly.</p>
+respectively.  The <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Mechanism defines the operation it carries out.
+PsyNeuLink provides a rich <a class="reference internal" href="Functions.html"><span class="doc">library</span></a> of mathematical, statistical and matrix manipulation functions.
+However, a Mechanism can also be assigned any Python function that is consistent with that Mechanism’s type (see
+<a class="reference internal" href="#basicsandsampler-customization"><span class="std std-ref">Customization</span></a>).  Since Mechanisms can implement virtually any function, Projections ensure that
+they can “communicate” with each other seamlessly.</p>
 <p>Together, these elements allow PsyNeuLink to implement and integrate processes of different types, levels of analysis,
 and/or time scales of operation, composing them into a coherent system.  This affords modelers the flexibility to
 commit each part of their model to a form of processing and/or level of analysis that is appropriate for that part,
@@ -230,13 +234,14 @@ capabilities.  They assume some experience with computational modeling and/or re
 more detailed and comprehensive introduction to the use of PsyNeuLink.</p>
 <div class="section" id="simple-configurations">
 <span id="basicsandsampler-simple-configurations"></span><h3>Simple Configurations<a class="headerlink" href="#simple-configurations" title="Permalink to this headline">¶</a></h3>
-<p>Mechanisms can be executed on their own (to gain familiarity with their operation), or linked together and run
-in a Composition to implement part of, or an entire model. Linking Mechanisms for execution can be as simple as
-creating them and then assiging them to a Composition in a list – PsyNeuLink provides the necessary Projections that
-connects each to the next one in the list, making reasonable assumptions about their connectivity.  For example, the
-following example creates a 3-layered 5-2-5 neural network encoder network, the first layer of which takes an an
-array of length 5 as its input, and uses a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function (the default for a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>), and the other
-two of which take 1d arrays of the specified sizes and use a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function:</p>
+<p>Mechanisms can be executed on their own (to gain familiarity with their operation, or for use in other Python
+applications), or linked together and run in a Composition to implement part of, or an entire model. Linking
+Mechanisms for execution can be as simple as creating them and then assiging them to a Composition in a list –
+PsyNeuLink provides the necessary Projections that connects each to the next one in the list, making reasonable
+assumptions about their connectivity.  For example, the following example creates a 3-layered 5-2-5 neural network
+encoder network, the first layer of which takes an an array of length 5 as its input, and uses a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function
+(the default for a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a>), and the other two of which take 1d arrays of the specified sizes and use a
+<a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct the Mechanisms:</span>
 <span class="n">input_layer</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="n">hidden_layer</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
@@ -675,9 +680,9 @@ Projections can become complex; PsyNeuLink provides methods for implementing the
 to illustrate the flow of signals and errors implemented by the algorithm.  The example below implements learning in
 a simple three-layered neural network that learns to compute the X-OR operation:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct Processing Mechanisms and Projections:</span>
-<span class="nb">input</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
-<span class="n">hidden</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Hidden&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
-<span class="n">output</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Output&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
+<span class="nb">input</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">hidden</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Hidden&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Output&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
 <span class="n">input_weights</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input Weights&#39;</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
 <span class="n">output_weights</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Output Weights&#39;</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
 <span class="n">xor_comp</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="s1">&#39;XOR Composition&#39;</span><span class="p">)</span>
@@ -728,14 +733,14 @@ For example, the following implements a network for learning semantic representa
 <span class="c1">#   Representation_Input</span>
 
 <span class="c1"># Construct Mechanisms</span>
-<span class="n">rep_in</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REP_IN&#39;</span><span class="p">)</span>
-<span class="n">rel_in</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REL_IN&#39;</span><span class="p">)</span>
-<span class="n">rep_hidden</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REP_HIDDEN&#39;</span><span class="p">)</span>
-<span class="n">rel_hidden</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REL_HIDDEN&#39;</span><span class="p">)</span>
-<span class="n">rep_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REP_OUT&#39;</span><span class="p">)</span>
-<span class="n">prop_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;PROP_OUT&#39;</span><span class="p">)</span>
-<span class="n">qual_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;QUAL_OUT&#39;</span><span class="p">)</span>
-<span class="n">act_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ACT_OUT&#39;</span><span class="p">)</span>
+<span class="n">rep_in</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REP_IN&#39;</span><span class="p">)</span>
+<span class="n">rel_in</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REL_IN&#39;</span><span class="p">)</span>
+<span class="n">rep_hidden</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REP_HIDDEN&#39;</span><span class="p">)</span>
+<span class="n">rel_hidden</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REL_HIDDEN&#39;</span><span class="p">)</span>
+<span class="n">rep_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REP_OUT&#39;</span><span class="p">)</span>
+<span class="n">prop_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;PROP_OUT&#39;</span><span class="p">)</span>
+<span class="n">qual_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;QUAL_OUT&#39;</span><span class="p">)</span>
+<span class="n">act_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ACT_OUT&#39;</span><span class="p">)</span>
 
 <span class="c1"># Construct Composition</span>
 <span class="n">comp</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Rumelhart Semantic Network&#39;</span><span class="p">)</span>
@@ -760,6 +765,50 @@ three orders of magnitude) faster (see <a class="reference internal" href="Compo
 for comparisons of the advantages and disadvantages of using a standard <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> vs. <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> for
 learning).</p>
 </div>
+</div>
+<div class="section" id="customization">
+<span id="basicsandsampler-customization"></span><h3>Customization<a class="headerlink" href="#customization" title="Permalink to this headline">¶</a></h3>
+<p>The Mechanisms in the examples above all use PsyNeuLink <a class="reference internal" href="Functions.html"><span class="doc">Functions</span></a>.  However, as noted earlier, a Mechanism can be
+assigned any Ptyhon function, so long as it is compatible with the Mechanism’s type.  More specifically, its
+first argument must accept a variable that has the same shape as the Mechanism’s variable.  For most Mechanism types
+this can be specified in the <strong>default_variable</strong> argument of their constructors, so in practice this places little
+constraint on the type of functions that can be assigned.  For example, the script below defines a function that
+returns the amplitude of a sinusoid with a specified frequency at a specified time, and then assignes this to a
+<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_sinusoidal_fct</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
+<span class="gp">... </span>                      <span class="n">phase</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>                      <span class="n">amplitude</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">frequency</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">... </span>   <span class="n">time</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="gp">... </span>   <span class="k">return</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">frequency</span> <span class="o">*</span> <span class="n">time</span> <span class="o">+</span> <span class="n">phase</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_wave_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
+<span class="gp">... </span>                                       <span class="n">function</span><span class="o">=</span><span class="n">my_sinusoidal_fct</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that the first argument is specified as a 2d variable that contains the frequency and time values as its elements
+– this matches the definition of the ProcessingMechanism’s <strong>default_variable</strong>, which the Mechanism will expect to
+receive as input from any other Mechanisms that project to it.  When a Python function is specified as the
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of Mechanism (or any other Component in PsyNeuLink), it is automatically
+“wrapped” as a <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>, a special class of PsyNeuLink <a class="reference internal" href="Functions.html"><span class="doc">Function</span></a> that integrates it with
+PsyNeuLink:  in addition to making its first argument available as the input to the Component to which it is assigned,
+it also makes its parameters available for modulation by <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a>.  For example,
+notice that <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> has two other arguments, in addition to its <code class="docutils literal"><span class="pre">input</span></code>: <code class="docutils literal"><span class="pre">phase</span></code> and <code class="docutils literal"><span class="pre">amplitude</span></code>.
+As a result, the phase and amplitude of <code class="docutils literal"><span class="pre">my_wave_mech</span></code> can be modulated in by referencing them in the constructor of a
+<a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">control</span> <span class="o">=</span> <span class="n">ControlMechanism</span><span class="p">(</span><span class="n">control_signals</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;phase&#39;</span><span class="p">,</span> <span class="n">my_wave_mech</span><span class="p">),</span>
+<span class="go">                                                 &#39;amplitude&#39;, my_wave_mech])</span>
+</pre></div>
+</div>
+<p>This facility not only makes PsyNeuLink flexible, but can be used to extend it in powerful ways.  For example, as
+mentioned under <a class="reference internal" href="#basicsandsampler-learning"><span class="std std-ref">Learning</span></a>, functions from other environments that implement complex learning models
+can be assigned as the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Mechanism, and in that way integrated into a
+PsyNeuLink model.</p>
+</div>
+<div class="section" id="conclusion">
+<h3>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h3>
+<p>The examples above are intended to provide a sample of PsyNeuLink’s capabilities, and how they can be used.  The
+<a class="reference internal" href="index_logo_with_text.html#tutorial"><span class="std std-ref">Tutorial</span></a> provides a more thorough, interactive introduction to its use, and the <a class="reference internal" href="UserGuide.html"><span class="doc">User's Guide</span></a> provides
+a more detailed description of PsyNeuLink’s organization and capabilities.</p>
 </div>
 </div>
 </div>

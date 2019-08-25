@@ -9,6 +9,7 @@ Basics and Sampler
     * `BasicsAndSampler_Control`
     * `BasicsAndSampler_Logging_and_Animation`
     * `BasicsAndSampler_Learning`
+    * `BasicsAndSampler_Customization`
 
 .. _BasicsAndSampler_Basics:
 
@@ -44,8 +45,11 @@ each type.  For example, there is a variety of ProcessingMechanisms that can be 
 evaluate information in various ways (e.g., to implement layers of a feedforward or recurrent neural network, or a
 drift diffusion decision process); and there are `ModulatoryMechanisms <ModulatoryMechanism>` and `LearningMechanisms
 <LearningMechanism>` that can be used to modulate the functioning of ProcessingMechanisms and modify Projections,
-respectively.  Since Mechanisms can implement any function, Projections ensure that they can "communicate" with
-each other seamlessly.
+respectively.  The `function <Mechanism_Base.function>` of a Mechanism defines the operation it carries out.
+PsyNeuLink provides a rich `library <Functions>` of mathematical, statistical and matrix manipulation functions.
+However, a Mechanism can also be assigned any Python function that is consistent with that Mechanism's type (see
+`BasicsAndSampler_Customization`).  Since Mechanisms can implement virtually any function, Projections ensure that
+they can "communicate" with each other seamlessly.
 
 Together, these elements allow PsyNeuLink to implement and integrate processes of different types, levels of analysis,
 and/or time scales of operation, composing them into a coherent system.  This affords modelers the flexibility to
@@ -79,13 +83,14 @@ more detailed and comprehensive introduction to the use of PsyNeuLink.
 Simple Configurations
 ~~~~~~~~~~~~~~~~~~~~~
 
-Mechanisms can be executed on their own (to gain familiarity with their operation), or linked together and run
-in a Composition to implement part of, or an entire model. Linking Mechanisms for execution can be as simple as
-creating them and then assiging them to a Composition in a list -- PsyNeuLink provides the necessary Projections that
-connects each to the next one in the list, making reasonable assumptions about their connectivity.  For example, the
-following example creates a 3-layered 5-2-5 neural network encoder network, the first layer of which takes an an
-array of length 5 as its input, and uses a `Linear` function (the default for a `TransferMechanism`), and the other
-two of which take 1d arrays of the specified sizes and use a `Logistic` function::
+Mechanisms can be executed on their own (to gain familiarity with their operation, or for use in other Python
+applications), or linked together and run in a Composition to implement part of, or an entire model. Linking
+Mechanisms for execution can be as simple as creating them and then assiging them to a Composition in a list --
+PsyNeuLink provides the necessary Projections that connects each to the next one in the list, making reasonable
+assumptions about their connectivity.  For example, the following example creates a 3-layered 5-2-5 neural network
+encoder network, the first layer of which takes an an array of length 5 as its input, and uses a `Linear` function
+(the default for a `ProcessingMechanism`), and the other two of which take 1d arrays of the specified sizes and use a
+`Logistic` function::
 
     # Construct the Mechanisms:
     input_layer = ProcessingMechanism(size=5)
@@ -587,9 +592,9 @@ to illustrate the flow of signals and errors implemented by the algorithm.  The 
 a simple three-layered neural network that learns to compute the X-OR operation::
 
     # Construct Processing Mechanisms and Projections:
-    input = TransferMechanism(name='Input', default_variable=np.zeros(2))
-    hidden = TransferMechanism(name='Hidden', default_variable=np.zeros(10), function=Logistic())
-    output = TransferMechanism(name='Output', default_variable=np.zeros(1), function=Logistic())
+    input = ProcessingMechanism(name='Input', default_variable=np.zeros(2))
+    hidden = ProcessingMechanism(name='Hidden', default_variable=np.zeros(10), function=Logistic())
+    output = ProcessingMechanism(name='Output', default_variable=np.zeros(1), function=Logistic())
     input_weights = MappingProjection(name='Input Weights', matrix=np.random.rand(2,10))
     output_weights = MappingProjection(name='Output Weights', matrix=np.random.rand(10,1))
     xor_comp = Composition('XOR Composition')
@@ -652,14 +657,14 @@ For example, the following implements a network for learning semantic representa
     #   Representation_Input
 
     # Construct Mechanisms
-    rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
-    rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
-    rep_hidden = pnl.TransferMechanism(size=4, function=Logistic, name='REP_HIDDEN')
-    rel_hidden = pnl.TransferMechanism(size=5, function=Logistic, name='REL_HIDDEN')
-    rep_out = pnl.TransferMechanism(size=10, function=Logistic, name='REP_OUT')
-    prop_out = pnl.TransferMechanism(size=12, function=Logistic, name='PROP_OUT')
-    qual_out = pnl.TransferMechanism(size=13, function=Logistic, name='QUAL_OUT')
-    act_out = pnl.TransferMechanism(size=14, function=Logistic, name='ACT_OUT')
+    rep_in = pnl.ProcessingMechanism(size=10, name='REP_IN')
+    rel_in = pnl.ProcessingMechanism(size=11, name='REL_IN')
+    rep_hidden = pnl.ProcessingMechanism(size=4, function=Logistic, name='REP_HIDDEN')
+    rel_hidden = pnl.ProcessingMechanism(size=5, function=Logistic, name='REL_HIDDEN')
+    rep_out = pnl.ProcessingMechanism(size=10, function=Logistic, name='REP_OUT')
+    prop_out = pnl.ProcessingMechanism(size=12, function=Logistic, name='PROP_OUT')
+    qual_out = pnl.ProcessingMechanism(size=13, function=Logistic, name='QUAL_OUT')
+    act_out = pnl.ProcessingMechanism(size=14, function=Logistic, name='ACT_OUT')
 
     # Construct Composition
     comp = Composition(name='Rumelhart Semantic Network')
@@ -692,32 +697,54 @@ three orders of magnitude) faster (see `Composition_Learning`, as well as `Compo
 for comparisons of the advantages and disadvantages of using a standard `Composition` vs. `AutodiffComposition` for
 learning).
 
-.. ADD FINAL STATEMENT HERE
-.. The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,
-.. and the `Tutorial` provides an interactive introduction to its use.
+.. _BasicsAndSampler_Customization:
+
+Customization
+~~~~~~~~~~~~~
+
+The Mechanisms in the examples above all use PsyNeuLink `Functions`.  However, as noted earlier, a Mechanism can be
+assigned any Ptyhon function, so long as it is compatible with the Mechanism's type.  More specifically, its
+first argument must accept a variable that has the same shape as the Mechanism's variable.  For most Mechanism types
+this can be specified in the **default_variable** argument of their constructors, so in practice this places little
+constraint on the type of functions that can be assigned.  For example, the script below defines a function that
+returns the amplitude of a sinusoid with a specified frequency at a specified time, and then assignes this to a
+`ProcessingMechanism`::
+
+        >>> def my_sinusoidal_fct(input=[[0],[0]],
+        ...                       phase=0,
+        ...                       amplitude=1):
+        ...    frequency = input[0]
+        ...    time = input[1]
+        ...    return amplitude * np.sin(2 * np.pi * frequency * time + phase)
+        >>> my_wave_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                        function=my_sinusoidal_fct)
+
+Note that the first argument is specified as a 2d variable that contains the frequency and time values as its elements
+-- this matches the definition of the ProcessingMechanism's **default_variable**, which the Mechanism will expect to
+receive as input from any other Mechanisms that project to it.  When a Python function is specified as the
+`function <Mechanism_Base.function>` of Mechanism (or any other Component in PsyNeuLink), it is automatically
+"wrapped" as a `UserDefinedFunction`, a special class of PsyNeuLink `Function <Functions>` that integrates it with
+PsyNeuLink:  in addition to making its first argument available as the input to the Component to which it is assigned,
+it also makes its parameters available for modulation by `ModulatoryMechanisms <ModulatoryMechanism>`.  For example,
+notice that ``my_sinusoidal_fct`` has two other arguments, in addition to its ``input``: ``phase`` and ``amplitude``.
+As a result, the phase and amplitude of ``my_wave_mech`` can be modulated in by referencing them in the constructor of a
+`ControlMechanism`::
+
+    >>> control = ControlMechanism(control_signals=[('phase', my_wave_mech),
+                                                     'amplitude', my_wave_mech])
+
+This facility not only makes PsyNeuLink flexible, but can be used to extend it in powerful ways.  For example, as
+mentioned under `BasicsAndSampler_Learning`, functions from other environments that implement complex learning models
+can be assigned as the `function <Mechanism_Base.function>` of a Mechanism, and in that way integrated into a
+PsyNeuLink model.
+
+Conclusion
+~~~~~~~~~~
+
+The examples above are intended to provide a sample of PsyNeuLink's capabilities, and how they can be used.  The
+`Tutorial` provides a more thorough, interactive introduction to its use, and the `User's Guide <UserGuide>` provides
+a more detailed description of PsyNeuLink's organization and capabilities.
 
 .. STUFF TO ADD -------------------------------------------------------------------------------------------------------
-..
-.. XXX USER DEFINED FUNCTIONS
-.. XXX RL LEARNING??
-.. XXX NESTED COMPOSITIONS
+.. XXX NESTED COMPOSITIONS (BEYOND AUTODIFF)
 .. XXX COMPILATION
-..
-
-.. OLD: --------------------------------------------------------------------------------------------------------------
-.. For example, the feedforward network above can be
-.. trained using backpropagation simply by adding the **learning** argument to the constructor for the Process::
-..
-..     my_encoder = Process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
-..
-.. and then specifying the target for each trial when it is executed (here, the Process' `run <Process.run>` command
-.. is used to execute a series of five training trials, one that trains it on each element of the input)::
-..
-..     my_encoder.run(input=[[0,0,0,0,0], [1,0,0,0,0], [0,0,1,0,0], [0,0,0,1,0], [0,0,0,0,1]],
-..                    target=[[0,0,0,0,0], [1,0,0,0,0], [0,0,1,0,0], [0,0,0,1,0], [0,0,0,0,1]])
-..
-.. `Backpropagation <BackPropagation>` is the default learning method, but PsyNeuLink also currently supports
-.. `Reinforcement Learning <Reinforcement>`, and others are currently being implemented (including Hebbian, Temporal
-.. Differences, and supervised learning for recurrent networks).
-..
-..
