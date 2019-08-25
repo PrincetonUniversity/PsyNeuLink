@@ -635,11 +635,6 @@ class PytorchModelCreator(torch.nn.Module):
                             pnlvm.ir.ArrayType(ctx.float_ty, node_dim))
                         is_set = False
                         # We propagate error backwards from next layer
-                        i = 0
-                        for j in range(0, len(self.execution_sets)):
-                            if node in self.execution_sets[j]:
-                                i = j
-                                break
                         efferents = [
                             proj.receiver._owner for proj in node.efferents]
                         for efferent_node in efferents:
@@ -687,7 +682,6 @@ class PytorchModelCreator(torch.nn.Module):
 
                 for (node, err_val) in error_dict.items():
                     if node in input_nodes:
-                        # we don't care about errors of input (TODO: get rid of them)
                         continue
 
                     for (afferent_node,weight) in self._get_afferent_nodes(node):
@@ -720,36 +714,22 @@ class PytorchModelCreator(torch.nn.Module):
             ctx.inject_printf(builder,"\tUPDATING WEIGHTS\n")
             for node in delta_w:
                 _, node_dim = node.defaults.value.shape
-                i = 0
-                for j in range(0, len(self.execution_sets)):
-                    if node in self.execution_sets[j]:
-                        i = j
-                        break
+
                 for (afferent_node, delta_w_matrix) in delta_w[node].items():
                     weights_llvmlite, weights_dim_x, weights_dim_y = self._gen_get_node_weight_pointer(ctx,builder,model_params,node,afferent_node)
-                    
-                    # print weight matrices
-                    ctx.inject_printf(builder,"REPLACING WEIGHT MATRIX:\n")
-                    for x in range(0,weights_dim_x):
-                        ctx.inject_printf_float_array(builder,builder.gep(weights_llvmlite,[ctx.int32_ty(0),ctx.int32_ty(x)]),weights_dim_y,prefix="\t")
-                    
-                    ctx.inject_printf(builder,"WITH:\n")
                     
                     weight_row = None
                     with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "delta_w_loop_outer") as (builder, weight_row):
                         weight_column = None
-                        ctx.inject_printf(builder,"\t")
                         with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_y), "delta_w_loop_inner") as (builder, weight_column):
                             old_val = builder.load(builder.gep(
                                 weights_llvmlite, [ctx.int32_ty(0), weight_row, weight_column]))
                             new_val = builder.load(builder.gep(
                                 delta_w_matrix, [ctx.int32_ty(0), weight_row, weight_column]))
                             new_val = builder.fmul(ctx.float_ty(self._composition.learning_rate), new_val)
-                            ctx.inject_printf(builder,"%f ",new_val)
                             new_val = builder.fsub(old_val, new_val)
                             builder.store(new_val, builder.gep(weights_llvmlite, [
                                           ctx.int32_ty(0), weight_row, weight_column]))
-                        ctx.inject_printf(builder,"\n")
             builder.ret_void()
             llvm_func = builder.function
         return llvm_func
