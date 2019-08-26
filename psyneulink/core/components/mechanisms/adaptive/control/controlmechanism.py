@@ -174,6 +174,47 @@ If a default ObjectiveMechanism is created, it uses XXX function
 If one is specified, XXX
 see `note
 <EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for an example).
+    .. note::
+       If a constructor for an `ObjectiveMechanism` is used for the **objective_mechanism** argument of the
+       EVCControlMechanism's constructor, then the default values of its attributes override any used by the
+       EVCControlMechanism for its `objective_mechanism <EVCControlMechanism.objective_mechanism>`.  In particular,
+       whereas an EVCControlMechanism uses the same default `function <ObjectiveMechanism.function>` as an
+       `ObjectiveMechanism` (`LinearCombination`), it uses *PRODUCT* rather than *SUM* as the default value of the
+       `operation <LinearCombination.operation>` attribute of the function.  As a consequence, if the constructor for
+       an ObjectiveMechanism is used to specify the EVCControlMechanism's **objective_mechanism** argument,
+       and the **operation** argument is not specified, *SUM* rather than *PRODUCT* will be used for the
+       ObjectiveMechanism's `function <ObjectiveMechanism.function>`.  To ensure that *PRODUCT* is used, it must be
+       specified explicitly in the **operation** argument of the constructor for the ObjectiveMechanism (see 1st
+       example under `System_Control_Examples`).
+
+
+_System_Control_Examples
+The following example specifies an `EVCControlMechanism` as the controller for a System with two `Processes <Process>`
+that include two `Mechanisms <Mechanism>` (not shown)::
+
+    my_system = System(processes=[TaskExecutionProcess, RewardProcess],
+                       controller=EVCControlMechanism(objective_mechanism=
+                                                   ObjectiveMechanism(
+                                                       monitored_output_states=[
+                                                           Reward,
+                                                           Decision.output_states[PROBABILITY_UPPER_THRESHOLD],
+                                                           (Decision.output_states[RESPONSE_TIME], -1, 1)]))
+                                                       function=LinearCombination(operation=PRODUCT))
+
+A constructor is used to specify the EVCControlMechanism that includes a constructor specifying its `objective_mechanism
+<ControlMechanism.objective_mechanism>`;  the **monitored_output_states** argument of the ObjectiveMechanism's constructor
+is used to specify that it should monitor the `primary OutputState <OutputState_Primary>` of the Reward Mechanism
+and the *PROBABILITY_UPPER_THRESHOLD* and *RESPONSE_TIME* and, specifying how it should combine them (see the `example
+<ControlMechanism_Examples>` under ControlMechanism for an explanation). Note that the **function** argument for the
+ObjectiveMechanism's constructor is also specified;  this is because an ObjectiveMechanism uses *SUM* as the default
+for the `operation <LinearCombination.operation>` of its `LinearCombination` function, whereas as the EVCControlMechanism
+requires *PRODUCT* -- in this case, to properly use the weight and exponents specified for the RESPONSE_TIME
+OutputState of Decision (see `note <EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for
+a more complete explanation).  Note that both the EVCControlMechanism and/or the ObjectiveMechanism could have been
+constructed separately, and then referenced in the **controller** argument of ``my_system`` and **objective_mechanism**
+argument of the EVCControlMechanism, respectively.
+
+
 FIX: MOVE THE EXAMPLE TO HERE
 
 
