@@ -360,8 +360,8 @@ class CompExecution(CUDAExecution):
 
     def _get_input_struct(self, inputs):
         origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
-        # Either node or composition execute. All functions expect inputs
-        # to be 3rd param.
+        # Either node or composition execute.
+        # All execute functions expect inputs to be 3rd param.
         c_input = self._bin_func.byref_arg_types[2]
 
         # Read provided input data and separate each input state
@@ -455,26 +455,13 @@ class CompExecution(CUDAExecution):
     def _get_run_input_struct(self, inputs, num_input_sets):
         origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
         input_type = self._bin_run_func.byref_arg_types[3]
-        c_input = input_type * num_input_sets
-        if len(self._execution_ids) > 1:
-            c_input = c_input * len(self._execution_ids)
-            run_inputs = []
-            for inp in inputs:
-                run_inps = []
-                # Extract inputs for each trial
-                for i in range(num_input_sets):
-                    run_inps.append([])
-                    for m in origins:
-                        run_inps[i] += [[v] for v in inp[m][i]]
-                run_inputs.append(run_inps)
+        c_input = (input_type * num_input_sets) * len(self._execution_ids)
+        if len(self._execution_ids) == 1:
+            inputs = [inputs]
 
-        else:
-            run_inputs = []
-            # Extract inputs for each trial
-            for i in range(num_input_sets):
-                run_inputs.append([])
-                for m in origins:
-                    run_inputs[i] += [[v] for v in inputs[m][i]]
+        assert len(inputs) == len(self._execution_ids)
+        # Extract input for each trial and execution id
+        run_inputs = ((([iv] for m in origins for iv in inp[m][i]) for i in range(num_input_sets)) for inp in inputs)
 
         return c_input(*_tupleize(run_inputs))
 
