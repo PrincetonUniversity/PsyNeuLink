@@ -23,7 +23,7 @@ structure of the EVCControlMechanism.
 An EVCControlMechanism is similar to a standard `ControlMechanism`, with the following exceptions:
 
   * it can only be assigned to a System as its `controller <System.controller>`, and not in any other capacity
-    (see `ControlMechanism_System_Controller`);
+    (see `ControlMechanism_Composition_Controller`);
   ..
   * it has several specialized functions that are used to search over the `allocations <ControlSignal.allocations>`\\s
     of its its `ControlSignals <ControlSignal>`, and evaluate the performance of its `system

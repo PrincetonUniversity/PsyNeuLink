@@ -92,7 +92,7 @@ OutputStates to be monitored can also be added using either the ModulatoryMechan
 the ObjectiveMechanism.
 
 COMMENT:
-TBI [Functionality for System that has yet to be ported to Composition]
+TBI FOR COMPOSITION
 If a ModulatoryMechanism is specified as the `controller <Composition.controller>` of a Composition (see `below
 <ModulatoryMechanism_Composition_Controller>`), any OutputStates specified to be monitored by the System are
 assigned as inputs to the ObjectiveMechanism.  This includes any specified in the **monitor_for_modulation** argument
@@ -139,7 +139,7 @@ are listed in the `modulatory_projections <ModulatoryMechanism.modulatory_projec
 attributes, respectively.
 
 COMMENT:
-TBI:
+TBI FOR COMPOSITION
 If the ModulatoryMechanism is created as part of a `System`, the States to be modulated by it can be specified in
 one of two ways:
 
@@ -382,10 +382,12 @@ The ObjectiveMechanism can also be created on its own, and then referenced in th
 Here, as in the first example, the constructor for the ObjectiveMechanism can be used to specify its function, as well
 as the OutputState that it monitors.
 
+COMMENT:
+TBI FOR COMPOSITION
 See `System_Control_Examples` for examples of how a ModulatoryMechanism, the OutputStates its
 `objective_mechanism <ControlSignal.objective_mechanism>`, and its `control_signals <ModulatoryMechanism.control_signals>`
 can be specified for a System.
-
+COMMENT
 
 .. _ModulatoryMechanism_Class_Reference:
 
@@ -697,9 +699,9 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
 
     outcome : 1d array
-        the `value <InputState.value>` of the ModulatoryMechanism's `primary InputState <InputState_Primary>`,
-        which receives its `Projection <Projection>` from the *OUTCOME* `OutputState` of its `objective_mechanism
-        <ModulatoryMechanism.objective_mechanism>`.
+        the `value <InputState.value>` of the ModulatoryMechanism's `primary InputState <InputState_Primary>`;
+        this receives its `Projection <Projection>` from the *OUTCOME* `OutputState` of its `objective_mechanism
+        <ModulatoryMechanism.objective_mechanism>` if that is specified
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
@@ -1446,6 +1448,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         if self._objective_mechanism:
             self.objective_mechanism._add_process(process, role)
 
+    # FIX: TBI FOR COMPOSITION
     @tc.typecheck
     def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
         """Assign ModulatoryMechanism as `controller <System.controller>` for a `System`.
