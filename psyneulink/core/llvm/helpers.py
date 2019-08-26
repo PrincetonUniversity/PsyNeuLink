@@ -16,26 +16,26 @@ from contextlib import contextmanager
 def for_loop(builder, start, stop, inc, id):
     # Initialize index variable
     assert start.type is stop.type
-    index_var = builder.alloca(stop.type)
+    index_var = builder.alloca(stop.type, name=id + "_index_var_loc")
     builder.store(start, index_var)
 
     # basic blocks
-    cond_block = builder.append_basic_block(id + "-cond")
+    cond_block = builder.append_basic_block(id + "-cond-bb")
     out_block = None
 
     # Loop condition
     builder.branch(cond_block)
     with builder.goto_block(cond_block):
-        tmp = builder.load(index_var)
-        cond = builder.icmp_signed("<", tmp, stop)
+        tmp = builder.load(index_var, name=id + "_cond_index_var")
+        cond = builder.icmp_signed("<", tmp, stop, name=id + "_loop_cond")
 
         # Loop body
         with builder.if_then(cond, likely=True):
-            index = builder.load(index_var)
+            index = builder.load(index_var, name=id + "_loop_index_var")
 
             yield (builder, index)
 
-            index = builder.add(index, inc)
+            index = builder.add(index, inc, name=id + "_index_var_inc")
             builder.store(index, index_var)
             builder.branch(cond_block)
 
