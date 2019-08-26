@@ -170,15 +170,11 @@ FIX: PUT THIS IN APPROPRIATE PLACES:
 
 .. _ControlMechanism_ObjectiveMechanism_Function:
 
-If a default ObjectiveMechanism XXXX
-
-MENTION ITS FUNCTION OVERRIDED
-
-
+If a default ObjectiveMechanism is created, it uses XXX function
+If one is specified, XXX
 see `note
 <EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for an example).
 FIX: MOVE THE EXAMPLE TO HERE
-
 
 
 COMMENT:
