@@ -116,20 +116,20 @@ specified:
       <ControlMechanism_Monitor_for_Control_Argument>` to any specified in the ObjectiveMechanism's **monitor**
       `argument <ObjectiveMechanism_Monitor>` .  This can be used to specify the `function
       <ObjectiveMechanism.function>` used by the ObjectiveMechanism to evaluate the OutputStates monitored as well as
-      how it weights those OutputStates when they are evaluated  (see `ControlMechanism_ObjectiveMechanism` for
-      additional details).
+      how it weights those OutputStates when they are evaluated  (see `ControlMechanism_ObjectiveMechanism_Function`
+      for additional details).
 
     - *an existing* `ObjectiveMechanism` -- for any OutputStates specified in the ControlMechanism's
       **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`, an InputState is added to the
       ObjectiveMechanism, along with `MappingProjection` to it from the specified OutputState.    This can be used to
       specify an ObjectiveMechanism with a custom `function <ObjectiveMechanism.function>` and weighting of the
-      OutputStates monitored (see `ControlMechanism_ObjectiveMechanism` for additional details).
+      OutputStates monitored (see `ControlMechanism_ObjectiveMechanism_Function` for additional details).
 
     .. note::
 
        Using either of the last two methods (a constructor for, or an existing ObjectiveMechanism) will override the
-       attributes used by a ControlMechanism to create a default ObjectiveMechanism (see
-       `ControlMechanism_ObjectiveMechanism` for details).
+       attributes used by a ControlMechanism to create a default ObjectiveMechanism (see `below
+       `ControlMechanism_ObjectiveMechanism_Function` for additional details).
 
 
 .. _ControlMechanism_ObjectiveMechanism:
@@ -151,47 +151,28 @@ If an `ObjectiveMechanism` is specified in the **objective_mechanism** `argument
 <ControlMechanism_Objective_Mechanism_Argument>` of the ControlMechanism's constructor, it is assigned to the
 ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` attribute, and used to monitor the
 `value <OutputState.value>`\\(s) of the OutputState(s) specified in the **monitor_for_control** `argument
-<ControlMechanism_Monitor_for_Control_Argument>` of the ControlMechanism's consructor, and/or those specified in
+<ControlMechanism_Monitor_for_Control_Argument>` of the ControlMechanism's consructor, as well as any specified in
 the **monitor** `argument <ObjectiveMechanism_Monitor>` of the ObjectiveMechanism's constructor.   These are
 evaluated using the `objective_mechanism`\\'s `function <ObjectiveMechanism.function>`, the result of which is
-assigned to its *OUTCOME* `output_state <ObjectiveMechanism_Output>` and passed to the ControlMechanism's *OUTCOME*
-`input_state <ControlMechanism_Input>`.
+assigned to its *OUTCOME* `output_state <ObjectiveMechanism_Output>`.  This is passed to the ControlMechanism's
+*OUTCOME* `input_state <ControlMechanism_Input>`, which is used by the ControlMechanism's `function
+<ControlMechanism.function>` to determine its `control_allocation <ControlMechanism.control_allocation>`.
 
-Toward this end, if the ObjectiveMechanism is
-
-
-and evaluate the
-
-
-Toward this end
-FIX: CONSOLIDATE WITH ABOVE:
-, along with a `MappingProjection` from its *OUTCOME* `output_state
-<ObjectiveMechanism_Output>` to the  ControlMechanism's *OUTCOME* `input_state <ControlMechanism_Input>`,
-and any OutputStates specified in the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`
-are used to create InputStates (and MappingProjections to them) for the ObjetiveMechanism, rather than the
-ControlMechanism itself.
+Toward this end, if an ObjectiveMechanism is specified for a ControlMechanism, for each OutputState to be monitored,
+an InputState is assigned to the ObjectiveMechanism, along with a `MappingProjection` to that InputState from the
+specified OutputState.  In addition, a `MappingProjection` is created from the *OUTCOME* `output_state
+<ObjectiveMechanism_Output>` of the ObjectiveMechanism to the *OUTCOME* `input_state <ControlMechanism_Input>`,
+of the ControlMechanism (which in this configuration is its  `primary InputState <InputState_Primary>`)
 
 
+FIX: PUT THIS IN APPROPRIATE PLACES:
+(see `ControlMechanism_Examples`),
 
-(see
-`ControlMechanism_Examples`),
+.. _ControlMechanism_ObjectiveMechanism_Function:
 
-(using its
-**monitored_output_states_weights_and_exponents** argument).
+If a default ObjectiveMechanism XXXX
 
-
-MENTION ITS FUNCTION
-The result of this evaluation is used to determine
-the ControlMechanism's `control_allocation <ControlMechanism.control_allocation>`. The ObjectiveMechanism, the
-OutputStates that it monitors, and how it evaluates them can be specified in a variety of ways, that depend on the
-context in which the ControlMechanism is created, as described in the subsections below. In all cases,
-the ObjectiveMechanism is assigned to the ControlMechanism's `objective_mechanism
-<ControlMechanism.objective_mechanism>` attribute, and a `MappingProjection` is created that projects from the
-ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Output>` to the ControlMechanism's *OUTCOME*
-`InputState` (which is its  `primary InputState <InputState_Primary>`.  All of the OutputStates monitored by the
-ObjectiveMechanism are listed in its `monitored_output_States <ObjectiveMechanism.monitored_output_states>`
-attribute, and in the ControlMechanism's `monitor_for_control <ControlMechanism.montior_for_control>` attribute.
-
+MENTION ITS FUNCTION OVERRIDED
 
 
 see `note
