@@ -99,7 +99,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
         my_component = SomeComponent(function=SomeFunction)
 
       This will create a default instance of the specified subclass, using default values for its parameters.
-    |
+
     * **Function** - this can be either an existing `Function <Function>` object or the constructor for one, as in the
       following examples::
 

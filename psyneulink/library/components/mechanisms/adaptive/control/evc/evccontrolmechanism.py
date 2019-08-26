@@ -241,7 +241,7 @@ greatest EVC value. The following steps are used to calculate the EVC for each `
     `objective_mechanism`, which provides the result to the EVCControlMechanism.  If `system
     <EVCControlMechanism.system>`\\.recordSimulationPref is `True`, the results of each simulation are appended to the
     `simulation_results <System.simulation_results>` attribute of `system <EVCControlMechanism.system>`.
-  |
+
   * **Evaluate the System's performance** - this is carried out by the EVCControlMechanism's `objective_mechanism
     <EVCControlMechanism.objective_mechanism>`, which is executed as part of the simulation of the System.  The
     `function <ObjectiveMechanism.function>` for a default ObjectiveMechanism is a `LinearCombination` Function that
@@ -250,15 +250,15 @@ greatest EVC value. The following steps are used to calculate the EVC for each `
     <EVCControlMechanism.objective_mechanism>`'s `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
     attribute) by taking their elementwise (Hadamard) product.  However, this behavior can be customized in a variety
     of ways, as described `above <EVCControlMechanism_ObjectiveMechanism>`.
-  |
+
   * **Calculate EVC** - call the EVCControlMechanism's `value_function <EVCControlMechanism.value_function>` passing it
     the outcome (received from the `objective_mechanism`) and a list of the `costs <ControlSignal.cost>` \\s of its
     `ControlSignals <EVCControlMechanism_ControlSignals>`.  The default `value_function
     <EVCControlMechanism.value_function>` calls two additional auxiliary functions, in the following order:
-    |
+
     - `cost_function <EVCControlMechanism.cost_function>`, which sums the costs;  this can be configured to weight
       and/or exponentiate individual costs (see `cost_function <EVCControlMechanism.cost_function>` attribute);
-    |
+
     - `combine_outcome_and_cost_function <EVCControlMechanism.combine_outcome_and_cost_function>`, which subtracts the
       sum of the costs from the outcome to generate the EVC;  this too can be configured (see
       `combine_outcome_and_cost_function <EVCControlMechanism.combine_outcome_and_cost_function>`).

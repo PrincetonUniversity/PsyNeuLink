@@ -83,14 +83,14 @@ arguments of the `System`, as described below.
     Mechanisms within the System. If an OutputState of a particular Mechanism is desired, and it shares its name with
     other Mechanisms in the System, then it must be referenced explicitly (see `InputState specification
     <InputState_Specification>`, and examples under `System_Control_Examples`).
-  |
+
   * **MonitoredOutputStatesOption** -- must be a value of `MonitoredOutputStatesOption`, and must appear alone or as a
     single item in the list specifying the **monitor_for_control** argument;  any other specification(s) included in
     the list will take precedence.  The MonitoredOutputStatesOption applies to all of the Mechanisms in the System
     except its `controller <System.controller>` and `LearningMechanisms <LearningMechanism>`. The
     *PRIMARY_OUTPUT_STATES* value specifies that the `primary OutputState <OutputState_Primary>` of every Mechanism be
     monitored, whereas *ALL_OUTPUT_STATES* specifies that *every* OutputState of every Mechanism be monitored.
-  |
+
   The default for the **monitor_for_control** argument is *MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES*.
   The OutputStates specified in the **monitor_for_control** argument are added to any already specified for the
   ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>`, and the full set is listed in
