@@ -45,14 +45,14 @@ types of Mechanisms in PsyNeuLink:
       * `LearningMechanism <LearningMechanism>` - these receive training (target) values, and compare them with the
         output of a Mechanism to generate `LearningSignals <LearningSignal>` that are used to modify `MappingProjections
         <MappingProjection>` (see `learning <Process_Execution_Learning>`).
-      |
+
       * `ControlMechanism <ControlMechanism>` - these evaluate the output of a specified set of Mechanisms, and
         generate `ControlSignals <ControlSignal>` used to modify the parameters of those or other Mechanisms.
-      |
+
       * `GatingMechanism <GatingMechanism>` - these use their input(s) to determine whether and how to modify the
         `value <State_Base.value>` of the `InputState(s) <InputState>` and/or `OutputState(s) <OutputState>` of other
         Mechanisms.
-      |
+
       Each type of AdaptiveMechanism is associated with a corresponding type of `ModulatorySignal <ModulatorySignal>`
       (a type of `OutputState` specialized for use with the AdaptiveMechanism) and `ModulatoryProjection
       <ModulatoryProjection>`.
