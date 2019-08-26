@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.5.3.2+397.g482bc91 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.5.3.2+399.g1a9d922 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+397.g482bc91',
+              VERSION:'0.5.3.2+399.g1a9d922',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.5.3.2+397
+                0.5.3.2+399
               </div>
             
           
@@ -210,11 +210,6 @@ ordinarily be used (e.g., in an <a class="reference internal" href="InputState.h
 with a name matching the string will be monitored, including ones with the same name that belong to different
 Mechanisms within the System. If an OutputState of a particular Mechanism is desired, and it shares its name with
 other Mechanisms in the System, then it must be referenced explicitly (see <a class="reference internal" href="InputState.html#inputstate-specification"><span class="std std-ref">InputState specification</span></a>, and examples under <a class="reference internal" href="#system-control-examples"><span class="std std-ref">Specifying Control for a System</span></a>).</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
 <li><strong>MonitoredOutputStatesOption</strong> – must be a value of <code class="xref any docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code>, and must appear alone or as a
 single item in the list specifying the <strong>monitor_for_control</strong> argument;  any other specification(s) included in
 the list will take precedence.  The MonitoredOutputStatesOption applies to all of the Mechanisms in the System
@@ -222,9 +217,6 @@ except its <a class="reference internal" href="#psyneulink.core.components.syste
 <em>PRIMARY_OUTPUT_STATES</em> value specifies that the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> of every Mechanism be
 monitored, whereas <em>ALL_OUTPUT_STATES</em> specifies that <em>every</em> OutputState of every Mechanism be monitored.</li>
 </ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
 <p>The default for the <strong>monitor_for_control</strong> argument is <em>MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES</em>.
 The OutputStates specified in the <strong>monitor_for_control</strong> argument are added to any already specified for the
 ControlMechanism’s <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, and the full set is listed in

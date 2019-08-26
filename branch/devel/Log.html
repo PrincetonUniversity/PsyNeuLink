@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.5.3.2+397.g482bc91 documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.5.3.2+399.g1a9d922 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+397.g482bc91',
+              VERSION:'0.5.3.2+399.g1a9d922',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+397
+                0.5.3.2+399
               </div>
             
           
@@ -242,41 +242,19 @@ programmatically (“manually”).  Components can be specified by their names o
 <p>Although every Component is assigned its own Log, that records the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of that Component,
 the Logs for <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> also  provide access to and control
 the Logs of their <a class="reference internal" href="State.html"><span class="doc">States</span></a>.  Specifically the Logs of these Components contain the following information:</p>
-<ul>
-<li><p class="first"><strong>Mechanisms</strong></p>
 <ul class="simple">
+<li><strong>Mechanisms</strong><ul>
 <li><em>value</em> – the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
 <li><em>InputStates</em> – the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of any <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> (listed in the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_states" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute).</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
 <li><em>ParameterStates</em> – the <a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState.value" title="psyneulink.core.components.states.parameterstate.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> (listed in the Mechanism’s
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_states" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_states"><code class="xref any py py-attr docutils literal"><span class="pre">parameter_states</span></code></a> attribute);  this includes all of the <code class="xref any docutils literal"><span class="pre">user</span> <span class="pre">configurable</span></code> parameters of the Mechanism and its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
 <li><em>OutputStates</em> – the <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of any <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> (listed in the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute).</li>
 </ul>
 </li>
 </ul>
-<ul>
-<li><p class="first"><strong>Projections</strong></p>
 <ul class="simple">
+<li><strong>Projections</strong><ul>
 <li><em>value</em> – the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Projection.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
 <li><em>matrix</em> – the value of the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter (for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> only).</li>
 </ul>
 </li>

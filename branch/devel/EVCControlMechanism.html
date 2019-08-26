@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EVCControlMechanism &mdash; PsyNeuLink 0.5.3.2+397.g482bc91 documentation</title>
+  <title>EVCControlMechanism &mdash; PsyNeuLink 0.5.3.2+399.g1a9d922 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+397.g482bc91',
+              VERSION:'0.5.3.2+399.g1a9d922',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+397
+                0.5.3.2+399
               </div>
             
           
@@ -376,34 +376,17 @@ prior to each simulation, so that the results for each <a class="reference inter
 are based on the same initial conditions.  Each simulation includes execution of the EVCControlMechanism’s
 <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, which provides the result to the EVCControlMechanism.  If <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>.recordSimulationPref is <code class="xref any docutils literal"><span class="pre">True</span></code>, the results of each simulation are appended to the
 <code class="xref any docutils literal"><span class="pre">simulation_results</span></code> attribute of <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.system"><code class="xref any py py-attr docutils literal"><span class="pre">system</span></code></a>.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
 <li><strong>Evaluate the System’s performance</strong> - this is carried out by the EVCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, which is executed as part of the simulation of the System.  The
 <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for a default ObjectiveMechanism is a <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> Function that
 combines the <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of the OutputStates listed in the EVCControlMechanism’s
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_states" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute (and the <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>’s <code class="xref any docutils literal"><span class="pre">monitored_output_states</span></code>
 attribute) by taking their elementwise (Hadamard) product.  However, this behavior can be customized in a variety
 of ways, as described <a class="reference internal" href="#evccontrolmechanism-objectivemechanism"><span class="std std-ref">above</span></a>.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul>
-<li><p class="first"><strong>Calculate EVC</strong> - call the EVCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.value_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.value_function"><code class="xref any py py-attr docutils literal"><span class="pre">value_function</span></code></a> passing it
+<li><strong>Calculate EVC</strong> - call the EVCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.value_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.value_function"><code class="xref any py py-attr docutils literal"><span class="pre">value_function</span></code></a> passing it
 the outcome (received from the <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.adaptive.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>) and a list of the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">costs</span></code></a> s of its
-<a class="reference internal" href="#evccontrolmechanism-controlsignals"><span class="std std-ref">ControlSignals</span></a>.  The default <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.value_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.value_function"><code class="xref any py py-attr docutils literal"><span class="pre">value_function</span></code></a> calls two additional auxiliary functions, in the following order:
-|
-- <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.cost_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_function</span></code></a>, which sums the costs;  this can be configured to weight</p>
-<blockquote>
-<div><p>and/or exponentiate individual costs (see <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.cost_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_function</span></code></a> attribute);</p>
-</div></blockquote>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
+<a class="reference internal" href="#evccontrolmechanism-controlsignals"><span class="std std-ref">ControlSignals</span></a>.  The default <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.value_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.value_function"><code class="xref any py py-attr docutils literal"><span class="pre">value_function</span></code></a> calls two additional auxiliary functions, in the following order:<ul>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.cost_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_function</span></code></a>, which sums the costs;  this can be configured to weight
+and/or exponentiate individual costs (see <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.cost_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_function</span></code></a> attribute);</li>
 <li><a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.combine_outcome_and_cost_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.combine_outcome_and_cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">combine_outcome_and_cost_function</span></code></a>, which subtracts the
 sum of the costs from the outcome to generate the EVC;  this too can be configured (see
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.combine_outcome_and_cost_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.combine_outcome_and_cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">combine_outcome_and_cost_function</span></code></a>).</li>

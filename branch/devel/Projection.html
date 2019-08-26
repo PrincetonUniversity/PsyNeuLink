@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projections &mdash; PsyNeuLink 0.5.3.2+397.g482bc91 documentation</title>
+  <title>Projections &mdash; PsyNeuLink 0.5.3.2+399.g1a9d922 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+397.g482bc91',
+              VERSION:'0.5.3.2+399.g1a9d922',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+397
+                0.5.3.2+399
               </div>
             
           
@@ -313,11 +313,6 @@ specifications.</li>
 determined (e.g., it is used in the specification of a <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>). For
 MappingProjections, a <a class="reference internal" href="MappingProjection.html#mapping-matrix-specification"><span class="std std-ref">matrix specification</span></a> can also be used to specify the
 projection (see <strong>value</strong> below).</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
 <li><em>CONTROL_PROJECTION</em> (or <em>CONTROL</em>) – this can be used when specifying a parameter using the <a class="reference internal" href="ParameterState.html#parameterstate-tuple-specification"><span class="std std-ref">tuple format</span></a>, to create a default <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for that
 parameter.  If the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> to which the parameter belongs is part of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, then a
 <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is added to the System’s <a class="reference internal" href="System.html#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and assigned as the
@@ -326,11 +321,6 @@ is deferred</span></a> until the Mechanism is assigned to a System,
 at which time the ControlSignal is added to the System’s <a class="reference internal" href="System.html#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and assigned
 as its the ControlProjection’s <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.  See <code class="xref any docutils literal"><span class="pre">ControlMechanism_Control_Signals</span></code> for
 additional details.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
 <li><em>GATING_PROJECTION</em> (or <em>GATING</em>) – this can be used when specifying an <a class="reference internal" href="InputState.html#inputstate-projection-source-specification"><span class="std std-ref">InputState</span></a> or an <code class="xref any docutils literal"><span class="pre">OutputState</span></code>, to create a
 default <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> to the <a class="reference internal" href="State.html"><span class="doc">State</span></a>. If the GatingProjection’s <a class="reference internal" href="GatingProjection.html#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.sender" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>
 cannot be inferred from the context in which this specification occurs, then its <a class="reference internal" href="GatingProjection.html#gatingprojection-deferred-initialization"><span class="std std-ref">initialization is deferred</span></a> until it can be determined (e.g., a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> or
@@ -365,11 +355,6 @@ specifying the value of parameters used to instantiate it. These should take the
 if this entry is absent, a default Projection will be created that is appropriate for the context
 (for example, a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> for an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>, a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> for the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, and a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> for any other
 type of parameter.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
 <li><em>PROJECTION_PARAMS</em>: <em>Dict[Projection argument, argument value]</em> –
 the key for each entry of the dictionary must be the name of a Projection parameter, and its value the value
 of the parameter.  It can contain any of the standard parameters for instantiating a Projection (in particular
@@ -389,25 +374,10 @@ items in order, and can include the fourth optional item:</p>
 <div><ul class="simple">
 <li><strong>State specification</strong> – specifies the <a class="reference internal" href="State.html#state-specification"><span class="std std-ref">State</span></a> to connect with (<strong>not</strong> the one being
 connected; that is determined from context)</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
 <li><strong>weight</strong> – must be a value specifying the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.weight" title="psyneulink.core.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> of the Projection;  it can be
 <code class="xref any docutils literal"><span class="pre">None</span></code>, in which case it is ignored, but there must be a specification present;</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
 <li><strong>exponent</strong> – must be a value specifying the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.exponent" title="psyneulink.core.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> of the Projection;  it
 can be <code class="xref any docutils literal"><span class="pre">None</span></code>, in which case it is ignored, but there must be a specification present;</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
 <li><strong>Projection specification</strong> – this is optional but, if included, msut be a <a class="reference internal" href="#projection-specification"><span class="std std-ref">Projection specification</span></a>;  it can take any of the forms of a Projection specification described above for
 any Projection subclass; it can be used to provide additional specifications for the Projection, such as its
 <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> if it is a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</li>
