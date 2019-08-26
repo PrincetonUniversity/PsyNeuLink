@@ -15,17 +15,18 @@ A ControlMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that `modulates
 <ModulatorySignal_Modulation>` of one or more `ParameterStates <ParameterState>` of other Mechanisms in the
 `Composition` to which it belongs.  It's `function <ControlMechanism.function>` calculates a `control_allocation
 <ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
-<ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputStates that are used to
-that modulate the parameters of other Mechanisms' `function <Mechanism.function>` (see `ControlSignal_Modulation` for a
+<ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputStates that are used to that
+modulate the parameters of other Mechanisms' `function <Mechanism_Base.function>` (see `ControlSignal_Modulation` for a
 more detailed description of how modulation operates).  A ControlMechanism can be configured to monitor the outputs
-of other Mechanisms in order to determine its `control_allocation <ControlMechanism.control_allocation>`, by
-specifying these in the **monitor_for_control** argument of its constructor,  or in the **monitor** argument of an
-an `ObjectiveMechanism` assigned to its **objective_mechanism** argument (see `ControlMechanism_ObjectiveMechanism`
-below).  A ControlMechanism can also be assigned as the `controller <Composition.controller>` of a `Composition`,
-which has a special relation to that Composition: it generally executes either before or after all of the other
-Mechanisms in that Composition (see `Composition_Controller_Execution`).  The OutputStates monitored by the
-ControlMechanism or its `objective_mechanism <ControlMechanism.objective_mechanism>`, and the parameters it modulates
-can be listed using its `show <ControlMechanism.show>` method.
+of other Mechanisms in order to determine its `control_allocation <ControlMechanism.control_allocation>`, by specifying
+these in the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>` of its constructor,
+or in the **monitor** `argument <ObjectiveMechanism_Monitor>` of an ObjectiveMechanism` assigned to its
+**objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>` (see `ControlMechanism_Creation`
+below).  A ControlMechanism can also be assigned as the `controller <Composition.controller>` of a `Composition`,  which
+has a special relation to that Composition: it generally executes either before or after all of the other Mechanisms in
+that Composition (see `Composition_Controller_Execution`).  The OutputStates monitored by the ControlMechanism or its
+`objective_mechanism <ControlMechanism.objective_mechanism>`, and the parameters it modulates can be listed using its
+`show <ControlMechanism.show>` method.
 
 Note that a ControlMechanism is a subclass of `ModulatoryMechanism` that is restricted to using only `ControlSignals
 <ControlSignal>` and not GatingSignals.  Accordingly, its constructor has a **control_signals** argument in place of
@@ -68,51 +69,73 @@ Each can be done in several ways, as described below.
 
 A ControlMechanism can be configured to monitor the output of other Mechanisms directly (by receiving direct
 Projections from their OutputStates), or by way of an ObjectiveMechanism that evaluates those outputs and passes the
-result to the ControlMechanism, using the following arguments:
+result to the ControlMechanism (see `ControlMechanism_ObjectiveMechanism`).  The following figure shows an example of
+each:
+
+FIX: FIGURE WITH PROJECTIONS DIRECTLY FROM TEH OUTPUT STATES MONTIORED AND VIA AN OBJECTIVE MECHANISM
+
+Which configuration is used is determined by how the following arguments of the ControlMechanism's constructor are
+specified:
+
+  .. _ControlMechanism_Monitor_for_Control_Argument:
 
   * **monitor_for_control** -- a list of `OutputState specifications <OutputState_Specification>`.  If the
-    **objective_mechanism** argument is not specified, then for each OutputState specified, an `InputState` is created
-    for the ControlMechanism along with a `MappingProjection` projects to it from the specified OutputState.  If the
-    **objective_mechanism** argument is specified, then the OutputStates specified in **monitor_for_control** are used
-    to create InputStates for the specified ObjectiveMechanism rather than the ControlMechanism itself (see below).
-  ..
-  * **objective_mechanism** -- if this is specfied, then any OutputStates specified in the **monitor_for_control**
-    argument are used to create InputStates (and MappingProjections to them from the specified OutputStates) for
-    ObjectiveMechanism rather than the ControlMechanism, and a MappingProjection is created from the
-    ObjectiveMechanism's *OUTCOME* OutputState to the ControlMechanism's *OUTCOME* InputState; the
-    **objective_mechanism** argument can be specified as any of the following:
+    **objective_mechanism** argument is not specified (or is *False* or *None*), then for each OutputState specified,
+    an `InputState` is created for the ControlMechanism along with a `MappingProjection` projects to it from the
+    specified OutputState.  If the **objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>`
+    is specified, then the OutputStates specified in **monitor_for_control** are used to create InputStates (and
+    MappingProjections to them) for the specified `ObjectiveMechanism`, rather than the ControlMechanism itself (see
+    `ControlMechanism_ObjectiveMechanism`).
 
-    - an existing `ObjectiveMechanism` -- any OutputStates specified in the ControlMechanism's **monitor_for_control**
-      argument are used to add InputStates to the ObjectiveMechanism, and create MappingProjections to them from the
-      specified OutputStates;
-    |
-    - a constructor for an ObjectiveMechanism -- any OutputStates specified in the ControlMechanism's
-      **monitor_for_control** argument are added to any specified in the ObjectiveMechanism's **monitor** argument.
-    |
-    - a list of `OutputState specifications <ObjectiveMechanism_Monitor>`; a default ObjectiveMechanism
-      is created, using the list of OutputState specifications for its **monitor** argument together with any specified
-      in the ControlMechanism's **monitor_for_control** argument.
-    |
+  .. _ControlMechanism_Objective_Mechanism_Argument:
 
-FIX:
-    Note that if the ObjectiveMechanism is specified in either of the first two ways listed above, its
-    attributes override any attributes specified by the ControlMechanism for its default `objective_mechanism
-    <ControlMechanism.objective_mechanism>`, including those of its `function <ObjectiveMechanism.function>` (see
-    `note <EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for an example);
+  * **objective_mechanism** -- if this is specfied in any way other than **False** or **None** (the default),
+    then an ObjectiveMechanism is created that receives projections from all of the OutputStates to be monitored
+    (specified either in the **monitor_for_control** argument of the ControlMechanism's constructor, or the **monitor**
+    `argument <ObjectiveMechanism_Monitor>` of the ObjectiveMechanism's constructor), and then projects to the
+    ControlMechanism (see `ControlMechanism_ObjectiveMechanism>` for details).  The **objective_mechanism** argument
+    can be specified in any of the following ways:
 
-    its **function** argument can be used to specify how those OutputStates are evaluated (see
-    `ControlMechanism_Examples`);
+    - *False* or *None** -- no ObjectiveMechanism is created, and Projections from the OutputStates specified in
+      the ControlMechanism's **monitor_for_control** argument are sent directly to corresponding InputStates created
+      on the ControlMechanism itself (see specification of **monitor_for_control** `above
+      <ControlMechanism_Monitor_for_Control_Argument>`).
 
-When a ControlMechanism is created,
-if no `ObjectiveMechanism` is specified in the **objective_mechanism** of its
-constructor, then  one is automatically created and assigned as its `objective_mechanism
-<ControlMechanism.objective_mechanism>` attribute (see `ControlMechanism_ObjectiveMechanism` below).  This is used to
-monitor and evaluate the OutputStates that are are used to determine the ControlMechanism's `control_allocation
-<ControlMechanism.control_allocation>`.  The `OutputStates <OutputState>` monitored by the `objective_mechanism
-<ControlMechanism.objective_mechanism>` can be specified in the **monitor_for_control** argument of the
-ControlMechanism's constructor, or in the **monitor** argument of the constructor for the `ObjectiveMechanism`
-itself.  The parameters to be controlled by the  ControlMechanism are specified in the **control_signals** argument
-(see `ControlMechanism_Control_Signals` below).
+    - *True* -- a default `ObjectiveMechanism` is created;  any OutputStates specified in the
+      ControlMechanism's **monitor_for_control** argument are assigned to the **monitor** `argument
+      <ObjectiveMechanism_Monitor>` of the ObjectiveMechanism's constructor (see `ControlMechanism_ObjectiveMechanism`
+      for additional details).
+
+    - *a list of* `OutputState specifications <ObjectiveMechanism_Monitor>`; a default ObjectiveMechanism
+      is created as described above, using the list of OutputState specifications for its **monitor** `argument
+      <ObjectiveMechanism_Monitor>`, together with any specified in the ControlMechanism's **monitor_for_control**
+      `argument <ControlMechanism_Monitor_for_Control_Argument>`.
+
+    - *a constructor for an* `ObjectiveMechanism` -- the specified ObjectiveMechanism is created, adding any
+      OutputStates specified in the ControlMechanism's **monitor_for_control** `argument
+      <ControlMechanism_Monitor_for_Control_Argument>` to any specified in the ObjectiveMechanism's **monitor**
+      `argument <ObjectiveMechanism_Monitor>` .  This can be used to specify the `function
+      <ObjectiveMechanism.function>` used by the ObjectiveMechanism to evaluate the OutputStates monitored as well as
+      how it weights those OutputStates when they are evaluated  (see `ControlMechanism_ObjectiveMechanism` for
+      additional details).
+
+    - *an existing* `ObjectiveMechanism` -- for any OutputStates specified in the ControlMechanism's
+      **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`, an InputState is added to the
+      ObjectiveMechanism, along with `MappingProjection` to it from the specified OutputState.    This can be used to
+      specify an ObjectiveMechanism with a custom `function <ObjectiveMechanism.function>` and weighting of the
+      OutputStates monitored (see `ControlMechanism_ObjectiveMechanism` for additional details).
+
+    .. note::
+
+       Using either of the last two methods (a constructor for, or an existing ObjectiveMechanism) will override the
+       attributes used by a ControlMechanism to create a default ObjectiveMechanism (see
+       `ControlMechanism_ObjectiveMechanism` for details).
+
+
+.. _ControlMechanism_ObjectiveMechanism:
+
+Objective Mechanism
+^^^^^^^^^^^^^^^^^^^
 
 COMMENT:
 TBI FOR COMPOSITION
@@ -124,15 +147,41 @@ parameters (`ControlSignals <ControlSignal>` and corresponding `ControlProjectio
 automatically, as described below.
 COMMENT
 
+If an `ObjectiveMechanism` is specified in the **objective_mechanism** `argument
+<ControlMechanism_Objective_Mechanism_Argument>` of the ControlMechanism's constructor, it is assigned to the
+ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` attribute, and used to monitor the
+`value <OutputState.value>`\\(s) of the OutputState(s) specified in the **monitor_for_control** `argument
+<ControlMechanism_Monitor_for_Control_Argument>` of the ControlMechanism's consructor, and/or those specified in
+the **monitor** `argument <ObjectiveMechanism_Monitor>` of the ObjectiveMechanism's constructor.   These are
+evaluated using the `objective_mechanism`\\'s `function <ObjectiveMechanism.function>`, the result of which is
+assigned to its *OUTCOME* `output_state <ObjectiveMechanism_Output>` and passed to the ControlMechanism's *OUTCOME*
+`input_state <ControlMechanism_Input>`.
+
+Toward this end, if the ObjectiveMechanism is
 
 
-.. _ControlMechanism_ObjectiveMechanism:
+and evaluate the
 
-*ObjectiveMechanism*
 
-FIX: - NEEDS TO BE UPDATED RE: OPTION OF NOT SPECIFYING AN OBJECTIVE MECHANISM
-Whenever a ControlMechanism is created, it automatically creates an `ObjectiveMechanism` that monitors and evaluates
-the `value <OutputState.value>`\\(s) of a set of `OutputState(s) <OutputState>`; this evaluation is used to determine
+Toward this end
+FIX: CONSOLIDATE WITH ABOVE:
+, along with a `MappingProjection` from its *OUTCOME* `output_state
+<ObjectiveMechanism_Output>` to the  ControlMechanism's *OUTCOME* `input_state <ControlMechanism_Input>`,
+and any OutputStates specified in the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`
+are used to create InputStates (and MappingProjections to them) for the ObjetiveMechanism, rather than the
+ControlMechanism itself.
+
+
+
+(see
+`ControlMechanism_Examples`),
+
+(using its
+**monitored_output_states_weights_and_exponents** argument).
+
+
+MENTION ITS FUNCTION
+The result of this evaluation is used to determine
 the ControlMechanism's `control_allocation <ControlMechanism.control_allocation>`. The ObjectiveMechanism, the
 OutputStates that it monitors, and how it evaluates them can be specified in a variety of ways, that depend on the
 context in which the ControlMechanism is created, as described in the subsections below. In all cases,
@@ -143,9 +192,11 @@ ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Output>` to the 
 ObjectiveMechanism are listed in its `monitored_output_States <ObjectiveMechanism.monitored_output_states>`
 attribute, and in the ControlMechanism's `monitor_for_control <ControlMechanism.montior_for_control>` attribute.
 
-COMMENT:
-*When the ControlMechanism is created explicitly*
-COMMENT
+
+
+see `note
+<EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for an example).
+FIX: MOVE THE EXAMPLE TO HERE
 
 
 
@@ -219,6 +270,7 @@ Structure
 *Input*
 ~~~~~~~
 
+FIX: QUALIFY BY WHETHER OR NOT CONTROLMECHANISM HAS AN OBJECTIVEMECHANISM (SEE ABOVE).
 A ControlMechanism has a single *OUTCOME* `InputState`. Its `value <InputState.value>` (that can be referenced
 by its `outcome <ControlMechanism.outcome>` attribute) is used as the input to the ControlMechanism's `function
 <ControlMechanism.function>`, that determines the ControlMechanism's `control_allocation
@@ -535,8 +587,8 @@ class ControlMechanism(ModulatoryMechanism):
         specifies either an `ObjectiveMechanism` to use for the ControlMechanism, or a list of the OutputStates it
         should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitor>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitor** argument, along with any
-        OutputStates specified in the ControlMechanism's **monitor_for_control** argument (see
-        `ControlMechanism_Monitor_for_Control` for additional details).
+        OutputStates specified in the ControlMechanism's **monitor_for_control** `argument
+        <ControlMechanism_Monitor_for_Control_Argument>`.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputStates.
@@ -616,8 +668,8 @@ class ControlMechanism(ModulatoryMechanism):
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
-        **monitor_for_control** argument of the ControlMechanism's constructor are used to generate its
-        `control_allocation <ControlMechanism.control_allocation>`.
+        **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>` of the ControlMechanism's
+        constructor are used to generate its `control_allocation <ControlMechanism.control_allocation>`.
 
     default_allocation : number, list or 1d array
         determines the default_allocation of any `control_signals <ControlMechanism.control.signals>` for

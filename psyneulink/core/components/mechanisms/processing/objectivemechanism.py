@@ -43,7 +43,7 @@ FOR DEVELOPERS:
     The monitor property returns the OutputStates that project to the Mechanism's InputStates
 COMMENT
 
-The **monitor** argument of the constructor specifies the `OutputStates <OutputState>` it monitors.
+The **monitor** argument of an ObjectiveMechanism's constructor specifies the `OutputStates <OutputState>` it monitors.
 This takes the place of the **input_states** argument used by most other forms of `Mechanism <Mechanism>`, and is used
 by the ObjectiveMechanism to create an `InputState` for each OutputState it monitors, along with a `MappingProjection`
 from the OutputState to that InputState.  The **monitor** argument takes a list of items that can
