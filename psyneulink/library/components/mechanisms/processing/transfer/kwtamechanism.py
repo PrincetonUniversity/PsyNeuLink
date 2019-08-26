@@ -146,13 +146,13 @@ When a KTWA is executed, it first determines its `variable <KWTAMechanism.variab
   - calculate the scope of offsets that will satisfy the constraint; how this is done is determined by the
     `average_based <KWTAMechanism.average_based>` attribute (see `above
     <KWTAMechanism_average_based>`);
-  |
+
   - select an offset from the scope based on the `ratio <KWTAMechanism.ratio>` option (see `above
     <KWTAMechanism_ratio>`);
-  |
+
   - constrain the offset to be 0 or negative if the `inhibition_only <KWTAMechanism.inhibition_only>` option
     is set (see `above <KWTAMechanism_inhibition_only>`;
-  |
+
   - apply the offset to all elements of the `variable <KWTAMechanism.variable>`.
 ..
 The modified `variable <KWTAMechanism.variable>` is then passed to the KWTAMechanism's `function
