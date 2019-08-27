@@ -333,7 +333,6 @@ and is used as the input to the ControlMechanism's `function <ControlMechanism.f
 *Function*
 ~~~~~~~~~~
 
-FIX: QUALIFY BY WHETHER OR NOT CONTROLMECHANISM HAS AN OBJECTIVEMECHANISM (SEE ABOVE).
 A ControlMechanism's `function <ControlMechanism.function>` uses its `outcome <ControlMechanism.outcome>`
 attribute (the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `control_allocation
 <ControlMechanism.control_allocation>`.  By default, `function <ControlMechanism.function>` is assigned
