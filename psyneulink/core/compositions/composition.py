@@ -2196,7 +2196,69 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 scheduler._init_consideration_queue_from_graph(self.graph_processing)
     # MODIFIED 8/16/19 END
 
+    # def _determine_node_roles(self):
+    #     # Clear old roles
+    #     self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
+    #
+    #     # Required Roles
+    #     for node_role_pair in self.required_node_roles:
+    #         self._add_node_role(node_role_pair[0], node_role_pair[1])
+    #
+    #     objective_mechanism = None
+    #     if self.controller and self.enable_controller and self.controller.objective_mechanism:
+    #         objective_mechanism = self.controller.objective_mechanism
+    #         self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
+    #
+    #     # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
+    #     if self.scheduler_processing.consideration_queue:
+    #         self._analyze_consideration_queue(self.scheduler_processing.consideration_queue, objective_mechanism)
+    #
+    #     # Cycles
+    #     for node in self.scheduler_processing.cycle_nodes:
+    #         self._add_node_role(node, NodeRole.CYCLE)
+    #
+    #     # "Feedback" projections
+    #     for node in self.feedback_senders:
+    #         self._add_node_role(node, NodeRole.FEEDBACK_SENDER)
+    #
+    #     for node in self.feedback_receivers:
+    #         self._add_node_role(node, NodeRole.FEEDBACK_RECEIVER)
+    #
+    #     # Required Roles
+    #     for node_role_pair in self.required_node_roles:
+    #         self._add_node_role(node_role_pair[0], node_role_pair[1])
+    #
+    #     # If INPUT nodes were not specified by user, ORIGIN nodes become INPUT nodes
+    #     if not self.get_nodes_by_role(NodeRole.INPUT):
+    #         origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
+    #         for node in origin_nodes:
+    #             self._add_node_role(node, NodeRole.INPUT)
+    #
+    #     # If OUTPUT nodes were not specified by user, TERMINAL nodes become OUTPUT nodes.
+    #     # If there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
+    #     # If there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
+    #     if not self.get_nodes_by_role(NodeRole.OUTPUT):
+    #         if self.get_nodes_by_role(NodeRole.LEARNING):
+    #             # FIX: ADD COMMENT HERE
+    #             # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
+    #             terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
+    #                                    if any([item for item in items
+    #                                            if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
+    #         else:
+    #             terminal_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
+    #         if not terminal_nodes:
+    #             try:
+    #                 # FIX: ADD COMMENT HERE
+    #                 terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
+    #                                        if any([item for item in items
+    #                                                if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
+    #             except IndexError:
+    #                 terminal_nodes = []
+    #         for node in terminal_nodes:
+    #             self._add_node_role(node, NodeRole.OUTPUT)
+
     def _determine_node_roles(self):
+
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
 
@@ -2212,6 +2274,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler_processing.consideration_queue:
             self._analyze_consideration_queue(self.scheduler_processing.consideration_queue, objective_mechanism)
+
+        # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
+        # A ControlMechanism should not be the TERMINAL node of a Composition
+        #    (unless it is specifed as a required_role, in which case it is reassigned below)
+        for node in self.nodes:
+            if isinstance(node, ControlMechanism):
+                if NodeRole.TERMINAL in self.nodes_to_roles[node]:
+                    self.nodes_to_roles[node].remove(NodeRole.TERMINAL)
+                if NodeRole.OUTPUT in self.nodes_to_roles[node]:
+                    self.nodes_to_roles[node].remove(NodeRole.OUTPUT)
+        # MODIFIED 8/12/19 END
 
         # Cycles
         for node in self.scheduler_processing.cycle_nodes:
@@ -2234,28 +2307,65 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in origin_nodes:
                 self._add_node_role(node, NodeRole.INPUT)
 
-        # If OUTPUT nodes were not specified by user, TERMINAL nodes become OUTPUT nodes.
-        # If there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
-        # If there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
+        # If OUTPUT nodes were not specified by user, assign them:
+        # FIX: MODIFIED FEEDBACK - NEED MORE COMPLEMENT COMMENTING HERE
+        # - if there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
+        # - if there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
         if not self.get_nodes_by_role(NodeRole.OUTPUT):
             if self.get_nodes_by_role(NodeRole.LEARNING):
                 # FIX: ADD COMMENT HERE
                 # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
-                terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
+                output_nodes = list([items for items in self.scheduler_processing.consideration_queue
                                        if any([item for item in items
                                                if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
             else:
-                terminal_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
-            if not terminal_nodes:
+                output_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
+            if not output_nodes:
                 try:
-                    # FIX: ADD COMMENT HERE
-                    terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
-                                           if any([item for item in items
-                                                   if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
+                    # # MODIFIED 8/12/19 OLD:
+                    # terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
+                    #                        if any([item for item in items
+                    #                                if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
+                    # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
+                    # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
+                    #    - not used for Learning;
+                    #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
+                    #    - do not project to any other nodes.
+                    # FIX: STILL NOT ASSIGNING A1 AS TERMINAL IN SCRATCH PAD;
+                    #      BUT ALSO RISKS ASSIGNING BOTH A1 AND A2 SINCE BOTH ARE IN THE SAME CONSIDERATION_SET
+                    # First, find last consideration_set in scheduler_processing that does not contain
+                    #    learning-related nodes or a ControlMechanism
+                    output_nodes = list([items for items in self.scheduler_processing.consideration_queue
+                                           if any([item for item in items if
+                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item]
+                                                    and not isinstance(item, ControlMechanism)
+                                                    and not (isinstance(item, ObjectiveMechanism)
+                                                             and item._role == CONTROL))
+                                                   ])]
+                                          )[-1]
+                    # Then, add any nodes that are not learning-related or a ControlMechanism,
+                    #    and that have *no* efferent Projections
+                    # IMPLEMENTATION NOTE:
+                    #  Do this here, as the list considers entire sets in the consideration queue,
+                    #    and a node with no efferents may be in the same set as one with efferents
+                    #    if they have the same dependencies.
+                    for node in self.nodes:
+                        if (not node.efferents
+                                and not NodeRole.LEARNING in self.nodes_to_roles[node]
+                                and not isinstance(node, ControlMechanism)):
+                            output_nodes.add(node)
+                    # MODIFIED 8/12/19 END
                 except IndexError:
-                    terminal_nodes = []
-            for node in terminal_nodes:
+                    output_nodes = []
+            for node in output_nodes:
                 self._add_node_role(node, NodeRole.OUTPUT)
+            # MODIFIED 8/16/19 NEW:
+            # Finally, assign TERMINAL nodes
+            for node in self.nodes:
+                if not node.efferents or NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]:
+                    self._add_node_role(node, NodeRole.TERMINAL)
+            # MODIFIED 8/16/19 END
+
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
