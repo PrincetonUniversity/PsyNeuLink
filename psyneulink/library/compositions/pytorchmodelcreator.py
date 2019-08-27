@@ -4,7 +4,7 @@ from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core import llvm as pnlvm
-from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer
+from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer,SGDOptimizer
 from llvmlite import ir
 import numpy
 import ctypes
@@ -777,6 +777,8 @@ class PytorchModelCreator(torch.nn.Module):
         optimizer_type = self._composition.optimizer_type
         if optimizer_type == 'adam':
             optimizer = AdamOptimizer(self,lr = self._composition.learning_rate)
+        elif optimizer_type == 'sgd':
+            optimizer = SGDOptimizer(self,lr = self._composition.learning_rate)
         else:
             raise Exception("OPTIMIZER TYPE",optimizer_type,"NOT SUPPORTED")
         optimizer_struct = builder.alloca(optimizer._get_optimizer_struct_type(ctx))

@@ -22,7 +22,7 @@ except ImportError:
     torch_available = False
 
 
-__all__ = ['AdamOptimizer']
+__all__ = ['AdamOptimizer','SGDOptimizer']
 
 
 class Optimizer():
@@ -106,7 +106,9 @@ class Optimizer():
 
 
 class AdamOptimizer(Optimizer):
-
+    '''
+    Implements compiled ADAM Optimizer ( from paper https://arxiv.org/pdf/1412.6980.pdf  )
+    '''
     # sets up parameters of model & the information required for forward computation
     def __init__(self, pytorch_model, lr=1e-3, betas=(.9, .9999), eps=1e-8, weight_decay=0,):
         super().__init__(pytorch_model)
@@ -293,6 +295,69 @@ class AdamOptimizer(Optimizer):
                         weights_llvmlite, [zero, weight_row, weight_column])
                     value = builder.fsub(builder.load(old_weight_ptr), value)
                     builder.store(value, old_weight_ptr)
+        ctx.inject_printf(builder, f"\t\t\tOPTIM DONE UPDATE\n")
+        builder.ret_void()
+
+        return llvm_func
+
+
+class SGDOptimizer(Optimizer):
+    '''
+    Implements compiled Stocastic Gradient Descent optimizer (without momentum)
+    '''
+    # sets up parameters of model & the information required for forward computation
+    def __init__(self, pytorch_model, lr=1e-3):
+        super().__init__(pytorch_model)
+        self.lr = lr
+
+    def _get_optimizer_struct_type(self, ctx):
+        return super()._get_optimizer_struct_type(ctx)
+
+    def initialize_optimizer_struct(self, ctx, builder, optim_struct):
+        pass
+
+    # steps the adam optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
+    def step(self, ctx):
+        name = self._composition.name+"_SGD_STEP"
+        # try:
+        #     llvm_func = ctx.get_llvm_function(name)
+        #     return llvm_func
+        # except Exception as e:
+        #     pass
+
+        args = [self._get_optimizer_struct_type(ctx).as_pointer(),
+                self._pytorch_model._get_param_struct_type(ctx).as_pointer()]
+        builder = ctx.create_llvm_function(args, self, name)
+        llvm_func = builder.function
+        llvm_func.attributes.add('alwaysinline')
+        optim_struct, model_params = llvm_func.args
+
+        # setup values
+        zero = ctx.int32_ty(0)
+        one = ctx.int32_ty(1)
+        one_float = ctx.float_ty(1)
+
+        delta_w = builder.gep(
+            optim_struct, [zero, ctx.int32_ty(self._DELTA_W_NUM)])
+
+        lr = ctx.float_ty(self.lr)
+       
+        gradient_struct_values = self._get_listof_gradient_struct_values()
+        
+        # update weights
+        for (node, node_idx, afferent_node, afferent_node_index, matrix, weights_dim_x, weights_dim_y) in gradient_struct_values:
+            node_idx_ir = ctx.int32_ty(node_idx)
+            afferent_node_index_ir = ctx.int32_ty(afferent_node_index)
+
+            delta_w_ptr = builder.gep(delta_w,[zero,node_idx_ir,afferent_node_index_ir])            
+            weights_llvmlite, weights_dim_x, weights_dim_y = self._pytorch_model._gen_get_node_weight_pointer(
+                ctx, builder, model_params, node, afferent_node)
+            ctx.inject_printf(
+                builder, f"\t\t\t\tOPTIM UPDATE WEIGHTS {afferent_node.name} {node.name}\n")
+            
+            multiplied_delta_w = self._pytorch_model._gen_inject_mat_scalar_mult(ctx,builder,delta_w_ptr,lr,weights_dim_x,weights_dim_y)
+            self._pytorch_model._gen_inject_mat_sub(ctx,builder,weights_llvmlite,multiplied_delta_w,weights_dim_x,weights_dim_y,weights_llvmlite)
+
         ctx.inject_printf(builder, f"\t\t\tOPTIM DONE UPDATE\n")
         builder.ret_void()
 
