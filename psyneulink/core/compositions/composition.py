@@ -5414,13 +5414,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 i = get_index_of_node_in_G_body(node, MECHANISM)
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
-            # Put ControlMechanisms last
+            # Put ControlMechanism(s) last
             if isinstance(node, ControlMechanism):
                 i = get_index_of_node_in_G_body(node, MECHANISM)
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
 
         for proj in self.projections:
+            # Put ControlProjection(s) last (along with ControlMechanis(s))
             if isinstance(proj, ControlProjection):
                 i = get_index_of_node_in_G_body(node, PROJECTION)
                 if i is not None:
