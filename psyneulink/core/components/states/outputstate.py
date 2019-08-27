@@ -176,12 +176,12 @@ which it should project. Each of these is described below:
         as the input to the OutputState's `function <OutputState.function>` (see `OutputState_Customization`); this
         must be compatible (in the number and format of the items it specifies) with the OutputState's `function
         <OutputState.function>`.
-      |
+
       * *FUNCTION*:<`Function <Function>`, function or method> - specifies the function used to transform and/or
         combine the item(s) specified for the OutputState's `variable <OutputState.variable>` into its
         `value <OutputState.value>`;  its input must be compatible (in the number and format of elements) with the
         specification of the OutputState's `variable <OutputState.variable>` (see `OutputState_Customization`).
-      |
+
       * *PROJECTIONS* or *MECHANISMS*:<list of `Projections <Projection>` and/or `Mechanisms <Mechanism>`> - specifies
         one or more efferent `MappingProjections <MappingProjection>` from the OutputState, Mechanims that should
         receive them, and/or `ModulatoryProjections <ModulatoryProjection>` for it to receive;  this may be constrained
@@ -197,7 +197,7 @@ which it should project. Each of these is described below:
         Mechanism's `value <Mechanism_Base.value>` to be used for the OutputState's `variable <OutputState.variable>`;
         equivalent to specifying (OWNER_VALUE, <int>) for *VARIABLE* (see `OutputState_Customization`), which should be
         used for compatibility with future versions.
-      |
+
       * *ASSIGN*:<function> *[DEPRECATED in version 0.4.5]* - specifies the OutputState's `function`
         <OutputState.assign>` attribute;  *FUNCTION* should be used for compatibility with future versions.
 
@@ -261,10 +261,10 @@ which it should project. Each of these is described below:
           `InputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
           (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
-        |
+
         * **2-item tuple:** *(<State, Mechanism, or list of them>, <Projection specification>)* -- this is a contracted
           form of the 3-item tuple described below
-        |
+
         * **3-item tuple:** *(<value, State spec, or list of State specs>, variable spec, Projection specification)* --
           this allows the specification of State(s) to which the OutputState should project, together with a
           specification of its `variable <OutputState.variable>` attribute, and (optionally) parameters of the
@@ -278,10 +278,10 @@ which it should project. Each of these is described below:
               case their `primary InputState <InputStatePrimary>` is used.  All of the State specifications must be
               consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
               <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included.
-            |
+
             * **variable spec** -- specifies the attributes of the OutputState's `owner <OutputState.owner>` Mechanism
               used for its `variable <OutputState.variable>` (see `OutputState_Customization`).
-            |
+
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
               must be compatible with the State specification(s) in the 1st item; if there is more than one
               State specified, and the Projection specification is used, all of the States
@@ -328,12 +328,12 @@ below, starting with constraints that are given the highest precedence:
     `specified to project to any other Components <OutputState_Projection_Destination_Specification>`, then if the
     Component is a:
 
-    |
+
     * **InputState or Mechanism** (for which its `primary InputState <InputState_Primary>` is used) -- if its
       `variable <State_Base.variable>` matches the format of the OutputState's `value <OutputState.value>`, a
       `MappingProjection` is created using an `IDENTITY_MATRIX`;  otherwise, a `FULL_CONNECTIVITY_MATRIX` is used
       that maps the OutputState's `value <OutputState.value>` to the InputState's `variable <State_Base.variable>`.
-    |
+
     * **MappingProjection** -- if its `matrix <MappingProjection.matrix>` is specified, then the `sender dimensionality
       <Mapping_Matrix_Dimensionality>` of the matrix must be the same as that of the OutputState's `value
       <OutputState.value>`; if its `receiver <MappingProjection.receiver>` is specified, but not its `matrix
@@ -341,7 +341,7 @@ below, starting with constraints that are given the highest precedence:
       receiver (as described just above);  if neither its `matrix <MappingProjection.matrix>` or its `receiver
       <MappingProjection.receiver>` are specified, then the Projection's `initialization is deferred
       <MappingProjection_Deferred_Initialization>` until its `receiver <MappingProjection.receiver>` is specified.
-    |
+
     * **GatingProjection, GatingSignal or GatingMechanism** -- any of these can be used to specify an OutputState;
       their `value` does not need to be compatible with the OutputState's `variable <InputState.variable>` or
       `value <OutputState.value>`, however it does have to be compatible with the `modulatory parameter
