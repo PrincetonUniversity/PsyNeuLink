@@ -59,6 +59,9 @@ constructor or its `assign_as_controller <ControlMechanism.assign_as_controller>
 Creating a ControlMechanism
 ---------------------------
 
+FIX: PUT THIS IN APPROPRIATE PLACES:
+(see `ControlMechanism_Examples`),
+
 When a ControlMechanism is created, the OutputStates it monitors and the parameters it controls must be specified.
 Each can be done in several ways, as described below.
 
@@ -72,7 +75,7 @@ Projections from their OutputStates), or by way of an ObjectiveMechanism that ev
 result to the ControlMechanism (see `ControlMechanism_ObjectiveMechanism`).  The following figure shows an example of
 each:
 
-FIX: FIGURE WITH PROJECTIONS DIRECTLY FROM TEH OUTPUT STATES MONTIORED AND VIA AN OBJECTIVE MECHANISM
+FIX: ADD FIGURE WITH PROJECTIONS DIRECTLY FROM TEH OUTPUT STATES MONTIORED AND VIA AN OBJECTIVE MECHANISM
 
 Which configuration is used is determined by how the following arguments of the ControlMechanism's constructor are
 specified:
@@ -80,36 +83,37 @@ specified:
   .. _ControlMechanism_Monitor_for_Control_Argument:
 
   * **monitor_for_control** -- a list of `OutputState specifications <OutputState_Specification>`.  If the
-    **objective_mechanism** argument is not specified (or is *False* or *None*), then for each OutputState specified,
-    an `InputState` is created for the ControlMechanism along with a `MappingProjection` projects to it from the
-    specified OutputState.  If the **objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>`
-    is specified, then the OutputStates specified in **monitor_for_control** are used to create InputStates (and
-    MappingProjections to them) for the specified `ObjectiveMechanism`, rather than the ControlMechanism itself (see
-    `ControlMechanism_ObjectiveMechanism`).
+    **objective_mechanism** argument is not specified (or is *False* or *None*) then, when the ControlMechanism is
+    added to a `Composition`, a `MappingProjection is created for each OutputState specified to the ControlMechanism's
+    *OUTCOME* `input_state <ControlMechanism_Input>`.  If the **objective_mechanism** `argument
+    <ControlMechanism_Objective_Mechanism_Argument>` is specified, then the OutputStates specified in
+    **monitor_for_control** are assigned to the `ObjectiveMechanism` rather than the ControlMechanism itself (see
+    `ControlMechanism_ObjectiveMechanism` for details).
 
   .. _ControlMechanism_Objective_Mechanism_Argument:
 
   * **objective_mechanism** -- if this is specfied in any way other than **False** or **None** (the default),
-    then an ObjectiveMechanism is created that receives projections from all of the OutputStates to be monitored
-    (specified either in the **monitor_for_control** argument of the ControlMechanism's constructor, or the **monitor**
-    `argument <ObjectiveMechanism_Monitor>` of the ObjectiveMechanism's constructor), and then projects to the
-    ControlMechanism (see `ControlMechanism_ObjectiveMechanism>` for details).  The **objective_mechanism** argument
-    can be specified in any of the following ways:
+    then an ObjectiveMechanism is created that projects to the ControlMechanism and, when added to a `Composition`,
+    is assigned Projections from all of the OutputStates specified either in the  **monitor_for_control** argument of
+    the ControlMechanism's constructor, or the **monitor** `argument <ObjectiveMechanism_Monitor>` of the
+    ObjectiveMechanism's constructor (see `ControlMechanism_ObjectiveMechanism>` for details).  The
+    **objective_mechanism** argument can be specified in any of the following ways:
 
-    - *False* or *None** -- no ObjectiveMechanism is created, and Projections from the OutputStates specified in
-      the ControlMechanism's **monitor_for_control** argument are sent directly to corresponding InputStates created
-      on the ControlMechanism itself (see specification of **monitor_for_control** `above
+    - *False* or *None** -- no ObjectiveMechanism is created and, when the ControlMechanism is added to a `Composition`,
+      Projections from the OutputStates specified in the ControlMechanism's **monitor_for_control** argument are sent
+      directly to ControlMechanism (see specification of **monitor_for_control** `argument
       <ControlMechanism_Monitor_for_Control_Argument>`).
 
-    - *True* -- a default `ObjectiveMechanism` is created;  any OutputStates specified in the
-      ControlMechanism's **monitor_for_control** argument are assigned to the **monitor** `argument
-      <ObjectiveMechanism_Monitor>` of the ObjectiveMechanism's constructor (see `ControlMechanism_ObjectiveMechanism`
-      for additional details).
+    - *True* -- an `ObjectiveMechanism` is created that projects to the ControlMechanism, and any OutputStates
+      specified in the ControlMechanism's **monitor_for_control** argument are assigned to ObjectiveMechanism's
+      **monitor** `argument <ObjectiveMechanism_Monitor>` instead (see `ControlMechanism_ObjectiveMechanism` for
+      additional details).
 
-    - *a list of* `OutputState specifications <ObjectiveMechanism_Monitor>`; a default ObjectiveMechanism
-      is created as described above, using the list of OutputState specifications for its **monitor** `argument
-      <ObjectiveMechanism_Monitor>`, together with any specified in the ControlMechanism's **monitor_for_control**
-      `argument <ControlMechanism_Monitor_for_Control_Argument>`.
+    - *a list of* `OutputState specifications <ObjectiveMechanism_Monitor>`; an ObjectiveMechanism is created that
+      projects to the ControlMechanism, and the list of OutputStates specified, together with any specified in the
+      ControlMechanism's **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`, are
+      assigned to the ObjectiveMechanism's **monitor** `argument <ObjectiveMechanism_Monitor>` (see
+      `ControlMechanism_ObjectiveMechanism` for additional details).
 
     - *a constructor for an* `ObjectiveMechanism` -- the specified ObjectiveMechanism is created, adding any
       OutputStates specified in the ControlMechanism's **monitor_for_control** `argument
@@ -125,17 +129,18 @@ specified:
       specify an ObjectiveMechanism with a custom `function <ObjectiveMechanism.function>` and weighting of the
       OutputStates monitored (see `ControlMechanism_ObjectiveMechanism_Function` for additional details).
 
-    .. note::
-
-       Using either of the last two methods (a constructor for, or an existing ObjectiveMechanism) will override the
-       attributes used by a ControlMechanism to create a default ObjectiveMechanism (see `below
-       `ControlMechanism_ObjectiveMechanism_Function` for additional details).
+The OutputStates monitored by a ControlMechanism or its `objective_mechanism <ControlMechanism.objective_mechanism>`
+are listed in the ControlMechanism's `monitor_for_control <ControlMechanism.monitor_for_control>` attribute
+(and are the same as those listed in the `monitored_outout_states <ObjectiveMechanism.monitored_output_states>`
+attribute of the `objective_mechanism <ControlMechanism.objective_mechanism>`, if specified).
 
 
 .. _ControlMechanism_ObjectiveMechanism:
 
 Objective Mechanism
 ^^^^^^^^^^^^^^^^^^^
+
+FIX: ADD TO BELOW
 
 COMMENT:
 TBI FOR COMPOSITION
@@ -147,82 +152,69 @@ parameters (`ControlSignals <ControlSignal>` and corresponding `ControlProjectio
 automatically, as described below.
 COMMENT
 
-If an `ObjectiveMechanism` is specified in the **objective_mechanism** `argument
-<ControlMechanism_Objective_Mechanism_Argument>` of the ControlMechanism's constructor, it is assigned to the
-ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` attribute, and used to monitor the
-`value <OutputState.value>`\\(s) of the OutputState(s) specified in the **monitor_for_control** `argument
-<ControlMechanism_Monitor_for_Control_Argument>` of the ControlMechanism's consructor, as well as any specified in
-the **monitor** `argument <ObjectiveMechanism_Monitor>` of the ObjectiveMechanism's constructor.   These are
-evaluated using the `objective_mechanism`\\'s `function <ObjectiveMechanism.function>`, the result of which is
-assigned to its *OUTCOME* `output_state <ObjectiveMechanism_Output>`.  This is passed to the ControlMechanism's
+If an `ObjectiveMechanism` is specified for a ControlMechanism (in the **objective_mechanism** `argument
+<ControlMechanism_Objective_Mechanism_Argument>` of its constructor), it is assigned to the ControlMechanism's
+`objective_mechanism <ControlMechanism.objective_mechanism>` attribute, and a `MappingProjection is created
+automatically that projects from the ObjectiveMechanism's *OUTCOME* `output_state <ObjectiveMechanism_Output>` to the
+*OUTCOME* `input_state <ControlMechanism_Input>` of the ControlMechanism.
+
+The `objective_mechanism <ControlMechanism.objective_mechanism>` is used to monitor the OutputStates
+specified in the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>` of the
+ControlMechanism's constructor, as well as any specified in the **monitor** `argument <ObjectiveMechanism_Monitor>` of
+the ObjectiveMechanism's constructor.  Specifically, for each OutputState specified in either place, an `input_state
+<ObjectiveMechanism.input_states>` is added to the ObjectiveMechanism.  OutputStates to be monitored (and
+corresponding `input_states <ObjectiveMechanism.input_states>` can be added to the `objective_mechanism
+<ControlMechanism.objective_mechanism>` later, by using its `add_to_monitor <ObjectiveMechanism.add_to_monitor>` method.
+The set of OutputStates monitored by the `objective_mechanism <ControlMechanism.objective_mechanism>` are listed in
+its `monitor <ObjectiveMechanism>` attribute, as well as in the ControlMechanism's `monitor_for_control
+<ControlMechanism.monitor_for_control>` attribute.
+
+When the ControlMechanism is added to a `Composition`, the `objective_mechanism <ControlMechanism.objective_mechanism>`
+is also automatically added, and MappingProjectons are created from each of the OutputStates that it monitors to
+its corresponding `input_states <ObjectiveMechanism.input_states>`.  When the Composition is run, the `value
+<OutputState.value>`\\(s) of the OutputState(s) monitored are evaluated using the `objective_mechanism`\\'s `function
+<ObjectiveMechanism.function>`, and the result is assigned to its *OUTCOME* `output_state
+<ObjectiveMechanism_Output>`.  That `value <ObjectiveMechanism.value>` is then passed to the ControlMechanism's
 *OUTCOME* `input_state <ControlMechanism_Input>`, which is used by the ControlMechanism's `function
 <ControlMechanism.function>` to determine its `control_allocation <ControlMechanism.control_allocation>`.
 
-Toward this end, if an ObjectiveMechanism is specified for a ControlMechanism, for each OutputState to be monitored,
-an InputState is assigned to the ObjectiveMechanism, along with a `MappingProjection` to that InputState from the
-specified OutputState.  In addition, a `MappingProjection` is created from the *OUTCOME* `output_state
-<ObjectiveMechanism_Output>` of the ObjectiveMechanism to the *OUTCOME* `input_state <ControlMechanism_Input>`,
-of the ControlMechanism (which in this configuration is its  `primary InputState <InputState_Primary>`)
-
-
-FIX: PUT THIS IN APPROPRIATE PLACES:
-(see `ControlMechanism_Examples`),
-
 .. _ControlMechanism_ObjectiveMechanism_Function:
 
-If a default ObjectiveMechanism is created, it uses XXX function
-If one is specified, XXX
-see `note
-<EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for an example).
-    .. note::
-       If a constructor for an `ObjectiveMechanism` is used for the **objective_mechanism** argument of the
-       EVCControlMechanism's constructor, then the default values of its attributes override any used by the
-       EVCControlMechanism for its `objective_mechanism <EVCControlMechanism.objective_mechanism>`.  In particular,
-       whereas an EVCControlMechanism uses the same default `function <ObjectiveMechanism.function>` as an
-       `ObjectiveMechanism` (`LinearCombination`), it uses *PRODUCT* rather than *SUM* as the default value of the
-       `operation <LinearCombination.operation>` attribute of the function.  As a consequence, if the constructor for
-       an ObjectiveMechanism is used to specify the EVCControlMechanism's **objective_mechanism** argument,
-       and the **operation** argument is not specified, *SUM* rather than *PRODUCT* will be used for the
-       ObjectiveMechanism's `function <ObjectiveMechanism.function>`.  To ensure that *PRODUCT* is used, it must be
-       specified explicitly in the **operation** argument of the constructor for the ObjectiveMechanism (see 1st
-       example under `System_Control_Examples`).
+If a default ObjectiveMechanism is created by the ControlMechanism (i.e., when *True* or a list of OutputStates is
+specified for the **objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>` of the
+constructor), then the ObjectiveMechanism is created with its standard default `function <ObjectiveMechanism.function>`
+(`LinearCombination`), but using *PRODUCT* (rather than the default, *SUM*) as the value of the function's `operation
+<LinearCombination.operation>` parameter. The result is that the `objective_mechanism
+<ControlMechanism.objective_mechanism>` multiplies the `value <OutputState.value>`\s of the OutputStates that it
+monitors, which it passes to the ControlMechanism.  However, if the **objective_mechanism** is specified using either
+a constructor for, or an existing ObjectiveMechanism, then the defaults for the `ObjectiveMechanism` class -- and any
+attributes explicitly specified in its construction -- are used.  In that case, if the `LinearCombination` with
+*PRODUCT* as its `operation <LinearCombination.operation>` parameter are still desired, this must be explicitly
+specified.  This is illustrated in the following examples.
 
+The following example specifies a `ControlMechanism` that automatically constructs its `objective_mechanism
+<ControlMechanism.objective_mechanism>`::
 
-_System_Control_Examples
-The following example specifies an `EVCControlMechanism` as the controller for a System with two `Processes <Process>`
-that include two `Mechanisms <Mechanism>` (not shown)::
+    >>> my_ctl_mech = ControlMechanism(objective_mechanism=True)
+    >>> assert isinstance(my_ctl_mech.objective_mechanism.function, LinearCombination)
+    >>> assert my_ctl_mech.objective_mechanism.function.operation == PRODUCT
 
-    my_system = System(processes=[TaskExecutionProcess, RewardProcess],
-                       controller=EVCControlMechanism(objective_mechanism=
-                                                   ObjectiveMechanism(
-                                                       monitored_output_states=[
-                                                           Reward,
-                                                           Decision.output_states[PROBABILITY_UPPER_THRESHOLD],
-                                                           (Decision.output_states[RESPONSE_TIME], -1, 1)]))
-                                                       function=LinearCombination(operation=PRODUCT))
+Notice that `LinearCombination was assigned as the `function <ObjectiveMechanism.function>` of the `objective_mechanism
+<ControlMechanism.objective_mechanism>`, and *PRODUCT* as its `operation <LinearCombination.operation>` parameter.
 
-A constructor is used to specify the EVCControlMechanism that includes a constructor specifying its `objective_mechanism
-<ControlMechanism.objective_mechanism>`;  the **monitored_output_states** argument of the ObjectiveMechanism's constructor
-is used to specify that it should monitor the `primary OutputState <OutputState_Primary>` of the Reward Mechanism
-and the *PROBABILITY_UPPER_THRESHOLD* and *RESPONSE_TIME* and, specifying how it should combine them (see the `example
-<ControlMechanism_Examples>` under ControlMechanism for an explanation). Note that the **function** argument for the
-ObjectiveMechanism's constructor is also specified;  this is because an ObjectiveMechanism uses *SUM* as the default
-for the `operation <LinearCombination.operation>` of its `LinearCombination` function, whereas as the EVCControlMechanism
-requires *PRODUCT* -- in this case, to properly use the weight and exponents specified for the RESPONSE_TIME
-OutputState of Decision (see `note <EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for
-a more complete explanation).  Note that both the EVCControlMechanism and/or the ObjectiveMechanism could have been
-constructed separately, and then referenced in the **controller** argument of ``my_system`` and **objective_mechanism**
-argument of the EVCControlMechanism, respectively.
+By contrast, the following example explicitly specifies the **objective_mechanism** argument using a constructor for
+an ObjectiveMechanism::
 
+    >>> my_ctl_mech = ControlMechanism(objective_mechanism=True)
+    >>> assert isinstance(my_ctl_mech.objective_mechanism.function, LinearCombination)
+    >>> assert my_ctl_mech.objective_mechanism.function.operation == SUM
 
-FIX: MOVE THE EXAMPLE TO HERE
-
+In this case, the defaults for the ObjectiveMechanism's class are used for its `function <ObjectiveMechanism.function>`,
+which is a `LinearCombination` function with *SUM* as its `operation <LinearCombination.operation>` parameter.
 
 COMMENT:
-*When the ControlMechanism is created for or assigned as the controller a Composition*
-
 TBI FOR COMPOSITION
-If a ControlMechanism is specified as the `controller <Composition.controller>` of a `Composition` (see
+When a ControlMechanism is created for or assigned as the `controller <Composition.controller>` of a `Composition` (see
 `ControlMechanism_Composition_Controller`), any OutputStates specified to be monitored by the System are assigned as
 inputs to the ObjectiveMechanism.  This includes any specified in the **monitor_for_control** argument of the
 System's constructor, as well as any specified in a MONITOR_FOR_CONTROL entry of a Mechanism `parameter specification
@@ -233,13 +225,6 @@ FOR DEVELOPERS:
     constructor called by ControlMechanism._instantiate_objective_mechanmism;  otherwise, they are created using the
     ObjectiveMechanism.add_to_monitor method.
 COMMENT
-
-* Adding OutputStates to be monitored to a ControlMechanism*
-
-OutputStates to be monitored can also be added to an existing ControlMechanism by using the `add_to_monitor
-<ObjectiveMechanism.add_to_monitor>` method of the ControlMechanism's `objective_mechanism
-<ControlMechanism.objective_mechanism>`.
-
 
 .. _ControlMechanism_Control_Signals:
 
@@ -288,34 +273,31 @@ Structure
 *Input*
 ~~~~~~~
 
-FIX: QUALIFY BY WHETHER OR NOT CONTROLMECHANISM HAS AN OBJECTIVEMECHANISM (SEE ABOVE).
-A ControlMechanism has a single *OUTCOME* `InputState`. Its `value <InputState.value>` (that can be referenced
-by its `outcome <ControlMechanism.outcome>` attribute) is used as the input to the ControlMechanism's `function
-<ControlMechanism.function>`, that determines the ControlMechanism's `control_allocation
-<ControlMechanism.control_allocation>`. The *OUTCOME* InputState receives its input via a `MappingProjection` from the
-*OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`. The Objective Mechanism is specified
-in the **objective_mechanism** argument of its constructor, and listed in its `objective_mechanism
-<EVCControlMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the ObjectiveMechanism (listed
-in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute) are also listed in the
-`monitor_for_control <ControlMechanism.monitor_for_control>` of the ControlMechanism (see
-`ControlMechanism_ObjectiveMechanism` for how the ObjectiveMechanism and the OutputStates it monitors are specified).
-The OutputStates monitored by the ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` can
-be displayed using its `show <ControlMechanism.show>` method. The ObjectiveMechanism's `function <ObjectiveMechanism>`
-evaluates the specified OutputStates, and the result is conveyed as the input to the ControlMechanism.
-
+By default, a ControlMechanism has a single (`primary <InputState_Primary>`) `input_state
+<ControlMechanism.input_state>` that is named *OUTCOME*.  If the ControlMechanism has an `objective_mechanism
+<ControlMechanism.objective_mechanism>`, then the *OUTCOME* `input_state <ControlMechanism.input_state>` receives a
+single `MappingProjection` from the `objective_mechanism <ControlMechanism.objective_mechanism>`\\'s *OUTCOME*
+OutputState (see `ControlMechanism_ObjectiveMechanism` for additional details). Otherwise, when the ControlMechanism is
+added to a `Composition`, MappingProjections are created that project to the ControlMechanism's *OUTCOME* `input_state
+<ControlMechanism.input_state>` from each of the OutputStates specified in the **monitor_for_control** `argument
+<ControlMechanism_Monitor_for_Control_Argument>` of its constructor.  The `value <InputState.value>` of the
+ControlMechanism's *OUTCOME* InputState is assigned to its `outcome <ControlMechanism.outcome>` attribute),
+and is used as the input to the ControlMechanism's `function <ControlMechanism.function>` to determine its
+`control_allocation <ControlMechanism.control_allocation>`.
 
 .. _ControlMechanism_Function:
 
 *Function*
 ~~~~~~~~~~
 
-A ControlMechanism's `function <ControlMechanism.function>` uses `outcome <ControlMechanism.outcome>`
-(the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `control_allocation
+FIX: QUALIFY BY WHETHER OR NOT CONTROLMECHANISM HAS AN OBJECTIVEMECHANISM (SEE ABOVE).
+A ControlMechanism's `function <ControlMechanism.function>` uses its `outcome <ControlMechanism.outcome>`
+attribute (the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `control_allocation
 <ControlMechanism.control_allocation>`.  By default, `function <ControlMechanism.function>` is assigned
 the `DefaultAllocationFunction`, which takes a single value as its input, and assigns that as the value of
 each item of `modulatory_allocation <ControlMechanism.control_allocation>`.  Each of these items is assigned as
-the allocation for the corresponding  `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. Thus,
-by default, the ControlMechanism distributes its input as the allocation to each of its `control_signals
+the allocation for the corresponding  `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. This
+distributes the ControlMechanism's input as the allocation to each of its `control_signals
 <ControlMechanism.control_signals>`.  This same behavior also applies to any custom function assigned to a
 ControlMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
 assigned that returns a 2d array with more than one item, and it has the same number of `control_signals
@@ -359,15 +341,17 @@ When a ControlMechanism executes, each of its `control_signals <ControlMechanmis
 Execution
 ---------
 
-If a ControlMechanism is a System's `controller`, it is always the last `Mechanism <Mechanism>` to be executed in a
-`TRIAL` for that System (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).  The
-ControlMechanism's `function <ControlMechanism.function>` takes as its input the `value <InputState.value>` of
-its *OUTCOME* `input_state <Mechanism_Base.input_state>` (also contained in `outcome <ControlSignal.outcome>`
-and uses that to determine its `control_allocation <ControlMechanism.control_allocation>` which specifies the value
-assigned to the `allocation <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each
-ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, which is used by its
-`ControlProjection(s) <ControlProjection>` to modulate the value of the ParameterState(s) for the parameter(s) it
-controls, which are then used in the subsequent `TRIAL` of execution.
+If a ControlMechanism is assigned as the `controller` of a `Composition`, then it is executed either before or after
+all of the other  `Mechanisms <Mechanism_Base>` executed in a `TRIAL` for that Composition, depending on the
+value assigned to the Composition's `controller_mode <Composition.controller_mode>` attribute (see
+`Composition_Controller_Execution).  The ControlMechanism's `function <ControlMechanism.function>` takes as its input
+the `value <InputState.value>` of its *OUTCOME* `input_state <ControlMechanism.input_state>` (also contained in
+`outcome <ControlSignal.outcome>`).  It uses that to determine the `control_allocation
+<ControlMechanism.control_allocation>`, which specifies the value assigned to the `allocation
+<ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each ControlSignal uses that value to
+calculate its `intensity <ControlSignal.intensity>`, which is used by its `ControlProjection(s) <ControlProjection>`
+to modulate the value of the ParameterState(s) for the parameter(s) it controls, which are then used in the
+subsequent `TRIAL` of execution.
 
 .. note::
    A `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
@@ -679,10 +663,15 @@ class ControlMechanism(ModulatoryMechanism):
         ObjectiveMechanism's `function <ObjectiveMechanism.function>` to parametrize the contribution made to its
         output by each of the values that it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
 
+    input_state : InputState
+        the ControlMechanism's `primary InputState <InputState_Primary>`, named *OUTCOME*;  this receives a
+        `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of `objective_mechanism
+        <ControlMechanism.objective_mechanism>` if that is specified; otherwise, it receives MappingProjections
+        from each of the OutputStates specifed in `monitor_for_control <ControlMechanism.monitor_for_control>`
+        (see `_ControlMechanism_Input` for additional details).
+
     outcome : 1d array
-        the `value <InputState.value>` of the ControlMechanism's `primary InputState <InputState_Primary>`;
-        this receives its `Projection <Projection>` from the *OUTCOME* `OutputState` of its `objective_mechanism
-        <ControlMechanism.objective_mechanism>` if that is specified.
+        the `value <InputState.value>` of the ControlMechanism's *OUTCOME* `input_state <ControlMechanism.input_state>`.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
