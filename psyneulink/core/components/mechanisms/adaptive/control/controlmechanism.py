@@ -205,7 +205,7 @@ Notice that `LinearCombination was assigned as the `function <ObjectiveMechanism
 By contrast, the following example explicitly specifies the **objective_mechanism** argument using a constructor for
 an ObjectiveMechanism::
 
-    >>> my_ctl_mech = ControlMechanism(objective_mechanism=True)
+    >>> my_ctl_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism())
     >>> assert isinstance(my_ctl_mech.objective_mechanism.function, LinearCombination)
     >>> assert my_ctl_mech.objective_mechanism.function.operation == SUM
 
