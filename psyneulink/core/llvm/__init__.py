@@ -154,10 +154,15 @@ def init_builtins():
         builtins.setup_vxm_transposed(ctx)
         builtins.setup_mersenne_twister(ctx)
         builtins.setup_vec_add(ctx)
+        builtins.setup_mat_add(ctx)
         builtins.setup_vec_sub(ctx)
+        builtins.setup_mat_sub(ctx)
         builtins.setup_vec_copy(ctx)
         builtins.setup_vec_hadamard(ctx)
-        builtins.setup_vec_sqr_mag(ctx)
+        builtins.setup_mat_hadamard(ctx)
+        builtins.setup_vec_scalar_mult(ctx)
+        builtins.setup_mat_scalar_mult(ctx)
+        builtins.setup_mat_scalar_add(ctx)
 def cleanup():
     _cpu_engine.clean_module()
     if ptx_enabled:

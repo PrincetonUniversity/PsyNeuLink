@@ -383,19 +383,61 @@ def setup_vec_hadamard(ctx):
 
    builder.ret_void()
 
-# returns squared vector magnitude
-def setup_vec_sqr_mag(ctx):
+# vec multiply by scalar constant
+def setup_vec_scalar_mult(ctx):
+    # Setup types
+   double_ptr_ty = ctx.float_ty.as_pointer()
+   
+   # builtin vector addition func
+   # param1: ptr to vector 1
+   # param2: scalar to multiply by
+   # param3: sizeof vectors (must be the same)
+   # param4: ptr to output vector (make sure this is same size as param3)
+   func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.float_ty, ctx.int32_ty, double_ptr_ty))
+
+   # Create function
+   function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_vec_scalar_mult")
+   function.attributes.add('argmemonly')
+   function.attributes.add('alwaysinline')
+
+   block = function.append_basic_block(name="entry")
+   builder = ir.IRBuilder(block)
+   builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
+   u, s, x, o = function.args
+
+   # Add function arg attributes
+   for a in u, o:
+       a.attributes.add('nonnull')
+       a.attributes.add('noalias')
+
+   index = None
+
+   # mult
+   with helpers.for_loop_zero_inc(builder, x, "scalar_mult_loop") as (builder, index):
+       u_ptr = builder.gep(u,[index])
+       o_ptr = builder.gep(o, [index])
+       u_val = builder.load(u_ptr)
+       
+       u_product = builder.fmul(u_val,s)
+       builder.store(u_product, o_ptr)
+
+   builder.ret_void()
+
+# hadamard multiplication for matrices
+def setup_mat_scalar_mult(ctx):
     # Setup types
     double_ptr_ty = ctx.float_ty.as_pointer()
 
     # builtin vector magnitude func
-    # param1: ptr to vector
-    # param2: sizeof vector
-    # param3: double ptr for output
-    func_ty = ir.FunctionType(ir.DoubleType(), (double_ptr_ty, ctx.int32_ty))
+    # param1: ptr to matrix 1
+    # param2: scalar
+    # param3: dim_x of matrix
+    # param4: dim_y of matrix
+    # param5: output ptr
+    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.float_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
 
     # Create function
-    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_vec_sqr_mag")
+    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_mat_scalar_mult")
     function.attributes.add('argmemonly')
     function.attributes.add('alwaysinline')
 
@@ -403,26 +445,257 @@ def setup_vec_sqr_mag(ctx):
     builder = ir.IRBuilder(block)
     builder.debug_metadata = LLVMBuilderContext.get_debug_location(
         function, None)
-    u, x  = function.args
+    m1,s,dim_x,dim_y,o  = function.args
 
     # Add function arg attributes
-    u.attributes.add('nonnull')
-    u.attributes.add('noalias')
+    for a in m1, o:
+       a.attributes.add('nonnull')
+       a.attributes.add('noalias')
 
-    index = None
+    x = None
+    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (builder, x):
+        y = None
+        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (builder, y):
+            matrix_index = builder.mul(x, dim_y)
+            matrix_index = builder.add(matrix_index, y)
+            
+            m1_ptr = builder.gep(m1, [matrix_index])
+            o_ptr = builder.gep(o, [matrix_index])
+            
+            m1_val = builder.load(m1_ptr)
+            o_val = builder.fmul(s,m1_val)
 
-    curr_sum = builder.alloca(ir.DoubleType())
-    builder.store(ir.DoubleType()(0),curr_sum)
-    with helpers.for_loop_zero_inc(builder, x, "zero") as (builder, index):
-        u_ptr = builder.gep(u, [index])
-        u_val = builder.load(u_ptr)
+            builder.store(o_val,o_ptr)
 
-        sqr = builder.fmul(u_val,u_val)
-        val = builder.fadd(builder.load(curr_sum),sqr)
-        builder.store(val,curr_sum)
-    
-    #builder.store(builder.load(curr_sum),o)
-    builder.ret(builder.load(curr_sum))
+    builder.ret_void()
+
+# scalar add a value to a matrix
+def setup_mat_scalar_add(ctx):
+    # Setup types
+    double_ptr_ty = ctx.float_ty.as_pointer()
+
+    # builtin vector magnitude func
+    # param1: ptr to matrix 1
+    # param2: scalar
+    # param3: dim_x of matrix
+    # param4: dim_y of matrix
+    # param5: output ptr
+    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.float_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
+
+    # Create function
+    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_mat_scalar_add")
+    function.attributes.add('argmemonly')
+    function.attributes.add('alwaysinline')
+
+    block = function.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(
+        function, None)
+    m1,s,dim_x,dim_y,o  = function.args
+
+    # Add function arg attributes
+    for a in m1, o:
+       a.attributes.add('nonnull')
+       a.attributes.add('noalias')
+
+    x = None
+    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (builder, x):
+        y = None
+        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (builder, y):
+            matrix_index = builder.mul(x, dim_y)
+            matrix_index = builder.add(matrix_index, y)
+            
+            m1_ptr = builder.gep(m1, [matrix_index])
+            o_ptr = builder.gep(o, [matrix_index])
+            
+            m1_val = builder.load(m1_ptr)
+            o_val = builder.fadd(s,m1_val)
+
+            builder.store(o_val,o_ptr)
+
+    builder.ret_void()
+
+# hadamard multiplication for matrices
+def setup_mat_hadamard(ctx):
+    # Setup types
+    double_ptr_ty = ctx.float_ty.as_pointer()
+
+    # builtin vector magnitude func
+    # param1: ptr to matrix 1
+    # param2: ptr to matrix 2
+    # param3: dim_x of matrix
+    # param4: dim_y of matrix
+    # param5: output ptr
+    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
+
+    # Create function
+    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_mat_hadamard")
+    function.attributes.add('argmemonly')
+    function.attributes.add('alwaysinline')
+
+    block = function.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(
+        function, None)
+    m1,m2,dim_x,dim_y,o  = function.args
+
+    # Add function arg attributes
+    for a in m1,m2, o:
+       a.attributes.add('nonnull')
+       a.attributes.add('noalias')
+
+    x = None
+    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (builder, x):
+        y = None
+        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (builder, y):
+            matrix_index = builder.mul(x, dim_y)
+            matrix_index = builder.add(matrix_index, y)
+            m1_ptr = builder.gep(m1, [matrix_index])
+            m2_ptr = builder.gep(m2, [matrix_index])
+            o_ptr = builder.gep(o, [matrix_index])
+
+            m1_val = builder.load(m1_ptr)
+            m2_val = builder.load(m2_ptr)
+            o_val = builder.fmul(m1_val,m2_val)
+            builder.store(o_val,o_ptr)
+
+    builder.ret_void()
+
+# matrix subtraction
+def setup_mat_sub(ctx):
+    # Setup types
+    double_ptr_ty = ctx.float_ty.as_pointer()
+
+    # builtin vector magnitude func
+    # param1: ptr to matrix 1
+    # param2: ptr to matrix 2
+    # param3: dim_x of matrix
+    # param4: dim_y of matrix
+    # param5: output ptr
+    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
+
+    # Create function
+    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_mat_sub")
+    function.attributes.add('argmemonly')
+    function.attributes.add('alwaysinline')
+
+    block = function.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(
+        function, None)
+    m1,m2,dim_x,dim_y,o  = function.args
+
+    # Add function arg attributes
+    for a in m1,m2, o:
+       a.attributes.add('nonnull')
+       a.attributes.add('noalias')
+
+    x = None
+    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (builder, x):
+        y = None
+        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (builder, y):
+            matrix_index = builder.mul(x, dim_y)
+            matrix_index = builder.add(matrix_index, y)
+            m1_ptr = builder.gep(m1, [matrix_index])
+            m2_ptr = builder.gep(m2, [matrix_index])
+            o_ptr = builder.gep(o, [matrix_index])
+
+            m1_val = builder.load(m1_ptr)
+            m2_val = builder.load(m2_ptr)
+            o_val = builder.fsub(m1_val,m2_val)
+            builder.store(o_val,o_ptr)
+
+    builder.ret_void()
+
+# matrix addition
+def setup_mat_add(ctx):
+    # Setup types
+    double_ptr_ty = ctx.float_ty.as_pointer()
+
+    # builtin vector magnitude func
+    # param1: ptr to matrix 1
+    # param2: ptr to matrix 2
+    # param3: dim_x of matrix
+    # param4: dim_y of matrix
+    # param5: output ptr
+    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
+
+    # Create function
+    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_mat_add")
+    function.attributes.add('argmemonly')
+    function.attributes.add('alwaysinline')
+
+    block = function.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(
+        function, None)
+    m1,m2,dim_x,dim_y,o  = function.args
+
+    # Add function arg attributes
+    for a in m1,m2, o:
+       a.attributes.add('nonnull')
+       a.attributes.add('noalias')
+
+    x = None
+    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (builder, x):
+        y = None
+        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (builder, y):
+            matrix_index = builder.mul(x, dim_y)
+            matrix_index = builder.add(matrix_index, y)
+            m1_ptr = builder.gep(m1, [matrix_index])
+            m2_ptr = builder.gep(m2, [matrix_index])
+            o_ptr = builder.gep(o, [matrix_index])
+
+            m1_val = builder.load(m1_ptr)
+            m2_val = builder.load(m2_ptr)
+            o_val = builder.fadd(m1_val,m2_val)
+            builder.store(o_val,o_ptr)
+
+    builder.ret_void()
+
+# copy matrix 
+def setup_mat_copy(ctx):
+    # Setup types
+    double_ptr_ty = ctx.float_ty.as_pointer()
+
+    # builtin vector magnitude func
+    # param1: ptr to matrix 1
+    # param2: dim_x of matrix
+    # param3: dim_y of matrix
+    # param4: output ptr
+    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
+
+    # Create function
+    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_mat_copy")
+    function.attributes.add('argmemonly')
+    function.attributes.add('alwaysinline')
+
+    block = function.append_basic_block(name="entry")
+    builder = ir.IRBuilder(block)
+    builder.debug_metadata = LLVMBuilderContext.get_debug_location(
+        function, None)
+    m1,dim_x,dim_y,o  = function.args
+
+    # Add function arg attributes
+    for a in m1, o:
+       a.attributes.add('nonnull')
+       a.attributes.add('noalias')
+
+    x = None
+    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (builder, x):
+        y = None
+        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (builder, y):
+            matrix_index = builder.mul(x, dim_y)
+            matrix_index = builder.add(matrix_index, y)
+            
+            m1_ptr = builder.gep(m1, [matrix_index])
+            o_ptr = builder.gep(o, [matrix_index])
+            
+            m1_val = builder.load(m1_ptr)
+
+            builder.store(m1_val,o_ptr)
+
+    builder.ret_void()
 
 def setup_pnl_intrinsics(ctx):
     # Setup types
