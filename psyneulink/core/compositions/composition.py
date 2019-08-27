@@ -1112,8 +1112,8 @@ from psyneulink.core.components.functions.combinationfunctions import LinearComb
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, \
-    ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
+    LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -1131,10 +1131,10 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROL, CONTROLLER, CONDITIONS, FUNCTIONS, \
+    AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, CONTROL, CONTROLLER, CONDITIONS, FUNCTIONS, \
     HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISMS,  MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
-    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
+    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
@@ -5389,31 +5389,45 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _assign_learning_components(G)
 
         # Sort nodes for display
-        def get_index_of_node_in_G_body(node):
+        def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):
-                # Skip projections
-                if node.name in item and not '->' in item:
-                    return i
+                if node.name in item:
+                    if node_type in {MECHANISM, BOTH}:
+                        if not '->' in item:
+                            return i
+                    elif node_type in {PROJECTION, BOTH}:
+                        if '->' in item:
+                            return i
+                    else:
+                        assert False, f'PROGRAM ERROR: node_type not specified or illegal ({node_type})'
+
         for node in self.nodes:
             roles = self.get_roles_by_node(node)
             # Put INPUT node(s) first
             if NodeRole.INPUT in roles:
-                i = get_index_of_node_in_G_body(node)
+                i = get_index_of_node_in_G_body(node, MECHANISM)
                 if i is not None:
                     G.body.insert(0,G.body.pop(i))
-            # # Put OUTPUT node(s) last (except for ControlMechanisms)
-            # if NodeRole.OUTPUT in roles:
-            #     i = get_index_of_node_in_G_body(node)
-            #     if i is not None:
-            #         G.body.insert(len(G.body),G.body.pop(i))
-            # # Put ControlMechanisms last
-            # if isinstance(node, ControlMechanism):
-            #     i = get_index_of_node_in_G_body(node)
-            #     if i is not None:
-            #         G.body.insert(len(G.body),G.body.pop(i))
+            # Put OUTPUT node(s) last (except for ControlMechanisms)
+            if NodeRole.OUTPUT in roles:
+                i = get_index_of_node_in_G_body(node, MECHANISM)
+                if i is not None:
+                    G.body.insert(len(G.body),G.body.pop(i))
+            # Put ControlMechanisms last
+            if isinstance(node, ControlMechanism):
+                i = get_index_of_node_in_G_body(node, MECHANISM)
+                if i is not None:
+                    G.body.insert(len(G.body),G.body.pop(i))
+
+        for proj in self.projections:
+            if isinstance(proj, ControlProjection):
+                i = get_index_of_node_in_G_body(node, PROJECTION)
+                if i is not None:
+                    G.body.insert(len(G.body),G.body.pop(i))
+
         if self.controller and show_controller:
-            i = get_index_of_node_in_G_body(self.controller)
+            i = get_index_of_node_in_G_body(self.controller, MECHANISM)
             G.body.insert(len(G.body),G.body.pop(i))
 
         # GENERATE OUTPUT ---------------------------------------------------------------------
