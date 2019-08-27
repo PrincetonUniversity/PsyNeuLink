@@ -2134,129 +2134,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               visited_compositions)
         return nested_compositions
 
-    # MODIFIED 8/16/19 NEW: [JDC] - MODIFIED FEEDBACK
-    def _check_feedback(self, scheduler):
-        '''Check that feedback specification is required for projections to which it has been assigned
-        Note:
-        - graph_processing and graph_processing.dependency_dict are used as indications of structural dependencies
-        - scheduler.dependency_dict is used as indication of execution dependencies
-        '''
-
-        # MODIFIED 8/18/19 OLD:
-        if scheduler:
-            # If an external scheduler is provided, update it with current processing graph
-            try:
-                scheduler._init_consideration_queue_from_graph(self.graph_processing)
-            # Ignore any cycles at this point
-            except ValueError:
-                pass
-        else:
-            scheduler = self.scheduler_processing
-        # MODIFIED 8/18/19 NEW: [JDC]
-        # scheduler = scheduler or self.scheduler_processing
-        # # FIX: IS THIS SAFE?  IT WILL CRASH IF THERE IS A CYCLE
-        # scheduler._init_consideration_queue_from_graph(self.graph_processing)
-        # MODIFIED 8/18/19 END
-
-        for vertex in [v for v in self.graph.vertices
-                       # FIX: MODIFIED FEEDBACK
-                       #   CONSTRAIN TO ControlProjections FOR NOW,
-                       #  AS OVERIDES OTHER CASES THAT ARE GENERATED ON COMMAND LINE.
-                       # if isinstance(v.component, ControlProjection) and v.feedback==True]:
-                       #  ALTERNATIVE: TRUE=ENFORCE FEEDBACK, MAYBE=REMOVE IF NO EFFECT,FALSE=NO FEEDBACK
-                       if v.feedback==MAYBE]:
-            projection = vertex.component
-            # assert isinstance(projection, Projection), \
-            #     f'PROGRAM ERROR: vertex identified with feedback=True that is not a Projection'
-            vertex.feedback = False
-            # Update Composition's graph_processing
-            self._update_processing_graph()
-            # Update scheduler's consideration_queue based on update of graph_processing
-            try:
-                scheduler._init_consideration_queue_from_graph(self.graph_processing)
-            except ValueError:
-                # If a cycle is detected, leave feedback alone
-                feedback = 'leave'
-            # If, when feedback is False, the dependency_dicts for the structural and execution are the same,
-            #    then no need for feedback specification, so remove it
-            #       and remove assignments of sender and receiver to corresponding feedback entries of Composition
-            if self.graph_processing.dependency_dict == scheduler.dependency_dict:
-                feedback = 'remove'
-            else:
-                feedback = 'leave'
-
-            # Remove nodes that send and receive feedback projection from feedback_senders and feedback_receivers lists
-            if feedback == 'remove':
-                self.feedback_senders.remove(projection.sender.owner)
-                self.feedback_receivers.remove(projection.receiver.owner)
-            # Otherwise, restore feedback assignment and scheduler's consideration_queue
-            else:
-                vertex.feedback = True
-                self._update_processing_graph()
-                scheduler._init_consideration_queue_from_graph(self.graph_processing)
-    # MODIFIED 8/16/19 END
-
-    # def _determine_node_roles(self):
-    #     # Clear old roles
-    #     self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
-    #
-    #     # Required Roles
-    #     for node_role_pair in self.required_node_roles:
-    #         self._add_node_role(node_role_pair[0], node_role_pair[1])
-    #
-    #     objective_mechanism = None
-    #     if self.controller and self.enable_controller and self.controller.objective_mechanism:
-    #         objective_mechanism = self.controller.objective_mechanism
-    #         self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
-    #
-    #     # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
-    #     if self.scheduler_processing.consideration_queue:
-    #         self._analyze_consideration_queue(self.scheduler_processing.consideration_queue, objective_mechanism)
-    #
-    #     # Cycles
-    #     for node in self.scheduler_processing.cycle_nodes:
-    #         self._add_node_role(node, NodeRole.CYCLE)
-    #
-    #     # "Feedback" projections
-    #     for node in self.feedback_senders:
-    #         self._add_node_role(node, NodeRole.FEEDBACK_SENDER)
-    #
-    #     for node in self.feedback_receivers:
-    #         self._add_node_role(node, NodeRole.FEEDBACK_RECEIVER)
-    #
-    #     # Required Roles
-    #     for node_role_pair in self.required_node_roles:
-    #         self._add_node_role(node_role_pair[0], node_role_pair[1])
-    #
-    #     # If INPUT nodes were not specified by user, ORIGIN nodes become INPUT nodes
-    #     if not self.get_nodes_by_role(NodeRole.INPUT):
-    #         origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
-    #         for node in origin_nodes:
-    #             self._add_node_role(node, NodeRole.INPUT)
-    #
-    #     # If OUTPUT nodes were not specified by user, TERMINAL nodes become OUTPUT nodes.
-    #     # If there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
-    #     # If there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
-    #     if not self.get_nodes_by_role(NodeRole.OUTPUT):
-    #         if self.get_nodes_by_role(NodeRole.LEARNING):
-    #             # FIX: ADD COMMENT HERE
-    #             # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
-    #             terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
-    #                                    if any([item for item in items
-    #                                            if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
-    #         else:
-    #             terminal_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
-    #         if not terminal_nodes:
-    #             try:
-    #                 # FIX: ADD COMMENT HERE
-    #                 terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
-    #                                        if any([item for item in items
-    #                                                if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
-    #             except IndexError:
-    #                 terminal_nodes = []
-    #         for node in terminal_nodes:
-    #             self._add_node_role(node, NodeRole.OUTPUT)
-
     def _determine_node_roles(self):
 
         # Clear old roles
@@ -3132,6 +3009,65 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if [proj for proj in sender.efferents if proj.receiver is receiver and proj in self.projections]:
             return True
         return False
+
+    def _check_feedback(self, scheduler):
+        '''Check that feedback specification is required for projections to which it has been assigned
+        Note:
+        - graph_processing and graph_processing.dependency_dict are used as indications of structural dependencies
+        - scheduler.dependency_dict is used as indication of execution dependencies
+        '''
+
+        if scheduler:
+            # If an external scheduler is provided, update it with current processing graph
+            try:
+                scheduler._init_consideration_queue_from_graph(self.graph_processing)
+            # Ignore any cycles at this point
+            except ValueError:
+                pass
+        else:
+            scheduler = self.scheduler_processing
+        # MODIFIED 8/18/19 NEW: [JDC]
+        # scheduler = scheduler or self.scheduler_processing
+        # # FIX: IS THIS SAFE?  IT WILL CRASH IF THERE IS A CYCLE
+        # scheduler._init_consideration_queue_from_graph(self.graph_processing)
+        # MODIFIED 8/18/19 END
+
+        for vertex in [v for v in self.graph.vertices
+                       # FIX: MODIFIED FEEDBACK
+                       #   CONSTRAIN TO ControlProjections FOR NOW,
+                       #  AS OVERIDES OTHER CASES THAT ARE GENERATED ON COMMAND LINE.
+                       # if isinstance(v.component, ControlProjection) and v.feedback==True]:
+                       #  ALTERNATIVE: TRUE=ENFORCE FEEDBACK, MAYBE=REMOVE IF NO EFFECT,FALSE=NO FEEDBACK
+                       if v.feedback==MAYBE]:
+            projection = vertex.component
+            # assert isinstance(projection, Projection), \
+            #     f'PROGRAM ERROR: vertex identified with feedback=True that is not a Projection'
+            vertex.feedback = False
+            # Update Composition's graph_processing
+            self._update_processing_graph()
+            # Update scheduler's consideration_queue based on update of graph_processing
+            try:
+                scheduler._init_consideration_queue_from_graph(self.graph_processing)
+            except ValueError:
+                # If a cycle is detected, leave feedback alone
+                feedback = 'leave'
+            # If, when feedback is False, the dependency_dicts for the structural and execution are the same,
+            #    then no need for feedback specification, so remove it
+            #       and remove assignments of sender and receiver to corresponding feedback entries of Composition
+            if self.graph_processing.dependency_dict == scheduler.dependency_dict:
+                feedback = 'remove'
+            else:
+                feedback = 'leave'
+
+            # Remove nodes that send and receive feedback projection from feedback_senders and feedback_receivers lists
+            if feedback == 'remove':
+                self.feedback_senders.remove(projection.sender.owner)
+                self.feedback_receivers.remove(projection.receiver.owner)
+            # Otherwise, restore feedback assignment and scheduler's consideration_queue
+            else:
+                vertex.feedback = True
+                self._update_processing_graph()
+                scheduler._init_consideration_queue_from_graph(self.graph_processing)
 
 
     # ******************************************************************************************************************
