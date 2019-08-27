@@ -715,10 +715,13 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         See documentation for **default_allocation** argument of ModulatorySignal constructor for additional details.
 
     modulatory_signals : ContentAddressableList[ModulatorySignal]
-        list of the ModulatoryMechanisms `ControlSignals <ControlSignals>` and `GatingSignals <GatingSignals>`,
+        list of the ModulatoryMechanisms `ControlSignals <ControlSignals>` and `GatingSignals <GatingSignals>`.
+        COMMENT:
+        TBI FOR COMPOSITION
         including any inherited from a `system <ModulatoryMechanism.system>` for which it is a `controller
-        <System.controller>`.  This is the same as the ModulatoryMechanism's `output_states
-        <Mechanism_Base.output_states>` attribute).
+        <System.controller>`.
+        COMMENT
+        This is the same as the ModulatoryMechanism's `output_states <Mechanism_Base.output_states>` attribute).
 
     modulatory_allocation : 2d array
         contains allocations for all the ModulatoryMechanism's `modulatory_signals
@@ -730,16 +733,24 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         the ModulatoryMechanism's `value <Mechanism_Base.value>` attribute).
 
     control_signals : ContentAddressableList[ControlSignal]
-        list of the `ControlSignals <ControlSignals>` for the ModulatoryMechanism, including any inherited from a
+        list of the `ControlSignals <ControlSignals>` for the ModulatoryMechanism.
+        COMMENT:
+        TBI FOR COMPOSITION
+        , including any inherited from a
         `system <ModulatoryMechanism.system>` for which it is a `controller <System.controller>`.
+        COMMENT
 
     control_allocation : 2d array
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
         ControlSignal listed in the `control_signals <ModulatoryMechanism.control_signals>` attribute.
 
     gating_signals : ContentAddressableList[GatingSignal]
-        list of the `GatingSignals <ControlSignals>` for the ModulatoryMechanism, including any inherited from a
+        list of the `GatingSignals <ControlSignals>` for the ModulatoryMechanism.
+        COMMENT:
+        TBI FOR COMPOSITION
+        , including any inherited from a
         `system <ModulatoryMechanism.system>` for which it is a `controller <System.controller>`.
+        COMMENT
 
     gating_allocation : 2d array
         each item is the value assigned as the `allocation <GatingSignal.allocation>` for the corresponding

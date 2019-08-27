@@ -492,6 +492,15 @@ Environment.
     comp.run(inputs=input_dictionary)
 COMMENT
 
+COMMENT:
+.. _Run_Initial_Values_and_Feedback
+FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
+MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
+..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
+a list or ndarray of **initial_values**[...] The **initial_values** are
+assigned at the start of a `TRIAL` as input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
+and listed in the Composition's ?? attribute),
+
 
 .. _Run_Scope_of_Execution:
 
@@ -537,6 +546,8 @@ When looking for values after a run, it's important to know the execution contex
 In general, anything that happens outside of a Composition run and without an explicit setting of execution context
 occurs in the `None` execution context.
 
+COMMENT
+
 .. _Composition_Controller:
 
 Controlling a Composition
@@ -556,7 +567,7 @@ A `controller <Composition.controller>` can be assigned either by specifying it 
 Composition's constructor, or using its `add_controller <Composition.add_controller>` method.
 
 COMMENT:
-TBI [PARALLELING SYSTEM]:
+TBI FOR COMPOSITION
 Specyfing Parameters to Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 A controller can also be specified for the System, in the **controller** argument of the `System`.  This can be an

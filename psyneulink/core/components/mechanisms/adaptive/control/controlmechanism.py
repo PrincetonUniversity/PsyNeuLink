@@ -344,7 +344,19 @@ Execution
 If a ControlMechanism is assigned as the `controller` of a `Composition`, then it is executed either before or after
 all of the other  `Mechanisms <Mechanism_Base>` executed in a `TRIAL` for that Composition, depending on the
 value assigned to the Composition's `controller_mode <Composition.controller_mode>` attribute (see
-`Composition_Controller_Execution).  The ControlMechanism's `function <ControlMechanism.function>` takes as its input
+`Composition_Controller_Execution).  If a ControlMechanism is added to a Composition for which it is not a
+`controller <Composition.controller>`, then it executes in the same way as a `ProcessingMechanism
+<ProcessingMechanism>`, based on its place in the Composition's `graph <Composition.graph>`.  Because
+`ControlProjections <ControlProjection>` are likely to introduce cycles (recurrent connection loops) in the graph,
+the effects of a ControlMechanism and its projections will generally not be applied in the first `TRIAL` (see
+COMMENT:
+`Run_Initial_Values_and_Feedback` and
+COMMENT
+**feedback** argument for the `add_projection <Composition.add_projection>` method of `Composition` for a
+description of how to configure the initialization of feedback loops in a Composition; also see `Scheduler` for a
+description of detailed ways in which a GatingMechanism and its dependents can be scheduled to execute).
+
+The ControlMechanism's `function <ControlMechanism.function>` takes as its input
 the `value <InputState.value>` of its *OUTCOME* `input_state <ControlMechanism.input_state>` (also contained in
 `outcome <ControlSignal.outcome>`).  It uses that to determine the `control_allocation
 <ControlMechanism.control_allocation>`, which specifies the value assigned to the `allocation
