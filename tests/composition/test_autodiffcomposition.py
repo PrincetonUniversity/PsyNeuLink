@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.pytorch
 @pytest.mark.acconstructor
+
 class TestACConstructor:
 
     def test_no_args(self):
