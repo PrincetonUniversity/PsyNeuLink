@@ -1576,9 +1576,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         projection_t = ctx.get_param_struct_type(self.recurrent_projection)
         return pnlvm.ir.LiteralStructType([transfer_t, projection_t])
 
-    def _get_context_struct_type(self, ctx):
-        transfer_t = ctx.get_context_struct_type(super())
-        projection_t = ctx.get_context_struct_type(self.recurrent_projection)
+    def _get_state_struct_type(self, ctx):
+        transfer_t = ctx.get_state_struct_type(super())
+        projection_t = ctx.get_state_struct_type(self.recurrent_projection)
         return_t = ctx.get_output_struct_type(self)
         return pnlvm.ir.LiteralStructType([transfer_t, projection_t, return_t])
 
@@ -1587,9 +1587,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         projection_params = self.recurrent_projection._get_param_initializer(execution_id)
         return tuple([transfer_params, projection_params])
 
-    def _get_context_initializer(self, execution_id):
-        transfer_init = super()._get_context_initializer(execution_id)
-        projection_init = self.recurrent_projection._get_context_initializer(execution_id)
+    def _get_state_initializer(self, execution_id):
+        transfer_init = super()._get_state_initializer(execution_id)
+        projection_init = self.recurrent_projection._get_state_initializer(execution_id)
 
         # Initialize to output state defaults. That is what the recurrent
         # projection finds.

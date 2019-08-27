@@ -15,11 +15,12 @@
 
 """
 ..
-    Sections:
-      * :ref:`Transfer_Overview`
-      * :ref:`Transfer_Creation`
-      * :ref:`Transfer_Execution`
-      * :ref:`Transfer_Class_Reference`
+Sections
+--------
+  * `Transfer_Overview`
+  * `Transfer_Creation`
+  * `Transfer_Execution`
+  * `Transfer_Class_Reference`
 
 .. _Transfer_Overview:
 
@@ -1354,13 +1355,13 @@ class TransferMechanism(ProcessingMechanism_Base):
             param_type_list.append(ctx.get_param_struct_type(self.integrator_function))
         return pnlvm.ir.LiteralStructType(param_type_list)
 
-    def _get_function_context_struct_type(self, ctx):
-        context_type_list = [ctx.get_context_struct_type(self.function)]
+    def _get_function_state_struct_type(self, ctx):
+        state_struct_type_list = [ctx.get_state_struct_type(self.function)]
         if self.integrator_mode:
            assert self.integrator_function is not None
-           context_type_list.append(ctx.get_context_struct_type(self.integrator_function))
+           state_struct_type_list.append(ctx.get_state_struct_type(self.integrator_function))
 
-        return pnlvm.ir.LiteralStructType(context_type_list)
+        return pnlvm.ir.LiteralStructType(state_struct_type_list)
 
     def _get_function_param_initializer(self, execution_id):
         function_param_list = [self.function._get_param_initializer(execution_id)]
@@ -1369,11 +1370,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             function_param_list.append(self.integrator_function._get_param_initializer(execution_id))
         return tuple(function_param_list)
 
-    def _get_function_context_initializer(self, execution_id):
-        context_list = [self.function._get_context_initializer(execution_id)]
+    def _get_function_state_initializer(self, execution_id):
+        context_list = [self.function._get_state_initializer(execution_id)]
         if self.integrator_mode:
             assert self.integrator_function is not None
-            context_list.append(self.integrator_function._get_context_initializer(execution_id))
+            context_list.append(self.integrator_function._get_state_initializer(execution_id))
         return tuple(context_list)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
@@ -1407,7 +1408,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         if clip is not None:
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                index = None
                 with pnlvm.helpers.array_ptr_loop(builder, mf_out_local, "clip") as (builder, index):
                     ptri = builder.gep(mf_out_local, [ctx.int32_ty(0), index])
                     ptro = builder.gep(mf_out_local, [ctx.int32_ty(0), index])

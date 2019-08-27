@@ -45,14 +45,14 @@ types of Mechanisms in PsyNeuLink:
       * `LearningMechanism <LearningMechanism>` - these receive training (target) values, and compare them with the
         output of a Mechanism to generate `LearningSignals <LearningSignal>` that are used to modify `MappingProjections
         <MappingProjection>` (see `learning <Process_Execution_Learning>`).
-      |
+
       * `ControlMechanism <ControlMechanism>` - these evaluate the output of a specified set of Mechanisms, and
         generate `ControlSignals <ControlSignal>` used to modify the parameters of those or other Mechanisms.
-      |
+
       * `GatingMechanism <GatingMechanism>` - these use their input(s) to determine whether and how to modify the
         `value <State_Base.value>` of the `InputState(s) <InputState>` and/or `OutputState(s) <OutputState>` of other
         Mechanisms.
-      |
+
       Each type of AdaptiveMechanism is associated with a corresponding type of `ModulatorySignal <ModulatorySignal>`
       (a type of `OutputState` specialized for use with the AdaptiveMechanism) and `ModulatoryProjection
       <ModulatoryProjection>`.
@@ -834,7 +834,7 @@ the `output <Process.output>` of that Process, and similarly for any System to w
 
 .. note::
    A Mechanism that is the `ORIGIN` or `TERMINAL` of a Process does not necessarily have the same role in the
-   System(s) to which the Mechanism or Process belongs (see `example <LearningProjection_Target_vs_Terminal_Figure>`).
+   System(s) to which the Mechanism or Process belongs (see `example <LearningProjection_Output_vs_Terminal_Figure>`).
 
 
 .. _Mechanism_Execution:
@@ -2552,37 +2552,37 @@ class Mechanism_Base(Mechanism):
     def _get_mech_params_type(self, ctx):
         pass
 
-    def _get_input_context_struct_type(self, ctx):
-        gen = (ctx.get_context_struct_type(state) for state in self.input_states)
+    def _get_input_state_struct_type(self, ctx):
+        gen = (ctx.get_state_struct_type(state) for state in self.input_states)
         return pnlvm.ir.LiteralStructType(gen)
 
-    def _get_param_context_struct_type(self, ctx):
-        gen = (ctx.get_context_struct_type(state) for state in self.parameter_states)
+    def _get_param_state_struct_type(self, ctx):
+        gen = (ctx.get_state_struct_type(state) for state in self.parameter_states)
         return pnlvm.ir.LiteralStructType(gen)
 
-    def _get_output_context_struct_type(self, ctx):
-        gen = (ctx.get_context_struct_type(state) for state in self.output_states)
+    def _get_output_state_struct_type(self, ctx):
+        gen = (ctx.get_state_struct_type(state) for state in self.output_states)
         return pnlvm.ir.LiteralStructType(gen)
 
-    def _get_function_context_struct_type(self, ctx):
-        return ctx.get_context_struct_type(self.function)
+    def _get_function_state_struct_type(self, ctx):
+        return ctx.get_state_struct_type(self.function)
 
-    def _get_context_struct_type(self, ctx):
-        input_context_struct = self._get_input_context_struct_type(ctx)
-        output_context_struct = self._get_output_context_struct_type(ctx)
-        param_context_struct = self._get_param_context_struct_type(ctx)
-        function_context_struct = self._get_function_context_struct_type(ctx)
+    def _get_state_struct_type(self, ctx):
+        input_state_struct = self._get_input_state_struct_type(ctx)
+        output_state_struct = self._get_output_state_struct_type(ctx)
+        param_state_struct = self._get_param_state_struct_type(ctx)
+        function_state_struct = self._get_function_state_struct_type(ctx)
 
-        context_list = [input_context_struct, function_context_struct,
-                        output_context_struct, param_context_struct]
+        context_list = [input_state_struct, function_state_struct,
+                        output_state_struct, param_state_struct]
 
-        mech_context = self._get_mech_context_type(ctx)
+        mech_context = self._get_mech_state_struct_type(ctx)
         if mech_context is not None:
             context_list.append(mech_context)
 
         return pnlvm.ir.LiteralStructType(context_list)
 
-    def _get_mech_context_type(self, ctx):
+    def _get_mech_state_struct_type(self, ctx):
         pass
 
     def _get_output_struct_type(self, ctx):
@@ -2635,31 +2635,31 @@ class Mechanism_Base(Mechanism):
     def _get_mech_params_init(self):
         pass
 
-    def _get_input_context_initializer(self, execution_id):
-        gen = (state._get_context_initializer(execution_id) for state in self.input_states)
+    def _get_input_state_initializer(self, execution_id):
+        gen = (state._get_state_initializer(execution_id) for state in self.input_states)
         return tuple(gen)
 
-    def _get_param_context_initializer(self, execution_id):
-        gen = (state._get_context_initializer(execution_id) for state in self.parameter_states)
+    def _get_param_state_initializer(self, execution_id):
+        gen = (state._get_state_initializer(execution_id) for state in self.parameter_states)
         return tuple(gen)
 
-    def _get_output_context_initializer(self, execution_id):
-        gen = (state._get_context_initializer(execution_id) for state in self.output_states)
+    def _get_output_state_initializer(self, execution_id):
+        gen = (state._get_state_initializer(execution_id) for state in self.output_states)
         return tuple(gen)
 
-    def _get_function_context_initializer(self, execution_id):
-        return self.function._get_context_initializer(execution_id)
+    def _get_function_state_initializer(self, execution_id):
+        return self.function._get_state_initializer(execution_id)
 
-    def _get_context_initializer(self, execution_id):
-        input_context_init = self._get_input_context_initializer(execution_id)
-        function_context_init = self._get_function_context_initializer(execution_id)
-        output_context_init = self._get_output_context_initializer(execution_id)
-        param_context_init = self._get_param_context_initializer(execution_id)
+    def _get_state_initializer(self, execution_id):
+        input_state_init = self._get_input_state_initializer(execution_id)
+        function_state_init = self._get_function_state_initializer(execution_id)
+        output_state_init = self._get_output_state_initializer(execution_id)
+        param_state_init = self._get_param_state_initializer(execution_id)
 
-        context_init_list = [input_context_init, function_context_init,
-                             output_context_init, param_context_init]
+        state_init_list = [input_state_init, function_state_init,
+                             output_state_init, param_state_init]
 
-        return tuple(context_init_list)
+        return tuple(state_init_list)
 
     def _gen_llvm_input_states(self, ctx, builder, params, context, si):
         # Allocate temporary storage. We rely on the fact that series
@@ -2856,7 +2856,7 @@ class Mechanism_Base(Mechanism):
         print("- output: {}".format(output_string))
 
     @tc.typecheck
-    def show_structure(self,
+    def _show_structure(self,
                        show_functions:bool=False,
                        show_mech_function_params:bool=False,
                        show_state_function_params:bool=False,
@@ -3000,7 +3000,7 @@ class Mechanism_Base(Mechanism):
 
         def mech_cell():
             """Return html with name of Mechanism, possibly with function and/or value
-            Inclusion of roles, function and/or value is determined by arguments of call to show_structure()
+            Inclusion of roles, function and/or value is determined by arguments of call to _show_structure()
             """
             header = ''
             if show_headers:
@@ -3065,8 +3065,8 @@ class Mechanism_Base(Mechanism):
 
             Each table has a header cell and and inner table with cells for each state in the list
             InputState and OutputState cells are aligned horizontally;  ParameterState cells are aligned vertically.
-            Use show_functions, show_values and include_labels arguments from call to show_structure()
-            See show_structure docstring for full template.
+            Use show_functions, show_values and include_labels arguments from call to _show_structure()
+            See _show_structure docstring for full template.
             """
 
             def state_cell(state, include_function:bool=False, include_value:bool=False, use_label:bool=False):

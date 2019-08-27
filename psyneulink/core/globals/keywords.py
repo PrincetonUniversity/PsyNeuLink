@@ -153,7 +153,7 @@ class NodeRoles:
         have only one `TERMINAL` Mechanism, but a System may have many.  Note that the `TERMINAL`
         Mechanism of a process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
         as it may send projections to other processes in the System (see `example
-        <LearningProjection_Target_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
+        <LearningProjection_Output_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
         its :keyword:`terminalMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For
         additional details about `TERMINAL` Mechanisms in Processes, see `Process_Mechanisms` and
         `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.

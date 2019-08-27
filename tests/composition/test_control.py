@@ -197,6 +197,179 @@ class TestControlMechanisms:
     #                               Ty: [4, 4]})
     #     assert np.allclose(result, [[[4.], [4.]],
     #                                 [[4.], [4.]]])
+    def test_two_tier_ocm(self):
+        integrationConstant = 0.8  # Time Constant
+        DRIFT = 0.25  # Drift Rate
+        STARTING_POINT = 0.0  # Starting Point
+        THRESHOLD = 0.05  # Threshold
+        NOISE = 0.1  # Noise
+        T0 = 0.2  # T0
+        congruentWeight = 0.2
+
+        # Task Layer: [Color, Motion] {0, 1} Mutually Exclusive
+        taskLayer = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
+                                          # size=2,
+                                          function=pnl.Linear(slope=1, intercept=0),
+                                          output_states=[pnl.RESULT],
+                                          name='Task Input [I1, I2]')
+
+        # Stimulus Layer: [Color Stimulus, Motion Stimulus]
+        stimulusInfo = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
+                                             # size=2,
+                                             function=pnl.Linear(slope=1, intercept=0),
+                                             output_states=[pnl.RESULT],
+                                             name="Stimulus Input [S1, S2]")
+
+        congruenceWeighting = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
+                                                    size=2,
+                                                    function=pnl.Linear(slope=congruentWeight, intercept=0),
+                                                    name='Congruence * Automatic Component')
+
+        # Activation Layer: [Color Activation, Motion Activation]
+        activation = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0]],
+                                                    function=pnl.Logistic(gain=1.0),
+                                                    matrix=[[1.0, -1.0],
+                                                            [-1.0, 1.0]],
+                                                    integrator_mode=True,
+                                                    integrator_function=pnl.AdaptiveIntegrator(
+                                                        rate=integrationConstant),
+                                                    initial_value=np.array([[0.0, 0.0]]),
+                                                    output_states=[pnl.RESULT],
+                                                    name='Task Activations [Act1, Act2]')
+
+        activation.set_log_conditions([pnl.RESULT, "mod_gain"])
+
+        # Hadamard product of Activation and Stimulus Information
+        nonAutomaticComponent = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
+                                                      size=2,
+                                                      function=pnl.Linear(slope=1, intercept=0),
+                                                      input_states=pnl.InputState(combine=pnl.PRODUCT),
+                                                      output_states=[pnl.RESULT],
+                                                      name='Non-Automatic Component')
+
+        # Summation of nonAutomatic and Automatic Components
+        ddmCombination = pnl.TransferMechanism(size=1,
+                                               function=pnl.Linear(slope=1, intercept=0),
+                                               input_states=pnl.InputState(combine=pnl.SUM),
+                                               output_states=[pnl.RESULT],
+                                               name="Drift = Wa*(S1 + S2) + (S1*Act1 + S2*Act2)")
+
+        decisionMaker = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=DRIFT,
+                                                                      starting_point=STARTING_POINT,
+                                                                      threshold=THRESHOLD,
+                                                                      noise=NOISE,
+                                                                      t0=T0),
+                                output_states=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
+                                               pnl.PROBABILITY_UPPER_THRESHOLD,
+                                               pnl.PROBABILITY_LOWER_THRESHOLD],
+                                name='DDM')
+
+        weightingFunction = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
+                                                  size=2,
+                                                  function=pnl.Linear(slope=1, intercept=0),
+                                                  input_states=pnl.InputState(combine=pnl.PRODUCT),
+                                                  output_states=[pnl.RESULT],
+                                                  name='Bias')
+
+        topCorrect = pnl.TransferMechanism(size=1,
+                                           function=pnl.Linear(slope=1, intercept=0),
+                                           input_states=pnl.InputState(combine=pnl.PRODUCT),
+                                           output_states=[pnl.RESULT],
+                                           name="weightDDMInput")
+
+        stabilityFlexibility = pnl.Composition(name='inner', controller_mode=pnl.BEFORE)
+
+        # Linear pathway from the task input origin node to the DDM
+        stabilityFlexibility.add_linear_processing_pathway(pathway=[taskLayer,
+                                                                    activation,
+                                                                    nonAutomaticComponent,
+                                                                    ddmCombination,
+                                                                    topCorrect,
+                                                                    decisionMaker])
+
+        # Linear pathway from the stimulus input origin node to the DDM
+        stabilityFlexibility.add_linear_processing_pathway(pathway=[stimulusInfo,
+                                                                    nonAutomaticComponent,
+                                                                    ddmCombination,
+                                                                    topCorrect,
+                                                                    decisionMaker])
+
+        # Linear pathway from the stimulus input origin node to the DDM with congruence
+        stabilityFlexibility.add_linear_processing_pathway(pathway=[stimulusInfo,
+                                                                    congruenceWeighting,
+                                                                    ddmCombination,
+                                                                    topCorrect,
+                                                                    decisionMaker])
+
+        stabilityFlexibility.add_linear_processing_pathway(pathway=[taskLayer,
+                                                                    weightingFunction,
+                                                                    topCorrect,
+                                                                    decisionMaker])
+
+        stabilityFlexibility.add_linear_processing_pathway(pathway=[stimulusInfo,
+                                                                    weightingFunction,
+                                                                    topCorrect,
+                                                                    decisionMaker])
+
+        stabilityFlexibility.add_controller(
+            pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
+                                             features=[taskLayer.input_state,
+                                                       stimulusInfo.input_state],
+                                             feature_function=pnl.Buffer(history=2),
+                                             name="Controller",
+                                             objective_mechanism=pnl.ObjectiveMechanism(
+                                                 monitor=[(pnl.PROBABILITY_UPPER_THRESHOLD,
+                                                           decisionMaker)],
+                                                 function=pnl.SimpleIntegrator,
+                                                 name="Controller Objective Mechanism"),
+                                             function=pnl.GridSearch(),
+                                             control_signals=[pnl.ControlSignal(
+                                                 projections=[(pnl.GAIN, activation)],
+                                                 function=pnl.Linear,
+                                                 variable=1.0,
+                                                 intensity_cost_function=pnl.Linear(
+                                                     slope=0.0),
+                                                 allocation_samples=pnl.SampleSpec(
+                                                     start=1.0,
+                                                     stop=5.0,
+                                                     num=2))]
+                                             )
+        )
+        outerComposition = pnl.Composition(name='outer',
+                                           controller_mode=pnl.AFTER,
+                                           retain_old_simulation_data=True)
+        outerComposition.add_node(stabilityFlexibility)
+        outerComposition.add_controller(
+            pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
+                                             features=[taskLayer.input_state, stimulusInfo.input_state],
+                                             feature_function=pnl.Buffer(history=2),
+                                             name="OuterController",
+                                             objective_mechanism=pnl.ObjectiveMechanism(
+                                                 monitor=[(pnl.PROBABILITY_UPPER_THRESHOLD, decisionMaker)],
+                                                 function=pnl.SimpleIntegrator,
+                                                 name="Controller Objective Mechanism"),
+                                             function=pnl.GridSearch(),
+                                             control_signals=[
+                                                 pnl.ControlSignal(
+                                                     projections=[(pnl.THRESHOLD, decisionMaker)],
+                                                     function=pnl.Linear,
+                                                     variable=1.0,
+                                                     intensity_cost_function=pnl.Linear(
+                                                         slope=0.0),
+                                                     allocation_samples=pnl.SampleSpec(
+                                                         start=0.5,
+                                                         stop=2.0,
+                                                         num=3))
+                                             ])
+        )
+        taskTrain = [[0, 1], [0, 1], [0, 1]]
+        stimulusTrain = [[1, -1], [1, -1], [1, -1]]
+        zipTrain = list(zip(taskTrain, stimulusTrain))
+        outerComposition.run(zipTrain)
+        assert np.allclose(outerComposition.results,
+                           [[[0.05], [0.42357798], [0.76941918], [0.23058082]],
+                            [[0.1], [0.64721378], [0.98737278], [0.01262722]],
+                            [[0.1], [0.60232676], [0.9925894], [0.0074106]]])
 
     def test_multilevel_control(self):
         oA = pnl.TransferMechanism(

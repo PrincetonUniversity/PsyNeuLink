@@ -89,21 +89,21 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
 * **Mechanisms**
 
   * *value* -- the `value <Mechanism_Base.value>` of the Mechanism.
-  |
+
   * *InputStates* -- the `value <InputState.value>` of any `InputState` (listed in the Mechanism's `input_states
     <Mechanism_Base.input_states>` attribute).
-  |
+
   * *ParameterStates* -- the `value <ParameterState.value>` of `ParameterState` (listed in the Mechanism's
     `parameter_states <Mechanism_Base.parameter_states>` attribute);  this includes all of the `user configurable
     <Component_User_Params>` parameters of the Mechanism and its `function <Mechanism_Base.function>`.
-  |
+
   * *OutputStates* -- the `value <OutputState.value>` of any `OutputState` (listed in the Mechanism's `output_states
     <Mechanism_Base.output_states>` attribute).
 ..
 * **Projections**
 
   * *value* -- the `value <Projection_Base.value>` of the Projection.
-  |
+
   * *matrix* -- the value of the `matrix <MappingProjection.matrix>` parameter (for `MappingProjections
     <MappingProjection>` only).
 

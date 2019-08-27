@@ -317,18 +317,16 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
     """
 
     from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+    from psyneulink.core.globals.parameters import parse_execution_context
 
     if not isinstance(mod_proj, ModulatoryProjection_Base):
         raise FunctionError('mod_proj ({0}) is not a ModulatoryProjection_Base'.format(mod_proj))
 
-    # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
-    function_mod_meta_param_obj = mod_proj.sender.modulation
+    execution_id = parse_execution_context(execution_context)
 
-    # # MODIFIED 6/27/18 OLD
-    # # Get the actual parameter of owner.function to be modulated
-    # function_param_name = owner.function.params[function_mod_meta_param_obj.value.attrib_name]
-    # # Get the function parameter's value
-    # function_param_value = owner.function.params[function_param_name]
+    # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
+    function_mod_meta_param_obj = mod_proj.sender.parameters.modulation._get(execution_id)
+
     # # MODIFIED 6/27/18 NEW:
     if function_mod_meta_param_obj in {OVERRIDE, DISABLE}:
         # function_param_name = function_mod_meta_param_obj
@@ -844,15 +842,25 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
-    def _get_context_initializer(self, execution_id):
+    def _get_compilation_state(self):
         try:
-            stateful = (getattr(self.parameters, sa)._get(execution_id) for sa in self.stateful_attributes)
-            # Skip first element of random state (id string)
-            lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
-
-            return pnlvm._tupleize(lists)
+            stateful = self.stateful_attributes
         except AttributeError:
-            return tuple()
+            return ()
+        return (getattr(self.parameters, sa) for sa in stateful)
+
+    def _get_state_ids(self):
+        return [sp.name for sp in self._get_compilation_state()]
+
+    def _get_state_values(self, execution_id=None):
+        return tuple(sp._get(execution_id) for sp in self._get_compilation_state())
+
+    def _get_state_initializer(self, execution_id):
+        stateful = self._get_state_values(execution_id)
+        # Skip first element of random state (id string)
+        lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
+
+        return pnlvm._tupleize(lists)
 
     def _get_compilation_params(self, execution_id=None):
         # Filter out known unused/invalid params
