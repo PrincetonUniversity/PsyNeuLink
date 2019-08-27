@@ -92,7 +92,7 @@ OutputStates to be monitored can also be added using either the ModulatoryMechan
 the ObjectiveMechanism.
 
 COMMENT:
-TBI [Functionality for System that has yet to be ported to Composition]
+TBI FOR COMPOSITION
 If a ModulatoryMechanism is specified as the `controller <Composition.controller>` of a Composition (see `below
 <ModulatoryMechanism_Composition_Controller>`), any OutputStates specified to be monitored by the System are
 assigned as inputs to the ObjectiveMechanism.  This includes any specified in the **monitor_for_modulation** argument
@@ -139,7 +139,7 @@ are listed in the `modulatory_projections <ModulatoryMechanism.modulatory_projec
 attributes, respectively.
 
 COMMENT:
-TBI:
+TBI FOR COMPOSITION
 If the ModulatoryMechanism is created as part of a `System`, the States to be modulated by it can be specified in
 one of two ways:
 
@@ -382,10 +382,12 @@ The ObjectiveMechanism can also be created on its own, and then referenced in th
 Here, as in the first example, the constructor for the ObjectiveMechanism can be used to specify its function, as well
 as the OutputState that it monitors.
 
+COMMENT:
+TBI FOR COMPOSITION
 See `System_Control_Examples` for examples of how a ModulatoryMechanism, the OutputStates its
 `objective_mechanism <ControlSignal.objective_mechanism>`, and its `control_signals <ModulatoryMechanism.control_signals>`
 can be specified for a System.
-
+COMMENT
 
 .. _ModulatoryMechanism_Class_Reference:
 
@@ -697,9 +699,9 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
 
     outcome : 1d array
-        the `value <InputState.value>` of the ModulatoryMechanism's `primary InputState <InputState_Primary>`,
-        which receives its `Projection <Projection>` from the *OUTCOME* `OutputState` of its `objective_mechanism
-        <ModulatoryMechanism.objective_mechanism>`.
+        the `value <InputState.value>` of the ModulatoryMechanism's `primary InputState <InputState_Primary>`;
+        this receives its `Projection <Projection>` from the *OUTCOME* `OutputState` of its `objective_mechanism
+        <ModulatoryMechanism.objective_mechanism>` if that is specified
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
@@ -713,10 +715,13 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         See documentation for **default_allocation** argument of ModulatorySignal constructor for additional details.
 
     modulatory_signals : ContentAddressableList[ModulatorySignal]
-        list of the ModulatoryMechanisms `ControlSignals <ControlSignals>` and `GatingSignals <GatingSignals>`,
+        list of the ModulatoryMechanisms `ControlSignals <ControlSignals>` and `GatingSignals <GatingSignals>`.
+        COMMENT:
+        TBI FOR COMPOSITION
         including any inherited from a `system <ModulatoryMechanism.system>` for which it is a `controller
-        <System.controller>`.  This is the same as the ModulatoryMechanism's `output_states
-        <Mechanism_Base.output_states>` attribute).
+        <System.controller>`.
+        COMMENT
+        This is the same as the ModulatoryMechanism's `output_states <Mechanism_Base.output_states>` attribute).
 
     modulatory_allocation : 2d array
         contains allocations for all the ModulatoryMechanism's `modulatory_signals
@@ -728,16 +733,24 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         the ModulatoryMechanism's `value <Mechanism_Base.value>` attribute).
 
     control_signals : ContentAddressableList[ControlSignal]
-        list of the `ControlSignals <ControlSignals>` for the ModulatoryMechanism, including any inherited from a
+        list of the `ControlSignals <ControlSignals>` for the ModulatoryMechanism.
+        COMMENT:
+        TBI FOR COMPOSITION
+        , including any inherited from a
         `system <ModulatoryMechanism.system>` for which it is a `controller <System.controller>`.
+        COMMENT
 
     control_allocation : 2d array
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
         ControlSignal listed in the `control_signals <ModulatoryMechanism.control_signals>` attribute.
 
     gating_signals : ContentAddressableList[GatingSignal]
-        list of the `GatingSignals <ControlSignals>` for the ModulatoryMechanism, including any inherited from a
+        list of the `GatingSignals <ControlSignals>` for the ModulatoryMechanism.
+        COMMENT:
+        TBI FOR COMPOSITION
+        , including any inherited from a
         `system <ModulatoryMechanism.system>` for which it is a `controller <System.controller>`.
+        COMMENT
 
     gating_allocation : 2d array
         each item is the value assigned as the `allocation <GatingSignal.allocation>` for the corresponding
@@ -1210,23 +1223,29 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # Assign ObjectiveMechanism's role as CONTROL
         self.objective_mechanism._role = CONTROL
 
-        # If ModulatoryMechanism is a System controller, name Projection from
-        # ObjectiveMechanism based on the System
-        if self.system is not None:
-            name = self.system.name + ' outcome signal'
-        # Otherwise, name it based on the ObjectiveMechanism
-        else:
-            name = self.objective_mechanism.name + ' outcome signal'
-
+        # MODIFIED 8/16/19 OLD:
+        # # If ModulatoryMechanism is a System controller, name Projection from
+        # # ObjectiveMechanism based on the System
+        # if self.system is not None:
+        #     name = self.system.name + ' outcome signal'
+        # # Otherwise, name it based on the ObjectiveMechanism
+        # else:
+        #     # name = self.objective_mechanism.name + ' outcome signal'
+        # MODIFIED 8/16/19 END
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
                                                       receiver=self,
                                                       matrix=AUTO_ASSIGN_MATRIX,
-                                                      name=name)
+                                                      # name=name
+                                                      )
         for input_state in self.objective_mechanism.input_states:
             input_state.internal_only = True
 
         self.aux_components.append(self.objective_mechanism)
-        self.aux_components.append((projection_from_objective, True))
+        # # MODIFIED 8/12/19 OLD:
+        # self.aux_components.append((projection_from_objective, True))
+        # # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
+        self.aux_components.append(projection_from_objective)
+        # MODIFIED 8/12/19 END
         self._objective_projection = projection_from_objective
         self.monitor_for_modulation = self.monitored_output_states
 
@@ -1241,13 +1260,21 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                           context=context)
 
     def _instantiate_input_states(self, context=None):
+
         super()._instantiate_input_states(context=context)
         self.input_state.name = OUTCOME
+        self.input_state.name = OUTCOME
 
-        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        # if self.monitor_for_control or self._objective_mechanism:
+        # If objective_mechanism is specified, instantiate it,
+        #     including Projections to it from monitor_for_control
         if self._objective_mechanism:
             self._instantiate_objective_mechanism(context=context)
+
+        # Otherwise, instantiate Projections from monitor_for_control to ControlMechanism
+        elif self.monitor_for_modulation:
+            from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+            for sender in convert_to_list(self.monitor_for_modulation):
+                self.aux_components.append(MappingProjection(sender=sender, receiver=self.input_states[OUTCOME]))
 
     def _instantiate_output_states(self, context=None):
 
@@ -1446,6 +1473,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         if self._objective_mechanism:
             self.objective_mechanism._add_process(process, role)
 
+    # FIX: TBI FOR COMPOSITION
     @tc.typecheck
     def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
         """Assign ModulatoryMechanism as `controller <System.controller>` for a `System`.

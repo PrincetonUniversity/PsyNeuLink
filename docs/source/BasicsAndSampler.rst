@@ -621,7 +621,7 @@ components created by the call to ``add_backpropagation_pathway``:
 
 
 Training the model requires specifying a set of inputs and targets to use as training stimuli, and identifying the
-target Mechanism (that receives the target responses)::
+target Mechanism (that receives the input specifying the target responses)::
 
     # Construct 4 trials worth of stimuli and responses (for the four conditions of the XOR operation):
     xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
