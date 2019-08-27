@@ -1049,7 +1049,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             # If assigned as a Function, set TransferMechanism as its owner, and assign its actual function to noise
             if isinstance(noise, DistributionFunction):
                 noise.owner = self
-                target_set[NOISE] = noise._execute
+                target_set[NOISE] = noise.execute
             self._validate_noise(target_set[NOISE])
 
         # Validate INTEGRATOR_FUNCTION:
@@ -1102,7 +1102,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             else:
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
-                        noise[i] = noise[i]._execute
+                        noise[i] = noise[i].execute
                     if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
                         raise MechanismError("The elements of a noise list or array must be floats or functions. "
                             "{} is not a valid noise element for {}".format(noise[i], self.name))

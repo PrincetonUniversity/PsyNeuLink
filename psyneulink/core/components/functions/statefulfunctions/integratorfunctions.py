@@ -1112,7 +1112,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
             noise = target_set[NOISE]
             if isinstance(noise, DistributionFunction):
                 noise.owner = self
-                target_set[NOISE] = noise._execute
+                target_set[NOISE] = noise.execute
             self._validate_noise(target_set[NOISE])
             # if INITIALIZER in target_set:
             #     self._validate_initializer(target_set[INITIALIZER])
@@ -1694,7 +1694,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
             noise = target_set[NOISE]
             if isinstance(noise, DistributionFunction):
                 noise.owner = self
-                target_set[NOISE] = noise._execute
+                target_set[NOISE] = noise.execute
             self._validate_noise(target_set[NOISE])
             # if INITIALIZER in target_set:
             #     self._validate_initializer(target_set[INITIALIZER])
