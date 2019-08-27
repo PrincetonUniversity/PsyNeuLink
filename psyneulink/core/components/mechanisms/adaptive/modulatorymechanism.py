@@ -1260,13 +1260,21 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                           context=context)
 
     def _instantiate_input_states(self, context=None):
+
         super()._instantiate_input_states(context=context)
         self.input_state.name = OUTCOME
+        self.input_state.name = OUTCOME
 
-        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        # if self.monitor_for_control or self._objective_mechanism:
+        # If objective_mechanism is specified, instantiate it,
+        #     including Projections to it from monitor_for_control
         if self._objective_mechanism:
             self._instantiate_objective_mechanism(context=context)
+
+        # Otherwise, instantiate Projections from monitor_for_control to ControlMechanism
+        elif self.monitor_for_modulation:
+            from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+            for sender in convert_to_list(self.monitor_for_modulation):
+                self.aux_components.append(MappingProjection(sender=sender, receiver=self.input_states[OUTCOME]))
 
     def _instantiate_output_states(self, context=None):
 
@@ -1288,7 +1296,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self._modulatory_signals = ContentAddressableList(component_type=ModulatorySignal,
                                                        list=[state for state in self.output_states
                                                              if isinstance(state, (ControlSignal, GatingSignal))])
-
+test_control_modulation_in_composition
     def _instantiate_modulatory_signals(self, context):
         """Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)"""
         for i, modulatory_signal in enumerate(self.modulatory_signals):

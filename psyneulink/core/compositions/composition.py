@@ -1779,15 +1779,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <NodeRole.INPUT>` by default. If the required_roles argument of `add_node <Composition.add_node>` is used
         to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
         nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
-
-        :param graph:
-        :param context:
-        :return:
         """
 
-        # MODIFIED 8/16/19 NEW: [JDC] - MODIFIED FEEDBACK
         self._check_feedback(scheduler)
-        # MODIFIED 8/16/19 END
         self._determine_node_roles()
         self._create_CIM_states()
         self._update_shadow_projections()
@@ -3026,31 +3020,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pass
         else:
             scheduler = self.scheduler_processing
-        # MODIFIED 8/18/19 NEW: [JDC]
-        # scheduler = scheduler or self.scheduler_processing
-        # # FIX: IS THIS SAFE?  IT WILL CRASH IF THERE IS A CYCLE
-        # scheduler._init_consideration_queue_from_graph(self.graph_processing)
-        # MODIFIED 8/18/19 END
 
-        for vertex in [v for v in self.graph.vertices
-                       # FIX: MODIFIED FEEDBACK
-                       #   CONSTRAIN TO ControlProjections FOR NOW,
-                       #  AS OVERIDES OTHER CASES THAT ARE GENERATED ON COMMAND LINE.
-                       # if isinstance(v.component, ControlProjection) and v.feedback==True]:
-                       #  ALTERNATIVE: TRUE=ENFORCE FEEDBACK, MAYBE=REMOVE IF NO EFFECT,FALSE=NO FEEDBACK
-                       if v.feedback==MAYBE]:
+        for vertex in [v for v in self.graph.vertices if v.feedback==MAYBE]:
             projection = vertex.component
             # assert isinstance(projection, Projection), \
             #     f'PROGRAM ERROR: vertex identified with feedback=True that is not a Projection'
             vertex.feedback = False
+
             # Update Composition's graph_processing
             self._update_processing_graph()
+
             # Update scheduler's consideration_queue based on update of graph_processing
             try:
                 scheduler._init_consideration_queue_from_graph(self.graph_processing)
             except ValueError:
                 # If a cycle is detected, leave feedback alone
                 feedback = 'leave'
+
             # If, when feedback is False, the dependency_dicts for the structural and execution are the same,
             #    then no need for feedback specification, so remove it
             #       and remove assignments of sender and receiver to corresponding feedback entries of Composition
