@@ -5388,7 +5388,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if show_learning:
             _assign_learning_components(G)
 
-        # Sort to put ORIGIN nodes first and controller and its objective_mechanism last
+        # Sort nodes for display
         def get_index_of_node_in_G_body(node):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):
@@ -5397,10 +5397,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     return i
         for node in self.nodes:
             roles = self.get_roles_by_node(node)
+            # Put INPUT node(s) first
             if NodeRole.INPUT in roles:
                 i = get_index_of_node_in_G_body(node)
                 if i is not None:
                     G.body.insert(0,G.body.pop(i))
+            # # Put OUTPUT node(s) last (except for ControlMechanisms)
+            # if NodeRole.OUTPUT in roles:
+            #     i = get_index_of_node_in_G_body(node)
+            #     if i is not None:
+            #         G.body.insert(len(G.body),G.body.pop(i))
+            # # Put ControlMechanisms last
+            # if isinstance(node, ControlMechanism):
+            #     i = get_index_of_node_in_G_body(node)
+            #     if i is not None:
+            #         G.body.insert(len(G.body),G.body.pop(i))
         if self.controller and show_controller:
             i = get_index_of_node_in_G_body(self.controller)
             G.body.insert(len(G.body),G.body.pop(i))
