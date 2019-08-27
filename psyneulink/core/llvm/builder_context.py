@@ -296,7 +296,7 @@ class LLVMBuilderContext:
             a.attributes.add('noalias')
         
         context, params, comp_in, data_arg, cond = llvm_func.args
-        pytorch_model._gen_llvm_training_function_body(self,composition, builder, context, params, comp_in, data_arg, cond)
+        pytorch_model._gen_llvm_training_function_body(self, builder, context, params, comp_in, data_arg, cond)
         # Call output CIM
 
         if "const_params" in debug_env:
