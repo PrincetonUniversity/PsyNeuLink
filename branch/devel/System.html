@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.5.3.2+401.g90065c8 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.5.3.2+402.g3059093 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+401.g90065c8',
+              VERSION:'0.5.3.2+402.g3059093',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.5.3.2+401
+                0.5.3.2+402
               </div>
             
           
@@ -192,13 +192,13 @@ must be included in the <strong>processes</strong> argument of the <a class="ref
 <p>A controller can also be specified for the System, in the <strong>controller</strong> argument of the <a class="reference internal" href="#"><span class="doc">System</span></a>.  This can be an
 existing <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>, a constructor for one, or a class of ControlMechanism in which case a default
 instance of that class will be created.  If an existing ControlMechanism or the constructor for one is used, then
-the <code class="xref any docutils literal"><span class="pre">OutputStates</span> <span class="pre">it</span> <span class="pre">monitors</span></code> and the <code class="xref any docutils literal"><span class="pre">parameters</span> <span class="pre">it</span> <span class="pre">controls</span></code> can be specified using its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> and <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>
+the <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">OutputStates it monitors</span></a> and the <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">parameters it controls</span></a> can be specified using its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> and <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>
 attributes, respectively.  In addition, these can be specified in the <strong>monitor_for_control</strong> and <strong>control_signal</strong>
 arguments of the <a class="reference internal" href="#"><span class="doc">System</span></a>, as described below.</p>
 <ul>
 <li><p class="first"><strong>monitor_for_control</strong> argument – used to specify OutputStates of Mechanisms in the System that should be
 monitored by the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> associated with the System’s <a class="reference internal" href="#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> (see
-<code class="xref any docutils literal"><span class="pre">ControlMechanism_ObjectiveMechanism</span></code>);  these are used in addition to any specified for the ControlMechanism or
+<a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">Objective Mechanism</span></a>);  these are used in addition to any specified for the ControlMechanism or
 its ObjectiveMechanism.  These can be specified in the <strong>monitor_for_control</strong> argument of the <a class="reference internal" href="#"><span class="doc">System</span></a> using
 any of the ways used to specify the <em>monitored_output_states</em> for an ObjectiveMechanism (see
 <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">Monitor</span></a>).  In addition, the <strong>monitor_for_control</strong> argument supports two
@@ -226,7 +226,7 @@ ObjectiveMechanism’s <code class="xref any docutils literal"><span class="pre"
 </ul>
 <ul class="simple">
 <li><strong>control_signals</strong> argument – used to specify the parameters of Components in the System to be controlled. These
-can be specified in any of the ways used to <code class="xref any docutils literal"><span class="pre">specify</span> <span class="pre">ControlSignals</span></code> in the
+can be specified in any of the ways used to <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">specify ControlSignals</span></a> in the
 <em>control_signals</em> argument of a ControlMechanism. These are added to any <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> that have
 already been specified for the <a class="reference internal" href="#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> (listed in its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> attribute), and any parameters that have directly been <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">specified for
 control</span></a> within the System (see <a class="reference internal" href="#system-control"><span class="std std-ref">Control</span></a> below for additional details).</li>
@@ -394,8 +394,8 @@ other Mechanisms in the System have executed.  Although a System may have more t
 can be assigned as its <a class="reference internal" href="#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>;  all other ControlMechanisms are executed during the
 <code class="xref any docutils literal"><span class="pre">processing</span> <span class="pre">`System_Execution_Processing</span></code> phase of the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> like any other Mechanism.  The <a class="reference internal" href="#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> uses its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> to monitor and evaluate
 the <a class="reference internal" href="OutputState.html"><span class="doc">OutputState(s)</span></a> of Mechanisms in the System; based on the information it receives from that
-<a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, it modulates the value of the parameters of Components in the System that have been <code class="xref any docutils literal"><span class="pre">specified</span>
-<span class="pre">for</span> <span class="pre">control</span></code>, which then take effect in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> (see <a class="reference internal" href="#system-control"><span class="std std-ref">Control</span></a> for
+<a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, it modulates the value of the parameters of Components in the System that have been <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">specified
+for control</span></a>, which then take effect in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> (see <a class="reference internal" href="#system-control"><span class="std std-ref">Control</span></a> for
 additional information about control). The control Components of a System can be displayed using the System’s
 <code class="xref any docutils literal"><span class="pre">show_graph`method</span> <span class="pre">with</span> <span class="pre">its</span> <span class="pre">**show_control**</span> <span class="pre">argument</span> <span class="pre">assigned</span> <span class="pre">`True</span></code>.</p>
 <p class="rubric" id="system-examples">Examples</p>
@@ -416,7 +416,7 @@ that include two <a class="reference internal" href="Mechanism.html"><span class
 </div>
 <p>A constructor is used to specify the EVCControlMechanism that includes a constructor specifying its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>;  the <strong>monitored_output_states</strong> argument of the ObjectiveMechanism’s constructor
 is used to specify that it should monitor the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> of the Reward Mechanism
-and the <em>PROBABILITY_UPPER_THRESHOLD</em> and <em>RESPONSE_TIME</em> and, specifying how it should combine them (see the <a class="reference internal" href="ControlMechanism.html#controlmechanism-examples"><span class="std std-ref">example</span></a> under ControlMechanism for an explanation). Note that the <strong>function</strong> argument for the
+and the <em>PROBABILITY_UPPER_THRESHOLD</em> and <em>RESPONSE_TIME</em> and, specifying how it should combine them (see the <code class="xref any docutils literal"><span class="pre">example</span></code> under ControlMechanism for an explanation). Note that the <strong>function</strong> argument for the
 ObjectiveMechanism’s constructor is also specified;  this is because an ObjectiveMechanism uses <em>SUM</em> as the default
 for the <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> of its <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function, whereas as the EVCControlMechanism
 requires <em>PRODUCT</em> – in this case, to properly use the weight and exponents specified for the RESPONSE_TIME
@@ -433,7 +433,7 @@ argument of the EVCControlMechanism, respectively.</p>
 </pre></div>
 </div>
 <p>Here, the constructor for the ObjectiveMechanism is elided, and the <strong>objective_mechanism</strong> argument for the
-EVCControlMechanism is specified as a list of OutputStates (see <code class="xref any docutils literal"><span class="pre">ControlMechanism_ObjectiveMechanism</span></code>).</p>
+EVCControlMechanism is specified as a list of OutputStates (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">Objective Mechanism</span></a>).</p>
 <p>The specification can be made even simpler, but with some additional considerations that must be kept in mind,
 as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_system</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">TaskExecutionProcess</span><span class="p">,</span> <span class="n">RewardProcess</span><span class="p">],</span>

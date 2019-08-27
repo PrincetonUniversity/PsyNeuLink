@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Gating Mechanism &mdash; PsyNeuLink 0.5.3.2+401.g90065c8 documentation</title>
+  <title>Gating Mechanism &mdash; PsyNeuLink 0.5.3.2+402.g3059093 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+401.g90065c8',
+              VERSION:'0.5.3.2+402.g3059093',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+401
+                0.5.3.2+402
               </div>
             
           
@@ -276,11 +276,13 @@ GatingSignals can be displayed using its <code class="xref py py-func docutils l
 <div class="section" id="execution">
 <span id="gatingmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A GatingMechanism executes in the same way as a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>, based on its place in the
-System’s <a class="reference internal" href="System.html#psyneulink.core.components.system.System.graph" title="psyneulink.core.components.system.System.graph"><code class="xref any py py-attr docutils literal"><span class="pre">graph</span></code></a>.  Because <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> are likely to introduce cycles
-(recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally not be
-applied in the first <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> (see <a class="reference internal" href="System.html#system-execution-input-and-initialization"><span class="std std-ref">initialization</span></a> for a description of
-how to configure the initialization of feedback loops in a System; also see <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> for a description of detailed
-ways in which a GatingMechanism and its dependents can be scheduled to execute).</p>
+Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph" title="psyneulink.core.compositions.composition.Composition.graph"><code class="xref any py py-attr docutils literal"><span class="pre">graph</span></code></a>.  Because <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> are likely to introduce
+cycles (recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally
+not be applied in the first <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> (see
+<strong>feedback</strong> argument for the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_projection" title="psyneulink.core.compositions.composition.Composition.add_projection"><code class="xref any py py-meth docutils literal"><span class="pre">add_projection</span></code></a>
+method of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> for a description of how to configure the initialization of feedback loops in a Composition;
+also see <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> for a description of detailed ways in which a GatingMechanism and its dependents can be scheduled
+to execute).</p>
 <p>When executed, a GatingMechanism  uses its input to determine the value of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation" title="psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.gating_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">gating_allocation</span></code></a>, each item of which is used by a corresponding <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> to determine its
 <a class="reference internal" href="GatingSignal.html#psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.gating_signal" title="psyneulink.core.components.states.modulatorysignals.gatingsignal.GatingSignal.gating_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a> and assign to its <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>. In the
 subsequent <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, each GatingProjection’s value is used by the State to which it projects to modulate the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of that State (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a> fon an explanation of how the value

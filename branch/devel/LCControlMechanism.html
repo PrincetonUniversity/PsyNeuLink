@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.5.3.2+401.g90065c8 documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.5.3.2+402.g3059093 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+401.g90065c8',
+              VERSION:'0.5.3.2+402.g3059093',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+401
+                0.5.3.2+402
               </div>
             
           
@@ -198,20 +198,18 @@ its <a class="reference internal" href="#psyneulink.library.components.mechanism
 </div>
 <div class="section" id="creating-an-lccontrolmechanism">
 <span id="lccontrolmechanism-creation"></span><h2>Creating an LCControlMechanism<a class="headerlink" href="#creating-an-lccontrolmechanism" title="Permalink to this headline">¶</a></h2>
-<p>An LCControlMechanism can be created in any of the ways used to <code class="xref any docutils literal"><span class="pre">create</span> <span class="pre">a</span> <span class="pre">ControlMechanism</span></code>.
+<p>An LCControlMechanism can be created in any of the ways used to <a class="reference internal" href="ControlMechanism.html#controlmechanism-creation"><span class="std std-ref">create a ControlMechanism</span></a>.
 The following sections describe how to specify the inputs that drive the LCControlMechanism’s response, and the
 Mechanisms that it controls.</p>
 <div class="section" id="objectivemechanism-and-monitored-outputstates">
 <span id="lccontrolmechanism-objectivemechanism-creation"></span><h3><em>ObjectiveMechanism and Monitored OutputStates</em><a class="headerlink" href="#objectivemechanism-and-monitored-outputstates" title="Permalink to this headline">¶</a></h3>
-<p>Like all ControlMechanisms, when an LCControlMechanism is created it automatically creates an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>,
-from which it receives its input. The ObjectiveMechanism receives its input from any <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>
-specified in <strong>monitor_for_control</strong> argument of the constructor for LCControlMechanism (or of a <a class="reference internal" href="System.html"><span class="doc">System</span></a> for which
-it is assigned as a <a class="reference internal" href="System.html#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>; see <code class="xref any docutils literal"><span class="pre">ControlMechanism_ObjectiveMechanism</span></code>). By default,
-the ObjectiveMechanism is assigned a <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.CombineMeans" title="psyneulink.core.components.functions.combinationfunctions.CombineMeans"><code class="xref any py py-class docutils literal"><span class="pre">CombineMeans</span></code></a> Function  as its <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see
-<a class="reference internal" href="#lccontrolmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism</span></a>).  The ObjectiveMechanism can be customized using the
-<strong>objective_mechanism</strong> argument of the LCControlMechanism’s constructor; however, the <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
-of its <em>OUTCOME</em> <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> must be a scalar value (that is used as the input to the LCControlMechanism’s
-<a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to drive its <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">phasic response</span></a>.</p>
+<p>Like any ControlMechanisms, when an LCControlMechanism is created it may <code class="xref any docutils literal"><span class="pre">automatically</span> <span class="pre">create</span>
+<span class="pre">&lt;`ControlMechanism_ObjectiveMechanism</span></code>&gt; an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> from which it receives its input. The
+ObjectiveMechanism receives its input from any <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> specified in <strong>monitor_for_control</strong>
+argument of the constructor for LCControlMechanism
+By default, the ObjectiveMechanism of an LCControlMechanism is assigned a <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.CombineMeans" title="psyneulink.core.components.functions.combinationfunctions.CombineMeans"><code class="xref any py py-class docutils literal"><span class="pre">CombineMeans</span></code></a> Function  as its <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#lccontrolmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism</span></a>).  The ObjectiveMechanism can be
+customized using the <strong>objective_mechanism</strong> argument of the LCControlMechanism’s constructor; however, the <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>OUTCOME</em> <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> must be a scalar value (that is used as the input to the
+LCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to drive its <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">phasic response</span></a>.</p>
 </div>
 <div class="section" id="mechanisms-to-modulate">
 <span id="lccontrolmechanism-modulated-mechanisms"></span><h3><em>Mechanisms to Modulate</em><a class="headerlink" href="#mechanisms-to-modulate" title="Permalink to this headline">¶</a></h3>
@@ -237,14 +235,14 @@ of the LCControlMechanism’s <a class="reference internal" href="ObjectiveMecha
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, which drives its <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">phasic response</span></a>.</p>
 <div class="section" id="objectivemechanism">
 <span id="lccontrolmechanism-objectivemechanism"></span><h4>ObjectiveMechanism<a class="headerlink" href="#objectivemechanism" title="Permalink to this headline">¶</a></h4>
-<p>The ObjectiveMechanism for an LCControlMechanism receives its inputs from the <a class="reference internal" href="OutputState.html"><span class="doc">OutputState(s)</span></a> specified
-the <strong>monitor_for_control</strong> argument of the LCControlMechanism constructor, or the <strong>montiored_output_states</strong> argument
-of the LCControlMechanism’s <code class="xref any docutils literal"><span class="pre">ObjectiveMechanism</span></code>.  By default, the
+<p>If an ObjectiveMechanism is <code class="xref any docutils literal"><span class="pre">automatically</span> <span class="pre">created</span></code> specified the
+<strong>monitor_for_control</strong> argument of the LCControlMechanism constructor, or the <strong>montiored_output_states</strong> argument
+of the LCControlMechanism’s <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism</span></a>.  By default, the
 ObjectiveMechanism is assigned a <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.CombineMeans" title="psyneulink.core.components.functions.combinationfunctions.CombineMeans"><code class="xref any py py-class docutils literal"><span class="pre">CombineMeans</span></code></a> Function with a default <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> of
 <em>SUM</em>; this takes the mean of each array that the ObjectiveMechanism receives from the <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
 each of the OutputStates that it monitors, and returns the sum of these means.  The <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
 each OutputState can be weighted (multiplicatively and/or exponentially), by specifying this in the
-<strong>monitor_for_control</strong> argument of the LCControlMechanism (see <code class="xref any docutils literal"><span class="pre">ControlMechanism_ObjectiveMechanism</span></code> for details).
+<strong>monitor_for_control</strong> argument of the LCControlMechanism (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitor-for-control"><span class="std std-ref">Specifying OutputStates to be monitored</span></a> for details).
 As with any ControlMechanism, its ObjectiveMechanism can be explicitly specified to customize its <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> or any of its other parameters, by specifyihng it in the <strong>objective_mechanism</strong>
 argument of the LCControlMechanism’s constructor.</p>
 <div class="admonition note" id="lccontrolmechanism-objective-mechanism-function-note">
@@ -428,7 +426,7 @@ OutputStates used to drive its <a class="reference internal" href="#lccontrolmec
 <dt id="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.monitor_for_control">
 <code class="descname">monitor_for_control</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.monitor_for_control" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[OutputState]</em> – list of the <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> that project to <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> (and also listed in the ObjectiveMechanism’s <code class="xref any docutils literal"><span class="pre">monitored_output_states</span></code> attribute);  these are used by the ObjectiveMechanism to
-generate the ControlMechanism’s <code class="xref any docutils literal"><span class="pre">input</span></code>, which drives the <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">phasic response</span></a> of its <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
+generate the ControlMechanism’s <a class="reference internal" href="ControlMechanism.html#controlmechanism-input"><span class="std std-ref">input</span></a>, which drives the <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">phasic response</span></a> of its <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
