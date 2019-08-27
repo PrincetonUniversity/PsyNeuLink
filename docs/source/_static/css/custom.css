@@ -4,9 +4,20 @@ Sets bottom-margin size for list elements in the main body of the document to 12
 Because Sphinx includes the table of contents in the main section, we then reset just the list elements
 in that section to 0px.
  */
-.main li{
+#mechanisms li, #processing-mechanisms li,
+#transfermechanism li, #integratormechanism li,
+#objectivemechanism li, #adaptive-mechanisms li,
+#projections li, #pathway-projections li,
+#modulatory-projections li, #states li,
+#inputstate li, #parameterstate li, #outputstate li,
+#modulatorysignals li, #functions li, #compositions li,
+#compositionfunctionapproximator li, #autodiffcomposition li,
+#scheduling li, #scheduler li, #condition li, #time li,
+#run li, #log li
+{
     margin-bottom: 12px;
 }
-.toctree-wrapper li{
-    margin-bottom: 0px;
+
+.toctree-wrapper.compound li, div#sections li{
+    margin-bottom: 0px !important;
 }

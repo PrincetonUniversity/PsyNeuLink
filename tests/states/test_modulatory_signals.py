@@ -40,7 +40,6 @@ class TestGatingSignals:
         comp1 = Composition()
         comp1.add_nodes([Tx1, Ty1, G1])
         comp1.add_linear_processing_pathway([Tx1, Ty1, G1, Tx1])
-        comp1.show_graph()
         comp1.run(inputs={Tx1: inputs})
 
         Tx2 = TransferMechanism()
