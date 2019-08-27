@@ -1296,7 +1296,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self._modulatory_signals = ContentAddressableList(component_type=ModulatorySignal,
                                                        list=[state for state in self.output_states
                                                              if isinstance(state, (ControlSignal, GatingSignal))])
-test_control_modulation_in_composition
+
     def _instantiate_modulatory_signals(self, context):
         """Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)"""
         for i, modulatory_signal in enumerate(self.modulatory_signals):
