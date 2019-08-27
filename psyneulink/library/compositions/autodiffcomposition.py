@@ -903,7 +903,7 @@ class AutodiffComposition(Composition):
                         context=context    
                     ))
                 self.learning_enabled = True
-
+                results = [results]
             else:
                 self._analyze_graph()
 
