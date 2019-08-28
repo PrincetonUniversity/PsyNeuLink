@@ -1053,14 +1053,17 @@ class Parameter(types.SimpleNamespace):
 
     def _set_log_condition(self, value):
         if not isinstance(value, LogCondition):
-            try:
-                value = LogCondition.from_string(value)
-            except (AttributeError, LogError):
+            if value is True:
+                value = LogCondition.ALL_ASSIGNMENTS
+            else:
                 try:
-                    value = LogCondition(value)
-                except ValueError:
-                    # if this fails, value can't be interpreted as a LogCondition
-                    raise
+                    value = LogCondition.from_string(value)
+                except (AttributeError, LogError):
+                    try:
+                        value = LogCondition(value)
+                    except ValueError:
+                        # if this fails, value can't be interpreted as a LogCondition
+                        raise
 
         super().__setattr__('log_condition', value)
 

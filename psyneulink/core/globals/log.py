@@ -430,8 +430,10 @@ class LogCondition(enum.IntFlag):
     """Set at the end of a `TRIAL`."""
     RUN = ContextFlags.SIMULATION<<2
     """Set at the end of a `RUN`."""
-    ALL_ASSIGNMENTS = \
+    ALL_ASSIGNMENTS = (
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
+        | SIMULATION | TRIAL | RUN
+    )
     """Specifies all contexts."""
 
     @classmethod
