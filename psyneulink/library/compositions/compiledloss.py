@@ -97,10 +97,10 @@ class MSELoss(Loss):
 
         if sum_loss is False:
             self._pytorch_model._gen_inject_vec_sub(ctx,builder,value,target,dim,output)
-            self._pytorch_model._gen_inject_vec_scalar_mult(ctx,builder,output,ctx.float_ty(2),dim,output)
+            #self._pytorch_model._gen_inject_vec_scalar_mult(ctx,builder,output,ctx.float_ty(2),dim,output)
         else:
             # in this case, we add the loss
             tmp = self._pytorch_model._gen_inject_vec_sub(ctx,builder,value,target,dim)
-            self._pytorch_model._gen_inject_vec_scalar_mult(ctx,builder,tmp,ctx.float_ty(2),dim,tmp)
+            #self._pytorch_model._gen_inject_vec_scalar_mult(ctx,builder,tmp,ctx.float_ty(2),dim,tmp)
             self._pytorch_model._gen_inject_vec_add(ctx,builder,output,tmp,dim,output)
         return output
