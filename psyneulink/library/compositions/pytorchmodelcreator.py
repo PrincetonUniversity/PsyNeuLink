@@ -110,7 +110,6 @@ class PytorchModelCreator(torch.nn.Module):
                         if proj_matrix is None:
                             proj_matrix = mapping_proj.parameters.matrix._get(
                                 None)
-
                         # set up pytorch weights that correspond to projection. If copying params from psyneulink,
                         # copy weight values from projection. Otherwise, use random values.
                         if param_init_from_pnl:
@@ -242,8 +241,7 @@ class PytorchModelCreator(torch.nn.Module):
                     if "ref_pass" in debug_env:
                         node_params += [bias.detach().numpy().ctypes.data_as(ctypes.c_void_p).value]
                     else:
-                        node_params += [ctx.convert_python_struct_to_llvm_ir(
-                            bias.detach().numpy())]
+                        node_params += [bias.detach().numpy()]
                 
                 param_list[node_idx] = node_params
             if "ref_pass" in debug_env:
@@ -435,7 +433,7 @@ class PytorchModelCreator(torch.nn.Module):
                                                 ctx.int32_ty(afferent_node_index)])
         if "ref_pass" in debug_env:
             mem_addr = builder.load(node_weights)
-            ctx.inject_printf(builder,"GOT WEIGHT MATRIX WITH ADDRESS: %ld (dimensionality: %d x %d )\n",mem_addr,ctx.int32_ty(dim_x),ctx.int32_ty(dim_y))
+            #ctx.inject_printf(builder,"GOT WEIGHT MATRIX WITH ADDRESS: %ld (dimensionality: %d x %d )\n",mem_addr,ctx.int32_ty(dim_x),ctx.int32_ty(dim_y))
             node_weights = builder.inttoptr(mem_addr, ir.types.ArrayType(
                 ir.types.ArrayType(ir.types.DoubleType(), dim_y), dim_x).as_pointer())
     
@@ -475,14 +473,14 @@ class PytorchModelCreator(torch.nn.Module):
                 dim_x, dim_y = component.defaults.variable.shape
                 
                 if i == 0:
-                    input_slot = self._composition._get_node_index(component)
                     cmp_arg = builder.gep(
-                            arg_in, [ctx.int32_ty(0), ctx.int32_ty(input_slot)])
+                            arg_in, [ctx.int32_ty(0), ctx.int32_ty(component_id)])
                 else:
                     # is_set keeps track of if we already have valid (i.e. non-garbage) values inside the alloc'd value
                     is_set = False
                     for input_vertex, weights in afferents.items():
                         input_node = input_vertex.component
+                        ctx.inject_printf(builder,f"COMPILED FORWARD {input_node} -> {component}\n")
                         input_node_idx = self._composition._get_node_index(
                             input_node)
                         # frozen_values[input_node.component]
@@ -586,7 +584,8 @@ class PytorchModelCreator(torch.nn.Module):
             _, node_dim = node.defaults.variable.shape
             node_input_array_ptr = builder.gep(node_input_arrays[node], [
                                                 input_idx, ctx.int32_ty(0)])
-            self._gen_inject_vec_copy(ctx,builder,node_input_array_ptr,node_dim,model_input)
+            node_model_input = builder.gep(model_input,[ctx.int32_ty(0),ctx.int32_ty(node_idx)])
+            self._gen_inject_vec_copy(ctx,builder,node_input_array_ptr,node_dim,node_model_input)
             
             ctx.inject_printf_float_array(
                 builder, node_input_array_ptr, node_dim, prefix=f"\tNODE {node_idx} INPUT: ")
@@ -606,6 +605,7 @@ class PytorchModelCreator(torch.nn.Module):
         loss_fn = ctx.get_llvm_function(loss._gen_call_function(ctx).name)
         total_loss = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(0),total_loss)
+
         while(len(backprop_queue) > 0):
             node = backprop_queue.popleft()
             if node in error_dict or not hasattr(node, "afferents") or node == composition.input_CIM or node in input_nodes:
@@ -617,7 +617,6 @@ class PytorchModelCreator(torch.nn.Module):
 
             node_idx = composition._get_node_index(node)
             _, node_dim = node.defaults.value.shape
-            node_dim_ir = ctx.int32_ty(node_dim)
 
 
             activation_func_derivative_bin_func = ctx.get_llvm_function(self.bin_function_derivative_creator(ctx,node).name)
@@ -633,15 +632,19 @@ class PytorchModelCreator(torch.nn.Module):
                 # compute  dC/da = a_l - y(x) (TODO: Allow other cost functions! This only applies to MSE)
                 node_target = builder.gep(node_target_arrays[node], [
                                             input_idx, ctx.int32_ty(0)])
-                node_output = builder.gep(model_output, [ctx.int32_ty(
-                    0), ctx.int32_ty(0), ctx.int32_ty(node_idx)])
+                node_output = self._get_output_index(ctx,builder,model_output,node_idx)
 
                 tmp_loss = loss._gen_inject_lossfunc_call(ctx,builder,loss_fn,node_output,node_target,node_dim)
+               
+                ctx.inject_printf_float_array(builder,node_output,node_dim,override_debug=False)
+                
+                ctx.inject_printf(builder,f"tmp loss for {node} :%f\n",tmp_loss,override_debug=False)
                 builder.store(builder.fadd(builder.load(total_loss),tmp_loss),total_loss)
                 loss_derivative = loss._gen_inject_loss_differential(ctx,builder,node_output,node_target,node_dim)
                 # compute δ_l = dσ/da ⊙ σ'(z)
+                
                 self._gen_inject_vec_hadamard(ctx,builder,activation_func_derivative,loss_derivative,node_dim,error_val)
-
+                
             else:
                 # We propagate error backwards from next layer
                 
@@ -686,7 +689,7 @@ class PytorchModelCreator(torch.nn.Module):
                 # update delta_W
                 node_delta_w = builder.gep(delta_w,[ctx.int32_ty(0),ctx.int32_ty(node_idx), ctx.int32_ty(afferent_node_idx)])
                 weight_row = None
-                ctx.inject_printf(builder,f"UPDATE DELTA_W {afferent_node} -> {node} \n",override_debug=False)
+                #ctx.inject_printf(builder,f"UPDATE DELTA_W {afferent_node} -> {node} \n",override_debug=True)
                 with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "weight_update_loop_outer") as (builder, weight_row):
                     weight_column = None
                     with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_y), "weight_update_loop_inner") as (builder, weight_column):
@@ -700,11 +703,11 @@ class PytorchModelCreator(torch.nn.Module):
                             old_val, builder.fmul(a_val, d_val))
                         builder.store(new_val, builder.gep(node_delta_w, [
                                         ctx.int32_ty(0), weight_row, weight_column]))
-                        ctx.inject_printf(builder,"%f ",new_val,override_debug=False)
-                    ctx.inject_printf(builder,"\n",override_debug=False)
+                        #ctx.inject_printf(builder,"%f ",new_val,override_debug=True)
+                    #ctx.inject_printf(builder,"\n",override_debug=True)
                         
         builder.store(builder.fmul(ctx.float_ty(.5),builder.load(total_loss)),total_loss)
-        ctx.inject_printf(builder,"TOTAL LOSS: %f\n",builder.load(total_loss))
+        ctx.inject_printf(builder,"TOTAL LOSS: %f\n",builder.load(total_loss),override_debug=False)
         builder.ret_void()
         llvm_func = builder.function
         return llvm_func
@@ -797,16 +800,18 @@ class PytorchModelCreator(torch.nn.Module):
         optimizer.initialize_optimizer_struct(ctx,builder,optimizer_struct)
         backprop = ctx.get_llvm_function(self._gen_llvm_training_backprop(ctx,optimizer,loss).name)
         optimizer_step = ctx.get_llvm_function(optimizer.step(ctx).name)
+
         with pnlvm.helpers.for_loop_zero_inc(builder, epochs, "epoch_loop") as (builder, epoch_idx):
-            ctx.inject_printf(builder, "EPOCH %d\n", epoch_idx)
+            ctx.inject_printf(builder, "\033[0;32mEPOCH %d\033[0m\n", epoch_idx)
             input_idx = None
             with pnlvm.helpers.for_loop_zero_inc(builder, num_inputs, "input_loop") as (builder, input_idx):
-                ctx.inject_printf(builder, "\tINPUT %d\n", input_idx)
-                ctx.inject_printf(builder, "\t\tOPTIMIZER ZERO GRAD %d\n", input_idx)
+            #with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(1), "input_loop") as (builder, input_idx):
+                ctx.inject_printf(builder, "\n\033[0;31mINPUT %d\033[0m\n", input_idx)
+                ctx.inject_printf(builder, "OPTIMIZER ZERO GRAD %d\n", input_idx)
                 optimizer.zero_grad(ctx,builder,optimizer_struct)
-                ctx.inject_printf(builder, "\t\tBACKPROP %d\n", input_idx)
+                ctx.inject_printf(builder, "BACKPROP %d\n", input_idx)
                 builder.call(backprop,[model_context, model_params, model_input, model_output, optimizer_struct, input_struct_ptr, target_struct_ptr, input_idx])
-                ctx.inject_printf(builder, "\t\tOPTIMIZER STEP %d\n", input_idx)
+                ctx.inject_printf(builder, "OPTIMIZER STEP %d\n", input_idx)
                 builder.call(optimizer_step,[optimizer_struct,model_params])
     
     # inserts a value into the forward computation output array struct

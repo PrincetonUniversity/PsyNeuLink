@@ -261,7 +261,7 @@ class LLVMBuilderContext:
 
 
     def inject_printf_float_array(self,builder,array,dim,prefix="",suffix="\n",ctype_dimension=False,override_debug=False):
-        if "print_values" not in debug_env:
+        if "print_values" not in debug_env and override_debug is False:
             return
         self.inject_printf(builder,prefix,override_debug=override_debug)
 

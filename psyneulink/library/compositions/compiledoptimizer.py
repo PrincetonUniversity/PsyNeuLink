@@ -82,14 +82,15 @@ class Optimizer():
             weight_row = None
             curr_grad_struct = builder.gep(grad_struct, [ctx.int32_ty(
                 0), ctx.int32_ty(node_idx), ctx.int32_ty(afferent_node_index)])
-            with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "weight_zero_loop_outer") as (builder, weight_row):
+            weight_row = None
+            with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "zero_grad_loop_outer") as (builder, weight_row):
                 weight_column = None
-                with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_y), "weight_zero_loop_inner") as (builder, weight_column):
-                    grad_struct_ptr = builder.gep(
-                        curr_grad_struct, [ctx.int32_ty(0), weight_row, weight_column])
-                    builder.store(ctx.float_ty(0), grad_struct_ptr)
+                with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_y), "zero_grad_loop_inner") as (builder, weight_column):
+                    builder.store(ctx.float_ty(0),builder.gep(curr_grad_struct,[ctx.int32_ty(0),weight_row,weight_column]))       
+            #self._pytorch_model._gen_inject_mat_scalar_mult(ctx,builder,curr_grad_struct,ctx.float_ty(0),weights_dim_x,weights_dim_y,curr_grad_struct)
 
     def zero_grad(self, ctx, builder, optim_struct):
+        #ctx.inject_printf(builder,"t val zero g before %f\n",builder.load(builder.gep(optim_struct,[ctx.int32_ty(0),ctx.int32_ty(self._T_NUM)])),override_debug=True)
         delta_w_struct = builder.gep(
             optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._DELTA_W_NUM)])
         self._gen_zero_gradient_struct(ctx, builder, delta_w_struct)
@@ -110,7 +111,7 @@ class AdamOptimizer(Optimizer):
     Implements compiled ADAM Optimizer ( from paper https://arxiv.org/pdf/1412.6980.pdf  )
     '''
     # sets up parameters of model & the information required for forward computation
-    def __init__(self, pytorch_model, lr=1e-3, betas=(.9, .9999), eps=1e-8, weight_decay=0,):
+    def __init__(self, pytorch_model, lr=1e-3, betas=(.9, .999), eps=1e-8, weight_decay=0,):
         super().__init__(pytorch_model)
         self.lr = lr
         self.betas = betas
@@ -134,15 +135,19 @@ class AdamOptimizer(Optimizer):
 
     def initialize_optimizer_struct(self, ctx, builder, optim_struct):
         # set initial moments to 0
+        delta_w = builder.gep(
+            optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._DELTA_W_NUM)])
         m_t = builder.gep(
             optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._M_T_NUM)])
         v_t = builder.gep(
             optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._V_T_NUM)])
         t = builder.gep(
             optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._T_NUM)])
+        self._gen_zero_gradient_struct(ctx, builder, delta_w)
         self._gen_zero_gradient_struct(ctx, builder, m_t)
         self._gen_zero_gradient_struct(ctx, builder, v_t)
         builder.store(ctx.float_ty(0), t)
+
 
     # steps the adam optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
     def step(self, ctx):
@@ -185,7 +190,7 @@ class AdamOptimizer(Optimizer):
         # 1) increment t
         builder.store(builder.fadd(builder.load(t), one_float), t)
         t_val = builder.load(t)
-
+        # ctx.inject_printf(builder,"\nT: %f\n",t_val,override_debug=True)
         # 1.5) calculate values to be used later (based on incremented t)
         b1_pow = builder.call(pow, [b1, t_val])
         b2_pow = builder.call(pow, [b2, t_val])
@@ -201,6 +206,10 @@ class AdamOptimizer(Optimizer):
 
         # this is the new learning rate to use
         alpha_t = builder.fmul(alpha_mult, lr)
+        # ctx.inject_printf(builder, "BIAS CORR 1 %f\n",one_minus_b1_pow,override_debug=True)
+        # ctx.inject_printf(builder, "BIAS CORR 2 %f\n",one_minus_b2_pow,override_debug=True)
+        # ctx.inject_printf(builder, "sqrt BIAS CORR 2 %f\n",alpha_mult,override_debug=True)
+        # ctx.inject_printf(builder, "STEPSIZE %f\n",alpha_t,override_debug=True)
 
         gradient_struct_values = self._get_listof_gradient_struct_values()
 
@@ -241,6 +250,7 @@ class AdamOptimizer(Optimizer):
                 v_t, [zero, node_idx_ir, afferent_node_index_ir])
             delta_w_ptr = builder.gep(
                 delta_w, [zero, node_idx_ir, afferent_node_index_ir])
+            #ctx.inject_printf(builder,"grad sq beta val %f\n",builder.load(builder.gep(v_t_ptr,[zero,zero,zero])),override_debug=True)
 
             # v_t = v_t * b2
             self._pytorch_model._gen_inject_mat_scalar_mult(
@@ -251,12 +261,12 @@ class AdamOptimizer(Optimizer):
                 ctx, builder, delta_w_ptr, delta_w_ptr, weights_dim_x, weights_dim_y)
 
             # (1-b2)*(g_t)^2
-            tmp_val = self._pytorch_model._gen_inject_mat_scalar_mult(
-                ctx, builder, delta_w_sqrd, one_minus_b2, weights_dim_x, weights_dim_y)
+            self._pytorch_model._gen_inject_mat_scalar_mult(
+                ctx, builder, delta_w_sqrd, one_minus_b2, weights_dim_x, weights_dim_y,delta_w_sqrd)
 
             # v_t = v_t + (1-b2)*(g_t)^2
             self._pytorch_model._gen_inject_mat_add(
-                ctx, builder, v_t_ptr, tmp_val, weights_dim_x, weights_dim_y, v_t_ptr)
+                ctx, builder, v_t_ptr, delta_w_sqrd, weights_dim_x, weights_dim_y, v_t_ptr)
 
         # 4) update weights
 
@@ -268,34 +278,45 @@ class AdamOptimizer(Optimizer):
                 m_t, [zero, node_idx_ir, afferent_node_index_ir])
             v_t_ptr = builder.gep(
                 v_t, [zero, node_idx_ir, afferent_node_index_ir])
-
+            delta_w_ptr = builder.gep(
+                delta_w, [zero, node_idx_ir, afferent_node_index_ir])
             # this is messy - #TODO - cleanup this
             weights_llvmlite, weights_dim_x, weights_dim_y = self._pytorch_model._gen_get_node_weight_pointer(
                 ctx, builder, model_params, node, afferent_node)
             ctx.inject_printf(
-                builder, f"\t\t\t\tOPTIM UPDATE WEIGHTS {afferent_node.name} {node.name}\n")
+                builder, f"OPTIM UPDATE WEIGHTS {afferent_node.name} {node.name}\n",override_debug=False)
             weight_row = None
-            with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "weight_update_loop_outer") as (builder, weight_row):
+            with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "optimizer_w_upd_outer") as (builder, weight_row):
                 weight_column = None
-                with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_y), "weight_update_loop_inner") as (builder, weight_column):
+                with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_y), "optimizer_w_upd_inner") as (builder, weight_column):
                     
                     # sqrt(v_t) + eps
-                    value = builder.load(builder.gep(
+                    v_t_value = builder.load(builder.gep(
                         v_t_ptr, [zero, weight_row, weight_column]))
-                    value = builder.call(sqrt, [value])
+                    value = builder.call(sqrt, [v_t_value])
                     value = builder.fadd(value, eps)
 
+                    # alpha_t * m_t
                     m_t_value = builder.load(builder.gep(
                         m_t_ptr, [zero, weight_row, weight_column]))
                     m_t_value = builder.fmul(alpha_t, m_t_value)
 
+                    # value = alpha_t * m_t / (sqrt(v_t) + eps)
                     value = builder.fdiv(m_t_value, value)
 
                     old_weight_ptr = builder.gep(
                         weights_llvmlite, [zero, weight_row, weight_column])
+                    
+                    # new_weight = old_weight - value
                     value = builder.fsub(builder.load(old_weight_ptr), value)
                     builder.store(value, old_weight_ptr)
-        ctx.inject_printf(builder, f"\t\t\tOPTIM DONE UPDATE\n")
+
+                    delta_w_val = builder.load(builder.gep(delta_w_ptr,[zero, weight_row, weight_column]))
+                    ctx.inject_printf(builder,"%f ",delta_w_val,override_debug=False)
+                ctx.inject_printf(builder,"\n",override_debug=False)
+                
+        ctx.inject_printf(builder, f"\t\t\tOPTIM DONE UPDATE\n",override_debug=False)
+
         builder.ret_void()
 
         return llvm_func

@@ -665,13 +665,15 @@ class AutodiffComposition(Composition):
                     do_logging,
                     scheduler=scheduler,
                 )
-
                 # compute total loss across output neurons for current trial
                 curr_loss = torch.zeros(1).double()
                 for component in curr_tensor_outputs.keys():
                     # possibly add custom loss option, which is a loss function that takes many args
                     # (outputs, targets, weights, and more) and returns a scalar
-                    curr_loss += self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
+                    new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
+                    #print(curr_tensor_outputs[component])
+                    #print("TMP LOSS",component,new_loss)
+                    curr_loss += new_loss
                 # save average loss across all output neurons on current trial
                 curr_losses[t] = (curr_loss[0].item())/out_size
 
@@ -680,13 +682,18 @@ class AutodiffComposition(Composition):
                 # backpropagate to compute gradients and perform learning update for parameters
                 optimizer.zero_grad()
                 curr_loss = curr_loss/2
+                #print("AD LOSS",curr_loss)
+                printable = {}
+                for component in curr_tensor_outputs.keys():
+                    printable[component] = curr_tensor_outputs[component].detach().numpy()
+                np.set_printoptions(precision=3)
+                #print("AD OUTPUTS\n",printable)
                 if self.force_no_retain_graph:
                     curr_loss.backward(retain_graph=False)
                 else:
                     curr_loss.backward(retain_graph=True)
                 self.parameters.pytorch_representation._get(execution_id).copy_weights_to_psyneulink(execution_id)
                 optimizer.step()
-
                 # save outputs of model if this is final epoch
                 curr_output_list = []
                 for input_state in self.output_CIM.input_states:
