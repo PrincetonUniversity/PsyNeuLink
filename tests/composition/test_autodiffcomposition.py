@@ -664,7 +664,7 @@ class TestTrainingCorrectness:
 
         # COMPOSITION FOR SEMANTIC NET
         sem_net = AutodiffComposition(param_init_from_pnl=from_pnl_or_no,
-                                      optimizer_type=opt, learning_rate=.1)
+                                      optimizer_type=opt, learning_rate=.001)
 
         sem_net.add_node(nouns_in)
         sem_net.add_node(rels_in)

@@ -686,7 +686,7 @@ class PytorchModelCreator(torch.nn.Module):
                 # update delta_W
                 node_delta_w = builder.gep(delta_w,[ctx.int32_ty(0),ctx.int32_ty(node_idx), ctx.int32_ty(afferent_node_idx)])
                 weight_row = None
-                ctx.inject_printf(builder,f"UPDATE DELTA_W {afferent_node} -> {node} \n")
+                ctx.inject_printf(builder,f"UPDATE DELTA_W {afferent_node} -> {node} \n",override_debug=False)
                 with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "weight_update_loop_outer") as (builder, weight_row):
                     weight_column = None
                     with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_y), "weight_update_loop_inner") as (builder, weight_column):
@@ -700,8 +700,8 @@ class PytorchModelCreator(torch.nn.Module):
                             old_val, builder.fmul(a_val, d_val))
                         builder.store(new_val, builder.gep(node_delta_w, [
                                         ctx.int32_ty(0), weight_row, weight_column]))
-                        ctx.inject_printf(builder,"%f ",new_val)
-                    ctx.inject_printf(builder,"\n")
+                        ctx.inject_printf(builder,"%f ",new_val,override_debug=False)
+                    ctx.inject_printf(builder,"\n",override_debug=False)
                         
         builder.store(builder.fmul(ctx.float_ty(.5),builder.load(total_loss)),total_loss)
         ctx.inject_printf(builder,"TOTAL LOSS: %f\n",builder.load(total_loss))
