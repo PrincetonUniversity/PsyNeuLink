@@ -1774,9 +1774,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
         <NodeRole.TERMINAL>`, it is also given the role `OUTPUT <NodeRole.OUTPUT>`.
 
-        However, if the required_roles argument of `add_node <Composition.add_node>` is used to set any node in the
+        However, if the **required_roles** argument of `add_node <Composition.add_node>` is used to set any node in the
         Composition to `INPUT <NodeRole.INPUT>`, then the `ORIGIN <NodeRole.ORIGIN>` nodes are not set to `INPUT
-        <NodeRole.INPUT>` by default. If the required_roles argument of `add_node <Composition.add_node>` is used
+        <NodeRole.INPUT>` by default. If the **required_roles** argument of `add_node <Composition.add_node>` is used
         to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
         nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
         """
@@ -3096,8 +3096,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_linear_processing_pathway(self, pathway, *args):
         """Add sequence of Mechanisms or Compositions possibly with intercolated Projections
 
-        Tuples (Mechanism, NodeRole(s)) can be used to assign required_roles to Mechanisms.
+        A `MappingProjection` is created for each contiguous pair of `Mechanisms <Mechanism>` and/or Compositions
+        in the **pathway** argument, from the `primary OutputState <OutputState_Primary>` of the first one to the
+        `primary InputState <InputState_Primary>` of the second.
 
+        Tuples (Mechanism, `NodeRoles <NodeRole>`) can be used to assign `required_roles
+        <Composition.add_node.required_roles>` to Mechanisms.
+
+        COMMENT:
+        # FIX 8/27/19 [JDC]:  Generalize to ModulatoryMechanism
+        COMMENT
         Note that any specifications of a ControlMechanism's **monitor_for_control** `argument
         <ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument specified in the constructor for an
         ObjectiveMechanism in the **objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>`
@@ -3147,6 +3155,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.add_nodes([pathway[c]])
                 nodes.append(pathway[c])
 
+        # FIX 8/27/19 [JDC]:  GENERALIZE TO ModulatoryMechanism
         # MODIFIED 8/12/19 NEW: [JDC] - AVOID DUPLCIATE CONTROL_RELATED PROJECTIONS
         # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
         #    and any ObjectiveMechanism that projects to a ControlMechanism,

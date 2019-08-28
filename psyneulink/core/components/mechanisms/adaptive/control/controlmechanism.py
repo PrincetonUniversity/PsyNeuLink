@@ -283,10 +283,10 @@ an ObjectiveMechanism::
 In this case, the defaults for the ObjectiveMechanism's class are used for its `function <ObjectiveMechanism.function>`,
 which is a `LinearCombination` function with *SUM* as its `operation <LinearCombination.operation>` parameter.
 
-Specifying the ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` using a constructor
-can also be used to parameterize the contribution that each monitored OutputState makes to their evaluation
-FIX: SEE OBJECTIVE MECH FOR WORDING
-FIX: WEIGHTS AND EXPONENTS
+Specifying the ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` with a constructor
+can also be used to parameterize the contribution that each monitored OutputState makes to their evaluation by the
+ObjectiveMechanism's `function <ObjectiveMechanism.function>`, by specifying its **monitor_weights_and_exponents**
+`argument <ObjectiveMechanism_Monitor_Weights_and_Exponents>`.
 
 COMMENT:
 TBI FOR COMPOSITION
@@ -407,12 +407,11 @@ of how a ControlSignal modulates the value of a parameter).
 *Costs and Net Outcome*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-FIX: CORRECT TO INDICATE THAT COSTS ARE CALCULATED WHEN CONTROLMECHANISM IS EXECUTED
 A ControlMechanism's `control_signals <ControlMechanism.control_signals>` are each associated with a set of `costs
-<ControlSignal_Costs>`, that are determined individually by each `ControlSignal` when it is `executed
-<ControlSignal_Execution>`.  The costs last computed by the ControlMechanism's `control_signals <ControlMechanism>`
-are assigned to its `costs <ControlSignal.costs>` attribute.  A ControlMechanism also has a set of methods --
-`combine_costs <ControlMechanism.combine_costs>`, `compute_reconfiguration_cost
+<ControlSignal_Costs>`, that are computed individually by each `ControlSignal` when they are `executed
+<ControlSignal_Execution>` by the ControlMechanism.  The costs last computed by the `control_signals
+<ControlMechanism>` are assigned to the ControlMechanism's `costs <ControlSignal.costs>` attribute.  A ControlMechanism
+also has a set of methods -- `combine_costs <ControlMechanism.combine_costs>`, `compute_reconfiguration_cost
 <ControlMechanism.compute_reconfiguration_cost>`, and `compute_net_outcome <ControlMechanism.compute_net_outcome>` --
 that can be used to compute the `combined costs <ControlMechanism.combined_costs>` of its `control_signals
 <ControlMechanism.control_signals>`, a `reconfiguration_cost <ControlSignal.reconfiguration_cost>` based on their change
@@ -429,7 +428,6 @@ for details).
 Execution
 ---------
 
-FIX: CORRECT TO INDICATE THAT COSTS ARE CALCULATED WHEN CONTROLMECHANISM IS EXECUTED
 If a ControlMechanism is assigned as the `controller` of a `Composition`, then it is executed either before or after
 all of the other  `Mechanisms <Mechanism_Base>` executed in a `TRIAL` for that Composition, depending on the
 value assigned to the Composition's `controller_mode <Composition.controller_mode>` attribute (see
@@ -439,6 +437,7 @@ value assigned to the Composition's `controller_mode <Composition.controller_mod
 `ControlProjections <ControlProjection>` are likely to introduce cycles (recurrent connection loops) in the graph,
 the effects of a ControlMechanism and its projections will generally not be applied in the first `TRIAL` (see
 COMMENT:
+FIX 8/27/19 [JDC]:
 `Composition_Initial_Values_and_Feedback` and
 COMMENT
 **feedback** argument for the `add_projection <Composition.add_projection>` method of `Composition` for a
@@ -450,9 +449,9 @@ the `value <InputState.value>` of its *OUTCOME* `input_state <ControlMechanism.i
 `outcome <ControlSignal.outcome>`).  It uses that to determine the `control_allocation
 <ControlMechanism.control_allocation>`, which specifies the value assigned to the `allocation
 <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each ControlSignal uses that value to
-calculate its `intensity <ControlSignal.intensity>`, which is used by its `ControlProjection(s) <ControlProjection>`
-to modulate the value of the ParameterState(s) for the parameter(s) it controls, which are then used in the
-subsequent `TRIAL` of execution.
+calculate its `intensity <ControlSignal.intensity>`, as well as its `cost <ControlSignal.cost>.  The `intensity
+<ControlSignal.intensity>`is used by its `ControlProjection(s) <ControlProjection>` to modulate the value of the
+ParameterState(s) for the parameter(s) it controls, which are then used in the subsequent `TRIAL` of execution.
 
 .. note::
    A `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
