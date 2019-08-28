@@ -71,13 +71,7 @@ to the Composition: it is used to control all of the parameters that have been `
 all of the other Components in the Composition are executed, including any other ControlMechanisms that belong to it
 (see `Composition_Controller_Execution`).  A ControlMechanism can be assigned as the `controller
 <Composition.controller>` for a Composition by specifying it in the **controller** argument of the Composition's
-constructor, or by specifying the Composition as the **composition** argument of
-COMMENT:
-TBI FOR COMPOSITION
-either the ControlMechanism's
-constructor or its
-COMMENT
-the ConrtrolMechanism's `assign_as_controller <ControlMechanism.assign_as_controller>` method. A Composition's
+constructor, or by using the Composition's `add_controller <Composition.add_controller>` method.  A Composition's
 `controller <Composition.controller>` and its associated Components can be displayed using the Composition's
 `show_graph <Composition.show_graph>` method with its **show_control** argument assigned as `True`.
 
@@ -287,7 +281,8 @@ Specifying the ControlMechanism's `objective_mechanism <ControlMechanism.objecti
 also provides greater control over how ObjectiveMechanism evaluates the OutputStates it monitors.  In addition to
 specifying its `function <ObjectiveMechanism.function>`, the **monitor_weights_and_exponents** `argument
 <ObjectiveMechanism_Monitor_Weights_and_Exponents>` can be used to parameterize the relative contribution made by the
-monitored OutputStates when they are evaluated by that `function <ObjectiveMechanism.function>`.
+monitored OutputStates when they are evaluated by that `function <ObjectiveMechanism.function>` (see
+`ControlMechanism_Examples`).
 
 COMMENT:
 TBI FOR COMPOSITION
@@ -322,7 +317,7 @@ A `ControlSignal` is created for each parameter specified to be controlled by a 
 ControlSignals for a ControlMechanism are listed in its `control_signals  <ControlMechanism.control_signals>` attribute,
 and all of its ControlProjections are listed in its`control_projections <ControlMechanism.control_projections>`
 attribute. Additional parameters to be controlled can be added to a ControlMechanism by using its `assign_params`
-method to add a `ControlSignal` for each additional parameter.
+method to add a `ControlSignal` for each additional parameter.  See `ControlMechanism_Examples`.
 
 COMMENT:
 TBI FOR COMPOSITION
@@ -477,16 +472,15 @@ and the function used to evaluated these::
 
     >>> my_control_mech = ControlMechanism(
     ...                          objective_mechanism=ObjectiveMechanism(monitor=[(my_mech_A, 2, 1),
-    ...                                                                               my_DDM.output_states[RESPONSE_TIME]],
+    ...                                                                           my_DDM.output_states[RESPONSE_TIME]],
     ...                                                                     name="Objective Mechanism"),
     ...                          function=LinearCombination(operation=PRODUCT),
     ...                          control_signals=[(THRESHOLD, my_DDM),
     ...                                           (GAIN, my_mech_B)],
     ...                          name="My Control Mech")
 
-
 This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputState
-<OutputState_Primary>` of ``my_Transfer_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
+<OutputState_Primary>` of ``my_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
 first multiplies the former by 2 before, then takes product of their values and passes the result as the input to the
 ControlMechanism.  The ControlMechanism's `function <ControlMechanism.function>` uses this value to determine
 the allocation for its ControlSignals, that control the value of the `threshold <DDM.threshold>` parameter of
@@ -496,33 +490,34 @@ The following example specifies the same set of OutputStates for the ObjectiveMe
 to the **objective_mechanism** argument::
 
     >>> my_control_mech = ControlMechanism(
-    ...                             objective_mechanism=[(my_transfer_mech_A, 2, 1),
+    ...                             objective_mechanism=[(my_mech_A, 2, 1),
     ...                                                  my_DDM.output_states[RESPONSE_TIME]],
     ...                             control_signals=[(THRESHOLD, my_DDM),
-    ...                                              (GAIN, my_transfer_mech_B)])
-    ...
+    ...                                              (GAIN, my_mech_B)])
 
 Note that, while this form is more succinct, it precludes specifying the ObjectiveMechanism's function.  Therefore,
 the values of the monitored OutputStates will be added (the default) rather than multiplied.
 
 The ObjectiveMechanism can also be created on its own, and then referenced in the constructor for the ControlMechanism::
 
-    >>> my_obj_mech = ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
-    ...                                                               my_DDM.output_states[RESPONSE_TIME]],
+    >>> my_obj_mech = ObjectiveMechanism(monitored_output_states=[(my_mech_A, 2, 1),
+    ...                                                            my_DDM.output_states[RESPONSE_TIME]],
     ...                                      function=LinearCombination(operation=PRODUCT))
 
     >>> my_control_mech = ControlMechanism(
     ...                        objective_mechanism=my_obj_mech,
     ...                        control_signals=[(THRESHOLD, my_DDM),
-    ...                                         (GAIN, my_transfer_mech_B)])
+    ...                                         (GAIN, my_mech_B)])
 
 Here, as in the first example, the constructor for the ObjectiveMechanism can be used to specify its function, as well
 as the OutputState that it monitors.
 
+COMMENT:
+FIX 8/27/19 [JDC]:  ADD TO COMPOSITION
 See `System_Control_Examples` for examples of how a ControlMechanism, the OutputStates its
 `objective_mechanism <ControlSignal.objective_mechanism>`, and its `control_signals <ControlMechanism.control_signals>`
 can be specified for a System.
-
+COMMENT
 
 .. _ControlMechanism_Class_Reference:
 
