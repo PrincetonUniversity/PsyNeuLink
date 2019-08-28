@@ -1,0 +1,28 @@
+digraph outer {
+	graph [overlap=False rankdir=BT]
+	node [color=black fontname=arial fontsize=12 penwidth=1 shape=record]
+	edge [fontname=arial fontsize=10]
+	subgraph cluster_inner {
+		graph [overlap=False rankdir=BT]
+		node [color=black fontname=arial fontsize=12 penwidth=1 shape=record]
+		edge [fontname=arial fontsize=10]
+		A1 [color=green penwidth=3 rank=source shape=oval]
+		A1 -> B1 [label="" arrowhead=normal color=black penwidth=1]
+		B1 [color=red penwidth=3 rank=max shape=oval]
+		color=green
+		label=inner
+	}
+	inner [color=green penwidth=3 rank=source shape=oval]
+		graph [overlap=False rankdir=BT]
+		node [color=black fontname=arial fontsize=12 penwidth=1 shape=record]
+		edge [fontname=arial fontsize=10]
+		A2 [color=green penwidth=3 rank=source shape=oval]
+		A2 -> B2 [label="" arrowhead=normal color=black penwidth=1]
+		B2 [color=red penwidth=3 rank=max shape=oval]
+		color=red
+		label=inner2
+	}
+	inner2 [color=red penwidth=3 rank=max shape=oval]
+	inner -> inner2 [label="" arrowhead=normal color=black penwidth=1]
+	subgraph cluster_inner2 {
+}

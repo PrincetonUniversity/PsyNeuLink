@@ -130,11 +130,16 @@ Execution
 ---------
 
 A GatingMechanism executes in the same way as a `ProcessingMechanism <ProcessingMechanism>`, based on its place in the
-System's `graph <System.graph>`.  Because `GatingProjections <GatingProjection>` are likely to introduce cycles
-(recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally not be
-applied in the first `TRIAL` (see `initialization <System_Execution_Input_And_Initialization>` for a description of
-how to configure the initialization of feedback loops in a System; also see `Scheduler` for a description of detailed
-ways in which a GatingMechanism and its dependents can be scheduled to execute).
+Composition's `graph <Composition.graph>`.  Because `GatingProjections <GatingProjection>` are likely to introduce
+cycles (recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally
+not be applied in the first `TRIAL` (see
+COMMENT:
+`Composition_Initial_Values_and_Feedback` and
+COMMENT
+**feedback** argument for the `add_projection <Composition.add_projection>`
+method of `Composition` for a description of how to configure the initialization of feedback loops in a Composition;
+also see `Scheduler` for a description of detailed ways in which a GatingMechanism and its dependents can be scheduled
+to execute).
 
 When executed, a GatingMechanism  uses its input to determine the value of its `gating_allocation
 <GatingMechanism.gating_allocation>`, each item of which is used by a corresponding `GatingSignal` to determine its

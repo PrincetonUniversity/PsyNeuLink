@@ -38,15 +38,21 @@ Mechanisms that it controls.
 *ObjectiveMechanism and Monitored OutputStates*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Like all ControlMechanisms, when an LCControlMechanism is created it automatically creates an `ObjectiveMechanism`,
-from which it receives its input. The ObjectiveMechanism receives its input from any `OutputStates <OutputState>`
-specified in **monitor_for_control** argument of the constructor for LCControlMechanism (or of a `System` for which
-it is assigned as a `controller <System.controller>`; see `ControlMechanism_ObjectiveMechanism`). By default,
-the ObjectiveMechanism is assigned a `CombineMeans` Function  as its `function <ObjectiveMechanism.function>` (see
-`LCControlMechanism_ObjectiveMechanism`).  The ObjectiveMechanism can be customized using the
-**objective_mechanism** argument of the LCControlMechanism's constructor; however, the `value <OutputState.value>`
-of its *OUTCOME* `OutputState` must be a scalar value (that is used as the input to the LCControlMechanism's
-`function <LCControlMechanism.function>` to drive its `phasic response <LCControlMechanism_Modes_Of_Operation>`.
+Like any ControlMechanisms, when an LCControlMechanism is created it may `automatically create
+<`ControlMechanism_ObjectiveMechanism`> an `ObjectiveMechanism` from which it receives its input. The
+ObjectiveMechanism receives its input from any `OutputStates <OutputState>` specified in **monitor_for_control**
+argument of the constructor for LCControlMechanism
+COMMENT:
+TBI FOR COMPOSITION
+(or of a `System` for which
+it is assigned as a `controller <System.controller>`; see `ControlMechanism_ObjectiveMechanism`).
+COMMENT
+By default, the ObjectiveMechanism of an LCControlMechanism is assigned a `CombineMeans` Function  as its `function
+<ObjectiveMechanism.function>` (see `LCControlMechanism_ObjectiveMechanism`).  The ObjectiveMechanism can be
+customized using the **objective_mechanism** argument of the LCControlMechanism's constructor; however, the `value
+<OutputState.value>` of its *OUTCOME* `OutputState` must be a scalar value (that is used as the input to the
+LCControlMechanism's `function <LCControlMechanism.function>` to drive its `phasic response
+<LCControlMechanism_Modes_Of_Operation>`.
 
 .. _LCControlMechanism_Modulated_Mechanisms:
 
@@ -88,14 +94,15 @@ of the LCControlMechanism's `ObjectiveMechanism`.  That value is used as the inp
 ObjectiveMechanism
 ^^^^^^^^^^^^^^^^^^
 
-The ObjectiveMechanism for an LCControlMechanism receives its inputs from the `OutputState(s) <OutputState>` specified
-the **monitor_for_control** argument of the LCControlMechanism constructor, or the **montiored_output_states** argument
+If an ObjectiveMechanism is `automatically created <LCControlMechanism_ObjectiveMechanism_Creation> for an
+LCControlMechanism, it receives its inputs from the `OutputState(s) <OutputState>` specified the
+**monitor_for_control** argument of the LCControlMechanism constructor, or the **montiored_output_states** argument
 of the LCControlMechanism's `ObjectiveMechanism <ControlMechanism_ObjectiveMechanism>`.  By default, the
 ObjectiveMechanism is assigned a `CombineMeans` Function with a default `operation <LinearCombination.operation>` of
 *SUM*; this takes the mean of each array that the ObjectiveMechanism receives from the `value <OutputState.value>` of
 each of the OutputStates that it monitors, and returns the sum of these means.  The `value <OutputState.value>` of
 each OutputState can be weighted (multiplicatively and/or exponentially), by specifying this in the
-**monitor_for_control** argument of the LCControlMechanism (see `ControlMechanism_ObjectiveMechanism` for details).
+**monitor_for_control** argument of the LCControlMechanism (see `ControlMechanism_Monitor_for_Control` for details).
 As with any ControlMechanism, its ObjectiveMechanism can be explicitly specified to customize its `function
 <ObjectiveMechanism.function>` or any of its other parameters, by specifyihng it in the **objective_mechanism**
 argument of the LCControlMechanism's constructor.
