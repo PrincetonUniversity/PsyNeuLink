@@ -920,6 +920,7 @@ class ControlMechanism(ModulatoryMechanism):
         params = self._assign_args_to_param_dicts(system=system,
                                                   params=params)
 
+        # FIX: REMOVE system ARGUMENT
         super(ControlMechanism, self).__init__(system=system,
                                                default_variable=default_variable,
                                                size=size,
@@ -945,6 +946,7 @@ class ControlMechanism(ModulatoryMechanism):
     def _instantiate_control_signal(self, control_signal, context):
         return super()._instantiate_modulatory_signal(modulatory_signal=control_signal, context=context)
 
+    # FIX: TBI FOR COMPOSITION
     @tc.typecheck
     def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
         """Assign ControlMechanism as `controller <System.controller>` for a `System`.
