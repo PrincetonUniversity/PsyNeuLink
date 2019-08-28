@@ -493,7 +493,7 @@ Environment.
 COMMENT
 
 COMMENT:
-.. _Run_Initial_Values_and_Feedback
+.. _Composition_Initial_Values_and_Feedback
 FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
 MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
 ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
@@ -3095,9 +3095,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_linear_processing_pathway(self, pathway, *args):
         """Add sequence of Mechanisms or Compositions possibly with intercolated Projections
+
         Tuples (Mechanism, NodeRole(s)) can be used to assign required_roles to Mechanisms.
-        Don't add projections for ControlMechanisms or ObjectiveMechanisms that project to them;
-            those are be handled either by their constructors or, for a controller, by _add_controller()
+
+        Note that any specifications of a ControlMechanism's **monitor_for_control** `argument
+        <ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument specified in the constructor for an
+        ObjectiveMechanism in the **objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>`
+        supercede any MappingProjections that would otherwise be created for them when specified in the **pathway**
+        argument.
         """
         nodes = []
 

@@ -98,7 +98,7 @@ Each can be done in several ways, as described below.
 A ControlMechanism can be configured to monitor the output of other Mechanisms directly (by receiving direct
 Projections from their OutputStates), or by way of an `ObjectiveMechanism` that evaluates those outputs and passes the
 result to the ControlMechanism (see `below <ControlMechanism_ObjectiveMechanism>` for more detailed description).
-The following figure shows an example of each:
+The following figures show an example of each:
 
 +-------------------------------------------------------------------------+----------------------------------------------------------------------+
 | .. figure:: _static/ControlMechanism_without_ObjectiveMechanism_fig.svg | .. figure:: _static/ControlMechanism_with_ObjectiveMechanism_fig.svg |
@@ -132,14 +132,13 @@ FIX: USE THIS IF MOVED TO SECTION AT END THAT CONSOLIDATES EXAMPLES
 | >>> comp.add_linear_processing_pathway([mech_A,mech_B, ctl_mech])       |                                                                         |
 | >>> comp.show_graph()                                                   |                                                                         |
 +-------------------------------------------------------------------------+-------------------------------------------------------------------------+
-
-CAPTION explaining:
-- Composition is shown as polygon since it is a FEEDBACK_SENDER (see Composition_Feedback or the like)
-- squares indicate ControlProjections (see show_graph)
-- monitor_for_control overrides MappingProjection assignments from add_linear_processing_pathway
-                   (see add_linear_processing_pathway and/or Control)
 COMMENT
 
+Note that, in the figures above, the `ControlProjections <ControlProjection>` are designated with square "arrowheads",
+and the ControlMechanisms are shown as septagons to indicate that their ControlProjections create a feedback loop
+(see `Composition_Initial_Values_and_Feedback`;  also, see `below <ControlMechanism_Add_Linear_Processing_Pathway>`
+regarding specification of a ControlMechanism and associated ObjectiveMechanism in a Composition's
+`add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method).
 
 Which configuration is used is determined by how the following arguments of the ControlMechanism's constructor are
 specified (also see `ControlMechanism_Examples`):
@@ -198,6 +197,14 @@ are listed in the ControlMechanism's `monitor_for_control <ControlMechanism.moni
 (and are the same as those listed in the `monitor <ObjectiveMechanism.monitor>` attribute of the
 `objective_mechanism <ControlMechanism.objective_mechanism>`, if specified).
 
+.. _ControlMechanism_Add_Linear_Processing_Pathway:
+
+Note that the MappingProjections created by specification of a ControlMechanism's **monitor_for_control** `argument
+<ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument in the constructor for an
+ObjectiveMechanism in the ControlMechanism's **objective_mechanism** `argument
+<ControlMechanism_Objective_Mechanism_Argument>` supercede any MappingProjections that would otherwise be created for
+them when included in the **pathway**  argumentof a Composition's `add_linear_processing_pathway
+<Composition.add_linear_processing_pathway>` method.
 
 .. _ControlMechanism_ObjectiveMechanism:
 
@@ -275,6 +282,11 @@ an ObjectiveMechanism::
 
 In this case, the defaults for the ObjectiveMechanism's class are used for its `function <ObjectiveMechanism.function>`,
 which is a `LinearCombination` function with *SUM* as its `operation <LinearCombination.operation>` parameter.
+
+Specifying the ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` using a constructor
+can also be used to parameterize the contribution that each monitored OutputState makes to their evaluation
+FIX: SEE OBJECTIVE MECH FOR WORDING
+FIX: WEIGHTS AND EXPONENTS
 
 COMMENT:
 TBI FOR COMPOSITION
@@ -395,6 +407,7 @@ of how a ControlSignal modulates the value of a parameter).
 *Costs and Net Outcome*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+FIX: CORRECT TO INDICATE THAT COSTS ARE CALCULATED WHEN CONTROLMECHANISM IS EXECUTED
 A ControlMechanism's `control_signals <ControlMechanism.control_signals>` are each associated with a set of `costs
 <ControlSignal_Costs>`, that are determined individually by each `ControlSignal` when it is `executed
 <ControlSignal_Execution>`.  The costs last computed by the ControlMechanism's `control_signals <ControlMechanism>`
@@ -416,6 +429,7 @@ for details).
 Execution
 ---------
 
+FIX: CORRECT TO INDICATE THAT COSTS ARE CALCULATED WHEN CONTROLMECHANISM IS EXECUTED
 If a ControlMechanism is assigned as the `controller` of a `Composition`, then it is executed either before or after
 all of the other  `Mechanisms <Mechanism_Base>` executed in a `TRIAL` for that Composition, depending on the
 value assigned to the Composition's `controller_mode <Composition.controller_mode>` attribute (see
@@ -425,7 +439,7 @@ value assigned to the Composition's `controller_mode <Composition.controller_mod
 `ControlProjections <ControlProjection>` are likely to introduce cycles (recurrent connection loops) in the graph,
 the effects of a ControlMechanism and its projections will generally not be applied in the first `TRIAL` (see
 COMMENT:
-`Run_Initial_Values_and_Feedback` and
+`Composition_Initial_Values_and_Feedback` and
 COMMENT
 **feedback** argument for the `add_projection <Composition.add_projection>` method of `Composition` for a
 description of how to configure the initialization of feedback loops in a Composition; also see `Scheduler` for a

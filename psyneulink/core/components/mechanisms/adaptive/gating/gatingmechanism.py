@@ -134,7 +134,7 @@ Composition's `graph <Composition.graph>`.  Because `GatingProjections <GatingPr
 cycles (recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally
 not be applied in the first `TRIAL` (see
 COMMENT:
-`Run_Initial_Values_and_Feedback` and
+`Composition_Initial_Values_and_Feedback` and
 COMMENT
 **feedback** argument for the `add_projection <Composition.add_projection>`
 method of `Composition` for a description of how to configure the initialization of feedback loops in a Composition;
