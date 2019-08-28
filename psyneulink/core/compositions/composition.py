@@ -1131,7 +1131,7 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, CONTROL, CONTROLLER, CONDITIONS, FUNCTIONS, \
+    AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONTROL, CONTROLLER, CONDITIONS, FUNCTIONS, \
     HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
     ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
@@ -5416,18 +5416,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         assert False, f'PROGRAM ERROR: node_type not specified or illegal ({node_type})'
 
+        def get_index_of_subgraph_end_in_G_body(node, node_type:tc.enum(COMPOSITION), start_index):
+            for i, item in enumerate(G.body[start_index+1:]):
+                if f'-> {node.name}' in item:
+                    return i
+
         for node in self.nodes:
             roles = self.get_roles_by_node(node)
             # Put INPUT node(s) first
             if NodeRole.INPUT in roles:
                 i = get_index_of_node_in_G_body(node, MECHANISM)
                 if i is not None:
-                    G.body.insert(0,G.body.pop(i))
+                    if isinstance(node,Composition):
+                        j = get_index_of_subgraph_end_in_G_body(node, COMPOSITION, i)
+                        for _ in range(j):
+                            G.body.insert(0,G.body.pop(i))
+                    else:
+                        G.body.insert(0,G.body.pop(i))
             # Put OUTPUT node(s) last (except for ControlMechanisms)
             if NodeRole.OUTPUT in roles:
                 i = get_index_of_node_in_G_body(node, MECHANISM)
                 if i is not None:
-                    G.body.insert(len(G.body),G.body.pop(i))
+                    if isinstance(node,Composition):
+                        j = get_index_of_subgraph_end_in_G_body(node, COMPOSITION, i)
+                        for _ in range(j):
+                            G.body.insert(len(G.body),G.body.pop(i))
+                    else:
+                        G.body.insert(len(G.body),G.body.pop(i))
             # Put ControlMechanism(s) last
             if isinstance(node, ControlMechanism):
                 i = get_index_of_node_in_G_body(node, MECHANISM)
