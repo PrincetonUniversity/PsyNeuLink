@@ -998,6 +998,10 @@ class State_Base(State):
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation).
 
+    full_name : str
+        the name of the State with its owner if that is assigned: <owner.name>[<self.name>] if owner is not None;
+        otherwise same as `name <State.name>`.
+
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the State; if it is not specified in the **prefs** argument of the constructor,
         a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
