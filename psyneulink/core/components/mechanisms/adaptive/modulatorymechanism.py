@@ -268,11 +268,12 @@ FIX: XXX MOVE THIS TO ABOVE:
 
 *Reconfiguration Cost*
 
-This cost is distinct from the costs of the ModulatoryMechanism's ControlSignals, and in particular it is not the same
-as their `adjustment_cost <ControlSignal.adjustment_cost>`.  The latter, if specified by a ControlSignal, is computed
+A ModulatoryMechanism's ``reconfiguration_cost  <ModulatoryMechanism.reconfiguration_cost>` is distinct from the
+costs of the ModulatoryMechanism's ControlSignals (if it has any), and in particular it is not the same as their
+`adjustment_cost <ControlSignal.adjustment_cost>`.  The latter, if specified by a ControlSignal, is computed
 individually by that ControlSignal using its `adjustment_cost_function <ControlSignal.adjustment_cost_function>` based
 on the change in its `intensity <ControlSignal.intensity>` from its last execution. In contrast, a ModulatoryMechanism's
-`reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>` is computed by its `compute_reconfiguration_cost
+`reconfiguration_cost  <ModulatoryMechanism.reconfiguration_cost>` is computed by its `compute_reconfiguration_cost
 <ModulatoryMechanism.compute_reconfiguration_cost>` function, based on the change in its `modulatory_allocation
 ModulatoryMechanism.modulatory_allocation>` from the last execution, that will be applied to *all* of its
 `modulatory_signals <ModulatoryMechanism.modulatory_signals>` (including any `gating_signals

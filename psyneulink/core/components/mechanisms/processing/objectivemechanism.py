@@ -64,6 +64,11 @@ or `size <ObjectiveMechanism.size>` attributes (see `Mechanism InputState specif
 be monitored, the InputState is created but will be ignored until an OutputState (and MappingProjection from it) are
 specified for that InputState.
 
+COMMENT:
+FIX 8/27/19 [JDC]:
+ADD DISCUSSION OF monitor_weights_and_exponents ARGUMENT HERE
+.. _ObjectiveMechanism_Monitor_Weights_and_Exponents:
+COMMENT
 
 COMMENT:
 Note that some forms of specification may depend on specifications made for the OutputState referenced, the Mechanism
@@ -95,6 +100,11 @@ attribute.  When an ObjectiveMechanism is created by a `ControlMechanism`, or a 
 ControlMechanism passes OutputState specifications listed in its **objective_mechanism** argument (see
 `ControlMechanism_ObjectiveMechanism`), and a System passes any listed in its **monitor_for_control** argument (see
 `System_Control_Specification`).
+COMMENT
+
+COMMENT:
+FIX 8/27/19 [JDC]:
+GENERALIZE TO ModulatoryMechanism
 COMMENT
 
 The OutputStates monitored by the ObjectiveMechanism are listed in its `monitor <ObjectiveMechanism.monitor>` attribute.

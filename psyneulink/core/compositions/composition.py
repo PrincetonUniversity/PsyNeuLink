@@ -493,7 +493,7 @@ Environment.
 COMMENT
 
 COMMENT:
-.. _Run_Initial_Values_and_Feedback
+.. _Composition_Initial_Values_and_Feedback
 FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
 MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
 ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
@@ -1112,8 +1112,8 @@ from psyneulink.core.components.functions.combinationfunctions import LinearComb
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, \
-    ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
+    LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -1131,10 +1131,10 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROL, CONTROLLER, CONDITIONS, FUNCTIONS, \
+    AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, CONTROL, CONTROLLER, CONDITIONS, FUNCTIONS, \
     HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISMS,  MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
-    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
+    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
@@ -1774,9 +1774,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
         <NodeRole.TERMINAL>`, it is also given the role `OUTPUT <NodeRole.OUTPUT>`.
 
-        However, if the required_roles argument of `add_node <Composition.add_node>` is used to set any node in the
+        However, if the **required_roles** argument of `add_node <Composition.add_node>` is used to set any node in the
         Composition to `INPUT <NodeRole.INPUT>`, then the `ORIGIN <NodeRole.ORIGIN>` nodes are not set to `INPUT
-        <NodeRole.INPUT>` by default. If the required_roles argument of `add_node <Composition.add_node>` is used
+        <NodeRole.INPUT>` by default. If the **required_roles** argument of `add_node <Composition.add_node>` is used
         to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
         nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
         """
@@ -3095,9 +3095,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_linear_processing_pathway(self, pathway, *args):
         """Add sequence of Mechanisms or Compositions possibly with intercolated Projections
-        Tuples (Mechanism, NodeRole(s)) can be used to assign required_roles to Mechanisms.
-        Don't add projections for ControlMechanisms or ObjectiveMechanisms that project to them;
-            those are be handled either by their constructors or, for a controller, by _add_controller()
+
+        A `MappingProjection` is created for each contiguous pair of `Mechanisms <Mechanism>` and/or Compositions
+        in the **pathway** argument, from the `primary OutputState <OutputState_Primary>` of the first one to the
+        `primary InputState <InputState_Primary>` of the second.
+
+        Tuples (Mechanism, `NodeRoles <NodeRole>`) can be used to assign `required_roles
+        <Composition.add_node.required_roles>` to Mechanisms.
+
+        COMMENT:
+        # FIX 8/27/19 [JDC]:  Generalize to ModulatoryMechanism
+        COMMENT
+        Note that any specifications of a ControlMechanism's **monitor_for_control** `argument
+        <ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument specified in the constructor for an
+        ObjectiveMechanism in the **objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>`
+        supercede any MappingProjections that would otherwise be created for them when specified in the **pathway**
+        argument.
         """
         nodes = []
 
@@ -3142,6 +3155,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.add_nodes([pathway[c]])
                 nodes.append(pathway[c])
 
+        # FIX 8/27/19 [JDC]:  GENERALIZE TO ModulatoryMechanism
         # MODIFIED 8/12/19 NEW: [JDC] - AVOID DUPLCIATE CONTROL_RELATED PROJECTIONS
         # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
         #    and any ObjectiveMechanism that projects to a ControlMechanism,
@@ -5388,21 +5402,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if show_learning:
             _assign_learning_components(G)
 
-        # Sort to put ORIGIN nodes first and controller and its objective_mechanism last
-        def get_index_of_node_in_G_body(node):
+        # Sort nodes for display
+        def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):
-                # Skip projections
-                if node.name in item and not '->' in item:
-                    return i
+                if node.name in item:
+                    if node_type in {MECHANISM, BOTH}:
+                        if not '->' in item:
+                            return i
+                    elif node_type in {PROJECTION, BOTH}:
+                        if '->' in item:
+                            return i
+                    else:
+                        assert False, f'PROGRAM ERROR: node_type not specified or illegal ({node_type})'
+
         for node in self.nodes:
             roles = self.get_roles_by_node(node)
+            # Put INPUT node(s) first
             if NodeRole.INPUT in roles:
-                i = get_index_of_node_in_G_body(node)
+                i = get_index_of_node_in_G_body(node, MECHANISM)
                 if i is not None:
                     G.body.insert(0,G.body.pop(i))
+            # Put OUTPUT node(s) last (except for ControlMechanisms)
+            if NodeRole.OUTPUT in roles:
+                i = get_index_of_node_in_G_body(node, MECHANISM)
+                if i is not None:
+                    G.body.insert(len(G.body),G.body.pop(i))
+            # Put ControlMechanism(s) last
+            if isinstance(node, ControlMechanism):
+                i = get_index_of_node_in_G_body(node, MECHANISM)
+                if i is not None:
+                    G.body.insert(len(G.body),G.body.pop(i))
+
+        for proj in self.projections:
+            # Put ControlProjection(s) last (along with ControlMechanis(s))
+            if isinstance(proj, ControlProjection):
+                i = get_index_of_node_in_G_body(node, PROJECTION)
+                if i is not None:
+                    G.body.insert(len(G.body),G.body.pop(i))
+
         if self.controller and show_controller:
-            i = get_index_of_node_in_G_body(self.controller)
+            i = get_index_of_node_in_G_body(self.controller, MECHANISM)
             G.body.insert(len(G.body),G.body.pop(i))
 
         # GENERATE OUTPUT ---------------------------------------------------------------------
