@@ -28,9 +28,9 @@ in that section to 0px.
 [id^="module-psyneulink.core"] li,
 [id^="module-psyneulink.library"] li
 {
-    margin-bottom: 12px;
+    margin-top: 12px;
 }
 
 .toctree-wrapper.compound li, div#sections li{
-    margin-bottom: 0px !important;
+    margin-top: 0px !important;
 }
