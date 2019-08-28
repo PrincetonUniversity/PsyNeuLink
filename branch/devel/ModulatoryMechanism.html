@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModulatoryMechanism &mdash; PsyNeuLink 0.5.3.2+405.g5e7ea85 documentation</title>
+  <title>ModulatoryMechanism &mdash; PsyNeuLink 0.5.3.2+406.g117b677 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+405.g5e7ea85',
+              VERSION:'0.5.3.2+406.g117b677',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+405
+                0.5.3.2+406
               </div>
             
           
@@ -345,8 +345,9 @@ ModulatoryMechanism (e.g., <a class="reference internal" href="OptimizationContr
 but these can also be assigned custom functions (see links to attributes for details).</p>
 <p>FIX: XXX MOVE THIS TO ABOVE:</p>
 <p id="modulatorymechanism-reconfiguration-cost"><em>Reconfiguration Cost</em></p>
-<p>This cost is distinct from the costs of the ModulatoryMechanism’s ControlSignals, and in particular it is not the same
-as their <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.adjustment_cost" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.adjustment_cost"><code class="xref any py py-attr docutils literal"><span class="pre">adjustment_cost</span></code></a>.  The latter, if specified by a ControlSignal, is computed
+<p>A ModulatoryMechanism’s <a href="#id1"><span class="problematic" id="id2">``</span></a>reconfiguration_cost  &lt;ModulatoryMechanism.reconfiguration_cost&gt;` is distinct from the
+costs of the ModulatoryMechanism’s ControlSignals (if it has any), and in particular it is not the same as their
+<a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.adjustment_cost" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.adjustment_cost"><code class="xref any py py-attr docutils literal"><span class="pre">adjustment_cost</span></code></a>.  The latter, if specified by a ControlSignal, is computed
 individually by that ControlSignal using its <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.adjustment_cost_function" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.adjustment_cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">adjustment_cost_function</span></code></a> based
 on the change in its <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> from its last execution. In contrast, a ModulatoryMechanism’s
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism.reconfiguration_cost" title="psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism.reconfiguration_cost"><code class="xref any py py-attr docutils literal"><span class="pre">reconfiguration_cost</span></code></a> is computed by its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism.compute_reconfiguration_cost" title="psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism.compute_reconfiguration_cost"><code class="xref any py py-attr docutils literal"><span class="pre">compute_reconfiguration_cost</span></code></a> function, based on the change in its <code class="xref any docutils literal"><span class="pre">modulatory_allocation</span>

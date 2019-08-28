@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.5.3.2+405.g5e7ea85 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.5.3.2+406.g117b677 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+405.g5e7ea85',
+              VERSION:'0.5.3.2+406.g117b677',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.5.3.2+405
+                0.5.3.2+406
               </div>
             
           
@@ -416,7 +416,7 @@ that include two <a class="reference internal" href="Mechanism.html"><span class
 </div>
 <p>A constructor is used to specify the EVCControlMechanism that includes a constructor specifying its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>;  the <strong>monitored_output_states</strong> argument of the ObjectiveMechanism’s constructor
 is used to specify that it should monitor the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> of the Reward Mechanism
-and the <em>PROBABILITY_UPPER_THRESHOLD</em> and <em>RESPONSE_TIME</em> and, specifying how it should combine them (see the <code class="xref any docutils literal"><span class="pre">example</span></code> under ControlMechanism for an explanation). Note that the <strong>function</strong> argument for the
+and the <em>PROBABILITY_UPPER_THRESHOLD</em> and <em>RESPONSE_TIME</em> and, specifying how it should combine them (see the <a class="reference internal" href="ControlMechanism.html#controlmechanism-examples"><span class="std std-ref">example</span></a> under ControlMechanism for an explanation). Note that the <strong>function</strong> argument for the
 ObjectiveMechanism’s constructor is also specified;  this is because an ObjectiveMechanism uses <em>SUM</em> as the default
 for the <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> of its <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function, whereas as the EVCControlMechanism
 requires <em>PRODUCT</em> – in this case, to properly use the weight and exponents specified for the RESPONSE_TIME
