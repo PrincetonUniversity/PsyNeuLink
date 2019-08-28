@@ -2231,6 +2231,14 @@ class State_Base(State):
     def efferents(self, proj):
         assert False, f"Illegal attempt to directly assign {repr('efferents')} attribute of {self.name}"
 
+    @property
+    def full_name(self):
+        '''Return name relative to owner as:  <owner.name>[<self.name>]'''
+        if self.owner:
+            return f'{self.owner.name}[{self.name}]'
+        else:
+            return self.name
+
     def _assign_default_state_name(self, context=None):
         return False
 

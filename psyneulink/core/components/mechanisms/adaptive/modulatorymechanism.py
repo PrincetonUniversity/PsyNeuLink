@@ -1224,29 +1224,22 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # Assign ObjectiveMechanism's role as CONTROL
         self.objective_mechanism._role = CONTROL
 
-        # MODIFIED 8/16/19 OLD:
-        # # If ModulatoryMechanism is a System controller, name Projection from
-        # # ObjectiveMechanism based on the System
-        # if self.system is not None:
-        #     name = self.system.name + ' outcome signal'
-        # # Otherwise, name it based on the ObjectiveMechanism
-        # else:
-        #     # name = self.objective_mechanism.name + ' outcome signal'
-        # MODIFIED 8/16/19 END
+        # Instantiate MappingProjection from ObjectiveMechanism to ModulatoryMechanism
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
                                                       receiver=self,
-                                                      matrix=AUTO_ASSIGN_MATRIX,
-                                                      # name=name
-                                                      )
+                                                      matrix=AUTO_ASSIGN_MATRIX)
+
+        # CONFIGURE FOR ASSIGNMENT TO COMPOSITION
+
+        # Insure that ObjectiveMechanism's input_states are not assigned projections from a Composition's input_CIM
         for input_state in self.objective_mechanism.input_states:
             input_state.internal_only = True
-
+        # Flag ObjectiveMechanism and its Projection to ControlMechanism for inclusion in Composition
         self.aux_components.append(self.objective_mechanism)
-        # # MODIFIED 8/12/19 OLD:
-        # self.aux_components.append((projection_from_objective, True))
-        # # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
         self.aux_components.append(projection_from_objective)
-        # MODIFIED 8/12/19 END
+
+        # ASSIGN ATTRIBUTES
+
         self._objective_projection = projection_from_objective
         self.monitor_for_modulation = self.monitored_output_states
 
