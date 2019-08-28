@@ -8,6 +8,29 @@
 # **************************************  ControlMechanism ************************************************
 
 """
+Sections
+--------
+
+  * `ControlMechanism_Overview`
+  * `ControlMechanism_Composition_Controller`
+  * `ControlMechanism_Creation`
+  COMMENT:
+      - `ControlMechanism_Monitor_for_Control`
+      - `ControlMechanism_ObjectiveMechanism`
+      - `ControlMechanism_Control_Signals`
+  COMMENT
+  * `ControlMechanism_Structure`
+  COMMENT:
+      - `ControlMechanism_Input`
+      - `ControlMechanism_Function`
+      - `ControlMechanism_Costs_NetOutcome`
+  COMMENT
+  * `ControlMechanism_Execution`
+  * `ControlMechanism_Examples`
+  * `ControlMechanism_Class_Reference`
+
+.. _ControlMechanism_Overview:
+
 Overview
 --------
 
@@ -64,9 +87,6 @@ the ConrtrolMechanism's `assign_as_controller <ControlMechanism.assign_as_contro
 Creating a ControlMechanism
 ---------------------------
 
-FIX: PUT THIS IN APPROPRIATE PLACES:
-(see `ControlMechanism_Examples`),
-
 When a ControlMechanism is created, the OutputStates it monitors and the parameters it controls must be specified.
 Each can be done in several ways, as described below.
 
@@ -122,7 +142,7 @@ COMMENT
 
 
 Which configuration is used is determined by how the following arguments of the ControlMechanism's constructor are
-specified:
+specified (also see `ControlMechanism_Examples`):
 
   .. _ControlMechanism_Monitor_for_Control_Argument:
 
@@ -143,9 +163,9 @@ specified:
     ObjectiveMechanism's constructor (see `ControlMechanism_ObjectiveMechanism` for details).  The
     **objective_mechanism** argument can be specified in any of the following ways:
 
-    - *False* or *None** -- no ObjectiveMechanism is created and, when the ControlMechanism is added to a `Composition`,
-      Projections from the OutputStates specified in the ControlMechanism's **monitor_for_control** argument are sent
-      directly to ControlMechanism (see specification of **monitor_for_control** `argument
+    - *False or None* -- no ObjectiveMechanism is created and, when the ControlMechanism is added to a
+      `Composition`, Projections from the OutputStates specified in the ControlMechanism's **monitor_for_control**
+      argument are sent directly to ControlMechanism (see specification of **monitor_for_control** `argument
       <ControlMechanism_Monitor_for_Control_Argument>`).
 
     - *True* -- an `ObjectiveMechanism` is created that projects to the ControlMechanism, and any OutputStates
@@ -164,8 +184,8 @@ specified:
       <ControlMechanism_Monitor_for_Control_Argument>` to any specified in the ObjectiveMechanism's **monitor**
       `argument <ObjectiveMechanism_Monitor>` .  This can be used to specify the `function
       <ObjectiveMechanism.function>` used by the ObjectiveMechanism to evaluate the OutputStates monitored as well as
-      how it weights those OutputStates when they are evaluated  (see
-      `below <ControlMechanism_ObjectiveMechanism_Function>` for additional details).
+      how it weights those OutputStates when they are evaluated  (see `below
+      <ControlMechanism_ObjectiveMechanism_Function>` for additional details).
 
     - *an existing* `ObjectiveMechanism` -- for any OutputStates specified in the ControlMechanism's
       **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`, an InputState is added to the
@@ -195,10 +215,11 @@ automatically, as described below.
 COMMENT
 
 If an `ObjectiveMechanism` is specified for a ControlMechanism (in the **objective_mechanism** `argument
-<ControlMechanism_Objective_Mechanism_Argument>` of its constructor), it is assigned to the ControlMechanism's
-`objective_mechanism <ControlMechanism.objective_mechanism>` attribute, and a `MappingProjection` is created
-automatically that projects from the ObjectiveMechanism's *OUTCOME* `output_state <ObjectiveMechanism_Output>` to the
-*OUTCOME* `input_state <ControlMechanism_Input>` of the ControlMechanism.
+<ControlMechanism_Objective_Mechanism_Argument>` of its constructor; also see `ControlMechanism_Examples`),
+it is assigned to the ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` attribute,
+and a `MappingProjection` is created automatically that projects from the ObjectiveMechanism's *OUTCOME*
+`output_state <ObjectiveMechanism_Output>` to the *OUTCOME* `input_state <ControlMechanism_Input>` of the
+ControlMechanism.
 
 The `objective_mechanism <ControlMechanism.objective_mechanism>` is used to monitor the OutputStates
 specified in the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>` of the
@@ -369,14 +390,26 @@ for ControlSignals that have not been assigned their own `default_allocation  <C
 to which it projects to modify the value of the parameter it controls (see `ControlSignal_Modulation` for description
 of how a ControlSignal modulates the value of a parameter).
 
-.. _ControlMechanism_Output:
+.. _ControlMechanism_Costs_NetOutcome:
 
 *Costs and Net Outcome*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-When a ControlMechanism executes, each of its `control_signals <ControlMechanmism>` can incur a `cost
-<ControlSignal.cost>`.  The costs
-
+A ControlMechanism's `control_signals <ControlMechanism.control_signals>` are each associated with a set of `costs
+<ControlSignal_Costs>`, that are determined individually by each `ControlSignal` when it is `executed
+<ControlSignal_Execution>`.  The costs last computed by the ControlMechanism's `control_signals <ControlMechanism>`
+are assigned to its `costs <ControlSignal.costs>` attribute.  A ControlMechanism also has a set of methods --
+`combine_costs <ControlMechanism.combine_costs>`, `compute_reconfiguration_cost
+<ControlMechanism.compute_reconfiguration_cost>`, and `compute_net_outcome <ControlMechanism.compute_net_outcome>` --
+that can be used to compute the `combined costs <ControlMechanism.combined_costs>` of its `control_signals
+<ControlMechanism.control_signals>`, a `reconfiguration_cost <ControlSignal.reconfiguration_cost>` based on their change
+in value, and a `net_outcome <ControlMechanism.net_outcome>` (the `value <InputState.value>` of the ControlMechanism's
+*OUTCOME* `input_state <ControlMechanism_Input>` minus its `combined costs <ControlMechanism.combined_costs>`),
+respectively (see `description in Modulatory Mechanism <ModulatoryMechanism_Costs_Computation>` for more details).
+These methods are used by some subclasses of ControlMechanism (e.g., `OptimizationControlMechanism`) to compute their
+`control_allocation <ControlMechanism.control_allocation>`.  Each method is assigned a default function, but can be
+assigned a custom functions in a corrsponding argument of the ControlMechanism's constructor (see links to attributes
+for details).
 
 .. _ControlMechanism_Execution:
 
@@ -412,7 +445,6 @@ subsequent `TRIAL` of execution.
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
    to which it belongs has executed.
-COMMENT
 
 
 .. _ControlMechanism_Examples:
@@ -424,18 +456,18 @@ The following example creates a ControlMechanism by specifying its **objective_m
 that specifies the OutputStates to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`
 and the function used to evaluated these::
 
-    >>> my_transfer_mech_A = TransferMechanism(name="Transfer Mech A")
+    >>> my_mech_A = ProcessingMechanism(name="Mech A")
     >>> my_DDM = DDM(name="My DDM")
-    >>> my_transfer_mech_B = TransferMechanism(function=Logistic,
-    ...                                            name="Transfer Mech B")
+    >>> my_mech_B = ProcessingMechanism(function=Logistic,
+    ...                                            name="Mech B")
 
     >>> my_control_mech = ControlMechanism(
-    ...                          objective_mechanism=ObjectiveMechanism(monitor=[(my_transfer_mech_A, 2, 1),
+    ...                          objective_mechanism=ObjectiveMechanism(monitor=[(my_mech_A, 2, 1),
     ...                                                                               my_DDM.output_states[RESPONSE_TIME]],
     ...                                                                     name="Objective Mechanism"),
     ...                          function=LinearCombination(operation=PRODUCT),
     ...                          control_signals=[(THRESHOLD, my_DDM),
-    ...                                           (GAIN, my_transfer_mech_B)],
+    ...                                           (GAIN, my_mech_B)],
     ...                          name="My Control Mech")
 
 
