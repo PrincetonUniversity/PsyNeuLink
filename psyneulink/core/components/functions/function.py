@@ -146,7 +146,9 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.core.globals.keywords import \
+    ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
+    MODULATORY_PROJECTION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -320,7 +322,8 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
     from psyneulink.core.globals.parameters import parse_execution_context
 
     if not isinstance(mod_proj, ModulatoryProjection_Base):
-        raise FunctionError('mod_proj ({0}) is not a ModulatoryProjection_Base'.format(mod_proj))
+        raise FunctionError(f'Specification of {MODULATORY_PROJECTION} to {owner.full_name} ({mod_proj}) '
+                            f'is not a {ModulatoryProjection_Base.__name__}')
 
     execution_id = parse_execution_context(execution_context)
 
