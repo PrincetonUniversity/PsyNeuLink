@@ -284,9 +284,10 @@ In this case, the defaults for the ObjectiveMechanism's class are used for its `
 which is a `LinearCombination` function with *SUM* as its `operation <LinearCombination.operation>` parameter.
 
 Specifying the ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` with a constructor
-can also be used to parameterize the contribution that each monitored OutputState makes to their evaluation by the
-ObjectiveMechanism's `function <ObjectiveMechanism.function>`, by specifying its **monitor_weights_and_exponents**
-`argument <ObjectiveMechanism_Monitor_Weights_and_Exponents>`.
+also provides greater control over how ObjectiveMechanism evaluates the OutputStates it monitors.  In addition to
+specifying its `function <ObjectiveMechanism.function>`, the **monitor_weights_and_exponents** `argument
+<ObjectiveMechanism_Monitor_Weights_and_Exponents>` can be used to parameterize the relative contribution made by the
+monitored OutputStates when they are evaluated by that `function <ObjectiveMechanism.function>`.
 
 COMMENT:
 TBI FOR COMPOSITION
