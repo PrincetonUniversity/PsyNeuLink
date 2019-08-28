@@ -672,7 +672,6 @@ class AutodiffComposition(Composition):
                     # possibly add custom loss option, which is a loss function that takes many args
                     # (outputs, targets, weights, and more) and returns a scalar
                     curr_loss += self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
-
                 # save average loss across all output neurons on current trial
                 curr_losses[t] = (curr_loss[0].item())/out_size
 
@@ -874,6 +873,8 @@ class AutodiffComposition(Composition):
                                                     reinitialize_values=reinitialize_values,
                                                     runtime_params=runtime_params,
                                                     context=context)
+                pt_model = self.parameters.pytorch_representation._get(execution_id)
+                pt_model.copy_weights_to_psyneulink()
                 # HACK: manually call forward function to get final outputs
                 results = []
                 self.learning_enabled = False

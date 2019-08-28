@@ -352,13 +352,10 @@ class SGDOptimizer(Optimizer):
             delta_w_ptr = builder.gep(delta_w,[zero,node_idx_ir,afferent_node_index_ir])            
             weights_llvmlite, weights_dim_x, weights_dim_y = self._pytorch_model._gen_get_node_weight_pointer(
                 ctx, builder, model_params, node, afferent_node)
-            ctx.inject_printf(
-                builder, f"\t\t\t\tOPTIM UPDATE WEIGHTS {afferent_node.name} {node.name}\n")
             
             multiplied_delta_w = self._pytorch_model._gen_inject_mat_scalar_mult(ctx,builder,delta_w_ptr,lr,weights_dim_x,weights_dim_y)
             self._pytorch_model._gen_inject_mat_sub(ctx,builder,weights_llvmlite,multiplied_delta_w,weights_dim_x,weights_dim_y,weights_llvmlite)
 
-        ctx.inject_printf(builder, f"\t\t\tOPTIM DONE UPDATE\n")
         builder.ret_void()
 
         return llvm_func
