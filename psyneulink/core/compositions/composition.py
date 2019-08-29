@@ -6679,7 +6679,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if node is not self.controller:
                             if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
                                 for state in node.input_states:
-                                    state.update(execution_id=execution_id,
+                                    state._update(execution_id=execution_id,
                                                  context=ContextFlags.COMPOSITION)
                             node.execute(
                                 execution_id=execution_id,
@@ -6803,7 +6803,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projection.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
                     projection.parameters.context._get(execution_id).string = \
                         f"Updating {ParameterState.__name__} for {projection.name} in {self.name}"
-                    matrix_parameter_state.update(execution_id=execution_id,
+                    matrix_parameter_state._update(execution_id=execution_id,
                                                                 context=ContextFlags.COMPOSITION)
                     projection.parameters.context._get(execution_id).execution_phase = execution_phase_buffer
 

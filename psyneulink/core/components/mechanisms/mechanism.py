@@ -2471,13 +2471,13 @@ class Mechanism_Base(Mechanism):
 
         for i in range(len(self.input_states)):
             state = self.input_states[i]
-            state.update(execution_id=execution_id, params=runtime_params, context=context)
+            state._update(execution_id=execution_id, params=runtime_params, context=context)
         return np.array(self.get_input_values(execution_id))
 
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
 
         for state in self._parameter_states:
-            state.update(execution_id=execution_id, params=runtime_params, context=context)
+            state._update(execution_id=execution_id, params=runtime_params, context=context)
         self._update_attribs_dicts(context=context)
 
     def _update_attribs_dicts(self, context=None):
@@ -2499,7 +2499,7 @@ class Mechanism_Base(Mechanism):
         """
         for i in range(len(self.output_states)):
             state = self.output_states[i]
-            state.update(execution_id=execution_id, params=runtime_params, context=context)
+            state._update(execution_id=execution_id, params=runtime_params, context=context)
 
     def initialize(self, value, execution_context=None):
         """Assign an initial value to the Mechanism's `value <Mechanism_Base.value>` attribute and update its

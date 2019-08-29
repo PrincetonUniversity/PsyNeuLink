@@ -934,7 +934,7 @@ class Projection_Base(Projection):
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
         for state in self._parameter_states:
             state_name = state.name
-            state.update(execution_id=execution_id, params=runtime_params, context=context)
+            state._update(execution_id=execution_id, params=runtime_params, context=context)
 
             # Assign version of ParameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
