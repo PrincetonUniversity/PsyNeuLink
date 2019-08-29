@@ -272,11 +272,12 @@ class LLVMBuilderContext:
 
         if ctype_dimension:
             loop_iterator = None
-            with pnlvm.helpers.for_loop_zero_inc(builder, dim, "print_vector_loop") as (builder, loop_iterator):
+            inner_builder = None
+            with pnlvm.helpers.for_loop_zero_inc(builder, dim, "print_vector_loop") as (inner_builder, loop_iterator):
                 if array.type == self.float_ty.as_pointer():
-                    self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[loop_iterator])),override_debug=override_debug)
+                    self.inject_printf(inner_builder,"%f ",inner_builder.load(inner_builder.gep(array,[loop_iterator])),override_debug=override_debug)
                 else:
-                    self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[self.int32_ty(0),loop_iterator])),override_debug=override_debug)
+                    self.inject_printf(inner_builder,"%f ",inner_builder.load(inner_builder.gep(array,[self.int32_ty(0),loop_iterator])),override_debug=override_debug)
         else:
             for i in range(0,dim):
                 self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[self.int32_ty(0),self.int32_ty(i)])),override_debug=override_debug)
