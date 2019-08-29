@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import ctypes
 import numpy as np
 import pytest
