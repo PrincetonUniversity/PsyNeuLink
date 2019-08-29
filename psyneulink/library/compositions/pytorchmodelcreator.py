@@ -288,6 +288,7 @@ class PytorchModelCreator(torch.nn.Module):
         self._forward_llvm_func = llvm_func
         return llvm_func
 
+    #FIXME: Move _gen functions to helper or change builtins to directly accept aggregate types
     def _gen_inject_vxm(self, ctx, builder, m1, m2, y, z, output_vec=None):
         # create output vec
         if output_vec is None:
@@ -902,6 +903,7 @@ class PytorchModelCreator(torch.nn.Module):
                 weights.detach().numpy(), execution_id, ContextFlags.COMMAND_LINE)
 
     # Helper method that functions the same as function_creator, but instead injects the computation to the builder
+    # FIXME: Change to directly using compiled function methods
     def bin_function_creator(self, ctx, node, execution_id=None):
         # first try to get cached func
         name = node.name+"_"+node.function.name
@@ -993,7 +995,9 @@ class PytorchModelCreator(torch.nn.Module):
         builder.ret_void()
 
         return llvm_func
+    
     # Helper method that creates a bin func that returns the derivative of the function into the builder
+    # FIXME: Add compiled derivative functions, and move these calls there
     def bin_function_derivative_creator(self, ctx, node, execution_id=None):
         # first try to get cached func
         name = node.name+"_"+node.function.name+"_derivative"
