@@ -190,15 +190,15 @@ together, so the time and context in the log are not meaningful, only the logged
 Nested Execution
 ----------------
 
-Like any other `Composition`, an AutodiffComposition may be `nested inside another <Composition_Nested>`.  If
-learning is not enabled, nesting is in the same way as any other Composition.  However, if learning is enabled
-for a nested AutodiffComposition, its input format is different (see below);  as a consequence,
-a nested AutodiffComposition with learning enabled must an `ORIGIN` Mchanism of the Composition in which it is nested.
+Like any other `Composition`, an AutodiffComposition may be `nested inside another <Composition_Nested>`.  If learning
+is not enabled, nesting is handled in the same way as any other Composition.  However, if learning is enabled for a
+nested AutodiffComposition, its input format is different (see below);  as a consequence, a nested AutodiffComposition
+with learning enabled must an `ORIGIN` Mchanism of the Composition in which it is nested.
 
 .. note::
 
-    As with all `nested Compositions <Composition_Nested>`, the AutodiffComposition's ``_analyze_graph()``
-    method must be called (or execute the AutodiffComposition) before nesting it.
+    As with all `nested Compositions <Composition_Nested>`, the AutodiffComposition's `_analyze_graph
+    <Composition._analyze_graph>` method must be called (or the AutodiffComposition must be run) before nesting it.
 
 COMMENT:
 FIX:  IS THIS STILL TRUE:
@@ -217,12 +217,14 @@ Composition::
     >>> my_outer_composition.add_node(my_autodiff)
     >>> # Specify dict containing inputs and targets for nested Composition
     >>> training_input = {my_autodiff: input_dict}
+    >>> # Run with learning enabled
     >>> result1 = my_outer_composition.run(inputs=training_input)
-    >>>
+    COMMENT:
+    >>> # Run with learning disabled (and standard input format)
     >>> my_autodiff.learning_enabled = False
     >>> no_training_input = {my_autodiff: my_inputs}
     >>> result2 = parentmy_outer_compositionComposition.run(inputs=no_training_input)
-
+    COMMENT
 
 .. _Composition_Class_Reference:
 
@@ -366,11 +368,10 @@ class AutodiffComposition(Composition):
     loss : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
 
-    name : str : default LeabraMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default AutodiffComposition-<index>
+        the name of the Composition. Specified in the **name** argument of the constructor for the Projection;
+        if not specified, a default is assigned by `CompositionRegistry` (see :doc:`Registry <LINK>` for conventions
+        used in naming, including for default and duplicate names).
 
     Returns
     -------
