@@ -202,7 +202,7 @@ Below is an example script showing how to nest an AutodiffComposition with learn
     >>> # create AutodiffComposition
     >>> my_autodiff = pnl.AutodiffComposition()
     >>> my_autodiff.add_node(my_mech_1)
-    >>> my_autodiff.add_node(my_mech_1)
+    >>> my_autodiff.add_node(my_mech_2)
     >>> my_autodiff.add_projection(sender=my_mech_1, projection=my_projection, receiver=my_mech_2)
     >>> my_autodiff._analyze_graph()  # alternatively, my_autodiff.run( ... )
     >>>
@@ -215,7 +215,7 @@ Below is an example script showing how to nest an AutodiffComposition with learn
     >>> parentComposition.add_node(my_autodiff)
     >>>
     >>> training_input = {my_autodiff: input_dict}
-    >>> result1 = parentComposition.run(inputs=input)
+    >>> result1 = parentComposition.run(inputs=training_input)
     >>>
     >>> my_autodiff.learning_enabled = False
     >>> no_training_input = {my_autodiff: my_inputs}
@@ -573,7 +573,7 @@ class AutodiffComposition(Composition):
 
         # If learning is disabled, but inputs are provided in the same format as used for learning,
         #    ignore dict in "targets" entry, and pass dict in "inputs" entry along as inputs
-        elif isinstance(inputs, dict) and self._has_required_keys(inputs):
+        elif isinstance(inputs, dict) and "inputs" in inputs.keys():
             inputs = inputs["inputs"]
 
         return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
