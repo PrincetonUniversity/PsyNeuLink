@@ -1051,10 +1051,10 @@ class ControlSignal(ModulatorySignal):
 
         return state_spec, params_dict
 
-    def update(self, execution_id=None, params=None, context=None):
+    def _update(self, execution_id=None, params=None, context=None):
         """Update value (intensity) and costs
         """
-        super().update(execution_id=execution_id, params=params, context=context)
+        super()._update(execution_id=execution_id, params=params, context=context)
 
         if self.parameters.cost_options._get(execution_id):
             intensity = self.parameters.value._get(execution_id)

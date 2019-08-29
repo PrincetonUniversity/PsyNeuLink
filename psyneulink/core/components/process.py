@@ -2364,11 +2364,11 @@ class Process(Process_Base):
                     if isinstance(sender, Process) or not self in (sender.processes):
                         continue
 
-                    # Call parameter_state.update with LEARNING in context to update LearningSignals
+                    # Call parameter_state._update with LEARNING in context to update LearningSignals
                     # Note: context is set on the projection,
                     #    as the ParameterStates are assigned their owner's context in their update methods
                     # Note: do this rather just calling LearningSignals directly
-                    #       since parameter_state.update() handles parsing of LearningProjection-specific params
+                    #       since parameter_state._update() handles parsing of LearningProjection-specific params
                     projection._assign_context_values(
                         execution_id,
                         string=self.parameters.context._get(execution_id).string.replace(EXECUTING, LEARNING + ' '),
@@ -2385,8 +2385,8 @@ class Process(Process_Base):
                                 continue
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
-                            # parameter_state.update(params=params, context=context)
-                            parameter_state.update(execution_id=execution_id, context=context)
+                            # parameter_state._update(params=params, context=context)
+                            parameter_state._update(execution_id=execution_id, context=context)
 
                     # Not all Projection subclasses instantiate ParameterStates
                     except AttributeError as e:

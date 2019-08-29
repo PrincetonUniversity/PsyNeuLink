@@ -1311,7 +1311,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param states are updated in the
             # projection's _update_parameter_states, and accordingly are not updated here
             if state.name != AUTO and state.name != HETERO:
-                state.update(execution_id=execution_id, params=runtime_params, context=context)
+                state._update(execution_id=execution_id, params=runtime_params, context=context)
 
     def _update_previous_value(self, execution_id=None):
         value = self.parameters.value._get(execution_id)
