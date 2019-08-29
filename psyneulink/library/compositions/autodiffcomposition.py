@@ -134,12 +134,16 @@ Most arguments to AutodiffComposition's `run` or `execute` methods are the same 
 case the AutodiffComposition executes like a Composition.
 
 However, if `learning_enabled <AutodiffComposition.learning_enabled>` is True, the **inputs** argument
-format is different. If `learning_enabled <AutodiffComposition.learning_enabled>` is True, then **inputs** should be a
-dictionary with required keys "inputs" and "targets", and optional key "epochs". The value at "inputs" should be a
-dictionary relating origin mechanisms to their inputs. The value at "targets" should be a dictionary relating terminal
-mechanisms to their inputs. The value at "epochs" is an integer stating the number of epochs of training (i.e. how many
-times all inputs and targets are run). It defaults to 1. Here is an example of creating a simple AutodiffComposition
-and specifying inputs and targets:
+format is different. If `learning_enabled <AutodiffComposition.learning_enabled>` is True, then **inputs**
+argument must be a dictionary with at least two nested dictionaries within it, one for the inputs and the other
+for the targets, as well as an additional entry specifying the numbrer of training epochs to run.  Specifically,
+the outer dictionary must have at least two entries with keys *"inputs"* and  *"targets"*.  The value of the
+*"inputs"* entry must be a standard input dictionary, specifying the inputs for each `ORIGIN` Mechanism.  The value
+of the *"targets"* entry must be a similar dictionary, in this case specifying the target values for the outputs of
+each `TERMINAL` Mechanism in the Composition. In addition, an entry with the key *"epochs"* can be included, which
+must then have as its value an integer specifying the number of epochs of training to run (i.e. how many times all
+inputs and corresponding targets are run); it defaults to 1. The following is an example of creating a simple
+AutodiffComposition and specifying its inputs and targets:
 
     >>> import psyneulink as pnl
     >>> # set up PsyNeuLink Components
@@ -151,13 +155,18 @@ and specifying inputs and targets:
     >>> # create AutodiffComposition
     >>> my_autodiff = pnl.AutodiffComposition()
     >>> my_autodiff.add_node(my_mech_1)
-    >>> my_autodiff.add_node(my_mech_1)
+    >>> my_autodiff.add_node(my_mech_2)
     >>> my_autodiff.add_projection(sender=my_mech_1, projection=my_projection, receiver=my_mech_2)
     >>> # input specification
     >>> my_inputs = {my_mech_1: [[1, 2, 3]]}
     >>> my_targets = {my_mech_2: [[4, 5]]}
     >>> input_dict = {"inputs": my_inputs, "targets": my_targets, "epochs": 2}
     >>> my_autodiff.run(inputs = input_dict)
+
+When running an AutodiffComposition with learning disabled (i.e., **learning_enabled**=False), the same input format as
+a standard `Composition` can be used (that is, a single dictionary specifying the inputs for each `ORIGIN` Mechanism).
+However, for convenience, it can also be run with the same input dictionary used for training;  in that case, the
+*"input"* entry is used as the inputs for the run, and the *"targets"* and *"epochs"* (if present) are ignored.
 
 Logging
 -------
