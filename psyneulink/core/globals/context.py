@@ -142,9 +142,10 @@ class ContextFlags(enum.IntFlag):
     """Set after completion of initialization of the Component."""
     REINITIALIZED =   1<<4  # 16
     """Set on stateful Components when they are re-initialized."""
+    UNINITIALIZED = 1 << 16
+    """Default value set before initialization"""
 
-    INITIALIZATION_MASK = DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | REINITIALIZED
-    UNINITIALIZED = ~INITIALIZATION_MASK
+    INITIALIZATION_MASK = DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | REINITIALIZED | UNINITIALIZED
 
     # execution_phase flags
     PROCESSING =    1<<5  # 32
@@ -155,12 +156,12 @@ class ContextFlags(enum.IntFlag):
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
     SIMULATION =    1<<8  # 256
     """Set during simulation by Composition.controller"""
-
-    EXECUTION_PHASE_MASK = PROCESSING | LEARNING | CONTROL | SIMULATION
-    EXECUTING = EXECUTION_PHASE_MASK
-    IDLE = ~EXECUTION_PHASE_MASK
+    IDLE = 1 << 17
     """Identifies condition in which no flags in the `execution_phase <Context.execution_phase>` are set.
     """
+
+    EXECUTING = PROCESSING | LEARNING | CONTROL | SIMULATION
+    EXECUTION_PHASE_MASK = EXECUTING | IDLE
 
     # source (source-of-call) flags
     COMMAND_LINE =  1<<9  # 512
@@ -179,10 +180,11 @@ class ContextFlags(enum.IntFlag):
     """Call by a/the Composition to which the Component belongs."""
 
     PROCESS =   1<<15     # 32768
+    NONE = 1 << 18
 
     """Call by a/the Composition to which the Component belongs."""
-    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | PROPERTY | COMPOSITION | PROCESS
-    NONE = ~SOURCE_MASK
+    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | METHOD | PROPERTY | COMPOSITION | PROCESS | NONE
+
 
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK
 
@@ -250,18 +252,24 @@ INITIALIZATION_STATUS_FLAGS = {ContextFlags.DEFERRED_INIT,
                                ContextFlags.INITIALIZING,
                                ContextFlags.VALIDATING,
                                ContextFlags.INITIALIZED,
-                               ContextFlags.REINITIALIZED}
+                               ContextFlags.REINITIALIZED,
+                               ContextFlags.UNINITIALIZED}
 
 EXECUTION_PHASE_FLAGS = {ContextFlags.PROCESSING,
                          ContextFlags.LEARNING,
                          ContextFlags.CONTROL,
-                         ContextFlags.SIMULATION
+                         ContextFlags.SIMULATION,
+                         ContextFlags.IDLE
                          }
 
-SOURCE_FLAGS = {ContextFlags.CONSTRUCTOR,
-                ContextFlags.COMMAND_LINE,
+SOURCE_FLAGS = {ContextFlags.COMMAND_LINE,
+                ContextFlags.CONSTRUCTOR,
+                ContextFlags.INSTANTIATE,
                 ContextFlags.COMPONENT,
-                ContextFlags.COMPOSITION}
+                ContextFlags.METHOD,
+                ContextFlags.PROPERTY,
+                ContextFlags.COMPOSITION,
+                ContextFlags.NONE}
 
 
 class Context():
@@ -293,6 +301,7 @@ class Context():
             * `VALIDATING <ContextFlags.VALIDATING>`
             * `INITIALIZED <ContextFlags.INITIALIZED>`
             * `REINITIALIZED <ContextFlags.REINITIALIZED>`
+            * `UNINITIALIZED <ContextFlags.UNINITALIZED>`
 
     execution_phase : field of flags attribute
         indicates the phase of execution of the Component;
@@ -302,7 +311,9 @@ class Context():
             * `LEARNING <ContextFlags.LEARNING>`
             * `CONTROL <ContextFlags.CONTROL>`
             * `SIMULATION <ContextFlags.SIMULATION>`
-        If no flags are set, the Component is not being executed at the current time, and `flags_string
+            * `IDLE <ContextFlags.IDLE>`
+
+        If `IDLE` is set, the Component is not being executed at the current time, and `flags_string
         <Context.flags_string>` will include *IDLE* in the string.  In some circumstances all of the
         `execution_phase <Context.execution_phase>` flags may be set, in which case `flags_string
         <Context.flags_string>` will include *EXECUTING* in the string.
@@ -341,7 +352,7 @@ class Context():
                  composition=None,
                  flags=None,
                  initialization_status=ContextFlags.UNINITIALIZED,
-                 execution_phase=None,
+                 execution_phase=ContextFlags.IDLE,
                  # source=ContextFlags.COMPONENT,
                  source=ContextFlags.NONE,
                  execution_id:UUID=None,
@@ -349,9 +360,9 @@ class Context():
 
         self.owner = owner
         self.composition = composition
-        self.initialization_status = initialization_status
-        self.execution_phase = execution_phase
-        self.source = source
+        self._initialization_status = initialization_status
+        self._execution_phase = execution_phase
+        self._source = source
         if flags:
             if (initialization_status != (ContextFlags.UNINITIALIZED) and
                     not (flags & ContextFlags.INITIALIZATION_MASK & initialization_status)):
@@ -399,16 +410,14 @@ class Context():
 
     @property
     def flags(self):
-        try:
-            return self._flags
-        except:
-            self._flags = ContextFlags.UNINITIALIZED |ContextFlags.COMPONENT
-            return self._flags
+        return self.initialization_status | self.execution_phase | self.source
 
     @flags.setter
-    def flags(self, flags):
+    def flags(self, flags: ContextFlags):
         if isinstance(flags, (ContextFlags, int)):
-            self._flags = flags
+            self.initialization_status = flags & ContextFlags.INITIALIZATION_MASK
+            self.execution_phase = flags & ContextFlags.EXECUTION_PHASE_MASK
+            self.source = flags & ContextFlags.SOURCE_MASK
         else:
             raise ContextError("\'{}\'{} argument in call to {} must be a {} or an int".
                                format(FLAGS, flags, self.__name__, ContextFlags.__name__))
@@ -419,77 +428,70 @@ class Context():
 
     @property
     def initialization_status(self):
-        return self.flags & ContextFlags.INITIALIZATION_MASK
+        return self._initialization_status
 
     @initialization_status.setter
     def initialization_status(self, flag):
         """Check that a flag is one and only one status flag"""
-        flag &= ContextFlags.INITIALIZATION_MASK
         if flag in INITIALIZATION_STATUS_FLAGS:
-            self.flags &= ContextFlags.UNINITIALIZED
-            self.flags |= flag
-        elif not flag or flag is ContextFlags.UNINITIALIZED:
-            self.flags &= ContextFlags.UNINITIALIZED
+            self._initialization_status = flag
+        elif not flag:
+            self._initialization_status = ContextFlags.UNINITIALIZED
         elif not (flag & ContextFlags.INITIALIZATION_MASK):
-            raise ContextError("Attempt to assign a flag ({}) to {}.context.flags "
+            raise ContextError("Attempt to assign a flag ({}) to initialization_status "
                                "that is not an initialization status flag".
-                               format(ContextFlags._get_context_string(flag), self.owner.name))
+                               format(str(flag)))
         else:
-            raise ContextError("Attempt to assign more than one flag ({}) to {}.context.initialization_status".
-                               format(ContextFlags._get_context_string(flag), self.owner.name))
+            raise ContextError("Attempt to assign more than one flag ({}) to initialization_status".
+                               format(str(flag)))
 
     @property
     def execution_phase(self):
-        v = self.flags & ContextFlags.EXECUTION_PHASE_MASK
-        if v == 0:
-            return ContextFlags.IDLE
-        else:
-            return v
-
+        return self._execution_phase
 
     @execution_phase.setter
     def execution_phase(self, flag):
-        """Check that a flag is one and only one execution_phase flag"""
-        if flag in EXECUTION_PHASE_FLAGS:
-            # self.flags |= flag
-            self.flags &= ContextFlags.IDLE
-            self.flags |= flag
-        elif not flag or flag is ContextFlags.IDLE:
-            self.flags &= ContextFlags.IDLE
-        elif flag is ContextFlags.EXECUTING:
-            self.flags |= flag
-        elif not (flag & ContextFlags.EXECUTION_PHASE_MASK):
-            raise ContextError("Attempt to assign a flag ({}) to {}.context.execution_phase "
+        """Check that flag is a valid execution_phase flag assignment"""
+        if not flag:
+            self._execution_phase = ContextFlags.IDLE
+        elif (flag & ~ContextFlags.EXECUTION_PHASE_MASK):
+            raise ContextError("Attempt to assign a flag ({}) to execution_phase "
                                "that is not an execution phase flag".
-                               format(ContextFlags._get_context_string(flag), self.owner.name))
+                               format(str(flag)))
         else:
-            raise ContextError("Attempt to assign more than one flag ({}) to {}.context.execution_phase".
-                               format(ContextFlags._get_context_string(flag), self.owner.name))
+            if (
+                flag in EXECUTION_PHASE_FLAGS
+                or (flag & ~(ContextFlags.SIMULATION | ContextFlags.CONTROL)) in EXECUTION_PHASE_FLAGS
+            ):
+                self._execution_phase = flag
+            else:
+                raise ContextError(
+                    f"Attempt to assign more than one non-SIMULATION/CONTROL flag ({str(flag)}) to execution_phase"
+                )
 
     @property
     def source(self):
-        return self.flags & ContextFlags.SOURCE_MASK
+        return self._source
 
     @source.setter
     def source(self, flag):
         """Check that a flag is one and only one source flag"""
         if flag in SOURCE_FLAGS:
-            self.flags &= ContextFlags.NONE
-            self.flags |= flag
-        elif not flag or flag is ContextFlags.NONE:
-            self.flags &= ContextFlags.NONE
+            self._source = flag
+        elif not flag:
+            self._source = ContextFlags.NONE
         elif not flag & ContextFlags.SOURCE_MASK:
-            raise ContextError("Attempt to assign a flag ({}) to {}.context.source that is not a source flag".
-                               format(ContextFlags._get_context_string(flag), self.owner.name))
+            raise ContextError("Attempt to assign a flag ({}) to source that is not a source flag".
+                               format(str(flag)))
         else:
-            raise ContextError("Attempt to assign more than one flag ({}) to {}.context.source".
-                               format(ContextFlags._get_context_string(flag), self.owner.name))
+            raise ContextError("Attempt to assign more than one flag ({}) to source".
+                               format(str(flag)))
 
     @property
     def execution_time(self):
         try:
             return self._execution_time
-        except:
+        except AttributeError:
             return None
 
     @execution_time.setter
@@ -508,6 +510,41 @@ class Context():
             self.string = string
         else:
             self.string = '{0} {1} {2}'.format(self.string, SEPARATOR_BAR, string)
+
+    def _change_flags(self, *flags, operation=lambda attr, blank_flag, *flags: NotImplemented):
+        # split by flag type to avoid extra costly binary operations on enum flags
+        if all([flag in INITIALIZATION_STATUS_FLAGS for flag in flags]):
+            self.initialization_status = operation(self.initialization_status, ContextFlags.UNINITIALIZED, *flags)
+        elif all([flag in EXECUTION_PHASE_FLAGS for flag in flags]):
+            self.execution_phase = operation(self.execution_phase, ContextFlags.IDLE, *flags)
+        elif all([flag in SOURCE_FLAGS for flag in flags]):
+            self.source = operation(self.source, ContextFlags.NONE, *flags)
+        else:
+            raise ContextError(f'Flags must all correspond to one of: initialization_status, execution_phase, source')
+
+    def add_flag(self, flag: ContextFlags):
+        def add(attr, blank_flag, flag):
+            return (attr & ~blank_flag) | flag
+
+        self._change_flags(flag, operation=add)
+
+    def remove_flag(self, flag: ContextFlags):
+        def remove(attr, blank_flag, flag):
+            if attr & flag:
+                res = (attr | flag) ^ flag
+                if res is ContextFlags.UNSET:
+                    res = blank_flag
+                return res
+            else:
+                return attr
+
+        self._change_flags(flag, operation=remove)
+
+    def replace_flag(self, old: ContextFlags, new: ContextFlags):
+        def replace(attr, blank_flag, old, new):
+            return (attr & ~old) | new
+
+        self._change_flags(old, new, operation=replace)
 
 
 @tc.typecheck
@@ -608,7 +645,7 @@ def _get_time(component, context_flags, execution_id=None):
         #         t = None
         # MODIFIED 7/15/19 NEW:  ACCOMODATE LEARNING IN COMPOSITION DONE WITH scheduler_processing
         try:
-            if execution_flags in {ContextFlags.PROCESSING, ContextFlags.LEARNING} or not execution_flags:
+            if execution_flags in {ContextFlags.PROCESSING, ContextFlags.LEARNING, ContextFlags.IDLE}:
                 t = system.scheduler_processing.clocks[execution_id].time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
             elif execution_flags == ContextFlags.CONTROL:
