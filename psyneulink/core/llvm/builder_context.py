@@ -335,6 +335,8 @@ class LLVMBuilderContext:
 
     def gen_autodiffcomp_exec(self,composition,simulation=False):
         """Creates llvm bin execute for autodiffcomp"""
+        assert composition.controller is None
+       
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation._get(composition.default_execution_id)
         cond_gen = ConditionGenerator(self, composition)
@@ -372,13 +374,6 @@ class LLVMBuilderContext:
 
         builder.call(input_cim_f, [context, params, comp_in, data, data])
 
-        if simulation is False and composition.enable_controller and \
-           composition.controller_mode == BEFORE:
-            assert composition.controller is not None
-            controller = composition._get_node_wrapper(composition.controller, simulation)
-            controller_f = self.get_llvm_function(controller)
-            builder.call(controller_f, [context, params, comp_in, data, data])
-
         # Call pytorch internal compiled llvm func
         pytorch_forward_func = self.get_llvm_function(pytorch_model._bin_exec_func.name)
         input_cim_idx = composition._get_node_index(composition.input_CIM)
@@ -395,13 +390,6 @@ class LLVMBuilderContext:
                                          ])
         
         builder.call(pytorch_forward_func,[model_context,model_params,model_input,model_output])
-        if simulation is False and composition.enable_controller and \
-           composition.controller_mode == AFTER:
-            assert composition.controller is not None
-            controller = composition._get_node_wrapper(composition.controller, simulation)
-            controller_f = self.get_llvm_function(controller)
-            builder.call(controller_f, [context, params, comp_in, data, data])
-
         
         # Call output CIM
         output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation)
