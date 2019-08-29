@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>States &mdash; PsyNeuLink 0.5.3.2+406.g117b677 documentation</title>
+  <title>States &mdash; PsyNeuLink 0.5.3.2+407.gf1f793e documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+406.g117b677',
+              VERSION:'0.5.3.2+407.gf1f793e',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+406
+                0.5.3.2+407
               </div>
             
           
@@ -909,7 +909,7 @@ the TransferFunction identifies as ADDITIVE and MULTIPLICATIVE are subject to mo
 <dl class="attribute">
 <dt id="psyneulink.core.components.states.state.State_Base.value">
 <code class="descname">value</code><a class="headerlink" href="#psyneulink.core.components.states.state.State_Base.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> – current value of the State (updated by <code class="xref any docutils literal"><span class="pre">update</span></code> method).</p>
+<dd><p><em>number, list or np.ndarray</em> – current value of the State (updated by <code class="xref any docutils literal"><span class="pre">_update</span></code> method).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -931,11 +931,24 @@ creation).</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.components.states.state.State_Base.full_name">
+<code class="descname">full_name</code><a class="headerlink" href="#psyneulink.core.components.states.state.State_Base.full_name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – the name of the State with its owner if that is assigned: &lt;owner.name&gt;[&lt;self.name&gt;] if owner is not None;
+otherwise same as <code class="xref any docutils literal"><span class="pre">name</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.components.states.state.State_Base.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.states.state.State_Base.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the State; if it is not specified in the <strong>prefs</strong> argument of the constructor,
 a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for
 details).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">full_name</code></dt>
+<dd><p><em>Return name relative to owner as</em> – &lt;owner.name&gt;[&lt;self.name&gt;]</p>
 </dd></dl>
 
 </dd></dl>
