@@ -413,11 +413,10 @@ def setup_vec_scalar_mult(ctx):
 
    # mult
    with helpers.for_loop_zero_inc(builder, x, "scalar_mult_loop") as (b1, index):
-       u_ptr = b1.gep(u,[index])
+       u_ptr = b1.gep(u, [index])
        o_ptr = b1.gep(o, [index])
        u_val = b1.load(u_ptr)
-       
-       u_product = b1.fmul(u_val,s)
+       u_product = b1.fmul(u_val, s)
        b1.store(u_product, o_ptr)
 
    builder.ret_void()
