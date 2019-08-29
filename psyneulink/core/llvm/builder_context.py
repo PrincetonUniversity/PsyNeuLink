@@ -379,7 +379,7 @@ class LLVMBuilderContext:
         builder.call(input_cim_f, [context, params, comp_in, data, data])
 
         # Call pytorch internal compiled llvm func
-        pytorch_forward_func = self.get_llvm_function(pytorch_model._bin_exec_func.name)
+        pytorch_forward_func = self.get_llvm_function(self.gen_llvm_function(pytorch_model).name)
         input_cim_idx = composition._get_node_index(composition.input_CIM)
 
         model_context = context
