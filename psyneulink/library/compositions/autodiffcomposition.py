@@ -559,6 +559,7 @@ class AutodiffComposition(Composition):
         return required_keys.issubset(set(input_dict.keys()))
 
     def _adjust_stimulus_dict(self, inputs):
+
         if self.learning_enabled:
             if isinstance(inputs, dict):
                 if self._has_required_keys(inputs):
@@ -569,6 +570,7 @@ class AutodiffComposition(Composition):
                     if not self._has_required_keys(input_dict):
                         raise AutodiffCompositionError("Invalid input specification.")
                 return inputs
+
         # If learning is disabled, but inputs are provided in the same format as used for learning,
         #    ignore dict in "targets" entry, and pass dict in "inputs" entry along as inputs
         elif isinstance(inputs, dict) and self._has_required_keys(inputs):
