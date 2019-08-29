@@ -422,8 +422,8 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGatingAllocation
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTEXT, \
     CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, EID_SIMULATION, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
-    MODULATES, MODULATORY_SIGNAL, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, \
-    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, SYSTEM, VARIABLE
+    MODULATORY_SIGNAL, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, \
+    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel

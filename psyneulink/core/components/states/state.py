@@ -1868,7 +1868,6 @@ class State_Base(State):
 
 
             # ASSIGN TO STATE
-            # FIX: 7/22/19 - MAKE METHOD AND USE HERE AND IN _instantiate_projection_to_state
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.efferents
@@ -2781,7 +2780,7 @@ def _parse_state_spec(state_type=None,
         # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
         if isinstance(state_specification, type) and issubclass(state_specification, AdaptiveMechanism_Base):
             state_specification = state_specification.outputStateTypes
-            # MODIFIED 5/11/19 NEW: [JDC] TO ACCOMODATE GatingSignals on ControlMechanism
+            # IMPLEMENTATION NOTE:  The following is to accomodate GatingSignals on ControlMechanism
             # FIX: TRY ELIMINATING SIMILAR HANDLING IN Projection (and OutputState?)
             # FIX: AND ANY OTHER PLACES WHERE LISTS ARE DEALT WITH
             if isinstance(state_specification, list):
@@ -2856,27 +2855,6 @@ def _parse_state_spec(state_type=None,
                                                                   weight=None,
                                                                   exponent=None,
                                                                   projection=projection))
-
-    # # State class
-    # elif (inspect.isclass(state_specification) and issubclass(state_specification, State)):
-    #     # Specified type of State is same as connectee's type (state_type),
-    #     #    so assume it is a reference to the State itself to be instantiated
-    #     if state_specification is not state_type:
-    #         raise StateError("Specification of {} for {} (\'{}\') is insufficient to instantiate the {}".
-    #             format(state_type_name, owner.name, state_specification.__name__, State.__name__))
-
-    # # MODIFIED 11/25/17 NEW:
-    # # State class
-    # if (inspect.isclass(state_specification) and issubclass(state_specification, State)):
-    #     try:
-    #         state_specification = (owner.paramClassDefaults[name], state_specification)
-    #     except:
-    #         pass
-    #     else:
-    #         state_dict = _parse_state_spec(state_spec=state_specification,
-    #                                        **state_dict)
-    # # MODIFIED 11/25/17 END:
-
 
     # Projection specification (class, object, or matrix value (matrix keyword processed below):
     elif _is_projection_spec(state_specification, include_matrix_spec=False):

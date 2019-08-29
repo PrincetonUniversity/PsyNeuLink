@@ -997,10 +997,7 @@ class ControlSignal(ModulatorySignal):
                                          format(cost_function, cost_function_name))
 
             self.paramsCurrent[cost_function_name] = cost_function
-            # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-            # MODIFIED 11/9/18 OLD:[JDC]
             self.intensity_change = [0]
-            # MODIFIED 11/9/18 END
 
     def _initialize_cost_attributes(self, context=None):
         if self.cost_options:
