@@ -172,7 +172,6 @@ class AdamOptimizer(Optimizer):
         # 1) increment t
         builder.store(builder.fadd(builder.load(t), one_float), t)
         t_val = builder.load(t)
-        # ctx.inject_printf(builder,"\nT: %f\n",t_val,override_debug=True)
         # 1.5) calculate values to be used later (based on incremented t)
         b1_pow = builder.call(pow, [b1, t_val])
         b2_pow = builder.call(pow, [b2, t_val])
@@ -188,10 +187,6 @@ class AdamOptimizer(Optimizer):
 
         # this is the new learning rate to use
         alpha_t = builder.fmul(alpha_mult, lr)
-        # ctx.inject_printf(builder, "BIAS CORR 1 %f\n",one_minus_b1_pow,override_debug=True)
-        # ctx.inject_printf(builder, "BIAS CORR 2 %f\n",one_minus_b2_pow,override_debug=True)
-        # ctx.inject_printf(builder, "sqrt BIAS CORR 2 %f\n",alpha_mult,override_debug=True)
-        # ctx.inject_printf(builder, "STEPSIZE %f\n",alpha_t,override_debug=True)
 
         gradient_struct_values = self._get_listof_gradient_struct_values()
 
@@ -232,7 +227,6 @@ class AdamOptimizer(Optimizer):
                 v_t, [zero, node_idx_ir, afferent_node_index_ir])
             delta_w_ptr = builder.gep(
                 delta_w, [zero, node_idx_ir, afferent_node_index_ir])
-            #ctx.inject_printf(builder,"grad sq beta val %f\n",builder.load(builder.gep(v_t_ptr,[zero,zero,zero])),override_debug=True)
 
             # v_t = v_t * b2
             self._pytorch_model._gen_inject_mat_scalar_mult(
