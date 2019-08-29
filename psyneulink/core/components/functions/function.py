@@ -253,13 +253,13 @@ class ModulationParam(Enum):
     """Specify parameter of a `Function <Function>` for `modulation <ModulatorySignal_Modulation>` by a ModulatorySignal
 
     COMMENT:
-        Each term specifies a different type of modulation used by a `ModulatorySignal <ModulatorySignal>`.  The first
-        two refer to classes that define the following terms:
-            * attrib_name (*ADDITIVE_PARAM* or *MULTIPLICATIVE_PARAM*):  specifies which meta-parameter of the function
+        Each term specifies a different type of modulation used by a `ModulatorySignal <ModulatorySignal>`.
+        The first two refer to classes that define the following terms:
+            * attrib_name (*ADDITIVE_PARAM* or *MULTIPLICATIVE_PARAM*): specifies which meta-parameter of the function
               to use for modulation;
-            * name (str): name of the meta-parameter
-            * init_val (int or float): value with which to initialize the parameter being modulated if it is not otherwise
-              specified
+            * name (str): name of the meta-parameter;
+            * init_val (int or float): value with which to initialize the parameter being modulated
+              if it is not otherwise specified;
             * reduce (function): the manner by which to aggregate multiple ModulatorySignals of that type, if the
               `ParameterState` receives more than one `ModulatoryProjection <ModulatoryProjection>` of that type.
     COMMENT

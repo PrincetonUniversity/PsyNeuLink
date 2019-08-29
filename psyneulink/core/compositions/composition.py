@@ -2848,6 +2848,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _parse_receiver_spec(self, projection, receiver, sender, learning_projection):
 
+        receiver_arg = receiver
+
         # if a receiver was not passed, check for a receiver InputState stored on the Projection object
         if receiver is None:
             if hasattr(projection, "receiver"):
@@ -2888,14 +2890,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_projection = True
 
         else:
-            raise CompositionError("receiver arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
-                                   format(receiver, self.name,
-                                          Mechanism.__name__, InputState.__name__, Composition.__name__))
+            raise CompositionError(f"receiver arg ({receiver_arg}) of call to add_projection method of {self.name} "
+                                   f"is not a {Mechanism.__name__}, {InputState.__name__} or {Composition.__name__}.")
 
-        if not isinstance(receiver_mechanism, CompositionInterfaceMechanism) \
-                and not isinstance(receiver, Composition)\
-                and receiver_mechanism not in self.nodes\
-                and not learning_projection:
+        if (not isinstance(receiver_mechanism, CompositionInterfaceMechanism)
+                and not isinstance(receiver, Composition)
+                and receiver_mechanism not in self.nodes
+                and not learning_projection):
 
             # if the receiver is IN a nested Composition AND receiver is an INPUT Node
             # then use the corresponding CIM on the nested comp as the receiver going forward
@@ -2905,9 +2906,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nested_compositions.append(graph_receiver)
             # Otherwise, there was a mistake in the spec
             if receiver is None:
-                raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
-                                       "is not in it or any of its nested {}s ".
-                                       format(repr(receiver), self.name, Composition.__name__, ))
+                raise CompositionError(f"receiver arg ({repr(receiver_arg)}) in call to add_projection method of "
+                                       f"{self.name} is not in it or any of its nested {Composition.__name__}s.")
 
         return receiver, receiver_mechanism, graph_receiver, receiver_input_state, \
                nested_compositions, learning_projection
