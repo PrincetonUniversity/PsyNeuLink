@@ -99,9 +99,10 @@ arguments that are specific to the AutodiffComposition, as described below.
   options for strings are 'mse' (the default), 'crossentropy', 'l1', 'nll', 'poissonnll', and 'kldiv'. These refer to
   Mean Squared Error, Cross Entropy, L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, and KL
   Divergence respectively. The **loss_spec** can also be any PyTorch loss function, including a custom-written one.
-  For a list of PyTorch loss functions, see `https://pytorch.org/docs/stable/nn.html#loss-functions`_. For information
-  on writing a custom loss function, see `https://pytorch.org/docs/master/notes/extending.html`_ and
-  `https://discuss.pytorch.org/t/build-your-own-loss-function-in-pytorch/235`_
+  For a list of PyTorch loss functions, see `Loss function <https://pytorch.org/docs/stable/nn.html#loss-functions>`_.
+  For information on writing a custom loss function, see `Extending PyTorch
+  <https://pytorch.org/docs/master/notes/extending.html>`_, as well as `Build your own loss function in PyTorch
+  <https://discuss.pytorch.org/t/build-your-own-loss-function-in-pytorch/235>`_.
 
 * **randomize** -- specifies whether the order of inputs will be randomized in each epoch. All inputs are run in each
   epoch.  However, if **randomize** is True, then the order in which inputs are within an epoch is random.
@@ -111,12 +112,9 @@ arguments that are specific to the AutodiffComposition, as described below.
   <AutodiffComposition.losses>` attribute. If True, the losses of each run overwrite `losses
   <AutodiffComposition.losses>` instead.
 
-COMMENT:
-FIX:  NEED TO EXPLAIN / REFERENCE `retain_graph`
-COMMENT
-* **force_no_retain_graph** -- If True, the AutodiffComposition does not use the `retain_graph` option when computing
-  PyTorch gradient. This can reduce memory usage. However, it breaks recurrent networks, so it should only be used
-  when the network is not recurrent.
+* **force_no_retain_graph** -- If True, the AutodiffComposition does not use PyTorch's *retain_graph* option when
+  computing the gradient. This can reduce memory usage; however, it breaks recurrent networks, so it should only
+  be used when the network is not recurrent.
 
 .. note::
     The AutodiffComposition detachs all gradients between epochs of training. For more information on why this is done,
