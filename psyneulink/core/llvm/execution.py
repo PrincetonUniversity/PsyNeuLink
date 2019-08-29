@@ -494,8 +494,6 @@ class CompExecution(CUDAExecution):
 
     # inserts autodiff params into the param struct (this unfortunately needs to be done dynamically, as we don't know autodiff inputs ahead of time)
     def _initialize_autodiff_param_struct(self,autodiff_stimuli):
-        param_struct = self._param_struct
-            
         inputs = {}
         targets = {} 
         epochs = 0

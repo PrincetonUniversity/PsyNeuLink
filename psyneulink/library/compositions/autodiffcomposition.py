@@ -1083,13 +1083,9 @@ class AutodiffComposition(Composition):
                        else tuple() for p in self.projections)
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation._get(self.default_execution_id)
-        pytorch_params = model._get_param_struct()
+        pytorch_params = model._get_param_initializer()
         param_args = [tuple(mech_params),tuple(proj_params),pytorch_params]
-        if self.learning_enabled is True:
-            learning_targets = pnlvm.ir.LiteralStructType([
-                pnlvm.ir.IntType(32), # idx of the node
-                pnlvm.ir.IntType(64) 
-            ])
+        
         learning_params = (
             0,
             0,

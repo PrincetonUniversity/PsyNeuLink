@@ -252,19 +252,6 @@ class PytorchModelCreator(torch.nn.Module):
             return self._cached_param_list
         return pnlvm.execution._tupleize(self._cached_param_list)
 
-    # Gets param struct for pytorch model (i.e. weights)
-    def _get_param_struct(self):
-        bin_func = self._bin_exec_func
-        param_cty = bin_func.byref_arg_types[1]
-        params = self._get_param_initializer()
-
-        return params
-
-    def _get_state_struct(self):
-        bin_func = self._bin_exec_func
-        context_cty = bin_func.byref_arg_types[0]
-        return context_cty(*(1,))
-
     def _get_state_struct_type(self, ctx):
         return self._composition._get_state_struct_type(ctx)
 
@@ -818,13 +805,7 @@ class PytorchModelCreator(torch.nn.Module):
 
     def _get_output_index(self, ctx, builder, arg_out, index):
         return builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(index), ctx.int32_ty(0)])
-
-    @property
-    def _bin_exec_func(self):
-        if self.__bin_exec_func is None:
-            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self)
-        return self.__bin_exec_func
-
+    
     # performs forward computation for the model
     def forward(self, inputs, execution_id=None, do_logging=True, scheduler=None):
         outputs = {}  # dict for storing values of terminal (output) nodes
