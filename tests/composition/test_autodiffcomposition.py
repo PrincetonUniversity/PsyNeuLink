@@ -179,7 +179,7 @@ class TestMiscTrainingFunctionality:
     @pytest.mark.parametrize("mode", ['Python',
                                     #pytest.param('LLVM', marks=pytest.mark.llvm),
                                     #pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.xfail]), # these loss specs remain unimplemented at the moment
                                     #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                     #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                     ])
@@ -226,7 +226,7 @@ class TestMiscTrainingFunctionality:
     @pytest.mark.parametrize("mode", ['Python',
                                     #pytest.param('LLVM', marks=pytest.mark.llvm),
                                     #pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.xfail]), # 
                                     #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                     #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                     ])
