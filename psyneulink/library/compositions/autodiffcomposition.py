@@ -112,44 +112,47 @@ arguments that are specific to the AutodiffComposition, as described below.
   <AutodiffComposition.losses>` attribute. If True, the losses of each run overwrite `losses
   <AutodiffComposition.losses>` instead.
 
-* **force_no_retain_graph** -- If True, the AutodiffComposition does not use PyTorch's *retain_graph* option when
-  computing the gradient. This can reduce memory usage; however, it breaks recurrent networks, so it should only
-  be used when the network is not recurrent.
+* **force_no_retain_graph** -- False by default.  If True, the AutodiffComposition does not use PyTorch's `retain_graph
+  <https://pytorch.org/docs/master/autograd.html?highlight=retain_graph>`_  option when computing the gradient. This
+  can reduce memory usage; however, it breaks recurrent networks, so it should only be used when the network is not
+  recurrent.
 
 .. note::
     The AutodiffComposition detachs all gradients between epochs of training. For more information on why this is done,
-    see `here <bit.ly/2t2ZkyR>` or `here <bit.ly/2RGuMNg>`.
+    see `Trying to backward through a graph a second time <https://discuss.pytorch.org/t/runtimeerror-trying-to-backward-through-the-graph-a-second-time-but-the-buffers-have-already-been-freed-specify-retain-graph-true-when-calling-backward-the-first-time/6795>`_
+    and `Why we need to detach Variable which contains [a] hidden representation
+    <https://discuss.pytorch.org/t/solved-why-we-need-to-detach-variable-which-contains-hidden-representation/1426/4>`_.
 
 .. _AutodiffComposition_Structure:
 
 Structure
 ---------
 
-AutodiffComposition has all the attributes of its parent class `Composition`, in addition to several more.
+An AutodiffComposition has all the attributes of its parent class `Composition`, as well ones corresponding to the
+arguments described above, and the following.
 
-The `target_CIM <AutodiffComposition.target_CIM>` attribute is analogous to the `input_CIM <Composition.input_CIM>` of
-any Composition, but instead of providing inputs, provides targets for the AutodiffComposition.
+* `target_CIM <AutodiffComposition.target_CIM>` -- analogous to the `input_CIM <Composition.input_CIM>` of
+  a standard `Composition`, but instead of representing the input to the `ORIGIN` Mechanism(s) of the Composition
+  represents the targets used to specify the target `value <Mechanism_Base.value>` of its `TERMINAL` Mechanism(s)
+  (see `below <AutodiffComposition_Input>` for a description of how these are specified).
 
-The `pytorch_representation <AutodiffComposition.pytorch_representation>` attribute holds the PyTorch representation
-of the PsyNeuLink model that AutodiffComposition contains.
+* `pytorch_representation <AutodiffComposition.pytorch_representation>` -- containsa the PyTorch representation
+  of the PsyNeuLink model that AutodiffComposition contains.
 
-The `losses <AutodiffComposition.losses>` attribute tracks the average loss for each training epoch.
+* `losses <AutodiffComposition.losses>` -- tracks the average loss for each training epoch.
 
-As mentioned above, the `learning_enabled <AutodiffComposition.learning_enabled>` attribute can be toggled to determine
-whether the AutodiffComposition learns or whether it executes like an ordinary Composition.
+* `optimizer <AutodiffComposition.optimizer>` -- contains the PyTorch optimizer function used for learning. It
+  is determined at initialization by the **optimizer_type**, **learning_rate**, and **weight_decay** arguments.
 
-The `optimizer <AutodiffComposition.optimizer>` attribute contains the PyTorch optimizer function used for learning. It
-is determined at initialization by the **optimizer_type**, **learning_rate**, and **weight_decay** arguments.
-
-The `loss <AutodiffComposition.loss>` attribute contains the PyTorch loss function used for learning. It is determined
-at initialization by the **loss_spec** argument.
+* `loss <AutodiffComposition.loss>` -- contains the PyTorch loss function used for learning. It is determined
+  at initialization by the **loss_spec** argument.
 
 .. _AutodiffComposition_Execution:
 
 Execution
 ---------
 
-Most arguments to AutodiffComposition's `run` or `execute` methods are the same as in a Composition. When
+Most arguments to AutodiffComposition's `run` or `execute` methods are the same as for a `Composition`. When
 `learning_enabled <AutodiffComposition.learning_enabled>` is False, the arguments are the same, since in this
 case the AutodiffComposition executes like a Composition.
 
