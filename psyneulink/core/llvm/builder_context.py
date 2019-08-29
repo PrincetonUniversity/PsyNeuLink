@@ -126,10 +126,14 @@ class LLVMBuilderContext:
 
     def gen_llvm_function(self, obj):
         # HACK: allows for learning bin func and non-learning to differ
-        if hasattr(obj,"learning_enabled") and obj.learning_enabled is True:
-            if obj not in self._learningcache:
-                self._learningcache[obj] = obj._gen_llvm_function()
-            return self._learningcache[obj]
+        try:
+            if obj.learning_enabled is True:
+                if obj not in self._learningcache:
+                    self._learningcache[obj] = obj._gen_llvm_function()
+                return self._learningcache[obj]
+        except AttributeError as e:
+            pass
+            
         if obj not in self._cache:
             self._cache[obj] = obj._gen_llvm_function()
         return self._cache[obj]
