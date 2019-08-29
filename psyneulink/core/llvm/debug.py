@@ -33,7 +33,7 @@ Compilation modifiers:
  * "const_state" -- hardcode base context values into generate code,
                  instead of laoding them from the context argument
  * "force_runs" -- set number of runs to be fixed ('1' if no other value is specified)
- * "ref_pass" -- Pass arguments to llvm functions by reference, instead of copying structs - is much faster than normal execution
+ * "no_ref_pass" -- Don't pass arguments to llvm functions by reference
 
 Compiled code dump:
  * "llvm" -- dumps LLVM IR into a file (named after the dumped module).

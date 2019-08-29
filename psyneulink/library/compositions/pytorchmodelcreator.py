@@ -161,7 +161,7 @@ class PytorchModelCreator(torch.nn.Module):
         vals = [None]*len(self.execution_sets[0])
         for component, value in input.items():
             component_id = self._id_map[0][component]
-            if "ref_pass" in debug_env:
+            if "no_ref_pass" not in debug_env:
                 vals[component_id] = value.numpy().ctypes.data_as(
                     ctypes.c_void_p).value
             else:
@@ -192,7 +192,7 @@ class PytorchModelCreator(torch.nn.Module):
             for (afferent_vertex, weights) in afferents.items():
                 afferent_node = afferent_vertex.component
                 afferent_index = self._get_afferent_node_index(node,afferent_node)
-                if "ref_pass" in debug_env:
+                if "no_ref_pass" not in debug_env:
                     afferent_weight = ir.types.IntType(64)
                 else:
                     afferent_weight = ctx.convert_python_struct_to_llvm_ir(
@@ -203,7 +203,7 @@ class PytorchModelCreator(torch.nn.Module):
             # 2) setup bias
             bias = forward_info[1]
             if bias is not None:
-                if "ref_pass" in debug_env:
+                if "no_ref_pass" not in debug_env:
                     node_params += [ir.types.IntType(64)]
                 else:
                     node_params += [ctx.convert_python_struct_to_llvm_ir(
@@ -228,7 +228,7 @@ class PytorchModelCreator(torch.nn.Module):
                 for (afferent_vertex, weights) in afferents.items():
                     afferent_node = afferent_vertex.component
                     afferent_index = self._get_afferent_node_index(node,afferent_node)
-                    if "ref_pass" in debug_env: # this gets the actual memory address of the weights - is static (according to https://github.com/numpy/numpy/issues/13906)
+                    if "no_ref_pass" not in debug_env: # this gets the actual memory address of the weights - is static (according to https://github.com/numpy/numpy/issues/13906)
                         afferent_weight = weights.detach().numpy().ctypes.data_as(ctypes.c_void_p).value
                     else:
                         afferent_weight = weights.detach().numpy()
@@ -238,17 +238,17 @@ class PytorchModelCreator(torch.nn.Module):
                 # 2) initialize bias
                 bias = forward_info[1]
                 if bias is not None:
-                    if "ref_pass" in debug_env:
+                    if "no_ref_pass" not in debug_env:
                         node_params += [bias.detach().numpy().ctypes.data_as(ctypes.c_void_p).value]
                     else:
                         node_params += [bias.detach().numpy()]
                 
                 param_list[node_idx] = node_params
-            if "ref_pass" in debug_env:
+            if "no_ref_pass" not in debug_env:
                 self._cached_param_list = pnlvm.execution._tupleize(param_list)
             else:
                 self._cached_param_list = param_list
-        if "ref_pass" in debug_env:
+        if "no_ref_pass" not in debug_env:
             return self._cached_param_list
         return pnlvm.execution._tupleize(self._cached_param_list)
 
@@ -431,7 +431,7 @@ class PytorchModelCreator(torch.nn.Module):
                                                 ctx.int32_ty(node_idx),
                                                 ctx.int32_ty(0),
                                                 ctx.int32_ty(afferent_node_index)])
-        if "ref_pass" in debug_env:
+        if "no_ref_pass" not in debug_env:
             mem_addr = builder.load(node_weights)
             #ctx.inject_printf(builder,"GOT WEIGHT MATRIX WITH ADDRESS: %ld (dimensionality: %d x %d )\n",mem_addr,ctx.int32_ty(dim_x),ctx.int32_ty(dim_y))
             node_weights = builder.inttoptr(mem_addr, ir.types.ArrayType(
@@ -447,7 +447,7 @@ class PytorchModelCreator(torch.nn.Module):
         node_bias = builder.gep(model_params,[ctx.int32_ty(0),
                                                 ctx.int32_ty(node_idx),
                                                 ctx.int32_ty(1)])
-        if "ref_pass" in debug_env:
+        if "no_ref_pass" not in debug_env:
             mem_addr = builder.load(node_bias)
             node_bias = builder.inttoptr(mem_addr,
                 ir.types.ArrayType(ir.types.DoubleType(), dim).as_pointer())
