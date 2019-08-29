@@ -424,7 +424,6 @@ class PytorchModelCreator(torch.nn.Module):
                                                 ctx.int32_ty(afferent_node_index)])
         if "no_ref_pass" not in debug_env:
             mem_addr = builder.load(node_weights)
-            #ctx.inject_printf(builder,"GOT WEIGHT MATRIX WITH ADDRESS: %ld (dimensionality: %d x %d )\n",mem_addr,ctx.int32_ty(dim_x),ctx.int32_ty(dim_y))
             node_weights = builder.inttoptr(mem_addr, ir.types.ArrayType(
                 ir.types.ArrayType(ir.types.DoubleType(), dim_y), dim_x).as_pointer())
     
@@ -674,7 +673,7 @@ class PytorchModelCreator(torch.nn.Module):
                 _,weights_dim_x,weights_dim_y = self._gen_get_node_weight_pointer(ctx,builder,model_params,node,afferent_node)
                 # update delta_W
                 node_delta_w = builder.gep(delta_w,[ctx.int32_ty(0),ctx.int32_ty(node_idx), ctx.int32_ty(afferent_node_idx)])
-                #ctx.inject_printf(builder,f"UPDATE DELTA_W {afferent_node} -> {node} \n",override_debug=True)
+                
                 with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "weight_update_loop_outer") as (b1, weight_row):
                     with pnlvm.helpers.for_loop_zero_inc(b1, ctx.int32_ty(weights_dim_y), "weight_update_loop_inner") as (b2, weight_column):
                         a_val = b2.load(b2.gep(afferent_node_activation, [
