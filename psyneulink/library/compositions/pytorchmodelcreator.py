@@ -1,7 +1,7 @@
 import numpy as np
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.utilities import NodeRole
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer,SGDOptimizer
@@ -938,7 +938,7 @@ class PytorchModelCreator(torch.nn.Module):
                 return ret
 
         # if we have relu function (the only other kind of function allowed by the autodiff composition)
-        else:
+        elif isinstance(node.function, ReLU):
             gain = get_fct_param_value('gain')
             bias = get_fct_param_value('bias')
             leak = get_fct_param_value('leak')
@@ -960,6 +960,8 @@ class PytorchModelCreator(torch.nn.Module):
                     builder.fmul(max, gain),
                     builder.fmul(min, leak))
                 return ret
+        else:
+            raise Exception(f"Unsupported compiled activation function {node.function}")
         
         #do computations
         iterator = None
@@ -1031,7 +1033,6 @@ class PytorchModelCreator(torch.nn.Module):
                 ret = builder.fmul(ret,builder.fsub(float_ty(1),ret))
                 return ret
 
-        # if we have relu function (the only other kind of function allowed by the autodiff composition)
         else:
             raise Exception(f"Function type {node.function} is currently unsupported by compiled execution!")
         
