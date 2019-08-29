@@ -14,14 +14,6 @@ from collections import deque
 
 debug_env = pnlvm.debug_env
 
-try:
-    import torch
-    from torch import nn
-    torch_available = True
-except ImportError:
-    torch_available = False
-
-
 __all__ = ['AdamOptimizer','SGDOptimizer']
 
 
