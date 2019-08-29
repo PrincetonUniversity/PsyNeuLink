@@ -6877,9 +6877,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
         for node in stimuli.keys():
             if not node in input_nodes:
-                if not isinstance(node (Mechanism. Composition)):
-                    raise CompositionError(f"{node} in inputs dict for {self.name} is not a "
-                                           f"{Mechanism.__name__} or {Composition.__name__}.")
+                if not isinstance(node, (Mechanism, Composition)):
+                    raise CompositionError(f'{node} in "inputs" dict for {self.name} is not a '
+                                           f'{Mechanism.__name__} or {Composition.__name__}.')
                 else:
                     raise CompositionError(f"{node.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
 
