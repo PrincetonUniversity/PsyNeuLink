@@ -540,13 +540,13 @@ class PytorchModelCreator(torch.nn.Module):
         input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
 
-        node_value_ir_types = dict([(node, pnlvm.ir.ArrayType(
+        node_value_ir_types = {node: pnlvm.ir.ArrayType(
             pnlvm.ir.ArrayType(
                 ctx.float_ty,
                 len(node.defaults.value[0])
             ),
             1
-        )) for node in composition.nodes])
+        ) for node in composition.nodes}
 
         def _get_node_array_ptr(node, struct_ptr):
             node_idx = composition._get_node_index(node)
@@ -556,15 +556,10 @@ class PytorchModelCreator(torch.nn.Module):
             return builder.inttoptr(
                 array_ptr, node_value_ir_types[node].as_pointer())
 
-        node_input_arrays = dict([
-            (node, _get_node_array_ptr(node, input_struct_ptr))
-            for node in input_nodes
-        ])
+        node_input_arrays = {node: _get_node_array_ptr(node, input_struct_ptr) for node in input_nodes}
 
-        node_target_arrays = dict([
-            (node, _get_node_array_ptr(node, target_struct_ptr))
-            for node in output_nodes
-        ])
+        node_target_arrays = {node: _get_node_array_ptr(node, target_struct_ptr) for node in output_nodes}
+
         
         # initialize optimizer params:
         delta_w = builder.gep(optim_struct,[ctx.int32_ty(0),ctx.int32_ty(optimizer._DELTA_W_NUM)])
