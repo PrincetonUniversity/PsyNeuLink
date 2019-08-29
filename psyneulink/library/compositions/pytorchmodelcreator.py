@@ -369,6 +369,7 @@ class PytorchModelCreator(torch.nn.Module):
         builtin = ctx.get_llvm_function("__pnl_builtin_mat_sub")
         builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()), builder.bitcast(m2, ctx.float_ty.as_pointer()), ctx.int32_ty(x), ctx.int32_ty(y), builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
         return output_mat
+    
     def _gen_inject_vec_hadamard(self,ctx,builder,u,v,dim,output_vec = None):
         if output_vec is None:
             output_vec = builder.alloca(
@@ -389,6 +390,7 @@ class PytorchModelCreator(torch.nn.Module):
         builtin = ctx.get_llvm_function("__pnl_builtin_mat_hadamard")
         builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()), builder.bitcast(m2, ctx.float_ty.as_pointer()), ctx.int32_ty(x), ctx.int32_ty(y), builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
         return output_mat
+    
     def _gen_inject_vxm_transposed(self, ctx, builder, m1, m2, y, z, output_vec=None):
         # create output vec
         if output_vec is None:
@@ -405,6 +407,7 @@ class PytorchModelCreator(torch.nn.Module):
                 ir.types.ArrayType(ctx.float_ty, dim))
         builder.call(bin_func, [builder.bitcast(vector, ctx.float_ty.as_pointer()), ctx.int32_ty(dim), builder.bitcast(output_vec, ctx.float_ty.as_pointer())])
         return output_vec
+    
     # gets a pointer for the weights matrix between node and afferent_node
     def _gen_get_node_weight_pointer(self, ctx, builder,model_params,node,afferent_node):
         node_idx = self._composition._get_node_index(node)
