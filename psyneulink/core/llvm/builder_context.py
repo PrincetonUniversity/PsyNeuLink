@@ -365,10 +365,11 @@ class LLVMBuilderContext:
             builder.store(data_vals, data)
         else:
             data = data_arg
+        
         # Call input CIM
         input_cim_w = composition._get_node_wrapper(composition.input_CIM, simulation)
         input_cim_f = self.get_llvm_function(input_cim_w)
-        # TODO: Figure out why data is passed twice?
+
         builder.call(input_cim_f, [context, params, comp_in, data, data])
 
         if simulation is False and composition.enable_controller and \
@@ -379,7 +380,6 @@ class LLVMBuilderContext:
             builder.call(controller_f, [context, params, comp_in, data, data])
 
         # Call pytorch internal compiled llvm func
-        
         pytorch_forward_func = self.get_llvm_function(pytorch_model._bin_exec_func.name)
         input_cim_idx = composition._get_node_index(composition.input_CIM)
 
