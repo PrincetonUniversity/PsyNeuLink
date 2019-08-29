@@ -15,149 +15,191 @@
 Overview
 --------
 
-AutodiffComposition is a subclass of `Composition <Composition>` that trains models more quickly by integrating with
-`PyTorch <https://pytorch.org/>`_, a popular machine learning library. In situations with training,
-AutodiffComposition is used similarly to a Composition, but is much faster.
-
-The `xor_in_psyneulink_and_pytorch.py` script (in the Scripts folder of the PsyNeuLink source code) is an example of
-how to use AutodiffComposition. The script also gives a comparison of runtimes.
+AutodiffComposition is a subclass of `Composition` used to train feedforward neural network models through integration
+with `PyTorch <https://pytorch.org/>`_, a popular machine learning library, which executes considerably more quickly
+than using the `standard implementation of learning <Composition_Learning_Standard>` in a Composition, using its
+`learning methods <Composition_Learning_Methods>`. An AutodiffComposition is configured and run similarly to a standard
+Composition, with some exceptions that are described below.  An example is provided in the
+`xor_in_psyneulink_and_pytorch.py` script (in the Scripts folder of the PsyNeuLink source code), which also provides
+a comparison of runtimes.
+COMMENT:
+FIX: UPDATE runtimes WITH COMPILED VERSION
+COMMENT
 
 .. _AutodiffComposition_Creation:
 
 Creating an AutodiffComposition
 -------------------------------
 
-An AutodiffComposition can be created by calling the constructor, and then adding `Components <Component>` using the
-add methods of its parent class `Composition`. The most unusual argument in initialization is
-**param_init_from_pnl**, which controls how parameters are set up for the internal PyTorch representation of the model.
+An AutodiffComposition can be created by calling its constructor, and then adding `Components <Component>` using the
+standard `Composition methods <Composition_Creation>` for doing so.  The constructor also includes an number of
+arguments that are specific to the AutodiffComposition, as described below.
 
-If set to True:
+.. warning:: Mechanisms or Projections should not be added to or deleted from an AutodiffComposition after it has
+   been run for the first time. Unlike an ordinary Composition, AutodiffComposition does not support this
+   functionality.
 
-* Only weight parameters that correspond to projections are created. No trainable bias parameters are created, as they
-    don’t exist for the autodiff composition’s mechanisms.
+* **param_init_from_pnl** argument -- determines how parameters are set up for the internal PyTorch representation of
+  the model.  If it is set to True:
 
-* The weight parameters are initialized to be perfectly identical to the autodiff composition’s projections - the
-    tensor of the parameter object corresponding to a particular projection not only has the same dimensionality as
-    the projection’s matrix, it has the same exact values.
+    COMMENT:
+    FIX: THIS SHOULD BE ADDRESSED
+    COMMENT
+    * only weight parameters that correspond to the `value <Parameter.value>` of the `matrix <MappingProjection.matrix>`
+      parameter of the `MappingProjections <MappingProjection>` in the Composition are created;  no bias parameters are
+      created, as the bias parameters associated with Mechanisms are not trainable;
 
-* Pytorch functions representing mechanism functions incorporate their scalar, untrainable biases.
+    * the weight parameters are initialized to be identical to the `value <Parameter.value>` of `matrix
+      <MappingProjection.matrix>` parameters of the `MappingProjections <MappingProjection>` in the Composition;
+      the tensor of the parameter object corresponding to a particular MappingProjection not only has the same
+      dimensionality as its `matrix <MappingProjection.matrix>`, it also has the exact same values;
 
-If set to False:
+    * Pytorch functions representing the `function <Mechanism_Base.function>` of each `Mechanism` in the Composition
+      incorporate their scalar, untrainable biases.
 
-* Both weight parameters corresponding to projections and trainable bias parameters for mechanisms are created.
+    If it is set to False:
 
-* Weight parameters have the same dimensionality as their corresponding projections. However, their values - and those
-    of the bias parameters - are sampled from a random distribution.
+        * in addition to the weight parameters created for each MappingProjection, a trainable bias parameter
+          is created for each for each Mechanism in the Composition;
 
-* Though trainable biases now exist, Pytorch functions representing mechanism functions still incorporate their scalar,
-    untrainable biases.
+        * weight parameters have the same dimensionality as the `matrix <MappingProjection.matrix>` parameter of the
+          corresponding `MappingProjections <MappingProjection>`;  however, their values -- and those of the bias
+          parameters -- are sampled from a random distribution;
 
-.. warning:: Do not add or remove Mechanisms or Projections to an AutodiffComposition after it has been run for the
-    first time. Unlike an ordinary Composition, AutodiffComposition does not support this functionality.
+        * in addition to the trainable biases created for each Mechanism, the Pytorch function implemented for each
+          Mechanism's `function <Mechanism_Base.function>` still incorporates its scalar, untrainable bias.
 
-Two other initialization arguments are **patience** and **min_delta**, allow the model to halt training early. The
-model tracks how many consecutive 'bad' epochs of training have failed to significantly reduce the model's loss. Once
-this number exceeds **patience**, the model stops training. By default, **patience** is ``None``, and the model
-will train for the number of specified epochs and will not stop training early.
+* **patience** -- allows the model to halt training early. The  model tracks how many consecutive 'bad' epochs of
+  training have failed to significantly reduce the model's loss. When this number exceeds **patience**, the model stops
+  training. By default, **patience** is ``None``, and the model will train for the number of specified epochs and
+  will not stop training early.
 
-**min_delta** defines what threshold counts as a significant reduction in model loss. By default it is zero, in which
-case any reduction in loss counts as a significant reduction. If **min_delta** is large and positive, the model tends to
-stop earlier because it views fewer epochs as 'good'.
+* **min_delta** -- specifies the threshold used by **patience** used to determine a significant reduction in model
+  loss. By default it is zero, in which case any reduction in loss counts as a significant reduction. If **min_delta**
+  is large and positive, the model tends to stop earlier because it views fewer epochs as 'good'.
 
-**learning_rate** specifies the learning rate for this run (default 0.001), which is passed to the **optimizer**
-argument. **optimizer** specifies the kind of optimizer used in training. The current options are 'sgd' (the default)
-or 'adam'.
+* **learning_rate** -- specifies the learning rate for the current run (default 0.001), which is passed to the
+  optimized specified in the **optimizer** argument.
 
-**learning_enabled** specifies whether the AutodiffComposition should learn, and it defaults to True. When True, the
-AutodiffComposition trains using PyTorch, as normal. When False, the AutodiffComposition acts like an ordinary
-Composition, which does not change weights. `learning_enabled <AutodiffComposition.learning_enabled>` is also an
-attribute, which can be toggled between runs.
+* **optimizer** -- specifies the kind of optimizer used in training. The current options are 'sgd' (the default) or
+  'adam'.
 
-**optimizer_type** specifies the kind of optimizer used in training. The current options are 'sgd' (which is the
-default) or 'adam'.
+* **optimizer_type** -- specifies the kind of optimizer used in training. The current options are 'sgd' (which is the
+  default) or 'adam'.
 
-**weight_decay** specifies the L2 penalty (which discourages large weights) used by the optimizer. This defaults to 0.
+* **learning_enabled** -- specifies whether the AutodiffComposition should learn (default is True). When True,
+  the AutodiffComposition trains using PyTorch, as normal. When False, the AutodiffComposition run like an ordinary
+  `Composition`, which does not change weights. `learning_enabled <AutodiffComposition.learning_enabled>` is also an
+  attribute, which can be toggled between runs.
 
-**loss_spec** specifies the loss function for training. It can be a string or a PyTorch loss function. The current
-options for strings are 'mse' (the default), 'crossentropy', 'l1', 'nll', 'poissonnll', and 'kldiv'. These refer to
-Mean Squared Error, Cross Entropy, L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, and KL
-Divergence respectively. The **loss_spec** can also be any PyTorch loss function, including a custom-written one. For a
-list of PyTorch loss functions, see https://pytorch.org/docs/stable/nn.html#loss-functions. For information on writing
-a custom loss function, see https://pytorch.org/docs/master/notes/extending.html and
-https://discuss.pytorch.org/t/build-your-own-loss-function-in-pytorch/235
+* **weight_decay** -- specifies the L2 penalty (which discourages large weights) used by the optimizer. This defaults
+  to 0.
 
-**randomize** specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are
-run, but if **randomize** is True then the order in which inputs are within an epoch is random.)
+* **loss_spec** -- specifies the loss function for training. It can be a string or a PyTorch loss function. The current
+  options for strings are 'mse' (the default), 'crossentropy', 'l1', 'nll', 'poissonnll', and 'kldiv'. These refer to
+  Mean Squared Error, Cross Entropy, L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, and KL
+  Divergence respectively. The **loss_spec** can also be any PyTorch loss function, including a custom-written one.
+  For a list of PyTorch loss functions, see `Loss function <https://pytorch.org/docs/stable/nn.html#loss-functions>`_.
+  For information on writing a custom loss function, see `Extending PyTorch
+  <https://pytorch.org/docs/master/notes/extending.html>`_, as well as `Build your own loss function in PyTorch
+  <https://discuss.pytorch.org/t/build-your-own-loss-function-in-pytorch/235>`_.
 
-**refresh_losses** specifies whether the `losses` attribute is refreshed for each call to `run()`. If False, the losses
-of each run are appended to the `losses` attribute. If True, the losses of each run overwrite `losses` instead.
+* **randomize** -- specifies whether the order of inputs will be randomized in each epoch. All inputs are run in each
+  epoch.  However, if **randomize** is True, then the order in which inputs are within an epoch is random.
 
-**force_no_retain_graph** defaults to False. If True, the AutodiffComposition does not use the `retain_graph` option
-when computing PyTorch gradient. This can reduce memory usage. However, it breaks recurrent networks, so it should only
-be used when the network is not recurrent.
+* **refresh_losses** -- specifies whether the `losses` attribute is refreshed for each call to `run
+  <AutodiffComposition.run>`. If False, the losses of each run are appended to the `losses
+  <AutodiffComposition.losses>` attribute. If True, the losses of each run overwrite `losses
+  <AutodiffComposition.losses>` instead.
+
+* **force_no_retain_graph** -- False by default.  If True, the AutodiffComposition does not use PyTorch's `retain_graph
+  <https://pytorch.org/docs/master/autograd.html?highlight=retain_graph>`_  option when computing the gradient. This
+  can reduce memory usage; however, it breaks recurrent networks, so it should only be used when the network is not
+  recurrent.
 
 .. note::
     The AutodiffComposition detachs all gradients between epochs of training. For more information on why this is done,
-    see `here <bit.ly/2t2ZkyR>` or `here <bit.ly/2RGuMNg>`.
+    see `Trying to backward through a graph a second time <https://discuss.pytorch.org/t/runtimeerror-trying-to-backward-through-the-graph-a-second-time-but-the-buffers-have-already-been-freed-specify-retain-graph-true-when-calling-backward-the-first-time/6795>`_
+    and `Why we need to detach Variable which contains [a] hidden representation
+    <https://discuss.pytorch.org/t/solved-why-we-need-to-detach-variable-which-contains-hidden-representation/1426/4>`_.
 
 .. _AutodiffComposition_Structure:
 
 Structure
 ---------
 
-AutodiffComposition has all the attributes of its parent class `Composition`, in addition to several more.
+An AutodiffComposition has all the attributes of its parent class `Composition`, as well ones corresponding to the
+arguments described above, and the following.
 
-The `target_CIM <AutodiffComposition.target_CIM>` attribute is analogous to the `input_CIM <Composition.input_CIM>` of
-any Composition, but instead of providing inputs, provides targets for the AutodiffComposition.
+* `target_CIM <AutodiffComposition.target_CIM>` -- analogous to the `input_CIM <Composition.input_CIM>` of
+  a standard `Composition`, but instead of representing the input to the `ORIGIN` Mechanism(s) of the Composition
+  represents the targets used to specify the target `value <Mechanism_Base.value>` of its `TERMINAL` Mechanism(s)
+  (see `below <AutodiffComposition_Input>` for a description of how these are specified).
 
-The `pytorch_representation <AutodiffComposition.pytorch_representation>` attribute holds the PyTorch representation
-of the PsyNeuLink model that AutodiffComposition contains.
+* `pytorch_representation <AutodiffComposition.pytorch_representation>` -- containsa the PyTorch representation
+  of the PsyNeuLink model that AutodiffComposition contains.
 
-The `losses <AutodiffComposition.losses>` attribute tracks the average loss for each training epoch.
+* `losses <AutodiffComposition.losses>` -- tracks the average loss for each training epoch.
 
-As mentioned above, the `learning_enabled <AutodiffComposition.learning_enabled>` attribute can be toggled to determine
-whether the AutodiffComposition learns or whether it executes like an ordinary Composition.
+* `optimizer <AutodiffComposition.optimizer>` -- contains the PyTorch optimizer function used for learning. It
+  is determined at initialization by the **optimizer_type**, **learning_rate**, and **weight_decay** arguments.
 
-The `optimizer <AutodiffComposition.optimizer>` attribute contains the PyTorch optimizer function used for learning. It
-is determined at initialization by the **optimizer_type**, **learning_rate**, and **weight_decay** arguments.
-
-The `loss <AutodiffComposition.loss>` attribute contains the PyTorch loss function used for learning. It is determined
-at initialization by the **loss_spec** argument.
+* `loss <AutodiffComposition.loss>` -- contains the PyTorch loss function used for learning. It is determined
+  at initialization by the **loss_spec** argument.
 
 .. _AutodiffComposition_Execution:
 
 Execution
 ---------
 
-Most arguments to AutodiffComposition's `run` or `execute` methods are the same as in a Composition. When
+Most arguments to AutodiffComposition's `run` or `execute` methods are the same as for a `Composition`. When
 `learning_enabled <AutodiffComposition.learning_enabled>` is False, the arguments are the same, since in this
 case the AutodiffComposition executes like a Composition.
 
+.. _AutodiffComposition_Input:
+
 However, if `learning_enabled <AutodiffComposition.learning_enabled>` is True, the **inputs** argument
-format is different. If `learning_enabled <AutodiffComposition.learning_enabled>` is True, then **inputs** should be a
-dictionary with required keys "inputs" and "targets", and optional key "epochs". The value at "inputs" should be a
-dictionary relating origin mechanisms to their inputs. The value at "targets" should be a dictionary relating terminal
-mechanisms to their inputs. The value at "epochs" is an integer stating the number of epochs of training (i.e. how many
-times all inputs and targets are run). It defaults to 1. Here is an example of creating a simple AutodiffComposition
-and specifying inputs and targets:
+format is different. If `learning_enabled <AutodiffComposition.learning_enabled>` is True, then **inputs**
+argument must be a dictionary with at least two nested dictionaries within it, one for the inputs and the other
+for the targets, as well as an additional entry specifying the numbrer of training epochs to run.  Specifically,
+the outer dictionary must have at least two entries with keys *"inputs"* and  *"targets"*.  The value of the
+*"inputs"* entry must be a standard input dictionary, specifying the inputs for each `ORIGIN` Mechanism.  The value
+of the *"targets"* entry must be a similar dictionary, in this case specifying the target values for the outputs of
+each `TERMINAL` Mechanism in the Composition. In addition, an entry with the key *"epochs"* can be included, which
+must then have as its value an integer specifying the number of epochs of training to run (i.e. how many times all
+inputs and corresponding targets are run); it defaults to 1. The following is an example showing how to create a
+simple AutodiffComposition, specify its inputs and targets, and run it with learning enabled and disabled.
 
     >>> import psyneulink as pnl
-    >>> # set up PsyNeuLink Components
+    >>> # Set up PsyNeuLink Components
     >>> my_mech_1 = pnl.TransferMechanism(function=pnl.Linear, size = 3)
     >>> my_mech_2 = pnl.TransferMechanism(function=pnl.Linear, size = 2)
     >>> my_projection = pnl.MappingProjection(matrix=np.random.randn(3,2),
     ...                     sender=my_mech_1,
     ...                     receiver=my_mech_2)
-    >>> # create AutodiffComposition
+    >>> # Create AutodiffComposition
     >>> my_autodiff = pnl.AutodiffComposition()
     >>> my_autodiff.add_node(my_mech_1)
-    >>> my_autodiff.add_node(my_mech_1)
+    >>> my_autodiff.add_node(my_mech_2)
     >>> my_autodiff.add_projection(sender=my_mech_1, projection=my_projection, receiver=my_mech_2)
-    >>> # input specification
+    >>> # Specify inputs and targets
     >>> my_inputs = {my_mech_1: [[1, 2, 3]]}
     >>> my_targets = {my_mech_2: [[4, 5]]}
     >>> input_dict = {"inputs": my_inputs, "targets": my_targets, "epochs": 2}
+    >>> # Run Composition with learning enabled
+    >>> my_autodiff.learning_enabled=True # this is not strictly necessary, as learning_enabled is True by default
     >>> my_autodiff.run(inputs = input_dict)
+    >>> # Run Composition with learning disabled
+    >>> my_autodiff.learning_enabled=False
+    >>> my_autodiff.run(inputs = input_dict)
+
+As shown above (and for convenience), an AutodiffComposition with learning disabled can be run with the same input
+format used for training.  In that case, the *"input"* entry is used as the inputs for the run, and the *"targets"*
+and *"epochs"* (if present) are ignored. However, since an AutodiffComposition with learning disabled is treated like
+any other Composition, it can also be run with the same input format as a standard `Composition`; that is,
+a single dictionary specifying the inputs for each `ORIGIN` Mechanism), as follows::
+
+    >>> my_autodiff.run(inputs = my_inputs)
 
 Logging
 -------
@@ -170,57 +212,42 @@ together, so the time and context in the log are not meaningful, only the logged
 
 Nested Execution
 ----------------
-COMMENT:
-    Need to add link to docs about nesting ordinary Compositions, once those docs are written.
-COMMENT
-In general, an AutodiffComposition may be nested inside another Composition, like ordinary Composition nesting. However,
-there are a few differences. The input format of an AutodiffComposition with learning enabled is quite unusual. Thus,
-when learning is enabled, the AutodiffComposition must be an origin mechanism of the Composition.
+
+Like any other `Composition`, an AutodiffComposition may be `nested inside another <Composition_Nested>`.  If learning
+is not enabled, nesting is handled in the same way as any other Composition.  However, if learning is enabled for a
+nested AutodiffComposition, its input format is different (see below);  as a consequence, a nested AutodiffComposition
+with learning enabled must an `ORIGIN` Mchanism of the Composition in which it is nested.
 
 .. note::
 
-    Like with all nested Compositions, you must call an AutodiffComposition's ``_analyze_graph()`` method
-    (or execute the AutodiffComposition) before nesting it.
+    As with all `nested Compositions <Composition_Nested>`, the AutodiffComposition's `_analyze_graph
+    <Composition._analyze_graph>` method must be called (or the AutodiffComposition must be run) before nesting it.
 
-However, when learning is not enabled, AutodiffComposition works just like an ordinary Composition, in theory. Thus, an
-AutodiffComposition with learning not enabled receives input in the same format as an ordinary Composition, and can
-therefore be placed anywhere in a Composition.
-
+COMMENT:
+FIX:  IS THIS STILL TRUE:
 .. note::
 
     Using an AutodiffComposition not as an origin mechanism is currently buggy, and might produce unexpected results.
+COMMENT
 
-Below is an example script showing how to nest an AutodiffComposition with learning enabled.
+The following shows how the AutodiffComposition created in the previous example can be nested and run inside another
+Composition::
 
-    >>> import psyneulink as pnl
-    >>> # set up PsyNeuLink Components
-    >>> my_mech_1 = pnl.TransferMechanism(function=pnl.Linear, size = 3)
-    >>> my_mech_2 = pnl.TransferMechanism(function=pnl.Linear, size = 2)
-    >>> my_projection = pnl.MappingProjection(matrix=np.random.randn(3,2),
-    ...                     sender=my_mech_1,
-    ...                     receiver=my_mech_2)
-    >>> # create AutodiffComposition
-    >>> my_autodiff = pnl.AutodiffComposition()
-    >>> my_autodiff.add_node(my_mech_1)
-    >>> my_autodiff.add_node(my_mech_1)
-    >>> my_autodiff.add_projection(sender=my_mech_1, projection=my_projection, receiver=my_mech_2)
     >>> my_autodiff._analyze_graph()  # alternatively, my_autodiff.run( ... )
     >>>
-    >>> # input specification
-    >>> my_inputs = {my_mech_1: [[1, 2, 3]]}
-    >>> my_targets = {my_mech_2: [[4, 5]]}
-    >>> input_dict = {"inputs": my_inputs, "targets": my_targets, "epochs": 2}
-    >>>
-    >>> parentComposition = pnl.Composition()
-    >>> parentComposition.add_node(my_autodiff)
-    >>>
+    >>> # Create outer composition
+    >>> my_outer_composition = pnl.Composition()
+    >>> my_outer_composition.add_node(my_autodiff)
+    >>> # Specify dict containing inputs and targets for nested Composition
     >>> training_input = {my_autodiff: input_dict}
-    >>> result1 = parentComposition.run(inputs=input)
-    >>>
+    >>> # Run with learning enabled
+    >>> result1 = my_outer_composition.run(inputs=training_input)
+    COMMENT:
+    >>> # Run with learning disabled (and standard input format)
     >>> my_autodiff.learning_enabled = False
     >>> no_training_input = {my_autodiff: my_inputs}
-    >>> result2 = parentComposition.run(inputs=no_training_input)
-
+    >>> result2 = parentmy_outer_compositionComposition.run(inputs=no_training_input)
+    COMMENT
 
 .. _Composition_Class_Reference:
 
@@ -364,11 +391,10 @@ class AutodiffComposition(Composition):
     loss : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
 
-    name : str : default LeabraMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+    name : str : default AutodiffComposition-<index>
+        the name of the Composition. Specified in the **name** argument of the constructor for the Projection;
+        if not specified, a default is assigned by `CompositionRegistry` (see :doc:`Registry <LINK>` for conventions
+        used in naming, including for default and duplicate names).
 
     Returns
     -------
@@ -573,11 +599,10 @@ class AutodiffComposition(Composition):
 
         # If learning is disabled, but inputs are provided in the same format as used for learning,
         #    ignore dict in "targets" entry, and pass dict in "inputs" entry along as inputs
-        elif isinstance(inputs, dict) and self._has_required_keys(inputs):
+        elif isinstance(inputs, dict) and "inputs" in inputs.keys():
             inputs = inputs["inputs"]
 
         return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
-
 
     # performs forward computation for one input
     def autodiff_processing(self, inputs, execution_id=None, do_logging=False, scheduler=None):
