@@ -70,13 +70,7 @@ class Optimizer():
     # inserts logic that zeroes out a gradient struct
 
     def _gen_zero_gradient_struct(self, ctx, builder, grad_struct):
-        for (node, node_idx, afferent_node, afferent_node_index, matrix, weights_dim_x, weights_dim_y) in self._get_listof_gradient_struct_values():
-            curr_grad_struct = builder.gep(grad_struct, [ctx.int32_ty(
-                0), ctx.int32_ty(node_idx), ctx.int32_ty(afferent_node_index)])
-            with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "zero_grad_loop_outer") as (b1, weight_row):
-                with pnlvm.helpers.for_loop_zero_inc(b1, ctx.int32_ty(weights_dim_y), "zero_grad_loop_inner") as (b2, weight_column):
-                    b2.store(ctx.float_ty(0),b2.gep(curr_grad_struct,[ctx.int32_ty(0),weight_row,weight_column]))       
-            #self._pytorch_model._gen_inject_mat_scalar_mult(ctx,builder,curr_grad_struct,ctx.float_ty(0),weights_dim_x,weights_dim_y,curr_grad_struct)
+        builder.store(grad_struct.type.pointee(None),grad_struct)
 
     def zero_grad(self, ctx, builder, optim_struct):
         delta_w_struct = builder.gep(
