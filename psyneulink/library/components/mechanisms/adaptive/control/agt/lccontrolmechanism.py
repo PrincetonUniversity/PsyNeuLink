@@ -891,14 +891,14 @@ class LCControlMechanism(ControlMechanism):
         vi = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
         vo = builder.gep(new_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        with pnlvm.helpers.array_ptr_loop(builder, vi, "LC_gain") as (builder, index):
-            in_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
-            val = builder.load(in_ptr);
-            val = builder.fmul(val, scaling_factor)
-            val = builder.fadd(val, base_factor)
+        with pnlvm.helpers.array_ptr_loop(builder, vi, "LC_gain") as (b1, index):
+            in_ptr = b1.gep(vi, [ctx.int32_ty(0), index])
+            val = b1.load(in_ptr)
+            val = b1.fmul(val, scaling_factor)
+            val = b1.fadd(val, base_factor)
 
-            out_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
-            builder.store(val, out_ptr)
+            out_ptr = b1.gep(vo, [ctx.int32_ty(0), index])
+            b1.store(val, out_ptr)
 
         # copy the main function return value
         for i, _ in enumerate(mf_out.type.pointee.elements):

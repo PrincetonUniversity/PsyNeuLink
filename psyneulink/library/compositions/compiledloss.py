@@ -71,12 +71,12 @@ class MSELoss(Loss):
         builder.store(ctx.float_ty(0),sum)
 
         index = None
-        with pnlvm.helpers.for_loop_zero_inc(builder, dim, "mse_sum_loop") as (builder, index):
-            value_ptr = builder.gep(value,[index])
-            target_ptr = builder.gep(target,[index])
-            diff = builder.fsub(builder.load(value_ptr),builder.load(target_ptr))
-            diff = builder.fmul(diff,diff)
-            builder.store(builder.fadd(builder.load(sum),diff),sum)
+        with pnlvm.helpers.for_loop_zero_inc(builder, dim, "mse_sum_loop") as (b1, index):
+            value_ptr = b1.gep(value,[index])
+            target_ptr = b1.gep(target,[index])
+            diff = b1.fsub(b1.load(value_ptr),b1.load(target_ptr))
+            diff = b1.fmul(diff,diff)
+            b1.store(b1.fadd(b1.load(sum),diff),sum)
 
         builder.ret(builder.load(sum))
 

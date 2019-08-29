@@ -38,11 +38,11 @@ def test_helper_fclamp(mode):
         tst_max = builder.load(builder.gep(bounds, [ctx.int32_ty(1)]))
 
         index = None
-        with pnlvm.helpers.for_loop_zero_inc(builder, count, "linear") as (builder, index):
-            val_ptr = builder.gep(vec, [index])
-            val = builder.load(val_ptr)
-            val = pnlvm.helpers.fclamp(builder, val, tst_min, tst_max)
-            builder.store(val, val_ptr)
+        with pnlvm.helpers.for_loop_zero_inc(builder, count, "linear") as (b1, index):
+            val_ptr = b1.gep(vec, [index])
+            val = b1.load(val_ptr)
+            val = pnlvm.helpers.fclamp(b1, val, tst_min, tst_max)
+            b1.store(val, val_ptr)
 
         builder.ret_void()
 
@@ -79,11 +79,11 @@ def test_helper_fclamp_const(mode):
         builder = ir.IRBuilder(block)
 
         index = None
-        with pnlvm.helpers.for_loop_zero_inc(builder, count, "linear") as (builder, index):
-            val_ptr = builder.gep(vec, [index])
-            val = builder.load(val_ptr)
-            val = pnlvm.helpers.fclamp(builder, val, TST_MIN, TST_MAX)
-            builder.store(val, val_ptr)
+        with pnlvm.helpers.for_loop_zero_inc(builder, count, "linear") as (b1, index):
+            val_ptr = b1.gep(vec, [index])
+            val = b1.load(val_ptr)
+            val = pnlvm.helpers.fclamp(b1, val, TST_MIN, TST_MAX)
+            b1.store(val, val_ptr)
 
         builder.ret_void()
 
@@ -118,15 +118,15 @@ def test_helper_is_close(mode):
         builder = ir.IRBuilder(block)
 
         index = None
-        with pnlvm.helpers.for_loop_zero_inc(builder, count, "compare") as (builder, index):
-            val1_ptr = builder.gep(in1, [index])
-            val2_ptr = builder.gep(in2, [index])
-            val1 = builder.load(val1_ptr)
-            val2 = builder.load(val2_ptr)
-            close = pnlvm.helpers.is_close(builder, val1, val2)
-            out_ptr = builder.gep(out, [index])
-            out_val = builder.select(close, ctx.float_ty(1), ctx.float_ty(0))
-            builder.store(out_val, out_ptr)
+        with pnlvm.helpers.for_loop_zero_inc(builder, count, "compare") as (b1, index):
+            val1_ptr = b1.gep(in1, [index])
+            val2_ptr = b1.gep(in2, [index])
+            val1 = b1.load(val1_ptr)
+            val2 = b1.load(val2_ptr)
+            close = pnlvm.helpers.is_close(b1, val1, val2)
+            out_ptr = b1.gep(out, [index])
+            out_val = b1.select(close, ctx.float_ty(1), ctx.float_ty(0))
+            b1.store(out_val, out_ptr)
 
         builder.ret_void()
         

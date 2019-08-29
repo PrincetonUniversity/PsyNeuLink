@@ -688,23 +688,19 @@ class PytorchModelCreator(torch.nn.Module):
                 _,weights_dim_x,weights_dim_y = self._gen_get_node_weight_pointer(ctx,builder,model_params,node,afferent_node)
                 # update delta_W
                 node_delta_w = builder.gep(delta_w,[ctx.int32_ty(0),ctx.int32_ty(node_idx), ctx.int32_ty(afferent_node_idx)])
-                weight_row = None
                 #ctx.inject_printf(builder,f"UPDATE DELTA_W {afferent_node} -> {node} \n",override_debug=True)
-                with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "weight_update_loop_outer") as (builder, weight_row):
-                    weight_column = None
-                    with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_y), "weight_update_loop_inner") as (builder, weight_column):
-                        a_val = builder.load(builder.gep(afferent_node_activation, [
+                with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "weight_update_loop_outer") as (b1, weight_row):
+                    with pnlvm.helpers.for_loop_zero_inc(b1, ctx.int32_ty(weights_dim_y), "weight_update_loop_inner") as (b2, weight_column):
+                        a_val = b2.load(b2.gep(afferent_node_activation, [
                                                     ctx.int32_ty(0), weight_row]))
-                        d_val = builder.load(builder.gep(
+                        d_val = b2.load(b2.gep(
                             err_val, [ctx.int32_ty(0), weight_column]))
-                        old_val = builder.load(builder.gep(node_delta_w, [
+                        old_val = b2.load(b2.gep(node_delta_w, [
                                                 ctx.int32_ty(0), weight_row, weight_column]))
-                        new_val = builder.fadd(
-                            old_val, builder.fmul(a_val, d_val))
-                        builder.store(new_val, builder.gep(node_delta_w, [
+                        new_val = b2.fadd(
+                            old_val, b2.fmul(a_val, d_val))
+                        b2.store(new_val, b2.gep(node_delta_w, [
                                         ctx.int32_ty(0), weight_row, weight_column]))
-                        #ctx.inject_printf(builder,"%f ",new_val,override_debug=True)
-                    #ctx.inject_printf(builder,"\n",override_debug=True)
                         
         builder.store(builder.fmul(ctx.float_ty(.5),builder.load(total_loss)),total_loss)
         ctx.inject_printf(builder,"TOTAL LOSS: %f\n",builder.load(total_loss),override_debug=False)
@@ -801,18 +797,17 @@ class PytorchModelCreator(torch.nn.Module):
         backprop = ctx.get_llvm_function(self._gen_llvm_training_backprop(ctx,optimizer,loss).name)
         optimizer_step = ctx.get_llvm_function(optimizer.step(ctx).name)
 
-        with pnlvm.helpers.for_loop_zero_inc(builder, epochs, "epoch_loop") as (builder, epoch_idx):
+        with pnlvm.helpers.for_loop_zero_inc(builder, epochs, "epoch_loop") as (b1, epoch_idx):
             ctx.inject_printf(builder, "\033[0;32mEPOCH %d\033[0m\n", epoch_idx)
             input_idx = None
-            with pnlvm.helpers.for_loop_zero_inc(builder, num_inputs, "input_loop") as (builder, input_idx):
-            #with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(1), "input_loop") as (builder, input_idx):
-                ctx.inject_printf(builder, "\n\033[0;31mINPUT %d\033[0m\n", input_idx)
-                ctx.inject_printf(builder, "OPTIMIZER ZERO GRAD %d\n", input_idx)
-                optimizer.zero_grad(ctx,builder,optimizer_struct)
-                ctx.inject_printf(builder, "BACKPROP %d\n", input_idx)
-                builder.call(backprop,[model_context, model_params, model_input, model_output, optimizer_struct, input_struct_ptr, target_struct_ptr, input_idx])
-                ctx.inject_printf(builder, "OPTIMIZER STEP %d\n", input_idx)
-                builder.call(optimizer_step,[optimizer_struct,model_params])
+            with pnlvm.helpers.for_loop_zero_inc(b1, num_inputs, "input_loop") as (b2, input_idx):
+                ctx.inject_printf(b2, "\n\033[0;31mINPUT %d\033[0m\n", input_idx)
+                ctx.inject_printf(b2, "OPTIMIZER ZERO GRAD %d\n", input_idx)
+                optimizer.zero_grad(ctx,b2,optimizer_struct)
+                ctx.inject_printf(b2, "BACKPROP %d\n", input_idx)
+                b2.call(backprop,[model_context, model_params, model_input, model_output, optimizer_struct, input_struct_ptr, target_struct_ptr, input_idx])
+                ctx.inject_printf(b2, "OPTIMIZER STEP %d\n", input_idx)
+                b2.call(optimizer_step,[optimizer_struct,model_params])
     
     # inserts a value into the forward computation output array struct
     def _output_forward_computation(self, ctx, builder, arg_out, index, y, value):
@@ -988,12 +983,12 @@ class PytorchModelCreator(torch.nn.Module):
         
         #do computations
         iterator = None
-        with pnlvm.helpers.for_loop_zero_inc(builder, dim, "function_loop") as (builder, iterator):
-            val_ptr = builder.gep(input_vector,[iterator])
-            val = builder.load(val_ptr)
+        with pnlvm.helpers.for_loop_zero_inc(builder, dim, "function_loop") as (b1, iterator):
+            val_ptr = b1.gep(input_vector,[iterator])
+            val = b1.load(val_ptr)
             val = modify_value(val)
-            output_location = builder.gep(output_vector,[iterator])
-            builder.store(val,output_location)
+            output_location = b1.gep(output_vector,[iterator])
+            b1.store(val,output_location)
         
         builder.ret_void()
 

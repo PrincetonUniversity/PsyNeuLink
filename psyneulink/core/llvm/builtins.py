@@ -42,9 +42,9 @@ def setup_vxm(ctx):
         a.attributes.add('noalias')
 
     # zero the output array
-    with helpers.for_loop_zero_inc(builder, y, "zero") as (builder, index):
-        ptr = builder.gep(o, [index])
-        builder.store(ctx.float_ty(0), ptr)
+    with helpers.for_loop_zero_inc(builder, y, "zero") as (b1, index):
+        ptr = b1.gep(o, [index])
+        b1.store(ctx.float_ty(0), ptr)
 
     # Multiplication
 
@@ -143,11 +143,10 @@ def setup_vxm_transposed(ctx):
         a.attributes.add('nonnull')
         a.attributes.add('noalias')
 
-    index = None
     # zero the output array
-    with helpers.for_loop_zero_inc(builder, x, "zero") as (builder, index):
-        ptr = builder.gep(o, [index])
-        builder.store(ctx.float_ty(0), ptr)
+    with helpers.for_loop_zero_inc(builder, x, "zero") as (b1, index):
+        ptr = b1.gep(o, [index])
+        b1.store(ctx.float_ty(0), ptr)
 
     # Multiplication
 
@@ -250,15 +249,15 @@ def setup_vec_add(ctx):
     index = None
 
     # Addition
-    with helpers.for_loop_zero_inc(builder, x, "zero") as (builder, index):
-        u_ptr = builder.gep(u,[index])
-        v_ptr = builder.gep(v,[index])
-        o_ptr = builder.gep(o, [index])
-        u_val = builder.load(u_ptr)
-        v_val = builder.load(v_ptr)
+    with helpers.for_loop_zero_inc(builder, x, "zero") as (b1, index):
+        u_ptr = b1.gep(u,[index])
+        v_ptr = b1.gep(v,[index])
+        o_ptr = b1.gep(o, [index])
+        u_val = b1.load(u_ptr)
+        v_val = b1.load(v_ptr)
         
-        u_v_sum = builder.fadd(u_val,v_val)
-        builder.store(u_v_sum, o_ptr)
+        u_v_sum = b1.fadd(u_val,v_val)
+        b1.store(u_v_sum, o_ptr)
 
     builder.ret_void()
 
@@ -291,12 +290,12 @@ def setup_vec_copy(ctx):
     index = None
 
     # Addition
-    with helpers.for_loop_zero_inc(builder, x, "zero") as (builder, index):
-        u_ptr = builder.gep(u,[index])
-        o_ptr = builder.gep(o, [index])
-        u_val = builder.load(u_ptr)
+    with helpers.for_loop_zero_inc(builder, x, "zero") as (b1, index):
+        u_ptr = b1.gep(u,[index])
+        o_ptr = b1.gep(o, [index])
+        u_val = b1.load(u_ptr)
         
-        builder.store(u_val, o_ptr)
+        b1.store(u_val, o_ptr)
 
     builder.ret_void()
 # Setup vector subtraction builtin
@@ -329,15 +328,15 @@ def setup_vec_sub(ctx):
    index = None
 
    # Addition
-   with helpers.for_loop_zero_inc(builder, x, "zero") as (builder, index):
-       u_ptr = builder.gep(u,[index])
-       v_ptr = builder.gep(v,[index])
-       o_ptr = builder.gep(o, [index])
-       u_val = builder.load(u_ptr)
-       v_val = builder.load(v_ptr)
+   with helpers.for_loop_zero_inc(builder, x, "zero") as (b1, index):
+       u_ptr = b1.gep(u,[index])
+       v_ptr = b1.gep(v,[index])
+       o_ptr = b1.gep(o, [index])
+       u_val = b1.load(u_ptr)
+       v_val = b1.load(v_ptr)
        
-       u_v_sum = builder.fsub(u_val,v_val)
-       builder.store(u_v_sum, o_ptr)
+       u_v_sum = b1.fsub(u_val,v_val)
+       b1.store(u_v_sum, o_ptr)
 
    builder.ret_void()
 
@@ -371,15 +370,15 @@ def setup_vec_hadamard(ctx):
    index = None
 
    # Addition
-   with helpers.for_loop_zero_inc(builder, x, "zero") as (builder, index):
-       u_ptr = builder.gep(u,[index])
-       v_ptr = builder.gep(v,[index])
-       o_ptr = builder.gep(o, [index])
-       u_val = builder.load(u_ptr)
-       v_val = builder.load(v_ptr)
+   with helpers.for_loop_zero_inc(builder, x, "zero") as (b1, index):
+       u_ptr = b1.gep(u,[index])
+       v_ptr = b1.gep(v,[index])
+       o_ptr = b1.gep(o, [index])
+       u_val = b1.load(u_ptr)
+       v_val = b1.load(v_ptr)
        
-       u_v_product = builder.fmul(u_val,v_val)
-       builder.store(u_v_product, o_ptr)
+       u_v_product = b1.fmul(u_val,v_val)
+       b1.store(u_v_product, o_ptr)
 
    builder.ret_void()
 
@@ -413,13 +412,13 @@ def setup_vec_scalar_mult(ctx):
    index = None
 
    # mult
-   with helpers.for_loop_zero_inc(builder, x, "scalar_mult_loop") as (builder, index):
-       u_ptr = builder.gep(u,[index])
-       o_ptr = builder.gep(o, [index])
-       u_val = builder.load(u_ptr)
+   with helpers.for_loop_zero_inc(builder, x, "scalar_mult_loop") as (b1, index):
+       u_ptr = b1.gep(u,[index])
+       o_ptr = b1.gep(o, [index])
+       u_val = b1.load(u_ptr)
        
-       u_product = builder.fmul(u_val,s)
-       builder.store(u_product, o_ptr)
+       u_product = b1.fmul(u_val,s)
+       b1.store(u_product, o_ptr)
 
    builder.ret_void()
 
@@ -453,19 +452,19 @@ def setup_mat_scalar_mult(ctx):
        a.attributes.add('noalias')
 
     x = None
-    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (builder, x):
+    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (b1, x):
         y = None
-        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (builder, y):
-            matrix_index = builder.mul(x, dim_y)
-            matrix_index = builder.add(matrix_index, y)
+        with helpers.for_loop_zero_inc(b1, dim_y, "zero_inner") as (b2, y):
+            matrix_index = b2.mul(x, dim_y)
+            matrix_index = b2.add(matrix_index, y)
             
-            m1_ptr = builder.gep(m1, [matrix_index])
-            o_ptr = builder.gep(o, [matrix_index])
+            m1_ptr = b2.gep(m1, [matrix_index])
+            o_ptr = b2.gep(o, [matrix_index])
             
-            m1_val = builder.load(m1_ptr)
-            o_val = builder.fmul(s,m1_val)
+            m1_val = b2.load(m1_ptr)
+            o_val = b2.fmul(s,m1_val)
 
-            builder.store(o_val,o_ptr)
+            b2.store(o_val,o_ptr)
 
     builder.ret_void()
 
@@ -499,19 +498,19 @@ def setup_mat_scalar_add(ctx):
        a.attributes.add('noalias')
 
     x = None
-    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (builder, x):
+    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (b1, x):
         y = None
-        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (builder, y):
-            matrix_index = builder.mul(x, dim_y)
-            matrix_index = builder.add(matrix_index, y)
+        with helpers.for_loop_zero_inc(b1, dim_y, "zero_inner") as (b2, y):
+            matrix_index = b2.mul(x, dim_y)
+            matrix_index = b2.add(matrix_index, y)
             
-            m1_ptr = builder.gep(m1, [matrix_index])
-            o_ptr = builder.gep(o, [matrix_index])
+            m1_ptr = b2.gep(m1, [matrix_index])
+            o_ptr = b2.gep(o, [matrix_index])
             
-            m1_val = builder.load(m1_ptr)
-            o_val = builder.fadd(s,m1_val)
+            m1_val = b2.load(m1_ptr)
+            o_val = b2.fadd(s,m1_val)
 
-            builder.store(o_val,o_ptr)
+            b2.store(o_val,o_ptr)
 
     builder.ret_void()
 
@@ -545,19 +544,19 @@ def setup_mat_hadamard(ctx):
        a.attributes.add('noalias')
 
     x = None
-    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (builder, x):
+    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (b1, x):
         y = None
-        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (builder, y):
-            matrix_index = builder.mul(x, dim_y)
-            matrix_index = builder.add(matrix_index, y)
-            m1_ptr = builder.gep(m1, [matrix_index])
-            m2_ptr = builder.gep(m2, [matrix_index])
-            o_ptr = builder.gep(o, [matrix_index])
+        with helpers.for_loop_zero_inc(b1, dim_y, "zero_inner") as (b2, y):
+            matrix_index = b2.mul(x, dim_y)
+            matrix_index = b2.add(matrix_index, y)
+            m1_ptr = b2.gep(m1, [matrix_index])
+            m2_ptr = b2.gep(m2, [matrix_index])
+            o_ptr = b2.gep(o, [matrix_index])
 
-            m1_val = builder.load(m1_ptr)
-            m2_val = builder.load(m2_ptr)
-            o_val = builder.fmul(m1_val,m2_val)
-            builder.store(o_val,o_ptr)
+            m1_val = b2.load(m1_ptr)
+            m2_val = b2.load(m2_ptr)
+            o_val = b2.fmul(m1_val,m2_val)
+            b2.store(o_val,o_ptr)
 
     builder.ret_void()
 
@@ -591,19 +590,19 @@ def setup_mat_sub(ctx):
        a.attributes.add('noalias')
 
     x = None
-    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (builder, x):
+    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (b1, x):
         y = None
-        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (builder, y):
-            matrix_index = builder.mul(x, dim_y)
-            matrix_index = builder.add(matrix_index, y)
-            m1_ptr = builder.gep(m1, [matrix_index])
-            m2_ptr = builder.gep(m2, [matrix_index])
-            o_ptr = builder.gep(o, [matrix_index])
+        with helpers.for_loop_zero_inc(b1, dim_y, "zero_inner") as (b2, y):
+            matrix_index = b2.mul(x, dim_y)
+            matrix_index = b2.add(matrix_index, y)
+            m1_ptr = b2.gep(m1, [matrix_index])
+            m2_ptr = b2.gep(m2, [matrix_index])
+            o_ptr = b2.gep(o, [matrix_index])
 
-            m1_val = builder.load(m1_ptr)
-            m2_val = builder.load(m2_ptr)
-            o_val = builder.fsub(m1_val,m2_val)
-            builder.store(o_val,o_ptr)
+            m1_val = b2.load(m1_ptr)
+            m2_val = b2.load(m2_ptr)
+            o_val = b2.fsub(m1_val,m2_val)
+            b2.store(o_val,o_ptr)
 
     builder.ret_void()
 
@@ -637,19 +636,19 @@ def setup_mat_add(ctx):
        a.attributes.add('noalias')
 
     x = None
-    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (builder, x):
+    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (b1, x):
         y = None
-        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (builder, y):
-            matrix_index = builder.mul(x, dim_y)
-            matrix_index = builder.add(matrix_index, y)
-            m1_ptr = builder.gep(m1, [matrix_index])
-            m2_ptr = builder.gep(m2, [matrix_index])
-            o_ptr = builder.gep(o, [matrix_index])
+        with helpers.for_loop_zero_inc(b1, dim_y, "zero_inner") as (b2, y):
+            matrix_index = b2.mul(x, dim_y)
+            matrix_index = b2.add(matrix_index, y)
+            m1_ptr = b2.gep(m1, [matrix_index])
+            m2_ptr = b2.gep(m2, [matrix_index])
+            o_ptr = b2.gep(o, [matrix_index])
 
-            m1_val = builder.load(m1_ptr)
-            m2_val = builder.load(m2_ptr)
-            o_val = builder.fadd(m1_val,m2_val)
-            builder.store(o_val,o_ptr)
+            m1_val = b2.load(m1_ptr)
+            m2_val = b2.load(m2_ptr)
+            o_val = b2.fadd(m1_val,m2_val)
+            b2.store(o_val,o_ptr)
 
     builder.ret_void()
 
@@ -682,18 +681,18 @@ def setup_mat_copy(ctx):
        a.attributes.add('noalias')
 
     x = None
-    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (builder, x):
+    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (b1, x):
         y = None
-        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (builder, y):
-            matrix_index = builder.mul(x, dim_y)
-            matrix_index = builder.add(matrix_index, y)
+        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (b2, y):
+            matrix_index = b2.mul(x, dim_y)
+            matrix_index = b2.add(matrix_index, y)
             
-            m1_ptr = builder.gep(m1, [matrix_index])
-            o_ptr = builder.gep(o, [matrix_index])
+            m1_ptr = b2.gep(m1, [matrix_index])
+            o_ptr = b2.gep(o, [matrix_index])
             
-            m1_val = builder.load(m1_ptr)
+            m1_val = b2.load(m1_ptr)
 
-            builder.store(m1_val,o_ptr)
+            b2.store(m1_val,o_ptr)
 
     builder.ret_void()
 
