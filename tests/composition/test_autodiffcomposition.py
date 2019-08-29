@@ -106,11 +106,7 @@ class TestMiscTrainingFunctionality:
 
     # test whether processing doesn't interfere with pytorch parameters after training
     @pytest.mark.parametrize("mode", ['Python',
-                                    #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                    #pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                     pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                     ])
     def test_training_then_processing(self,mode):
         xor_in = TransferMechanism(name='xor_in',
@@ -177,11 +173,7 @@ class TestMiscTrainingFunctionality:
         'loss', ['l1', 'poissonnll']
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                    #pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                     pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.xfail]), # these loss specs remain unimplemented at the moment
-                                    #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                     ])
     def test_various_loss_specs(self, loss, mode):
         xor_in = TransferMechanism(name='xor_in',
@@ -224,11 +216,7 @@ class TestMiscTrainingFunctionality:
                           "epochs": 10}, bin_execute = mode)
 
     @pytest.mark.parametrize("mode", ['Python',
-                                    #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                    #pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.xfail]), # 
-                                    #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.xfail]), 
                                     ])
     def test_pytorch_loss_spec(self,mode):
         import torch
@@ -283,11 +271,7 @@ class TestMiscTrainingFunctionality:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                    #pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                     pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                     ])
     def test_optimizer_specs(self, learning_rate, weight_decay, optimizer_type,mode):
         xor_in = TransferMechanism(name='xor_in',
@@ -338,11 +322,7 @@ class TestMiscTrainingFunctionality:
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     @pytest.mark.parametrize("mode", ['Python',
-                                    #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                    #pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                     pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                     ])
     def test_params_stay_separate(self,mode):
         xor_in = TransferMechanism(name='xor_in',
@@ -412,11 +392,7 @@ class TestMiscTrainingFunctionality:
 
     # test whether the autodiff composition's get_parameters method works as desired
     @pytest.mark.parametrize("mode", ['Python',
-                                    #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                    #pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                     pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                     ])
     def test_get_params(self,mode):
 
@@ -507,11 +483,7 @@ class TestTrainingCorrectness:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                    #pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                     pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                     ])
     def test_xor_training_correctness(self, eps, calls, opt, from_pnl_or_no,mode):
         xor_in = TransferMechanism(name='xor_in',
@@ -585,11 +557,7 @@ class TestTrainingCorrectness:
         ]
     )
     @pytest.mark.parametrize("mode", ["Python",
-                                    #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                    #pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                     pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                     ])
     def test_semantic_net_training_correctness(self, eps, opt, from_pnl_or_no,mode,benchmark):
 
@@ -788,11 +756,7 @@ class TestTrainingTime:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                    #pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                     pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                     ])
     def test_and_training_time(self, eps, opt,mode):
 
@@ -909,11 +873,7 @@ class TestTrainingTime:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                    #pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                     pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                     ])
     def test_xor_training_time(self, eps, opt,mode):
 
@@ -1883,13 +1843,9 @@ class TestNested:
             (2000, 4, 10, .00001),
         ]
     )
-    # disabled llvm as nested learning is not currently functional
+
     @pytest.mark.parametrize("mode", ['Python',
-                                    #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                    #pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                    #pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    #pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.xfail]),
                                     ])
     def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate, patience, min_delta,mode):
         xor_inputs = np.array(  # the inputs we will provide to the model

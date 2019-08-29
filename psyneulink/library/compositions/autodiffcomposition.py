@@ -571,7 +571,7 @@ class AutodiffComposition(Composition):
 
     def _adjust_stimulus_dict(self, inputs, bin_execute=False):
         # for bin executes, we manually parse out the autodiff stimuli
-        if bin_execute is True or str(bin_execute).startswith('LLVM'):
+        if bin_execute is True or str(bin_execute).endswith('Run'):
             if not self.learning_enabled and isinstance(inputs, dict) and self._has_required_keys(inputs):
                 inputs = inputs["inputs"]
             return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
@@ -867,7 +867,7 @@ class AutodiffComposition(Composition):
         scheduler_processing._init_clock(execution_id)
 
         if self.learning_enabled:
-            if bin_execute is True or bin_execute is "LLVMRun":
+            if bin_execute is True or str(bin_execute).endswith('Run'):
                 # Since the automatically generated llvm function is overwritten in the event that learning_enabled is true, we can just rely on the super function
                 results = super(AutodiffComposition, self).run(inputs=inputs,
                                                     scheduler_processing=scheduler_processing,
