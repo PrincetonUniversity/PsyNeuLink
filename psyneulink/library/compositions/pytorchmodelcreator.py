@@ -457,7 +457,7 @@ class PytorchModelCreator(torch.nn.Module):
             for component in current_exec_set:
                 component_id = self._composition._get_node_index(component)
                 biases = self.component_to_forward_info[component][1]
-                value = self._get_output_index(
+                value = self._get_output_value_ptr(
                     ctx, builder, arg_out, component_id)
                 afferents = self.component_to_forward_info[component][3]
                 dim_x, dim_y = component.defaults.variable.shape
@@ -474,7 +474,7 @@ class PytorchModelCreator(torch.nn.Module):
                         input_node_idx = self._composition._get_node_index(
                             input_node)
                         # frozen_values[input_node.component]
-                        input_value = self._get_output_index(
+                        input_value = self._get_output_value_ptr(
                             ctx, builder, arg_out, input_node_idx)
 
                         # We cast the ctype weights array to llvmlite pointer
@@ -617,7 +617,7 @@ class PytorchModelCreator(torch.nn.Module):
                 # compute  dC/da = a_l - y(x) (TODO: Allow other cost functions! This only applies to MSE)
                 node_target = builder.gep(node_target_arrays[node], [
                                             input_idx, ctx.int32_ty(0)])
-                node_output = self._get_output_index(ctx,builder,model_output,node_idx)
+                node_output = self._get_output_value_ptr(ctx,builder,model_output,node_idx)
 
                 tmp_loss = loss._gen_inject_lossfunc_call(ctx,builder,loss_fn,node_output,node_target,node_dim)
                
@@ -667,7 +667,7 @@ class PytorchModelCreator(torch.nn.Module):
                 # get a_(l-1)
                 afferent_node_idx = self._get_afferent_node_index(node,afferent_node)
 
-                afferent_node_activation = self._get_output_index(ctx,builder,model_output,self._composition._get_node_index(afferent_node))
+                afferent_node_activation = self._get_output_value_ptr(ctx,builder,model_output,self._composition._get_node_index(afferent_node))
 
                 # get dimensions of weight matrix
                 _,weights_dim_x,weights_dim_y = self._gen_get_node_weight_pointer(ctx,builder,model_params,node,afferent_node)
@@ -800,7 +800,7 @@ class PytorchModelCreator(torch.nn.Module):
             index), ctx.int32_ty(0), ctx.int32_ty(y)])
         builder.store(value, loc)
 
-    def _get_output_index(self, ctx, builder, arg_out, index):
+    def _get_output_value_ptr(self, ctx, builder, arg_out, index):
         return builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(index), ctx.int32_ty(0)])
     
     # performs forward computation for the model
