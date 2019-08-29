@@ -15,9 +15,9 @@
 Overview
 --------
 
-AutodiffComposition is a subclass of `Composition <Composition>` that trains models more quickly by integrating with
-`PyTorch <https://pytorch.org/>`_, a popular machine learning library. In situations with training,
-AutodiffComposition is used similarly to a Composition, but is much faster.
+AutodiffComposition is a subclass of `Composition` that trains feedforward neural network models more quickly by
+integrating with `PyTorch <https://pytorch.org/>`_, a popular machine learning library. AutodiffComposition
+is configured and used similarly to a Composition, with some exceptions that are descdribed below.
 
 The `xor_in_psyneulink_and_pytorch.py` script (in the Scripts folder of the PsyNeuLink source code) is an example of
 how to use AutodiffComposition. The script also gives a comparison of runtimes.
@@ -577,7 +577,6 @@ class AutodiffComposition(Composition):
             inputs = inputs["inputs"]
 
         return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
-
 
     # performs forward computation for one input
     def autodiff_processing(self, inputs, execution_id=None, do_logging=False, scheduler=None):
