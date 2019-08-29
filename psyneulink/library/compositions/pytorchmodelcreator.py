@@ -409,7 +409,7 @@ class PytorchModelCreator(torch.nn.Module):
         return output_vec
     
     # gets a pointer for the weights matrix between node and afferent_node
-    def _gen_get_node_weight_pointer(self, ctx, builder,model_params,node,afferent_node):
+    def _gen_get_node_weight_ptr(self, ctx, builder,model_params,node,afferent_node):
         node_idx = self._composition._get_node_index(node)
         forward_info_weights = self.component_to_forward_info[node][3]
         afferent_node_index = self._get_afferent_node_index(node,afferent_node)
@@ -478,7 +478,7 @@ class PytorchModelCreator(torch.nn.Module):
                             ctx, builder, arg_out, input_node_idx)
 
                         # We cast the ctype weights array to llvmlite pointer
-                        weights_llvmlite, weights_dim_x, weights_dim_y = self._gen_get_node_weight_pointer(ctx,builder,params,component,input_node)
+                        weights_llvmlite, weights_dim_x, weights_dim_y = self._gen_get_node_weight_ptr(ctx,builder,params,component,input_node)
                         weighted_inp = self._gen_inject_vxm(
                             ctx, builder, input_value, weights_llvmlite, weights_dim_x, weights_dim_y)
                         if is_set == False:
@@ -641,7 +641,7 @@ class PytorchModelCreator(torch.nn.Module):
                 for efferent_node in efferents:
                     efferent_node_error = error_dict[efferent_node]
                     
-                    weights_llvmlite, weights_dim_x, weights_dim_y = self._gen_get_node_weight_pointer(ctx,builder,model_params,efferent_node,node)
+                    weights_llvmlite, weights_dim_x, weights_dim_y = self._gen_get_node_weight_ptr(ctx,builder,model_params,efferent_node,node)
                     
                     if is_set is False:
                         self._gen_inject_vxm_transposed(
@@ -670,7 +670,7 @@ class PytorchModelCreator(torch.nn.Module):
                 afferent_node_activation = self._get_output_value_ptr(ctx,builder,model_output,self._composition._get_node_index(afferent_node))
 
                 # get dimensions of weight matrix
-                _,weights_dim_x,weights_dim_y = self._gen_get_node_weight_pointer(ctx,builder,model_params,node,afferent_node)
+                _,weights_dim_x,weights_dim_y = self._gen_get_node_weight_ptr(ctx,builder,model_params,node,afferent_node)
                 # update delta_W
                 node_delta_w = builder.gep(delta_w,[ctx.int32_ty(0),ctx.int32_ty(node_idx), ctx.int32_ty(afferent_node_idx)])
                 
