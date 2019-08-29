@@ -1124,6 +1124,7 @@ from psyneulink.core.components.projections.modulatory.controlprojection import 
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
+from psyneulink.core.components.states.state import State
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.outputstate import OutputState
@@ -2146,7 +2147,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.scheduler_processing.consideration_queue:
             self._analyze_consideration_queue(self.scheduler_processing.consideration_queue, objective_mechanism)
 
-        # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
         # A ControlMechanism should not be the TERMINAL node of a Composition
         #    (unless it is specifed as a required_role, in which case it is reassigned below)
         for node in self.nodes:
@@ -2155,7 +2155,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.nodes_to_roles[node].remove(NodeRole.TERMINAL)
                 if NodeRole.OUTPUT in self.nodes_to_roles[node]:
                     self.nodes_to_roles[node].remove(NodeRole.OUTPUT)
-        # MODIFIED 8/12/19 END
 
         # Cycles
         for node in self.scheduler_processing.cycle_nodes:
@@ -2179,7 +2178,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.INPUT)
 
         # If OUTPUT nodes were not specified by user, assign them:
-        # FIX: MODIFIED FEEDBACK - NEED MORE COMPLEMENT COMMENTING HERE
         # - if there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
         # - if there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
         if not self.get_nodes_by_role(NodeRole.OUTPUT):
@@ -2193,11 +2191,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 output_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
             if not output_nodes:
                 try:
-                    # # MODIFIED 8/12/19 OLD:
-                    # terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
-                    #                        if any([item for item in items
-                    #                                if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
-                    # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
                     # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
                     #    - not used for Learning;
                     #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
@@ -2225,18 +2218,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 and not NodeRole.LEARNING in self.nodes_to_roles[node]
                                 and not isinstance(node, ControlMechanism)):
                             output_nodes.add(node)
-                    # MODIFIED 8/12/19 END
                 except IndexError:
                     output_nodes = []
             for node in output_nodes:
                 self._add_node_role(node, NodeRole.OUTPUT)
-            # MODIFIED 8/16/19 NEW:
+
             # Finally, assign TERMINAL nodes
             for node in self.nodes:
                 if not node.efferents or NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]:
                     self._add_node_role(node, NodeRole.TERMINAL)
-            # MODIFIED 8/16/19 END
-
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
@@ -2685,13 +2675,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 except DuplicateProjectionError:
                     return projection
 
-        # MODIFIED 7/22/19 NEW: [JDC]
         elif self._check_for_existing_projection(projection, sender=sender, receiver=receiver):
             # FIX: THE FOLLOWING IS REQUIRED SO AS NOT TO CRASH IN test_alias_equivalence_for_modulates_and_projections
             #      - BLOCK OF CODE BELOW (KAM HACK) IS REQUIRED
             # return projection
             duplicate = True
-        # MODIFIED 7/22/19 END
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
@@ -2829,7 +2817,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
                 and not isinstance(sender, Composition)
                 and sender_mechanism not in self.nodes):
-            sender_name = sender.name
+            if isinstance(sender, State):
+                sender_name = sender.full_name
+            else:
+                sender_name = sender.name
 
             # if the sender is IN a nested Composition AND sender is an OUTPUT Node
             # then use the corresponding CIM on the nested comp as the sender going forward
@@ -3623,8 +3614,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
         ''' Construct MappingProjections among `learning components <Composition_Learning_Components>` for pathway'''
 
-        # FIX 5/29/19 [JDC]:  REPLACE INDICES BELOW WITH RELEVANT KEYWORDS;
-        #                     INTEGRATE WITH _get_back_prop_error_sources (RIGHT NOW, ONLY CALLED FOR TERMINAL SEQUENCE)
+        # FIX 5/29/19 [JDC]:  INTEGRATE WITH _get_back_prop_error_sources (RIGHT NOW, ONLY CALLED FOR TERMINAL SEQUENCE)
         try:
             sample_projection = MappingProjection(sender=output_source, receiver=comparator.input_states[SAMPLE])
         except DuplicateProjectionError:
@@ -3643,13 +3633,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
                                                     receiver=learning_mechanism.input_states[ERROR_SIGNAL_INDEX])
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
-        # # MODIFIED 7/22/19 NEW:
-        # error_signal_projections = []
-        # for learning_mech in learning_mechanism.dependent_learning_mechanisms:
-        #     error_signal_projections.append(MappingProjection(sender=comparator.output_states[OUTCOME],
-        #                                                       receiver=learning_mechanism.input_states[2]))
-        return [target_projection, sample_projection, error_signal_projections, act_out_projection, act_in_projection]
-        # MODIFIED 7/22/19 END
 
     def _create_learning_projection(self, learning_mechanism, learned_projection):
         '''Construct LearningProjections from LearningMechanisms to learned_projections in processing pathway'''
@@ -3796,11 +3779,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             # Eliminate existing comparators and targets for Mechanisms now in the pathway that were output_sources
             #   (i.e., ones that belong to previously-created sequences that overlap with the current one)
-            # # MODIFIED 7/28/19 CROSS_PATHWAYS OLD: [REMOVE ONCE ALL CONFIGURATION OF BACKPROP HAVE BEEN TRIED
-            # for pathway_mech in [m for m in pathway[:-1:] if isinstance(m, Mechanism)]:
-            # MODIFIED 7/28/19 CROSS_PATHWAYS NEW:
             for pathway_mech in [m for m in pathway if isinstance(m, Mechanism)]:
-            # MODIFIED 7/28/19 CROSS_PATHWAYS END:
 
                 old_comparator = next((p.receiver.owner for p in pathway_mech.efferents
                                        if (isinstance(p.receiver.owner, ComparatorMechanism)
@@ -3836,10 +3815,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 COMPARATOR_MECHANISM: comparator}
-
-            # # MODIFIED CROSSED_PATHWAYS 7/28 NEW: [JDC]
             self.add_required_node_role(pathway[-1], NodeRole.OUTPUT)
-            # MODIFIED CROSSED_PATHWAYS 7/28 END
 
             sequence_end = path_length-3
 
@@ -3862,13 +3838,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_mechanisms.append(learning_mechanism)
             learned_projections.append(learned_projection)
 
-        # MODIFIED CROSSED_PATHWAYS 7/28/19 [JDC] NEW: CHECK NUMERICALLY
         # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
         for lm in learning_mechanisms:
             if lm.dependent_learning_mechanisms:
                 projections = self._add_error_projection_to_dependent_learning_mechs(lm)
                 self.add_projections(projections)
-        # MODIFIED CROSSED_PATHWAYS END
 
         # Suppress no efferent connections warning for error_signal OutputState of last LearningMechanism in sequence
         learning_mechanisms[-1].output_states[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
@@ -4184,10 +4158,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             shadow_proj._activate_for_compositions(self)
                         except DuplicateProjectionError:
                             pass
-            # MODIFIED 6/11/19 NEW: [JDC]
             for proj in input_state.path_afferents:
                 proj._activate_for_compositions(self)
-            # MODIFIED 6/11/19 END
 
     def _build_predicted_inputs_dict(self, predicted_input):
         inputs = {}
@@ -4271,7 +4243,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         inputs = self._build_predicted_inputs_dict(predicted_input)
 
         # Run Composition in "SIMULATION" context
-        # MODIFIED 6/12/19 NEW: [JDC]
         if self._animate is not False and self._animate_simulations is not False:
             animate = self._animate
             buffer_animate_state = None
@@ -4279,7 +4250,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             animate = False
             buffer_animate_state = self._animate
         entry_execution_phase = self.parameters.context._get(execution_id).execution_phase
-        # MODIFIED 6/12/19 END
         self.parameters.context._get(execution_id).execution_phase = ContextFlags.SIMULATION
         self.run(inputs=inputs,
                  execution_id=execution_id,
@@ -4290,13 +4260,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  bin_execute=execution_mode,
                  skip_initialization=True,
                  )
-        # # MODIFIED 6/12/19 OLD:
-        # self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-        # MODIFIED 6/12/19 NEW: [JDC]
         self.parameters.context._get(execution_id).execution_phase = entry_execution_phase
         if buffer_animate_state:
             self._animate = buffer_animate_state
-        # MODIFIED 6/12/19 END
 
         # Store simulation results on "base" composition
         if context.initialization_status != ContextFlags.INITIALIZING:
@@ -4716,11 +4682,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # # MODIFIED 5/29/19 END
 
             # Implement sender edges
-            # MODIFIED 8/12/19 OLD:
             sndrs = processing_graph[rcvr]
-            # # MODIFIED 8/12/19 NEW:
-            # sndrs = [v.component for v in processing_graph[rcvr].parents]
-            # MODIFIED 8/12/19 END
             _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
 
         def _assign_cim_components(g, cims):
@@ -5098,11 +5060,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             rank=learning_rank, shape=mechanism_shape)
 
                 # Implement sender edges
-                # MODIFIED 8/12/19 OLD:
                 sndrs = processing_graph[rcvr]
-                # # MODIFIED 8/12/19 NEW:
-                # sndrs = [v.component for v in processing_graph[rcvr].parents]
-                # MODIFIED 8/12/19 END
                 _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
 
         def render_projection_as_node(g, proj, label,
@@ -5247,14 +5205,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     continue
 
                             else:
-                                # # MODIFIED 8/12/19 OLD:
-                                # if show_projection_labels:
-                                #     label = proc_mech_label
-                                # else:
-                                #     label = ''
-                                # g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
-                                #        color=proj_color, penwidth=proj_width)
-                                # MODIFIED 8/12/19 NEW: [JDC]
                                 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
                                 if isinstance(proj, ControlProjection):
                                     arrowhead=control_projection_arrow
@@ -5269,7 +5219,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        color=proj_color,
                                        penwidth=proj_width,
                                        arrowhead=arrowhead)
-                                # MODIFIED 8/12/19 END
 
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
@@ -5378,13 +5327,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
         if output_fmt != 'gv':
             self._analyze_graph()
-        # # MODIFIED 8/12/19 OLD:
-        # processing_graph = self.scheduler_processing.visual_graph
-        # # MODIFIED 8/12/19 NEW:
-        # processing_graph = self.graph_processing.comp_to_vertex
-        # MODIFIED 8/12/19 NEWER:
         processing_graph = self.graph_processing.dependency_dict
-        # MODIFIED 8/12/19 END
         rcvrs = list(processing_graph.keys())
 
         for r in rcvrs:
@@ -6540,22 +6483,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if bin_execute:
                     _comp_ex.execute_node(self.controller)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     entry_execution_phase = execution_context.execution_phase
                     execution_context.execution_phase = ContextFlags.CONTROL
-                # MODIFIED 6/13/19 END
 
                 # Animate controller (before execution)
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, execution_id)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     execution_context.execution_phase = entry_execution_phase
-                # MODIFIED 6/13/19 END
 
         # EXECUTE (each execution_set) *********************************************************************************
 
@@ -6687,7 +6626,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if node is not self.controller:
                             if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
                                 for state in node.input_states:
-                                    state.update(execution_id=execution_id,
+                                    state._update(execution_id=execution_id,
                                                  context=ContextFlags.COMPOSITION)
                             node.execute(
                                 execution_id=execution_id,
@@ -6811,7 +6750,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projection.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
                     projection.parameters.context._get(execution_id).string = \
                         f"Updating {ParameterState.__name__} for {projection.name} in {self.name}"
-                    matrix_parameter_state.update(execution_id=execution_id,
+                    matrix_parameter_state._update(execution_id=execution_id,
                                                                 context=ContextFlags.COMPOSITION)
                     projection.parameters.context._get(execution_id).execution_phase = execution_phase_buffer
 
@@ -6857,22 +6796,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _comp_ex.freeze_values()
                     _comp_ex.execute_node(self.controller)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: NEEDED TO ANIMATE CONTROL; REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     entry_execution_phase = execution_context.execution_phase
                     execution_context.execution_phase = ContextFlags.CONTROL
-                # MODIFIED 6/13/19 END
 
                 # Animate controller (after execution)
                 if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, execution_id)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     execution_context.execution_phase = entry_execution_phase
-                # MODIFIED 6/13/19 END
 
         execution_scheduler.clocks[execution_id]._increment_time(TimeScale.TRIAL)
 
@@ -6950,8 +6885,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
         for node in stimuli.keys():
             if not node in input_nodes:
-                raise CompositionError("{} in inputs dict for {} is not one of its INPUT nodes".
-                                       format(node.name, self.name))
+                if not isinstance(node, (Mechanism, Composition)):
+                    raise CompositionError(f'{node} in "inputs" dict for {self.name} is not a '
+                                           f'{Mechanism.__name__} or {Composition.__name__}.')
+                else:
+                    raise CompositionError(f"{node.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
 
         # STEP 1B: Check that all of the INPUT nodes are represented - if not, use default_external_input_values
         for node in input_nodes:

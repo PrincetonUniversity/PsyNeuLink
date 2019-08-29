@@ -584,7 +584,7 @@ class TestTrainingCorrectness:
             # (1000, 'adam', False)
         ]
     )
-    @pytest.mark.parametrize("mode", [pytest.param('Python', marks=pytest.mark.nobin),
+    @pytest.mark.parametrize("mode", ["Python",
                                     #pytest.param('LLVM', marks=pytest.mark.llvm),
                                     #pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                     pytest.param('LLVMRun', marks=pytest.mark.llvm),
@@ -772,9 +772,9 @@ class TestTrainingCorrectness:
                 # compare model output for terminal node on current trial with target for terminal node on current trial
                 assert np.allclose(np.round(result[0][i][j]), correct_value)
         
-        # benchmark(sem_net.run,inputs={'inputs': inputs_dict,
-        #                               'targets': targets_dict,
-        #                               'epochs': eps}, bin_execute=mode)
+        benchmark(sem_net.run,inputs={'inputs': inputs_dict,
+                                      'targets': targets_dict,
+                                      'epochs': eps}, bin_execute=mode)
 @pytest.mark.pytorch
 @pytest.mark.actime
 class TestTrainingTime:

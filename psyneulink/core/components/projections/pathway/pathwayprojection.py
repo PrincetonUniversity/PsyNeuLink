@@ -107,7 +107,7 @@ class PathwayProjection_Base(Projection_Base):
             if self.init_args[SENDER]:
                 sender = self.init_args[SENDER]
                 if isinstance(sender, type):
-                    sender_name = "({})".format(sender.__name__)
+                    sender_name = f"({sender.__name__})"
                 elif isinstance(sender.owner, Mechanism):
                     sender_name = name_template.format(sender.owner.name, sender_name)
             if self.init_args[RECEIVER]:

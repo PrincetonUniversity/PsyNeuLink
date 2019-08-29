@@ -572,7 +572,10 @@ class AutodiffComposition(Composition):
     def _adjust_stimulus_dict(self, inputs, bin_execute=False):
         # for bin executes, we manually parse out the autodiff stimuli
         if bin_execute is True or str(bin_execute).startswith('LLVM'):
+            if not self.learning_enabled and isinstance(inputs, dict) and self._has_required_keys(inputs):
+                inputs = inputs["inputs"]
             return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
+        
         if self.learning_enabled:
             if isinstance(inputs, dict):
                 if self._has_required_keys(inputs):
@@ -583,7 +586,14 @@ class AutodiffComposition(Composition):
                     if not self._has_required_keys(input_dict):
                         raise AutodiffCompositionError("Invalid input specification.")
                 return inputs
+
+        # If learning is disabled, but inputs are provided in the same format as used for learning,
+        #    ignore dict in "targets" entry, and pass dict in "inputs" entry along as inputs
+        elif isinstance(inputs, dict) and self._has_required_keys(inputs):
+            inputs = inputs["inputs"]
+
         return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
+
 
     # performs forward computation for one input
     def autodiff_processing(self, inputs, execution_id=None, do_logging=False, scheduler=None,bin_execute=False):

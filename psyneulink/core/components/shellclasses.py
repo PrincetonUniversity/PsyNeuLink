@@ -153,7 +153,7 @@ class State(ShellClass):
     def set_value(self, new_value):
         raise ShellClassError("Must implement set_value in {0}".format(self.__class__.__name__))
 
-    def update(self, params=None, context=None):
+    def _update(self, params=None, context=None):
         raise ShellClassError("{} must implement update".format(self.__class__.__name__))
 
 
