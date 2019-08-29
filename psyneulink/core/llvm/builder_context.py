@@ -657,6 +657,7 @@ class LLVMBuilderContext:
         # Get the right input stimulus
         input_idx = builder.urem(iters, builder.load(inputs_ptr))
         data_in_ptr = builder.gep(data_in, [input_idx])
+        
         # Call execution
         if simulation:
             exec_f = self.get_llvm_function(composition._llvm_simulation.name)
