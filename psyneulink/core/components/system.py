@@ -3035,9 +3035,10 @@ class System(System_Base):
 
                 elif isinstance(component, MappingProjection):
                     processes = list(component.sender.owner.processes.keys())
-                    component.parameters.context._get(execution_id).string = "Updating {} for {} in {}".format(ParameterState.__name__,
-                                                                                 component.name, self.name)
-                    component._parameter_states[MATRIX].update(execution_id=execution_id, context=ContextFlags.COMPOSITION)
+                    component.parameters.context._get(execution_id).string = "Updating {ParameterState.__name__} for " \
+                                                                             "{component.name} in {self.name}"
+                    component._parameter_states[MATRIX]._update(execution_id=execution_id,
+                                                                context=ContextFlags.COMPOSITION)
 
                 component.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 

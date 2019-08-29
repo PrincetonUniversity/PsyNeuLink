@@ -1645,7 +1645,7 @@ class StandardOutputStates():
         for state in dict_list:
             if INDEX in state:
                 if state[INDEX] in ALL:
-                    state.update({VARIABLE:OWNER_VALUE})
+                    state._update({VARIABLE:OWNER_VALUE})
                 elif state[INDEX] in PRIMARY:
                     state_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
                 elif state[INDEX] in SEQUENTIAL:

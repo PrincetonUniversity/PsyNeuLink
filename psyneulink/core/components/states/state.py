@@ -905,7 +905,7 @@ class State_Base(State):
             - set_value(value) -
                 validates and assigns value, and updates observers
                 returns None
-            - update(context) -
+            - _update(context) -
                 updates self.value by combining all projections and using them to compute new value
                 return None
 
@@ -925,7 +925,7 @@ class State_Base(State):
         - value (value) - establishes type of value attribute and initializes it (default: [0])
         - owner(Mechanism) - assigns State to Mechanism (default: NotImplemented)
         - params (dict):  (if absent, default State is implemented)
-            + FUNCTION (method)         |  Implemented in subclasses; used in update()
+            + FUNCTION (method)         |  Implemented in subclasses; used in _update()
             + FUNCTION_PARAMS (dict) |
             + PROJECTIONS:<projection specification or list of ones>
                 if absent, no projections will be created
@@ -980,7 +980,7 @@ class State_Base(State):
         `ModulatoryProjection <ModulatoryProjection_Structure>`.
 
     value : number, list or np.ndarray
-        current value of the State (updated by `update <State_Base.update>` method).
+        current value of the State (updated by `_update <State_Base._update>` method).
 
     name : str
         the name of the State. If the State's `initialization has been deferred <State_Deferred_Initialization>`,
@@ -997,6 +997,10 @@ class State_Base(State):
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation).
+
+    full_name : str
+        the name of the State with its owner if that is assigned: <owner.name>[<self.name>] if owner is not None;
+        otherwise same as `name <State.name>`.
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the State; if it is not specified in the **prefs** argument of the constructor,
@@ -1065,7 +1069,7 @@ class State_Base(State):
                  this argument is required, as can't instantiate a State without an owning Mechanism
             - variable (value): value of the State:
                 must be list or tuple of numbers, or a number (in which case it will be converted to a single-item list)
-                must match input and output of State's update function, and any sending or receiving projections
+                must match input and output of State's _update method, and any sending or receiving projections
             - size (int or array/list of ints):
                 Sets variable to be array(s) of zeros, if **variable** is not specified as an argument;
                 if **variable** is specified, it takes precedence over the specification of **size**.
@@ -1141,7 +1145,7 @@ class State_Base(State):
         self.mod_afferents = []
 
         self._path_proj_values = []
-        # Create dict with entries for each ModualationParam and initialize - used in update()
+        # Create dict with entries for each ModualationParam and initialize - used in _update()
         self._mod_proj_values = {}
         for (attrib, value) in ModulationParam.__members__.items():
             self._mod_proj_values[getattr(ModulationParam,attrib)] = []
@@ -1295,7 +1299,7 @@ class State_Base(State):
         #     it needs to be embedded in a list so that it is properly handled by LinearCombination
         #     (i.e., solo matrix is returned intact, rather than treated as arrays to be combined);
         # Notes:
-        #     * this is not a problem when LinearCombination is called in State.update(), since that puts
+        #     * this is not a problem when LinearCombination is called in state._update(), since that puts
         #         projection values in a list before calling LinearCombination to combine them
         #     * it is removed from the list below, after calling _instantiate_function
         # FIX: UPDATE WITH MODULATION_MODS REMOVE THE FOLLOWING COMMENT:
@@ -1864,7 +1868,6 @@ class State_Base(State):
 
 
             # ASSIGN TO STATE
-            # FIX: 7/22/19 - MAKE METHOD AND USE HERE AND IN _instantiate_projection_to_state
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.efferents
@@ -1900,10 +1903,10 @@ class State_Base(State):
         raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_specs method".
                          format(self.__class__.__name__))
 
-    def update(self, execution_id=None, params=None, context=None):
+    def _update(self, execution_id=None, params=None, context=None):
         """Update each projection, combine them, and assign return result
 
-        Call update for each projection in self.path_afferents (passing specified params)
+        Call _update for each projection in self.path_afferents (passing specified params)
         Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
         Call self.function (default: LinearCombination function) to combine their values
         Returns combined values of projections, modulated by any mod_afferents
@@ -2230,6 +2233,14 @@ class State_Base(State):
     @efferents.setter
     def efferents(self, proj):
         assert False, f"Illegal attempt to directly assign {repr('efferents')} attribute of {self.name}"
+
+    @property
+    def full_name(self):
+        '''Return name relative to owner as:  <owner.name>[<self.name>]'''
+        if self.owner:
+            return f'{self.owner.name}[{self.name}]'
+        else:
+            return self.name
 
     def _assign_default_state_name(self, context=None):
         return False
@@ -2769,7 +2780,7 @@ def _parse_state_spec(state_type=None,
         # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
         if isinstance(state_specification, type) and issubclass(state_specification, AdaptiveMechanism_Base):
             state_specification = state_specification.outputStateTypes
-            # MODIFIED 5/11/19 NEW: [JDC] TO ACCOMODATE GatingSignals on ControlMechanism
+            # IMPLEMENTATION NOTE:  The following is to accomodate GatingSignals on ControlMechanism
             # FIX: TRY ELIMINATING SIMILAR HANDLING IN Projection (and OutputState?)
             # FIX: AND ANY OTHER PLACES WHERE LISTS ARE DEALT WITH
             if isinstance(state_specification, list):
@@ -2844,27 +2855,6 @@ def _parse_state_spec(state_type=None,
                                                                   weight=None,
                                                                   exponent=None,
                                                                   projection=projection))
-
-    # # State class
-    # elif (inspect.isclass(state_specification) and issubclass(state_specification, State)):
-    #     # Specified type of State is same as connectee's type (state_type),
-    #     #    so assume it is a reference to the State itself to be instantiated
-    #     if state_specification is not state_type:
-    #         raise StateError("Specification of {} for {} (\'{}\') is insufficient to instantiate the {}".
-    #             format(state_type_name, owner.name, state_specification.__name__, State.__name__))
-
-    # # MODIFIED 11/25/17 NEW:
-    # # State class
-    # if (inspect.isclass(state_specification) and issubclass(state_specification, State)):
-    #     try:
-    #         state_specification = (owner.paramClassDefaults[name], state_specification)
-    #     except:
-    #         pass
-    #     else:
-    #         state_dict = _parse_state_spec(state_spec=state_specification,
-    #                                        **state_dict)
-    # # MODIFIED 11/25/17 END:
-
 
     # Projection specification (class, object, or matrix value (matrix keyword processed below):
     elif _is_projection_spec(state_specification, include_matrix_spec=False):
@@ -3106,7 +3096,7 @@ def _parse_state_spec(state_type=None,
     # get the State's value from the spec function if it exists,
     # otherwise we can assume there is a default function that does not
     # affect the shape, so it matches variable
-    # FIX: JDC 2/21/18 PROBLEM IS THAT, IF IT IS AN InputState, THEN EITHER update MUST BE CALLED
+    # FIX: JDC 2/21/18 PROBLEM IS THAT, IF IT IS AN InputState, THEN EITHER _update MUST BE CALLED
     # FIX:    OR VARIABLE MUST BE WRAPPED IN A LIST, ELSE LINEAR COMB MAY TREAT A 2D ARRAY
     # FIX:    AS TWO ITEMS TO BE COMBINED RATHER THAN AS A 2D ARRAY
     # KDM 6/7/18: below this can end up assigning to the state a variable of the same shape as a default function
