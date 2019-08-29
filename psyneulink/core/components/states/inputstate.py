@@ -1330,7 +1330,7 @@ class InputState(State_Base):
 
         InputState variable must be embedded in a list so that LinearCombination (its default function)
         returns a variable that is >=2d intact (rather than as arrays to be combined);
-        this is normally done in State.update() (and in State._instantiate-function), but that
+        this is normally done in state._update() (and in State._instantiate-function), but that
         can't be called by _parse_state_spec since the InputState itself may not yet have been instantiated.
 
         """

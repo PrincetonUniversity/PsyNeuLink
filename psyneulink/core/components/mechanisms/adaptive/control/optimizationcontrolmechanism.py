@@ -853,11 +853,11 @@ class OptimizationControlMechanism(ControlMechanism):
         """
         # "Outcome"
         outcome_input_state = self.input_state
-        outcome_input_state.update(execution_id=execution_id, params=runtime_params, context=context)
+        outcome_input_state._update(execution_id=execution_id, params=runtime_params, context=context)
         state_values = [np.atleast_2d(outcome_input_state.parameters.value._get(execution_id))]
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
-            state.update(execution_id=execution_id, params=runtime_params, context=context)
+            state._update(execution_id=execution_id, params=runtime_params, context=context)
             state_values.append(state.parameters.value._get(execution_id))
         return np.array(state_values)
 
