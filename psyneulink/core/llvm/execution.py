@@ -57,8 +57,9 @@ class CUDAExecution:
         if "cuda_data" in self.__debug_env:
             try:
                 name = self._bin_func.name
-            except:
+            except AttributeError:
                 name = self._composition.name
+
             print("{} CUDA uploaded: {}".format(name, self._uploaded_bytes))
             print("{} CUDA downloaded: {}".format(name, self._downloaded_bytes))
 
@@ -317,7 +318,7 @@ class CompExecution(CUDAExecution):
         if len(self._execution_ids) > 1:
             self.__data_struct = data_struct
         else:
-            self._composition._compilation_data.data_struct._set(data_struct, execution_id = self._execution_ids[0])
+            self._composition._compilation_data.data_struct._set(data_struct, execution_id=self._execution_ids[0])
 
     def _extract_node_struct(self, node, data):
         # context structure consists of a list of node contexts,

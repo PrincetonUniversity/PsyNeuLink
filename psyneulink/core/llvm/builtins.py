@@ -445,8 +445,8 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     a = builder.load(al)
     b = builder.load(bl)
 
-    a = builder.lshr(a, a.type(5)) # 27bit random value
-    b = builder.lshr(b, b.type(6)) # 26bit random value
+    a = builder.lshr(a, a.type(5))  # 27bit random value
+    b = builder.lshr(b, b.type(6))  # 26bit random value
 
     af = builder.uitofp(a, ctx.float_ty)
     bf = builder.uitofp(b, ctx.float_ty)
@@ -454,9 +454,9 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     # NOTE: The combination below could be implemented using bit ops,
     # but due to floating point rounding it'd give slightly different
     # random numbers
-    val = builder.fmul(af, ctx.float_ty(67108864.0))          # Shift left 26
-    val = builder.fadd(val, bf)                               # Combine
-    val = builder.fdiv(val, ctx.float_ty(9007199254740992.0)) # Scale
+    val = builder.fmul(af, ctx.float_ty(67108864.0))           # Shift left 26
+    val = builder.fadd(val, bf)                                # Combine
+    val = builder.fdiv(val, ctx.float_ty(9007199254740992.0))  # Scale
 
     # The value is in interval [0,1)
     lower_bound = builder.fcmp_ordered(">=", val, val.type(0.0))
