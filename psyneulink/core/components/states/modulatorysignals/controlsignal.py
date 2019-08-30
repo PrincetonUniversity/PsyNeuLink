@@ -331,7 +331,7 @@ from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 
 __all__ = [
     'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
-    'COMBINE_COSTS_FUNCTION', 'COST_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DURATION_COST',
+    'COMBINE_COSTS_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DURATION_COST',
     'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION',
 ]
 
