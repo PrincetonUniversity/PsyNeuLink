@@ -250,7 +250,8 @@ class AdditiveParam():
 
 
 class ModulationParam(Enum):
-    """Specify parameter of a `Function <Function>` for `modulation <ModulatorySignal_Modulation>` by a ModulatorySignal
+    """Specify parameter of a `Function <Function>` for each type of `modulation <ModulatorySignal_Modulation>`
+    specified by a ModulatorySignal.
 
     COMMENT:
         Each term specifies a different type of modulation used by a `ModulatorySignal <ModulatorySignal>`.
