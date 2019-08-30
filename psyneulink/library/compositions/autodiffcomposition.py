@@ -827,7 +827,7 @@ class AutodiffComposition(Composition):
         scheduler_processing=None,
         termination_processing=None,
         execution_id=None,
-        num_trials=1,
+        num_trials=None,
         call_before_time_step=None,
         call_after_time_step=None,
         call_before_pass=None,
