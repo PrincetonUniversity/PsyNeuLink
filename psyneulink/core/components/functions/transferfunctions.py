@@ -42,6 +42,7 @@ All TransferFunctions have the following attributes:
 """
 
 import numbers
+from enum import IntEnum
 
 import numpy as np
 import typecheck as tc
@@ -55,7 +56,7 @@ from psyneulink.core.components.functions.combinationfunctions import Reduce, SU
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.component import function_type
 from psyneulink.core.globals.keywords import \
-    ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, COST_FUNCTION, DEFAULT_VARIABLE, \
+    ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, TRANSFER_WITH_COST_FUNCTION, DEFAULT_VARIABLE, \
     EXPONENTIAL_FUNCTION, FULL_CONNECTIVITY_MATRIX, \
     GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, INVERSE_HOLLOW_MATRIX,\
@@ -3296,12 +3297,13 @@ class CostModulationParam(ModulationParam):
     COMBINED_COST_DISABLE = DISABLE_PARAM
 
 
-class TransferWithCost(ObjectiveFunction):
+class TransferWithCost(TransferFunction):
     """
     TransferWithCost(                           \
         default_variable=None,                  \
         size=None,                              \
         transfer_fct=Line                       \
+        cost_functions=None,                    \
         intensity_fct=Exponential               \
         adjustment_fct=Linear                   \
         duration_fct=SimpleIntegrator           \
@@ -3445,27 +3447,14 @@ class TransferWithCost(ObjectiveFunction):
         determines the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
 
-    componentName = COST_FUNCTION
+    componentName = TRANSFER_WITH_COST_FUNCTION
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    class Parameters(ObjectiveFunction.Parameters):
+    class Parameters(TransferFunction.Parameters):
         """
             Attributes
             ----------
-
-                variable
-                    see `variable <TransferWithCost.variable>`
-
-                    :default value: numpy.array([1.])
-                    :type: numpy.ndarray
-
-                value
-                    see `value <TransferWithCost.value>`
-
-                    :default value: numpy.array([1.])
-                    :type: numpy.ndarray
-                    :read only: True
 
                 adjustment_cost
                     see `adjustment_cost <TransferWithCost.adjustment_cost>`
@@ -3530,8 +3519,6 @@ class TransferWithCost(ObjectiveFunction):
         variable = Parameter(np.array([0]),
                              aliases='intensity',
                              history_min_length=1)
-        value = Parameter(np.array([0]), read_only=True, aliases=['cost'],
-                          history_min_length=1)
 
         transfer_fct = Linear
 
@@ -3545,6 +3532,7 @@ class TransferWithCost(ObjectiveFunction):
         adjustment_cost = 0
         duration_cost = 0
 
+        _validate_tranfer_fct = get_validator_by_function(is_function_type)
         _validate_cost_options = get_validator_by_type_only([CostFunctions, list])
         _validate_intensity_cost_fct = get_validator_by_function(is_function_type)
         _validate_adjustment_cost_fct = get_validator_by_function(is_function_type)
@@ -3554,8 +3542,8 @@ class TransferWithCost(ObjectiveFunction):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 cost_functions:tc.optional(tc.any(CostFunctions, list))=None,
                  transfer_fct:(is_function_type)=Linear,
+                 cost_functions:tc.optional(tc.any(CostFunctions, list))=None,
                  intensity_cost_fct:(is_function_type)=Exponential,
                  adjustment_cost_fct:tc.optional(is_function_type)=Linear,
                  duration_cost_fct:tc.optional(is_function_type)=SimpleIntegrator,
@@ -3590,80 +3578,80 @@ class TransferWithCost(ObjectiveFunction):
         self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
         # MODIFIED 6/12/19 END
 
-    def _validate_variable(self, variable, context=None):
-        """Validates that variable is 1d array
-        """
-        if len(np.atleast_2d(variable)) != 1:
-            raise FunctionError("Variable for {} must contain a single array or list of numbers".format(self.name))
-        return variable
-
-    def _validate_params(self, variable, request_set, target_set=None, context=None):
-        """Validate matrix param
-
-        `matrix <Stability.matrix>` argument must be one of the following
-            - 2d list, np.ndarray or np.matrix
-            - ParameterState for one of the above
-            - MappingProjection with a parameterStates[MATRIX] for one of the above
-
-        Parse matrix specification to insure it resolves to a square matrix
-        (but leave in the form in which it was specified so that, if it is a ParameterState or MappingProjection,
-         its current value can be accessed at runtime (i.e., it can be used as a "pointer")
-        """
-
-        # Validate matrix specification
-        if MATRIX in target_set:
-
-            from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-            from psyneulink.core.components.states.parameterstate import ParameterState
-
-            matrix = target_set[MATRIX]
-
-            if isinstance(matrix, str):
-                matrix = get_matrix(matrix)
-
-            if isinstance(matrix, MappingProjection):
-                try:
-                    matrix = matrix._parameter_states[MATRIX].value
-                    param_type_string = "MappingProjection's ParameterState"
-                except KeyError:
-                    raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
-                                        "ParameterState that has been assigned a 2d array or matrix".
-                                        format(MATRIX, self.name, matrix.shape, MATRIX))
-
-            elif isinstance(matrix, ParameterState):
-                try:
-                    matrix = matrix.value
-                    param_type_string = "ParameterState"
-                except KeyError:
-                    raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
-                                        "must be a 2d array or matrix".
-                                        format(MATRIX, MATRIX, self.name, matrix.shape))
-
-            else:
-                param_type_string = "array or matrix"
-
-            matrix = np.array(matrix)
-            if matrix.ndim != 2:
-                raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
-                                    "must be a 2d array or matrix".
-                                    format(param_type_string, MATRIX, self.name, matrix))
-            rows = matrix.shape[0]
-            cols = matrix.shape[1]
-            size = len(self.defaults.variable)
-
-            if rows != size:
-                raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
-                                    "it is {}x{}, but must be square matrix of size {}".
-                                    format(param_type_string, MATRIX, self.name, rows, cols, size))
-
-            if rows != cols:
-                raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
-                                    "must be a square matrix".
-                                    format(param_type_string, MATRIX, self.name, matrix))
-
-        super()._validate_params(request_set=request_set,
-                                 target_set=target_set,
-                                 context=context)
+    # def _validate_variable(self, variable, context=None):
+    #     """Validates that variable is 1d array
+    #     """
+    #     if len(np.atleast_2d(variable)) != 1:
+    #         raise FunctionError("Variable for {} must contain a single array or list of numbers".format(self.name))
+    #     return variable
+    #
+    # def _validate_params(self, variable, request_set, target_set=None, context=None):
+    #     """Validate matrix param
+    #
+    #     `matrix <Stability.matrix>` argument must be one of the following
+    #         - 2d list, np.ndarray or np.matrix
+    #         - ParameterState for one of the above
+    #         - MappingProjection with a parameterStates[MATRIX] for one of the above
+    #
+    #     Parse matrix specification to insure it resolves to a square matrix
+    #     (but leave in the form in which it was specified so that, if it is a ParameterState or MappingProjection,
+    #      its current value can be accessed at runtime (i.e., it can be used as a "pointer")
+    #     """
+    #
+    #     # Validate matrix specification
+    #     if MATRIX in target_set:
+    #
+    #         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+    #         from psyneulink.core.components.states.parameterstate import ParameterState
+    #
+    #         matrix = target_set[MATRIX]
+    #
+    #         if isinstance(matrix, str):
+    #             matrix = get_matrix(matrix)
+    #
+    #         if isinstance(matrix, MappingProjection):
+    #             try:
+    #                 matrix = matrix._parameter_states[MATRIX].value
+    #                 param_type_string = "MappingProjection's ParameterState"
+    #             except KeyError:
+    #                 raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
+    #                                     "ParameterState that has been assigned a 2d array or matrix".
+    #                                     format(MATRIX, self.name, matrix.shape, MATRIX))
+    #
+    #         elif isinstance(matrix, ParameterState):
+    #             try:
+    #                 matrix = matrix.value
+    #                 param_type_string = "ParameterState"
+    #             except KeyError:
+    #                 raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+    #                                     "must be a 2d array or matrix".
+    #                                     format(MATRIX, MATRIX, self.name, matrix.shape))
+    #
+    #         else:
+    #             param_type_string = "array or matrix"
+    #
+    #         matrix = np.array(matrix)
+    #         if matrix.ndim != 2:
+    #             raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
+    #                                 "must be a 2d array or matrix".
+    #                                 format(param_type_string, MATRIX, self.name, matrix))
+    #         rows = matrix.shape[0]
+    #         cols = matrix.shape[1]
+    #         size = len(self.defaults.variable)
+    #
+    #         if rows != size:
+    #             raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
+    #                                 "it is {}x{}, but must be square matrix of size {}".
+    #                                 format(param_type_string, MATRIX, self.name, rows, cols, size))
+    #
+    #         if rows != cols:
+    #             raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
+    #                                 "must be a square matrix".
+    #                                 format(param_type_string, MATRIX, self.name, matrix))
+    #
+    #     super()._validate_params(request_set=request_set,
+    #                              target_set=target_set,
+    #                              context=context)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiate matrix

@@ -107,7 +107,8 @@ __all__ = [
     'STATE', 'STATE_CONTEXT', 'STATE_NAME', 'STATE_PARAMS', 'STATE_PREFS', 'STATE_TYPE', 'STATE_VALUE', 'STATES',
     'SUBTRACTION', 'SUM', 'SYSTEM', 'SYSTEM_DEFAULT_CONTROLLER', 'SYSTEM_INIT',
     'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE',
-    'TIME_STEPS_DIM', 'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRIAL', 'TRIALS_DIM',
+    'TIME_STEPS_DIM', 'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRANSFER_WITH_COST_FUNCTION', 'TRIAL',
+    'TRIALS_DIM',
     'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS',
     'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE',
     'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0'
@@ -620,16 +621,16 @@ RELU_FUNCTION = "ReLU Function"
 GAUSSIAN_FUNCTION = "Gaussian Function"
 GAUSSIAN_DISTORT_FUNCTION = "GaussianDistort Function"
 SOFTMAX_FUNCTION = 'SoftMax Function'
+LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
+TRANSFER_WITH_COST_FUNCTION = "TransferWithCost Function"
 
 # SelectionFunctions:
 ONE_HOT_FUNCTION = "OneHot Function"
 
 # IntegratorFunctions:
 INTEGRATOR_FUNCTION = "IntegratorFunction Function"
-INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION = "Interactive Activation IntegratorFunction Function"
 SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"
-BUFFER_FUNCTION = 'Buffer Function'
-ContentAddressableMemory_FUNCTION = 'ContentAddressableMemory Function'
+INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION = "Interactive Activation IntegratorFunction Function"
 ACCUMULATOR_INTEGRATOR_FUNCTION = "AccumulatorIntegrator Function"
 FITZHUGHNAGUMO_INTEGRATOR_FUNCTION = "FitzHughNagumoIntegrator Function"
 DUAL_ADAPTIVE_INTEGRATOR_FUNCTION = "DualAdaptiveIntegrator Function"
@@ -639,7 +640,10 @@ ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
 GILZENRAT_INTEGRATOR_FUNCTION = "GilzenratDecisionIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU IntegratorFunction Function"
-LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
+
+# MemoryFunctions:
+BUFFER_FUNCTION = 'Buffer Function'
+ContentAddressableMemory_FUNCTION = 'ContentAddressableMemory Function'
 
 # OptimizationFunctions:
 GRADIENT_OPTIMIZATION_FUNCTION = "GradientOptimization Function"
@@ -656,8 +660,6 @@ TDLEARNING_FUNCTION = "TD Learning Function"
 PREDICTION_ERROR_DELTA_FUNCTION = "PredictionErrorDelta Function"
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
 
-STATE_MAP_FUNCTION = 'State Map Function'
-
 # Distributionfunctions
 NORMAL_DIST_FUNCTION = "Normal Distribution Function"
 UNIFORM_DIST_FUNCTION = "Uniform Distribution Function"
@@ -669,7 +671,9 @@ DRIFT_DIFFUSION_ANALYTICAL_FUNCTION = "Drift Diffusion Analytical Function"
 # ObjectiveFunctions
 STABILITY_FUNCTION = 'Stability Function'
 DISTANCE_FUNCTION = 'Distance Function'
-COST_FUNCTION = "Cost Function"
+
+# Interface Functions:
+STATE_MAP_FUNCTION = 'State Map Function'
 
 #endregion
 
