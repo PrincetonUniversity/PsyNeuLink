@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+411.g45b37a3 documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+412.ga238a27 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+411.g45b37a3',
+              VERSION:'0.5.3.2+412.ga238a27',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+411
+                0.5.3.2+412
               </div>
             
           
@@ -707,7 +707,7 @@ the dictionary is contained in the Mechanism’s <a class="reference internal" h
 <p>The labels specified in these dictionaries can be used to:</p>
 <blockquote>
 <div><ul class="simple">
-<li>specify items in the <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">inputs</span></a> and <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">targets</span></a> arguments of the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method
+<li>specify items in the <a class="reference internal" href="Run.html#composition-run-inputs"><span class="std std-ref">inputs</span></a> and <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">targets</span></a> arguments of the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method
 of a <a class="reference internal" href="System.html"><span class="doc">System</span></a></li>
 <li>report the values of the InputState(s) and OutputState(s) of a Mechanism</li>
 <li>visualize the inputs and outputs of the System’s Mechanisms</li>
@@ -758,7 +758,7 @@ applied to a Mechanism with multiple InputState, only the index zero InputState 
 </pre></div>
 </div>
 <p><em>Using Label Dictionaries</em></p>
-<p>When using labels to specify items in the <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">inputs</span></a> arguments of the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method, labels may
+<p>When using labels to specify items in the <a class="reference internal" href="Run.html#composition-run-inputs"><span class="std std-ref">inputs</span></a> arguments of the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method, labels may
 directly replace any or all of the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">InputState</span> <span class="pre">values</span></code></a> in an input specification dictionary. Keep in
 mind that each label must be specified in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_labels_dict" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_labels_dict"><code class="xref any py py-attr docutils literal"><span class="pre">input_labels_dict</span></code></a> of the Origin
 Mechanism to which inputs are being specified, and must map to a value that would have been valid in that position of
@@ -1227,7 +1227,7 @@ This must be consistent with the format of the Mechanism’s <a class="reference
 the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
 of the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_states" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>, and each item must be compatible with the
 format (number and type of elements) of the <code class="xref any docutils literal"><span class="pre">variable</span></code> of the
-corresponding InputState (see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Run Inputs</span></a> for details of input
+corresponding InputState (see <a class="reference internal" href="Run.html#composition-run-inputs"><span class="std std-ref">Run Inputs</span></a> for details of input
 specification formats).</li>
 <li><strong>runtime_params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.value"><em>value</em></a><em>]</em><em>]</em><em>]</em><em>]</em><em>:</em>) – a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism or
 its function. Any value assigned to a parameter will override the current value of that parameter for <em>only
@@ -1421,7 +1421,7 @@ State specification(s) can be an State object or the name of one.</td>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>inputs</strong> (<em>List</em><em>[</em><a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.input" title="psyneulink.core.components.process.Process.input"><em>input</em></a><em>] or </em><em>ndarray</em><em>(</em><a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.input" title="psyneulink.core.components.process.Process.input"><em>input</em></a><em>) </em><em>: default default_variable</em>) – the inputs used for each in a sequence of executions of the Mechanism (see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Inputs</span></a> for a detailed
+<li><strong>inputs</strong> (<em>List</em><em>[</em><a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.input" title="psyneulink.core.components.process.Process.input"><em>input</em></a><em>] or </em><em>ndarray</em><em>(</em><a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.input" title="psyneulink.core.components.process.Process.input"><em>input</em></a><em>) </em><em>: default default_variable</em>) – the inputs used for each in a sequence of executions of the Mechanism (see <a class="reference internal" href="Run.html#composition-run-inputs"><span class="std std-ref">Inputs</span></a> for a detailed
 description of formatting requirements and options).</li>
 <li><strong>num_trials</strong> (<em>int</em>) – number of trials to execute.</li>
 <li><strong>call_before_execution</strong> (<em>function : default None</em>) – called before each execution of the Mechanism.</li>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.5.3.2+411.g45b37a3 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.5.3.2+412.ga238a27 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+411.g45b37a3',
+              VERSION:'0.5.3.2+412.ga238a27',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+411
+                0.5.3.2+412
               </div>
             
           
@@ -340,12 +340,14 @@ simple AutodiffComposition, specify its inputs and targets, and run it with lear
 </div>
 <p>As shown above (and for convenience), an AutodiffComposition with learning disabled can be run with the same input
 format used for training.  In that case, the <em>“input”</em> entry is used as the inputs for the run, and the <em>“targets”</em>
-and <em>“epochs”</em> (if present) are ignored. However, since an AutodiffComposition with learning disabled is treated like
-any other Composition, it can also be run with the same input format as a standard <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>; that is,
-a single dictionary specifying the inputs for each <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism), as follows:</p>
+and <em>“epochs”</em> entries (if present) are ignored. However, since an AutodiffComposition with learning disabled is
+treated like any other Composition, it can also be run with the same <a class="reference internal" href="Run.html#composition-run-inputs"><span class="std std-ref">input format</span></a> as a standard
+<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>; that is, a single dictionary specifying the inputs for each <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism), such the one defined
+in the exaple above, as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">my_inputs</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>or <a class="reference internal" href="Composition.html#composition-input-as-function"><span class="std std-ref">using a function</span></a>.</p>
 </div>
 <div class="section" id="logging">
 <h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Run &mdash; PsyNeuLink 0.5.3.2+411.g45b37a3 documentation</title>
+  <title>Run &mdash; PsyNeuLink 0.5.3.2+412.ga238a27 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+411.g45b37a3',
+              VERSION:'0.5.3.2+412.ga238a27',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+411
+                0.5.3.2+412
               </div>
             
           
@@ -183,7 +183,7 @@ directly, using its <code class="xref std std-keyword docutils literal"><span cl
 runs only a single execution of the object;</li>
 </ul>
 <ul class="simple">
-<li>uses simpler formats for specifying <a class="reference internal" href="#run-inputs"><span class="std std-ref">inputs</span></a> and <a class="reference internal" href="#run-targets"><span class="std std-ref">targets</span></a>;</li>
+<li>uses simpler formats for specifying <a class="reference internal" href="#composition-run-inputs"><span class="std std-ref">inputs</span></a> and <a class="reference internal" href="#run-targets"><span class="std std-ref">targets</span></a>;</li>
 </ul>
 <ul class="simple">
 <li>automatically aggregates results across executions and stores them in the results attribute of the object.</li>
@@ -262,14 +262,14 @@ See <a class="reference internal" href="#run-execution-contexts-init"><span clas
 <div class="section" id="timing">
 <span id="run-timing"></span><h2><em>Timing</em><a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h2>
 <p>When <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> is called by a Component, it calls that Component’s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method once for each
-<a class="reference internal" href="#run-inputs"><span class="std std-ref">input</span></a>  (or set of inputs) specified in the call to <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, which constitutes a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of
+<a class="reference internal" href="#composition-run-inputs"><span class="std std-ref">input</span></a>  (or set of inputs) specified in the call to <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, which constitutes a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of
 execution.  For each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, the Component makes repeated <a class="reference internal" href="Scheduler.html#scheduler-execution"><span class="std std-ref">calls to its Scheduler</span></a>,
 executing the Components it specifies in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>, until every Component has been executed at least once or
 another <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination condition</span></a> is met.  The <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can be used in combination
 with <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> specifications for individual Components to execute different Components at different time scales.</p>
 </div>
 <div class="section" id="inputs">
-<span id="run-inputs"></span><h2><em>Inputs</em><a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h2>
+<span id="composition-run-inputs"></span><h2><em>Inputs</em><a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function presents the inputs for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to the input_states of the relevant Mechanisms in
 the <a class="reference internal" href="#run-scope-of-execution"><span class="std std-ref">scope of execution</span></a>. These are specified in the <strong>inputs</strong> argument of a Component’s
 <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.</p>
@@ -298,7 +298,7 @@ an origin mechanism are usually specified by a list of 2d lists/arrays, though <
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="figure" id="run-inputs-fig-states">
+<div class="figure" id="composition-run-inputs-fig-states">
 <img alt="Example input specifications with input states" src="_images/input_spec_states.svg" /></div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -868,7 +868,7 @@ rather than a dictionary.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>inputs</strong> (List[input] or ndarray(input) : default default_variable for a single <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>) – the input for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in a sequence (see <a class="reference internal" href="#run-inputs"><span class="std std-ref">Inputs</span></a> for detailed description of formatting
+<li><strong>inputs</strong> (List[input] or ndarray(input) : default default_variable for a single <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>) – the input for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in a sequence (see <a class="reference internal" href="#composition-run-inputs"><span class="std std-ref">Inputs</span></a> for detailed description of formatting
 requirements and options).</li>
 <li><strong>num_trials</strong> (<em>int : default None</em>) – the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s to run.  If it is <code class="xref any docutils literal"><span class="pre">None</span></code> (the default), then a number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s run will be equal
 equal to the number of items specified in the <strong>inputs</strong> argument.  If <strong>num_trials</strong> exceeds the number of
