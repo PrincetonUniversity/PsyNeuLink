@@ -20,7 +20,7 @@ that is assigned as the `value <ControlProjection.ControlProjection.value>` of i
 ControlProjection conveys its value to the `ParameterState` for the parameter it controls, which uses that value to
 `modulate <ModulatorySignal_Modulation>` the `value <ParameterState.value>` of the parameter.  A ControlSignal also
 calculates a `cost`, based on its `intensity` and/or its time course, that may be used by the ControlMechanism to
-adapt the ControlSignal's `allocation <ControlSignal.allocation>` in the future.
+adapt the ControlSignal's `allocation <ControlSignal.allocation>` in subsequent executions.
 
 .. _ControlSignal_Creation:
 
@@ -223,8 +223,8 @@ Examples
 *Modulate the parameter of a Mechanism's function*.  The following example assigns a
 ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a `TransferMechanism`::
 
-    >>> import psyneulink as pnl
-    >>> my_mech = pnl.TransferMechanism(function=pnl.Logistic(bias=(1.0, pnl.ControlSignal)))
+    >>> from psyneulink import *
+    >>> my_mech = TransferMechanism(function=Logistic(bias=(1.0, ControlSignal)))
 
 Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
 with a ControlProjection that projects to the TransferMechanism's `ParameterState` for the `bias <Logistic.bias>`
@@ -236,62 +236,56 @@ gain parameter.
 *Specify attributes of a ControlSignal*.  Ordinarily, ControlSignals modify the *MULTIPLICATIVE_PARAM* of a
 ParameterState's `function <ParameterState.function>` to modulate the parameter's value.
 In the example below, this is changed by specifying the `modulation <ControlSignal.modulation>` attribute of a
-`ControlSignal` for the `Logistic` Function of a `TransferMechanism`.  It is changed so that the value of the
+`ControlSignal` for the `Logistic` Function of the `TransferMechanism`.  It is changed so that the value of the
 ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
 function::
 
-    >>> my_mech = pnl.TransferMechanism(function=pnl.Logistic(gain=(1.0,
-    ...                                                             pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
+    >>> my_mech = TransferMechanism(function=Logistic(gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
 
-Note that the `ModulationParam` specified for the `ControlSignal` pertains to the function of a *ParameterState*
-for the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter), and *not* the Logistic function
-itself -- that is, in this example, the value of the ControlSignal is added to the *gain parameter* of the Logistic
-function, *not* its `variable <Logistic.variable>`).  If the value of the ControlSignal's **modulation** argument
-had been ``ModulationParam.OVERRIDE``, then the ControlSignal's value would have been used as (i.e., replaced) the
-value of the *Logistic* Function's `gain <Logistic.gain>` parameter, rather than added to it.
+Note that the `ModulationParam` specified for the `ControlSignal` refers to how the parameter of the *Logistic*
+Function (in this case, its `gain <Logistic.gain>` parameter) is modified, and not directly to input Logistic function;
+that is, in this example, the value of the ControlSignal is added to the *gain parameter* of the Logistic
+function, *not* its `variable <Logistic.variable>`.  If the value of the ControlSignal's **modulation** argument
+had been ``ModulationParam.OVERRIDE``, then the ControlSignal's value would have been used as (i.e., it would have
+replaced) the value of the *Logistic* Function's `gain <Logistic.gain>` parameter, rather than added to it.
 
 COMMENT:
     MOVE THIS EXAMPLE TO EVCControlMechanism
 
-*Modulate the parameters of several Mechanisms by an EVCControlMechanism*.  This shows::
+*Modulate the parameters of several Mechanisms by an OptimizationControlMechanism*.  This shows::
 
-    My_Mech_A = TransferMechanism(function=Logistic)
-    My_Mech_B = TransferMechanism(function=Linear,
+    my_mech_A = TransferMechanism(function=Logistic)
+    my_mech_B = TransferMechanism(function=Linear,
                                  output_states=[RESULT, OUTPUT_MEAN])
 
-    Process_A = Process(pathway=[My_Mech_A])
-    Process_B = Process(pathway=[My_Mech_B])
-    My_System = System(processes=[Process_A, Process_B])
-
-    My_EVC_Mechanism = EVCControlMechanism(system=My_System,
-                                    monitor_for_control=[My_Mech_A.output_states[RESULT],
-                                                         My_Mech_B.output_states[OUTPUT_MEAN]],
-                                    control_signals=[(GAIN, My_Mech_A),
-                                                     {NAME: INTERCEPT,
-                                                      MECHANISM: My_Mech_B,
-                                                      MODULATION:ModulationParam.ADDITIVE}],
-                                    name='My EVC Mechanism')
-COMMENT
+    my_ocm = OptimizationControlMechanism(monitor_for_control=[my_mech_A.output_states[RESULT],
+                                                               my_mech_B.output_states[OUTPUT_MEAN]],
+                                          control_signals=[(GAIN, my_mech_A),
+                                                           {NAME: INTERCEPT,
+                                                            MECHANISM: my_mech_B,
+                                                            MODULATION:ModulationParam.ADDITIVE}],
+                                          name='my_ocm')
 
 *Modulate the parameters of several Mechanisms in a System*.  The following example assigns ControlSignals to modulate
-the `gain <Logistic.gain>` parameter of the `Logistic` function for ``My_Mech_A`` and the `intercept
-<Logistic.intercept>` parameter of the `Linear` function for ``My_Mech_B``::
+the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`` and the `intercept
+<Logistic.intercept>` parameter of the `Linear` function for ``my_mech_B``::
 
-    >>> my_mech_a = pnl.TransferMechanism(function=pnl.Logistic)
-    >>> my_mech_b = pnl.TransferMechanism(function=pnl.Linear,
+    >>> my_mech_A = pnl.TransferMechanism(function=pnl.Logistic)
+    >>> my_mech_B = pnl.TransferMechanism(function=pnl.Linear,
     ...                                   output_states=[pnl.RESULT, pnl.OUTPUT_MEAN])
 
-    >>> process_a = pnl.Process(pathway=[my_mech_a])
-    >>> process_b = pnl.Process(pathway=[my_mech_b])
+    >>> process_a = pnl.Process(pathway=[my_mech_A])
+    >>> process_b = pnl.Process(pathway=[my_mech_B])
 
     >>> my_system = pnl.System(processes=[process_a, process_b],
-    ...                        monitor_for_control=[my_mech_a.output_states[pnl.RESULTS],
-    ...                                             my_mech_b.output_states[pnl.OUTPUT_MEAN]],
-    ...                        control_signals=[(pnl.GAIN, my_mech_a),
+    ...                        monitor_for_control=[my_mech_A.output_states[pnl.RESULTS],
+    ...                                             my_mech_B.output_states[pnl.OUTPUT_MEAN]],
+    ...                        control_signals=[(pnl.GAIN, my_mech_A),
     ...                                         {pnl.NAME: pnl.INTERCEPT,
-    ...                                          pnl.MECHANISM: my_mech_b,
+    ...                                          pnl.MECHANISM: my_mech_B,
     ...                                          pnl.MODULATION: pnl.ModulationParam.ADDITIVE}],
     ...                        name='My Test System')
+COMMENT
 
 
 Class Reference
