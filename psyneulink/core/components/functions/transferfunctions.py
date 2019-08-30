@@ -3674,15 +3674,22 @@ class TransferWithCost(TransferFunction):
         
         """
 
+        # FIRST, DEAL WITH CURRENT INTENSITY
+
         # Compute current intensity
         transfer_fct = self.parameters.transfer_fct.get(execution_id)
         intensity = transfer_fct(self.get.parameters.variable(execution_id))
 
-        #FIX ?FOLLOWING CORRECT:
+        # Compute intensity change
         try:
-            intensity_change = intensity - self.parameters.intensity.get_previous(execution_id)
+            # intensity_change = intensity - self.parameters.intensity.get_previous(execution_id)
+            intensity_change = intensity - self.parameters.intensity.get(execution_id)
         except TypeError:
             intensity_change = [0]
+        # Store current intensity
+        self.parameters.intensity.set(intensity, execution_id)
+
+        # THEN, DEAL WITH COSTS
 
         # Compute cost functions
         cost_options = self.parameters.cost_functions._get(execution_id)
