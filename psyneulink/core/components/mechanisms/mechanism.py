@@ -1440,7 +1440,7 @@ class Mechanism_Base(Mechanism):
 
         # Forbid direct call to base class constructor
         if context is None or (context !=ContextFlags.CONSTRUCTOR and
-                               not self.context.initialization_status == ContextFlags.VALIDATING):
+                               not self.initialization_status == ContextFlags.VALIDATING):
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; use a subclass")
 
         # IMPLEMENT **kwargs (PER State)
@@ -1450,7 +1450,7 @@ class Mechanism_Base(Mechanism):
         self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
         self.aux_components = []
         # Register with MechanismRegistry or create one
-        if self.context.initialization_status != ContextFlags.VALIDATING:
+        if self.initialization_status != ContextFlags.VALIDATING:
             register_category(entry=self,
                               base_class=Mechanism_Base,
                               name=name,
@@ -1630,7 +1630,7 @@ class Mechanism_Base(Mechanism):
                 except KeyError:
                     pass
             elif isinstance(parsed_input_state_spec, (Projection, Mechanism, State)):
-                if parsed_input_state_spec.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                if parsed_input_state_spec.initialization_status == ContextFlags.DEFERRED_INIT:
                     args = parsed_input_state_spec.init_args
                     if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
                         mech_variable_item = args[REFERENCE_VALUE]
@@ -2017,7 +2017,10 @@ class Mechanism_Base(Mechanism):
             warnings.simplefilter(action='ignore', category=UserWarning)
             self.function.output_type = FunctionOutputType.NP_2D_ARRAY
             self.function.enable_output_type_conversion = True
+
+        self.function.initialization_status = ContextFlags.INITIALIZING
         self.function._instantiate_value(context)
+        self.function.initialization_status = ContextFlags.INITIALIZED
 
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.states.parameterstate import _instantiate_parameter_state
@@ -2254,7 +2257,7 @@ class Mechanism_Base(Mechanism):
 
         if not self.parameters.context._get(execution_id).source or context & ContextFlags.COMMAND_LINE:
             self.parameters.context._get(execution_id).source = ContextFlags.COMMAND_LINE
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZED:
+        if self.initialization_status == ContextFlags.INITIALIZED:
             self.parameters.context._get(execution_id).string = "{} EXECUTING {}: {}".format(context.name,self.name,
                                                                ContextFlags._get_context_string(
                                                                        self.parameters.context._get(execution_id).flags, EXECUTION_PHASE))
@@ -2266,7 +2269,7 @@ class Mechanism_Base(Mechanism):
         #             self.functionsDict[func]()
 
         # Limit init to scope specified by context
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.initialization_status == ContextFlags.INITIALIZING:
             if self.parameters.context._get(execution_id).composition:
                 # Run full execute method for init of Process and System
                 pass
@@ -2483,7 +2486,7 @@ class Mechanism_Base(Mechanism):
     def _update_attribs_dicts(self, context=None):
         from psyneulink.core.globals.keywords import NOISE
         for state in self._parameter_states:
-            if NOISE in state.name and self.parameters.context.get().initialization_status == ContextFlags.INITIALIZING:
+            if NOISE in state.name and self.initialization_status == ContextFlags.INITIALIZING:
                 continue
             if state.name in self.user_params:
                 self.user_params.__additem__(state.name, state.value)

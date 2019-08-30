@@ -326,7 +326,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
         # Just return current input (for validation).
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             return variable
 
         previous_value = np.array(self.get_previous_value(execution_id))
@@ -557,7 +557,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         If a duplicate key is identified during retrieval (e.g., **duplicate_keys** is changed from True to
         False), a warning is issued and zeros are returned.  If *OVERWRITE*, then retrieval of a cue with an identical
         key causes the value at that entry to be overwritten with the new value.
-        
+
     equidistant_keys_select:  RANDOM | OLDEST | NEWEST
         deterimines which entry is retrieved when duplicate keys are identified or are indistinguishable by the
         `distance_function <ContentAddressableMemory.distance_function>`.
@@ -1129,7 +1129,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # and return current value (variable[1]) for validation.
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             return variable
 
         # Set key_size and val_size if this is the first entry

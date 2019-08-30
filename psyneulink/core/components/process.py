@@ -893,7 +893,7 @@ class Process(Process_Base):
                           context=context)
 
         if not context:
-            self.context.initialization_status = ContextFlags.INITIALIZING
+            self.initialization_status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
         if default_variable is None and len(pathway) > 0:
@@ -1485,7 +1485,7 @@ class Process(Process_Base):
 
                     # If initialization of MappingProjection has been deferred,
                     #    check sender and receiver, assign them if they have not been assigned, and initialize it
-                    if item.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                    if item.initialization_status == ContextFlags.DEFERRED_INIT:
                         # Check sender arg
                         try:
                             sender_arg = item.init_args[SENDER]
@@ -2243,7 +2243,7 @@ class Process(Process_Base):
         self._initialize_from_context(execution_id, base_execution_id, override=False)
 
         # Report output if reporting preference is on and this is not an initialization run
-        report_output = self.prefs.reportOutputPref and self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZED
+        report_output = self.prefs.reportOutputPref and self.initialization_status == ContextFlags.INITIALIZED
 
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input

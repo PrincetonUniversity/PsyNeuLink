@@ -201,7 +201,7 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         """
 
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             return (np.array([0]), np.array([0]), np.array([0]))
 
         # remove this in favor of attribute or parameter?
@@ -333,8 +333,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         """
 
-        if (self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING or
-                self.owner.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
+        if self.is_initializing:
             return [defaultControlAllocation]
 
         # Get value of, or set default for standard args

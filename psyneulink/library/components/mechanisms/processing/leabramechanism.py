@@ -282,7 +282,7 @@ class LeabraFunction(Function_Base):
                  context=None):
         network = self.parameters.network._get(execution_id)
         # HACK: otherwise the INITIALIZING function executions impact the state of the leabra network
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             output_size = len(network.layers[-1].units)
             return np.zeros(output_size)
 

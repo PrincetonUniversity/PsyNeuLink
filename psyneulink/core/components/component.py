@@ -417,7 +417,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.globals.context import Context, ContextFlags, _get_time
+from psyneulink.core.globals.context import Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time
 from psyneulink.core.globals.keywords import \
     COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, \
     FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, \
@@ -846,6 +846,16 @@ class Component(object, metaclass=ComponentsMeta):
     defaults
         an object that provides access to the default values of a `Component's` `parameters`
 
+    initialization_status : field of flags attribute
+        indicates the state of initialization of the Component;
+        one and only one of the following flags is always set:
+
+            * `DEFERRED_INIT <ContextFlags.DEFERRED_INIT>`
+            * `INITIALIZING <ContextFlags.INITIALIZING>`
+            * `VALIDATING <ContextFlags.VALIDATING>`
+            * `INITIALIZED <ContextFlags.INITIALIZED>`
+            * `REINITIALIZED <ContextFlags.REINITIALIZED>`
+            * `UNINITIALIZED <ContextFlags.UNINITALIZED>`
 
     """
 
@@ -1132,14 +1142,14 @@ class Component(object, metaclass=ComponentsMeta):
 
         self._validate()
 
-        self.context.initialization_status = ContextFlags.INITIALIZED
+        self.initialization_status = ContextFlags.INITIALIZED
         # MODIFIED 12/4/18 NEW [JDC]:
         from psyneulink.core.components.functions.function import Function_Base
         if (
             isinstance(self.function, Function_Base)
-            and self.function.context.initialization_status != ContextFlags.DEFERRED_INIT
+            and self.function.initialization_status != ContextFlags.DEFERRED_INIT
         ):
-            self.function.context.initialization_status = ContextFlags.INITIALIZED
+            self.function.initialization_status = ContextFlags.INITIALIZED
         # MODIFIED 12/4/18 END
 
         self._compilation_data = self._CompilationData(owner=self)
@@ -1340,11 +1350,11 @@ class Component(object, metaclass=ComponentsMeta):
     def _deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
         """
-        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if self.initialization_status == ContextFlags.DEFERRED_INIT:
 
             # Flag that object is now being initialized
             #       (usually in _instantiate_function)
-            self.context.initialization_status = ContextFlags.INITIALIZING
+            self.initialization_status = ContextFlags.INITIALIZING
 
             del self.init_args['self']
 
@@ -1376,7 +1386,7 @@ class Component(object, metaclass=ComponentsMeta):
             else:
                 self._assign_default_name()
 
-            self.context.initialization_status = ContextFlags.INITIALIZED
+            self.initialization_status = ContextFlags.INITIALIZED
 
     def _assign_deferred_init_name(self, name, context):
 
@@ -2847,12 +2857,12 @@ class Component(object, metaclass=ComponentsMeta):
 
             # setting init status because many mechanisms change execution or validation behavior
             # during initialization
-            self.function.context.initialization_status = ContextFlags.INITIALIZING
+            self.function.initialization_status = ContextFlags.INITIALIZING
 
             self.function.defaults.variable = function_variable
             self.function._instantiate_value(context)
 
-            self.function.context.initialization_status = ContextFlags.INITIALIZED
+            self.function.initialization_status = ContextFlags.INITIALIZED
 
         # Specification is Function class
         # Note:  parameter_states for function's parameters will be created in_instantiate_attributes_after_function
@@ -2975,7 +2985,7 @@ class Component(object, metaclass=ComponentsMeta):
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
         else:
-            if self.parameters.context._get(execution_id).initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
+            if self.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
                 self._increment_execution_count()
             self._update_current_execution_time(context=context, execution_id=execution_id)
 
@@ -3256,11 +3266,43 @@ class Component(object, metaclass=ComponentsMeta):
             raise ComponentError("{} attribute of {} must be of type {}".format(CONTEXT, self.name, Context.__name__))
 
     @property
+    def initialization_status(self):
+        try:
+            return self._initialization_status
+        except AttributeError:
+            self._initialization_status = ContextFlags.INITIALIZING
+        return self._initialization_status
+
+    @initialization_status.setter
+    def initialization_status(self, flag):
+        """Check that a flag is one and only one status flag"""
+        if flag in INITIALIZATION_STATUS_FLAGS:
+            self._initialization_status = flag
+        elif not flag:
+            self._initialization_status = ContextFlags.UNINITIALIZED
+        elif not (flag & ContextFlags.INITIALIZATION_MASK):
+            raise ContextError("Attempt to assign a flag ({}) to initialization_status "
+                               "that is not an initialization status flag".
+                               format(str(flag)))
+        else:
+            raise ContextError("Attempt to assign more than one flag ({}) to initialization_status".
+                               format(str(flag)))
+
+    @property
+    def is_initializing(self):
+        try:
+            owner_initializing = self.owner.initialization_status == ContextFlags.INITIALIZING
+        except AttributeError:
+            owner_initializing = False
+
+        return self.initialization_status == ContextFlags.INITIALIZING or owner_initializing
+
+    @property
     def log(self):
         try:
             return self._log
         except AttributeError:
-            if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            if self.initialization_status == ContextFlags.DEFERRED_INIT:
                 raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete "
                                      "or appropriately configuring a system to which it belongs".
                                      format(self.name, 'log'))

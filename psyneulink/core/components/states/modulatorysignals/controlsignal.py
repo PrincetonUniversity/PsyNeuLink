@@ -960,7 +960,7 @@ class ControlSignal(ModulatorySignal):
     def _instantiate_cost_attributes(self, context=None):
         if self.cost_options:
             # Default cost params
-            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+            if self.initialization_status != ContextFlags.DEFERRED_INIT:
                 self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
             else:
                 self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
@@ -999,7 +999,7 @@ class ControlSignal(ModulatorySignal):
     def _initialize_cost_attributes(self, context=None):
         if self.cost_options:
             # Default cost params
-            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+            if self.initialization_status != ContextFlags.DEFERRED_INIT:
                 self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
             else:
                 self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)

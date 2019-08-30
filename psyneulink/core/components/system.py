@@ -911,7 +911,7 @@ class System(System_Base):
 
         # Required to defer assignment of self.controller by setter
         #     until the rest of the System has been instantiated
-        self.context.initialization_status = ContextFlags.INITIALIZING
+        self.initialization_status = ContextFlags.INITIALIZING
 
         processes = processes or []
         if not isinstance(processes, list):
@@ -958,7 +958,7 @@ class System(System_Base):
 
         if not context:
             context = ContextFlags.COMPOSITION
-            self.context.initialization_status = ContextFlags.INITIALIZING
+            self.initialization_status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
 
         self.default_execution_id = self.name
@@ -970,7 +970,7 @@ class System(System_Base):
                          prefs=prefs,
                          context=context)
 
-        self.context.initialization_status = ContextFlags.INITIALIZED
+        self.initialization_status = ContextFlags.INITIALIZED
         self.reinitialize_mechanisms_when = reinitialize_mechanisms_when
 
         # Assign controller
@@ -2581,7 +2581,7 @@ class System(System_Base):
             for parameter_state in mech._parameter_states:
                 for projection in parameter_state.mod_afferents:
                     # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
-                    if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                    if projection.initialization_status == ContextFlags.DEFERRED_INIT:
                         proj_control_signal_specs = projection.control_signal_params or {}
                         proj_control_signal_specs.update({PROJECTIONS: [projection]})
                         control_signal_specs.append(proj_control_signal_specs)
@@ -2728,7 +2728,7 @@ class System(System_Base):
 
         if input is None:
             if (self.prefs.verbosePref and not (self.parameters.context._get(execution_id).source == ContextFlags.COMMAND_LINE or
-                                                self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING)):
+                                                self.initialization_status == ContextFlags.INITIALIZING)):
                 print("- No input provided;  default will be used: {0}")
             input = np.zeros_like(self.defaults.variable)
             for i in range(num_origin_mechs):
@@ -2850,7 +2850,7 @@ class System(System_Base):
                     print("{0}: {1} executed".format(self.name, self.controller.name))
 
             except AttributeError as error_msg:
-                if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+                if self.initialization_status != ContextFlags.INITIALIZING:
                     error_msg.args += ("PROGRAM ERROR: Problem executing controller ({}) for {}".format(self.controller.name, self.name),)
                     raise
 
@@ -5055,7 +5055,7 @@ class SystemInputState(OutputState):
             self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_STATE
         else:
             self.name = owner.name + "_" + name
-        self.context.initialization_status = ContextFlags.INITIALIZING
+        self.initialization_status = ContextFlags.INITIALIZING
         self.context.string = context
         self.prefs = prefs
         self.log = Log(owner=self)

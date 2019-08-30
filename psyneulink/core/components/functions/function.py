@@ -648,7 +648,7 @@ class Function_Base(Function):
         if context != ContextFlags.CONSTRUCTOR:
             raise FunctionError("Direct call to abstract class Function() is not allowed; use a Function subclass")
 
-        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if self.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
             self.init_args[NAME] = name
             return

@@ -344,7 +344,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # self.init_args['name'] = name
 
         # # Flag for deferred initialization
-        # self.context.initialization_status = ContextFlags.DEFERRED_INIT
+        # self.initialization_status = ContextFlags.DEFERRED_INIT
         # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         # self._learning_rate = learning_rate
@@ -417,11 +417,11 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             context=context
         )
 
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal._get(execution_id)))
 
         # # TEST PRINT
-        # if not self.context.initialization_status == ContextFlags.INITIALIZING:
+        # if not self.initialization_status == ContextFlags.INITIALIZING:
         #     if self.context.composition:
         #         time = self.context.composition.scheduler_processing.clock.simple_time
         #     else:

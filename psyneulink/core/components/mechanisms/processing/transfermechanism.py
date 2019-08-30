@@ -1283,10 +1283,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                                     f"size ({variable.shape[-1]}) of the innermost dimension (axis 0) of its "
                                     f"{repr(VARIABLE)} (i.e., the length of its items .")
             self.integrator_function.parameters.variable.default_value = variable
-            function_context_buffer = self.integrator_function.context.initialization_status
-            self.integrator_function.context.initialization_status = ContextFlags.INITIALIZING
+            function_context_buffer = self.integrator_function.initialization_status
+            self.integrator_function.initialization_status = ContextFlags.INITIALIZING
             self.integrator_function.parameters.value.default_value = self.integrator_function(variable)
-            self.integrator_function.context.initialization_status = function_context_buffer
+            self.integrator_function.initialization_status = function_context_buffer
         # MODIFIED 6/24/19 END
 
         self.has_integrated = True
@@ -1313,7 +1313,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE, execution_id)
 
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.initialization_status == ContextFlags.INITIALIZING:
             self._instantiate_integrator_function(variable=function_variable,
                                                   noise=noise,
                                                   initializer=initial_value,
@@ -1552,7 +1552,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if (
             self.convergence_criterion is not None
             and self.parameters.previous_value._get(execution_id) is not None
-            and self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING
+            and self.initialization_status != ContextFlags.INITIALIZING
         ):
             if self.delta(value, execution_id) <= self.convergence_criterion:
                 return True

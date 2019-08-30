@@ -864,7 +864,7 @@ def run(obj,
 
     # Class-specific validation:
     if not obj.parameters.context._get(execution_id).flags:
-        obj.parameters.context._get(execution_id).initialization_status = ContextFlags.VALIDATING
+        obj.initialization_status = ContextFlags.VALIDATING
         obj.parameters.context._get(execution_id).string = RUN + "validating " + obj.name
 
     # INITIALIZATION

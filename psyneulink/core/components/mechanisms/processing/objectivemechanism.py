@@ -685,7 +685,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
 
         # If call is for initialization
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.initialization_status == ContextFlags.INITIALIZING:
             # Use self.input_states (containing specs from **input_states** arg of constructor)
             #    or pass off instantiation of default InputState(s) to super
             input_states = self.input_states or None
@@ -974,7 +974,7 @@ def _parse_monitor_specs(monitor_specs):
 #         if isinstance(sender, OutputState):
 #             # Projection has been specified for receiver and initialization begun, so call deferred_init()
 #             if receiver.path_afferents:
-#                 if not receiver.path_afferents[0].context.initialization_status == ContextFlags.DEFERRED_INIT:
+#                 if not receiver.path_afferents[0].initialization_status == ContextFlags.DEFERRED_INIT:
 #                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
 #                                                   "implemented and initialized ({})".
 #                                                   format(receiver.name, owner.name, receiver.path_afferents[0].name))

@@ -1707,6 +1707,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
 
+        self.initialization_status = ContextFlags.INITIALIZED
+
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
 
@@ -2658,7 +2660,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
 
         # If Deferred init
-        if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if projection.initialization_status == ContextFlags.DEFERRED_INIT:
             # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
             if not isinstance(sender, OutputState):
                 sender = sender_mechanism
@@ -4265,7 +4267,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._animate = buffer_animate_state
 
         # Store simulation results on "base" composition
-        if context.initialization_status != ContextFlags.INITIALIZING:
+        if self.initialization_status != ContextFlags.INITIALIZING:
             try:
                 self.parameters.simulation_results._get(base_execution_id).append(
                     self.get_output_values(execution_id))
@@ -6471,7 +6473,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
             execution_phase = self.parameters.context._get(execution_id).execution_phase
             if (
-                    execution_phase != ContextFlags.INITIALIZING
+                    self.initialization_status != ContextFlags.INITIALIZING
                     and execution_phase != ContextFlags.SIMULATION
             ):
                 if self.controller and not bin_execute:

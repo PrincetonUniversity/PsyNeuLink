@@ -337,10 +337,10 @@ class ControlProjection(ModulatoryProjection_Base):
                                                   params=params)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        if (sender is None or sender.context.initialization_status == ContextFlags.DEFERRED_INIT or
+        if (sender is None or sender.initialization_status == ContextFlags.DEFERRED_INIT or
                 inspect.isclass(receiver) or receiver is None or
-                    receiver.context.initialization_status == ContextFlags.DEFERRED_INIT):
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
+                    receiver.initialization_status == ContextFlags.DEFERRED_INIT):
+            self.initialization_status = ContextFlags.DEFERRED_INIT
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)

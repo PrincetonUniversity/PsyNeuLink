@@ -546,7 +546,7 @@ class MappingProjection(PathwayProjection_Base):
 
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
+            self.initialization_status = ContextFlags.DEFERRED_INIT
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(sender=sender,

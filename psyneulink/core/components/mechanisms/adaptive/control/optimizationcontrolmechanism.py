@@ -864,7 +864,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         """Find control_allocation that optimizes result of `agent_rep.evaluate`  ."""
 
-        if (self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
+        if self.is_initializing:
             return [defaultControlAllocation]
 
         # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?

@@ -234,21 +234,20 @@ class ModulatoryProjection_Base(Projection_Base):
 
         template = "{} for {}[{}]"
 
-        if self.context.initialization_status &  (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
+        if self.initialization_status &  (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
             # If the name is not a default name for the class, return
             if not self.className + '-' in self.name:
                 return self.name
             self.name = template.format(self.className, self.receiver.owner.name, self.receiver.name)
 
-        elif self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        elif self.initialization_status == ContextFlags.DEFERRED_INIT:
             projection_name = template.format(self.className, state.owner.name, state.name)
             # self.init_args[NAME] = self.init_args[NAME] or projection_name
             self.name = self.init_args[NAME] or projection_name
 
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
-                                            format(self, ContextFlags._get_context_string(self.context.flags,
-                                                                                          INITIALIZATION_STATUS)))
+                                            format(self, self.initialization_status))
 
     def _delete_projection(projection):
         """Delete Projection and its entry in receiver and sender lists"""

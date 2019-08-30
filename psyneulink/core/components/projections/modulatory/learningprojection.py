@@ -539,7 +539,7 @@ class LearningProjection(ModulatoryProjection_Base):
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
+            self.initialization_status = ContextFlags.DEFERRED_INIT
 
         super().__init__(sender=sender,
                          receiver=receiver,
@@ -562,7 +562,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.initialization_status == ContextFlags.INITIALIZING:
             # VALIDATE SENDER
             sender = self.sender
             if isinstance(sender, LearningMechanism):
@@ -699,8 +699,8 @@ class LearningProjection(ModulatoryProjection_Base):
         runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
-            return self.parameters.context._get(execution_id).initialization_status
+        if self.initialization_status == ContextFlags.DEFERRED_INIT:
+            return self.initialization_status
 
         if variable is not None:
             learning_signal = variable
@@ -745,7 +745,7 @@ class LearningProjection(ModulatoryProjection_Base):
         if learning_rate is not None:
             value *= learning_rate
 
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(value)))
 
         return value

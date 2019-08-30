@@ -276,7 +276,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
         values = list(params_to_check.values())
 
-        # If default_variable was specified by user, check that all function_arg params have same length 
+        # If default_variable was specified by user, check that all function_arg params have same length
         #    as the length of items in the inner-most dimension (axis) of default_variable
         if self.parameters.variable._user_specified:
             default_variable_len = self.parameters.variable.default_value.shape[-1]
@@ -635,7 +635,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         # Don't warn if it belongs to a Component, ans that Component's function may pass in a value for variable
         # (such as a MappingProjection that uses AccumulatorFunction in its matrix ParameterState for learning)
         if (not self.owner
-                and self.context.initialization_status != ContextFlags.INITIALIZING
+                and self.initialization_status != ContextFlags.INITIALIZING
                 and variable is not None
                 and variable is not self.defaults.variable):
             warnings.warn("{} does not use its variable;  value passed ({}) will be ignored".
@@ -658,7 +658,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             self.parameters.previous_value._set(value, execution_id)
 
         return self.convert_output_type(value)
@@ -876,7 +876,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             self.parameters.previous_value._set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
@@ -1223,7 +1223,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             self.parameters.previous_value._set(adjusted_value, execution_id)
 
         # # MODIFIED 6/21/19 OLD:
@@ -1745,7 +1745,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
         value = self._combine_terms(short_term_avg, long_term_avg, execution_id=execution_id)
 
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             self.parameters.previous_short_term_avg._set(short_term_avg, execution_id)
             self.parameters.previous_long_term_avg._set(long_term_avg, execution_id)
 
@@ -2150,7 +2150,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         current_input = variable
 
         # FIX: ?CLEAN THIS UP BY SETTING initializer IN __init__ OR OTHER RELEVANT PLACE?
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             if rest.ndim == 0 or len(rest)==1:
                 # self.parameters.previous_value._set(np.full_like(current_input, rest), execution_id)
                 self._initialize_previous_value(np.full_like(current_input, rest), execution_id)
@@ -2181,7 +2181,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
 
         new_value = previous_value + (rate * (current_input + noise) * dist_from_asymptote) - (decay * dist_from_rest)
 
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             self.parameters.previous_value._set(new_value, execution_id)
 
         return self.convert_output_type(new_value)
@@ -2533,7 +2533,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         previous_time = self.get_current_function_param('previous_time', execution_id)
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             previous_value = adjusted_value
             previous_time = previous_time + time_step_size
             if not np.isscalar(variable):
@@ -2883,7 +2883,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         adjusted_value = value + offset
 
         previous_time = self.get_current_function_param('previous_time', execution_id)
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             previous_value = adjusted_value
             previous_time = previous_time + time_step_size
             if not np.isscalar(variable):
@@ -3136,7 +3136,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             self.parameters.previous_value._set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
@@ -4112,7 +4112,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             raise FunctionError("Invalid integration method ({}) selected for {}".
                                 format(integration_method, self.name))
 
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             previous_v = approximate_values[0]
             previous_w = approximate_values[1]
             previous_time = previous_time + time_step_size

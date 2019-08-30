@@ -483,7 +483,7 @@ class OptimizationFunction(Function_Base):
             for all the samples in the order they were evaluated; otherwise it is empty.
         """
 
-        if self._unspecified_args and self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZED:
+        if self._unspecified_args and self.initialization_status == ContextFlags.INITIALIZED:
             warnings.warn("The following arg(s) were not specified for {}: {} -- using default(s)".
                           format(self.name, ', '.join(self._unspecified_args)))
             self._unspecified_args = []
@@ -1733,7 +1733,7 @@ class GridSearch(OptimizationFunction):
         """Get next sample from grid.
         This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
         """
-        initialization_status = self.parameters.context._get(execution_id).initialization_status
+        initialization_status = self.initialization_status
         if initialization_status == ContextFlags.INITIALIZING:
             return [signal.start for signal in self.search_space]
         try:

@@ -16,9 +16,7 @@ Overview
 The Context class is used for the `context <Component.context>` attribute of all `Components <Component>`.  It is
 set when a Component is first instantiated, and updated under various operating conditions.  Its primary
 attribute is `flags <Context.flags>` - a binary vector, the individual flags of which are specified using the
-`ContextFlags` enum.  The `flags <Context.flags>` attribute is divided functionally into the three fields:
-
-  * `initialization_status <Context.initialization_status>` - state of initialization of the Component;
+`ContextFlags` enum.  The `flags <Context.flags>` attribute is divided functionally into the two fields:
 
   * `execution_phase <Context.execution_phase>` - phase of execution of the Component;
 
@@ -107,7 +105,8 @@ from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 __all__ = [
     'Context',
     'ContextFlags',
-    '_get_context'
+    '_get_context',
+    'INITIALIZATION_STATUS_FLAGS',
 ]
 
 STATUS = 'status'
@@ -191,16 +190,14 @@ class ContextFlags(enum.IntFlag):
     @classmethod
     @tc.typecheck
     def _get_context_string(cls, condition_flags,
-                            fields:tc.any(tc.enum(INITIALIZATION_STATUS,
-                                                  EXECUTION_PHASE,
-                                                  SOURCE), set, list)={INITIALIZATION_STATUS,
-                                                                       EXECUTION_PHASE,
+                            fields:tc.any(tc.enum(EXECUTION_PHASE,
+                                                  SOURCE), set, list)={EXECUTION_PHASE,
                                                                        SOURCE},
                             string:tc.optional(str)=None):
         """Return string with the names of flags that are set in **condition_flags**
 
         If **fields** is specified, then only the names of the flag(s) in the specified field(s) are returned.
-        The fields argument must be the name of a field (*INITIALIZATION_STATUS*, *EXECUTION_PHASE*, or *SOURCE*)
+        The fields argument must be the name of a field (*EXECUTION_PHASE* or *SOURCE*)
         or a set or list of them.
 
         If **string** is specified, the string returned is prepended by **string**.
@@ -221,16 +218,9 @@ class ContextFlags(enum.IntFlag):
         if condition_flags == ContextFlags.UNSET:
             return ContextFlags.UNSET.name
         # Otherwise, append each flag's name to the string
-        # for c in (INITIALIZATION_STATUS_FLAGS | EXECUTION_PHASE_FLAGS | SOURCE_FLAGS):
+        # for c in (EXECUTION_PHASE_FLAGS | SOURCE_FLAGS):
         #     if c & condition_flags:
         #        flagged_items.append(c.name)
-        if INITIALIZATION_STATUS in fields:
-            for c in INITIALIZATION_STATUS_FLAGS:
-                if not condition_flags & ContextFlags.INITIALIZATION_MASK:
-                    flagged_items.append(ContextFlags.UNINITIALIZED.name)
-                    break
-                if c & condition_flags:
-                   flagged_items.append(c.name)
         if EXECUTION_PHASE in fields:
             for c in EXECUTION_PHASE_FLAGS:
                 if not condition_flags & ContextFlags.EXECUTION_PHASE_MASK:
@@ -284,24 +274,13 @@ class Context():
         Component to which the Context belongs.
 
     flags : binary vector
-        represents the current operating context of the `owner <Context.owner>`; contains three fields
-        `initialization_status <Context.initialization_status>`, `execution_phase <Context.initialization_status>`,
+        represents the current operating context of the `owner <Context.owner>`; contains two fields
+        `execution_phase <Context.execution_phase>`,
         and `source <Context.source>` (described below).
 
     flags_string : str
         contains the names of the flags currently set in each of the fields of the `flags <Context.flags>` attribute;
         note that this is *not* the same as the `string <Context.string>` attribute (see `note <Context_String_Note>`).
-
-    initialization_status : field of flags attribute
-        indicates the state of initialization of the Component;
-        one and only one of the following flags is always set:
-
-            * `DEFERRED_INIT <ContextFlags.DEFERRED_INIT>`
-            * `INITIALIZING <ContextFlags.INITIALIZING>`
-            * `VALIDATING <ContextFlags.VALIDATING>`
-            * `INITIALIZED <ContextFlags.INITIALIZED>`
-            * `REINITIALIZED <ContextFlags.REINITIALIZED>`
-            * `UNINITIALIZED <ContextFlags.UNINITALIZED>`
 
     execution_phase : field of flags attribute
         indicates the phase of execution of the Component;
@@ -351,7 +330,6 @@ class Context():
                  owner=None,
                  composition=None,
                  flags=None,
-                 initialization_status=ContextFlags.UNINITIALIZED,
                  execution_phase=ContextFlags.IDLE,
                  # source=ContextFlags.COMPONENT,
                  source=ContextFlags.NONE,
@@ -360,16 +338,9 @@ class Context():
 
         self.owner = owner
         self.composition = composition
-        self._initialization_status = initialization_status
         self._execution_phase = execution_phase
         self._source = source
         if flags:
-            if (initialization_status != (ContextFlags.UNINITIALIZED) and
-                    not (flags & ContextFlags.INITIALIZATION_MASK & initialization_status)):
-                raise ContextError("Conflict in assignment to flags ({}) and status ({}) arguments of Context for {}".
-                                   format(ContextFlags._get_context_string(flags & ContextFlags.INITIALIZATION_MASK),
-                                          ContextFlags._get_context_string(flags, INITIALIZATION_STATUS),
-                                          self.owner.name))
             if (execution_phase and not (flags & ContextFlags.EXECUTION_PHASE_MASK & execution_phase)):
                 raise ContextError("Conflict in assignment to flags ({}) and execution_phase ({}) arguments "
                                    "of Context for {}".
@@ -410,12 +381,11 @@ class Context():
 
     @property
     def flags(self):
-        return self.initialization_status | self.execution_phase | self.source
+        return self.execution_phase | self.source
 
     @flags.setter
     def flags(self, flags: ContextFlags):
         if isinstance(flags, (ContextFlags, int)):
-            self.initialization_status = flags & ContextFlags.INITIALIZATION_MASK
             self.execution_phase = flags & ContextFlags.EXECUTION_PHASE_MASK
             self.source = flags & ContextFlags.SOURCE_MASK
         else:
@@ -425,25 +395,6 @@ class Context():
     @property
     def flags_string(self):
         return ContextFlags._get_context_string(self.flags)
-
-    @property
-    def initialization_status(self):
-        return self._initialization_status
-
-    @initialization_status.setter
-    def initialization_status(self, flag):
-        """Check that a flag is one and only one status flag"""
-        if flag in INITIALIZATION_STATUS_FLAGS:
-            self._initialization_status = flag
-        elif not flag:
-            self._initialization_status = ContextFlags.UNINITIALIZED
-        elif not (flag & ContextFlags.INITIALIZATION_MASK):
-            raise ContextError("Attempt to assign a flag ({}) to initialization_status "
-                               "that is not an initialization status flag".
-                               format(str(flag)))
-        else:
-            raise ContextError("Attempt to assign more than one flag ({}) to initialization_status".
-                               format(str(flag)))
 
     @property
     def execution_phase(self):
@@ -513,14 +464,12 @@ class Context():
 
     def _change_flags(self, *flags, operation=lambda attr, blank_flag, *flags: NotImplemented):
         # split by flag type to avoid extra costly binary operations on enum flags
-        if all([flag in INITIALIZATION_STATUS_FLAGS for flag in flags]):
-            self.initialization_status = operation(self.initialization_status, ContextFlags.UNINITIALIZED, *flags)
-        elif all([flag in EXECUTION_PHASE_FLAGS for flag in flags]):
+        if all([flag in EXECUTION_PHASE_FLAGS for flag in flags]):
             self.execution_phase = operation(self.execution_phase, ContextFlags.IDLE, *flags)
         elif all([flag in SOURCE_FLAGS for flag in flags]):
             self.source = operation(self.source, ContextFlags.NONE, *flags)
         else:
-            raise ContextError(f'Flags must all correspond to one of: initialization_status, execution_phase, source')
+            raise ContextError(f'Flags must all correspond to one of: execution_phase, source')
 
     def add_flag(self, flag: ContextFlags):
         def add(attr, blank_flag, flag):
@@ -556,9 +505,7 @@ def _get_context(context:tc.any(ContextFlags, str)):
     # FIX: 3/23/18 UPDATE WITH NEW FLAGS
     if isinstance(context, ContextFlags):
         return context
-    context_flag = ContextFlags.UNINITIALIZED
-    if INITIALIZING in context:
-        context_flag |= ContextFlags.INITIALIZING
+    context_flag = ContextFlags.UNSET
     if VALIDATE in context:
         context_flag |= ContextFlags.VALIDATING
     if EXECUTING in context:

@@ -492,7 +492,7 @@ class GatingMechanism(ModulatoryMechanism):
             for state in mech._input_states + mech._output_states:
                 for projection in state.mod_afferents:
                     # If projection was deferred for init, initialize it now and instantiate for self
-                    if (projection.context.initialization_status == ContextFlags.DEFERRED_INIT
+                    if (projection.initialization_status == ContextFlags.DEFERRED_INIT
                         and projection.init_args['sender'] is None):
                         # FIX 5/23/17: MODIFY THIS WHEN (param, GatingProjection) tuple
                         # FIX:         IS REPLACED WITH (param, GatingSignal) tuple

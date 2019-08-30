@@ -1022,7 +1022,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # delete self.init_args[ERROR_SOURCES]
 
         # # Flag for deferred initialization
-        # self.parameters.context._get(execution_id).initialization_status = ContextFlags.DEFERRED_INIT
+        # self.initialization_status = ContextFlags.DEFERRED_INIT
         # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         self._learning_rate = learning_rate
@@ -1355,14 +1355,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
             summed_error_signal += error_signal
 
         if (self.reportOutputPref and
-                self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING):
+                self.initialization_status != ContextFlags.INITIALIZING):
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
 
         # Durning initialization return zeros so that the first "real" trial for Backprop does not start
         # with the error computed during initialization
         if (self.in_composition and
                 isinstance(self.function, BackPropagation) and
-                self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
+                self.initialization_status == ContextFlags.INITIALIZING):
             return [0*summed_learning_signal, 0*summed_error_signal]
 
         return [summed_learning_signal, summed_error_signal]

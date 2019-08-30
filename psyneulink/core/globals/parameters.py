@@ -973,6 +973,13 @@ class Parameter(types.SimpleNamespace):
             context_str = ContextFlags._get_context_string(context.flags)
             log_condition_satisfied = self.log_condition & context.flags
 
+        if (
+            not log_condition_satisfied
+            and self.log_condition & LogCondition.INITIALIZATION
+            and self._owner._owner.initialization_status is ContextFlags.INITIALIZING
+        ):
+            log_condition_satisfied = True
+
         if log_condition_satisfied:
             if execution_id not in self.log:
                 self.log[execution_id] = collections.deque([])

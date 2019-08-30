@@ -1024,7 +1024,7 @@ class OutputState(State_Base):
             self.init_args['projections'] = projections
 
             # Flag for deferred initialization
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
+            self.initialization_status = ContextFlags.DEFERRED_INIT
             return
 
         self.reference_value = reference_value
@@ -1433,7 +1433,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
             if isinstance(output_state, OutputState):
                 # KDM 10/23/18: if DEFERRED_INIT is set, it will be set on the non-stateful .context
                 # attr so these should be ok
-                if output_state.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                if output_state.initialization_status == ContextFlags.DEFERRED_INIT:
                     try:
                         output_state_value = OutputState._get_state_function_value(owner,
                                                                                    output_state.function,
