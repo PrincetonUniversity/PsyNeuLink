@@ -75,7 +75,7 @@ names = [
 @pytest.mark.benchmark
 def test_basic(func, variable, params, fail, expected, benchmark):
     f = func(default_variable=variable, **params)
-    benchmark.group = "TransferFunction " + func.componentName;
+    benchmark.group = "TransferFunction " + func.componentName
     res = f.function(variable)
     benchmark(f.function, variable)
     assert np.allclose(res, expected)
@@ -91,7 +91,7 @@ def test_llvm(func, variable, params, fail, expected, benchmark):
         pytest.xfail(fail)
 
     f = func(default_variable=variable, **params)
-    benchmark.group = "TransferFunction " + func.componentName;
+    benchmark.group = "TransferFunction " + func.componentName
     m = pnlvm.execution.FuncExecution(f)
     res = m.execute(variable)
     benchmark(m.execute, variable)
@@ -108,7 +108,7 @@ def test_ptx_cuda(func, variable, params, fail, expected, benchmark):
         pytest.xfail(fail)
 
     f = func(default_variable=variable, **params)
-    benchmark.group = "TransferFunction " + func.componentName;
+    benchmark.group = "TransferFunction " + func.componentName
     m = pnlvm.execution.FuncExecution(f)
     res = m.cuda_execute(variable)
     benchmark(m.cuda_execute, variable)

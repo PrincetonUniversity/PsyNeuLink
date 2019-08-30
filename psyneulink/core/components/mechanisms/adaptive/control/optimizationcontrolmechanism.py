@@ -1150,9 +1150,9 @@ class OptimizationControlMechanism(ControlMechanism):
                                             [ctx.int32_ty(0), ctx.int32_ty(0),
                                              ctx.int32_ty(0)], "obj_val_ptr")
 
-            net_outcome_f = self._gen_llvm_net_outcome_function(ctx);
+            net_outcome_f = self._gen_llvm_net_outcome_function(ctx)
             builder.call(net_outcome_f, [params, state, allocation_sample,
-                                         objective_val_ptr, arg_out]);
+                                         objective_val_ptr, arg_out])
 
             builder.ret_void()
 

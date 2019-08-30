@@ -45,7 +45,7 @@ GROUP_PREFIX="SelectionFunction "
 @pytest.mark.benchmark
 def test_basic(func, variable, params, expected, benchmark):
     f = func(default_variable=variable, **params)
-    benchmark.group = GROUP_PREFIX + func.componentName + params['mode'];
+    benchmark.group = GROUP_PREFIX + func.componentName + params['mode']
     f(variable)
     res = f(variable)
     assert np.allclose(res, expected)
@@ -58,7 +58,7 @@ def test_basic(func, variable, params, expected, benchmark):
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_llvm(func, variable, params, expected, benchmark):
-    benchmark.group = GROUP_PREFIX + func.componentName + params['mode'];
+    benchmark.group = GROUP_PREFIX + func.componentName + params['mode']
     f = func(default_variable=variable, **params)
     m = pnlvm.execution.FuncExecution(f)
     m.execute(variable)
@@ -74,7 +74,7 @@ def test_llvm(func, variable, params, expected, benchmark):
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_ptx_cuda(func, variable, params, expected, benchmark):
-    benchmark.group = GROUP_PREFIX + func.componentName + params['mode'];
+    benchmark.group = GROUP_PREFIX + func.componentName + params['mode']
     f = func(default_variable=variable, **params)
     m = pnlvm.execution.FuncExecution(f)
     m.cuda_execute(variable)

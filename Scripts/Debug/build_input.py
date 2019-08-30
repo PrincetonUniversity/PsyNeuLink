@@ -14,7 +14,7 @@ from pandas import DataFrame, read_csv
 
 # returns array representation of 1HOT vector
 def to1HOT(subfeatureNum, colValue):
-	i = 1;
+	i = 1
 	thisarr = []
 	while i < colValue:
 		thisarr.append(0)

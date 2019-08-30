@@ -893,7 +893,7 @@ class LCControlMechanism(ControlMechanism):
 
         with pnlvm.helpers.array_ptr_loop(builder, vi, "LC_gain") as (builder, index):
             in_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
-            val = builder.load(in_ptr);
+            val = builder.load(in_ptr)
             val = builder.fmul(val, scaling_factor)
             val = builder.fadd(val, base_factor)
 
