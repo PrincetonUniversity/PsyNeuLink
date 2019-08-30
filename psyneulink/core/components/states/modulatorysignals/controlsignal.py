@@ -272,21 +272,22 @@ COMMENT:
 the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`` and the `intercept
 <Logistic.intercept>` parameter of the `Linear` function for ``my_mech_B``::
 
-    >>> my_mech_A = pnl.TransferMechanism(function=pnl.Logistic)
-    >>> my_mech_B = pnl.TransferMechanism(function=pnl.Linear,
-    ...                                   output_states=[pnl.RESULT, pnl.OUTPUT_MEAN])
+    >>> my_mech_A = TransferMechanism(function=Logistic)
+    >>> my_mech_B = TransferMechanism(function=Linear,
+    ...                                   output_states=[RESULT, OUTPUT_MEAN])
 
-    >>> process_a = pnl.Process(pathway=[my_mech_A])
-    >>> process_b = pnl.Process(pathway=[my_mech_B])
+    >>> process_a = Process(pathway=[my_mech_A])
+    >>> process_b = Process(pathway=[my_mech_B])
 
-    >>> my_system = pnl.System(processes=[process_a, process_b],
-    ...                        monitor_for_control=[my_mech_A.output_states[pnl.RESULTS],
-    ...                                             my_mech_B.output_states[pnl.OUTPUT_MEAN]],
-    ...                        control_signals=[(pnl.GAIN, my_mech_A),
-    ...                                         {pnl.NAME: pnl.INTERCEPT,
-    ...                                          pnl.MECHANISM: my_mech_B,
-    ...                                          pnl.MODULATION: pnl.ModulationParam.ADDITIVE}],
+    >>> my_system = System(processes=[process_a, process_b],
+    ...                        monitor_for_control=[my_mech_A.output_states[RESULTS],
+    ...                                             my_mech_B.output_states[OUTPUT_MEAN]],
+    ...                        control_signals=[(GAIN, my_mech_A),
+    ...                                         {NAME: INTERCEPT,
+    ...                                          MECHANISM: my_mech_B,
+    ...                                          MODULATION: ModulationParam.ADDITIVE}],
     ...                        name='My Test System')
+
 COMMENT
 
 
