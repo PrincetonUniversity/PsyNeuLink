@@ -153,7 +153,7 @@ its value from the previous `TRIAL` is assigned to the `last_intensity` attribut
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A ControlSignal has a `cost <ControlSignal.cost>` attribute that may be used by the ControlMechanism to which it
-belongs to determine its future `allocation <ControlSignal.allocation>`.  The value of the `cost <ControlSignal.cost>`
+belongs to determine its `allocation <ControlSignal.allocation>`.  The value of the `cost <ControlSignal.cost>`
 is computed from the ControlSignal's `intensity` using one or more of three cost functions, each of which
 computes a different component of the cost, and a function that combines them, as listed below:
 
