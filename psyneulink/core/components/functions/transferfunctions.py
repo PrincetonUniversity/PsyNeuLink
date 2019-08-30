@@ -20,6 +20,7 @@
 * `GaussianDistort`
 * `SoftMax`
 * `LinearMatrix`
+* `TransferWithCost`
 
 Overview
 --------
