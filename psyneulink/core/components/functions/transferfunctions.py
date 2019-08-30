@@ -3354,7 +3354,7 @@ class TransferWithCost(TransferFunction):
     of the functions enabled in `enabled_cost_functions <TransferWithCost.enabled_cost_functions>`, and stores the
     result in the `combined_costs <TransferWithCost.combined_costs>` attribute.
     
-    # FIX: EXPLAIN HOW enabled_cost_functions IS SET;  RENAME TO OPTIONS
+    # FIX: IMPLEMENT PARSING OF enabled_cost_functions:  GET FROM ControlSignal
 
     Arguments
     ---------
@@ -3374,7 +3374,7 @@ class TransferWithCost(TransferFunction):
         specifies the primary function, used to generate the value it returns.
 
     enabled_cost_functions : CostFunctions or List[CostFunctions] : None
-        specifies the costs to calculate when `function <TransferWithCost.function>` is called, and
+        specifies the costs to execute when `function <TransferWithCost.function>` is called, and
         include in the computation of `combined_cost <ControlSignal.combined_cost>`.
 
     intensity_cost_fct : Optional[TransferFunction] : default Exponential
@@ -3425,7 +3425,7 @@ class TransferWithCost(TransferFunction):
         same as `function <TransferWithCost.function>`.
 
     enabled_cost_functions : CostFunctions or None
-        boolean combination of currently assigned CostFunctions;  determines which `cost functions
+        boolean combination of currently enabled CostFunctions;  determines which `cost functions
         <TransferWithCost_Cost_Functions>` are calculated when `function <TransferWithCost.function>` is called, and
         are included in the computation of `combined_cost <ControlSignal.combined_cost>`.
 
