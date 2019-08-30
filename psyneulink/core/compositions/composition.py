@@ -2996,11 +2996,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return False
 
     def _check_feedback(self, scheduler):
-        '''Check that feedback specification is required for projections to which it has been assigned
+        """Check that feedback specification is required for projections to which it has been assigned
         Note:
         - graph_processing and graph_processing.dependency_dict are used as indications of structural dependencies
         - scheduler.dependency_dict is used as indication of execution dependencies
-        '''
+        """
 
         if scheduler:
             # If an external scheduler is provided, update it with current processing graph
@@ -3107,7 +3107,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         from psyneulink.core.globals.keywords import PROJECTION, NODE
         def is_spec(entry, desired_type:tc.enum(NODE, PROJECTION)):
-            '''Test whether pathway entry is specified type (NODE or PROJECTION)'''
+            """Test whether pathway entry is specified type (NODE or PROJECTION)"""
             node_specs = (Mechanism, Composition)
             proj_specs = (Projection, np.ndarray, np.matrix, str, list)
             if desired_type == NODE:
@@ -3561,7 +3561,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             learned_projection,
                                             learning_rate,
                                             learning_update):
-        '''Creates *TARGET_MECHANISM*, *COMPARATOR_MECHANISM* and *LEARNING_MECHANISM* for RL and TD learning'''
+        """Creates *TARGET_MECHANISM*, *COMPARATOR_MECHANISM* and *LEARNING_MECHANISM* for RL and TD learning"""
 
         if isinstance(learning_function, type):
             if issubclass(learning_function, TDLearning):
@@ -3612,7 +3612,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return target_mechanism, comparator_mechanism, learning_mechanism
 
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
-        ''' Construct MappingProjections among `learning components <Composition_Learning_Components>` for pathway'''
+        """Construct MappingProjections among `learning components <Composition_Learning_Components>` for pathway"""
 
         # FIX 5/29/19 [JDC]:  INTEGRATE WITH _get_back_prop_error_sources (RIGHT NOW, ONLY CALLED FOR TERMINAL SEQUENCE)
         try:
@@ -3635,7 +3635,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
 
     def _create_learning_projection(self, learning_mechanism, learned_projection):
-        '''Construct LearningProjections from LearningMechanisms to learned_projections in processing pathway'''
+        """Construct LearningProjections from LearningMechanisms to learned_projections in processing pathway"""
 
         learning_projection = LearningProjection(name="Learning Projection",
                                                  sender=learning_mechanism.learning_signals[0],
