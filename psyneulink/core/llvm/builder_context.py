@@ -566,7 +566,7 @@ class LLVMBuilderContext:
 
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:
-            assert all(type(x) == type(t[0]) for x in t)
+            assert all(type(x) is type(t[0]) for x in t)
             elem_t = self.convert_python_struct_to_llvm_ir(t[0])
             return ir.ArrayType(elem_t, len(t))
         elif type(t) is tuple:
