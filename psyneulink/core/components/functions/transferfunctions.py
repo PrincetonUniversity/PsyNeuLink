@@ -3318,14 +3318,16 @@ class TransferWithCost(ObjectiveFunction):
 
     .. _TransferWithCost_Cost_Functions:
 
+    FIX:
+    ............
     The following functions are computed on `variable <TransferWithCost.variable>` each time `function
     <TransferWithCost.function>` is executed, and assigned to the corresponding parameter:
-
 
     The value of `variable <Stability.variable>` is evaluated by one, two or three of the constituent cost functions
     -- `intensity_fct <TransferWithCost.intensity_fct>`, `adjustment_fct <TransferWithCost.adjustment_fct>`, and/or `duration_fct
     <TransferWithCost.duration_fct>`  -- and then combined using the `combine_costs_fct <TransferWithCost.combine_costs_fct>`.  A tuple is
     returned contaning each of the three individual costs and their combined value.
+    .............
 
     Arguments
     ---------
