@@ -334,7 +334,7 @@ from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 
 __all__ = [
     'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
-    'COMBINE_COSTS_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DURATION_COST',
+    'COMBINE_COSTS_FUNCTION', 'COST_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DURATION_COST',
     'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION',
 ]
 
@@ -367,7 +367,7 @@ COST_OPTIONS = 'cost_options'
 class ControlSignalCosts(IntEnum):
     """Options for selecting `cost functions <ControlSignal_Costs>` to be used by a ControlSignal.
 
-    These can be used alone or in combination with one another, by `enabling or disabling <_ControlSignal_Toggle_Costs>`
+    These can be used alone or in combination with one another, by `enabling or disabling <ControlSignal_Toggle_Costs>`
     each using the ControlSignal's `toggle_cost_function` method.
 
     Attributes
@@ -717,9 +717,9 @@ class ControlSignal(ModulatorySignal):
                     :type: `Function`
 
         """
-        # NOTE: if the specification of this getter is happening in several other classes, should consider
-        # refactoring Parameter to allow individual attributes to be inherited, othwerise, leaving this is an
-        # isolated case
+        # FIX: if the specification of this getter is happening in several other classes, should consider
+        #      refactoring Parameter to allow individual attributes to be inherited, othwerise, leaving this is an
+        #      isolated case
         variable = Parameter(np.array([defaultControlAllocation]),
                              aliases='allocation',
                              getter=_output_state_variable_getter)

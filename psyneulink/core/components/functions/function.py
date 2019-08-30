@@ -283,15 +283,7 @@ class ModulationParam(Enum):
         ignore the ModulatorySignal when calculating the State's `value <State_Base.value>`
     """
     MULTIPLICATIVE = MultiplicativeParam
-    # MULTIPLICATIVE = ModulationType(MULTIPLICATIVE_PARAM,
-    #                                 'MULTIPLICATIVE',
-    #                                 1,
-    #                                 lambda x : np.product(np.array(x), axis=0))
     ADDITIVE = AdditiveParam
-    # ADDITIVE = ModulationType(ADDITIVE_PARAM,
-    #                           'ADDITIVE',
-    #                           0,
-    #                           lambda x : np.sum(np.array(x), axis=0))
     OVERRIDE = OVERRIDE_PARAM
     # OVERRIDE = OverrideParam
     DISABLE = DISABLE_PARAM

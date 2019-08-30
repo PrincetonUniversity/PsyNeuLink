@@ -602,22 +602,29 @@ PROCESSING_MECHANISM = "ProcessingMechanism"
 # Functions:
 ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"
 USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
+
+# CombinationFunctions:
 REDUCE_FUNCTION = "Reduce Function"
 CONCATENATE_FUNCTION = "Concatenate Function"
 REARRANGE_FUNCTION = 'Rearrange Function'
 LINEAR_COMBINATION_FUNCTION = "LinearCombination Function"
-PREDICTION_ERROR_DELTA_FUNCTION = "PredictionErrorDelta Function"
 COMBINE_MEANS_FUNCTION = "CombineMeans Function"
+
+# TransferFunctions:
+IDENTITY_FUNCTION = 'Identity Function'
 LINEAR_FUNCTION = "Linear Function"
 LEABRA_FUNCTION = "Leabra Function"
 EXPONENTIAL_FUNCTION = "Exponential Function"
 LOGISTIC_FUNCTION = "Logistic Function"
 RELU_FUNCTION = "ReLU Function"
-ONE_HOT_FUNCTION = "OneHot Function"
 GAUSSIAN_FUNCTION = "Gaussian Function"
 GAUSSIAN_DISTORT_FUNCTION = "GaussianDistort Function"
-NORMAL_FUNCTION = 'Normal Function'
 SOFTMAX_FUNCTION = 'SoftMax Function'
+
+# SelectionFunctions:
+ONE_HOT_FUNCTION = "OneHot Function"
+
+# IntegratorFunctions:
 INTEGRATOR_FUNCTION = "IntegratorFunction Function"
 INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION = "Interactive Activation IntegratorFunction Function"
 SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"
@@ -633,8 +640,12 @@ GILZENRAT_INTEGRATOR_FUNCTION = "GilzenratDecisionIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU IntegratorFunction Function"
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
+
+# OptimizationFunctions:
 GRADIENT_OPTIMIZATION_FUNCTION = "GradientOptimization Function"
 GRID_SEARCH_FUNCTION = 'GridSearch Function'
+
+# LearningFunctions:
 GAUSSIAN_PROCESS_FUNCTION = 'GaussianProcess Function'
 HEBBIAN_FUNCTION = 'Hebbian Learning Function'
 CONTRASTIVE_HEBBIAN_FUNCTION = 'ContrastiveHebbian Learning Function'
@@ -642,11 +653,12 @@ KOHONEN_FUNCTION = 'Kohonen Learning Function'
 RL_FUNCTION = 'ReinforcementLearning Function'
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
 TDLEARNING_FUNCTION = "TD Learning Function"
+PREDICTION_ERROR_DELTA_FUNCTION = "PredictionErrorDelta Function"
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
-IDENTITY_FUNCTION = 'Identity Function'
-STATE_MAP_FUNCTION = 'State Map Function'
-# Distribution functions
 
+STATE_MAP_FUNCTION = 'State Map Function'
+
+# Distributionfunctions
 NORMAL_DIST_FUNCTION = "Normal Distribution Function"
 UNIFORM_DIST_FUNCTION = "Uniform Distribution Function"
 EXPONENTIAL_DIST_FUNCTION = "Exponential Distribution Function"
@@ -654,9 +666,10 @@ GAMMA_DIST_FUNCTION = "Gamma Distribution Function"
 WALD_DIST_FUNCTION = "Wald Distribution Function"
 DRIFT_DIFFUSION_ANALYTICAL_FUNCTION = "Drift Diffusion Analytical Function"
 
-# Objective functions
+# ObjectiveFunctions
 STABILITY_FUNCTION = 'Stability Function'
 DISTANCE_FUNCTION = 'Distance Function'
+COST_FUNCTION = "Cost Function"
 
 #endregion
 
