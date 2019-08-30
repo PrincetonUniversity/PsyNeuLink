@@ -29,10 +29,12 @@ Creating a ControlSignal
 
 A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is `specified for
 control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specified in the **control_signals** argument
-of the constructor for a `ControlMechanism <ControlMechanism>` or a `System <System_Control_Specification>`.  Although
-a ControlSignal can be created on its own using its constructor (or any of the other ways for `creating an OutputState
-<OutputStates_Creation>`), this is usually not necessary nor is it advisable, as a ControlSignal has dedicated
-components and requirements for configuration that must be met for it to function properly.
+of the constructor for a `ControlMechanism <ControlMechanism>`, as well as in the `specification of the parameter
+<ParameterState_Specification>` that the ControlSignal is intended to modulate (also see `Modualory Specificadtion
+<ParameterState_Modulatory_Specification>`.  Although a ControlSignal can also be  created on its own using its
+constructor (or any of the other ways for `creating an OutputState <OutputStates_Creation>`), this is usually not
+necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for configuration that
+must be met for it to function properly.
 
 .. _ControlSignal_Specification:
 
