@@ -112,7 +112,7 @@ The specification of the initial value of a parameter can take any of the follow
     * **Value** -- this must be a valid value for the parameter. It creates a default ParameterState,
       assigns the parameter's default value as the ParameterState's `value <ParameterState.value>`,
       and assigns the parameter's name as the name of the ParameterState.
-    ..
+
     * **ParameterState reference** -- this must refer to an existing **ParameterState** object; its name must be the
       name of a parameter of the owner or of the owner's `function <Component.function>`, and its value must be a valid
       one for the parameter.
@@ -120,7 +120,7 @@ The specification of the initial value of a parameter can take any of the follow
       .. note::
           This capability is provided for generality and potential
           future use, but its current use is not advised.
-    ..
+
     .. _ParameterState_Modulatory_Specification:
 
     * **Modulatory specification** -- this can be an existing `ControlSignal` or `ControlProjection`,
@@ -133,7 +133,7 @@ The specification of the initial value of a parameter can take any of the follow
       ModulatoryProjection already exist, their value(s) must be valid one(s) for the parameter.  Note that only
       Control and Learning Modulatory components can be assigned to a ParameterState (Gating components cannot be
       used -- they can only be assigned to `InputStates <InputState>` and `OutputStates <OutputState>`).
-    ..
+
     .. _ParameterState_Tuple_Specification:
 
     * **2-item tuple:** *(<value>, <Modulatory specification>)* -- this creates a default ParameterState, uses the value

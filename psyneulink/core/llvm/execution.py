@@ -458,7 +458,7 @@ class CompExecution(CUDAExecution):
         c_input = input_type * num_input_sets
         if len(self._execution_ids) > 1:
             c_input = c_input * len(self._execution_ids)
-            run_inputs = []
+            Composition_Run_Inputs = []
             for inp in inputs:
                 run_inps = []
                 # Extract inputs for each trial
@@ -466,17 +466,17 @@ class CompExecution(CUDAExecution):
                     run_inps.append([])
                     for m in origins:
                         run_inps[i] += [[v] for v in inp[m][i]]
-                run_inputs.append(run_inps)
+                Composition_Run_Inputs.append(run_inps)
 
         else:
-            run_inputs = []
+            Composition_Run_Inputs = []
             # Extract inputs for each trial
             for i in range(num_input_sets):
-                run_inputs.append([])
+                Composition_Run_Inputs.append([])
                 for m in origins:
-                    # Since the input to each input state needs to be a 2-d array, we need to pack v into an array
-                    run_inputs[i] += [[v] for v in inputs[m][i]]
-        return c_input(*_tupleize(run_inputs))
+                    Composition_Run_Inputs[i] += [[v] for v in inputs[m][i]]
+
+        return c_input(*_tupleize(Composition_Run_Inputs))
 
     @property
     def _bin_run_func(self):

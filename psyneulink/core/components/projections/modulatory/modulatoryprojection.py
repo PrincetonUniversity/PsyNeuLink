@@ -25,15 +25,15 @@ that modulate different types of Components and their States:
     `function <ParameterState.function>` in modulating the value of the MappingProjection's
     `matrix <MappingProjection.matrix>` parameter.
 ..
-* `GatingProjection`
-    takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to a `GatingMechanism`, and conveys it
-    to the `InputState` or `OutputState` of a `ProcessingMechanism <ProcessingMechanism>` for use by the State's
-    `function <State_Base.function>` in modulating its `value <State_Base.value>`.
-..
 * `ControlProjection`
     takes the `value of a <ControlSignal.value>` of a `ControlSignal` belonging to a `ControlMechanism`,
     and conveys it to the `ParameterState` for the parameter of a `Mechanism <Mechanism>` or its
     `function <Mechanism_Base.function>`, for use in modulating the value of the parameter.
+..
+* `GatingProjection`
+    takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to a `GatingMechanism`, and conveys it
+    to the `InputState` or `OutputState` of a `ProcessingMechanism <ProcessingMechanism>` for use by the State's
+    `function <State_Base.function>` in modulating its `value <State_Base.value>`.
 
 .. _Projection_Creation:
 

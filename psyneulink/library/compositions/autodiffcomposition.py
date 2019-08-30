@@ -195,11 +195,14 @@ simple AutodiffComposition, specify its inputs and targets, and run it with lear
 
 As shown above (and for convenience), an AutodiffComposition with learning disabled can be run with the same input
 format used for training.  In that case, the *"input"* entry is used as the inputs for the run, and the *"targets"*
-and *"epochs"* (if present) are ignored. However, since an AutodiffComposition with learning disabled is treated like
-any other Composition, it can also be run with the same input format as a standard `Composition`; that is,
-a single dictionary specifying the inputs for each `ORIGIN` Mechanism), as follows::
+and *"epochs"* entries (if present) are ignored. However, since an AutodiffComposition with learning disabled is
+treated like any other Composition, it can also be run with the same `input format <Composition_Run_Inputs>` as a standard
+`Composition`; that is, a single dictionary specifying the inputs for each `ORIGIN` Mechanism), such the one defined
+in the exaple above, as follows::
 
     >>> my_autodiff.run(inputs = my_inputs)
+
+or `using a function <Composition_Input_as_Function>`.
 
 Logging
 -------

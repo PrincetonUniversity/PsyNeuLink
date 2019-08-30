@@ -18,7 +18,7 @@ Sections
   * `Composition_Run`
   * `Composition_Controller`
   * `Composition_Learning`
-  * `Visualizing_a_Composition`
+  * `Composition_Visualization`
   * `Composition_Class_Reference`
 
 .. _Composition_Overview:
@@ -191,14 +191,14 @@ the nested composition just as for any other node.
 Running a Composition
 ---------------------
 
-.. _Run_Inputs:
+.. _Composition_Run_Inputs:
 
 *Inputs*
 ========
 
-The `run <Composition.run>` method presents the inputs for each `TRIAL` to the input_states of the INPUT Nodes in
-the `scope of execution <Run_Scope_of_Execution>`. These input values are specified in the **inputs** argument of a
-Composition's `execute <Composition.execute>` or `run <Composition.run>` methods.
+The `run <Composition.run>` method presents the inputs for each `TRIAL` to the input_states of the INPUT Nodes in the 
+`scope of execution <Composition_Scope_of_Execution>`. These input values are specified in the **inputs** argument of 
+a Composition's `execute <Composition.execute>` or `run <Composition.run>` methods.
 
 COMMENT:
     From KAM 2/7/19 - not sure "scope of execution" is the right phrase. To me, it implies that only a subset of the
@@ -210,7 +210,7 @@ The standard way to specificy inputs is a Python dictionary in which each key is
 each value is a list. The lists represent the inputs to the key `INPUT <NodeRole.INPUT>` Nodes, in which the i-th
 element of the list represents the input value to the key Node on trial i.
 
-.. _Run_Inputs_Fig_States:
+.. _Composition_Run_Inputs_Fig_States:
 
 .. figure:: _static/input_spec_states.svg
    :alt: Example input specifications with input states
@@ -218,7 +218,7 @@ element of the list represents the input value to the key Node on trial i.
 
 Each input value must be compatible with the shape of the key `INPUT <NodeRole.INPUT>` Node's `external_input_values
 <MechanismBase.external_input_values>`. As a result, each item in the list of inputs is typically a 2d list/array,
-though `some shorthand notations are allowed <Input_Specification_Examples>`.
+though `some shorthand notations are allowed <Composition_Input_Specification_Examples>`.
 
         >>> import psyneulink as pnl
 
@@ -302,7 +302,7 @@ values from trials 0 and 1 are used again on trials 5 and 6, respectively.
         >>> comp.run(inputs=input_dictionary,
         ...          num_trials=7)
 
-.. _Input_Specification_Examples:
+.. _Composition_Input_Specification_Examples:
 
 For convenience, condensed versions of the input specification described above are also accepted in the following
 situations:
@@ -452,7 +452,7 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only IN
         >>> comp.run(inputs=input_list)
 ..
 
-.. _Run_Inputs_Interactive:
+.. _Composition_Input_as_Function:
 
 *Interactive Inputs*
 ====================
@@ -502,7 +502,7 @@ assigned at the start of a `TRIAL` as input to Nodes that close recurrent loops 
 and listed in the Composition's ?? attribute),
 
 
-.. _Run_Scope_of_Execution:
+.. _Composition_Scope_of_Execution:
 
 *Execution Contexts*
 ====================
@@ -636,7 +636,7 @@ COMMENT:
 For Developers
 --------------
 
-.. _Run_Execution_Contexts_Init:
+.. _Composition_Execution_Contexts_Init:
 
 Initialization of Execution Contexts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -664,15 +664,15 @@ If you receive an error like below, while checking for a context value for examp
 
 this means that there was no context value found for execution_id, and can be indicative that execution_id
 was not initialized to the values of another execution context, which normally happens during execution.
-See `Execution Contexts initialization <Run_Execution_Contexts_Init>`.
+See `Execution Contexts initialization <Composition_Execution_Contexts_Init>`.
 
-.. _Run_Timing:
+.. _Composition_TIming:
 
 *Timing*
 ========
 
 When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
-method once for each `input <Run_Inputs>`  (or set of inputs) specified in the call to `run <Composition.run>`,
+method once for each `input <Composition_Run_Inputs>`  (or set of inputs) specified in the call to `run <Composition.run>`,
 which constitutes a `TRIAL` of execution.  For each `TRIAL`, the Component makes repeated `calls to its Scheduler
 <Scheduler_Execution>`, executing the Components it specifies in each `TIME_STEP`, until every Component has been
 executed at least once or
@@ -995,7 +995,7 @@ that each function is called at the appropriate times during execution.  Further
 the internal constituents of the object (e.g., intermediates layers of a neural network model) are not accessible to
 other Components in the Composition (e.g., as a source of information or for modulation).
 
-.. _Visualizing_a_Composition:
+.. _Composition_Visualization:
 
 Visualizing a Composition
 -------------------------
@@ -1056,7 +1056,7 @@ method.  The figure below shows several examples.
 **Output of show_graph using different options**
 
 .. figure:: _static/show_graph_figure.svg
-   :alt: System graph examples
+   :alt: Composition graph examples
    :scale: 150 %
 
    Displays of the Composition used in the `example above <System_show_graph_basic_figure>`, generated using various
@@ -4343,7 +4343,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
            (standard with PsyNeuLink pip install)
 
-        See `Visualizing a Composition <Visualizing_a_Composition>` for details and examples.
+        See `Visualizing a Composition <Composition_Visualization>` for details and examples.
 
         Arguments
         ---------

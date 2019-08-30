@@ -17,9 +17,9 @@ Overview
 A ControlProjection is a type of `ModulatoryProjection <ModulatoryProjection>` that projects to the `ParameterState
 <ParameterState>` of a `ProcessingMechanism <ProcessingMechanism>`. It takes the `value <ControlSignal.value>` of a
 `ControlSignal` of a `ControlMechanism <ControlMechanism>` and uses it to  modify the value of the parameter associated
-with the ParameterState to which it projects.  All of the ControlProjections in a System, along with its other `control
-components <ControlMechanism>`, can be displayed using the System's `show_graph <System.show_graph>` method with
-its **show_control** argument assigned as `True`.
+with the ParameterState to which it projects.  All of the ControlProjections in a Composition, along with its other
+`control components <ControlMechanism>`, can be displayed using the Composition's `show_graph <Composition.show_graph>`
+method with its **show_control** argument assigned as `True`.
 
 .. _ControlProjection_Creation:
 
@@ -29,13 +29,16 @@ Creating a ControlProjection
 A ControlProjection can be created using any of the standard ways to `create a Projection <Projection_Creation>`,
 or by including it in a `tuple <ParameterState_Tuple_Specification>` that specifies a parameter for a `Mechanism
 <Mechanism>`, `MappingProjection`, or the `function <Component.function>` of either of these.  If a ControlProjection
-is created explicitly (using its constructor), and its **receiver** argument is not specified, its initialization is
-`deferred <ControlProjection_Deferred_Initialization>`.  If it is included in a parameter specification,
-the `ParameterState` for the parameter being specified will be assigned as the ControlProjection's `receiver
-<ControlProjection.receiver>`. If its **sender** argument is not specified, its assignment depends on the
-**receiver**.  If the **receiver** belongs to a Mechanism that is part of a `System`, then the ControlProjection's
+is created explicitly (using its constructor), and either its **receiver** or **sender** argument is not specified,
+its initialization is `deferred <ControlProjection_Deferred_Initialization>`.  If it is included in a `parameter
+specification <ParameterState_Specification>`, the  `ParameterState` for the parameter being specified will be assigned
+as the ControlProjection's `receiver <ControlProjection.receiver>`.
+COMMENT:
+TBI FOR COMPOSITION
+If the **receiver** belongs to a Mechanism that is part of a `System`, then the ControlProjection's
 `sender <ControlProjection.sender>` is assigned to a `ControlSignal` of the System's `controller`.  Otherwise,
 its initialization is `deferred <ControlProjection_Deferred_Initialization>`.
+COMMENT
 
 .. _ControlProjection_Deferred_Initialization:
 
@@ -47,11 +50,10 @@ When a ControlProjection is created, its full initialization is `deferred <Compo
 a ControlProjection to be created before its `sender <ControlProjection.sender>` and/or `receiver
 <ControlProjection.receiver>` have been created (e.g., before them in a script), by calling its constructor without
 specifying its **sender** or **receiver** arguments. However, for the ControlProjection to be operational,
-initialization must be completed by calling its `deferred_init` method. This is not necessary if the ControlProjection
-is included in a `tuple specification <ParameterState_Tuple_Specification>` for the parameter of a `Mechanism
-<Mechanism>` or its `function <Mechanism_Base.function>`, in which case the deferred initialization is completed
-automatically when the `ControlMechanism <ControlMechanism>` is created for the `System` to which the parameter's owner
-belongs (see `ControlMechanism_Creation`).
+initialization must be completed by a call to its `deferred_init` method. This is done automatically if the
+ControlProjection is included in a `tuple specification <ParameterState_Tuple_Specification>` for the parameter of a
+`Mechanism <Mechanism>` or its `function <Mechanism_Base.function>`, when the `ControlMechanism <ControlMechanism>`
+is created for the `Composition` to which the parameter's owner belongs (see `ControlMechanism_Creation`).
 
 
 .. _ControlProjection_Structure:
