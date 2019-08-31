@@ -43,7 +43,7 @@ FOR DEVELOPERS:
     The monitor property returns the OutputStates that project to the Mechanism's InputStates
 COMMENT
 
-The **monitor** argument of the constructor specifies the `OutputStates <OutputState>` it monitors.
+The **monitor** argument of an ObjectiveMechanism's constructor specifies the `OutputStates <OutputState>` it monitors.
 This takes the place of the **input_states** argument used by most other forms of `Mechanism <Mechanism>`, and is used
 by the ObjectiveMechanism to create an `InputState` for each OutputState it monitors, along with a `MappingProjection`
 from the OutputState to that InputState.  The **monitor** argument takes a list of items that can
@@ -64,6 +64,11 @@ or `size <ObjectiveMechanism.size>` attributes (see `Mechanism InputState specif
 be monitored, the InputState is created but will be ignored until an OutputState (and MappingProjection from it) are
 specified for that InputState.
 
+COMMENT:
+FIX 8/27/19 [JDC]:
+ADD DISCUSSION OF monitor_weights_and_exponents ARGUMENT HERE
+.. _ObjectiveMechanism_Monitor_Weights_and_Exponents:
+COMMENT
 
 COMMENT:
 Note that some forms of specification may depend on specifications made for the OutputState referenced, the Mechanism
@@ -87,15 +92,25 @@ precedence afforded to each) are described below.
     types listed below:  if it is `None`, then none of that Mechanism's OutputStates are monitored; if it
     specifies OutputStates to be monitored, those are monitored even if they do not satisfy any of the conditions
     described in the specifications below.
-COMMENT
 
+TBI FOR COMPOSITION:
 The OutputStates monitored by the ObjectiveMechanism are listed in its `monitor <ObjectiveMechanism.monitor>`
 attribute.  When an ObjectiveMechanism is created by a `ControlMechanism`, or a `System` for its `controller
 <System.controller>`, these may pass a set of OutputStates to be monitored to the ObjectiveMechanism.  A
 ControlMechanism passes OutputState specifications listed in its **objective_mechanism** argument (see
 `ControlMechanism_ObjectiveMechanism`), and a System passes any listed in its **monitor_for_control** argument (see
 `System_Control_Specification`).
+COMMENT
 
+COMMENT:
+FIX 8/27/19 [JDC]:
+GENERALIZE TO ModulatoryMechanism
+COMMENT
+
+The OutputStates monitored by the ObjectiveMechanism are listed in its `monitor <ObjectiveMechanism.monitor>` attribute.
+When an ObjectiveMechanism is created by a `ControlMechanism`, these may pass a set of OutputStates to be monitored to
+the ObjectiveMechanism.  A ControlMechanism passes OutputState specifications listed in its **objective_mechanism**
+argument (see `ControlMechanism_ObjectiveMechanism`).
 
 .. _ObjectiveMechanism_Structure:
 
@@ -520,8 +535,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         input_states) and returns a 1d array.
 
     role : None, LEARNING or CONTROL
-        specifies whether the ObjectiveMechanism is used for learning in a Process or System (in conjunction with a
-        `ObjectiveMechanism`), or for control in a System (in conjunction with a `ControlMechanism <ControlMechanism>`).
+        specifies whether the ObjectiveMechanism is used for learning in a `Composition` (in conjunction with a
+        `LearningMechanism`), or for control in a Composition (in conjunction with a `ControlMechanism
+        <ControlMechanism>`).
 
     value : 1d np.array
         the output of the evaluation carried out by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.
@@ -638,7 +654,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          **kwargs)
 
         # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
-        #    the controller for a System;  it is set by the ControlMechanism when it creates the ObjectiveMechanism
+        #    the controller for a Composition;  it is set by the ControlMechanism when it creates the ObjectiveMechanism
         self.for_controller = False
 
     def _validate_params(self, request_set, target_set=None, context=None):

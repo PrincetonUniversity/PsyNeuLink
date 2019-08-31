@@ -1,5 +1,6 @@
 pytest
 pytest-benchmark
+pytest-codestyle
 pytest-cov
 pytest-profiling
 pytest-pydocstyle

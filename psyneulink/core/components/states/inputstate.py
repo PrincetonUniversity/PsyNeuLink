@@ -205,7 +205,7 @@ should project to the InputState. Each of these is described below:
           the value must be an integer or float, and is assigned as the value of the InputState's `weight
           <InputState.weight>` attribute (see `weight and exponent <InputState_Weights_And_Exponents>`);
           this takes precedence over any specification in the **weight** argument of the InputState's constructor.
-      |
+
       * *EXPONENT*:<number>
           the value must be an integer or float, and is assigned as the value of the InputState's `exponent
           <InputState.exponent>` attribute (see `weight and exponent <InputState_Weights_And_Exponents>`);
@@ -257,10 +257,10 @@ should project to the InputState. Each of these is described below:
           `OutputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
           (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
-        |
+
         * **2-item tuple:** *(<value, State specification, or list of State specs>, <Projection specification>)* --
           this is a contracted form of the 4-item tuple described below;
-        |
+
         * **4-item tuple:** *(<value, State spec, or list of State specs>, weight, exponent, Projection specification)*
           -- this allows the specification of State(s) that should project to the InputState, together with a
           specification of the InputState's `weight <InputState.weight>` and/or `exponent <InputState.exponent>`
@@ -269,23 +269,23 @@ should project to the InputState. Each of these is described below:
           (e.g., using the matrix of the Projection specification) and/or attributes of the Projection(s) to it. Each
           tuple must have at least the following first three items (in the order listed), and can include the fourth:
 
-            |
+
             * **value, State specification, or list of State specifications** -- specifies either the `variable
               <InputState.variable>` of the InputState, or one or more States that should project to it.  The State
               specification(s) can be a (State name, Mechanism) tuple (see above), and/or include Mechanisms (in which
               case their `primary OutputState <OutputStatePrimary>` is used.  All of the State specifications must be
               consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
               <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included;
-            |
+
             * **weight** -- must be an integer or a float; multiplies the `value <InputState.value>` of the InputState
               before it is combined with others by the Mechanism's `function <Mechanism.function>` (see
               ObjectiveMechanism for `examples <ObjectiveMechanism_Weights_and_Exponents_Example>`);
-            |
+
             * **exponent** -- must be an integer or float; exponentiates the `value <InputState.value>` of the
               InputState before it is combined with others by the ObjectiveMechanism's `function
               <ObjectiveMechanism.function>` (see ObjectiveMechanism for `examples
               <ObjectiveMechanism_Weights_and_Exponents_Example>`);
-            |
+
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
               must be compatible with the State specification(s) in the 1st item; if there is more than one State
               specified, and the Projection specification is used, all of the States
@@ -301,12 +301,12 @@ should project to the InputState. Each of these is described below:
       * *InputState or [InputState, ...]* -- each InputState must belong to an existing Mechanism; creates a new
         InputState for each one specified, along with Projections to it that parallel those of the one specified
         (see below).
-      |
+
       * *{SHADOW_INPUTS: <InputState or Mechanism or [<InputState or Mechanism>,...]>}* -- any InputStates specified
         must belong to an existing Mechanism;  creates a new InputState for each one specified, and for each of the
         InputStates belonging to any Mechanisms specified, along with Projections to them that parallel those of the
         one(s) specified (see below).
-      |
+
       For each InputState specified, and all of the InputStates belonging to any Mechanisms specified, a new InputState
       is created along with Projections to it that parallel those received by the corresponding InputState in the
       list.  In other words, for each InputState specified, a new one is created that receives exactly the same inputs
@@ -352,11 +352,11 @@ starting with constraints that are given the highest precedence:
 
     * **More than one Component is specified with the same :ref:`value` format** -- that format is used to determine
       the format of the InputState's `variable <InputState.variable>`.
-    |
+
     * **More than one Component is specified with different :ref:`value` formats** -- the InputState's `variable
       <InputState.variable>` is determined by item of the default `variable <Mechanism_Base.variable>` for
       the class of its owner Mechanism.
-    |
+
     * **A single Component is specified** -- its :ref:`value` is used to determine the format of the InputState's
       `variable <InputState.variable>`;  if the Component is a(n):
 
@@ -366,10 +366,10 @@ starting with constraints that are given the highest precedence:
           <InputState.variable>` and the Projection's `value <Projection_Base.value>` (since the Projection's
           `sender <Projection_Base.sender>` is unspecified, its `initialization is deferred
           <Projection_Deferred_Initialization>`.
-        |
+
         * **Existing MappingProjection** -- then its `value <Projection_Base.value>` determines the
           InputState's `variable <InputState.variable>`.
-        |
+
         * `Matrix specification <Mapping_Matrix_Specification>` -- its receiver dimensionality determines the format
           of the InputState's `variable <InputState.variable>`. For a standard 2d "weight" matrix (i.e., one that maps
           a 1d array from its `sender <Projection_Base.sender>` to a 1d array of its `receiver
@@ -378,14 +378,14 @@ starting with constraints that are given the highest precedence:
           dimensionality of the receiver (used for the InputState's `variable <InputState.variable>`) is the
           dimensionality of the matrix minus the dimensionality of the sender's `value <OutputState.value>`
           (see `matrix dimensionality <Mapping_Matrix_Dimensionality>`).
-      |
+
       * **OutputState or ProcessingMechanism** -- the `value <OutputState.value>` of the OutputState (if it is a
         Mechanism, then its `primary OutputState <OutputState_Primary>`) determines the format of the InputState's
         `variable <InputState.variable>`, and a MappingProjection is created from the OutputState to the InputState
         using an `IDENTITY_MATRIX`.  If the InputState's `variable <InputState.variable>` is constrained (as in some
         of the cases above), then a `FULL_CONNECTIVITY_MATRIX` is used which maps the shape of the OutputState's `value
         <OutputState.value>` to that of the InputState's `variable <InputState.variable>`.
-      |
+
       * **GatingProjection, GatingSignal or GatingMechanism** -- any of these can be used to specify an InputState;
         their `value` does not need to be compatible with the InputState's `variable <InputState.variable>`, however
         it does have to be compatible with the `modulatory parameter <Function_Modulatory_Params>` of the InputState's
@@ -1330,7 +1330,7 @@ class InputState(State_Base):
 
         InputState variable must be embedded in a list so that LinearCombination (its default function)
         returns a variable that is >=2d intact (rather than as arrays to be combined);
-        this is normally done in State.update() (and in State._instantiate-function), but that
+        this is normally done in state._update() (and in State._instantiate-function), but that
         can't be called by _parse_state_spec since the InputState itself may not yet have been instantiated.
 
         """
@@ -1392,7 +1392,6 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          state_param_identifier=INPUT_STATE,
                                          reference_value=reference_value if reference_value is not None
                                                                          else owner.defaults.variable,
-                                         # reference_value=reference_value,
                                          reference_value_name=VALUE,
                                          context=context)
 

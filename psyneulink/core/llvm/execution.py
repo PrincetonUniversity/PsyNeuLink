@@ -480,14 +480,94 @@ class CompExecution(CUDAExecution):
 
         return self.__bin_run_multi_func
 
-    def run(self, inputs, runs, num_input_sets):
+    # inserts autodiff params into the param struct (this unfortunately needs to be done dynamically, as we don't know autodiff inputs ahead of time)
+    def _initialize_autodiff_param_struct(self,autodiff_stimuli):
+        inputs = {}
+        targets = {} 
+        epochs = 0
+
+        if "inputs" in autodiff_stimuli:
+            inputs = autodiff_stimuli["inputs"]
+        if "targets" in autodiff_stimuli:
+            targets = autodiff_stimuli["targets"]
+        if "epochs" in autodiff_stimuli:
+            epochs = autodiff_stimuli["epochs"]
+        autodiff_stimuli_struct = [
+            epochs,
+            len(next(iter(inputs.values())))
+        ]
+        ctx = pnlvm.builder_context.LLVMBuilderContext.get_global()
+        
+       
+        value_struct_ir_ty = pnlvm.ir.LiteralStructType([
+            pnlvm.ir.IntType(32), # idx of the node
+            pnlvm.ir.IntType(32), # dimensionality of value
+            pnlvm.ir.IntType(64) # int memaddr of beginning of input/output list
+        ]
+        )
+        value_struct_c_ty = _convert_llvm_ir_to_ctype(value_struct_ir_ty) * len(self._composition.nodes)
+        
+        # autodiff_values keeps the ctype values on the stack, so it doesn't get gc'd TODO: Make sure this works as intended
+        autodiff_values = []
+        def make_val_arr(dictionary):
+            value_struct_array = [()] * len(self._composition.nodes)
+            for node,values in dictionary.items():
+                dimensionality = len(values[0])
+                idx = self._composition._get_node_index(node)
+                values_ir_ty = ctx.convert_python_struct_to_llvm_ir(values)
+                values_c_ty = _convert_llvm_ir_to_ctype(values_ir_ty)
+                values = values_c_ty(*_tupleize(values))
+                autodiff_values.append(values)
+
+                value_struct = tuple([
+                    idx,
+                    dimensionality,
+                    ctypes.cast(values,ctypes.c_void_p).value
+                ])
+                value_struct_array[idx] = value_struct
+            return value_struct_array
+        
+   
+        
+        target_struct_array = value_struct_c_ty(*_tupleize(make_val_arr(targets)))
+        autodiff_values.append(target_struct_array)
+        target_struct_array_ptr = ctypes.cast(target_struct_array,ctypes.c_void_p).value
+        autodiff_stimuli_struct.append(len(targets))
+        autodiff_stimuli_struct.append(target_struct_array_ptr)
+        
+        input_struct_array = value_struct_c_ty(*_tupleize(make_val_arr(inputs)))
+        autodiff_values.append(input_struct_array)
+        input_struct_array_ptr = ctypes.cast(input_struct_array,ctypes.c_void_p).value
+        autodiff_stimuli_struct.append(len(inputs))
+        autodiff_stimuli_struct.append(input_struct_array_ptr)
+
+        learning_params = pnlvm.ir.LiteralStructType([
+            pnlvm.ir.IntType(32), # epochs
+            pnlvm.ir.IntType(32), # number of targets/inputs to train with
+            pnlvm.ir.IntType(32), # number target nodes
+            pnlvm.ir.IntType(64), # addr of beginning of target struct arr
+            pnlvm.ir.IntType(32), # number input nodes
+            pnlvm.ir.IntType(64), # addr of beginning of input struct arr
+        ])
+        
+        autodiff_stimuli_cty = _convert_llvm_ir_to_ctype(learning_params)
+        autodiff_stimuli_struct = autodiff_stimuli_cty(*_tupleize(autodiff_stimuli_struct))
+        my_field_name = self._param_struct._fields_[3]
+        
+        setattr(self._param_struct, my_field_name[0], autodiff_stimuli_struct)
+        
+        return autodiff_values
+    def run(self, inputs, runs, num_input_sets,autodiff_stimuli = {"targets" : {}, "epochs": 0}):
         inputs = self._get_run_input_struct(inputs, num_input_sets)
+        # Special casing for autodiff
+        if hasattr(self._composition,"learning_enabled") and self._composition.learning_enabled is True:
+            keep_on_stack = self._initialize_autodiff_param_struct(autodiff_stimuli)
+
         if "force_runs" in debug_env:
             runs = max(runs, int(debug_env["force_runs"]))
         ct_vo = self._bin_run_func.byref_arg_types[4] * runs
         if len(self._execution_ids) > 1:
             ct_vo = ct_vo * len(self._execution_ids)
-
         outputs = ct_vo()
         runs_count = ctypes.c_int(runs)
         input_count = ctypes.c_int(num_input_sets)

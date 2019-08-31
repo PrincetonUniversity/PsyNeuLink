@@ -156,14 +156,14 @@ other constiuents, as described below.
 *ObjectiveMechanism*
 ^^^^^^^^^^^^^^^^^^^^
 
-Like any `ControlMechanism`, an OptimizationControlMechanism has an associated `objective_mechanism
-<ControlMechanism.objective_mechanism>` that is used to evaluate the outcome of processing for a given trial and pass
-the result to the OptimizationControlMechanism, which it places in its `outcome <OptimizationControlMechanism.outcome>`
-attribute.  This is used by its `compute_net_outcome <ControlMechanism.compute_net_outcome>` function, together with
-the `costs <ControlMechanism.costs>` of its `control_signals <ControlMechanism.control_signals>`, to compute the
-`net_outcome <ControlMechanism.net_outcome>` of processing for a given `state <OptimizationControlMechanism_State>`,
-and that is returned by `evaluation` method of the OptimizationControlMechanism's `agent_rep
-<OptimizationControlMechanism.agent_rep>`.
+Like any `ControlMechanism`, an OptimizationControlMechanism may be assigned an `objective_mechanism
+<ControlMechanism.objective_mechanism>` that is used to evaluate the outcome of processing for a given trial (see
+`ControlMechanism_Objective_ObjectiveMechanism). This passes the result to the OptimizationControlMechanism, which it
+places in its `outcome <OptimizationControlMechanism.outcome>` attribute.  This is used by its `compute_net_outcome
+<ControlMechanism.compute_net_outcome>` function, together with the `costs <ControlMechanism.costs>` of its
+`control_signals <ControlMechanism.control_signals>`, to compute the `net_outcome <ControlMechanism.net_outcome>` of
+processing for a given `state <OptimizationControlMechanism_State>`, and that is returned by `evaluation` method of the
+OptimizationControlMechanism's `agent_rep <OptimizationControlMechanism.agent_rep>`.
 
 .. note::
     The `objective_mechanism <ControlMechanism.objective_mechanism>` is distinct from, and should not be
@@ -182,8 +182,8 @@ and that is returned by `evaluation` method of the OptimizationControlMechanism'
 *Features*
 ^^^^^^^^^^
 
-In addition to its `primary InputState <InputState_Primary>` (which receives a projection from the *OUTCOME*
-OutpuState of the `objective_mechanism <ControlMechanism.objective_mechanism>`,
+In addition to its `primary InputState <InputState_Primary>` (which typically receives a projection from the
+*OUTCOME* OutpuState of the `objective_mechanism <ControlMechanism.objective_mechanism>`,
 an OptimizationControlMechanism also has an `InputState` for each of its features. By default, these are the current
 `input <Composition.input_values>` for the Composition to which the OptimizationControlMechanism belongs.  However,
 different values can be specified, as can a `feature_function <OptimizationControlMechanism_Feature_Function>` that
@@ -853,11 +853,11 @@ class OptimizationControlMechanism(ControlMechanism):
         """
         # "Outcome"
         outcome_input_state = self.input_state
-        outcome_input_state.update(execution_id=execution_id, params=runtime_params, context=context)
+        outcome_input_state._update(execution_id=execution_id, params=runtime_params, context=context)
         state_values = [np.atleast_2d(outcome_input_state.parameters.value._get(execution_id))]
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
-            state.update(execution_id=execution_id, params=runtime_params, context=context)
+            state._update(execution_id=execution_id, params=runtime_params, context=context)
             state_values.append(state.parameters.value._get(execution_id))
         return np.array(state_values)
 
@@ -1150,9 +1150,9 @@ class OptimizationControlMechanism(ControlMechanism):
                                             [ctx.int32_ty(0), ctx.int32_ty(0),
                                              ctx.int32_ty(0)], "obj_val_ptr")
 
-            net_outcome_f = self._gen_llvm_net_outcome_function(ctx);
+            net_outcome_f = self._gen_llvm_net_outcome_function(ctx)
             builder.call(net_outcome_f, [params, state, allocation_sample,
-                                         objective_val_ptr, arg_out]);
+                                         objective_val_ptr, arg_out])
 
             builder.ret_void()
 
