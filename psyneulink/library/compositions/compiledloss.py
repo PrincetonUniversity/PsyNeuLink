@@ -69,14 +69,12 @@ class MSELoss(Loss):
         if output is None:
             output = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
             # zero output vector
-            self._pytorch_model._gen_inject_vec_scalar_mult(ctx,builder,output,ctx.float_ty(0),dim,output)
+            builder.store(output.type.pointee(None), output)
 
         if sum_loss is False:
             self._pytorch_model._gen_inject_vec_sub(ctx,builder,value,target,dim,output)
-            #self._pytorch_model._gen_inject_vec_scalar_mult(ctx,builder,output,ctx.float_ty(2),dim,output)
         else:
             # in this case, we add the loss
             tmp = self._pytorch_model._gen_inject_vec_sub(ctx,builder,value,target,dim)
-            #self._pytorch_model._gen_inject_vec_scalar_mult(ctx,builder,tmp,ctx.float_ty(2),dim,tmp)
             self._pytorch_model._gen_inject_vec_add(ctx,builder,output,tmp,dim,output)
         return output
