@@ -6022,6 +6022,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
         # if there is only one INPUT Node, allow inputs to be specified in a list
+        # if there is only one INPUT Node, allow inputs to be specified in a list
         if isinstance(inputs, (list, np.ndarray)):
             if len(input_nodes) == 1:
                 inputs = {next(iter(input_nodes)): inputs}
@@ -6046,7 +6047,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     format(self.name, len(input_nodes), input_node_names))
         if not callable(inputs):
             # Currently, no validation if 'inputs' arg is a function
-            inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
+            ad_tmp = {}
+            if hasattr(self,'learning_enabled') and self.learning_enabled is True:
+                ad_tmp = inputs
+                inputs = inputs["inputs"]
+            inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs,bin_execute=bin_execute)
+            #HACK: basically checks to see if we retrieved info from the _adjust_stimulus_dict call, and replaces it with our own parsed version if learning is enabled
+            if hasattr(self,'learning_enabled') and self.learning_enabled is True:
+                autodiff_stimuli = ad_tmp
 
         if num_trials is not None:
             num_trials = num_trials
@@ -6075,7 +6083,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             try:
                 if bin_execute is True or bin_execute.startswith('LLVM'):
                     _comp_ex = pnlvm.CompExecution(self, [execution_id])
-                    results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
+                    results += _comp_ex.run(inputs, num_trials, num_inputs_sets,autodiff_stimuli=autodiff_stimuli)
                 elif bin_execute.startswith('PTX'):
                     self.__ptx_initialize(execution_id)
                     EX = self._compilation_data.ptx_execution._get(execution_id)
@@ -6863,7 +6871,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return "heterogeneous"
         return False
 
-    def _adjust_stimulus_dict(self, stimuli):
+    def _adjust_stimulus_dict(self, stimuli,bin_execute=False):
 
         autodiff_stimuli = {}
         all_stimuli_keys = list(stimuli.keys())

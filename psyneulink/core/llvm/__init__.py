@@ -81,6 +81,7 @@ class LLVMBinaryFunction:
         return self.c_func(*args, **kwargs)
 
     def wrap_call(self, *pargs):
+        #print(pargs)
         cpargs = (ctypes.byref(p) if p is not None else None for p in pargs)
         args = zip(cpargs, self.byref_arg_types)
         cargs = (ctypes.cast(p, ctypes.POINTER(t)) for p, t in args)
@@ -150,9 +151,18 @@ def init_builtins():
     with LLVMBuilderContext.get_global() as ctx:
         builtins.setup_pnl_intrinsics(ctx)
         builtins.setup_vxm(ctx)
+        builtins.setup_vxm_transposed(ctx)
         builtins.setup_mersenne_twister(ctx)
-
-
+        builtins.setup_vec_add(ctx)
+        builtins.setup_mat_add(ctx)
+        builtins.setup_vec_sub(ctx)
+        builtins.setup_mat_sub(ctx)
+        builtins.setup_vec_copy(ctx)
+        builtins.setup_vec_hadamard(ctx)
+        builtins.setup_mat_hadamard(ctx)
+        builtins.setup_vec_scalar_mult(ctx)
+        builtins.setup_mat_scalar_mult(ctx)
+        builtins.setup_mat_scalar_add(ctx)
 def cleanup():
     _cpu_engine.clean_module()
     if ptx_enabled:
