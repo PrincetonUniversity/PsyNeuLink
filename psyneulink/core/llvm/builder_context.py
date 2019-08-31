@@ -18,9 +18,15 @@ import numpy as np
 import os
 import re
 import weakref
+try:
+    import torch
+    torch_available = True
+except ImportError:
+    torch_available = False
 
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.keywords import AFTER, BEFORE
+from psyneulink.core.globals.utilities import NodeRole
 
 from psyneulink.core import llvm as pnlvm
 from .debug import debug_env
@@ -46,6 +52,7 @@ _int32_ty = ir.IntType(32)
 _float_ty = ir.DoubleType()
 _global_context = None
 
+_printf_count = 0
 
 class LLVMBuilderContext:
     uniq_counter = 0
@@ -56,7 +63,7 @@ class LLVMBuilderContext:
         self.float_ty = _float_ty
         self._modules = []
         self._cache = weakref.WeakKeyDictionary()
-
+        self._learningcache = weakref.WeakKeyDictionary()
     def __enter__(self):
         module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
         self._modules.append(module)
@@ -93,14 +100,16 @@ class LLVMBuilderContext:
             function_type = pnlvm.ir.FunctionType(args[0], [args[0], args[0]])
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
 
-    def create_llvm_function(self, args, component, name=None):
+    def create_llvm_function(self, args, component, name = None, return_type=pnlvm.ir.VoidType()):
         name = str(component) if name is None else name
 
         func_name = self.get_unique_name(name)
-        func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(), args)
+        func_ty = pnlvm.ir.FunctionType(return_type, args)
         llvm_func = pnlvm.ir.Function(self.module, func_ty, name=func_name)
         llvm_func.attributes.add('argmemonly')
         for a in llvm_func.args:
+            if not isinstance(a.type, ir.PointerType):
+                continue
             a.attributes.add('nonnull')
 
         metadata = self.get_debug_location(llvm_func, component)
@@ -116,6 +125,15 @@ class LLVMBuilderContext:
         return builder
 
     def gen_llvm_function(self, obj):
+        # HACK: allows for learning bin func and non-learning to differ
+        try:
+            if obj.learning_enabled is True:
+                if obj not in self._learningcache:
+                    self._learningcache[obj] = obj._gen_llvm_function()
+                return self._learningcache[obj]
+        except AttributeError as e:
+            pass
+            
         if obj not in self._cache:
             self._cache[obj] = obj._gen_llvm_function()
         return self._cache[obj]
@@ -196,19 +214,22 @@ class LLVMBuilderContext:
         params = component._get_param_values()
         return self.convert_python_struct_to_llvm_ir(params)
 
-    def get_context_struct_type(self, component):
-        if hasattr(component, '_get_context_struct_type'):
-            return component._get_context_struct_type(self)
+    def get_state_struct_type(self, component):
+        if hasattr(component, '_get_state_struct_type'):
+            return component._get_state_struct_type(self)
 
-        try:
-            stateful = tuple(getattr(component, sa) for sa in component.stateful_attributes)
-            return self.convert_python_struct_to_llvm_ir(stateful)
-        except AttributeError:
-            return ir.LiteralStructType([])
+        stateful = component._get_state_values()
+        return self.convert_python_struct_to_llvm_ir(stateful)
 
     def get_data_struct_type(self, component):
         if hasattr(component, '_get_data_struct_type'):
             return component._get_data_struct_type(self)
+
+        return ir.LiteralStructType([])
+
+    def get_autodiff_stimuli_struct_type(self, component):
+        if hasattr(component, '_get_autodiff_stimuli_struct_type'):
+            return component._get_autodiff_stimuli_struct_type(self)
 
         return ir.LiteralStructType([])
 
@@ -217,7 +238,7 @@ class LLVMBuilderContext:
         return builder.gep(params_ptr, [self.int32_ty(0), idx])
 
     def get_state_ptr(self, component, builder, state_ptr, state_name):
-        idx = self.int32_ty(component.stateful_attributes.index(state_name))
+        idx = self.int32_ty(component._get_state_ids().index(state_name))
         return builder.gep(state_ptr, [self.int32_ty(0), idx])
 
     def unwrap_2d_array(self, builder, element):
@@ -226,22 +247,117 @@ class LLVMBuilderContext:
             return builder.gep(element, [self.int32_ty(0), self.int32_ty(0)])
         return element
 
-    def gen_composition_exec(self, composition, simulation=False):
-        # Create condition generator
-        cond_gen = ConditionGenerator(self, composition)
+    def inject_printf(self, builder,fmt,*args,override_debug=False):
+        if "print_values" not in debug_env and override_debug is False:
+            return
+        fmt += "\0"
+        llvm_func = builder.function
+        import llvmlite.binding as llvm
+        llvm.load_library_permanently("libc.so.6")
+        printfc = llvm.address_of_symbol("printf")
+        voidptr_ty = ir.IntType(8).as_pointer()
+        printf = builder.inttoptr(pnlvm.ir.IntType(64)(printfc),ir.FunctionType(ir.IntType(32), [voidptr_ty], var_arg=True).as_pointer())
+        arr = pnlvm.ir.Constant(pnlvm.ir.ArrayType(pnlvm.ir.IntType(8), len(fmt)),
+        bytearray(fmt.encode("utf8")))
+        global _printf_count
+        global_fmt = ir.GlobalVariable(llvm_func.module, arr.type, name="fstr"+str(_printf_count))
+        _printf_count += 1
+        global_fmt.linkage = 'internal'
+        global_fmt.global_constant = True
+        global_fmt.initializer = arr
+        fmt_ptr = builder.bitcast(global_fmt,pnlvm.ir.IntType(8).as_pointer())
+        builder.call(printf,[fmt_ptr]+list(args))
 
-        name = 'exec_sim_wrap_' if simulation else 'exec_wrap_'
+
+    def inject_printf_float_array(self,builder,array,dim,prefix="",suffix="\n",ctype_dimension=False,override_debug=False):
+        if "print_values" not in debug_env and override_debug is False:
+            return
+        self.inject_printf(builder,prefix,override_debug=override_debug)
+
+        if ctype_dimension:
+            loop_iterator = None
+            b1 = None
+            with pnlvm.helpers.for_loop_zero_inc(builder, dim, "print_vector_loop") as (b1, loop_iterator):
+                if array.type == self.float_ty.as_pointer():
+                    self.inject_printf(b1,"%f ",b1.load(b1.gep(array,[loop_iterator])),override_debug=override_debug)
+                else:
+                    self.inject_printf(b1,"%f ",b1.load(b1.gep(array,[self.int32_ty(0),loop_iterator])),override_debug=override_debug)
+        else:
+            for i in range(0,dim):
+                self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[self.int32_ty(0),self.int32_ty(i)])),override_debug=override_debug)
+        self.inject_printf(builder,suffix,override_debug=override_debug)
+
+    def gen_autodiffcomp_learning_exec(self,composition,simulation=False):
+        composition._build_pytorch_representation(composition.default_execution_id)
+        pytorch_model = composition.parameters.pytorch_representation._get(composition.default_execution_id)
+        cond_gen = ConditionGenerator(self, composition)
+        
+        name = 'exec_learning_sim_wrap_' if simulation else 'exec_learning_wrap_'
         name += composition.name
-        args = [self.get_context_struct_type(composition).as_pointer(),
+        args = [self.get_state_struct_type(composition).as_pointer(),
                 self.get_param_struct_type(composition).as_pointer(),
                 self.get_input_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),
                 cond_gen.get_condition_struct_type().as_pointer()]
         builder = self.create_llvm_function(args, composition, name)
         llvm_func = builder.function
+        
         for a in llvm_func.args:
             a.attributes.add('noalias')
+        
+        context, params, comp_in, data_arg, cond = llvm_func.args
+        pytorch_model._gen_llvm_training_function_body(self, builder, context, params, comp_in, data_arg, cond)
+        # Call output CIM
 
+        if "const_params" in debug_env:
+            const_params = params.type.pointee(composition._get_param_initializer(None))
+            params = builder.alloca(const_params.type, name="const_params_loc")
+            builder.store(const_params, params)
+
+        if "alloca_data" in debug_env:
+            data = builder.alloca(data_arg.type.pointee)
+            data_vals = builder.load(data_arg)
+            builder.store(data_vals, data)
+        else:
+            data = data_arg
+
+        output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation)
+        output_cim_f = self.get_llvm_function(output_cim_w)
+        builder.block.name = "invoke_" + output_cim_f.name
+        builder.call(output_cim_f, [context, params, comp_in, data, data])
+
+        if "alloca_data" in debug_env:
+            data_vals = builder.load(data)
+            builder.store(data_vals, data_arg)
+
+        # Bump run counter
+        cond_gen.bump_ts(builder, cond, (1, 0, 0))
+
+        builder.ret_void()
+        
+        return llvm_func
+
+    def gen_autodiffcomp_exec(self,composition,simulation=False):
+        """Creates llvm bin execute for autodiffcomp"""
+        assert composition.controller is None
+       
+        composition._build_pytorch_representation(composition.default_execution_id)
+        pytorch_model = composition.parameters.pytorch_representation._get(composition.default_execution_id)
+        cond_gen = ConditionGenerator(self, composition)
+        
+        name = 'exec_sim_wrap_' if simulation else 'exec_wrap_'
+        name += composition.name
+        args = [self.get_state_struct_type(composition).as_pointer(),
+                self.get_param_struct_type(composition).as_pointer(),
+                self.get_input_struct_type(composition).as_pointer(),
+                self.get_data_struct_type(composition).as_pointer(),
+                cond_gen.get_condition_struct_type().as_pointer()]
+        builder = self.create_llvm_function(args, composition, name)
+        llvm_func = builder.function
+        
+        for a in llvm_func.args:
+            a.attributes.add('noalias')
+        
         context, params, comp_in, data_arg, cond = llvm_func.args
 
         if "const_params" in debug_env:
@@ -249,10 +365,76 @@ class LLVMBuilderContext:
             params = builder.alloca(const_params.type, name="const_params_loc")
             builder.store(const_params, params)
 
-        if "const_state" in debug_env:
-            const_state = context.type.pointee(composition._get_context_initializer(None))
-            context = builder.alloca(const_state.type, name="const_state_loc")
-            builder.store(const_state, context)
+        if "alloca_data" in debug_env:
+            data = builder.alloca(data_arg.type.pointee)
+            data_vals = builder.load(data_arg)
+            builder.store(data_vals, data)
+        else:
+            data = data_arg
+        
+        # Call input CIM
+        input_cim_w = composition._get_node_wrapper(composition.input_CIM, simulation)
+        input_cim_f = self.get_llvm_function(input_cim_w)
+
+        builder.call(input_cim_f, [context, params, comp_in, data, data])
+
+        # Call pytorch internal compiled llvm func
+        pytorch_forward_func = self.get_llvm_function(self.gen_llvm_function(pytorch_model).name)
+        input_cim_idx = composition._get_node_index(composition.input_CIM)
+
+        model_context = context
+        model_params = builder.gep(params,[self.int32_ty(0),
+                                        self.int32_ty(2)])
+
+        # Extract the input that should be inserted into the model
+        model_input = builder.gep(data,[self.int32_ty(0),
+                                        self.int32_ty(0),
+                                        self.int32_ty(input_cim_idx)])
+        model_output = builder.gep(data,[self.int32_ty(0),
+                                         ])
+        
+        builder.call(pytorch_forward_func,[model_context,model_params,model_input,model_output])
+        
+        # Call output CIM
+        output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation)
+        output_cim_f = self.get_llvm_function(output_cim_w)
+        builder.block.name = "invoke_" + output_cim_f.name
+        builder.call(output_cim_f, [context, params, comp_in, data, data])
+
+        if "alloca_data" in debug_env:
+            data_vals = builder.load(data)
+            builder.store(data_vals, data_arg)
+
+        # Bump run counter
+        cond_gen.bump_ts(builder, cond, (1, 0, 0))
+
+        builder.ret_void()
+        
+        return llvm_func
+
+    def gen_composition_exec(self, composition, simulation=False):
+        # Create condition generator
+        cond_gen = ConditionGenerator(self, composition)
+
+        name = 'exec_sim_wrap_' if simulation else 'exec_wrap_'
+        name += composition.name
+        args = [self.get_state_struct_type(composition).as_pointer(),
+                self.get_param_struct_type(composition).as_pointer(),
+                self.get_input_struct_type(composition).as_pointer(),
+                self.get_data_struct_type(composition).as_pointer(),
+                cond_gen.get_condition_struct_type().as_pointer()]
+                
+        builder = self.create_llvm_function(args, composition, name)
+        llvm_func = builder.function
+        for a in llvm_func.args:
+            a.attributes.add('noalias')
+
+        state, params, comp_in, data_arg, cond = llvm_func.args
+
+        if "const_params" in debug_env:
+            const_params = params.type.pointee(composition._get_param_initializer(None))
+            params = builder.alloca(const_params.type, name="const_params_loc")
+            builder.store(const_params, params)
 
         if "alloca_data" in debug_env:
             data = builder.alloca(data_arg.type.pointee)
@@ -264,14 +446,14 @@ class LLVMBuilderContext:
         # Call input CIM
         input_cim_w = composition._get_node_wrapper(composition.input_CIM, simulation)
         input_cim_f = self.get_llvm_function(input_cim_w)
-        builder.call(input_cim_f, [context, params, comp_in, data, data])
+        builder.call(input_cim_f, [state, params, comp_in, data, data])
 
         if simulation is False and composition.enable_controller and \
            composition.controller_mode == BEFORE:
             assert composition.controller is not None
             controller = composition._get_node_wrapper(composition.controller, simulation)
             controller_f = self.get_llvm_function(controller)
-            builder.call(controller_f, [context, params, comp_in, data, data])
+            builder.call(controller_f, [state, params, comp_in, data, data])
 
         # Allocate run set structure
         run_set_type = ir.ArrayType(ir.IntType(1), len(composition.nodes))
@@ -327,9 +509,9 @@ class LLVMBuilderContext:
                 builder.block.name = "invoke_" + mech_f.name
                 # Wrappers do proper indexing of all structures
                 if len(mech_f.args) == 5:  # Mechanism wrappers have 5 inputs
-                    builder.call(mech_f, [context, params, comp_in, data, output_storage])
+                    builder.call(mech_f, [state, params, comp_in, data, output_storage])
                 else:
-                    builder.call(mech_f, [context, params, comp_in, data, output_storage, cond])
+                    builder.call(mech_f, [state, params, comp_in, data, output_storage, cond])
 
                 cond_gen.generate_update_after_run(builder, cond, mech)
             builder.block.name = "post_invoke_" + mech_f.name
@@ -375,13 +557,13 @@ class LLVMBuilderContext:
             assert composition.controller is not None
             controller = composition._get_node_wrapper(composition.controller, simulation)
             controller_f = self.get_llvm_function(controller)
-            builder.call(controller_f, [context, params, comp_in, data, data])
+            builder.call(controller_f, [state, params, comp_in, data, data])
 
         # Call output CIM
         output_cim_w = composition._get_node_wrapper(composition.output_CIM, simulation)
         output_cim_f = self.get_llvm_function(output_cim_w)
         builder.block.name = "invoke_" + output_cim_f.name
-        builder.call(output_cim_f, [context, params, comp_in, data, data])
+        builder.call(output_cim_f, [state, params, comp_in, data, data])
 
         if "alloca_data" in debug_env:
             data_vals = builder.load(data)
@@ -397,7 +579,7 @@ class LLVMBuilderContext:
     def gen_composition_run(self, composition, simulation=False):
         name = 'run_sim_wrap_' if simulation else 'run_wrap_'
         name += composition.name
-        args = [self.get_context_struct_type(composition).as_pointer(),
+        args = [self.get_state_struct_type(composition).as_pointer(),
                 self.get_param_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),
                 self.get_input_struct_type(composition).as_pointer(),
@@ -409,18 +591,24 @@ class LLVMBuilderContext:
         for a in llvm_func.args:
             a.attributes.add('noalias')
 
-        context, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
+        state, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
         # simulation does not care about the output
         # it extracts results of the controller objective mechanism
         if simulation:
             data_out.attributes.remove('nonnull')
 
-        if not simulation and "clear_run_data" in debug_env:
+        if not simulation and "const_data" in debug_env:
+            const_data = data.type.pointee(composition._get_data_initializer(None))
             data = builder.alloca(data.type.pointee)
-            builder.store(data.type.pointee(None), data)
+            builder.store(const_data, data)
+
+        # Hardcode stateful parameters if set in the environment
+        if not simulation and "const_state" in debug_env:
+            const_state = state.type.pointee(composition._get_state_initializer(None))
+            state = builder.alloca(const_state.type, name="const_state_loc")
+            builder.store(const_state, state)
 
         if not simulation and "const_input" in debug_env:
-            builder.store(inputs_ptr.type.pointee(None), inputs_ptr)
             if not debug_env["const_input"]:
                 input_init = pnlvm._tupleize([[os.defaults.variable] for os in composition.input_CIM.input_states])
                 print("Setting default input: ", input_init)
@@ -429,9 +617,11 @@ class LLVMBuilderContext:
                 print("Setting user input: ", input_init)
 
             builder.store(data_in.type.pointee(input_init), data_in)
+            builder.store(inputs_ptr.type.pointee(1), inputs_ptr)
 
         if "force_runs" in debug_env:
             num = int(debug_env["force_runs"]) if debug_env["force_runs"] else 1
+            print("Forcing number of runs to: ", num)
             runs_ptr = builder.alloca(runs_ptr.type.pointee)
             builder.store(runs_ptr.type.pointee(num), runs_ptr)
 
@@ -467,13 +657,13 @@ class LLVMBuilderContext:
         # Get the right input stimulus
         input_idx = builder.urem(iters, builder.load(inputs_ptr))
         data_in_ptr = builder.gep(data_in, [input_idx])
-
+        
         # Call execution
         if simulation:
             exec_f = self.get_llvm_function(composition._llvm_simulation.name)
         else:
             exec_f = self.get_llvm_function(composition)
-        builder.call(exec_f, [context, params, data_in_ptr, data, cond])
+        builder.call(exec_f, [state, params, data_in_ptr, data, cond])
 
         if not simulation:
             # Extract output_CIM result
@@ -578,7 +768,8 @@ class LLVMBuilderContext:
             return ir.LiteralStructType([])
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
-
+        elif torch_available and isinstance(t,torch.Tensor):
+            return self.convert_python_struct_to_llvm_ir(t.numpy())
         assert False, "Don't know how to convert {}".format(type(t))
 
 

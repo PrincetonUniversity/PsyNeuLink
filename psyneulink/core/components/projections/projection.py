@@ -109,7 +109,7 @@ Projection in context:
         MappingProjections, a `matrix specification <Mapping_Matrix_Specification>` can also be used to specify the
         projection (see **value** below).
       COMMENT:
-      |
+
       * *LEARNING_PROJECTION*  (or *LEARNING*) -- this can only be used in the specification of a `MappingProjection`
         (see `tuple <Mapping_Matrix_Specification>` format).  If the `receiver <MappingProjection.receiver>` of the
         MappingProjection projects to a `LearningMechanism` or a `ComparatorMechanism` that projects to one, then a
@@ -118,7 +118,7 @@ Projection in context:
         <LearningMechanism_Creation>`, along with a LearningSignal that is assigned as the LearningProjection's `sender
         <LearningProjection.sender>`. See `LearningMechanism_Learning_Configurations` for additional details.
       COMMENT
-      |
+
       * *CONTROL_PROJECTION* (or *CONTROL*) -- this can be used when specifying a parameter using the `tuple format
         <ParameterState_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterState` for that
         parameter.  If the `Component <Component>` to which the parameter belongs is part of a `System`, then a
@@ -128,7 +128,7 @@ Projection in context:
         at which time the ControlSignal is added to the System's `controller <System.controller>` and assigned
         as its the ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_Control_Signals` for
         additional details.
-      |
+
       * *GATING_PROJECTION* (or *GATING*) -- this can be used when specifying an `InputState
         <InputState_Projection_Source_Specification>` or an `OutputState <OutputState_Projections>`, to create a
         default `GatingProjection` to the `State <State>`. If the GatingProjection's `sender <GatingProjection.sender>`
@@ -160,7 +160,7 @@ Projection in context:
         (for example, a `MappingProjection` for an `InputState`, a `LearningProjection` for the `matrix
         <MappingProjection.matrix>` parameter of a `MappingProjection`, and a `ControlProjection` for any other
         type of parameter.
-      |
+
       * *PROJECTION_PARAMS*: *Dict[Projection argument, argument value]* --
         the key for each entry of the dictionary must be the name of a Projection parameter, and its value the value
         of the parameter.  It can contain any of the standard parameters for instantiating a Projection (in particular
@@ -189,13 +189,13 @@ Projection in context:
 
      * **State specification** -- specifies the `State <State_Specification>` to connect with (**not** the one being
        connected; that is determined from context)
-     |
+
      * **weight** -- must be a value specifying the `weight <Projection_Base.weight>` of the Projection;  it can be
        `None`, in which case it is ignored, but there must be a specification present;
-     |
+
      * **exponent** -- must be a value specifying the `exponent <Projection_Base.exponent>` of the Projection;  it
        can be `None`, in which case it is ignored, but there must be a specification present;
-     |
+
      * **Projection specification** -- this is optional but, if included, msut be a `Projection specification
        <Projection_Specification>`;  it can take any of the forms of a Projection specification described above for
        any Projection subclass; it can be used to provide additional specifications for the Projection, such as its
@@ -934,7 +934,7 @@ class Projection_Base(Projection):
     def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
         for state in self._parameter_states:
             state_name = state.name
-            state.update(execution_id=execution_id, params=runtime_params, context=context)
+            state._update(execution_id=execution_id, params=runtime_params, context=context)
 
             # Assign version of ParameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
@@ -1023,14 +1023,14 @@ class Projection_Base(Projection):
     def _get_param_struct_type(self, ctx):
         return ctx.get_param_struct_type(self.function)
 
-    def _get_context_struct_type(self, ctx):
-        return ctx.get_context_struct_type(self.function)
+    def _get_state_struct_type(self, ctx):
+        return ctx.get_state_struct_type(self.function)
 
     def _get_param_initializer(self, execution_id):
         return self.function._get_param_initializer(execution_id)
 
-    def _get_context_initializer(self, execution_id):
-        return self.function._get_context_initializer(execution_id)
+    def _get_state_initializer(self, execution_id):
+        return self.function._get_state_initializer(execution_id)
 
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):

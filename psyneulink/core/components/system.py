@@ -83,14 +83,14 @@ arguments of the `System`, as described below.
     Mechanisms within the System. If an OutputState of a particular Mechanism is desired, and it shares its name with
     other Mechanisms in the System, then it must be referenced explicitly (see `InputState specification
     <InputState_Specification>`, and examples under `System_Control_Examples`).
-  |
+
   * **MonitoredOutputStatesOption** -- must be a value of `MonitoredOutputStatesOption`, and must appear alone or as a
     single item in the list specifying the **monitor_for_control** argument;  any other specification(s) included in
     the list will take precedence.  The MonitoredOutputStatesOption applies to all of the Mechanisms in the System
     except its `controller <System.controller>` and `LearningMechanisms <LearningMechanism>`. The
     *PRIMARY_OUTPUT_STATES* value specifies that the `primary OutputState <OutputState_Primary>` of every Mechanism be
     monitored, whereas *ALL_OUTPUT_STATES* specifies that *every* OutputState of every Mechanism be monitored.
-  |
+
   The default for the **monitor_for_control** argument is *MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES*.
   The OutputStates specified in the **monitor_for_control** argument are added to any already specified for the
   ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>`, and the full set is listed in
@@ -3035,9 +3035,10 @@ class System(System_Base):
 
                 elif isinstance(component, MappingProjection):
                     processes = list(component.sender.owner.processes.keys())
-                    component.parameters.context._get(execution_id).string = "Updating {} for {} in {}".format(ParameterState.__name__,
-                                                                                 component.name, self.name)
-                    component._parameter_states[MATRIX].update(execution_id=execution_id, context=ContextFlags.COMPOSITION)
+                    component.parameters.context._get(execution_id).string = "Updating {ParameterState.__name__} for " \
+                                                                             "{component.name} in {self.name}"
+                    component._parameter_states[MATRIX]._update(execution_id=execution_id,
+                                                                context=ContextFlags.COMPOSITION)
 
                 component.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
@@ -4122,7 +4123,7 @@ class System(System_Base):
             rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
             if show_mechanism_structure:
                 sg.node(rcvr_label,
-                        rcvr.show_structure(**mech_struct_args),
+                        rcvr._show_structure(**mech_struct_args),
                         color=rcvr_color,
                         rank=rcvr_rank,
                         penwidth=rcvr_penwidth)
@@ -4341,7 +4342,7 @@ class System(System_Base):
             # Implement node for Mechanism
             if show_mechanism_structure:
                 sg.node(rcvr_label,
-                        rcvr.show_structure(**mech_struct_args),
+                        rcvr._show_structure(**mech_struct_args),
                         rank=obj_mech_rank, color=rcvr_color, penwidth=rcvr_width)
             else:
                 sg.node(rcvr_label,
@@ -4588,13 +4589,13 @@ class System(System_Base):
             objmech_label = self._get_label(objmech, show_dimensions, show_roles)
             if show_mechanism_structure:
                 sg.node(ctlr_label,
-                        controller.show_structure(**mech_struct_args),
+                        controller._show_structure(**mech_struct_args),
                         color=ctlr_color,
                         penwidth=ctlr_width,
                         rank = control_rank
                        )
                 sg.node(objmech_label,
-                        objmech.show_structure(**mech_struct_args),
+                        objmech._show_structure(**mech_struct_args),
                         color=objmech_color,
                         penwidth=ctlr_width,
                         rank = control_rank
@@ -4723,7 +4724,7 @@ class System(System_Base):
                                 pred_proj_color = prediction_mechanism_color
                                 pred_proj_width = str(default_width)
                             sg.node(mech.name,
-                                    shape=mech.show_structure(**mech_struct_args),
+                                    shape=mech._show_structure(**mech_struct_args),
                                     color=pred_mech_color,
                                     penwidth=pred_mech_width)
 

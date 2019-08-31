@@ -18,7 +18,7 @@ Sections
   * `Composition_Run`
   * `Composition_Controller`
   * `Composition_Learning`
-  * `Visualizing_a_Composition`
+  * `Composition_Visualization`
   * `Composition_Class_Reference`
 
 .. _Composition_Overview:
@@ -66,6 +66,11 @@ following Composition methods:
 
 In addition, a Composition has the following set of `learning methods <Composition_Learning_Methods>` that can also
 be used to create a Composition from (or add) pathways that implement `learning <Composition_Learning>`:
+
+    - `add_linear_learning_pathway` <Composition.add_linear_learning_pathway>`
+
+        adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
+        needed to implement the algorithm specified in its **learning_function** argument in the specified pathway.
 
     - `add_reinforcement_learning_pathway <Composition.add_reinforcement_learning_pathway>`
 
@@ -186,14 +191,14 @@ the nested composition just as for any other node.
 Running a Composition
 ---------------------
 
-.. _Run_Inputs:
+.. _Composition_Run_Inputs:
 
 *Inputs*
 ========
 
-The `run <Composition.run>` method presents the inputs for each `TRIAL` to the input_states of the INPUT Nodes in
-the `scope of execution <Run_Scope_of_Execution>`. These input values are specified in the **inputs** argument of a
-Composition's `execute <Composition.execute>` or `run <Composition.run>` methods.
+The `run <Composition.run>` method presents the inputs for each `TRIAL` to the input_states of the INPUT Nodes in the 
+`scope of execution <Composition_Scope_of_Execution>`. These input values are specified in the **inputs** argument of 
+a Composition's `execute <Composition.execute>` or `run <Composition.run>` methods.
 
 COMMENT:
     From KAM 2/7/19 - not sure "scope of execution" is the right phrase. To me, it implies that only a subset of the
@@ -205,7 +210,7 @@ The standard way to specificy inputs is a Python dictionary in which each key is
 each value is a list. The lists represent the inputs to the key `INPUT <NodeRole.INPUT>` Nodes, in which the i-th
 element of the list represents the input value to the key Node on trial i.
 
-.. _Run_Inputs_Fig_States:
+.. _Composition_Run_Inputs_Fig_States:
 
 .. figure:: _static/input_spec_states.svg
    :alt: Example input specifications with input states
@@ -213,7 +218,7 @@ element of the list represents the input value to the key Node on trial i.
 
 Each input value must be compatible with the shape of the key `INPUT <NodeRole.INPUT>` Node's `external_input_values
 <MechanismBase.external_input_values>`. As a result, each item in the list of inputs is typically a 2d list/array,
-though `some shorthand notations are allowed <Input_Specification_Examples>`.
+though `some shorthand notations are allowed <Composition_Input_Specification_Examples>`.
 
         >>> import psyneulink as pnl
 
@@ -297,7 +302,7 @@ values from trials 0 and 1 are used again on trials 5 and 6, respectively.
         >>> comp.run(inputs=input_dictionary,
         ...          num_trials=7)
 
-.. _Input_Specification_Examples:
+.. _Composition_Input_Specification_Examples:
 
 For convenience, condensed versions of the input specification described above are also accepted in the following
 situations:
@@ -447,7 +452,7 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only IN
         >>> comp.run(inputs=input_list)
 ..
 
-.. _Run_Inputs_Interactive:
+.. _Composition_Input_as_Function:
 
 *Interactive Inputs*
 ====================
@@ -487,8 +492,17 @@ Environment.
     comp.run(inputs=input_dictionary)
 COMMENT
 
+COMMENT:
+.. _Composition_Initial_Values_and_Feedback
+FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
+MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
+..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
+a list or ndarray of **initial_values**[...] The **initial_values** are
+assigned at the start of a `TRIAL` as input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
+and listed in the Composition's ?? attribute),
 
-.. _Run_Scope_of_Execution:
+
+.. _Composition_Scope_of_Execution:
 
 *Execution Contexts*
 ====================
@@ -532,6 +546,8 @@ When looking for values after a run, it's important to know the execution contex
 In general, anything that happens outside of a Composition run and without an explicit setting of execution context
 occurs in the `None` execution context.
 
+COMMENT
+
 .. _Composition_Controller:
 
 Controlling a Composition
@@ -551,7 +567,7 @@ A `controller <Composition.controller>` can be assigned either by specifying it 
 Composition's constructor, or using its `add_controller <Composition.add_controller>` method.
 
 COMMENT:
-TBI [PARALLELING SYSTEM]:
+TBI FOR COMPOSITION
 Specyfing Parameters to Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 A controller can also be specified for the System, in the **controller** argument of the `System`.  This can be an
@@ -620,7 +636,7 @@ COMMENT:
 For Developers
 --------------
 
-.. _Run_Execution_Contexts_Init:
+.. _Composition_Execution_Contexts_Init:
 
 Initialization of Execution Contexts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -648,15 +664,15 @@ If you receive an error like below, while checking for a context value for examp
 
 this means that there was no context value found for execution_id, and can be indicative that execution_id
 was not initialized to the values of another execution context, which normally happens during execution.
-See `Execution Contexts initialization <Run_Execution_Contexts_Init>`.
+See `Execution Contexts initialization <Composition_Execution_Contexts_Init>`.
 
-.. _Run_Timing:
+.. _Composition_TIming:
 
 *Timing*
 ========
 
 When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
-method once for each `input <Run_Inputs>`  (or set of inputs) specified in the call to `run <Composition.run>`,
+method once for each `input <Composition_Run_Inputs>`  (or set of inputs) specified in the call to `run <Composition.run>`,
 which constitutes a `TRIAL` of execution.  For each `TRIAL`, the Component makes repeated `calls to its Scheduler
 <Scheduler_Execution>`, executing the Components it specifies in each `TIME_STEP`, until every Component has been
 executed at least once or
@@ -761,6 +777,7 @@ COMMENT
 Supervised learning is implemented using a Composition's method for the desired type of learning.  There are currently
 three such methods:
 
+    • `add_linear_learning_pathway`
     • `add_reinforcement_learning_pathway`
     • `add_td_learning_pathway`
     • `add_backpropagation_learning_pathway`.
@@ -978,7 +995,7 @@ that each function is called at the appropriate times during execution.  Further
 the internal constituents of the object (e.g., intermediates layers of a neural network model) are not accessible to
 other Components in the Composition (e.g., as a source of information or for modulation).
 
-.. _Visualizing_a_Composition:
+.. _Composition_Visualization:
 
 Visualizing a Composition
 -------------------------
@@ -1039,7 +1056,7 @@ method.  The figure below shows several examples.
 **Output of show_graph using different options**
 
 .. figure:: _static/show_graph_figure.svg
-   :alt: System graph examples
+   :alt: Composition graph examples
    :scale: 150 %
 
    Displays of the Composition used in the `example above <System_show_graph_basic_figure>`, generated using various
@@ -1086,38 +1103,42 @@ from PIL import Image
 from os import path, remove
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import Component, ComponentsMeta, function_type
+from psyneulink.core.components.component import Component, ComponentsMeta
+from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.interfacefunctions import InterfaceStateMap
-from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation, TDLearning
+from psyneulink.core.components.functions.learningfunctions import \
+    LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
-from psyneulink.core.components.mechanisms.mechanism import MechanismRegistry, Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, \
-    ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
+    LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
-from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
-from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
+from psyneulink.core.components.states.state import State
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.globals.registry import remove_instance_from_registry
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, COMPARATOR_MECHANISM, COMPONENT, CONTROLLER, CONDITIONS, FUNCTIONS, HARD_CLAMP, \
-    IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MECHANISM, MECHANISMS, NAME, NO_CLAMP, \
-    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, CONTROL, CONTROLLER, CONDITIONS, FUNCTIONS, \
+    HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
+    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
+    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
-from psyneulink.core.globals.parameters import Defaults, Parameter, ParametersBase
+from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, NodeRole, call_with_pruned_args, convert_to_list
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls
@@ -1219,7 +1240,7 @@ class Vertex(object):
 
 class Graph(object):
     """
-        A Graph of vertices and edges/
+        A Graph of vertices and edges.
 
         Attributes
         ----------
@@ -1229,6 +1250,9 @@ class Graph(object):
 
         vertices : List[Vertex]
             the `Vertices <Vertex>` contained in this Graph.
+
+        dependency_dict : Dict[`Component` : Set(`Compnent`)]
+            maps each Component to those from which it receives Projections
 
     """
 
@@ -1352,6 +1376,8 @@ class Graph(object):
             Returns
             -------
 
+            # FIX 8/12/19:  MODIFIED FEEDBACK -
+            #  IS THIS A CORRECT DESCRIPTION? (SAME AS get_forward_parents_from_component)
             A list[Vertex] of the parent `Vertices <Vertex>` of the Vertex associated with **component**: list[`Vertex`]
         """
         forward_children = []
@@ -1370,7 +1396,8 @@ class Graph(object):
 
             Returns
             -------
-
+            # FIX 8/12/19:  MODIFIED FEEDBACK -
+            #  IS THIS A CORRECT DESCRIPTION? (SAME AS get_forward_children_from_component)
             A list[Vertex] of the parent `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
         """
         forward_parents = []
@@ -1414,6 +1441,9 @@ class Graph(object):
 
         return list(self.comp_to_vertex[component].backward_sources)
 
+    @property
+    def dependency_dict(self):
+        return dict((v.component,set(d.component for d in v.parents)) for v in self.vertices)
 
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
@@ -1593,7 +1623,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     class _CompilationData(ParametersBase):
         ptx_execution = None
         parameter_struct = None
-        context_struct = None
+        state_struct = None
         data_struct = None
         scheduler_conditions = None
 
@@ -1732,22 +1762,95 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_unique_id(self):
         return uuid.uuid4()
 
-    def _update_shadows_dict(self, node):
-        # Create an empty entry for this node in the Composition's "shadows" dict
-        # If any other nodes shadow this node, they will be added to the list
-        if node not in self.shadows:
-            self.shadows[node] = []
 
-        nested_nodes = dict(self._get_nested_nodes())
-        # If this node is shadowing another node, then add it to that node's entry in the Composition's "shadows" dict
-        # If the node it's shadowing is a nested node, add it to the entry for the composition it's nested in.
-        for input_state in node.input_states:
-            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
-                owner = input_state.shadow_inputs.owner
-                if owner in nested_nodes:
-                    owner = nested_nodes[owner]
-                if node not in self.shadows[owner]:
-                    self.shadows[owner].append(node)
+    # ******************************************************************************************************************
+    #                                              GRAPH
+    # ******************************************************************************************************************
+
+    def _analyze_graph(self, scheduler=None):
+        """
+        Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
+
+        By default, if _analyze_graph determines that a node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
+        `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
+        <NodeRole.TERMINAL>`, it is also given the role `OUTPUT <NodeRole.OUTPUT>`.
+
+        However, if the **required_roles** argument of `add_node <Composition.add_node>` is used to set any node in the
+        Composition to `INPUT <NodeRole.INPUT>`, then the `ORIGIN <NodeRole.ORIGIN>` nodes are not set to `INPUT
+        <NodeRole.INPUT>` by default. If the **required_roles** argument of `add_node <Composition.add_node>` is used
+        to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
+        nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
+        """
+
+        self._check_feedback(scheduler)
+        self._determine_node_roles()
+        self._create_CIM_states()
+        self._update_shadow_projections()
+        self._check_for_projection_assignments()
+        self.needs_update_graph = False
+
+    def _update_processing_graph(self):
+        """
+        Constructs the processing graph (the graph that contains only Nodes as vertices)
+        from the composition's full graph
+        """
+        logger.debug('Updating processing graph')
+
+        self._graph_processing = self.graph.copy()
+
+        def remove_vertex(vertex):
+            logger.debug('Removing', vertex)
+            for parent in vertex.parents:
+                for child in vertex.children:
+                    if vertex.feedback:
+                        child.backward_sources.add(parent.component)
+                    self._graph_processing.connect_vertices(parent, child)
+            # ensure that children get handled
+            if len(vertex.parents) == 0:
+                for child in vertex.children:
+                    if vertex.feedback:
+                        child.backward_sources.add(parent.component)
+
+            for node in cur_vertex.parents + cur_vertex.children:
+                logger.debug(
+                    'New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(
+                        node, node.parents, node.children
+                    )
+                )
+
+            logger.debug('Removing vertex {0}'.format(cur_vertex))
+
+            self._graph_processing.remove_vertex(vertex)
+
+        # copy to avoid iteration problems when deleting
+        vert_list = self._graph_processing.vertices.copy()
+        for cur_vertex in vert_list:
+            logger.debug('Examining', cur_vertex)
+            if not cur_vertex.component.is_processing:
+                remove_vertex(cur_vertex)
+
+        self.needs_update_graph_processing = False
+
+    def _analyze_consideration_queue(self, q, objective_mechanism):
+        """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
+            all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
+            may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry of the
+            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
+        """
+        for node in q[0]:
+            self._add_node_role(node, NodeRole.ORIGIN)
+
+        for node in list(q)[-1]:
+            if node != objective_mechanism:
+                self._add_node_role(node, NodeRole.TERMINAL)
+            elif len(q[-1]) < 2:
+                for previous_node in q[-2]:
+                    self._add_node_role(previous_node, NodeRole.TERMINAL)
+
+
+    # ******************************************************************************************************************
+    #                                               NODES
+    # ******************************************************************************************************************
 
     def add_node(self, node, required_roles=None):
         """
@@ -1800,7 +1903,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projections.append((component, False))
                 elif isinstance(component, tuple):
                     if isinstance(component[0], Projection):
-                        if isinstance(component[1], bool):
+                        if isinstance(component[1], bool) or component[1]==MAYBE:
                             projections.append(component)
                         else:
                             raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a "
@@ -1833,7 +1936,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            "Composition, Projection, or tuple."
                                            .format(component.name, node.name))
 
-            # Add all projections to the composition
+            # Add all Projections to the Composition
             for proj_spec in projections:
                 # The proj_spec assumes a direct connection between sender and receiver, and is therefore invalid if
                 # either are nested (i.e. projections between them need to be routed through a CIM). In these cases,
@@ -1929,1536 +2032,52 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.required_node_roles.remove(item)
             del self.nodes[node]
 
-    def add_controller(self, controller:ModulatoryMechanism):
-        """
-        Add an `OptimizationControlMechanism` as the `controller
-        <Composition.controller>` of the Composition, which gives the OCM access to the
-        `Composition`'s `evaluate <Composition.evaluate>` method. This allows the OCM to use simulations to determine
-        an optimal Control policy.
-        """
+    def add_required_node_role(self, node, role):
+        if role not in NodeRole:
+            raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
-        if not isinstance(controller, ModulatoryMechanism):
-            raise CompositionError(f"Specification of {repr(CONTROLLER)} arg for {self.name} "
-                                   f"must be a {repr(ModulatoryMechanism.__name__)} ")
+        node_role_pair = (node, role)
+        if node_role_pair not in self.required_node_roles:
+            self.required_node_roles.append(node_role_pair)
 
-        self.controller = controller
-        self.controller.composition = self
+    def remove_required_node_role(self, node, role):
+        if role not in NodeRole:
+            raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
-        if self.controller.objective_mechanism:
-            self.add_node(self.controller.objective_mechanism)
+        node_role_pair = (node, role)
+        if node_role_pair in self.required_node_roles:
+            self.required_node_roles.remove(node_role_pair)
 
-        self.enable_controller = True
-
-        controller._activate_projections_for_compositions(self)
-        self._analyze_graph()
-        self._update_shadows_dict(controller)
-
-        # Skip first (OUTCOME) input_state
-        input_cims=[self.input_CIM] + [comp.input_CIM for comp in self._get_nested_compositions()]
-        for input_state in controller.input_states[1:]:
-            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
-                for proj in input_state.shadow_inputs.path_afferents:
-                    sender = proj.sender
-                    if sender.owner not in input_cims:
-                        self.add_projection(projection=MappingProjection(sender=sender, receiver=input_state),
-                                            sender=sender.owner,
-                                            receiver=controller)
-                        shadow_proj._activate_for_compositions(self)
-                    else:
-                        try:
-                            shadow_proj = MappingProjection(sender=proj.sender, receiver=input_state)
-                            shadow_proj._activate_for_compositions(self)
-                        except DuplicateProjectionError:
-                            pass
-            # MODIFIED 6/11/19 NEW: [JDC]
-            for proj in input_state.path_afferents:
-                proj._activate_for_compositions(self)
-            # MODIFIED 6/11/19 END
-
-    def _parse_projection_spec(self, projection, sender=None, receiver=None, name=None):
-        if isinstance(projection, (np.ndarray, np.matrix, list)):
-            return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
-        elif isinstance(projection, str):
-            if projection in MATRIX_KEYWORD_VALUES:
-                return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
-            else:
-                raise CompositionError("Invalid projection ({}) specified for {}.".format(projection, self.name))
-        elif isinstance(projection, ModulatoryProjection_Base):
-            return projection
-        elif projection is None:
-            return MappingProjection(sender=sender, receiver=receiver, name=name)
-        elif not isinstance(projection, Projection):
-            raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
-                                   .format(projection, self.name))
-        return projection
-
-    def _parse_sender_spec(self, projection, sender):
-
-        # if a sender was not passed, check for a sender OutputState stored on the Projection object
-        if sender is None:
-            if hasattr(projection, "sender"):
-                sender = projection.sender.owner
-            else:
-                raise CompositionError(f"{projection.name} is missing a sender specification. "
-                                       f"For a Projection to be added to a Composition a sender must be specified, "
-                                       "either on the Projection or in the call to Composition.add_projection(). ")
-
-        # initialize all receiver-related variables
-        graph_sender = sender_mechanism = sender_output_state = sender
-
-        nested_compositions = []
-        if isinstance(sender, Mechanism):
-            # Mechanism spec -- update sender_output_state to reference primary OutputState
-            sender_output_state = sender.output_state
-
-        elif isinstance(sender, OutputState):
-            # InputState spec -- update sender_mechanism and graph_sender to reference owner Mechanism
-            sender_mechanism = graph_sender = sender.owner
-
-        elif isinstance(sender, Composition):
-            # Nested Composition Spec -- update sender_mechanism to CIM; sender_output_state to CIM's primary O.S.
-            sender_mechanism = sender.output_CIM
-            sender_output_state = sender_mechanism.output_state
-            nested_compositions.append(sender)
-
-        else:
-            raise CompositionError("sender arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
-                                   format(sender, self.name,
-                                          Mechanism.__name__, OutputState.__name__, Composition.__name__))
-
-        if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
-                and not isinstance(sender, Composition)
-                and sender_mechanism not in self.nodes):
-            sender_name = sender.name
-
-            # if the sender is IN a nested Composition AND sender is an OUTPUT Node
-            # then use the corresponding CIM on the nested comp as the sender going forward
-            sender, sender_output_state, graph_sender, sender_mechanism = \
-                self._get_nested_node_CIM_state(sender_mechanism,
-                                                sender_output_state,
-                                                NodeRole.OUTPUT)
-            nested_compositions.append(graph_sender)
-            if sender is None:
-                receiver_name = 'node'
-                if hasattr(projection, 'receiver'):
-                    receiver_name = f'{repr(projection.receiver.owner.name)}'
-                raise CompositionError(f"A {Projection.__name__} specified to {receiver_name} in {self.name} "
-                                       f"has a sender ({repr(sender_name)}) that is not (yet) in it "
-                                       f"or any of its nested {Composition.__name__}s.")
-
-        if hasattr(projection, "sender"):
-            if projection.sender.owner != sender and \
-                    projection.sender.owner != graph_sender and \
-                    projection.sender.owner != sender_mechanism:
-                raise CompositionError("The position of {} in {} conflicts with its sender attribute."
-                                       .format(projection.name, self.name))
-
-        return sender, sender_mechanism, graph_sender, nested_compositions
-
-    def _parse_receiver_spec(self, projection, receiver, sender, learning_projection):
-
-        # if a receiver was not passed, check for a receiver InputState stored on the Projection object
-        if receiver is None:
-            if hasattr(projection, "receiver"):
-                receiver = projection.receiver.owner
-            else:
-                raise CompositionError("For a Projection to be added to a Composition, a receiver must be specified, "
-                                       "either on the Projection or in the call to Composition.add_projection(). {}"
-                                       " is missing a receiver specification. ".format(projection.name))
-
-        # initialize all receiver-related variables
-        graph_receiver = receiver_mechanism = receiver_input_state = receiver
-
-        nested_compositions = []
-        if isinstance(receiver, Mechanism):
-            # Mechanism spec -- update receiver_input_state to reference primary InputState
-            receiver_input_state = receiver.input_state
-
-        elif isinstance(receiver, InputState):
-            # InputState spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
-            receiver_mechanism = graph_receiver = receiver.owner
-
-        elif isinstance(receiver, Composition):
-            # Nested Composition Spec -- update receiver_mechanism to CIM; receiver_input_state to CIM's primary I.S.
-            receiver_mechanism = receiver.input_CIM
-            receiver_input_state = receiver_mechanism.input_state
-            nested_compositions.append(receiver)
-
-        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        # Add autoassociative learning mechanism + related projections to composition as processing components
-        elif isinstance(receiver, AutoAssociativeProjection):
-            receiver_mechanism = receiver.owner_mech
-            receiver_input_state = receiver_mechanism.input_state
-            learning_projection = True
-
-        elif isinstance(sender, LearningMechanism):
-            receiver_mechanism = receiver.receiver.owner
-            receiver_input_state = receiver_mechanism.input_state
-            learning_projection = True
-
-        else:
-            raise CompositionError("receiver arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
-                                   format(receiver, self.name,
-                                          Mechanism.__name__, InputState.__name__, Composition.__name__))
-
-        if not isinstance(receiver_mechanism, CompositionInterfaceMechanism) \
-                and not isinstance(receiver, Composition)\
-                and receiver_mechanism not in self.nodes\
-                and not learning_projection:
-
-            # if the receiver is IN a nested Composition AND receiver is an INPUT Node
-            # then use the corresponding CIM on the nested comp as the receiver going forward
-            receiver, receiver_input_state, graph_receiver, receiver_mechanism = \
-                self._get_nested_node_CIM_state(receiver_mechanism, receiver_input_state, NodeRole.INPUT)
-
-            nested_compositions.append(graph_receiver)
-            # Otherwise, there was a mistake in the spec
-            if receiver is None:
-                raise CompositionError("receiver arg ({}) in call to add_projection method of {} "
-                                       "is not in it or any of its nested {}s ".
-                                       format(repr(receiver), self.name, Composition.__name__, ))
-
-        return receiver, receiver_mechanism, graph_receiver, receiver_input_state, \
-               nested_compositions, learning_projection
-
-    def add_projection(self,
-                       projection=None,
-                       sender=None,
-                       receiver=None,
-                       feedback=False,
-                       learning_projection=False,
-                       name=None,
-                       allow_duplicates=False
-                       ):
-        """Add **projection** to the Composition, if one with the same sender and receiver doesn't already exist.
-
-        If **projection** is not specified, create a default `MappingProjection` using **sender** and **receiver**.
-
-        If **projection** is specified:
-
-        • if **projection** has already been instantiated, and **sender** and **receiver** are also specified,
-          they must match the `sender <MappingProjection.sender>` and `receiver <MappingProjection.receiver>`
-          of **projection**.
-
-        • if the status of **projection** is `deferred_init`:
-
-          - if its `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` attributes are not
-            specified, then **sender** and/or **receiver** are used.
-
-          - if `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` attributes are specified,
-            they must match **sender** and/or **receiver** if those have also been specified.
-
-          - if a Projection between the specified sender and receiver does *not* already exist, it is initialized; if
-            it *does* already exist, the request to add it is ignored, however requests to shadow it and/or mark it as
-            a`feedback` Projection are implemented (in case it has not already been done for the existing Projection).
-
-        .. note::
-           If **projection** is an instantiated projection (i.e., not in `deferred_init`) and one already exists between
-           its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` a warning is generated.
-
-        COMMENT:
-        IMPLEMENTATION NOTE:
-            Duplicates are determined by the **States** to which they project, not the Mechanisms (to allow
-            multiple Projections to exist between the same pair of Mechanisms using different States).
-            -
-            If an already instantiated Projection is passed to add_projection and is a duplicate of an existing one,
-            it is detected and suppresed, with a warning, in State._instantiate_projections_to_state.
-            -
-            If a Projection with deferred_init status is a duplicate, it is fully suppressed here,
-            as these are generated by add_linear_processing_pathway if the pathway overlaps with an existing one,
-            and so warnings are unnecessary and would be confusing to users.
-        COMMENT
-
-        Arguments
-        ---------
-
-        sender : Mechanism, Composition, or OutputState
-            the sender of **projection**
-
-        projection : Projection, matrix
-            the projection to add
-
-        receiver : Mechanism, Composition, or InputState
-            the receiver of **projection**
-
-        feedback : bool
-            When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
-            means that each Projections within the cycle actually passes to its `receiver <Projection_Base.receiver>`
-            the `value <Projection.value>` of its `sender <Projection_Base.sender>` from the previous execution.
-            When True, this Projection "breaks" the cycle, such that all Nodes execute in sequence, and only the
-            Projection marked as 'feedback' passes to its `receiver <Projection_Base.receiver>` the
-            `value <Projection.value>` of its `sender <Projection_Base.sender>` from the previous execution.
-
-        Returns
-        -------
-
-        projection if added, else None
-
-    """
-        # FIX 7/22/19 [JDC]: THIS COULD BE CLEANED UP MORE
+    def get_roles_by_node(self, node):
         try:
-            # projection = self._parse_projection_spec(projection, sender, receiver, name)
-            projection = self._parse_projection_spec(projection, name)
-        except DuplicateProjectionError:
-            return projection
-        duplicate = False
-
-        # Parse sender and receiver specs
-        sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
-        receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
-            self._parse_receiver_spec(projection, receiver, sender, learning_projection)
-
-        # If Deferred init
-        if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
-            # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
-            if not isinstance(sender, OutputState):
-                sender = sender_mechanism
-            if not isinstance(receiver, InputState):
-                receiver = receiver_mechanism
-            # Check if Projection to be initialized already exists;  if so, mark as duplicate and skip
-            duplicate = self._check_for_existing_projection(sender=sender, receiver=receiver)
-            if not duplicate:
-                # Initialize Projection
-                projection.init_args['sender'] = sender
-                projection.init_args['receiver'] = receiver
-                try:
-                    projection._deferred_init(context=" INITIALIZING ")
-                except DuplicateProjectionError:
-                    return projection
-
-        # MODIFIED 7/22/19 NEW: [JDC]
-        elif self._check_for_existing_projection(projection, sender=sender, receiver=receiver):
-            # FIX: THE FOLLOWING IS REQUIRED SO AS NOT TO CRASH IN test_alias_equivalence_for_modulates_and_projections
-            #      - BLOCK OF CODE BELOW (KAM HACK) IS REQUIRED
-            # return projection
-            duplicate = True
-        # MODIFIED 7/22/19 END
-
-        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        # Add autoassociative learning mechanism + related projections to composition as processing components
-        if sender_mechanism != self.input_CIM and receiver_mechanism != self.output_CIM \
-                and projection not in [vertex.component for vertex in self.graph.vertices] and not learning_projection:
-
-            projection.is_processing = False
-            # KDM 5/24/19: removing below rename because it results in several duplicates
-            # projection.name = f'{sender} to {receiver}'
-            self.graph.add_component(projection, feedback=feedback)
-
-            try:
-                self.graph.connect_components(graph_sender, projection)
-                self.graph.connect_components(projection, graph_receiver)
-            except CompositionError as c:
-                raise CompositionError(f"{c.args[0]} to {self.name}.")
-
-        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        # Add autoassociative learning mechanism + related projections to composition as processing components
-        if not duplicate:
-            self._validate_projection(projection,
-                                      sender, receiver,
-                                      sender_mechanism, receiver_mechanism,
-                                      learning_projection)
-            self.needs_update_graph = True
-            self.needs_update_graph_processing = True
-            self.needs_update_scheduler_processing = True
-
-            projection._activate_for_compositions(self)
-            for comp in nested_compositions:
-                projection._activate_for_compositions(comp)
-
-        # Note: do all of the following even if Projection is a duplicate,
-        #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
-
-        # Create "shadow" projections to any input states that are meant to shadow this projection's receiver
-        # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
-        if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
-            for shadow in self.shadows[receiver_mechanism]:
-                for input_state in shadow.input_states:
-                    if input_state.shadow_inputs is not None:
-                        if input_state.shadow_inputs.owner == receiver:
-                            # TBI: Copy the projection type/matrix value of the projection that is being shadowed
-                            self.add_projection(MappingProjection(sender=sender, receiver=input_state),
-                                                sender_mechanism, shadow)
-        if feedback:
-            self.feedback_senders.add(sender_mechanism)
-            self.feedback_receivers.add(receiver_mechanism)
-
-        return projection
-
-    def _add_projection(self, projection):
-        self.projections.append(projection)
-
-    def add_projections(self, projections=None):
-        """
-            Calls `add_projection <Composition.add_projection>` for each Projection in the *projections* list. Each
-            Projection must have its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`
-            already specified.  If an item in the list is a list of projections, called recursively on that list.
-
-            Arguments
-            ---------
-
-            projections : list of Projections
-                list of Projections to be added to the Composition
-        """
-
-        if isinstance(projections, list):
-            for projection in projections:
-                if isinstance(projection, list):
-                    self.add_projections(projection)
-                elif isinstance(projection, Projection) and \
-                        hasattr(projection, "sender") and \
-                        hasattr(projection, "receiver"):
-                    self.add_projection(projection)
-                else:
-                    raise CompositionError("Invalid projections specification for {}. The add_projections method of "
-                                           "Composition requires a list of Projections, each of which must have a "
-                                           "sender and a receiver.".format(self.name))
-        else:
-            raise CompositionError("Invalid projections specification for {}. The add_projections method of "
-                                   "Composition requires a list of Projections, each of which must have a "
-                                   "sender and a receiver.".format(self.name))
-
-    def remove_projection(self, projection):
-        # step 1 - remove Vertex from Graph
-        if projection in [vertex.component for vertex in self.graph.vertices]:
-            vert = self.graph.comp_to_vertex[projection]
-            self.graph.remove_vertex(vert)
-        # step 2 - remove Projection from Composition's list
-        if projection in self.projections:
-            self.projections.remove(projection)
-
-        # step 3 - TBI? remove Projection from afferents & efferents lists of any node
-
-    def add_pathway(self, path):
-        """
-            Adds an existing Pathway to the current Composition
-
-            Arguments
-            ---------
-
-            path: the Pathway (Composition) to be added
-        """
-
-        # identify nodes and projections
-        nodes, projections = [], []
-        for c in path.graph.vertices:
-            if isinstance(c.component, Mechanism):
-                nodes.append(c.component)
-            elif isinstance(c.component, Composition):
-                nodes.append(c.component)
-            elif isinstance(c.component, Projection):
-                projections.append(c.component)
-
-        # add all nodes first
-        for node in nodes:
-            self.add_node(node)
-
-        # then projections
-        for p in projections:
-            self.add_projection(p, p.sender.owner, p.receiver.owner)
-
-        self._analyze_graph()
-
-    def add_linear_processing_pathway(self, pathway, feedback=False, *args):
-        """Add sequence of Mechanisms or Compositions possibly with intercolated Projections
-        Tuples (Mechanism, NodeRole(s)) can be used to assign required_roles to Mechanisms.
-        """
-        nodes = []
-        # First, verify that the pathway begins with a node
-        if not isinstance(pathway, (list, tuple)):
-            raise CompositionError(f"First arg for add_linear_processing_pathway method of '{self.name}' "
-                                   f"{Composition.__name__} must be a list of nodes")
-
-        if isinstance(pathway[0], (Mechanism, Composition, tuple)):
-            self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
-            nodes.append(pathway[0])
-        else:
-            # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
-            raise CompositionError("The first item in a linear processing pathway must be a Node (Mechanism or "
-                                   "Composition).")
-
-        # Then, add all of the remaining nodes in the pathway
-        for c in range(1, len(pathway)):
-            # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
-            if isinstance(pathway[c], (Mechanism, Composition, tuple)):
-                self.add_nodes([pathway[c]])
-                nodes.append(pathway[c])
-        projections = []
-
-        # Then, loop through and validate that the Mechanism-Projection relationships make sense
-        # and add MappingProjection(s) where needed
-        for c in range(1, len(pathway)):
-
-            # if the current item is a Node
-            if isinstance(pathway[c], (Mechanism, Composition, tuple)):
-                if isinstance(pathway[c - 1], (Mechanism, Composition, tuple)):
-                    # if the previous item was also a Composition Node, add a mapping projection between them
-                    proj = self.add_projection(sender=pathway[c - 1],
-                                               receiver=pathway[c],
-                                               feedback=feedback)
-                    if proj:
-                        projections.append(proj)
-
-            # if the current item is a Projection specification
-            elif isinstance(pathway[c], (Projection, np.ndarray, np.matrix, str, list)):
-                if c == len(pathway) - 1:
-                    raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
-                                           " a linear processing pathway.".format(pathway[c]))
-                # confirm that it is between two nodes, then add the projection
-                proj = pathway[c]
-                sender = pathway[c - 1]
-                receiver = pathway[c + 1]
-                if isinstance(sender, (Mechanism, Composition)) \
-                        and isinstance(receiver, (Mechanism, Composition)):
-                    try:
-                        if isinstance(pathway[c], (np.ndarray, np.matrix, list)):
-                            proj = MappingProjection(sender=sender,
-                                                     matrix=pathway[c],
-                                                     receiver=receiver)
-                    except DuplicateProjectionError:
-                        # FIX: 7/22/19 ADD WARNING HERE??
-                        # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
-                        duplicate = [p for p in receiver.afferents if p in sender.efferents]
-                        assert len(duplicate)==1, \
-                            f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
-                                f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
-                                f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
-                        proj = duplicate[0]
-
-                    proj = self.add_projection(projection=proj,
-                                               sender=sender,
-                                               receiver=receiver,
-                                               feedback=feedback,
-                                               allow_duplicates=False)
-                    if proj:
-                        projections.append(proj)
-
-                else:
-                    raise CompositionError(
-                        "{} is not between two Composition Nodes. A Projection in a linear processing pathway must be "
-                        "preceded by a Composition Node (Mechanism or Composition) and followed by a Composition Node"
-                            .format(pathway[c]))
-            else:
-                raise CompositionError("{} is not a Projection or a Composition node (Mechanism or Composition). A "
-                                       "linear processing pathway must be made up of Projections and Composition Nodes."
-                                       .format(pathway[c]))
-        # interleave nodes and projections
-        explicit_pathway = [nodes[0]]
-        for i in range(len(projections)):
-            explicit_pathway.append(projections[i])
-            explicit_pathway.append(nodes[i+1])
-
-        return explicit_pathway
-
-    def _create_rl_learning_related_mechanisms(self,
-                                               input_source,
-                                               output_source,
-                                               error_function,
-                                               learned_projection,
-                                               learning_rate,
-                                               learning_update):
-        # Create learning components
-        target_mechanism = ProcessingMechanism(name='Target')
-
-        comparator_mechanism = ComparatorMechanism(name='Comparator',
-                                                   # target={NAME: TARGET,
-                                                   #         VARIABLE: [0.]},
-                                                   sample={NAME: SAMPLE,
-                                                           VARIABLE: [0.], WEIGHT: -1},
-                                                   target={NAME: TARGET,
-                                                           VARIABLE: [0.]},
-                                                   function=error_function,
-                                                   output_states=[OUTCOME, MSE])
-
-        learning_mechanism = \
-            LearningMechanism(function=Reinforcement(default_variable=[input_source.output_states[0].value,
-                                                                       output_source.output_states[0].value,
-                                                                       comparator_mechanism.output_states[0].value],
-                                                     learning_rate=learning_rate),
-                              default_variable=[input_source.output_states[0].value,
-                                                output_source.output_states[0].value,
-                                                comparator_mechanism.output_states[0].value],
-                              error_sources=comparator_mechanism,
-                              learning_enabled=learning_update,
-                              in_composition=True,
-                              name="Learning Mechanism for " + learned_projection.name)
-
-        learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
-                                                                                                         override=True)
-        self.enable_learning = True
-        return target_mechanism, comparator_mechanism, learning_mechanism
-
-    def _create_td_related_mechanisms(self,
-                                      input_source,
-                                      output_source,
-                                      error_function,
-                                      learned_projection,
-                                      learning_rate,
-                                      learning_update):
-        # Create learning components
-        target_mechanism = ProcessingMechanism(name='Target',
-                                               default_variable=output_source.defaults.value)
-
-        comparator_mechanism = PredictionErrorMechanism(
-            sample={NAME: SAMPLE,
-                    VARIABLE: output_source.defaults.value},
-            target={NAME: TARGET,
-                    VARIABLE: output_source.defaults.value},
-            function=PredictionErrorDeltaFunction(gamma=1.0),
-            # name="{} {}".format(output_source.name
-            #                     # PREDICTION_ERROR_MECHANISM
-            #                     )
-        )
-
-        learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
-                                               default_variable=[input_source.output_states[0].defaults.value,
-                                                                 output_source.output_states[0].defaults.value,
-                                                                 comparator_mechanism.output_states[0].defaults.value],
-                                               error_sources=comparator_mechanism,
-                                               learning_enabled=learning_update,
-                                               in_composition=True,
-                                               name="Learning Mechanism for " + learned_projection.name)
-
-        learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
-                                                                                                         override=True)
-        self.enable_learning = True
-        return target_mechanism, comparator_mechanism, learning_mechanism
-
-    def _create_terminal_backprop_sequence_components(self,
-                                                    input_source,
-                                                    output_source,
-                                                    error_function,
-                                                    learned_projection,
-                                                    learning_rate,
-                                                    learning_update):
-        """Create ComparatorMechanism, LearningMechanism and LearningProjection for Component in learning sequence"""
-
-        # target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
-        # comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
-        # learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
-
-        # If target and comparator already exist (due to overlapping pathway), use those
-        try:
-            target_mechanism = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
-            comparator_mechanism = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
-
-        # Otherwise, create new ones
+            return self.nodes_to_roles[node]
         except KeyError:
-            target_mechanism = ProcessingMechanism(name='Target',
-                                                   default_variable=output_source.output_states[0].value)
-            comparator_mechanism = ComparatorMechanism(name='Comparator',
-                                                       target={NAME: TARGET,
-                                                               VARIABLE: target_mechanism.output_states[0].value},
-                                                       sample={NAME: SAMPLE,
-                                                               VARIABLE: output_source.output_states[0].value,
-                                                               WEIGHT: -1},
-                                                       function=error_function,
-                                                       output_states=[OUTCOME, MSE])
+            raise CompositionError('Node {0} not found in {1}.nodes_to_roles'.format(node, self))
 
-        learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
-                                                              output_source.output_states[0].value,
-                                                              comparator_mechanism.output_states[0].value],
-                                            activation_derivative_fct=output_source.function.derivative,
-                                            learning_rate=learning_rate)
+    def get_nodes_by_role(self, role):
+        """
+            Returns a List of Composition Nodes in this Composition that have the *role* specified
 
-        learning_mechanism = LearningMechanism(function=learning_function,
-                                               default_variable=[input_source.output_states[0].value,
-                                                                 output_source.output_states[0].value,
-                                                                 comparator_mechanism.output_states[0].value],
-                                               error_sources=comparator_mechanism,
-                                               learning_enabled=learning_update,
-                                               in_composition=True,
-                                               name="Learning Mechanism for " + learned_projection.name)
+            Arguments
+            _________
 
-        self.add_nodes(nodes=[(target_mechanism, NodeRole.TARGET),
-                              comparator_mechanism,
-                              learning_mechanism],
-                       required_roles=NodeRole.LEARNING)
+            role : NodeRole
+                the List of nodes having this role to return
 
-        learning_related_projections = self._create_learning_related_projections(input_source,
-                                                                                 output_source,
-                                                                                 target_mechanism,
-                                                                                 comparator_mechanism,
-                                                                                 learning_mechanism)
-        self.add_projections(learning_related_projections)
+            Returns
+            -------
 
-        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection, feedback=True)
+            List of Composition Nodes with `NodeRole` *role* : List(`Mechanisms <Mechanism>` and
+            `Compositions <Composition>`)
+        """
+        if role not in NodeRole:
+            raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
-        self.enable_learning = True
-
-        return target_mechanism, comparator_mechanism, learning_mechanism
-
-    def _create_multilayer_backprop_components(self,
-                                               input_source,
-                                               output_source,
-                                               learned_projection,
-                                               learning_rate,
-                                               learning_update):
-
-        # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
-        learning_mechanism = \
-            next((lp.receiver.owner for lp in learned_projection.parameter_states[MATRIX].mod_afferents
-                  if isinstance(lp, LearningProjection)),
-                 None)
-
-        # If learning_mechanism exists:
-        #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
-        #    error_projections will contain list of any created to be added to the Composition below
-        if learning_mechanism:
-            error_sources, error_projections = self._get_back_prop_error_sources(output_source, learning_mechanism)
-        # If learning_mechanism does not yet exist:
-        #    error_sources will contain ones needed to create learning_mechanism
-        #    error_projections will be empty since they can't be created until the learning_mechanism is created below;
-        #    they will be created (using error_sources) when, and determined after learning_mechanism is created below
-        else:
-            error_sources, error_projections = self._get_back_prop_error_sources(output_source)
-            error_signal_template = [error_source.output_states[ERROR_SIGNAL].value for error_source in error_sources]
-            default_variable = [input_source.output_states[0].value, output_source.output_states[0].value] + \
-                               error_signal_template
-
-            learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
-                                                                  output_source.output_states[0].value,
-                                                                  error_signal_template[0]],
-                                                activation_derivative_fct=output_source.function.derivative,
-                                                learning_rate=learning_rate)
-
-            learning_mechanism = LearningMechanism(function=learning_function,
-                                                   # default_variable=[input_source.output_states[0].value,
-                                                   #                   output_source.output_states[0].value,
-                                                   #                   error_signal_template],
-                                                   default_variable=default_variable,
-                                                   error_sources=error_sources,
-                                                   learning_enabled=learning_update,
-                                                   in_composition=True,
-                                                   name="Learning Mechanism for " + learned_projection.name)
-
-            # Create MappingProjections from ERROR_SIGNAL OutputState of each error_source
-            #    to corresponding error_input_states
-            for i, error_source in enumerate(error_sources):
-                error_projection = MappingProjection(sender=error_source,
-                                                     receiver=learning_mechanism.error_signal_input_states[i])
-                error_projections.append(error_projection)
-
-        self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
-
-        act_in_projection = MappingProjection(sender=input_source.output_states[0],
-                                              receiver=learning_mechanism.input_states[0])
-        act_out_projection = MappingProjection(sender=output_source.output_states[0],
-                                               receiver=learning_mechanism.input_states[1])
-        self.add_projections([act_in_projection, act_out_projection] + error_projections)
-
-        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection, feedback=True)
-
-        return learning_mechanism
-
-    # NOTES:
-    # Learning-type-specific creation methods should:
-    # - create ComparatorMechanism and pass in as error_source (for 1st LearningMechanism in sequence in bp)
-    # - Determine and pass error_sources (aka previous_learning_mechanism) (for bp)
-    # - construct and pass in the learning_function
-    # - do the following for last LearningMechanism in sequence:
-    #   learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
-    #                                                                                                    override=True)
-    #
-    # Create_backprop... should pass error_function (handled by kwargs below)
-    # Check for existence of Learning mechanism (or do this in creation method?);  if one exists, compare its
-    #    ERROR_SIGNAL input_states with error_sources and update/add any needed, as well as corresponding
-    #    error_matrices (from their learned_projections) -- do so using LearningMechanism's add_states method);
-    #    create projections from each
-    # Move creation of LearningProjections and learning-related projections (MappingProjections) here
-    # ?Do add_nodes and add_projections here or in Learning-type-specific creation methods
-
-    def _create_learning_components(self,
-                                    sender_activity_source,   # aka input_source
-                                    receiver_activity_source, # aka output_source
-                                    error_sources,            # aka comparator/previous_learning_mechanism
-                                    learning_function,
-                                    learned_projection,
-                                    learning_rate,
-                                    learning_update,
-                                    target_mech=None,
-                                    **kwargs                  # Use of type-specific learning arguments
-                                    ):
-
-        # ONLY DO THIS IF ONE DOESN'T ALREADY EXIST (?pass in argument determing this?)
-        learning_mechanism = LearningMechanism(function=learning_function,
-                                               default_variable=[sender_activity_source.output_states[0].value,
-                                                                 receiver_activity_source.output_states[0].value,
-                                                                 error_sources.output_states[0].value],
-                                               error_sources=error_sources,
-                                               learning_enabled=learning_update,
-                                               in_composition=True,
-                                               name="Learning Mechanism for " + learned_projection.name,
-                                               **kwargs)
-
-
-        self.enable_learning = True
-        return learning_mechanism
-
-    def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
-        # construct learning related mapping projections
-
-        # FIX 5/29/19 [JDC]:  REPLACE INDICES BELOW WITH RELEVANT KEYWORDS;
-        #                     INTEGRATE WITH _get_back_prop_error_sources (RIGHT NOW, ONLY CALLED FOR TERMINAL SEQUENCE)
         try:
-            sample_projection = MappingProjection(sender=output_source, receiver=comparator.input_states[SAMPLE])
-        except DuplicateProjectionError:
-            sample_projection = [p for p in output_source.efferents
-                                 if p in comparator.input_states[SAMPLE].path_afferents]
-        try:
-            target_projection = MappingProjection(sender=target, receiver=comparator.input_states[TARGET])
-        except DuplicateProjectionError:
-            target_projection = [p for p in target.efferents
-                                 if p in comparator.input_states[TARGET].path_afferents]
-        act_in_projection = MappingProjection(sender=input_source.output_states[0],
-                                              receiver=learning_mechanism.input_states[ACTIVATION_INPUT_INDEX])
-        act_out_projection = MappingProjection(sender=output_source.output_states[0],
-                                               receiver=learning_mechanism.input_states[ACTIVATION_OUTPUT_INDEX])
-        # FIX CROSS_PATHWAYS 7/28/19 [JDC]: THIS MAY NEED TO USE ADD_STATES (SINCE ONE MAY EXIST; CONSTRUCT TEST FOR IT)
-        error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
-                                                    receiver=learning_mechanism.input_states[ERROR_SIGNAL_INDEX])
-        return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
-        # # MODIFIED 7/22/19 NEW:
-        # error_signal_projections = []
-        # for learning_mech in learning_mechanism.dependent_learning_mechanisms:
-        #     error_signal_projections.append(MappingProjection(sender=comparator.output_states[OUTCOME],
-        #                                                       receiver=learning_mechanism.input_states[2]))
-        return [target_projection, sample_projection, error_signal_projections, act_out_projection, act_in_projection]
-        # MODIFIED 7/22/19 END
+            return [node for node in self.nodes if role in self.nodes_to_roles[node]]
 
-    def _get_back_prop_error_sources(self, receiver_activity_mech, learning_mech=None):
-        # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP
-        #                              AND THEN TO HANDLE ALL FORMS OF LEARNING (AS BELOW)
-        #  REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
-        #  1) Determine whether this is a terminal sequence:
-        #     - use arg passed in or determine from context (see current implementation in add_backpropagation_learning_pathway)
-        #     - for terminal sequence, handle target and sample projections as below
-        #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
-        #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
-        #     - check validity of existing error_signal projections with respect to those and, if possible,
-        #       their correspondence with error_matrices
-        #     - check if any ERROR_SIGNAL input_states are empty (vacated by terminal sequence elements deleted in
-        #       add_projection)
-        #     - call add_states method on LearningMechanism to add new ERROR_SIGNAL input_state to its input_states
-        #       and error_matrix to its self.error_matrices attribute
-        #     - add new error_signal projection
-        """Add any LearningMechanisms associated with efferent projection from receiver_activity_mech"""
-        error_sources = []
-        error_projections = []
-
-        # First get all efferents of receiver_activity_mech with a LearningProjection that are in current Composition
-        for efferent in [p for p in receiver_activity_mech.efferents
-                         if (hasattr(p, 'has_learning_projection')
-                             and p.has_learning_projection
-                             and p in self.projections)]:
-            # Then get any LearningProjections to that efferent that are in current Composition
-            for learning_projection in [mod_aff for mod_aff in efferent.parameter_states[MATRIX].mod_afferents
-                                        if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
-                error_source = learning_projection.sender.owner
-                if (error_source not in self.nodes  # error_source is not in the Composition
-                        or (learning_mech  # learning_mech passed in
-                            # the error_source is already associated with learning_mech
-                            and (error_source in learning_mech.error_sources)
-                            # and the error_source already sends a Projection to learning_mech
-                            and (learning_mech in [p.receiver.owner for p in error_source.efferents]))):
-                    continue  # ignore the error_source
-                error_sources.append(error_source)
-
-                # If learning_mech was passed in, add error_source to its list of error_signal_input_states
-                if learning_mech:
-                    # FIX: REPLACE WITH learning_mech._add_error_signal_input_state ONCE IMPLEMENTED
-                    error_signal_input_state = next((e for e in learning_mech.error_signal_input_states
-                                                     if not e.path_afferents), None)
-                    if error_signal_input_state is None:
-                        error_signal_input_state = learning_mech.add_states(
-                                                            InputState(projections=error_source.output_states[ERROR_SIGNAL],
-                                                                       name=ERROR_SIGNAL,
-                                                                       context=ContextFlags.METHOD),
-                                                            context=ContextFlags.METHOD)
-                    # Create Projection here so that don't have to worry about determining correct
-                    #    error_signal_input_state of learning_mech in _create_multilayer_backprop_components
-                    error_projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
-                                                               receiver=error_signal_input_state))
-
-        # Return error_sources so they can be used to create a new LearningMechanism if needed
-        # Return error_projections created to existing learning_mech
-        #    so they can be added to the Composition by _create_multilayer_backprop_components
-        return error_sources, error_projections
-
-    def _add_error_projection_to_dependent_learning_mechs(self, error_source):
-        projections = []
-        # Get all afferents to receiver_activity_mech in Composition that have LearningProjections
-        for afferent in [p for p in error_source.input_source.path_afferents
-                         if (p in self.projections
-                             and hasattr(p, 'has_learning_projection')
-                             and p.has_learning_projection)]:
-            # For each LearningProjection to that afferent, if its LearningMechanism doesn't already receiver
-            for learning_projection in [lp for lp in afferent.parameter_states[MATRIX].mod_afferents
-                                        if (isinstance(lp, LearningProjection)
-                                            and error_source not in lp.sender.owner.error_sources)]:
-                dependent_learning_mech = learning_projection.sender.owner
-                error_signal_input_state = dependent_learning_mech.add_states(
-                                                    InputState(projections=error_source.output_states[ERROR_SIGNAL],
-                                                               name=ERROR_SIGNAL,
-                                                               context=ContextFlags.METHOD),
-                                                    context=ContextFlags.METHOD)
-                projections.append(error_signal_input_state[0].path_afferents[0])
-                # projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
-                #                                      receiver=error_signal_input_state[0]))
-        return projections
-
-    def _get_backprop_error_projections(self, learning_mech, receiver_activity_mech):
-        error_sources = []
-        error_projections = []
-        # for error_source in learning_mech.error_sources:
-        #     if error_source in self.nodes:
-        #         error_sources.append(error_source)
-        # Add any LearningMechanisms associated with efferent projection from receiver_activity_mech
-        # First get all efferents of receiver_activity_mech with a LearningProjection that are in current Composition
-        for efferent in [p for p in receiver_activity_mech.efferents
-                         if (hasattr(p, 'has_learning_projection')
-                             and p.has_learning_projection
-                             and p in self.projections)]:
-            # Then any LearningProjections to that efferent that are in current Composition
-            for learning_projection in [mod_aff for mod_aff in efferent.parameter_states[MATRIX].mod_afferents
-                                        if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
-                error_source = learning_projection.sender.owner
-                if (error_source in learning_mech.error_sources
-                        and error_source in self.nodes
-                        and learning_mech in [p.receiver.owner for p in error_source.efferents]):
-                    continue
-                error_sources.append(error_source)
-                # FIX: REPLACE WITH learning_mech._add_error_signal_input_state ONCE IMPLEMENTED
-                error_signal_input_state = next((e for e in learning_mech.error_signal_input_states
-                                                 if not e.path_afferents), None)
-                if error_signal_input_state is None:
-                    error_signal_input_state = learning_mech.add_states(
-                                                        InputState(projections=error_source.output_states[ERROR_SIGNAL],
-                                                                   name=ERROR_SIGNAL,
-                                                                   context=ContextFlags.METHOD),
-                                                        context=ContextFlags.METHOD)
-                # DOES THE ABOVE GENERATE A PROJECTION?  IF SO, JUST GET AND RETURN THAT;  ELSE DO THE FOLLOWING:
-                error_projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
-                                                           receiver=error_signal_input_state))
-        return error_projections
-        #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
-        #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
-        #     - check validity of existing error_signal projections with respect to those and, if possible,
-        #       their correspondence with error_matrices
-        #     - check if any ERROR_SIGNAL input_states are empty (vacated by terminal sequence elements deleted in
-        #       add_projection)
-        #     - call add_states method on LearningMechanism to add new ERROR_SIGNAL input_state to its input_states
-        #       and error_matrix to its self.error_matrices attribute
-        #     - add new error_signal projection
-
-
-    def _get_back_prop_error_sources(self, receiver_activity_mech, learning_mech=None):
-        # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP
-        #                              AND THEN TO HANDLE ALL FORMS OF LEARNING (AS BELOW)
-        #  REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
-        #  1) Determine whether this is a terminal sequence:
-        #     - use arg passed in or determine from context (see current implementation in add_backpropagation_learning_pathway)
-        #     - for terminal sequence, handle target and sample projections as below
-        #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
-        #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
-        #     - check validity of existing error_signal projections with respect to those and, if possible,
-        #       their correspondence with error_matrices
-        #     - check if any ERROR_SIGNAL input_states are empty (vacated by terminal sequence elements deleted in
-        #       add_projection)
-        #     - call add_states method on LearningMechanism to add new ERROR_SIGNAL input_state to its input_states
-        #       and error_matrix to its self.error_matrices attribute
-        #     - add new error_signal projection
-        """Add any LearningMechanisms associated with efferent projection from receiver_activity_mech"""
-        error_sources = []
-        error_projections = []
-
-        # First get all efferents of receiver_activity_mech with a LearningProjection that are in current Composition
-        for efferent in [p for p in receiver_activity_mech.efferents
-                         if (hasattr(p, 'has_learning_projection')
-                             and p.has_learning_projection
-                             and p in self.projections)]:
-            # Then get any LearningProjections to that efferent that are in current Composition
-            for learning_projection in [mod_aff for mod_aff in efferent.parameter_states[MATRIX].mod_afferents
-                                        if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
-                error_source = learning_projection.sender.owner
-                if (error_source not in self.nodes  # error_source is not in the Composition
-                        or (learning_mech  # learning_mech passed in
-                            # the error_source is already associated with learning_mech
-                            and (error_source in learning_mech.error_sources)
-                            # and the error_source already sends a Projection to learning_mech
-                            and (learning_mech in [p.receiver.owner for p in error_source.efferents]))):
-                    continue  # ignore the error_source
-                error_sources.append(error_source)
-
-                # If learning_mech was passed in, add error_source to its list of error_signal_input_states
-                if learning_mech:
-                    # FIX: REPLACE WITH learning_mech._add_error_signal_input_state ONCE IMPLEMENTED
-                    error_signal_input_state = next((e for e in learning_mech.error_signal_input_states
-                                                     if not e.path_afferents), None)
-                    if error_signal_input_state is None:
-                        error_signal_input_state = learning_mech.add_states(
-                                                            InputState(projections=error_source.output_states[ERROR_SIGNAL],
-                                                                       name=ERROR_SIGNAL,
-                                                                       context=ContextFlags.METHOD),
-                                                            context=ContextFlags.METHOD)
-                    # Create Projection here so that don't have to worry about determining correct
-                    #    error_signal_input_state of learning_mech in _create_multilayer_backprop_components
-                    error_projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
-                                                               receiver=error_signal_input_state))
-
-        # Return error_sources so they can be used to create a new LearningMechanism if needed
-        # Return error_projections created to existing learning_mech
-        #    so they can be added to the Composition by _create_multilayer_backprop_components
-        return error_sources, error_projections
-
-    def _add_error_projection_to_dependent_learning_mechs(self, error_source):
-        projections = []
-        # Get all afferents to receiver_activity_mech in Composition that have LearningProjections
-        for afferent in [p for p in error_source.input_source.path_afferents
-                         if (p in self.projections
-                             and hasattr(p, 'has_learning_projection')
-                             and p.has_learning_projection)]:
-            # For each LearningProjection to that afferent, if its LearningMechanism doesn't already receiver
-            for learning_projection in [lp for lp in afferent.parameter_states[MATRIX].mod_afferents
-                                        if (isinstance(lp, LearningProjection)
-                                            and error_source not in lp.sender.owner.error_sources)]:
-                dependent_learning_mech = learning_projection.sender.owner
-                error_signal_input_state = dependent_learning_mech.add_states(
-                                                    InputState(projections=error_source.output_states[ERROR_SIGNAL],
-                                                               name=ERROR_SIGNAL,
-                                                               context=ContextFlags.METHOD),
-                                                    context=ContextFlags.METHOD)
-                projections.append(error_signal_input_state[0].path_afferents[0])
-                # projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
-                #                                      receiver=error_signal_input_state[0]))
-        return projections
-
-    def _get_backprop_error_projections(self, learning_mech, receiver_activity_mech):
-        error_sources = []
-        error_projections = []
-        # for error_source in learning_mech.error_sources:
-        #     if error_source in self.nodes:
-        #         error_sources.append(error_source)
-        # Add any LearningMechanisms associated with efferent projection from receiver_activity_mech
-        # First get all efferents of receiver_activity_mech with a LearningProjection that are in current Composition
-        for efferent in [p for p in receiver_activity_mech.efferents
-                         if (hasattr(p, 'has_learning_projection')
-                             and p.has_learning_projection
-                             and p in self.projections)]:
-            # Then any LearningProjections to that efferent that are in current Composition
-            for learning_projection in [mod_aff for mod_aff in efferent.parameter_states[MATRIX].mod_afferents
-                                        if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
-                error_source = learning_projection.sender.owner
-                if (error_source in learning_mech.error_sources
-                        and error_source in self.nodes
-                        and learning_mech in [p.receiver.owner for p in error_source.efferents]):
-                    continue
-                error_sources.append(error_source)
-                # FIX: REPLACE WITH learning_mech._add_error_signal_input_state ONCE IMPLEMENTED
-                error_signal_input_state = next((e for e in learning_mech.error_signal_input_states
-                                                 if not e.path_afferents), None)
-                if error_signal_input_state is None:
-                    error_signal_input_state = learning_mech.add_states(
-                                                        InputState(projections=error_source.output_states[ERROR_SIGNAL],
-                                                                   name=ERROR_SIGNAL,
-                                                                   context=ContextFlags.METHOD),
-                                                        context=ContextFlags.METHOD)
-                # DOES THE ABOVE GENERATE A PROJECTION?  IF SO, JUST GET AND RETURN THAT;  ELSE DO THE FOLLOWING:
-                error_projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
-                                                           receiver=error_signal_input_state))
-        return error_projections
-        #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
-        #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
-        #     - check validity of existing error_signal projections with respect to those and, if possible,
-        #       their correspondence with error_matrices
-        #     - check if any ERROR_SIGNAL input_states are empty (vacated by terminal sequence elements deleted in
-        #       add_projection)
-        #     - call add_states method on LearningMechanism to add new ERROR_SIGNAL input_state to its input_states
-        #       and error_matrix to its self.error_matrices attribute
-        #     - add new error_signal projection
-
-
-    def _create_learning_projection(self, learning_mechanism, learned_projection):
-
-        learning_projection = LearningProjection(name="Learning Projection",
-                                                 sender=learning_mechanism.learning_signals[0],
-                                                 receiver=learned_projection.parameter_states["matrix"])
-
-        learned_projection.has_learning_projection = True
-
-        return learning_projection
-
-    def _unpack_processing_components_of_learning_pathway(self, processing_pathway):
-        # unpack processing components and add to composition
-        if len(processing_pathway) == 3:
-            input_source, learned_projection, output_source = processing_pathway
-        elif len(processing_pathway) == 2:
-            input_source, output_source = processing_pathway
-            learned_projection = MappingProjection(sender=input_source, receiver=output_source)
-        else:
-            raise CompositionError(f"Too many components in learning pathway: {pathway}. Only single-layer learning "
-                                   f"is supported by this method. See AutodiffComposition for other learning models.")
-        return input_source, output_source, learned_projection
-
-    def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                           learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
-        """
-        Arguments
-        ---------
-
-        pathway: List
-            list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
-            specified, that projection is the learned projection. Otherwise, a default MappingProjection is
-            automatically generated for the learned projection.
-
-        learning_rate : float : default 0.05
-            specifies the `learning_rate <ReinforcementLearning.learning_rate>` used for the `ReinforcementLearning`
-            function of the `LearningMechanism` in the **pathway**.
-
-        error_function : function : default LinearCombination
-            specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and
-            the output (`value <Mechanism_Base.value>`) of the `TARGET` Mechanism in the **pathway**).
-
-        learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
-            specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
-            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
-            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
-            <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
-            <LearningMechanism.learning_enabled>` for meaning of values).
-
-        Returns
-        --------
-
-        A dictionary of components that were automatically generated and added to the Composition in order to
-        implement ReinforcementLearning in the pathway.
-
-        {LEARNING_MECHANISM: learning_mechanism,
-         COMPARATOR_MECHANISM: comparator,
-         TARGET_MECHANISM: target,
-         LEARNED_PROJECTION: learned_projection}
-        """
-
-        if not error_function:
-            error_function = LinearCombination()
-
-        # Processing Components
-        input_source, output_source, learned_projection = \
-            self._unpack_processing_components_of_learning_pathway(pathway)
-        self.add_linear_processing_pathway([input_source, learned_projection, output_source])
-        self.add_required_node_role(output_source, NodeRole.OUTPUT)
-
-        # Learning Components
-        target, comparator, learning_mechanism = self._create_rl_learning_related_mechanisms(input_source,
-                                                                                             output_source,
-                                                                                             error_function,
-                                                                                             learned_projection,
-                                                                                             learning_rate,
-                                                                                             learning_update)
-        self.add_nodes([(target, NodeRole.TARGET), comparator, learning_mechanism],
-                       required_roles=NodeRole.LEARNING)
-
-        learning_related_projections = self._create_learning_related_projections(input_source,
-                                                                                 output_source,
-                                                                                 target,
-                                                                                 comparator,
-                                                                                 learning_mechanism)
-        self.add_projections(learning_related_projections)
-
-        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection, learning_projection=True)
-
-        learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
-                                       COMPARATOR_MECHANISM: comparator,
-                                       TARGET_MECHANISM: target,
-                                       LEARNED_PROJECTION: learned_projection}
-
-        return learning_related_components
-
-    def add_td_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
-        """
-        Arguments
-        ---------
-
-        pathway: List
-            list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
-            specified, that projection is the learned projection. Otherwise, a default MappingProjection is
-            automatically generated for the learned projection.
-
-        learning_rate : float : default 0.05
-            specifies the `learning_rate <TDLearning.learning_rate>` used for the `TDLearning` function of the
-            `LearningMechanism` in the **pathway**.
-
-        error_function : function : default LinearCombination
-            specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and
-            the output (`value <Mechanism_Base.value>`) of the `TARGET` Mechanism in the **pathway**).
-
-        learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
-            specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
-            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
-            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
-            <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
-            <LearningMechanism.learning_enabled>` for meaning of values).
-
-        Returns
-        --------
-
-        A dictionary of components that were automatically generated and added to the Composition in order to
-        implement TDLearning in the pathway.
-
-        {LEARNING_MECHANISM: learning_mechanism,
-         COMPARATOR_MECHANISM: comparator,
-         TARGET_MECHANISM: target,
-         LEARNED_PROJECTION: learned_projection}
-        """
-
-        if not error_function:
-            error_function = LinearCombination()
-
-        # Processing Components
-        input_source, output_source, learned_projection = \
-            self._unpack_processing_components_of_learning_pathway(pathway)
-        self.add_linear_processing_pathway([input_source, learned_projection, output_source])
-
-        # Learning Components
-        target, comparator, learning_mechanism = self._create_td_related_mechanisms(input_source,
-                                                                                    output_source,
-                                                                                    error_function,
-                                                                                    learned_projection,
-                                                                                    learning_rate,
-                                                                                    learning_update)
-        self.add_nodes([(target, NodeRole.TARGET), comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
-
-        learning_related_projections = self._create_learning_related_projections(input_source,
-                                                                                 output_source,
-                                                                                 target,
-                                                                                 comparator,
-                                                                                 learning_mechanism)
-        self.add_projections(learning_related_projections)
-
-        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection, learning_projection=True)
-
-        learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
-                                       COMPARATOR_MECHANISM: comparator,
-                                       TARGET_MECHANISM: target,
-                                       LEARNED_PROJECTION: learned_projection}
-
-        return learning_related_components
-
-    def add_backpropagation_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                             learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
-        """Add linear processing pathway with backpropogation learning
-
-        Arguments
-        ---------
-        pathway : list
-            specifies list of nodes for the pathway (see `add_linear_processing_pathway` for details of specification).
-
-        pathway: List
-            specifies nodes of the pathway for the learning sequence  (see `add_linear_processing_pathway` for
-            details of specification).  Any `MappingProjections <MappingProjection>` specified or constructed for the
-            pathway are assigned as `learned_projections`.
-
-        learning_rate : float : default 0.05
-            specifies the `learning_rate <Backpropagation.learning_rate>` used for the `Backpropagation` function of
-            the `LearningMechanisms <LearningMechanism>` in the **pathway**.
-
-        error_function : function : default LinearCombination
-            specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and the
-            output (`value <Mechanism_Base.value>`) of the `TARGET` (last) Mechanism in the **pathway**).
-
-        learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
-            specifies when the `matrix <MappingProjection.matrix>` parameters of the `learned_projections` are updated
-            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
-            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanisms
-            <LearningMechanism>` in the pathway, and their `LearningProjections <LearningProjection>`
-            (see `learning_enabled <LearningMechanism.learning_enabled>` for meaning of values).
-
-        Returns
-        --------
-
-        A dictionary of components that were automatically generated and added to the Composition in order to
-        implement Backpropagation along the pathway.
-
-        {LEARNING_MECHANISM: learning_mechanism,
-         COMPARATOR_MECHANISM: comparator,
-         TARGET_MECHANISM: target,
-         LEARNED_PROJECTION: learned_projection}
-        """
-        if not error_function:
-            error_function = LinearCombination()
-
-        # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
-        processing_pathway = self.add_linear_processing_pathway(pathway)
-
-        path_length = len(processing_pathway)
-
-        # Pathway length must be >=3 (Mechanism, Projection, Mechanism
-        if path_length >= 3:
-            # get the "terminal_sequence" --
-            # the last 2 nodes in the back prop pathway and the projection between them
-            # these components are are processed separately because
-            # they inform the construction of the Target and Comparator mechs
-            terminal_sequence = processing_pathway[path_length - 3: path_length]
-        else:
-            raise CompositionError(f"Backpropagation pathway specification ({pathway}) must not contain "
-                                   f"at least three components "
-                                   f"([{Mechanism.__name__}, {Projection.__name__}, {Mechanism.__name__}]).")
-
-        # Unpack and process terminal_sequence:
-        input_source, learned_projection, output_source = terminal_sequence
-
-        # If pathway includes existing terminal_sequence for the output_source, use that
-        if output_source in self._terminal_backprop_sequences:
-
-            # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:
-            #  THIS SHOULD BE INTEGRATED WITH CALL TO _create_terminal_backprop_sequence_components
-            #  ** NEED TO CHECK WHETHER LAST NODE IN THE SEQUENCE IS TERMINAL AND IF SO:
-            #     ASSIGN USING: self.add_required_node_role(output_source, NodeRole.OUTPUT)
-            # If learned_projection already has a LearningProjection (due to pathway overlap),
-            #    use those terminal sequence components
-            if (learned_projection.has_learning_projection
-                    and any([lp for lp in learned_projection.parameter_states[MATRIX].mod_afferents
-                             if lp in self.projections])):
-                target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
-                comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
-                learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
-
-            # Otherwise, create new ones
-            else:
-                target, comparator, learning_mechanism = \
-                    self._create_terminal_backprop_sequence_components(input_source,
-                                                                       output_source,
-                                                                       error_function,
-                                                                       learned_projection,
-                                                                       learning_rate,
-                                                                       learning_update)
-            sequence_end = path_length-3
-
-        # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
-        # Otherwise, if output_source already projects to a LearningMechanism, integrate with existing sequence
-        elif any(isinstance(p.receiver.owner, LearningMechanism) for p in output_source.efferents):
-            # Set learning_mechanism to the one to which output_source projects
-            learning_mechanism = next((p.receiver.owner for p in output_source.efferents
-                                       if isinstance(p.receiver.owner, LearningMechanism)))
-            # # Use existing target and comparator to learning_mechanism for Mechanism to which output_source project
-            # target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
-            # comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
-            target = None
-            comparator = None
-            sequence_end = path_length-1
-
-        # Otherwise create terminal_sequence for the sequence,
-        #    and eliminate existing terminal_sequences previously created for Mechanisms now in the pathway
-        else:
-            # Eliminate existing comparators and targets for Mechanisms now in the pathway that were output_sources
-            #   (i.e., ones that belong to previously-created sequences that overlap with the current one)
-            # # MODIFIED 7/28/19 CROSS_PATHWAYS OLD: [REMOVE ONCE ALL CONFIGURATION OF BACKPROP HAVE BEEN TRIED
-            # for pathway_mech in [m for m in pathway[:-1:] if isinstance(m, Mechanism)]:
-            # MODIFIED 7/28/19 CROSS_PATHWAYS NEW:
-            for pathway_mech in [m for m in pathway if isinstance(m, Mechanism)]:
-            # MODIFIED 7/28/19 CROSS_PATHWAYS END:
-
-                old_comparator = next((p.receiver.owner for p in pathway_mech.efferents
-                                       if (isinstance(p.receiver.owner, ComparatorMechanism)
-                                           and p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING))),
-                                      None)
-                if old_comparator:
-                    old_target = next((p.sender.owner for p in old_comparator.input_states[TARGET].path_afferents
-                                       if p.sender.owner in self.get_nodes_by_role(NodeRole.TARGET)),
-                                      None)
-                    self.remove_nodes([old_comparator, old_target])
-                    # FIX CROSSING_PATHWAYS [JDC]: MAKE THE FOLLOWING A METHOD?
-                    # Collect InputStates that received error_signal projections from the old_comparator
-                    #    and delete after old_comparator has been deleted
-                    #    (i.e., after those InputStates have been vacated)
-                    old_error_signal_input_states = []
-                    for error_projection in old_comparator.output_state.efferents:
-                        old_error_signal_input_states.append(error_projection.receiver)
-                    Mechanism_Base._delete_mechanism(old_comparator)
-                    Mechanism_Base._delete_mechanism(old_target)
-                    for input_state in old_error_signal_input_states:
-                        input_state.owner.remove_states(input_state)
-                    del self._terminal_backprop_sequences[pathway_mech]
-                    del self.required_node_roles[self.required_node_roles.index((pathway_mech, NodeRole.OUTPUT))]
-
-            # Create terminal_sequence
-            target, comparator, learning_mechanism = \
-                self._create_terminal_backprop_sequence_components(input_source,
-                                                                   output_source,
-                                                                   error_function,
-                                                                   learned_projection,
-                                                                   learning_rate,
-                                                                   learning_update)
-            self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
-                                                                TARGET_MECHANISM: target,
-                                                                COMPARATOR_MECHANISM: comparator}
-
-            # # MODIFIED CROSSED_PATHWAYS 7/28 NEW: [JDC]
-            self.add_required_node_role(pathway[-1], NodeRole.OUTPUT)
-            # MODIFIED CROSSED_PATHWAYS 7/28 END
-
-            sequence_end = path_length-3
-
-        # loop backwards through the rest of the pathway to create and connect
-        # the remaining learning mechanisms
-        learning_mechanisms = [learning_mechanism]
-        learned_projections = [learned_projection]
-        for i in range(sequence_end, 1, -2):
-            # set variables for this iteration
-            input_source = processing_pathway[i-2]
-            learned_projection = processing_pathway[i-1]
-            output_source = processing_pathway[i]
-
-            learning_mechanism = self._create_multilayer_backprop_components(input_source,
-                                                                             output_source,
-                                                                             learned_projection,
-                                                                             learning_rate,
-                                                                             learning_update)
-
-            learning_mechanisms.append(learning_mechanism)
-            learned_projections.append(learned_projection)
-
-        # MODIFIED CROSSED_PATHWAYS 7/28/19 [JDC] NEW: CHECK NUMERICALLY
-        # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
-        for lm in learning_mechanisms:
-            if lm.dependent_learning_mechanisms:
-                projections = self._add_error_projection_to_dependent_learning_mechs(lm)
-                self.add_projections(projections)
-        # MODIFIED CROSSED_PATHWAYS END
-
-        # Suppress no efferent connections warning for error_signal OutputState of last LearningMechanism in sequence
-        learning_mechanisms[-1].output_states[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
-                                                                                                             override=True)
-
-        learning_related_components = {LEARNING_MECHANISM: learning_mechanisms,
-                                       COMPARATOR_MECHANISM: comparator,
-                                       TARGET_MECHANISM: target,
-                                       LEARNED_PROJECTION: learned_projections}
-
-        # Update graph in case method is called again
-        self._analyze_graph()
-
-        return learning_related_components
-
-    def _validate_projection(self,
-                             projection,
-                             sender, receiver,
-                             graph_sender,
-                             graph_receiver,
-                             learning_projection,
-                             ):
-
-        # FIX: [JDC 6/8/19] SHOULDN'T THERE BE A CHECK FOR THEM LearningProjections? OR ARE THOSE DONE ELSEWHERE?
-        # Skip this validation on learning projections because they have non-standard senders and receivers
-        if not learning_projection:
-            if projection.sender.owner != graph_sender:
-                raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
-                                       "Components in the Composition.".format(projection, sender))
-            if projection.receiver.owner != graph_receiver:
-                raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
-                                       "Components in the Composition.".format(projection, receiver))
-
-    def _get_original_senders(self, input_state, projections):
-        original_senders = set()
-        for original_projection in projections:
-            if original_projection in self.projections:
-                original_senders.add(original_projection.sender)
-                correct_sender = original_projection.sender
-                shadow_found = False
-                for shadow_projection in input_state.path_afferents:
-                    if shadow_projection.sender == correct_sender:
-                        shadow_found = True
-                        break
-                if not shadow_found:
-                    # TBI - Shadow projection type? Matrix value?
-                    new_projection = MappingProjection(sender=correct_sender,
-                                                       receiver=input_state)
-                    self.add_projection(new_projection, sender=correct_sender, receiver=input_state)
-        return original_senders
-
-    def _update_shadow_projections(self):
-        for node in self.nodes:
-            for input_state in node.input_states:
-                if input_state.shadow_inputs:
-                    original_senders = self._get_original_senders(input_state, input_state.shadow_inputs.path_afferents)
-                    for shadow_projection in input_state.path_afferents:
-                        if shadow_projection.sender not in original_senders:
-                            self.remove_projection(shadow_projection)
-
-            # If the node does not have any roles, it is internal
-            if len(self.get_roles_by_node(node)) == 0:
-                self._add_node_role(node, NodeRole.INTERNAL)
-
-    def _check_for_projection_assignments(self):
-        """Check that all Projections and States with require_projection_in_composition attribute are configured.
-
-        Validate that all InputStates with require_projection_in_composition == True have an afferent Projection.
-        Validate that all OuputStates with require_projection_in_composition == True have an efferent Projection.
-        Validate that all Projections have senders and receivers.
-        """
-        projections = self.projections.copy()
-
-        for node in self.nodes:
-            if isinstance(node, Projection):
-                projections.append(node)
-                continue
-            for input_state in node.input_states:
-                if input_state.require_projection_in_composition and not input_state.path_afferents:
-                    warnings.warn(f'{InputState.__name__} ({input_state.name}) of {node.name} '
-                                  f'doesn\'t have any afferent {Projection.__name__}s')
-            for output_state in node.output_states:
-                if output_state.require_projection_in_composition and not output_state.efferents:
-                    warnings.warn(f'{OutputState.__name__} ({output_state.name}) of {node.name} '
-                                  f'doesn\'t have any efferent {Projection.__name__}s')
-
-        for projection in projections:
-            if not projection.sender:
-                warnings.warn(f'{Projection.__name__} {projection.name} is missing a sender')
-            if not projection.receiver:
-                warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
-
-    def _check_for_existing_projection(self,
-                                         projection=None,
-                                         sender=None,
-                                         receiver=None):
-        assert projection or (sender and receiver), \
-            f'_check_for_existing_projection must be passed a projection or a sender and receiver'
-
-        if projection:
-            sender = projection.sender
-            receiver = projection.receiver
-        else:
-            if isinstance(sender, Mechanism):
-                sender = sender.output_state
-            elif isinstance(sender, Composition):
-                sender = sender.output_CIM.output_state
-            if isinstance(receiver, Mechanism):
-                receiver = receiver.input_state
-            elif isinstance(receiver, Composition):
-                receiver = receiver.input_CIM.input_state
-
-        if [proj for proj in sender.efferents if proj.receiver is receiver and proj in self.projections]:
-            return True
-        return False
-
-    def _analyze_consideration_queue(self, q, objective_mechanism):
-        """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
-            all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
-            may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry of the
-            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
-        """
-        for node in q[0]:
-            self._add_node_role(node, NodeRole.ORIGIN)
-
-        for node in list(q)[-1]:
-            if node != objective_mechanism:
-                self._add_node_role(node, NodeRole.TERMINAL)
-            elif len(q[-1]) < 2:
-                for previous_node in q[-2]:
-                    self._add_node_role(previous_node, NodeRole.TERMINAL)
+        except KeyError as e:
+            raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
 
     def _get_nested_nodes(self,
                           nested_nodes=NotImplemented,
@@ -3511,6 +2130,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return nested_compositions
 
     def _determine_node_roles(self):
+
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
 
@@ -3521,11 +2141,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         objective_mechanism = None
         if self.controller and self.enable_controller and self.controller.objective_mechanism:
             objective_mechanism = self.controller.objective_mechanism
-            self._add_node_role(objective_mechanism, NodeRole.OBJECTIVE)
+            self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
 
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler_processing.consideration_queue:
             self._analyze_consideration_queue(self.scheduler_processing.consideration_queue, objective_mechanism)
+
+        # A ControlMechanism should not be the TERMINAL node of a Composition
+        #    (unless it is specifed as a required_role, in which case it is reassigned below)
+        for node in self.nodes:
+            if isinstance(node, ControlMechanism):
+                if NodeRole.TERMINAL in self.nodes_to_roles[node]:
+                    self.nodes_to_roles[node].remove(NodeRole.TERMINAL)
+                if NodeRole.OUTPUT in self.nodes_to_roles[node]:
+                    self.nodes_to_roles[node].remove(NodeRole.OUTPUT)
 
         # Cycles
         for node in self.scheduler_processing.cycle_nodes:
@@ -3548,126 +2177,56 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in origin_nodes:
                 self._add_node_role(node, NodeRole.INPUT)
 
-        # If OUTPUT nodes were not specified by user, TERMINAL nodes become OUTPUT nodes.
-        # If there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
-        # If there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
+        # If OUTPUT nodes were not specified by user, assign them:
+        # - if there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
+        # - if there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
         if not self.get_nodes_by_role(NodeRole.OUTPUT):
             if self.get_nodes_by_role(NodeRole.LEARNING):
                 # FIX: ADD COMMENT HERE
                 # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
-                terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
+                output_nodes = list([items for items in self.scheduler_processing.consideration_queue
                                        if any([item for item in items
                                                if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
             else:
-                terminal_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
-            if not terminal_nodes:
+                output_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
+            if not output_nodes:
                 try:
-                    # FIX: ADD COMMENT HERE
-                    terminal_nodes = list([items for items in self.scheduler_processing.consideration_queue
-                                           if any([item for item in items
-                                                   if not NodeRole.LEARNING in self.nodes_to_roles[item]])])[-1]
+                    # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
+                    #    - not used for Learning;
+                    #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
+                    #    - do not project to any other nodes.
+                    # FIX: STILL NOT ASSIGNING A1 AS TERMINAL IN SCRATCH PAD;
+                    #      BUT ALSO RISKS ASSIGNING BOTH A1 AND A2 SINCE BOTH ARE IN THE SAME CONSIDERATION_SET
+                    # First, find last consideration_set in scheduler_processing that does not contain
+                    #    learning-related nodes or a ControlMechanism
+                    output_nodes = list([items for items in self.scheduler_processing.consideration_queue
+                                           if any([item for item in items if
+                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item]
+                                                    and not isinstance(item, ControlMechanism)
+                                                    and not (isinstance(item, ObjectiveMechanism)
+                                                             and item._role == CONTROL))
+                                                   ])]
+                                          )[-1]
+                    # Then, add any nodes that are not learning-related or a ControlMechanism,
+                    #    and that have *no* efferent Projections
+                    # IMPLEMENTATION NOTE:
+                    #  Do this here, as the list considers entire sets in the consideration queue,
+                    #    and a node with no efferents may be in the same set as one with efferents
+                    #    if they have the same dependencies.
+                    for node in self.nodes:
+                        if (not node.efferents
+                                and not NodeRole.LEARNING in self.nodes_to_roles[node]
+                                and not isinstance(node, ControlMechanism)):
+                            output_nodes.add(node)
                 except IndexError:
-                    terminal_nodes = []
-            for node in terminal_nodes:
+                    output_nodes = []
+            for node in output_nodes:
                 self._add_node_role(node, NodeRole.OUTPUT)
 
-    def _analyze_graph(self):
-        """
-        Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
-
-        By default, if _analyze_graph determines that a node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
-        `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
-        <NodeRole.TERMINAL>`, it is also given the role `OUTPUT <NodeRole.OUTPUT>`.
-
-        However, if the required_roles argument of `add_node <Composition.add_node>` is used to set any node in the
-        Composition to `INPUT <NodeRole.INPUT>`, then the `ORIGIN <NodeRole.ORIGIN>` nodes are not set to `INPUT
-        <NodeRole.INPUT>` by default. If the required_roles argument of `add_node <Composition.add_node>` is used
-        to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
-        nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
-
-        :param graph:
-        :param context:
-        :return:
-        """
-
-        self._determine_node_roles()
-        self._create_CIM_states()
-        self._update_shadow_projections()
-        self._check_for_projection_assignments()
-        self.needs_update_graph = False
-
-    def _update_processing_graph(self):
-        """
-        Constructs the processing graph (the graph that contains only Nodes as vertices)
-        from the composition's full graph
-        """
-        logger.debug('Updating processing graph')
-
-        self._graph_processing = self.graph.copy()
-
-        def remove_vertex(vertex):
-            logger.debug('Removing', vertex)
-            for parent in vertex.parents:
-                for child in vertex.children:
-                    if vertex.feedback:
-                        child.backward_sources.add(parent.component)
-                    self._graph_processing.connect_vertices(parent, child)
-            # ensure that children get handled
-            if len(vertex.parents) == 0:
-                for child in vertex.children:
-                    if vertex.feedback:
-                        child.backward_sources.add(parent.component)
-
-            for node in cur_vertex.parents + cur_vertex.children:
-                logger.debug(
-                    'New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(
-                        node, node.parents, node.children
-                    )
-                )
-
-            logger.debug('Removing vertex {0}'.format(cur_vertex))
-
-            self._graph_processing.remove_vertex(vertex)
-
-        # copy to avoid iteration problems when deleting
-        vert_list = self._graph_processing.vertices.copy()
-        for cur_vertex in vert_list:
-            logger.debug('Examining', cur_vertex)
-            if not cur_vertex.component.is_processing:
-                remove_vertex(cur_vertex)
-
-        self.needs_update_graph_processing = False
-
-    def get_nodes_by_role(self, role):
-        """
-            Returns a List of Composition Nodes in this Composition that have the *role* specified
-
-            Arguments
-            _________
-
-            role : NodeRole
-                the List of nodes having this role to return
-
-            Returns
-            -------
-
-            List of Composition Nodes with `NodeRole` *role* : List(`Mechanisms <Mechanism>` and
-            `Compositions <Composition>`)
-        """
-        if role not in NodeRole:
-            raise CompositionError('Invalid NodeRole: {0}'.format(role))
-
-        try:
-            return [node for node in self.nodes if role in self.nodes_to_roles[node]]
-
-        except KeyError as e:
-            raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
-
-    def get_roles_by_node(self, node):
-        try:
-            return self.nodes_to_roles[node]
-        except KeyError:
-            raise CompositionError('Node {0} not found in {1}.nodes_to_roles'.format(node, self))
+            # Finally, assign TERMINAL nodes
+            for node in self.nodes:
+                if not node.efferents or NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]:
+                    self._add_node_role(node, NodeRole.TERMINAL)
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
@@ -3691,66 +2250,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes_to_roles[node].remove(role)
 
     tc.typecheck
-
-    def _get_nested_node_CIM_state(self,
-                                   node: Mechanism,
-                                   node_state: tc.any(InputState, OutputState),
-                                   role: tc.enum(NodeRole.INPUT, NodeRole.OUTPUT)
-                                   ):
-        """Check for node in nested Composition
-        Return relevant state of relevant CIM if found and nested Composition in which it was found, else (None, None)
-        """
-
-        nested_comp = CIM_state_for_nested_node = CIM = None
-
-        nested_comps = [c for c in self.nodes if isinstance(c, Composition)]
-        for nc in nested_comps:
-            if node in nc.nodes:
-                # Must be assigned Node.Role of INPUT or OUTPUT (depending on receiver vs sender)
-                if role not in nc.nodes_to_roles[node]:
-                    raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
-                                           format(node.name, Composition.__name__, self.name, nc.name,
-                                                  NodeRole.__name__, repr(role)))
-                # With the current implementation, there should never be multiple nested compositions that contain the
-                # same mechanism -- because all nested compositions are passed the same execution ID
-                # if CIM_state_for_nested_node:
-                #     warnings.warn("{} found with {} of {} in more than one nested {} of {}; "
-                #                   "only first one found (in {}) will be used".
-                #                   format(node.name, NodeRole.__name__, repr(role),
-                #                          Composition.__name__, self.name, nested_comp.name))
-                #     continue
-
-                if isinstance(node_state, InputState):
-                    CIM_state_for_nested_node = nc.input_CIM_states[node_state][0]
-                    CIM = nc.input_CIM
-                elif isinstance(node_state, OutputState):
-                    CIM_state_for_nested_node = nc.output_CIM_states[node_state][1]
-                    CIM = nc.output_CIM
-                else:
-                    # IMPLEMENTATION NOTE:  Place marker for future implementation of ParameterState handling
-                    #                       However, typecheck above should have caught this
-                    assert False
-
-                nested_comp = nc
-                break
-
-        return CIM_state_for_nested_node, CIM_state_for_nested_node, nested_comp, CIM
-
-    def add_required_node_role(self, node, role):
-        if role not in NodeRole:
-            raise CompositionError('Invalid NodeRole: {0}'.format(role))
-
-        node_role_pair = (node, role)
-        if node_role_pair not in self.required_node_roles:
-            self.required_node_roles.append(node_role_pair)
-
-    def remove_required_node_role(self, node, role):
-        if role not in NodeRole:
-            raise CompositionError('Invalid NodeRole: {0}'.format(role))
-
-        node_role_pair = (node, role)
-        if node_role_pair in self.required_node_roles:
-            self.required_node_roles.remove(node_role_pair)
 
     def _create_CIM_states(self, context=None):
         """
@@ -3975,456 +2474,1817 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             )
                             input_projection._activate_for_compositions(comp)
 
-    def _assign_values_to_input_CIM(self, inputs, execution_id=None):
-        """
-            Assign values from input dictionary to the InputStates of the Input CIM, then execute the Input CIM
-
-        """
-
-        build_CIM_input = []
-
-        for input_state in self.input_CIM.input_states:
-            # "input_state" is an InputState on the input CIM
-
-            for key in self.input_CIM_states:
-                # "key" is an InputState on an origin Node of the Composition
-                if self.input_CIM_states[key][0] == input_state:
-                    origin_input_state = key
-                    origin_node = key.owner
-                    index = origin_node.input_states.index(origin_input_state)
-
-                    if isinstance(origin_node, CompositionInterfaceMechanism):
-                        index = origin_node.input_states.index(origin_input_state)
-                        origin_node = origin_node.composition
-
-                    if origin_node in inputs:
-                        value = inputs[origin_node][index]
-
-                    else:
-                        value = origin_node.defaults.variable[index]
-
-            build_CIM_input.append(value)
-
-        self.input_CIM.execute(build_CIM_input, execution_id=execution_id)
-
-    def _assign_execution_ids(self, execution_id=None):
-        """
-            assigns the same execution id to each Node in the composition's processing graph as well as the CIMs.
-            The execution id is either specified in the user's call to run(), or from the Composition's
-            **default_execution_id**
+    def _get_nested_node_CIM_state(self,
+                                   node: Mechanism,
+                                   node_state: tc.any(InputState, OutputState),
+                                   role: tc.enum(NodeRole.INPUT, NodeRole.OUTPUT)
+                                   ):
+        """Check for node in nested Composition
+        Return relevant state of relevant CIM if found and nested Composition in which it was found, else (None, None)
         """
 
-        # Traverse processing graph and assign one uuid to all of its nodes
-        if execution_id is None:
-            execution_id = self.default_execution_id
+        nested_comp = CIM_state_for_nested_node = CIM = None
 
-        if execution_id not in self.execution_ids:
-            self.execution_ids.add(execution_id)
+        nested_comps = [c for c in self.nodes if isinstance(c, Composition)]
+        for nc in nested_comps:
+            if node in nc.nodes:
+                # Must be assigned Node.Role of INPUT or OUTPUT (depending on receiver vs sender)
+                if role not in nc.nodes_to_roles[node]:
+                    raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
+                                           format(node.name, Composition.__name__, self.name, nc.name,
+                                                  NodeRole.__name__, repr(role)))
+                # With the current implementation, there should never be multiple nested compositions that contain the
+                # same mechanism -- because all nested compositions are passed the same execution ID
+                # if CIM_state_for_nested_node:
+                #     warnings.warn("{} found with {} of {} in more than one nested {} of {}; "
+                #                   "only first one found (in {}) will be used".
+                #                   format(node.name, NodeRole.__name__, repr(role),
+                #                          Composition.__name__, self.name, nested_comp.name))
+                #     continue
 
-        return execution_id
-
-    def _identify_clamp_inputs(self, list_type, input_type, origins):
-        # clamp type of this list is same as the one the user set for the whole composition; return all nodes
-        if list_type == input_type:
-            return origins
-        # the user specified different types of clamps for each origin node; generate a list accordingly
-        elif isinstance(input_type, dict):
-            return [k for k, v in input_type.items() if list_type == v]
-        # clamp type of this list is NOT same as the one the user set for the whole composition; return empty list
-        else:
-            return []
-
-    def _parse_runtime_params(self, runtime_params):
-        if runtime_params is None:
-            return {}
-        for node in runtime_params:
-            for param in runtime_params[node]:
-                if isinstance(runtime_params[node][param], tuple):
-                    if len(runtime_params[node][param]) == 1:
-                        runtime_params[node][param] = (runtime_params[node][param], Always())
-                    elif len(runtime_params[node][param]) != 2:
-                        raise CompositionError(
-                            "Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
-                            "Must be a tuple of the form (parameter value, condition), or simply the "
-                            "parameter value. ".format(runtime_params[node][param],
-                                                       node.name,
-                                                       param,
-                                                       self.name))
+                if isinstance(node_state, InputState):
+                    CIM_state_for_nested_node = nc.input_CIM_states[node_state][0]
+                    CIM = nc.input_CIM
+                elif isinstance(node_state, OutputState):
+                    CIM_state_for_nested_node = nc.output_CIM_states[node_state][1]
+                    CIM = nc.output_CIM
                 else:
-                    runtime_params[node][param] = (runtime_params[node][param], Always())
-        return runtime_params
+                    # IMPLEMENTATION NOTE:  Place marker for future implementation of ParameterState handling
+                    #                       However, typecheck above should have caught this
+                    assert False
 
-    def _get_graph_node_label(self, item, show_dimensions=None):
-        if not isinstance(item, (Mechanism, Composition, Projection)):
-            raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
-        # TBI Show Dimensions
-        name = item.name
+                nested_comp = nc
+                break
 
-        if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
-            input_str = "in ({})".format(",".join(str(input_state.socket_width)
-                                                  for input_state in item.input_states))
-            output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
-                                                    for output_state in item.output_states))
-            return "{}\n{}\n{}".format(output_str, name, input_str)
-        if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
-            # MappingProjections use matrix
-            if isinstance(item, MappingProjection):
-                value = np.array(item.matrix)
-                dim_string = "({})".format("x".join([str(i) for i in value.shape]))
-                return "{}\n{}".format(item.name, dim_string)
-            # ModulatoryProjections use value
-            else:
-                value = np.array(item.value)
-                dim_string = "({})".format(len(value))
-                return "{}\n{}".format(item.name, dim_string)
+        return CIM_state_for_nested_node, CIM_state_for_nested_node, nested_comp, CIM
 
-        if isinstance(item, CompositionInterfaceMechanism):
-            name = name.replace('Input_CIM','INPUT')
-            name = name.replace('Output_CIM', 'OUTPUT')
+    def _update_shadows_dict(self, node):
+        # Create an empty entry for this node in the Composition's "shadows" dict
+        # If any other nodes shadow this node, they will be added to the list
+        if node not in self.shadows:
+            self.shadows[node] = []
 
-        return name
+        nested_nodes = dict(self._get_nested_nodes())
+        # If this node is shadowing another node, then add it to that node's entry in the Composition's "shadows" dict
+        # If the node it's shadowing is a nested node, add it to the entry for the composition it's nested in.
+        for input_state in node.input_states:
+            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+                owner = input_state.shadow_inputs.owner
+                if owner in nested_nodes:
+                    owner = nested_nodes[owner]
+                if node not in self.shadows[owner]:
+                    self.shadows[owner].append(node)
 
-    def _set_up_animation(self, execution_id):
 
-        self._component_animation_execution_count = None
+    # ******************************************************************************************************************
+    #                                            PROJECTIONS
+    # ******************************************************************************************************************
 
-        if isinstance(self._animate, dict):
-            # Assign directory for animation files
-            from psyneulink._version import root_dir
-            default_dir = root_dir + '/../show_graph output/GIFs/' + self.name # + " gifs"
-            # try:
-            #     rmtree(self._animate_directory)
-            # except:
-            #     pass
-            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
-            self._image_duration = self._animate.pop(DURATION, 0.75)
-            self._animate_num_runs = self._animate.pop(NUM_RUNS, 1)
-            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
-            self._animate_simulations = self._animate.pop(SIMULATIONS, False)
-            self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
-            self._animation_directory = self._animate.pop(MOVIE_DIR, default_dir)
-            self._save_images = self._animate.pop(SAVE_IMAGES, False)
-            self._show_animation = self._animate.pop(SHOW, False)
-            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
-                raise SystemError(f"{repr(UNIT)} entry of {repr('animate')} argument for {self.name} method "
-                                  f"of {repr('run')} ({self._animate_unit}) "
-                                  f"must be {repr(COMPONENT)} or {repr(EXECUTION_SET)}.")
-            if not isinstance(self._image_duration, (int, float)):
-                raise SystemError(f"{repr(DURATION)} entry of {repr('animate')} argument for {repr('run')} method of "
-                                  f"{self.name} ({self._image_duration}) must be an int or a float.")
-            if not isinstance(self._animate_num_runs, int):
-                raise SystemError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                  f"method of {self.name} ({self._animate_num_runs}) must an integer.")
-            if not isinstance(self._animate_num_trials, int):
-                raise SystemError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                  f"method of {self.name} ({self._animate_num_trials}) must an integer.")
-            if not isinstance(self._animate_simulations, bool):
-                raise SystemError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                  f"method of {self.name} ({self._animate_num_trials}) must a boolean.")
-            if not isinstance(self._animation_directory, str):
-                raise SystemError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
-                                  f"method of {self.name} ({self._animation_directory}) must be a string.")
-            if not isinstance(self._movie_filename, str):
-                raise SystemError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
-                                  f"method of {self.name} ({self._movie_filename}) must be a string.")
-            if not isinstance(self._save_images, bool):
-                raise SystemError(f"{repr(SAVE_IMAGES)} entry of {repr('animate')} argument for {repr('run')} method "
-                                  f"of {self.name} ({self._save_images}) must be a boolean")
-            if not isinstance(self._show_animation, bool):
-                raise SystemError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
-                                  f"method of {self.name} ({self._show_animation}) must be a boolean.")
-        elif self._animate:
-            # self._animate should now be False or a dict
-            raise SystemError("{} argument for {} method of {} ({}) must be a boolean or "
-                              "a dictionary of argument specifications for its {} method".
-                              format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
+    def add_projections(self, projections=None):
+        """
+            Calls `add_projection <Composition.add_projection>` for each Projection in the *projections* list. Each
+            Projection must have its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`
+            already specified.  If an item in the list is a list of projections, called recursively on that list.
 
-    def _animate_execution(self, active_items, execution_id):
-        if self._component_animation_execution_count is None:
-            self._component_animation_execution_count = 0
+            Arguments
+            ---------
+
+            projections : list of Projections
+                list of Projections to be added to the Composition
+        """
+
+        if isinstance(projections, list):
+            for projection in projections:
+                if isinstance(projection, list):
+                    self.add_projections(projection)
+                elif isinstance(projection, Projection) and \
+                        hasattr(projection, "sender") and \
+                        hasattr(projection, "receiver"):
+                    self.add_projection(projection)
+                else:
+                    raise CompositionError("Invalid projections specification for {}. The add_projections method of "
+                                           "Composition requires a list of Projections, each of which must have a "
+                                           "sender and a receiver.".format(self.name))
         else:
-            self._component_animation_execution_count += 1
-        self.show_graph(active_items=active_items,
-                        **self._animate,
-                        output_fmt='gif',
-                        execution_id=execution_id
-                        )
+            raise CompositionError("Invalid projections specification for {}. The add_projections method of "
+                                   "Composition requires a list of Projections, each of which must have a "
+                                   "sender and a receiver.".format(self.name))
 
-    @tc.typecheck
-    def show_structure(self,
-                       # direction = 'BT',
-                       show_functions:bool=False,
-                       show_values:bool=False,
-                       use_labels:bool=False,
-                       show_headers:bool=False,
-                       show_roles:bool=False,
-                       show_conditions:bool=False,
-                       system=None,
-                       composition=None,
-                       condition:tc.optional(Condition)=None,
-                       compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
-                       output_fmt:tc.enum('pdf','struct')='pdf'
+    def add_projection(self,
+                       projection=None,
+                       sender=None,
+                       receiver=None,
+                       feedback=False,
+                       learning_projection=False,
+                       name=None,
+                       allow_duplicates=False
                        ):
-        """Generate a detailed display of a the structure of a Mechanism.
+        """Add **projection** to the Composition, if one with the same sender and receiver doesn't already exist.
+
+        If **projection** is not specified, create a default `MappingProjection` using **sender** and **receiver**.
+
+        If **projection** is specified:
+
+        • if **projection** has already been instantiated, and **sender** and **receiver** are also specified,
+          they must match the `sender <MappingProjection.sender>` and `receiver <MappingProjection.receiver>`
+          of **projection**.
+
+        • if the status of **projection** is `deferred_init`:
+
+          - if its `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` attributes are not
+            specified, then **sender** and/or **receiver** are used.
+
+          - if `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` attributes are specified,
+            they must match **sender** and/or **receiver** if those have also been specified.
+
+          - if a Projection between the specified sender and receiver does *not* already exist, it is initialized; if
+            it *does* already exist, the request to add it is ignored, however requests to shadow it and/or mark it as
+            a`feedback` Projection are implemented (in case it has not already been done for the existing Projection).
 
         .. note::
-           This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
-           (standard with PsyNeuLink pip install)
+           If **projection** is an instantiated projection (i.e., not in `deferred_init`) and one already exists between
+           its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` a warning is generated.
 
-        Displays the structure of a Mechanism using the GraphViz `record
-        <http://graphviz.readthedocs.io/en/stable/examples.html#structs-revisited-py>`_ shape.  This method is called
-        by `System.show_graph` if its **show_mechanism_structure** argument is specified as `True` when it is called.
+        COMMENT:
+        IMPLEMENTATION NOTE:
+            Duplicates are determined by the **States** to which they project, not the Mechanisms (to allow
+            multiple Projections to exist between the same pair of Mechanisms using different States).
+            -
+            If an already instantiated Projection is passed to add_projection and is a duplicate of an existing one,
+            it is detected and suppresed, with a warning, in State._instantiate_projections_to_state.
+            -
+            If a Projection with deferred_init status is a duplicate, it is fully suppressed here,
+            as these are generated by add_linear_processing_pathway if the pathway overlaps with an existing one,
+            and so warnings are unnecessary and would be confusing to users.
+        COMMENT
 
         Arguments
         ---------
 
-        show_functions : bool : default False
-            show the `function <Component.function>` of the Mechanism and each of its States.
+        sender : Mechanism, Composition, or OutputState
+            the sender of **projection**
 
-        show_mech_function_params : bool : default False
-            show the parameters of the Mechanism's `function <Component.function>` if **show_functions** is True.
+        projection : Projection, matrix
+            the projection to add
 
-        show_state_function_params : bool : default False
-            show parameters for the `function <Component.function>` of the Mechanism's States if **show_functions** is
-            True).
+        receiver : Mechanism, Composition, or InputState
+            the receiver of **projection**
 
-        show_values : bool : default False
-            show the `value <Component.value>` of the Mechanism and each of its States (prefixed by "=").
+        feedback : bool
+            When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
+            means that each Projections within the cycle actually passes to its `receiver <Projection_Base.receiver>`
+            the `value <Projection.value>` of its `sender <Projection_Base.sender>` from the previous execution.
+            When True, this Projection "breaks" the cycle, such that all Nodes execute in sequence, and only the
+            Projection marked as 'feedback' passes to its `receiver <Projection_Base.receiver>` the
+            `value <Projection.value>` of its `sender <Projection_Base.sender>` from the previous execution.
 
-        use_labels : bool : default False
-            use labels for values if **show_values** is `True`; labels must be specified in the `input_labels_dict
-            <Mechanism.input_labels_dict>` (for InputState values) and `output_labels_dict
-            <Mechanism.output_labels_dict>` (for OutputState values); otherwise it is ignored.
+        Returns
+        -------
 
-        show_headers : bool : default False
-            show the Mechanism, InputState, ParameterState and OutputState headers.
+        projection if added, else None
 
-        show_roles : bool : default False
-            show the `roles <Composition.NodeRoles>` of each Mechanism in the `Composition`.
+    """
+        # FIX 7/22/19 [JDC]: THIS COULD BE CLEANED UP MORE
+        try:
+            # projection = self._parse_projection_spec(projection, sender, receiver, name)
+            projection = self._parse_projection_spec(projection, name)
+        except DuplicateProjectionError:
+            return projection
+        duplicate = False
 
-        show_conditions : bool : default False
-            show the `conditions <Condition>` used by `Composition` to determine whether/when to execute each Mechanism.
+        # Parse sender and receiver specs
+        sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
+        receiver, receiver_mechanism, graph_receiver, receiver_input_state, nested_compositions, learning_projection = \
+            self._parse_receiver_spec(projection, receiver, sender, learning_projection)
 
-        system : System : default None
-            specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_roles** argument is ignored.
+        # If Deferred init
+        if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            # If sender or receiver are State specs, use those;  otherwise, use graph node (Mechanism or Composition)
+            if not isinstance(sender, OutputState):
+                sender = sender_mechanism
+            if not isinstance(receiver, InputState):
+                receiver = receiver_mechanism
+            # Check if Projection to be initialized already exists;  if so, mark as duplicate and skip
+            duplicate = self._check_for_existing_projection(sender=sender, receiver=receiver)
+            if not duplicate:
+                # Initialize Projection
+                projection.init_args['sender'] = sender
+                projection.init_args['receiver'] = receiver
+                try:
+                    projection._deferred_init(context=" INITIALIZING ")
+                except DuplicateProjectionError:
+                    return projection
 
-        composition : Composition : default None
-            specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_roles** argument is ignored.
+        elif self._check_for_existing_projection(projection, sender=sender, receiver=receiver):
+            # FIX: THE FOLLOWING IS REQUIRED SO AS NOT TO CRASH IN test_alias_equivalence_for_modulates_and_projections
+            #      - BLOCK OF CODE BELOW (KAM HACK) IS REQUIRED
+            # return projection
+            duplicate = True
 
-        compact_cim : *INPUT* or *OUTUPT* : default None
-            specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM.
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        if sender_mechanism != self.input_CIM and receiver_mechanism != self.output_CIM \
+                and projection not in [vertex.component for vertex in self.graph.vertices] and not learning_projection:
 
-        output_fmt : keyword : default 'pdf'
-            'pdf': generate and open a pdf with the visualization;\n
-            'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
-            'struct': return a string that specifies the structure of a mechanism,
-            for use in a GraphViz node specification.
+            projection.is_processing = False
+            # KDM 5/24/19: removing below rename because it results in several duplicates
+            # projection.name = f'{sender} to {receiver}'
+            self.graph.add_component(projection, feedback=feedback)
+
+            try:
+                self.graph.connect_components(graph_sender, projection)
+                self.graph.connect_components(projection, graph_receiver)
+            except CompositionError as c:
+                raise CompositionError(f"{c.args[0]} to {self.name}.")
+
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        if not duplicate:
+            self._validate_projection(projection,
+                                      sender, receiver,
+                                      sender_mechanism, receiver_mechanism,
+                                      learning_projection)
+            self.needs_update_graph = True
+            self.needs_update_graph_processing = True
+            self.needs_update_scheduler_processing = True
+
+            projection._activate_for_compositions(self)
+            for comp in nested_compositions:
+                projection._activate_for_compositions(comp)
+
+        # Note: do all of the following even if Projection is a duplicate,
+        #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
+
+        # Create "shadow" projections to any input states that are meant to shadow this projection's receiver
+        # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
+        if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
+            for shadow in self.shadows[receiver_mechanism]:
+                for input_state in shadow.input_states:
+                    if input_state.shadow_inputs is not None:
+                        if input_state.shadow_inputs.owner == receiver:
+                            # TBI: Copy the projection type/matrix value of the projection that is being shadowed
+                            self.add_projection(MappingProjection(sender=sender, receiver=input_state),
+                                                sender_mechanism, shadow)
+        if feedback:
+            self.feedback_senders.add(sender_mechanism)
+            self.feedback_receivers.add(receiver_mechanism)
+
+        return projection
+
+    def remove_projection(self, projection):
+        # step 1 - remove Vertex from Graph
+        if projection in [vertex.component for vertex in self.graph.vertices]:
+            vert = self.graph.comp_to_vertex[projection]
+            self.graph.remove_vertex(vert)
+        # step 2 - remove Projection from Composition's list
+        if projection in self.projections:
+            self.projections.remove(projection)
+
+        # step 3 - TBI? remove Projection from afferents & efferents lists of any node
+
+    def _add_projection(self, projection):
+        self.projections.append(projection)
+
+    def _validate_projection(self,
+                             projection,
+                             sender, receiver,
+                             graph_sender,
+                             graph_receiver,
+                             learning_projection,
+                             ):
+
+        # FIX: [JDC 6/8/19] SHOULDN'T THERE BE A CHECK FOR THEM LearningProjections? OR ARE THOSE DONE ELSEWHERE?
+        # Skip this validation on learning projections because they have non-standard senders and receivers
+        if not learning_projection:
+            if projection.sender.owner != graph_sender:
+                raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
+                                       "Components in the Composition.".format(projection, sender))
+            if projection.receiver.owner != graph_receiver:
+                raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
+                                       "Components in the Composition.".format(projection, receiver))
+
+    def _parse_projection_spec(self, projection, sender=None, receiver=None, name=None):
+        if isinstance(projection, (np.ndarray, np.matrix, list)):
+            return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
+        elif isinstance(projection, str):
+            if projection in MATRIX_KEYWORD_VALUES:
+                return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
+            else:
+                raise CompositionError("Invalid projection ({}) specified for {}.".format(projection, self.name))
+        elif isinstance(projection, ModulatoryProjection_Base):
+            return projection
+        elif projection is None:
+            return MappingProjection(sender=sender, receiver=receiver, name=name)
+        elif not isinstance(projection, Projection):
+            raise CompositionError("Invalid projection ({}) specified for {}. Must be a Projection."
+                                   .format(projection, self.name))
+        return projection
+
+    def _parse_sender_spec(self, projection, sender):
+
+        # if a sender was not passed, check for a sender OutputState stored on the Projection object
+        if sender is None:
+            if hasattr(projection, "sender"):
+                sender = projection.sender.owner
+            else:
+                raise CompositionError(f"{projection.name} is missing a sender specification. "
+                                       f"For a Projection to be added to a Composition a sender must be specified, "
+                                       "either on the Projection or in the call to Composition.add_projection(). ")
+
+        # initialize all receiver-related variables
+        graph_sender = sender_mechanism = sender_output_state = sender
+
+        nested_compositions = []
+        if isinstance(sender, Mechanism):
+            # Mechanism spec -- update sender_output_state to reference primary OutputState
+            sender_output_state = sender.output_state
+
+        elif isinstance(sender, OutputState):
+            # InputState spec -- update sender_mechanism and graph_sender to reference owner Mechanism
+            sender_mechanism = graph_sender = sender.owner
+
+        elif isinstance(sender, Composition):
+            # Nested Composition Spec -- update sender_mechanism to CIM; sender_output_state to CIM's primary O.S.
+            sender_mechanism = sender.output_CIM
+            sender_output_state = sender_mechanism.output_state
+            nested_compositions.append(sender)
+
+        else:
+            raise CompositionError("sender arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
+                                   format(sender, self.name,
+                                          Mechanism.__name__, OutputState.__name__, Composition.__name__))
+
+        if (not isinstance(sender_mechanism, CompositionInterfaceMechanism)
+                and not isinstance(sender, Composition)
+                and sender_mechanism not in self.nodes):
+            if isinstance(sender, State):
+                sender_name = sender.full_name
+            else:
+                sender_name = sender.name
+
+            # if the sender is IN a nested Composition AND sender is an OUTPUT Node
+            # then use the corresponding CIM on the nested comp as the sender going forward
+            sender, sender_output_state, graph_sender, sender_mechanism = \
+                self._get_nested_node_CIM_state(sender_mechanism,
+                                                sender_output_state,
+                                                NodeRole.OUTPUT)
+            nested_compositions.append(graph_sender)
+            if sender is None:
+                receiver_name = 'node'
+                if hasattr(projection, 'receiver'):
+                    receiver_name = f'{repr(projection.receiver.owner.name)}'
+                raise CompositionError(f"A {Projection.__name__} specified to {receiver_name} in {self.name} "
+                                       f"has a sender ({repr(sender_name)}) that is not (yet) in it "
+                                       f"or any of its nested {Composition.__name__}s.")
+
+        if hasattr(projection, "sender"):
+            if projection.sender.owner != sender and \
+                    projection.sender.owner != graph_sender and \
+                    projection.sender.owner != sender_mechanism:
+                raise CompositionError("The position of {} in {} conflicts with its sender attribute."
+                                       .format(projection.name, self.name))
+
+        return sender, sender_mechanism, graph_sender, nested_compositions
+
+    def _parse_receiver_spec(self, projection, receiver, sender, learning_projection):
+
+        receiver_arg = receiver
+
+        # if a receiver was not passed, check for a receiver InputState stored on the Projection object
+        if receiver is None:
+            if hasattr(projection, "receiver"):
+                receiver = projection.receiver.owner
+            else:
+                raise CompositionError("For a Projection to be added to a Composition, a receiver must be specified, "
+                                       "either on the Projection or in the call to Composition.add_projection(). {}"
+                                       " is missing a receiver specification. ".format(projection.name))
+
+        # initialize all receiver-related variables
+        graph_receiver = receiver_mechanism = receiver_input_state = receiver
+
+        nested_compositions = []
+        if isinstance(receiver, Mechanism):
+            # Mechanism spec -- update receiver_input_state to reference primary InputState
+            receiver_input_state = receiver.input_state
+
+        elif isinstance(receiver, InputState):
+            # InputState spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
+            receiver_mechanism = graph_receiver = receiver.owner
+
+        elif isinstance(receiver, Composition):
+            # Nested Composition Spec -- update receiver_mechanism to CIM; receiver_input_state to CIM's primary I.S.
+            receiver_mechanism = receiver.input_CIM
+            receiver_input_state = receiver_mechanism.input_state
+            nested_compositions.append(receiver)
+
+        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # Add autoassociative learning mechanism + related projections to composition as processing components
+        elif isinstance(receiver, AutoAssociativeProjection):
+            receiver_mechanism = receiver.owner_mech
+            receiver_input_state = receiver_mechanism.input_state
+            learning_projection = True
+
+        elif isinstance(sender, LearningMechanism):
+            receiver_mechanism = receiver.receiver.owner
+            receiver_input_state = receiver_mechanism.input_state
+            learning_projection = True
+
+        else:
+            raise CompositionError(f"receiver arg ({receiver_arg}) of call to add_projection method of {self.name} "
+                                   f"is not a {Mechanism.__name__}, {InputState.__name__} or {Composition.__name__}.")
+
+        if (not isinstance(receiver_mechanism, CompositionInterfaceMechanism)
+                and not isinstance(receiver, Composition)
+                and receiver_mechanism not in self.nodes
+                and not learning_projection):
+
+            # if the receiver is IN a nested Composition AND receiver is an INPUT Node
+            # then use the corresponding CIM on the nested comp as the receiver going forward
+            receiver, receiver_input_state, graph_receiver, receiver_mechanism = \
+                self._get_nested_node_CIM_state(receiver_mechanism, receiver_input_state, NodeRole.INPUT)
+
+            nested_compositions.append(graph_receiver)
+            # Otherwise, there was a mistake in the spec
+            if receiver is None:
+                raise CompositionError(f"receiver arg ({repr(receiver_arg)}) in call to add_projection method of "
+                                       f"{self.name} is not in it or any of its nested {Composition.__name__}s.")
+
+        return receiver, receiver_mechanism, graph_receiver, receiver_input_state, \
+               nested_compositions, learning_projection
+
+    def _get_original_senders(self, input_state, projections):
+        original_senders = set()
+        for original_projection in projections:
+            if original_projection in self.projections:
+                original_senders.add(original_projection.sender)
+                correct_sender = original_projection.sender
+                shadow_found = False
+                for shadow_projection in input_state.path_afferents:
+                    if shadow_projection.sender == correct_sender:
+                        shadow_found = True
+                        break
+                if not shadow_found:
+                    # TBI - Shadow projection type? Matrix value?
+                    new_projection = MappingProjection(sender=correct_sender,
+                                                       receiver=input_state)
+                    self.add_projection(new_projection, sender=correct_sender, receiver=input_state)
+        return original_senders
+
+    def _update_shadow_projections(self):
+        for node in self.nodes:
+            for input_state in node.input_states:
+                if input_state.shadow_inputs:
+                    original_senders = self._get_original_senders(input_state, input_state.shadow_inputs.path_afferents)
+                    for shadow_projection in input_state.path_afferents:
+                        if shadow_projection.sender not in original_senders:
+                            self.remove_projection(shadow_projection)
+
+            # If the node does not have any roles, it is internal
+            if len(self.get_roles_by_node(node)) == 0:
+                self._add_node_role(node, NodeRole.INTERNAL)
+
+    def _check_for_projection_assignments(self):
+        """Check that all Projections and States with require_projection_in_composition attribute are configured.
+
+        Validate that all InputStates with require_projection_in_composition == True have an afferent Projection.
+        Validate that all OuputStates with require_projection_in_composition == True have an efferent Projection.
+        Validate that all Projections have senders and receivers.
+        """
+        projections = self.projections.copy()
+
+        for node in self.nodes:
+            if isinstance(node, Projection):
+                projections.append(node)
+                continue
+            for input_state in node.input_states:
+                if input_state.require_projection_in_composition and not input_state.path_afferents:
+                    warnings.warn(f'{InputState.__name__} ({input_state.name}) of {node.name} '
+                                  f'doesn\'t have any afferent {Projection.__name__}s')
+            for output_state in node.output_states:
+                if output_state.require_projection_in_composition and not output_state.efferents:
+                    warnings.warn(f'{OutputState.__name__} ({output_state.name}) of {node.name} '
+                                  f'doesn\'t have any efferent {Projection.__name__}s')
+
+        for projection in projections:
+            if not projection.sender:
+                warnings.warn(f'{Projection.__name__} {projection.name} is missing a sender')
+            if not projection.receiver:
+                warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
+
+    def _check_for_existing_projection(self,
+                                         projection=None,
+                                         sender=None,
+                                         receiver=None):
+        assert projection or (sender and receiver), \
+            f'_check_for_existing_projection must be passed a projection or a sender and receiver'
+
+        if projection:
+            sender = projection.sender
+            receiver = projection.receiver
+        else:
+            if isinstance(sender, Mechanism):
+                sender = sender.output_state
+            elif isinstance(sender, Composition):
+                sender = sender.output_CIM.output_state
+            if isinstance(receiver, Mechanism):
+                receiver = receiver.input_state
+            elif isinstance(receiver, Composition):
+                receiver = receiver.input_CIM.input_state
+
+        if [proj for proj in sender.efferents if proj.receiver is receiver and proj in self.projections]:
+            return True
+        return False
+
+    def _check_feedback(self, scheduler):
+        """Check that feedback specification is required for projections to which it has been assigned
+        Note:
+        - graph_processing and graph_processing.dependency_dict are used as indications of structural dependencies
+        - scheduler.dependency_dict is used as indication of execution dependencies
+        """
+
+        if scheduler:
+            # If an external scheduler is provided, update it with current processing graph
+            try:
+                scheduler._init_consideration_queue_from_graph(self.graph_processing)
+            # Ignore any cycles at this point
+            except ValueError:
+                pass
+        else:
+            scheduler = self.scheduler_processing
+
+        for vertex in [v for v in self.graph.vertices if v.feedback==MAYBE]:
+            projection = vertex.component
+            # assert isinstance(projection, Projection), \
+            #     f'PROGRAM ERROR: vertex identified with feedback=True that is not a Projection'
+            vertex.feedback = False
+
+            # Update Composition's graph_processing
+            self._update_processing_graph()
+
+            # Update scheduler's consideration_queue based on update of graph_processing
+            try:
+                scheduler._init_consideration_queue_from_graph(self.graph_processing)
+            except ValueError:
+                # If a cycle is detected, leave feedback alone
+                feedback = 'leave'
+
+            # If, when feedback is False, the dependency_dicts for the structural and execution are the same,
+            #    then no need for feedback specification, so remove it
+            #       and remove assignments of sender and receiver to corresponding feedback entries of Composition
+            if self.graph_processing.dependency_dict == scheduler.dependency_dict:
+                feedback = 'remove'
+            else:
+                feedback = 'leave'
+
+            # Remove nodes that send and receive feedback projection from feedback_senders and feedback_receivers lists
+            if feedback == 'remove':
+                self.feedback_senders.remove(projection.sender.owner)
+                self.feedback_receivers.remove(projection.receiver.owner)
+            # Otherwise, restore feedback assignment and scheduler's consideration_queue
+            else:
+                vertex.feedback = True
+                self._update_processing_graph()
+                scheduler._init_consideration_queue_from_graph(self.graph_processing)
+
+
+    # ******************************************************************************************************************
+    #                                            PATHWAYS
+    # ******************************************************************************************************************
+
+
+    # -----------------------------------------  PROCESSING  -----------------------------------------------------------
+
+    def add_pathway(self, path):
+        """
+            Adds an existing Pathway to the current Composition
+
+            Arguments
+            ---------
+
+            path: the Pathway (Composition) to be added
+        """
+
+        # identify nodes and projections
+        nodes, projections = [], []
+        for c in path.graph.vertices:
+            if isinstance(c.component, Mechanism):
+                nodes.append(c.component)
+            elif isinstance(c.component, Composition):
+                nodes.append(c.component)
+            elif isinstance(c.component, Projection):
+                projections.append(c.component)
+
+        # add all nodes first
+        for node in nodes:
+            self.add_node(node)
+
+        # then projections
+        for p in projections:
+            self.add_projection(p, p.sender.owner, p.receiver.owner)
+
+        self._analyze_graph()
+
+    def add_linear_processing_pathway(self, pathway, *args):
+        """Add sequence of Mechanisms or Compositions possibly with intercolated Projections
+
+        A `MappingProjection` is created for each contiguous pair of `Mechanisms <Mechanism>` and/or Compositions
+        in the **pathway** argument, from the `primary OutputState <OutputState_Primary>` of the first one to the
+        `primary InputState <InputState_Primary>` of the second.
+
+        Tuples (Mechanism, `NodeRoles <NodeRole>`) can be used to assign `required_roles
+        <Composition.add_node.required_roles>` to Mechanisms.
+
+        COMMENT:
+        # FIX 8/27/19 [JDC]:  Generalize to ModulatoryMechanism
+        COMMENT
+        Note that any specifications of a ControlMechanism's **monitor_for_control** `argument
+        <ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument specified in the constructor for an
+        ObjectiveMechanism in the **objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>`
+        supercede any MappingProjections that would otherwise be created for them when specified in the **pathway**
+        argument.
+        """
+        nodes = []
+
+        from psyneulink.core.globals.keywords import PROJECTION, NODE
+        def is_spec(entry, desired_type:tc.enum(NODE, PROJECTION)):
+            """Test whether pathway entry is specified type (NODE or PROJECTION)"""
+            node_specs = (Mechanism, Composition)
+            proj_specs = (Projection, np.ndarray, np.matrix, str, list)
+            if desired_type == NODE:
+                if (isinstance(entry, node_specs)
+                        or (isinstance(entry, tuple)
+                            and isinstance(entry[0], node_specs)
+                            and isinstance(entry[1], NodeRole))):
+                    return True
+            elif desired_type == PROJECTION:
+                if (isinstance(entry, proj_specs)
+                        or (isinstance(entry, tuple)
+                            and isinstance(entry[0], proj_specs)
+                            and entry[1] in {True, False, MAYBE})):
+                    return True
+            else:
+                return False
+
+        # First, verify that the pathway begins with a node
+        if not isinstance(pathway, (list, tuple)):
+            raise CompositionError(f"First argument in add_linear_processing_pathway method of '{self.name}' "
+                                   f"{Composition.__name__} must be a list of nodes")
+
+        # Then make sure the first item is a node and not a Projection
+        if is_spec(pathway[0], NODE):
+            self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
+            nodes.append(pathway[0])
+        else:
+            # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
+            raise CompositionError("The first item in a linear processing pathway must be a Node (Mechanism or "
+                                   "Composition).")
+
+        # Then, add all of the remaining nodes in the pathway
+        for c in range(1, len(pathway)):
+            # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
+            if is_spec(pathway[c], NODE):
+                self.add_nodes([pathway[c]])
+                nodes.append(pathway[c])
+
+        # FIX 8/27/19 [JDC]:  GENERALIZE TO ModulatoryMechanism
+        # MODIFIED 8/12/19 NEW: [JDC] - AVOID DUPLCIATE CONTROL_RELATED PROJECTIONS
+        # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
+        #    and any ObjectiveMechanism that projects to a ControlMechanism,
+        #    as well as any projections to them specified in the pathway;
+        #    this is to avoid instantiating projections to them that might conflict with those
+        #    instantiated by their constructors or, for a controller, _add_controller()
+        items_to_delete = []
+        for i, item in enumerate(pathway):
+            if ((isinstance(item, ControlMechanism) and item.monitor_for_modulation)
+                    or (isinstance(item, ObjectiveMechanism) and item._role == CONTROL)):
+                items_to_delete.append(item)
+                # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
+                if i>0 and is_spec(pathway[i-1],PROJECTION):
+                    items_to_delete.append(pathway[i-1])
+        for item in items_to_delete:
+            if isinstance(item, ControlMechanism):
+                arg_name = f'in the {repr(MONITOR_FOR_CONTROL)} of its constructor'
+            else:
+                arg_name = f'either in the {repr(MONITOR)} arg of its constructor, ' \
+                           f'or in the {repr(MONITOR_FOR_CONTROL)} arg of its associated {ControlMechanism.__name__}'
+            warnings.warn(f'No new {Projection.__name__}s were added to {item.name} that was included in '
+                          f'the {repr(PATHWAY)} arg of add_linear_processing_pathway for {self.name}, '
+                          f'since they were already specified {arg_name}.')
+            del pathway[pathway.index(item)]
+        # MODIFIED 8/12/19 END
+
+        # Then, loop through pathway and validate that the Mechanism-Projection relationships make sense
+        # and add MappingProjection(s) where needed
+        projections = []
+        for c in range(1, len(pathway)):
+
+            # if the current item is a Node
+            if is_spec(pathway[c], NODE):
+                if is_spec(pathway[c-1], NODE):
+                    # if the previous item was also a node, add a MappingProjection between them
+                    proj = self.add_projection(sender=pathway[c - 1],
+                                               receiver=pathway[c])
+                    if proj:
+                        projections.append(proj)
+
+            # if the current item is a Projection specification
+            elif is_spec(pathway[c], PROJECTION):
+                if c == len(pathway) - 1:
+                    raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
+                                           " a linear processing pathway.".format(pathway[c]))
+                # confirm that it is between two nodes, then add the projection
+                if isinstance(pathway[c], tuple):
+                    proj = pathway[c][0]
+                    feedback = pathway[c][1]
+                else:
+                    proj = pathway[c]
+                    feedback = False
+                sender = pathway[c-1]
+                receiver = pathway[c+1]
+                if isinstance(sender, (Mechanism, Composition)) \
+                        and isinstance(receiver, (Mechanism, Composition)):
+                    try:
+                        if isinstance(proj, (np.ndarray, np.matrix, list)):
+                            proj = MappingProjection(sender=sender,
+                                                     matrix=proj,
+                                                     receiver=receiver)
+                    except DuplicateProjectionError:
+                        # FIX: 7/22/19 ADD WARNING HERE??
+                        # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
+                        duplicate = [p for p in receiver.afferents if p in sender.efferents]
+                        assert len(duplicate)==1, \
+                            f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
+                                f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
+                                f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
+                        proj = duplicate[0]
+
+                    proj = self.add_projection(projection=proj,
+                                               sender=sender,
+                                               receiver=receiver,
+                                               feedback=feedback,
+                                               allow_duplicates=False)
+                    if proj:
+                        projections.append(proj)
+
+                else:
+                    raise CompositionError(
+                        "{} is not between two Composition Nodes. A Projection in a linear processing pathway must be "
+                        "preceded by a Composition Node (Mechanism or Composition) and followed by a Composition Node"
+                            .format(pathway[c]))
+            else:
+                raise CompositionError("{} is not a Projection or a Composition node (Mechanism or Composition). A "
+                                       "linear processing pathway must be made up of Projections and Composition Nodes."
+                                       .format(pathway[c]))
+        # interleave nodes and projections
+        explicit_pathway = [nodes[0]]
+        for i in range(len(projections)):
+            explicit_pathway.append(projections[i])
+            explicit_pathway.append(nodes[i+1])
+
+        return explicit_pathway
+
+
+    # ------------------------------------------  LEARNING  ------------------------------------------------------------
+
+    def add_linear_learning_pathway(self,
+                                    pathway,
+                                    learning_function,
+                                    learning_rate=0.05,
+                                    error_function=LinearCombination(),
+                                    learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
+        """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
+
+        Generic method for implementing a learning pathway.  Calls `add_linear_processing_pathway` to implement
+        the processing components including, if necessary, the MappingProjections between Mechanisms.  All of the
+        MappingProjections (whether specified or created) are subject to learning (and are assigned as the
+        `learned_projection <LearningMechanism.learned_projection>` attribute of the `LearningMechanisms
+        <LeaningMechanisms>` created for the pathway.
+
+        If **learning_function** is a sublcass of `LearningFunction <LearningFunctions>`, a class-specific
+        `learning method <Composition_Learning_Methods>` is called.  Some may allow the error_function
+        to be specified, in which case it must be compatible with the class of LearningFunction specified.
+
+        If **learning_function** an instantiated function, it is assigned to all of the `LearningMechanisms
+        <LearningMechanism>` created for the MappingProjections in the pathway.  A `ComparatorMechanism` is
+        created to compute the error for the pathway, and assigned the function specified in **error_function**,
+        which must be compatible with **learning_function**.
+
+        See `Composition_Learning` for for a more detailed description of how learning is implemented in a
+        Composition, including the `learning components` <Composition_Learning_Components>` that are created,
+        as well as other `learning methods <Composition_Learning_Methods>` that can be used to implement specific
+        algorithms.
+
+        Arguments
+        ---------
+
+        pathway: List
+            list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
+            specified, that projection is the learned projection. Otherwise, a default MappingProjection is
+            automatically generated for the learned projection.
+
+        learning_rate : float : default 0.05
+            specifies the `learning_rate <LearningMechanism.learning_rate>` used for the **learning_function**
+            of the `LearningMechanism` in the **pathway**.
+
+        error_function : function : default LinearCombination
+            specifies the function assigned to Mechanism used to compute the error from the target and the output
+            (`value <Mechanism_Base.value>`) of the `TARGET` Mechanism in the **pathway**.
+
+            .. note::
+               For most learning algorithms (and by default), a `ComparatorMechanism` is used to compute the error.
+               However, some learning algorithms may use a different Mechanism (e.g., for `TDlearning` a
+               `PredictionErrorMechanism` is used, which uses as its fuction `PredictionErrorDeltaFunction`.
+
+        learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
+            specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
+            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
+            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
+            <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
+            <LearningMechanism.learning_enabled>` for meaning of values).
+
+        Returns
+        --------
+
+        A dictionary of components that were automatically generated and added to the Composition in order to
+        implement ReinforcementLearning in the pathway.
+
+        {LEARNING_MECHANISM: learning_mechanism,
+         COMPARATOR_MECHANISM: comparator,
+         TARGET_MECHANISM: target,
+         LEARNED_PROJECTION: learned_projection}
 
         """
-        if composition:
-            system = composition
-        open_bracket = r'{'
-        pipe = r' | '
-        close_bracket = r'}'
-        mechanism_header = r'COMPOSITION:\n'
-        input_states_header = r'______CIMINPUTSTATES______\n' \
-                              r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ' \
-                              r'\ \ \ \ \ \ \ \ \ \ \\'
-        output_states_header = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ______/' \
-                               r'\nCIMOUTPUTSTATES'
 
-        def mech_string(mech):
-            """Return string with name of mechanism possibly with function and/or value
-            Inclusion of role, function and/or value is determined by arguments of call to show_structure
-            """
-            if show_headers:
-                mech_header = mechanism_header
+        if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
+            return self._create_backpropagation_learning_pathway(pathway,
+                                                                 learning_rate,
+                                                                 error_function,
+                                                                 learning_update)
+
+        # Processing Components
+        input_source, output_source, learned_projection = \
+            self._unpack_processing_components_of_learning_pathway(pathway)
+        self.add_linear_processing_pathway([input_source, learned_projection, output_source])
+
+        # FIX: CONSOLIDATE LEARNING - WAS SPECIFIC TO RL AND NOT IN TD
+        self.add_required_node_role(output_source, NodeRole.OUTPUT)
+
+        # Learning Components
+        target, comparator, learning_mechanism = self._create_learning_related_mechanisms(input_source,
+                                                                                          output_source,
+                                                                                          error_function,
+                                                                                          learning_function,
+                                                                                          learned_projection,
+                                                                                          learning_rate,
+                                                                                          learning_update)
+        self.add_nodes([(target, NodeRole.TARGET), comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
+
+        learning_related_projections = self._create_learning_related_projections(input_source,
+                                                                                 output_source,
+                                                                                 target,
+                                                                                 comparator,
+                                                                                 learning_mechanism)
+        self.add_projections(learning_related_projections)
+
+        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        self.add_projection(learning_projection, learning_projection=True)
+
+        learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
+                                       COMPARATOR_MECHANISM: comparator,
+                                       TARGET_MECHANISM: target,
+                                       LEARNED_PROJECTION: learned_projection}
+
+        # Update graph in case method is called again
+        self._analyze_graph()
+
+        return learning_related_components
+
+    def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
+                                           learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
+
+        Arguments
+        ---------
+
+        pathway: List
+            list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
+            specified, that projection is the learned projection. Otherwise, a default MappingProjection is
+            automatically generated for the learned projection.
+
+        learning_rate : float : default 0.05
+            specifies the `learning_rate <ReinforcementLearning.learning_rate>` used for the `ReinforcementLearning`
+            function of the `LearningMechanism` in the **pathway**.
+
+        error_function : function : default LinearCombination
+            specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and
+            the output (`value <Mechanism_Base.value>`) of the `TARGET` Mechanism in the **pathway**).
+
+        learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
+            specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
+            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
+            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
+            <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
+            <LearningMechanism.learning_enabled>` for meaning of values).
+
+        Returns
+        --------
+
+        A dictionary of components that were automatically generated and added to the Composition in order to
+        implement ReinforcementLearning in the pathway.
+
+        {LEARNING_MECHANISM: learning_mechanism,
+         COMPARATOR_MECHANISM: comparator,
+         TARGET_MECHANISM: target,
+         LEARNED_PROJECTION: learned_projection}
+        """
+
+        return self.add_linear_learning_pathway(pathway,
+                                                learning_rate=learning_rate,
+                                                learning_function=Reinforcement,
+                                                error_function=error_function,
+                                                learning_update=learning_update)
+
+    def add_td_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
+                                learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`TDLearning`
+
+        Arguments
+        ---------
+
+        pathway: List
+            list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
+            specified, that projection is the learned projection. Otherwise, a default MappingProjection is
+            automatically generated for the learned projection.
+
+        learning_rate : float : default 0.05
+            specifies the `learning_rate <TDLearning.learning_rate>` used for the `TDLearning` function of the
+            `LearningMechanism` in the **pathway**.
+
+        error_function : function : default LinearCombination
+            specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and
+            the output (`value <Mechanism_Base.value>`) of the `TARGET` Mechanism in the **pathway**).
+
+        learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
+            specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
+            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
+            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
+            <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
+            <LearningMechanism.learning_enabled>` for meaning of values).
+
+        Returns
+        --------
+
+        A dictionary of components that were automatically generated and added to the Composition in order to
+        implement TDLearning in the pathway.
+
+        {LEARNING_MECHANISM: learning_mechanism,
+         COMPARATOR_MECHANISM: comparator,
+         TARGET_MECHANISM: target,
+         LEARNED_PROJECTION: learned_projection}
+        """
+
+        return self.add_linear_learning_pathway(pathway,
+                                                learning_rate=learning_rate,
+                                                learning_function=TDLearning,
+                                                learning_update=learning_update)
+
+    def add_backpropagation_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
+                                             learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
+        """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Backpropagation`
+
+        Arguments
+        ---------
+        pathway : list
+            specifies list of nodes for the pathway (see `add_linear_processing_pathway` for details of specification).
+
+        pathway: List
+            specifies nodes of the pathway for the learning sequence  (see `add_linear_processing_pathway` for
+            details of specification).  Any `MappingProjections <MappingProjection>` specified or constructed for the
+            pathway are assigned as `learned_projections`.
+
+        learning_rate : float : default 0.05
+            specifies the `learning_rate <Backpropagation.learning_rate>` used for the `Backpropagation` function of
+            the `LearningMechanisms <LearningMechanism>` in the **pathway**.
+
+        error_function : function : default LinearCombination
+            specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and the
+            output (`value <Mechanism_Base.value>`) of the `TARGET` (last) Mechanism in the **pathway**).
+
+        learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
+            specifies when the `matrix <MappingProjection.matrix>` parameters of the `learned_projections` are updated
+            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
+            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanisms
+            <LearningMechanism>` in the pathway, and their `LearningProjections <LearningProjection>`
+            (see `learning_enabled <LearningMechanism.learning_enabled>` for meaning of values).
+
+        Returns
+        --------
+
+        A dictionary of components that were automatically generated and added to the Composition in order to
+        implement Backpropagation along the pathway.
+
+        {LEARNING_MECHANISM: learning_mechanism,
+         COMPARATOR_MECHANISM: comparator,
+         TARGET_MECHANISM: target,
+         LEARNED_PROJECTION: learned_projection}
+        """
+
+        return self.add_linear_learning_pathway(pathway,
+                                                learning_rate=learning_rate,
+                                                learning_function=BackPropagation,
+                                                error_function=error_function,
+                                                learning_update=learning_update)
+
+    # NOTES:
+    # Learning-type-specific creation methods should:
+    # - create ComparatorMechanism and pass in as error_source (for 1st LearningMechanism in sequence in bp)
+    # - Determine and pass error_sources (aka previous_learning_mechanism) (for bp)
+    # - construct and pass in the learning_function
+    # - do the following for last LearningMechanism in sequence:
+    #   learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
+    #                                                                                                    override=True)
+    #
+    # Create_backprop... should pass error_function (handled by kwargs below)
+    # Check for existence of Learning mechanism (or do this in creation method?);  if one exists, compare its
+    #    ERROR_SIGNAL input_states with error_sources and update/add any needed, as well as corresponding
+    #    error_matrices (from their learned_projections) -- do so using LearningMechanism's add_states method);
+    #    create projections from each
+    # Move creation of LearningProjections and learning-related projections (MappingProjections) here
+    # ?Do add_nodes and add_projections here or in Learning-type-specific creation methods
+
+    def _unpack_processing_components_of_learning_pathway(self, processing_pathway):
+        # unpack processing components and add to composition
+        if len(processing_pathway) == 3:
+            input_source, learned_projection, output_source = processing_pathway
+        elif len(processing_pathway) == 2:
+            input_source, output_source = processing_pathway
+            learned_projection = MappingProjection(sender=input_source, receiver=output_source)
+        else:
+            raise CompositionError(f"Too many components in learning pathway: {pathway}. Only single-layer learning "
+                                   f"is supported by this method. See AutodiffComposition for other learning models.")
+        return input_source, output_source, learned_projection
+
+
+    # FIX: NOT CURRENTLY USED; IMPLEMENTED FOR FUTURE USE IN GENERALIZATION OF LEARNING METHODS
+    def _create_learning_components(self,
+                                    sender_activity_source,   # aka input_source
+                                    receiver_activity_source, # aka output_source
+                                    error_sources,            # aka comparator/previous_learning_mechanism
+                                    learning_function,
+                                    learned_projection,
+                                    learning_rate,
+                                    learning_update,
+                                    target_mech=None,
+                                    **kwargs                  # Use of type-specific learning arguments
+                                    ):
+
+        # ONLY DO THIS IF ONE DOESN'T ALREADY EXIST (?pass in argument determing this?)
+        learning_mechanism = LearningMechanism(function=learning_function,
+                                               default_variable=[sender_activity_source.output_states[0].value,
+                                                                 receiver_activity_source.output_states[0].value,
+                                                                 error_sources.output_states[0].value],
+                                               error_sources=error_sources,
+                                               learning_enabled=learning_update,
+                                               in_composition=True,
+                                               name="Learning Mechanism for " + learned_projection.name,
+                                               **kwargs)
+
+
+        self.enable_learning = True
+        return learning_mechanism
+
+    def _create_learning_related_mechanisms(self,
+                                            input_source,
+                                            output_source,
+                                            error_function,
+                                            learning_function,
+                                            learned_projection,
+                                            learning_rate,
+                                            learning_update):
+        """Creates *TARGET_MECHANISM*, *COMPARATOR_MECHANISM* and *LEARNING_MECHANISM* for RL and TD learning"""
+
+        if isinstance(learning_function, type):
+            if issubclass(learning_function, TDLearning):
+                creation_method = self._create_td_related_mechanisms
+            elif issubclass(learning_function, Reinforcement):
+                creation_method = self._create_rl_related_mechanisms
             else:
-                mech_header = ''
-            mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
-            mech_role = ''
-            if system and show_roles:
-                try:
-                    mech_role = r'\n[{}]'.format(self.systems[system])
-                except KeyError:
-                    # # mech_role = r'\n[{}]'.format(self.system)
-                    # mech_role = r'\n[CONTROLLER]'
-                    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import \
-                        ControlMechanism
-                    from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-                        ObjectiveMechanism
-                    if isinstance(mech, ControlMechanism) and hasattr(mech, 'system'):
-                        mech_role = r'\n[CONTROLLER]'
-                    elif isinstance(mech, ObjectiveMechanism) and hasattr(mech, '_role'):
-                        mech_role = r'\n[{}]'.format(mech._role)
+                raise CompositionError(f"'learning_function' argument for add_linear_learning_pathway "
+                                       f"({learning_function}) must be a class of {LearningFunction.__name__}")
+
+            target_mechanism, comparator_mechanism, learning_mechanism  = creation_method(input_source,
+                                                                                          output_source,
+                                                                                          error_function,
+                                                                                          learned_projection,
+                                                                                          learning_rate,
+                                                                                          learning_update)
+
+        elif is_function_type(learning_function):
+            target_mechanism = ProcessingMechanism(name='Target')
+            comparator_mechanism = ComparatorMechanism(name='Comparator',
+                                                       sample={NAME: SAMPLE,
+                                                               VARIABLE: [0.], WEIGHT: -1},
+                                                       target={NAME: TARGET,
+                                                               VARIABLE: [0.]},
+                                                       function=error_function,
+                                                       output_states=[OUTCOME, MSE])
+            learning_mechanism = LearningMechanism(
+                                    function=learning_function(
+                                                         default_variable=[input_source.output_states[0].value,
+                                                                           output_source.output_states[0].value,
+                                                                           comparator_mechanism.output_states[0].value],
+                                                         learning_rate=learning_rate),
+                                    default_variable=[input_source.output_states[0].value,
+                                                      output_source.output_states[0].value,
+                                                      comparator_mechanism.output_states[0].value],
+                                    error_sources=comparator_mechanism,
+                                    learning_enabled=learning_update,
+                                    in_composition=True,
+                                    name="Learning Mechanism for " + learned_projection.name)
+        else:
+            raise CompositionError(f"'learning_function' argument of add_linear_learning_pathway "
+                                   f"({learning_function}) must be a class of {LearningFunction.__name__} or a "
+                                   f"learning-compatible function")
+
+        learning_mechanism.output_states[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
+                                                                                                         override=True)
+        self.enable_learning = True
+        return target_mechanism, comparator_mechanism, learning_mechanism
+
+    def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
+        """Construct MappingProjections among `learning components <Composition_Learning_Components>` for pathway"""
+
+        # FIX 5/29/19 [JDC]:  INTEGRATE WITH _get_back_prop_error_sources (RIGHT NOW, ONLY CALLED FOR TERMINAL SEQUENCE)
+        try:
+            sample_projection = MappingProjection(sender=output_source, receiver=comparator.input_states[SAMPLE])
+        except DuplicateProjectionError:
+            sample_projection = [p for p in output_source.efferents
+                                 if p in comparator.input_states[SAMPLE].path_afferents]
+        try:
+            target_projection = MappingProjection(sender=target, receiver=comparator.input_states[TARGET])
+        except DuplicateProjectionError:
+            target_projection = [p for p in target.efferents
+                                 if p in comparator.input_states[TARGET].path_afferents]
+        act_in_projection = MappingProjection(sender=input_source.output_states[0],
+                                              receiver=learning_mechanism.input_states[ACTIVATION_INPUT_INDEX])
+        act_out_projection = MappingProjection(sender=output_source.output_states[0],
+                                               receiver=learning_mechanism.input_states[ACTIVATION_OUTPUT_INDEX])
+        # FIX CROSS_PATHWAYS 7/28/19 [JDC]: THIS MAY NEED TO USE ADD_STATES (SINCE ONE MAY EXIST; CONSTRUCT TEST FOR IT)
+        error_signal_projection = MappingProjection(sender=comparator.output_states[OUTCOME],
+                                                    receiver=learning_mechanism.input_states[ERROR_SIGNAL_INDEX])
+        return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
+
+    def _create_learning_projection(self, learning_mechanism, learned_projection):
+        """Construct LearningProjections from LearningMechanisms to learned_projections in processing pathway"""
+
+        learning_projection = LearningProjection(name="Learning Projection",
+                                                 sender=learning_mechanism.learning_signals[0],
+                                                 receiver=learned_projection.parameter_states["matrix"])
+
+        learned_projection.has_learning_projection = True
+
+        return learning_projection
+
+    def _create_rl_related_mechanisms(self,
+                                      input_source,
+                                      output_source,
+                                      error_function,
+                                      learned_projection,
+                                      learning_rate,
+                                      learning_update):
+
+        target_mechanism = ProcessingMechanism(name='Target')
+
+        comparator_mechanism = ComparatorMechanism(name='Comparator',
+                                                   sample={NAME: SAMPLE,
+                                                           VARIABLE: [0.], WEIGHT: -1},
+                                                   target={NAME: TARGET,
+                                                           VARIABLE: [0.]},
+                                                   function=error_function,
+                                                   output_states=[OUTCOME, MSE])
+
+        learning_mechanism = \
+            LearningMechanism(function=Reinforcement(default_variable=[input_source.output_states[0].value,
+                                                                       output_source.output_states[0].value,
+                                                                       comparator_mechanism.output_states[0].value],
+                                                     learning_rate=learning_rate),
+                              default_variable=[input_source.output_states[0].value,
+                                                output_source.output_states[0].value,
+                                                comparator_mechanism.output_states[0].value],
+                              error_sources=comparator_mechanism,
+                              learning_enabled=learning_update,
+                              in_composition=True,
+                              name="Learning Mechanism for " + learned_projection.name)
+
+        return target_mechanism, comparator_mechanism, learning_mechanism
+
+    def _create_td_related_mechanisms(self,
+                                      input_source,
+                                      output_source,
+                                      error_function,
+                                      learned_projection,
+                                      learning_rate,
+                                      learning_update):
+
+        target_mechanism = ProcessingMechanism(name='Target',
+                                               default_variable=output_source.defaults.value)
+
+        comparator_mechanism = PredictionErrorMechanism(name='PredictionError',
+                                                        sample={NAME: SAMPLE,
+                                                                VARIABLE: output_source.defaults.value},
+                                                        target={NAME: TARGET,
+                                                                VARIABLE: output_source.defaults.value},
+                                                        function=PredictionErrorDeltaFunction(gamma=1.0))
+
+        learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
+                                               default_variable=[input_source.output_states[0].defaults.value,
+                                                                 output_source.output_states[0].defaults.value,
+                                                                 comparator_mechanism.output_states[0].defaults.value],
+                                               error_sources=comparator_mechanism,
+                                               learning_enabled=learning_update,
+                                               in_composition=True,
+                                               name="Learning Mechanism for " + learned_projection.name)
+
+        return target_mechanism, comparator_mechanism, learning_mechanism
+
+    def _create_backpropagation_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
+                                             learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
+
+        # FIX: LEARNING CONSOLIDATION - Can get rid of this:
+        if not error_function:
+            error_function = LinearCombination()
+
+        # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
+        processing_pathway = self.add_linear_processing_pathway(pathway)
+
+        path_length = len(processing_pathway)
+
+        # Pathway length must be >=3 (Mechanism, Projection, Mechanism
+        if path_length >= 3:
+            # get the "terminal_sequence" --
+            # the last 2 nodes in the back prop pathway and the projection between them
+            # these components are are processed separately because
+            # they inform the construction of the Target and Comparator mechs
+            terminal_sequence = processing_pathway[path_length - 3: path_length]
+        else:
+            raise CompositionError(f"Backpropagation pathway specification ({pathway}) must not contain "
+                                   f"at least three components "
+                                   f"([{Mechanism.__name__}, {Projection.__name__}, {Mechanism.__name__}]).")
+
+        # Unpack and process terminal_sequence:
+        input_source, learned_projection, output_source = terminal_sequence
+
+        # If pathway includes existing terminal_sequence for the output_source, use that
+        if output_source in self._terminal_backprop_sequences:
+
+            # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:
+            #  THIS SHOULD BE INTEGRATED WITH CALL TO _create_terminal_backprop_learning_components
+            #  ** NEED TO CHECK WHETHER LAST NODE IN THE SEQUENCE IS TERMINAL AND IF SO:
+            #     ASSIGN USING: self.add_required_node_role(output_source, NodeRole.OUTPUT)
+            # If learned_projection already has a LearningProjection (due to pathway overlap),
+            #    use those terminal sequence components
+            if (learned_projection.has_learning_projection
+                    and any([lp for lp in learned_projection.parameter_states[MATRIX].mod_afferents
+                             if lp in self.projections])):
+                target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
+                comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
+                learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
+
+            # Otherwise, create new ones
+            else:
+                target, comparator, learning_mechanism = \
+                    self._create_terminal_backprop_learning_components(input_source,
+                                                                       output_source,
+                                                                       error_function,
+                                                                       learned_projection,
+                                                                       learning_rate,
+                                                                       learning_update)
+            sequence_end = path_length-3
+
+        # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
+        # Otherwise, if output_source already projects to a LearningMechanism, integrate with existing sequence
+        elif any(isinstance(p.receiver.owner, LearningMechanism) for p in output_source.efferents):
+            # Set learning_mechanism to the one to which output_source projects
+            learning_mechanism = next((p.receiver.owner for p in output_source.efferents
+                                       if isinstance(p.receiver.owner, LearningMechanism)))
+            # # Use existing target and comparator to learning_mechanism for Mechanism to which output_source project
+            # target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
+            # comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
+            target = None
+            comparator = None
+            sequence_end = path_length-1
+
+        # Otherwise create terminal_sequence for the sequence,
+        #    and eliminate existing terminal_sequences previously created for Mechanisms now in the pathway
+        else:
+            # Eliminate existing comparators and targets for Mechanisms now in the pathway that were output_sources
+            #   (i.e., ones that belong to previously-created sequences that overlap with the current one)
+            for pathway_mech in [m for m in pathway if isinstance(m, Mechanism)]:
+
+                old_comparator = next((p.receiver.owner for p in pathway_mech.efferents
+                                       if (isinstance(p.receiver.owner, ComparatorMechanism)
+                                           and p.receiver.owner in self.get_nodes_by_role(NodeRole.LEARNING))),
+                                      None)
+                if old_comparator:
+                    old_target = next((p.sender.owner for p in old_comparator.input_states[TARGET].path_afferents
+                                       if p.sender.owner in self.get_nodes_by_role(NodeRole.TARGET)),
+                                      None)
+                    self.remove_nodes([old_comparator, old_target])
+                    # FIX CROSSING_PATHWAYS [JDC]: MAKE THE FOLLOWING A METHOD?
+                    # Collect InputStates that received error_signal projections from the old_comparator
+                    #    and delete after old_comparator has been deleted
+                    #    (i.e., after those InputStates have been vacated)
+                    old_error_signal_input_states = []
+                    for error_projection in old_comparator.output_state.efferents:
+                        old_error_signal_input_states.append(error_projection.receiver)
+                    Mechanism_Base._delete_mechanism(old_comparator)
+                    Mechanism_Base._delete_mechanism(old_target)
+                    for input_state in old_error_signal_input_states:
+                        input_state.owner.remove_states(input_state)
+                    del self._terminal_backprop_sequences[pathway_mech]
+                    del self.required_node_roles[self.required_node_roles.index((pathway_mech, NodeRole.OUTPUT))]
+
+            # Create terminal_sequence
+            target, comparator, learning_mechanism = \
+                self._create_terminal_backprop_learning_components(input_source,
+                                                                   output_source,
+                                                                   error_function,
+                                                                   learned_projection,
+                                                                   learning_rate,
+                                                                   learning_update)
+            self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
+                                                                TARGET_MECHANISM: target,
+                                                                COMPARATOR_MECHANISM: comparator}
+            self.add_required_node_role(pathway[-1], NodeRole.OUTPUT)
+
+            sequence_end = path_length-3
+
+        # loop backwards through the rest of the pathway to create and connect
+        # the remaining learning mechanisms
+        learning_mechanisms = [learning_mechanism]
+        learned_projections = [learned_projection]
+        for i in range(sequence_end, 1, -2):
+            # set variables for this iteration
+            input_source = processing_pathway[i-2]
+            learned_projection = processing_pathway[i-1]
+            output_source = processing_pathway[i]
+
+            learning_mechanism = self._create_non_terminal_backprop_learning_components(input_source,
+                                                                                        output_source,
+                                                                                        learned_projection,
+                                                                                        learning_rate,
+                                                                                        learning_update)
+
+            learning_mechanisms.append(learning_mechanism)
+            learned_projections.append(learned_projection)
+
+        # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
+        for lm in learning_mechanisms:
+            if lm.dependent_learning_mechanisms:
+                projections = self._add_error_projection_to_dependent_learning_mechs(lm)
+                self.add_projections(projections)
+
+        # Suppress no efferent connections warning for error_signal OutputState of last LearningMechanism in sequence
+        learning_mechanisms[-1].output_states[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
+                                                                                                             override=True)
+
+        learning_related_components = {LEARNING_MECHANISM: learning_mechanisms,
+                                       COMPARATOR_MECHANISM: comparator,
+                                       TARGET_MECHANISM: target,
+                                       LEARNED_PROJECTION: learned_projections}
+
+        # Update graph in case method is called again
+        self._analyze_graph()
+
+        return learning_related_components
+
+    def _create_terminal_backprop_learning_components(self,
+                                                      input_source,
+                                                      output_source,
+                                                      error_function,
+                                                      learned_projection,
+                                                      learning_rate,
+                                                      learning_update):
+        """Create ComparatorMechanism, LearningMechanism and LearningProjection for Component in learning sequence"""
+
+        # target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
+        # comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
+        # learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
+
+        # If target and comparator already exist (due to overlapping pathway), use those
+        try:
+            target_mechanism = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
+            comparator_mechanism = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
+
+        # Otherwise, create new ones
+        except KeyError:
+            target_mechanism = ProcessingMechanism(name='Target',
+                                                   default_variable=output_source.output_states[0].value)
+            comparator_mechanism = ComparatorMechanism(name='Comparator',
+                                                       target={NAME: TARGET,
+                                                               VARIABLE: target_mechanism.output_states[0].value},
+                                                       sample={NAME: SAMPLE,
+                                                               VARIABLE: output_source.output_states[0].value,
+                                                               WEIGHT: -1},
+                                                       function=error_function,
+                                                       output_states=[OUTCOME, MSE])
+
+        learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
+                                                              output_source.output_states[0].value,
+                                                              comparator_mechanism.output_states[0].value],
+                                            activation_derivative_fct=output_source.function.derivative,
+                                            learning_rate=learning_rate)
+
+        learning_mechanism = LearningMechanism(function=learning_function,
+                                               default_variable=[input_source.output_states[0].value,
+                                                                 output_source.output_states[0].value,
+                                                                 comparator_mechanism.output_states[0].value],
+                                               error_sources=comparator_mechanism,
+                                               learning_enabled=learning_update,
+                                               in_composition=True,
+                                               name="Learning Mechanism for " + learned_projection.name)
+
+        self.add_nodes(nodes=[(target_mechanism, NodeRole.TARGET),
+                              comparator_mechanism,
+                              learning_mechanism],
+                       required_roles=NodeRole.LEARNING)
+
+        learning_related_projections = self._create_learning_related_projections(input_source,
+                                                                                 output_source,
+                                                                                 target_mechanism,
+                                                                                 comparator_mechanism,
+                                                                                 learning_mechanism)
+        self.add_projections(learning_related_projections)
+
+        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        self.add_projection(learning_projection, feedback=True)
+
+        self.enable_learning = True
+
+        return target_mechanism, comparator_mechanism, learning_mechanism
+
+    def _create_non_terminal_backprop_learning_components(self,
+                                                          input_source,
+                                                          output_source,
+                                                          learned_projection,
+                                                          learning_rate,
+                                                          learning_update):
+
+        # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
+        learning_mechanism = \
+            next((lp.receiver.owner for lp in learned_projection.parameter_states[MATRIX].mod_afferents
+                  if isinstance(lp, LearningProjection)),
+                 None)
+
+        # If learning_mechanism exists:
+        #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
+        #    error_projections will contain list of any created to be added to the Composition below
+        if learning_mechanism:
+            error_sources, error_projections = self._get_back_prop_error_sources(output_source, learning_mechanism)
+        # If learning_mechanism does not yet exist:
+        #    error_sources will contain ones needed to create learning_mechanism
+        #    error_projections will be empty since they can't be created until the learning_mechanism is created below;
+        #    they will be created (using error_sources) when, and determined after learning_mechanism is created below
+        else:
+            error_sources, error_projections = self._get_back_prop_error_sources(output_source)
+            error_signal_template = [error_source.output_states[ERROR_SIGNAL].value for error_source in error_sources]
+            default_variable = [input_source.output_states[0].value,
+                                output_source.output_states[0].value] + error_signal_template
+
+            learning_function = BackPropagation(default_variable=[input_source.output_states[0].value,
+                                                                  output_source.output_states[0].value,
+                                                                  error_signal_template[0]],
+                                                activation_derivative_fct=output_source.function.derivative,
+                                                learning_rate=learning_rate)
+
+            learning_mechanism = LearningMechanism(function=learning_function,
+                                                   # default_variable=[input_source.output_states[0].value,
+                                                   #                   output_source.output_states[0].value,
+                                                   #                   error_signal_template],
+                                                   default_variable=default_variable,
+                                                   error_sources=error_sources,
+                                                   learning_enabled=learning_update,
+                                                   in_composition=True,
+                                                   name="Learning Mechanism for " + learned_projection.name)
+
+            # Create MappingProjections from ERROR_SIGNAL OutputState of each error_source
+            #    to corresponding error_input_states
+            for i, error_source in enumerate(error_sources):
+                error_projection = MappingProjection(sender=error_source,
+                                                     receiver=learning_mechanism.error_signal_input_states[i])
+                error_projections.append(error_projection)
+
+        self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
+
+        act_in_projection = MappingProjection(sender=input_source.output_states[0],
+                                              receiver=learning_mechanism.input_states[0])
+        act_out_projection = MappingProjection(sender=output_source.output_states[0],
+                                               receiver=learning_mechanism.input_states[1])
+        self.add_projections([act_in_projection, act_out_projection] + error_projections)
+
+        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+        self.add_projection(learning_projection, feedback=True)
+
+        return learning_mechanism
+
+    def _get_back_prop_error_sources(self, receiver_activity_mech, learning_mech=None):
+        # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP
+        #                              AND THEN TO HANDLE ALL FORMS OF LEARNING (AS BELOW)
+        #  REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
+        #  1) Determine whether this is a terminal sequence:
+        #     - use arg passed in or determine from context (see current implementation in add_backpropagation_learning_pathway)
+        #     - for terminal sequence, handle target and sample projections as below
+        #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
+        #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
+        #     - check validity of existing error_signal projections with respect to those and, if possible,
+        #       their correspondence with error_matrices
+        #     - check if any ERROR_SIGNAL input_states are empty (vacated by terminal sequence elements deleted in
+        #       add_projection)
+        #     - call add_states method on LearningMechanism to add new ERROR_SIGNAL input_state to its input_states
+        #       and error_matrix to its self.error_matrices attribute
+        #     - add new error_signal projection
+        """Add any LearningMechanisms associated with efferent projection from receiver_activity_mech"""
+        error_sources = []
+        error_projections = []
+
+        # First get all efferents of receiver_activity_mech with a LearningProjection that are in current Composition
+        for efferent in [p for p in receiver_activity_mech.efferents
+                         if (hasattr(p, 'has_learning_projection')
+                             and p.has_learning_projection
+                             and p in self.projections)]:
+            # Then get any LearningProjections to that efferent that are in current Composition
+            for learning_projection in [mod_aff for mod_aff in efferent.parameter_states[MATRIX].mod_afferents
+                                        if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
+                error_source = learning_projection.sender.owner
+                if (error_source not in self.nodes  # error_source is not in the Composition
+                        or (learning_mech  # learning_mech passed in
+                            # the error_source is already associated with learning_mech
+                            and (error_source in learning_mech.error_sources)
+                            # and the error_source already sends a Projection to learning_mech
+                            and (learning_mech in [p.receiver.owner for p in error_source.efferents]))):
+                    continue  # ignore the error_source
+                error_sources.append(error_source)
+
+                # If learning_mech was passed in, add error_source to its list of error_signal_input_states
+                if learning_mech:
+                    # FIX: REPLACE WITH learning_mech._add_error_signal_input_state ONCE IMPLEMENTED
+                    error_signal_input_state = next((e for e in learning_mech.error_signal_input_states
+                                                     if not e.path_afferents), None)
+                    if error_signal_input_state is None:
+                        error_signal_input_state = learning_mech.add_states(
+                                                            InputState(projections=error_source.output_states[ERROR_SIGNAL],
+                                                                       name=ERROR_SIGNAL,
+                                                                       context=ContextFlags.METHOD),
+                                                            context=ContextFlags.METHOD)
+                    # Create Projection here so that don't have to worry about determining correct
+                    #    error_signal_input_state of learning_mech in _create_non_terminal_backprop_learning_components
+                    error_projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
+                                                               receiver=error_signal_input_state))
+
+        # Return error_sources so they can be used to create a new LearningMechanism if needed
+        # Return error_projections created to existing learning_mech
+        #    so they can be added to the Composition by _create_non_terminal_backprop_learning_components
+        return error_sources, error_projections
+
+    def _get_backprop_error_projections(self, learning_mech, receiver_activity_mech):
+        error_sources = []
+        error_projections = []
+        # for error_source in learning_mech.error_sources:
+        #     if error_source in self.nodes:
+        #         error_sources.append(error_source)
+        # Add any LearningMechanisms associated with efferent projection from receiver_activity_mech
+        # First get all efferents of receiver_activity_mech with a LearningProjection that are in current Composition
+        for efferent in [p for p in receiver_activity_mech.efferents
+                         if (hasattr(p, 'has_learning_projection')
+                             and p.has_learning_projection
+                             and p in self.projections)]:
+            # Then any LearningProjections to that efferent that are in current Composition
+            for learning_projection in [mod_aff for mod_aff in efferent.parameter_states[MATRIX].mod_afferents
+                                        if (isinstance(mod_aff, LearningProjection) and mod_aff in self.projections)]:
+                error_source = learning_projection.sender.owner
+                if (error_source in learning_mech.error_sources
+                        and error_source in self.nodes
+                        and learning_mech in [p.receiver.owner for p in error_source.efferents]):
+                    continue
+                error_sources.append(error_source)
+                # FIX: REPLACE WITH learning_mech._add_error_signal_input_state ONCE IMPLEMENTED
+                error_signal_input_state = next((e for e in learning_mech.error_signal_input_states
+                                                 if not e.path_afferents), None)
+                if error_signal_input_state is None:
+                    error_signal_input_state = learning_mech.add_states(
+                                                        InputState(projections=error_source.output_states[ERROR_SIGNAL],
+                                                                   name=ERROR_SIGNAL,
+                                                                   context=ContextFlags.METHOD),
+                                                        context=ContextFlags.METHOD)
+                # DOES THE ABOVE GENERATE A PROJECTION?  IF SO, JUST GET AND RETURN THAT;  ELSE DO THE FOLLOWING:
+                error_projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
+                                                           receiver=error_signal_input_state))
+        return error_projections
+        #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
+        #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
+        #     - check validity of existing error_signal projections with respect to those and, if possible,
+        #       their correspondence with error_matrices
+        #     - check if any ERROR_SIGNAL input_states are empty (vacated by terminal sequence elements deleted in
+        #       add_projection)
+        #     - call add_states method on LearningMechanism to add new ERROR_SIGNAL input_state to its input_states
+        #       and error_matrix to its self.error_matrices attribute
+        #     - add new error_signal projection
+
+    def _add_error_projection_to_dependent_learning_mechs(self, error_source):
+        projections = []
+        # Get all afferents to receiver_activity_mech in Composition that have LearningProjections
+        for afferent in [p for p in error_source.input_source.path_afferents
+                         if (p in self.projections
+                             and hasattr(p, 'has_learning_projection')
+                             and p.has_learning_projection)]:
+            # For each LearningProjection to that afferent, if its LearningMechanism doesn't already receiver
+            for learning_projection in [lp for lp in afferent.parameter_states[MATRIX].mod_afferents
+                                        if (isinstance(lp, LearningProjection)
+                                            and error_source not in lp.sender.owner.error_sources)]:
+                dependent_learning_mech = learning_projection.sender.owner
+                error_signal_input_state = dependent_learning_mech.add_states(
+                                                    InputState(projections=error_source.output_states[ERROR_SIGNAL],
+                                                               name=ERROR_SIGNAL,
+                                                               context=ContextFlags.METHOD),
+                                                    context=ContextFlags.METHOD)
+                projections.append(error_signal_input_state[0].path_afferents[0])
+                # projections.append(MappingProjection(sender=error_source.output_states[ERROR_SIGNAL],
+                #                                      receiver=error_signal_input_state[0]))
+        return projections
+
+
+    # ******************************************************************************************************************
+    #                                              CONTROL
+    # ******************************************************************************************************************
+
+    def add_controller(self, controller:ModulatoryMechanism):
+        """
+        Add an `OptimizationControlMechanism` as the `controller
+        <Composition.controller>` of the Composition, which gives the OCM access to the
+        `Composition`'s `evaluate <Composition.evaluate>` method. This allows the OCM to use simulations to determine
+        an optimal Control policy.
+        """
+
+        if not isinstance(controller, ModulatoryMechanism):
+            raise CompositionError(f"Specification of {repr(CONTROLLER)} arg for {self.name} "
+                                   f"must be a {repr(ModulatoryMechanism.__name__)} ")
+
+        self.controller = controller
+        self.controller.composition = self
+
+        if self.controller.objective_mechanism:
+            self.add_node(self.controller.objective_mechanism)
+
+        self.enable_controller = True
+
+        controller._activate_projections_for_compositions(self)
+        self._analyze_graph()
+        self._update_shadows_dict(controller)
+
+        # Skip first (OUTCOME) input_state
+        input_cims=[self.input_CIM] + [comp.input_CIM for comp in self._get_nested_compositions()]
+        for input_state in controller.input_states[1:]:
+            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+                for proj in input_state.shadow_inputs.path_afferents:
+                    sender = proj.sender
+                    if sender.owner not in input_cims:
+                        self.add_projection(projection=MappingProjection(sender=sender, receiver=input_state),
+                                            sender=sender.owner,
+                                            receiver=controller)
+                        shadow_proj._activate_for_compositions(self)
                     else:
-                        mech_role = ""
+                        try:
+                            shadow_proj = MappingProjection(sender=proj.sender, receiver=input_state)
+                            shadow_proj._activate_for_compositions(self)
+                        except DuplicateProjectionError:
+                            pass
+            for proj in input_state.path_afferents:
+                proj._activate_for_compositions(self)
 
-            mech_function = ''
-            if show_functions:
-                mech_function = r'\n({})'.format(mech.function.__class__.__name__)
-            mech_value = ''
-            if show_values:
-                mech_value = r'\n={}'.format(mech.value)
-            return mech_name + mech_role + mech_function + mech_value
+    def _build_predicted_inputs_dict(self, predicted_input):
+        inputs = {}
+        # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
+        # If this is not a good assumption, we need another way to look up the feature InputStates
+        # of the OCM and know which InputState maps to which predicted_input value
 
-        from psyneulink.core.globals.utilities import ContentAddressableList
-        def states_string(state_list: ContentAddressableList,
-                          state_type,
-                          include_function: bool = False,
-                          include_value: bool = False,
-                          use_label: bool = False):
-            """Return string with name of states in ContentAddressableList with functions and/or values as specified"""
-            states = open_bracket
-            for i, state in enumerate(state_list):
-                if i:
-                    states += pipe
-                function = ''
-                if include_function:
-                    function = r'\n({})'.format(state.function.__class__.__name__)
-                value = ''
-                if include_value:
-                    if use_label:
-                        value = r'\n={}'.format(state.label)
+        nested_nodes = dict(self._get_nested_nodes())
+        for j in range(len(self.controller.input_states) - 1):
+            input_state = self.controller.input_states[j + 1]
+            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+                owner = input_state.shadow_inputs.owner
+                if not owner in nested_nodes:
+                    inputs[input_state.shadow_inputs.owner] = predicted_input[j]
+                else:
+                    comp = nested_nodes[owner]
+                    if not comp in inputs:
+                        inputs[comp]=[[predicted_input[j]]]
                     else:
-                        value = r'\n={}'.format(state.value)
-                states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,
-                                                        state.name,
-                                                        function,
-                                                        value)
-            states += close_bracket
-            return states
+                        inputs[comp]=np.concatenate([[predicted_input[j]],inputs[comp][0]])
+        return inputs
 
-        # Construct Mechanism specification
-        mech = mech_string(self)
+    def reshape_control_signal(self, arr):
 
-        # Construct InputStates specification
-        if len(self.input_states) and compact_cim is not INPUT:
-            if show_headers:
-                input_states = input_states_header + pipe + states_string(self.input_states,
-                                                                          InputState,
-                                                                          include_function=show_functions,
-                                                                          include_value=show_values,
-                                                                          use_label=use_labels)
-            else:
-                input_states = states_string(self.input_states,
-                                             InputState,
-                                             include_function=show_functions,
-                                             include_value=show_values,
-                                             use_label=use_labels)
-            input_states = pipe + input_states
+        current_shape = np.shape(arr)
+        if len(current_shape) > 2:
+            newshape = (current_shape[0], current_shape[1])
+            newarr = np.reshape(arr, newshape)
+            arr = tuple(newarr[i].item() for i in range(len(newarr)))
+
+        return np.array(arr)
+
+    def _get_total_cost_of_control_allocation(self, control_allocation, execution_id, runtime_params, context):
+        total_cost = 0.
+        if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
+
+            base_control_allocation = self.reshape_control_signal(self.controller.parameters.value._get(execution_id))
+
+            candidate_control_allocation = self.reshape_control_signal(control_allocation)
+
+            # Get reconfiguration cost for candidate control signal
+            reconfiguration_cost = 0.
+            if callable(self.controller.compute_reconfiguration_cost):
+                reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
+                                                                                     base_control_allocation])
+                self.controller.reconfiguration_cost.set(reconfiguration_cost, execution_id)
+
+            # Apply candidate control signal
+            self.controller._apply_control_allocation(candidate_control_allocation,
+                                                                execution_id=execution_id,
+                                                                runtime_params=runtime_params,
+                                                                context=context)
+
+            # Get control signal costs
+            all_costs = self.controller.parameters.costs._get(execution_id) + [reconfiguration_cost]
+            # Compute a total for the candidate control signal(s)
+            total_cost = self.controller.combine_costs(all_costs)
+        return total_cost
+
+    def evaluate(
+            self,
+            predicted_input=None,
+            control_allocation=None,
+            num_simulation_trials=None,
+            runtime_params=None,
+            base_execution_id=None,
+            execution_id=None,
+            context=None,
+            execution_mode=False,
+    ):
+        """Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
+           `controller <Composition.controller>` in order to return the
+           `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
+           `controller <Composition.controller>` under that control_allocation. All values are
+           reset to pre-simulation values at the end of the simulation.
+        """
+        # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
+        total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
+
+        # Build input dictionary for simulation
+        inputs = self._build_predicted_inputs_dict(predicted_input)
+
+        # Run Composition in "SIMULATION" context
+        if self._animate is not False and self._animate_simulations is not False:
+            animate = self._animate
+            buffer_animate_state = None
         else:
-            input_states = ''
-
-        # Construct OutputStates specification
-        if len(self.output_states) and compact_cim is not OUTPUT:
-            if show_headers:
-                output_states = states_string(self.output_states,
-                                              OutputState,
-                                              include_function=show_functions,
-                                              include_value=show_values,
-                                              use_label=use_labels) + pipe + output_states_header
-            else:
-                output_states = states_string(self.output_states,
-                                              OutputState,
-                                              include_function=show_functions,
-                                              include_value=show_values,
-                                              use_label=use_labels)
-
-            output_states = output_states + pipe
-        else:
-            output_states = ''
-
-        m_node_struct = open_bracket + \
-                        output_states + \
-                        open_bracket + mech + close_bracket + \
-                        input_states + \
-                        close_bracket
-
-        if output_fmt == 'struct':
-            # return m.node
-            return m_node_struct
-
-        # Make node
-        import graphviz as gv
-        m = gv.Digraph(  # 'mechanisms',
-            # filename='mechanisms_revisited.gv',
-            node_attr={'shape': 'record'},
-        )
-        m.node(self.name, m_node_struct, shape='record')
-
-        if output_fmt == 'pdf':
-            m.view(self.name.replace(" ", "-"), cleanup=True)
-
-        elif output_fmt == 'jupyter':
-            return m
-
-    def _generate_gifs(self, G, active_items, execution_id):
-
-        def create_phase_string(phase):
-            return f'%16s' % phase + ' - '
-
-        def create_time_string(time, spec):
-            if spec == 'TIME':
-                r = time.run
-                t = time.trial
-                p = time.pass_
-                ts = time.time_step
-            else:
-                r = t = p = ts = '__'
-            return f"Time(run: %2s, " % r + f"trial: %2s, " % t + f"pass: %2s, " % p + f"time_step: %2s)" % ts
-
-        G.format = 'gif'
-        execution_phase = self.parameters.context.get(execution_id).execution_phase
-        time = self.scheduler_processing.get_clock(execution_id).time
-        run_num = time.run
-        trial_num = time.trial
-
-        if INITIAL_FRAME in active_items:
-            phase_string = create_phase_string('Initializing')
-            time_string = create_time_string(time, 'BLANKS')
-
-        elif execution_phase == ContextFlags.PROCESSING:
-            phase_string = create_phase_string('Processing Phase')
-            time_string = create_time_string(time, 'TIME')
-        # elif execution_phase == ContextFlags.LEARNING:
-        #     time = self.scheduler_learning.get_clock(execution_id).time
-        #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
-        #         format(run_num, time.trial, time.pass_, time.time_step)
-        #     phase_string = 'Learning Phase - '
-
-        elif execution_phase == ContextFlags.CONTROL:
-            phase_string = create_phase_string('Control Phase')
-            time_string = create_time_string(time, 'TIME')
-
-        else:
-            raise CompositionError(
-                f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
-
-        label = f'\n{self.name}\n{phase_string}{time_string}\n'
-        G.attr(label=label)
-        G.attr(labelloc='b')
-        G.attr(fontname='Monaco')
-        G.attr(fontsize='14')
-        index = repr(self._component_animation_execution_count)
-        image_filename = '-'.join([repr(run_num), repr(trial_num), index])
-        image_file = self._animation_directory + '/' + image_filename + '.gif'
-        G.render(filename=image_filename,
-                 directory=self._animation_directory,
-                 cleanup=True,
-                 # view=True
+            animate = False
+            buffer_animate_state = self._animate
+        entry_execution_phase = self.parameters.context._get(execution_id).execution_phase
+        self.parameters.context._get(execution_id).execution_phase = ContextFlags.SIMULATION
+        self.run(inputs=inputs,
+                 execution_id=execution_id,
+                 runtime_params=runtime_params,
+                 num_trials=num_simulation_trials,
+                 animate=animate,
+                 context=context,
+                 bin_execute=execution_mode,
+                 skip_initialization=True,
                  )
-        # Append gif to self._animation
-        image = Image.open(image_file)
-        # TBI?
-        # if not self._save_images:
-        #     remove(image_file)
-        if not hasattr(self, '_animation'):
-            self._animation = [image]
-        else:
-            self._animation.append(image)
+        self.parameters.context._get(execution_id).execution_phase = entry_execution_phase
+        if buffer_animate_state:
+            self._animate = buffer_animate_state
+
+        # Store simulation results on "base" composition
+        if context.initialization_status != ContextFlags.INITIALIZING:
+            try:
+                self.parameters.simulation_results._get(base_execution_id).append(
+                    self.get_output_values(execution_id))
+            except AttributeError:
+                self.parameters.simulation_results._set([self.get_output_values(execution_id)], base_execution_id)
+
+        # Update input states in order to get correct value for "outcome" (from objective mech)
+        self.controller._update_input_states(execution_id, runtime_params, context.flags_string)
+        outcome = self.controller.input_state.parameters.value._get(execution_id)
+
+        # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
+        net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
+
+        return net_outcome
+
+
+    # ******************************************************************************************************************
+    #                                                SHOW_GRAPH
+    # ******************************************************************************************************************
 
     @tc.typecheck
     def show_graph(self,
@@ -4444,9 +4304,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    input_color='green',
                    output_color='red',
                    input_and_output_color='brown',
+                   # feedback_color='yellow',
                    controller_color='blue',
                    learning_color='orange',
                    composition_color='pink',
+                   control_projection_arrow='box',
+                   feedback_shape = 'septagon',
+                   cim_shape='square',
                    output_fmt:tc.enum('pdf','gv','jupyter','gif')='pdf',
                    execution_id=NotImplemented,
                    **kwargs):
@@ -4468,6 +4332,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            input_and_output_color='brown',    \
            controller_color='blue',           \
            composition_color='pink',          \
+           feedback_shape = 'septagon',       \
+           cim_shape='square',                \
            output_fmt='pdf',                  \
            execution_id=None)
 
@@ -4477,7 +4343,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
            (standard with PsyNeuLink pip install)
 
-        See `Visualizing a Composition <Visualizing_a_Composition>` for details and examples.
+        See `Visualizing a Composition <Composition_Visualization>` for details and examples.
 
         Arguments
         ---------
@@ -4580,14 +4446,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the display color of nodes that are both an `INPUT <NodeRole.INPUT>` and an `OUTPUT
             <NodeRole.OUTPUT>` Node in the Composition
 
-        input_and_output_color : keyword : default 'brown'
-            specifies the display color of nodes that represented nested Compositions.
+        COMMENT:
+        feedback_color : keyword : default 'yellow'
+            specifies the display color of nodes that are assigned the `NodeRole` `FEEDBACK_SENDER`.
+        COMMENT
+
+        controller_color : keyword : default 'blue'
+            specifies the color in which the controller components are displayed
+
+        learning_color : keyword : default 'orange'
+            specifies the color in which the learning components are displayed
+
+        composition_color : keyword : default 'brown'
+            specifies the display color of nodes that represent nested Compositions.
+
+        feedback_shape : keyword : default 'septagon'
+            specifies the display shape of nodes that are assigned the `NodeRole` `FEEDBACK_SENDER`.
 
         cim_shape : default 'square'
             specifies the display color input_CIM and output_CIM nodes
-
-        controller_color : keyword : default `blue`
-            specifies the color in which the controller components are displayed
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
@@ -4632,6 +4509,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 nested_comp_graph = rcvr.show_graph(**args)
                 nested_comp_graph.name = "cluster_"+rcvr.name
                 rcvr_label = rcvr.name
+                # if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
+                #     nested_comp_graph.attr(color=feedback_color)
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     nested_comp_graph.attr(color=input_and_output_color)
@@ -4658,15 +4537,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Implement rcvr node
             else:
 
-                # Set rcvr color and penwidth based on node type
+                # Set rcvr shape, color, and penwidth based on node type
                 rcvr_rank = 'same'
-                node_shape = mechanism_shape
+
+                # Feedback Node
+                if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
+                    node_shape = feedback_shape
+                else:
+                    node_shape = mechanism_shape
 
                 # Get condition if any associated with rcvr
                 if rcvr in self.scheduler_processing.conditions:
                     condition = self.scheduler_processing.conditions[rcvr]
                 else:
                     condition = None
+
+                # # Feedback Node
+                # if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
+                #     if rcvr in active_items:
+                #         if active_color is BOLD:
+                #             rcvr_color = feedback_color
+                #         else:
+                #             rcvr_color = active_color
+                #         rcvr_penwidth = str(bold_width + active_thicker_by)
+                #         self.active_item_rendered = True
+                #     else:
+                #         rcvr_color = feedback_color
+                #         rcvr_penwidth = str(bold_width)
 
                 # Input and Output Node
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
@@ -4741,7 +4638,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if show_node_structure and isinstance(rcvr, Mechanism):
                     g.node(rcvr_label,
-                           rcvr.show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
+                           rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
                            shape=struct_shape,
                            color=rcvr_color,
                            rank=rcvr_rank,
@@ -4830,7 +4727,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if show_node_structure:
                     g.node(cim_label,
-                           cim.show_structure(**node_struct_args, node_border=cim_penwidth, compact_cim=True),
+                           cim._show_structure(**node_struct_args, node_border=cim_penwidth, compact_cim=True),
                            shape=struct_shape,
                            color=cim_color,
                            rank=cim_rank,
@@ -4961,7 +4858,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             ctlr_label = self._get_graph_node_label(controller, show_dimensions)
             if show_node_structure:
                 g.node(ctlr_label,
-                       controller.show_structure(**node_struct_args, node_border=ctlr_width,
+                       controller._show_structure(**node_struct_args, node_border=ctlr_width,
                                                  condition=self.controller_condition),
                        shape=struct_shape,
                        color=ctlr_color,
@@ -5040,7 +4937,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         condition = None
                     g.node(objmech_label,
-                           objmech.show_structure(**node_struct_args, node_border=ctlr_width, condition=condition),
+                           objmech._show_structure(**node_struct_args, node_border=ctlr_width, condition=condition),
                            shape=struct_shape,
                            color=objmech_color,
                            penwidth=ctlr_width,
@@ -5155,7 +5052,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Implement node for Mechanism
                 if show_node_structure:
                     g.node(rcvr_label,
-                            rcvr.show_structure(**node_struct_args),
+                            rcvr._show_structure(**node_struct_args),
                             rank=learning_rank, color=rcvr_color, penwidth=rcvr_width)
                 else:
                     g.node(rcvr_label,
@@ -5229,12 +5126,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return True
 
         @tc.typecheck
-        def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None):
+        def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None, proj_arrow=None):
+
             proj_color = proj_color or default_node_color
+            proj_arrow = default_projection_arrow
+
             for sndr in senders:
 
                 # Set sndr info
-
                 sndr_label = self._get_graph_node_label(sndr, show_dimensions)
 
                 # Iterate through all Projections from all OutputStates of sndr
@@ -5306,12 +5205,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     continue
 
                             else:
+                                from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+                                if isinstance(proj, ControlProjection):
+                                    arrowhead=control_projection_arrow
+                                else:
+                                    arrowhead=proj_arrow
                                 if show_projection_labels:
                                     label = proc_mech_label
                                 else:
                                     label = ''
-                                g.edge(sndr_proj_label, proc_mech_rcvr_label, label=label,
-                                       color=proj_color, penwidth=proj_width)
+                                g.edge(sndr_proj_label, proc_mech_rcvr_label,
+                                       label=label,
+                                       color=proj_color,
+                                       penwidth=proj_width,
+                                       arrowhead=arrowhead)
 
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
@@ -5346,7 +5253,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.active_item_rendered = False
 
-        # Argument values used to call Mechanism.show_structure()
+        # Argument values used to call Mechanism._show_structure()
         if isinstance(show_node_structure, (list, tuple, set)):
             node_struct_args = {'composition': self,
                                 'show_roles': any(key in show_node_structure for key in {ROLES, ALL}),
@@ -5372,6 +5279,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_headers': show_headers,
                                 'output_fmt': 'struct'}
 
+        # DEFAULT ATTRIBUTES ----------------------------------------------------------------
+
         default_node_color = 'black'
         mechanism_shape = 'oval'
         learning_projection_shape = 'diamond'
@@ -5379,6 +5288,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         cim_shape = 'rectangle'
         composition_shape = 'rectangle'
         agent_rep_shape = 'egg'
+        default_projection_arrow = 'normal'
 
         bold_width = 3
         default_width = 1
@@ -5417,7 +5327,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
         if output_fmt != 'gv':
             self._analyze_graph()
-        processing_graph = self.scheduler_processing.visual_graph
+        processing_graph = self.graph_processing.dependency_dict
         rcvrs = list(processing_graph.keys())
 
         for r in rcvrs:
@@ -5435,21 +5345,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if show_learning:
             _assign_learning_components(G)
 
-        # Sort to put ORIGIN nodes first and controller and its objective_mechanism last
-        def get_index_of_node_in_G_body(node):
+        # Sort nodes for display
+        def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):
-                # Skip projections
-                if node.name in item and not '->' in item:
-                    return i
+                if node.name in item:
+                    if node_type in {MECHANISM, BOTH}:
+                        if not '->' in item:
+                            return i
+                    elif node_type in {PROJECTION, BOTH}:
+                        if '->' in item:
+                            return i
+                    else:
+                        assert False, f'PROGRAM ERROR: node_type not specified or illegal ({node_type})'
+
         for node in self.nodes:
             roles = self.get_roles_by_node(node)
+            # Put INPUT node(s) first
             if NodeRole.INPUT in roles:
-                i = get_index_of_node_in_G_body(node)
+                i = get_index_of_node_in_G_body(node, MECHANISM)
                 if i is not None:
                     G.body.insert(0,G.body.pop(i))
+            # Put OUTPUT node(s) last (except for ControlMechanisms)
+            if NodeRole.OUTPUT in roles:
+                i = get_index_of_node_in_G_body(node, MECHANISM)
+                if i is not None:
+                    G.body.insert(len(G.body),G.body.pop(i))
+            # Put ControlMechanism(s) last
+            if isinstance(node, ControlMechanism):
+                i = get_index_of_node_in_G_body(node, MECHANISM)
+                if i is not None:
+                    G.body.insert(len(G.body),G.body.pop(i))
+
+        for proj in self.projections:
+            # Put ControlProjection(s) last (along with ControlMechanis(s))
+            if isinstance(proj, ControlProjection):
+                i = get_index_of_node_in_G_body(node, PROJECTION)
+                if i is not None:
+                    G.body.insert(len(G.body),G.body.pop(i))
+
         if self.controller and show_controller:
-            i = get_index_of_node_in_G_body(self.controller)
+            i = get_index_of_node_in_G_body(self.controller, MECHANISM)
             G.body.insert(len(G.body),G.body.pop(i))
 
         # GENERATE OUTPUT ---------------------------------------------------------------------
@@ -5470,6 +5406,825 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         elif output_fmt == 'gv':
             return G
+
+    @tc.typecheck
+    def _show_structure(self,
+                       # direction = 'BT',
+                       show_functions:bool=False,
+                       show_values:bool=False,
+                       use_labels:bool=False,
+                       show_headers:bool=False,
+                       show_roles:bool=False,
+                       show_conditions:bool=False,
+                       system=None,
+                       composition=None,
+                       condition:tc.optional(Condition)=None,
+                       compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
+                       output_fmt:tc.enum('pdf','struct')='pdf'
+                       ):
+        """Generate a detailed display of a the structure of a Mechanism.
+
+        .. note::
+           This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
+           (standard with PsyNeuLink pip install)
+
+        Displays the structure of a Mechanism using the GraphViz `record
+        <http://graphviz.readthedocs.io/en/stable/examples.html#structs-revisited-py>`_ shape.  This method is called
+        by `System.show_graph` if its **show_mechanism_structure** argument is specified as `True` when it is called.
+
+        Arguments
+        ---------
+
+        show_functions : bool : default False
+            show the `function <Component.function>` of the Mechanism and each of its States.
+
+        show_mech_function_params : bool : default False
+            show the parameters of the Mechanism's `function <Component.function>` if **show_functions** is True.
+
+        show_state_function_params : bool : default False
+            show parameters for the `function <Component.function>` of the Mechanism's States if **show_functions** is
+            True).
+
+        show_values : bool : default False
+            show the `value <Component.value>` of the Mechanism and each of its States (prefixed by "=").
+
+        use_labels : bool : default False
+            use labels for values if **show_values** is `True`; labels must be specified in the `input_labels_dict
+            <Mechanism.input_labels_dict>` (for InputState values) and `output_labels_dict
+            <Mechanism.output_labels_dict>` (for OutputState values); otherwise it is ignored.
+
+        show_headers : bool : default False
+            show the Mechanism, InputState, ParameterState and OutputState headers.
+
+        show_roles : bool : default False
+            show the `roles <Composition.NodeRoles>` of each Mechanism in the `Composition`.
+
+        show_conditions : bool : default False
+            show the `conditions <Condition>` used by `Composition` to determine whether/when to execute each Mechanism.
+
+        system : System : default None
+            specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
+            if this is not specified, the **show_roles** argument is ignored.
+
+        composition : Composition : default None
+            specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
+            if this is not specified, the **show_roles** argument is ignored.
+
+        compact_cim : *INPUT* or *OUTUPT* : default None
+            specifies whether to suppress InputState fields for input_CIM and OutputState fields for output_CIM.
+
+        output_fmt : keyword : default 'pdf'
+            'pdf': generate and open a pdf with the visualization;\n
+            'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
+            'struct': return a string that specifies the structure of a mechanism,
+            for use in a GraphViz node specification.
+
+        """
+        if composition:
+            system = composition
+        open_bracket = r'{'
+        pipe = r' | '
+        close_bracket = r'}'
+        mechanism_header = r'COMPOSITION:\n'
+        input_states_header = r'______CIMINPUTSTATES______\n' \
+                              r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ' \
+                              r'\ \ \ \ \ \ \ \ \ \ \\'
+        output_states_header = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ______/' \
+                               r'\nCIMOUTPUTSTATES'
+
+        def mech_string(mech):
+            """Return string with name of mechanism possibly with function and/or value
+            Inclusion of role, function and/or value is determined by arguments of call to _show_structure
+            """
+            if show_headers:
+                mech_header = mechanism_header
+            else:
+                mech_header = ''
+            mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
+            mech_role = ''
+            if system and show_roles:
+                try:
+                    mech_role = r'\n[{}]'.format(self.systems[system])
+                except KeyError:
+                    # # mech_role = r'\n[{}]'.format(self.system)
+                    # mech_role = r'\n[CONTROLLER]'
+                    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import \
+                        ControlMechanism
+                    from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
+                        ObjectiveMechanism
+                    if isinstance(mech, ControlMechanism) and hasattr(mech, 'system'):
+                        mech_role = r'\n[CONTROLLER]'
+                    elif isinstance(mech, ObjectiveMechanism) and hasattr(mech, '_role'):
+                        mech_role = r'\n[{}]'.format(mech._role)
+                    else:
+                        mech_role = ""
+
+            mech_function = ''
+            if show_functions:
+                mech_function = r'\n({})'.format(mech.function.__class__.__name__)
+            mech_value = ''
+            if show_values:
+                mech_value = r'\n={}'.format(mech.value)
+            return mech_name + mech_role + mech_function + mech_value
+
+        from psyneulink.core.globals.utilities import ContentAddressableList
+        def states_string(state_list: ContentAddressableList,
+                          state_type,
+                          include_function: bool = False,
+                          include_value: bool = False,
+                          use_label: bool = False):
+            """Return string with name of states in ContentAddressableList with functions and/or values as specified"""
+            states = open_bracket
+            for i, state in enumerate(state_list):
+                if i:
+                    states += pipe
+                function = ''
+                if include_function:
+                    function = r'\n({})'.format(state.function.__class__.__name__)
+                value = ''
+                if include_value:
+                    if use_label:
+                        value = r'\n={}'.format(state.label)
+                    else:
+                        value = r'\n={}'.format(state.value)
+                states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,
+                                                        state.name,
+                                                        function,
+                                                        value)
+            states += close_bracket
+            return states
+
+        # Construct Mechanism specification
+        mech = mech_string(self)
+
+        # Construct InputStates specification
+        if len(self.input_states) and compact_cim is not INPUT:
+            if show_headers:
+                input_states = input_states_header + pipe + states_string(self.input_states,
+                                                                          InputState,
+                                                                          include_function=show_functions,
+                                                                          include_value=show_values,
+                                                                          use_label=use_labels)
+            else:
+                input_states = states_string(self.input_states,
+                                             InputState,
+                                             include_function=show_functions,
+                                             include_value=show_values,
+                                             use_label=use_labels)
+            input_states = pipe + input_states
+        else:
+            input_states = ''
+
+        # Construct OutputStates specification
+        if len(self.output_states) and compact_cim is not OUTPUT:
+            if show_headers:
+                output_states = states_string(self.output_states,
+                                              OutputState,
+                                              include_function=show_functions,
+                                              include_value=show_values,
+                                              use_label=use_labels) + pipe + output_states_header
+            else:
+                output_states = states_string(self.output_states,
+                                              OutputState,
+                                              include_function=show_functions,
+                                              include_value=show_values,
+                                              use_label=use_labels)
+
+            output_states = output_states + pipe
+        else:
+            output_states = ''
+
+        m_node_struct = open_bracket + \
+                        output_states + \
+                        open_bracket + mech + close_bracket + \
+                        input_states + \
+                        close_bracket
+
+        if output_fmt == 'struct':
+            # return m.node
+            return m_node_struct
+
+        # Make node
+        import graphviz as gv
+        m = gv.Digraph(  # 'mechanisms',
+            # filename='mechanisms_revisited.gv',
+            node_attr={'shape': 'record'},
+        )
+        m.node(self.name, m_node_struct, shape='record')
+
+        if output_fmt == 'pdf':
+            m.view(self.name.replace(" ", "-"), cleanup=True)
+
+        elif output_fmt == 'jupyter':
+            return m
+
+    def _get_graph_node_label(self, item, show_dimensions=None):
+        if not isinstance(item, (Mechanism, Composition, Projection)):
+            raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
+        # TBI Show Dimensions
+        name = item.name
+
+        if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
+            input_str = "in ({})".format(",".join(str(input_state.socket_width)
+                                                  for input_state in item.input_states))
+            output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
+                                                    for output_state in item.output_states))
+            return "{}\n{}\n{}".format(output_str, name, input_str)
+        if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
+            # MappingProjections use matrix
+            if isinstance(item, MappingProjection):
+                value = np.array(item.matrix)
+                dim_string = "({})".format("x".join([str(i) for i in value.shape]))
+                return "{}\n{}".format(item.name, dim_string)
+            # ModulatoryProjections use value
+            else:
+                value = np.array(item.value)
+                dim_string = "({})".format(len(value))
+                return "{}\n{}".format(item.name, dim_string)
+
+        if isinstance(item, CompositionInterfaceMechanism):
+            name = name.replace('Input_CIM','INPUT')
+            name = name.replace('Output_CIM', 'OUTPUT')
+
+        return name
+
+    def _set_up_animation(self, execution_id):
+
+        self._component_animation_execution_count = None
+
+        if isinstance(self._animate, dict):
+            # Assign directory for animation files
+            from psyneulink._version import root_dir
+            default_dir = root_dir + '/../show_graph output/GIFs/' + self.name # + " gifs"
+            # try:
+            #     rmtree(self._animate_directory)
+            # except:
+            #     pass
+            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
+            self._image_duration = self._animate.pop(DURATION, 0.75)
+            self._animate_num_runs = self._animate.pop(NUM_RUNS, 1)
+            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
+            self._animate_simulations = self._animate.pop(SIMULATIONS, False)
+            self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
+            self._animation_directory = self._animate.pop(MOVIE_DIR, default_dir)
+            self._save_images = self._animate.pop(SAVE_IMAGES, False)
+            self._show_animation = self._animate.pop(SHOW, False)
+            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
+                raise SystemError(f"{repr(UNIT)} entry of {repr('animate')} argument for {self.name} method "
+                                  f"of {repr('run')} ({self._animate_unit}) "
+                                  f"must be {repr(COMPONENT)} or {repr(EXECUTION_SET)}.")
+            if not isinstance(self._image_duration, (int, float)):
+                raise SystemError(f"{repr(DURATION)} entry of {repr('animate')} argument for {repr('run')} method of "
+                                  f"{self.name} ({self._image_duration}) must be an int or a float.")
+            if not isinstance(self._animate_num_runs, int):
+                raise SystemError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                  f"method of {self.name} ({self._animate_num_runs}) must an integer.")
+            if not isinstance(self._animate_num_trials, int):
+                raise SystemError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                  f"method of {self.name} ({self._animate_num_trials}) must an integer.")
+            if not isinstance(self._animate_simulations, bool):
+                raise SystemError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                  f"method of {self.name} ({self._animate_num_trials}) must a boolean.")
+            if not isinstance(self._animation_directory, str):
+                raise SystemError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
+                                  f"method of {self.name} ({self._animation_directory}) must be a string.")
+            if not isinstance(self._movie_filename, str):
+                raise SystemError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
+                                  f"method of {self.name} ({self._movie_filename}) must be a string.")
+            if not isinstance(self._save_images, bool):
+                raise SystemError(f"{repr(SAVE_IMAGES)} entry of {repr('animate')} argument for {repr('run')} method "
+                                  f"of {self.name} ({self._save_images}) must be a boolean")
+            if not isinstance(self._show_animation, bool):
+                raise SystemError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
+                                  f"method of {self.name} ({self._show_animation}) must be a boolean.")
+        elif self._animate:
+            # self._animate should now be False or a dict
+            raise SystemError("{} argument for {} method of {} ({}) must be a boolean or "
+                              "a dictionary of argument specifications for its {} method".
+                              format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
+
+    def _animate_execution(self, active_items, execution_id):
+        if self._component_animation_execution_count is None:
+            self._component_animation_execution_count = 0
+        else:
+            self._component_animation_execution_count += 1
+        self.show_graph(active_items=active_items,
+                        **self._animate,
+                        output_fmt='gif',
+                        execution_id=execution_id
+                        )
+
+    def _generate_gifs(self, G, active_items, execution_id):
+
+        def create_phase_string(phase):
+            return f'%16s' % phase + ' - '
+
+        def create_time_string(time, spec):
+            if spec == 'TIME':
+                r = time.run
+                t = time.trial
+                p = time.pass_
+                ts = time.time_step
+            else:
+                r = t = p = ts = '__'
+            return f"Time(run: %2s, " % r + f"trial: %2s, " % t + f"pass: %2s, " % p + f"time_step: %2s)" % ts
+
+        G.format = 'gif'
+        execution_phase = self.parameters.context.get(execution_id).execution_phase
+        time = self.scheduler_processing.get_clock(execution_id).time
+        run_num = time.run
+        trial_num = time.trial
+
+        if INITIAL_FRAME in active_items:
+            phase_string = create_phase_string('Initializing')
+            time_string = create_time_string(time, 'BLANKS')
+
+        elif execution_phase == ContextFlags.PROCESSING:
+            phase_string = create_phase_string('Processing Phase')
+            time_string = create_time_string(time, 'TIME')
+        # elif execution_phase == ContextFlags.LEARNING:
+        #     time = self.scheduler_learning.get_clock(execution_id).time
+        #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
+        #         format(run_num, time.trial, time.pass_, time.time_step)
+        #     phase_string = 'Learning Phase - '
+
+        elif execution_phase == ContextFlags.CONTROL:
+            phase_string = create_phase_string('Control Phase')
+            time_string = create_time_string(time, 'TIME')
+
+        else:
+            raise CompositionError(
+                f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
+
+        label = f'\n{self.name}\n{phase_string}{time_string}\n'
+        G.attr(label=label)
+        G.attr(labelloc='b')
+        G.attr(fontname='Monaco')
+        G.attr(fontsize='14')
+        index = repr(self._component_animation_execution_count)
+        image_filename = '-'.join([repr(run_num), repr(trial_num), index])
+        image_file = self._animation_directory + '/' + image_filename + '.gif'
+        G.render(filename=image_filename,
+                 directory=self._animation_directory,
+                 cleanup=True,
+                 # view=True
+                 )
+        # Append gif to self._animation
+        image = Image.open(image_file)
+        # TBI?
+        # if not self._save_images:
+        #     remove(image_file)
+        if not hasattr(self, '_animation'):
+            self._animation = [image]
+        else:
+            self._animation.append(image)
+
+
+    # ******************************************************************************************************************
+    #                                           EXECUTION
+    # ******************************************************************************************************************
+
+    def run(
+            self,
+            inputs=None,
+            scheduler_processing=None,
+            termination_processing=None,
+            num_trials=None,
+            call_before_time_step=None,
+            call_after_time_step=None,
+            call_before_pass=None,
+            call_after_pass=None,
+            call_before_trial=None,
+            call_after_trial=None,
+            clamp_input=SOFT_CLAMP,
+            bin_execute=False,
+            log=False,
+            initial_values=None,
+            reinitialize_values=None,
+            runtime_params=None,
+            skip_initialization=False,
+            animate=False,
+            execution_id=None,
+            base_execution_id=None,
+            context=None):
+        """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
+        conditions are met.  See `Run` for details of formatting input specifications. See `Run` for details of
+        formatting input specifications. Use **animate** to generate a gif of the execution sequence.
+
+            Arguments
+            ---------
+
+            inputs: { `Mechanism <Mechanism>` : list } or { `Composition <Composition>` : list }
+                a dictionary containing a key-value pair for each Node in the composition that receives inputs from
+                the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
+                list corresponds to a certain `TRIAL`.
+
+            scheduler_processing : Scheduler
+                the scheduler object that owns the conditions that will instruct the execution of the Composition.
+                If not specified, the Composition will use its automatically generated scheduler.
+
+            execution_id
+                execution_id will be set to self.default_execution_id if unspecified
+
+            base_execution_id
+                the execution_id corresponding to the execution context from which this execution will be initialized,
+                if values currently do not exist for **execution_id**
+
+            num_trials : int
+                typically, the composition will infer the number of trials from the length of its input specification.
+                To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
+                or use default inputs, and select a number of trials with num_trials.
+
+            call_before_time_step : callable
+                will be called before each `TIME_STEP` is executed.
+
+            call_after_time_step : callable
+                will be called after each `TIME_STEP` is executed.
+
+            call_before_pass : callable
+                will be called before each `PASS` is executed.
+
+            call_after_pass : callable
+                will be called after each `PASS` is executed.
+
+            call_before_trial : callable
+                will be called before each `TRIAL` is executed.
+
+            call_after_trial : callable
+                will be called after each `TRIAL` is executed.
+
+            initial_values : Dict[Node: Node Value]
+                sets the values of nodes before the start of the run. This is useful in cases where a node's value is
+                used before that node executes for the first time (usually due to recurrence or control).
+
+            runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]]
+                nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
+                `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
+                during this `Run` when the specified `Condition` is met.
+
+                Outer dictionary:
+                    - *key* - Node
+                    - *value* - Runtime Parameter Specification Dictionary
+
+                Runtime Parameter Specification Dictionary:
+                    - *key* - keyword corresponding to a parameter of the Node
+                    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
+                      a `Condition`
+
+                See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+
+            animate : dict or bool : False
+                specifies use of the `show_graph <Composition.show_graph>` method to generate a gif movie showing the
+                sequence of Components executed in a run.  A dict can be specified containing options to pass to
+                the `show_graph <Composition.show_graph>` method;  each key must be a legal argument for the `show_graph
+                <Composition.show_graph>` method, and its value a specification for that argument.  The entries listed
+                below can also be included in the dict to specify parameters of the animation.  If the **animate**
+                argument is specified simply as `True`, defaults are used for all arguments of `show_graph
+                <Composition.show_graph>` and the options below:
+
+                * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components
+                  to treat as active in each call to `show_graph <Composition.show_graph>`. *COMPONENT* generates an
+                  image for the execution of each Component.  *EXECUTION_SET* generates an image for each `execution_set
+                  <Component.execution_sets>`, showing all of the Components in that set as active.
+
+                * *DURATION*: float (default=0.75) -- specifies the duration (in seconds) of each image in the movie.
+
+                * *NUM_RUNS*: int (default=1) -- specifies the number of runs to animate;  by default, this is 1.
+                  If the number specified is less than the total number of runs executed, only the number specified
+                  are animated; if it is greater than the number of runs being executed, only the number being run are
+                  animated.
+
+                * *NUM_TRIALS*: int (default=1) -- specifies the number of trials to animate;  by default, this is 1.
+                  If the number specified is less than the total number of trials being run, only the number specified
+                  are animated; if it is greater than the number of trials being run, only the number being run are
+                  animated.
+
+                * *MOVIE_DIR*: str (default=project root dir) -- specifies the directdory to be used for the movie file;
+                  by default a subdirectory of <root_dir>/show_graph_OUTPUT/GIFS is created using the `name
+                  <Composition.name>` of the  `Composition`, and the gif files are stored there.
+
+                * *MOVIE_NAME*: str (default=\\ `name <System.name>` + 'movie') -- specifies the name to be used for
+                  the movie file; it is automatically appended with '.gif'.
+
+                * *SAVE_IMAGES*: bool (default=\\ `False`\\ ) -- specifies whether to save each of the images used to
+                  construct the animation in separate gif files, in addition to the file containing the animation.
+
+                * *SHOW*: bool (default=\\ `False`\\ ) -- specifies whether to show the animation after it is
+                  constructed, using the OS's default viewer.
+
+            log : bool, LogCondition
+                Sets the `log_condition <Parameter.log_condition>` for every primary `node <Composition.nodes>` and
+                `projection <Composition.projections>` in this Composition, if it is not already set.
+
+                .. note::
+                   as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
+                   correspond to the `EXECUTION LogCondition <LogCondition.EXECUTION>`.
+
+        COMMENT:
+        REPLACE WITH EVC/OCM EXAMPLE
+        Examples
+        --------
+
+        This figure shows an animation of the Composition in the XXX example script, with
+        the show_graph **show_learning** argument specified as *ALL*:
+
+        .. _Composition_XXX_movie:
+
+        .. figure:: _static/XXX_movie.gif
+           :alt: Animation of Composition in XXX example script
+           :scale: 50 %
+
+        This figure shows an animation of the Composition in the XXX example script, with
+        the show_graph **show_control** argument specified as *ALL* and *UNIT* specified as *EXECUTION_SET*:
+
+        .. _Composition_XXX_movie:
+
+        .. figure:: _static/XXX_movie.gif
+           :alt: Animation of Composition in XXX example script
+           :scale: 150 %
+        COMMENT
+
+        Returns
+        ---------
+
+        output value of the final Node executed in the composition : various
+        """
+
+        if scheduler_processing is None:
+            scheduler_processing = self.scheduler_processing
+
+        if termination_processing is None:
+            termination_processing = self.termination_processing
+        else:
+            new_conds = self.termination_processing.copy()
+            new_conds.update(termination_processing)
+            termination_processing = new_conds
+
+        if initial_values is not None:
+            for node in initial_values:
+                if node not in self.nodes:
+                    raise CompositionError("{} (entry in initial_values arg) is not a node in \'{}\'".
+                                           format(node.name, self.name))
+
+        if reinitialize_values is None:
+            reinitialize_values = {}
+
+        for node in reinitialize_values:
+            node.reinitialize(*reinitialize_values[node], execution_context=execution_id)
+
+        # MODIFIED 8/27/19 OLD:
+        # try:
+        #     if self.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
+        #         self._analyze_graph()
+        # except AttributeError:
+        #     # if context is None, it has not been created for this execution_id yet, so it is not
+        #     # in a simulation
+        #     self._analyze_graph()
+        # MODIFIED 8/27/19 NEW:
+        # FIX: MODIFIED FEEDBACK -
+        #      THIS IS NEEDED HERE (AND NO LATER) TO WORK WITH test_3_mechanisms_2_origins_1_additive_control_1_terminal
+        # If a scheduler was passed in, first call _analyze_graph with default scheduler
+        if scheduler_processing is not self.scheduler_processing:
+            self._analyze_graph()
+        # Then call _analyze graph with scheduler actually being used (passed in or default)
+        try:
+            if self.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
+                self._analyze_graph(scheduler_processing)
+        except AttributeError:
+            # if context is None, it has not been created for this execution_id yet,
+            # so it is not in a simulation
+            self._analyze_graph(scheduler_processing)
+        # MODIFIED 8/27/19 END
+
+        # set auto logging if it's not already set, and if log argument is True
+        if log:
+            for item in self.nodes + self.projections:
+                if not isinstance(item, CompositionInterfaceMechanism):
+                    for param in item.parameters:
+                        if param.loggable and param.log_condition is LogCondition.OFF:
+                            param.log_condition = LogCondition.EXECUTION
+
+        # Set animation attributes
+        if animate is True:
+            animate = {}
+        self._animate = animate
+        if self._animate is not False:
+            self._set_up_animation(execution_id)
+
+        # SET UP EXECUTION -----------------------------------------------
+
+        results = []
+
+        execution_id = self._assign_execution_ids(execution_id)
+
+        scheduler_processing._init_counts(execution_id=execution_id)
+
+        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+
+        # if there is only one INPUT Node, allow inputs to be specified in a list
+        # if there is only one INPUT Node, allow inputs to be specified in a list
+        if isinstance(inputs, (list, np.ndarray)):
+            if len(input_nodes) == 1:
+                inputs = {next(iter(input_nodes)): inputs}
+            else:
+                raise CompositionError(
+                    f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
+                    f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
+        elif callable(inputs):
+            num_inputs_sets = 1
+            autodiff_stimuli = {}
+        elif not isinstance(inputs, dict):
+            if len(input_nodes) == 1:
+                raise CompositionError(
+                    "Inputs to {} must be specified in a list or in a dictionary "
+                    "with the INPUT node ({}) as its only key".
+                        format(self.name, next(iter(input_nodes)).name))
+            else:
+                input_node_names = ", ".join([i.name for i in input_nodes])
+                raise CompositionError(
+                    "Inputs to {} must be specified in a dictionary "
+                    "with its {} INPUT nodes ({}) as the keys and their inputs as the values".
+                    format(self.name, len(input_nodes), input_node_names))
+        if not callable(inputs):
+            # Currently, no validation if 'inputs' arg is a function
+            ad_tmp = {}
+            if hasattr(self,'learning_enabled') and self.learning_enabled is True:
+                ad_tmp = inputs
+                inputs = inputs["inputs"]
+            inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs,bin_execute=bin_execute)
+            #HACK: basically checks to see if we retrieved info from the _adjust_stimulus_dict call, and replaces it with our own parsed version if learning is enabled
+            if hasattr(self,'learning_enabled') and self.learning_enabled is True:
+                autodiff_stimuli = ad_tmp
+
+        if num_trials is not None:
+            num_trials = num_trials
+        else:
+            num_trials = num_inputs_sets
+
+        scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
+
+        execution_context = self.parameters.context._get(execution_id)
+
+        # KDM 3/29/19: run the following not only during LLVM Run compilation, due to bug where TimeScale.RUN
+        # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
+        # called repeatedly (this init is repeated in Composition.execute)
+        # initialize from base context but don't overwrite any values already set for this execution_id
+        if (not skip_initialization
+            and (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION)):
+            self._initialize_from_context(execution_id, base_execution_id, override=False)
+            self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
+
+        is_simulation = (execution_context is not None and
+                         execution_context.execution_phase == ContextFlags.SIMULATION)
+        if (bin_execute is True or str(bin_execute).endswith('Run')):
+            # There's no mode to run simulations.
+            # Simulations are run as part of the controller node wrapper.
+            assert not is_simulation
+            try:
+                if bin_execute is True or bin_execute.startswith('LLVM'):
+                    _comp_ex = pnlvm.CompExecution(self, [execution_id])
+                    results += _comp_ex.run(inputs, num_trials, num_inputs_sets,autodiff_stimuli=autodiff_stimuli)
+                elif bin_execute.startswith('PTX'):
+                    self.__ptx_initialize(execution_id)
+                    EX = self._compilation_data.ptx_execution._get(execution_id)
+                    results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
+
+                full_results = self.parameters.results._get(execution_id)
+                if full_results is None:
+                    full_results = results
+                else:
+                    full_results.extend(results)
+
+                self.parameters.results._set(full_results, execution_id)
+                # KAM added the [-1] index after changing Composition run()
+                # behavior to return only last trial of run (11/7/18)
+                self.most_recent_execution_id = execution_id
+                return full_results[-1]
+
+            except Exception as e:
+                if bin_execute is not True:
+                    raise e
+
+                print("WARNING: Failed to Run execution `{}': {}".format(
+                      self.name, str(e)))
+
+        # Reset gym forager environment for the current trial
+        if self.env:
+            trial_output = np.atleast_2d(self.env.reset())
+
+        # Loop over the length of the list of inputs - each input represents a TRIAL
+        for trial_num in range(num_trials):
+
+            # Execute call before trial "hook" (user defined function)
+            if call_before_trial:
+                call_with_pruned_args(call_before_trial, execution_context=execution_id)
+
+            if termination_processing[TimeScale.RUN].is_satisfied(
+                scheduler=scheduler_processing,
+                execution_context=execution_id
+            ):
+                break
+
+            # PROCESSING ------------------------------------------------------------------------
+            # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
+            if callable(inputs):
+                # If 'inputs' argument is a function, call the function here with results from last trial
+                execution_stimuli = inputs(self.env, trial_output)
+                if not isinstance(execution_stimuli, dict):
+                    return trial_output
+            else:
+                execution_stimuli = {}
+                stimulus_index = trial_num % num_inputs_sets
+                for node in inputs:
+                    if len(inputs[node]) == 1:
+                        execution_stimuli[node] = inputs[node][0]
+                        continue
+                    execution_stimuli[node] = inputs[node][stimulus_index]
+
+            execution_autodiff_stimuli = {}
+            for node in autodiff_stimuli:
+                if isinstance(autodiff_stimuli[node], list):
+                    execution_autodiff_stimuli[node] = autodiff_stimuli[node][stimulus_index]
+                else:
+                    execution_autodiff_stimuli[node] = autodiff_stimuli[node]
+
+            for node in self.nodes:
+                if hasattr(node, "reinitialize_when") and node.parameters.has_initializers._get(execution_id):
+                    if node.reinitialize_when.is_satisfied(scheduler=self.scheduler_processing,
+                                                           execution_context=execution_id):
+                        node.reinitialize(None, execution_context=execution_id)
+
+            # execute processing
+            # pass along the stimuli for this trial
+            trial_output = self.execute(inputs=execution_stimuli,
+                                        autodiff_stimuli=execution_autodiff_stimuli,
+                                        scheduler_processing=scheduler_processing,
+                                        termination_processing=termination_processing,
+                                        call_before_time_step=call_before_time_step,
+                                        call_before_pass=call_before_pass,
+                                        call_after_time_step=call_after_time_step,
+                                        call_after_pass=call_after_pass,
+                                        execution_id=execution_id,
+                                        base_execution_id=base_execution_id,
+                                        clamp_input=clamp_input,
+                                        runtime_params=runtime_params,
+                                        skip_initialization=True,
+                                        bin_execute=bin_execute)
+
+            # ---------------------------------------------------------------------------------
+            # store the result of this execute in case it will be the final result
+
+            # object.results.append(result)
+            if isinstance(trial_output, collections.abc.Iterable):
+                result_copy = trial_output.copy()
+            else:
+                result_copy = trial_output
+
+            if self.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
+                results.append(result_copy)
+
+                if not self.parameters.retain_old_simulation_data._get():
+                    if self.controller is not None:
+                        # if any other special parameters store simulation info that needs to be cleaned up
+                        # consider dedicating a function to it here
+                        # this will not be caught above because it resides in the base context (execution_id)
+                        if not self.parameters.simulation_results.retain_old_simulation_data:
+                            self.parameters.simulation_results._get(execution_id).clear()
+
+                        if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
+                            self.controller.parameters.simulation_ids._get(execution_id).clear()
+
+            if call_after_trial:
+                call_with_pruned_args(call_after_trial, execution_context=execution_id)
+
+        scheduler_processing.clocks[execution_id]._increment_time(TimeScale.RUN)
+
+        full_results = self.parameters.results._get(execution_id)
+        if full_results is None:
+            full_results = results
+        else:
+            full_results.extend(results)
+
+        self.parameters.results._set(full_results, execution_id)
+
+        self.most_recent_execution_id = execution_id
+
+        if self._animate is not False:
+            # Save list of gifs in self._animation as movie file
+            movie_path = self._animation_directory + '/' + self._movie_filename
+            self._animation[0].save(fp=movie_path,
+                                    format='GIF',
+                                    save_all=True,
+                                    append_images=self._animation[1:],
+                                    duration=self._image_duration*1000,
+                                    loop=0)
+            # print(f'\nSaved movie for {self.name} in {self._animation_directory}/{self._movie_filename}')
+            print(f"\nSaved movie for '{self.name}' in '{self._movie_filename}'")
+            if self._show_animation:
+                movie = Image.open(movie_path)
+                movie.show()
+
+        return trial_output
 
     def execute(
             self,
@@ -5728,22 +6483,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if bin_execute:
                     _comp_ex.execute_node(self.controller)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     entry_execution_phase = execution_context.execution_phase
                     execution_context.execution_phase = ContextFlags.CONTROL
-                # MODIFIED 6/13/19 END
 
                 # Animate controller (before execution)
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, execution_id)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     execution_context.execution_phase = entry_execution_phase
-                # MODIFIED 6/13/19 END
 
         # EXECUTE (each execution_set) *********************************************************************************
 
@@ -5875,7 +6626,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if node is not self.controller:
                             if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
                                 for state in node.input_states:
-                                    state.update(execution_id=execution_id,
+                                    state._update(execution_id=execution_id,
                                                  context=ContextFlags.COMPOSITION)
                             node.execute(
                                 execution_id=execution_id,
@@ -5999,7 +6750,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projection.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
                     projection.parameters.context._get(execution_id).string = \
                         f"Updating {ParameterState.__name__} for {projection.name} in {self.name}"
-                    matrix_parameter_state.update(execution_id=execution_id,
+                    matrix_parameter_state._update(execution_id=execution_id,
                                                                 context=ContextFlags.COMPOSITION)
                     projection.parameters.context._get(execution_id).execution_phase = execution_phase_buffer
 
@@ -6045,22 +6796,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _comp_ex.freeze_values()
                     _comp_ex.execute_node(self.controller)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: NEEDED TO ANIMATE CONTROL; REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     entry_execution_phase = execution_context.execution_phase
                     execution_context.execution_phase = ContextFlags.CONTROL
-                # MODIFIED 6/13/19 END
 
                 # Animate controller (after execution)
                 if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, execution_id)
 
-                # MODIFIED 6/13/19 NEW: [JDC]
                 # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                 if execution_context:
                     execution_context.execution_phase = entry_execution_phase
-                # MODIFIED 6/13/19 END
 
         execution_scheduler.clocks[execution_id]._increment_time(TimeScale.TRIAL)
 
@@ -6088,437 +6835,274 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for i in range(self.stateful_nodes):
             self.stateful_nodes[i].reinitialize(values[i], execution_context=execution_context)
 
-    def run(
-            self,
-            inputs=None,
-            scheduler_processing=None,
-            termination_processing=None,
-            num_trials=None,
-            call_before_time_step=None,
-            call_after_time_step=None,
-            call_before_pass=None,
-            call_after_pass=None,
-            call_before_trial=None,
-            call_after_trial=None,
-            clamp_input=SOFT_CLAMP,
-            bin_execute=False,
-            log=False,
-            initial_values=None,
-            reinitialize_values=None,
-            runtime_params=None,
-            skip_initialization=False,
-            animate=False,
-            execution_id=None,
-            base_execution_id=None,
-            context=None):
-        """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
-        conditions are met.  See `Run` for details of formatting input specifications. See `Run` for details of
-        formatting input specifications. Use **animate** to generate a gif of the execution sequence.
+    def disable_all_history(self):
+        """
+            When run, disables history tracking for all Parameters of all Components used in this Composition
+        """
+        self._set_all_parameter_properties_recursively(history_max_length=0)
 
-            Arguments
-            ---------
+    def _get_processing_condition_set(self, node):
+        dep_group = []
+        for group in self.scheduler_processing.consideration_queue:
+            if node in group:
+                break
+            dep_group = group
 
-            inputs: { `Mechanism <Mechanism>` : list } or { `Composition <Composition>` : list }
-                a dictionary containing a key-value pair for each Node in the composition that receives inputs from
-                the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
-                list corresponds to a certain `TRIAL`.
+        # NOTE: This is not ideal we don't need to depend on
+        # the entire previous group. Only our dependencies
+        cond = [EveryNCalls(dep, 1) for dep in dep_group]
+        if node not in self.scheduler_processing.conditions:
+            cond.append(Always())
+        else:
+            node_conds = self.scheduler_processing.conditions[node]
+            cond.append(node_conds)
 
-            scheduler_processing : Scheduler
-                the scheduler object that owns the conditions that will instruct the execution of the Composition.
-                If not specified, the Composition will use its automatically generated scheduler.
+        return All(*cond)
 
-            execution_id
-                execution_id will be set to self.default_execution_id if unspecified
+    def _input_matches_variable(self, input_value, var):
+        # input_value states are uniform
+        if np.shape(np.atleast_2d(input_value)) == np.shape(var):
+            return "homogeneous"
+        # input_value states have different lengths
+        elif len(np.shape(var)) == 1 and isinstance(var[0], (list, np.ndarray)):
+            for i in range(len(input_value)):
+                if len(input_value[i]) != len(var[i]):
+                    return False
+            return "heterogeneous"
+        return False
 
-            base_execution_id
-                the execution_id corresponding to the execution context from which this execution will be initialized,
-                if values currently do not exist for **execution_id**
+    def _adjust_stimulus_dict(self, stimuli,bin_execute=False):
 
-            num_trials : int
-                typically, the composition will infer the number of trials from the length of its input specification.
-                To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
-                or use default inputs, and select a number of trials with num_trials.
+        autodiff_stimuli = {}
+        all_stimuli_keys = list(stimuli.keys())
+        for node in all_stimuli_keys:
+            if hasattr(node, "pytorch_representation"):
+                if node.learning_enabled:
+                    autodiff_stimuli[node] = stimuli[node]
+                    del stimuli[node]
 
-            call_before_time_step : callable
-                will be called before each `TIME_STEP` is executed.
+        # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
+        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+        for node in stimuli.keys():
+            if not node in input_nodes:
+                if not isinstance(node, (Mechanism, Composition)):
+                    raise CompositionError(f'{node} in "inputs" dict for {self.name} is not a '
+                                           f'{Mechanism.__name__} or {Composition.__name__}.')
+                else:
+                    raise CompositionError(f"{node.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
 
-            call_after_time_step : callable
-                will be called after each `TIME_STEP` is executed.
+        # STEP 1B: Check that all of the INPUT nodes are represented - if not, use default_external_input_values
+        for node in input_nodes:
+            if not node in stimuli:
+                stimuli[node] = node.default_external_input_values
 
-            call_before_pass : callable
-                will be called before each `PASS` is executed.
+        # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
 
-            call_after_pass : callable
-                will be called after each `PASS` is executed.
+        # (1) Replace any user provided convenience notations with values that match the following specs:
+        # a - all dictionary values are lists containing an input value for each trial (even if only one trial)
+        # b - each input value is a 2d array that matches variable
+        # example: { Mech1: [Fully_specified_input_for_mech1_on_trial_1, Fully_specified_input_for_mech1_on_trial_2 … ],
+        #            Mech2: [Fully_specified_input_for_mech2_on_trial_1, Fully_specified_input_for_mech2_on_trial_2 … ]}
+        # (2) Verify that all nodes provide the same number of inputs (check length of each dictionary value)
 
-            call_before_trial : callable
-                will be called before each `TRIAL` is executed.
+        adjusted_stimuli = {}
+        nums_input_sets = set()
+        for node, stim_list in stimuli.items():
+            if isinstance(node, Composition):
+                if isinstance(stim_list, dict):
 
-            call_after_trial : callable
-                will be called after each `TRIAL` is executed.
+                    adjusted_stimulus_dict, num_trials, autodiff_stimuli = node._adjust_stimulus_dict(stim_list)
+                    translated_stimulus_dict = {}
 
-            initial_values : Dict[Node: Node Value]
-                sets the values of nodes before the start of the run. This is useful in cases where a node's value is
-                used before that node executes for the first time (usually due to recurrence or control).
+                    # first time through the stimulus dictionary, assemble a dictionary in which the keys are input CIM
+                    # InputStates and the values are lists containing the first input value
+                    for nested_input_node, values in adjusted_stimulus_dict.items():
+                        first_value = values[0]
+                        for i in range(len(first_value)):
+                            input_state = nested_input_node.external_input_states[i]
+                            input_cim_input_state = node.input_CIM_states[input_state][0]
+                            translated_stimulus_dict[input_cim_input_state] = [first_value[i]]
+                            # then loop through the stimulus dictionary again for each remaining trial
+                            for trial in range(1, num_trials):
+                                translated_stimulus_dict[input_cim_input_state].append(values[trial][i])
 
-            runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]]
-                nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
-                `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
-                during this `Run` when the specified `Condition` is met.
+                    adjusted_stimulus_list = []
+                    for trial in range(num_trials):
+                        trial_adjusted_stimulus_list = []
+                        for state in node.external_input_states:
+                            trial_adjusted_stimulus_list.append(translated_stimulus_dict[state][trial])
+                        adjusted_stimulus_list.append(trial_adjusted_stimulus_list)
+                    stimuli[node] = adjusted_stimulus_list
+                    stim_list = adjusted_stimulus_list  # ADDED CW 12/21/18: This line fixed a bug, but it might be a hack
 
-                Outer dictionary:
-                    - *key* - Node
-                    - *value* - Runtime Parameter Specification Dictionary
+            # excludes any input states marked "internal_only" (usually recurrent)
+            # KDM 3/29/19: changed to use defaults equivalent of node.external_input_values
+            input_must_match = [input_state.defaults.value for input_state in node.input_states
+                                if not input_state.internal_only]
 
-                Runtime Parameter Specification Dictionary:
-                    - *key* - keyword corresponding to a parameter of the Node
-                    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
-                      a `Condition`
+            if input_must_match == []:
+                # all input states are internal_only
+                continue
 
-                See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+            check_spec_type = self._input_matches_variable(stim_list, input_must_match)
+            # If a node provided a single input, wrap it in one more list in order to represent trials
+            if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
+                if check_spec_type == "homogeneous":
+                    # np.atleast_2d will catch any single-input states specified without an outer list
+                    # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
+                    adjusted_stimuli[node] = [np.atleast_2d(stim_list)]
+                else:
+                    adjusted_stimuli[node] = [stim_list]
+                nums_input_sets.add(1)
 
-            animate : dict or bool : False
-                specifies use of the `show_graph <Composition.show_graph>` method to generate a gif movie showing the
-                sequence of Components executed in a run.  A dict can be specified containing options to pass to
-                the `show_graph <Composition.show_graph>` method;  each key must be a legal argument for the `show_graph
-                <Composition.show_graph>` method, and its value a specification for that argument.  The entries listed
-                below can also be included in the dict to specify parameters of the animation.  If the **animate**
-                argument is specified simply as `True`, defaults are used for all arguments of `show_graph
-                <Composition.show_graph>` and the options below:
+            else:
+                adjusted_stimuli[node] = []
+                for stim in stimuli[node]:
+                    check_spec_type = self._input_matches_variable(stim, input_must_match)
+                    # loop over each input to verify that it matches variable
+                    if check_spec_type == False:
+                        err_msg = "Input stimulus ({}) for {} is incompatible with its external_input_values ({}).". \
+                            format(stim, node.name, input_must_match)
+                        # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
+                        # for "functionality" but rather a hack for user clarity
+                        if "KWTA" in str(type(node)):
+                            err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
+                                                " to represent the outside stimulus for the inhibition input state, and " \
+                                                "for systems, put your inputs"
+                        raise RunError(err_msg)
+                    elif check_spec_type == "homogeneous":
+                        # np.atleast_2d will catch any single-input states specified without an outer list
+                        # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
+                        adjusted_stimuli[node].append(np.atleast_2d(stim))
+                    else:
+                        adjusted_stimuli[node].append(stim)
+                nums_input_sets.add(len(stimuli[node]))
+        if len(nums_input_sets) > 1:
+            if 1 in nums_input_sets:
+                nums_input_sets.remove(1)
+                if len(nums_input_sets) > 1:
+                    raise CompositionError("The input dictionary for {} contains input specifications of different "
+                                           "lengths ({}). The same number of inputs must be provided for each node "
+                                           "in a Composition.".format(self.name, nums_input_sets))
+            else:
+                raise CompositionError("The input dictionary for {} contains input specifications of different "
+                                       "lengths ({}). The same number of inputs must be provided for each node "
+                                       "in a Composition.".format(self.name, nums_input_sets))
+        num_input_sets = nums_input_sets.pop()
+        return adjusted_stimuli, num_input_sets, autodiff_stimuli
 
-                * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components
-                  to treat as active in each call to `show_graph <Composition.show_graph>`. *COMPONENT* generates an
-                  image for the execution of each Component.  *EXECUTION_SET* generates an image for each `execution_set
-                  <Component.execution_sets>`, showing all of the Components in that set as active.
+    def _adjust_execution_stimuli(self, stimuli):
+        adjusted_stimuli = {}
+        for node, stimulus in stimuli.items():
+            if isinstance(node, Composition):
+                input_must_match = node.default_external_input_values
+                if isinstance(stimulus, dict):
+                    adjusted_stimulus_dict = node._adjust_stimulus_dict(stimulus)
+                    adjusted_stimuli[node] = adjusted_stimulus_dict
+                    continue
+            else:
+                input_must_match = node.default_external_input_values
 
-                * *DURATION*: float (default=0.75) -- specifies the duration (in seconds) of each image in the movie.
+            check_spec_type = self._input_matches_variable(stimulus, input_must_match)
+            # If a node provided a single input, wrap it in one more list in order to represent trials
+            if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
+                if check_spec_type == "homogeneous":
+                    # np.atleast_2d will catch any single-input states specified without an outer list
+                    # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
+                    adjusted_stimuli[node] = np.atleast_2d(stimulus)
+                else:
+                    adjusted_stimuli[node] = stimulus
+            else:
+                raise CompositionError("Input stimulus ({}) for {} is incompatible with its variable ({})."
+                                       .format(stimulus, node.name, input_must_match))
+        return adjusted_stimuli
 
-                * *NUM_RUNS*: int (default=1) -- specifies the number of runs to animate;  by default, this is 1.
-                  If the number specified is less than the total number of runs executed, only the number specified
-                  are animated; if it is greater than the number of runs being executed, only the number being run are
-                  animated.
+    def _assign_values_to_input_CIM(self, inputs, execution_id=None):
+        """
+            Assign values from input dictionary to the InputStates of the Input CIM, then execute the Input CIM
 
-                * *NUM_TRIALS*: int (default=1) -- specifies the number of trials to animate;  by default, this is 1.
-                  If the number specified is less than the total number of trials being run, only the number specified
-                  are animated; if it is greater than the number of trials being run, only the number being run are
-                  animated.
-
-                * *MOVIE_DIR*: str (default=project root dir) -- specifies the directdory to be used for the movie file;
-                  by default a subdirectory of <root_dir>/show_graph_OUTPUT/GIFS is created using the `name
-                  <Composition.name>` of the  `Composition`, and the gif files are stored there.
-
-                * *MOVIE_NAME*: str (default=\\ `name <System.name>` + 'movie') -- specifies the name to be used for
-                  the movie file; it is automatically appended with '.gif'.
-
-                * *SAVE_IMAGES*: bool (default=\\ `False`\\ ) -- specifies whether to save each of the images used to
-                  construct the animation in separate gif files, in addition to the file containing the animation.
-
-                * *SHOW*: bool (default=\\ `False`\\ ) -- specifies whether to show the animation after it is
-                  constructed, using the OS's default viewer.
-
-            log : bool, LogCondition
-                Sets the `log_condition <Parameter.log_condition>` for every primary `node <Composition.nodes>` and
-                `projection <Composition.projections>` in this Composition, if it is not already set.
-
-                .. note::
-                   as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
-                   correspond to the `EXECUTION LogCondition <LogCondition.EXECUTION>`.
-
-        COMMENT:
-        REPLACE WITH EVC/OCM EXAMPLE
-        Examples
-        --------
-
-        This figure shows an animation of the Composition in the XXX example script, with
-        the show_graph **show_learning** argument specified as *ALL*:
-
-        .. _Composition_XXX_movie:
-
-        .. figure:: _static/XXX_movie.gif
-           :alt: Animation of Composition in XXX example script
-           :scale: 50 %
-
-        This figure shows an animation of the Composition in the XXX example script, with
-        the show_graph **show_control** argument specified as *ALL* and *UNIT* specified as *EXECUTION_SET*:
-
-        .. _Composition_XXX_movie:
-
-        .. figure:: _static/XXX_movie.gif
-           :alt: Animation of Composition in XXX example script
-           :scale: 150 %
-        COMMENT
-
-        Returns
-        ---------
-
-        output value of the final Node executed in the composition : various
         """
 
-        if scheduler_processing is None:
-            scheduler_processing = self.scheduler_processing
+        build_CIM_input = []
 
-        if termination_processing is None:
-            termination_processing = self.termination_processing
+        for input_state in self.input_CIM.input_states:
+            # "input_state" is an InputState on the input CIM
+
+            for key in self.input_CIM_states:
+                # "key" is an InputState on an origin Node of the Composition
+                if self.input_CIM_states[key][0] == input_state:
+                    origin_input_state = key
+                    origin_node = key.owner
+                    index = origin_node.input_states.index(origin_input_state)
+
+                    if isinstance(origin_node, CompositionInterfaceMechanism):
+                        index = origin_node.input_states.index(origin_input_state)
+                        origin_node = origin_node.composition
+
+                    if origin_node in inputs:
+                        value = inputs[origin_node][index]
+
+                    else:
+                        value = origin_node.defaults.variable[index]
+
+            build_CIM_input.append(value)
+
+        self.input_CIM.execute(build_CIM_input, execution_id=execution_id)
+
+    def _assign_execution_ids(self, execution_id=None):
+        """
+            assigns the same execution id to each Node in the composition's processing graph as well as the CIMs.
+            The execution id is either specified in the user's call to run(), or from the Composition's
+            **default_execution_id**
+        """
+
+        # Traverse processing graph and assign one uuid to all of its nodes
+        if execution_id is None:
+            execution_id = self.default_execution_id
+
+        if execution_id not in self.execution_ids:
+            self.execution_ids.add(execution_id)
+
+        return execution_id
+
+    def _identify_clamp_inputs(self, list_type, input_type, origins):
+        # clamp type of this list is same as the one the user set for the whole composition; return all nodes
+        if list_type == input_type:
+            return origins
+        # the user specified different types of clamps for each origin node; generate a list accordingly
+        elif isinstance(input_type, dict):
+            return [k for k, v in input_type.items() if list_type == v]
+        # clamp type of this list is NOT same as the one the user set for the whole composition; return empty list
         else:
-            new_conds = self.termination_processing.copy()
-            new_conds.update(termination_processing)
-            termination_processing = new_conds
+            return []
 
-        if initial_values is not None:
-            for node in initial_values:
-                if node not in self.nodes:
-                    raise CompositionError("{} (entry in initial_values arg) is not a node in \'{}\'".
-                                           format(node.name, self.name))
-
-        if reinitialize_values is None:
-            reinitialize_values = {}
-
-        for node in reinitialize_values:
-            node.reinitialize(*reinitialize_values[node], execution_context=execution_id)
-
-        try:
-            if self.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
-                self._analyze_graph()
-        except AttributeError:
-            # if context is None, it has not been created for this execution_id yet, so it is not
-            # in a simulation
-            self._analyze_graph()
-
-        # set auto logging if it's not already set, and if log argument is True
-        if log:
-            for item in self.nodes + self.projections:
-                if not isinstance(item, CompositionInterfaceMechanism):
-                    for param in item.parameters:
-                        if param.loggable and param.log_condition is LogCondition.OFF:
-                            param.log_condition = LogCondition.EXECUTION
-
-        # Set animation attributes
-        if animate is True:
-            animate = {}
-        self._animate = animate
-        if self._animate is not False:
-            self._set_up_animation(execution_id)
-
-        # SET UP EXECUTION -----------------------------------------------
-
-        results = []
-
-        execution_id = self._assign_execution_ids(execution_id)
-
-        scheduler_processing._init_counts(execution_id=execution_id)
-
-        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-
-        # if there is only one INPUT Node, allow inputs to be specified in a list
-        if isinstance(inputs, (list, np.ndarray)):
-            if len(input_nodes) == 1:
-                inputs = {next(iter(input_nodes)): inputs}
-            else:
-                raise CompositionError(
-                    f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
-                    f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
-        elif callable(inputs):
-            num_inputs_sets = 1
-            autodiff_stimuli = {}
-        elif not isinstance(inputs, dict):
-            if len(input_nodes) == 1:
-                raise CompositionError(
-                    "Inputs to {} must be specified in a list or in a dictionary "
-                    "with the INPUT node ({}) as its only key".
-                        format(self.name, next(iter(input_nodes)).name))
-            else:
-                input_node_names = ", ".join([i.name for i in input_nodes])
-                raise CompositionError(
-                    "Inputs to {} must be specified in a dictionary "
-                    "with its {} INPUT nodes ({}) as the keys and their inputs as the values".
-                    format(self.name, len(input_nodes), input_node_names))
-        if not callable(inputs):
-            # Currently, no validation if 'inputs' arg is a function
-            inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
-
-        if num_trials is not None:
-            num_trials = num_trials
-        else:
-            num_trials = num_inputs_sets
-
-        scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
-
-        execution_context = self.parameters.context._get(execution_id)
-
-        # KDM 3/29/19: run the following not only during LLVM Run compilation, due to bug where TimeScale.RUN
-        # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
-        # called repeatedly (this init is repeated in Composition.execute)
-        # initialize from base context but don't overwrite any values already set for this execution_id
-        if (
-            not skip_initialization
-            and (execution_context is None or execution_context.execution_phase != ContextFlags.SIMULATION)
-        ):
-            self._initialize_from_context(execution_id, base_execution_id, override=False)
-            self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
-
-        is_simulation = (execution_context is not None and
-                         execution_context.execution_phase == ContextFlags.SIMULATION)
-        if (bin_execute is True or str(bin_execute).endswith('Run')):
-            # There's no mode to run simulations.
-            # Simulations are run as part of the controller node wrapper.
-            assert not is_simulation
-            try:
-                if bin_execute is True or bin_execute.startswith('LLVM'):
-                    _comp_ex = pnlvm.CompExecution(self, [execution_id])
-                    results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
-                elif bin_execute.startswith('PTX'):
-                    self.__ptx_initialize(execution_id)
-                    EX = self._compilation_data.ptx_execution._get(execution_id)
-                    results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
-
-                full_results = self.parameters.results._get(execution_id)
-                if full_results is None:
-                    full_results = results
+    def _parse_runtime_params(self, runtime_params):
+        if runtime_params is None:
+            return {}
+        for node in runtime_params:
+            for param in runtime_params[node]:
+                if isinstance(runtime_params[node][param], tuple):
+                    if len(runtime_params[node][param]) == 1:
+                        runtime_params[node][param] = (runtime_params[node][param], Always())
+                    elif len(runtime_params[node][param]) != 2:
+                        raise CompositionError(
+                            "Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
+                            "Must be a tuple of the form (parameter value, condition), or simply the "
+                            "parameter value. ".format(runtime_params[node][param],
+                                                       node.name,
+                                                       param,
+                                                       self.name))
                 else:
-                    full_results.extend(results)
-
-                self.parameters.results._set(full_results, execution_id)
-                # KAM added the [-1] index after changing Composition run()
-                # behavior to return only last trial of run (11/7/18)
-                self.most_recent_execution_id = execution_id
-                return full_results[-1]
-
-            except Exception as e:
-                if bin_execute is not True:
-                    raise e
-
-                print("WARNING: Failed to Run execution `{}': {}".format(
-                      self.name, str(e)))
-
-        # Reset gym forager environment for the current trial
-        if self.env:
-            trial_output = np.atleast_2d(self.env.reset())
-
-        # Loop over the length of the list of inputs - each input represents a TRIAL
-        for trial_num in range(num_trials):
-
-            # Execute call before trial "hook" (user defined function)
-            if call_before_trial:
-                call_with_pruned_args(call_before_trial, execution_context=execution_id)
-
-            if termination_processing[TimeScale.RUN].is_satisfied(
-                scheduler=scheduler_processing,
-                execution_context=execution_id
-            ):
-                break
-
-            # PROCESSING ------------------------------------------------------------------------
-            # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
-            if callable(inputs):
-                # If 'inputs' argument is a function, call the function here with results from last trial
-                execution_stimuli = inputs(self.env, trial_output)
-                if not isinstance(execution_stimuli, dict):
-                    return trial_output
-            else:
-                execution_stimuli = {}
-                stimulus_index = trial_num % num_inputs_sets
-                for node in inputs:
-                    if len(inputs[node]) == 1:
-                        execution_stimuli[node] = inputs[node][0]
-                        continue
-                    execution_stimuli[node] = inputs[node][stimulus_index]
-
-            execution_autodiff_stimuli = {}
-            for node in autodiff_stimuli:
-                if isinstance(autodiff_stimuli[node], list):
-                    execution_autodiff_stimuli[node] = autodiff_stimuli[node][stimulus_index]
-                else:
-                    execution_autodiff_stimuli[node] = autodiff_stimuli[node]
-
-            for node in self.nodes:
-                if hasattr(node, "reinitialize_when") and node.parameters.has_initializers._get(execution_id):
-                    if node.reinitialize_when.is_satisfied(scheduler=self.scheduler_processing,
-                                                           execution_context=execution_id):
-                        node.reinitialize(None, execution_context=execution_id)
-
-            # execute processing
-            # pass along the stimuli for this trial
-            trial_output = self.execute(inputs=execution_stimuli,
-                                        autodiff_stimuli=execution_autodiff_stimuli,
-                                        scheduler_processing=scheduler_processing,
-                                        termination_processing=termination_processing,
-                                        call_before_time_step=call_before_time_step,
-                                        call_before_pass=call_before_pass,
-                                        call_after_time_step=call_after_time_step,
-                                        call_after_pass=call_after_pass,
-                                        execution_id=execution_id,
-                                        base_execution_id=base_execution_id,
-                                        clamp_input=clamp_input,
-                                        runtime_params=runtime_params,
-                                        skip_initialization=True,
-                                        bin_execute=bin_execute)
-
-            # ---------------------------------------------------------------------------------
-            # store the result of this execute in case it will be the final result
-
-            # object.results.append(result)
-            if isinstance(trial_output, collections.abc.Iterable):
-                result_copy = trial_output.copy()
-            else:
-                result_copy = trial_output
-
-            if self.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
-                results.append(result_copy)
-
-                if not self.parameters.retain_old_simulation_data._get():
-                    if self.controller is not None:
-                        # if any other special parameters store simulation info that needs to be cleaned up
-                        # consider dedicating a function to it here
-                        # this will not be caught above because it resides in the base context (execution_id)
-                        if not self.parameters.simulation_results.retain_old_simulation_data:
-                            self.parameters.simulation_results._get(execution_id).clear()
-
-                        if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
-                            self.controller.parameters.simulation_ids._get(execution_id).clear()
-
-            if call_after_trial:
-                call_with_pruned_args(call_after_trial, execution_context=execution_id)
-
-        scheduler_processing.clocks[execution_id]._increment_time(TimeScale.RUN)
-
-        full_results = self.parameters.results._get(execution_id)
-        if full_results is None:
-            full_results = results
-        else:
-            full_results.extend(results)
-
-        self.parameters.results._set(full_results, execution_id)
-
-        self.most_recent_execution_id = execution_id
-
-        if self._animate is not False:
-            # Save list of gifs in self._animation as movie file
-            movie_path = self._animation_directory + '/' + self._movie_filename
-            self._animation[0].save(fp=movie_path,
-                                    format='GIF',
-                                    save_all=True,
-                                    append_images=self._animation[1:],
-                                    duration=self._image_duration*1000,
-                                    loop=0)
-            # print(f'\nSaved movie for {self.name} in {self._animation_directory}/{self._movie_filename}')
-            print(f"\nSaved movie for '{self.name}' in '{self._movie_filename}'")
-            if self._show_animation:
-                movie = Image.open(movie_path)
-                movie.show()
-
-        return trial_output
+                    runtime_params[node][param] = (runtime_params[node][param], Always())
+        return runtime_params
 
     def _after_agent_rep_execution(self, context=None):
         pass
 
-    @property
-    def _all_nodes(self):
-        for n in self.nodes:
-            yield n
-        yield self.input_CIM
-        yield self.output_CIM
-        if self.controller:
-            yield self.controller
+
+    # ******************************************************************************************************************
+    #                                           LLVM
+    # ******************************************************************************************************************
 
     def _get_param_struct_type(self, ctx):
         mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
@@ -6527,9 +7111,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pnlvm.ir.LiteralStructType(mech_param_type_list),
             pnlvm.ir.LiteralStructType(proj_param_type_list)))
 
-    def _get_context_struct_type(self, ctx):
-        mech_ctx_type_list = (ctx.get_context_struct_type(m) for m in self._all_nodes)
-        proj_ctx_type_list = (ctx.get_context_struct_type(p) for p in self.projections)
+    def _get_state_struct_type(self, ctx):
+        mech_ctx_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
+        proj_ctx_type_list = (ctx.get_state_struct_type(p) for p in self.projections)
         return pnlvm.ir.LiteralStructType((
             pnlvm.ir.LiteralStructType(mech_ctx_type_list),
             pnlvm.ir.LiteralStructType(proj_ctx_type_list)))
@@ -6549,10 +7133,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             data.append(nested_data)
         return pnlvm.ir.LiteralStructType(data)
 
-    def _get_context_initializer(self, execution_id=None, simulation=False):
-        mech_contexts = (tuple(m._get_context_initializer(execution_id=execution_id))
+    def _get_state_initializer(self, execution_id=None, simulation=False):
+        mech_contexts = (tuple(m._get_state_initializer(execution_id=execution_id))
                          for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_contexts = (tuple(p._get_context_initializer(execution_id=execution_id)) for p in self.projections)
+        proj_contexts = (tuple(p._get_state_initializer(execution_id=execution_id)) for p in self.projections)
         return (tuple(mech_contexts), tuple(proj_contexts))
 
     def _get_param_initializer(self, execution_id, simulation=False):
@@ -6631,7 +7215,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._compilation_data.ptx_execution.set(None, execution_context)
         self._compilation_data.parameter_struct.set(None, execution_context)
-        self._compilation_data.context_struct.set(None, execution_context)
+        self._compilation_data.state_struct.set(None, execution_context)
         self._compilation_data.data_struct.set(None, execution_context)
         self._compilation_data.scheduler_conditions.set(None, execution_context)
 
@@ -6647,7 +7231,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [
-                ctx.get_context_struct_type(self).as_pointer(),
+                ctx.get_state_struct_type(self).as_pointer(),
                 ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
                 data_struct_ptr, data_struct_ptr]
@@ -6764,311 +7348,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return llvm_func
 
-    def _get_processing_condition_set(self, node):
-        dep_group = []
-        for group in self.scheduler_processing.consideration_queue:
-            if node in group:
-                break
-            dep_group = group
-
-        # NOTE: This is not ideal we don't need to depend on
-        # the entire previous group. Only our dependencies
-        cond = [EveryNCalls(dep, 1) for dep in dep_group]
-        if node not in self.scheduler_processing.conditions:
-            cond.append(Always())
-        else:
-            node_conds = self.scheduler_processing.conditions[node]
-            cond.append(node_conds)
-
-        return All(*cond)
-
-    def _input_matches_variable(self, input_value, var):
-        # input_value states are uniform
-        if np.shape(np.atleast_2d(input_value)) == np.shape(var):
-            return "homogeneous"
-        # input_value states have different lengths
-        elif len(np.shape(var)) == 1 and isinstance(var[0], (list, np.ndarray)):
-            for i in range(len(input_value)):
-                if len(input_value[i]) != len(var[i]):
-                    return False
-            return "heterogeneous"
-        return False
-
-    def _adjust_stimulus_dict(self, stimuli):
-
-        autodiff_stimuli = {}
-        all_stimuli_keys = list(stimuli.keys())
-        for node in all_stimuli_keys:
-            if hasattr(node, "pytorch_representation"):
-                if node.learning_enabled:
-                    autodiff_stimuli[node] = stimuli[node]
-                    del stimuli[node]
-
-        # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
-        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-        for node in stimuli.keys():
-            if not node in input_nodes:
-                raise CompositionError("{} in inputs dict for {} is not one of its INPUT nodes".
-                                       format(node.name, self.name))
-
-        # STEP 1B: Check that all of the INPUT nodes are represented - if not, use default_external_input_values
-        for node in input_nodes:
-            if not node in stimuli:
-                stimuli[node] = node.default_external_input_values
-
-        # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
-
-        # (1) Replace any user provided convenience notations with values that match the following specs:
-        # a - all dictionary values are lists containing an input value for each trial (even if only one trial)
-        # b - each input value is a 2d array that matches variable
-        # example: { Mech1: [Fully_specified_input_for_mech1_on_trial_1, Fully_specified_input_for_mech1_on_trial_2 … ],
-        #            Mech2: [Fully_specified_input_for_mech2_on_trial_1, Fully_specified_input_for_mech2_on_trial_2 … ]}
-        # (2) Verify that all nodes provide the same number of inputs (check length of each dictionary value)
-
-        adjusted_stimuli = {}
-        nums_input_sets = set()
-        for node, stim_list in stimuli.items():
-            if isinstance(node, Composition):
-                if isinstance(stim_list, dict):
-
-                    adjusted_stimulus_dict, num_trials, autodiff_stimuli = node._adjust_stimulus_dict(stim_list)
-                    translated_stimulus_dict = {}
-
-                    # first time through the stimulus dictionary, assemble a dictionary in which the keys are input CIM
-                    # InputStates and the values are lists containing the first input value
-                    for nested_input_node, values in adjusted_stimulus_dict.items():
-                        first_value = values[0]
-                        for i in range(len(first_value)):
-                            input_state = nested_input_node.external_input_states[i]
-                            input_cim_input_state = node.input_CIM_states[input_state][0]
-                            translated_stimulus_dict[input_cim_input_state] = [first_value[i]]
-                            # then loop through the stimulus dictionary again for each remaining trial
-                            for trial in range(1, num_trials):
-                                translated_stimulus_dict[input_cim_input_state].append(values[trial][i])
-
-                    adjusted_stimulus_list = []
-                    for trial in range(num_trials):
-                        trial_adjusted_stimulus_list = []
-                        for state in node.external_input_states:
-                            trial_adjusted_stimulus_list.append(translated_stimulus_dict[state][trial])
-                        adjusted_stimulus_list.append(trial_adjusted_stimulus_list)
-                    stimuli[node] = adjusted_stimulus_list
-                    stim_list = adjusted_stimulus_list  # ADDED CW 12/21/18: This line fixed a bug, but it might be a hack
-
-            # excludes any input states marked "internal_only" (usually recurrent)
-            # KDM 3/29/19: changed to use defaults equivalent of node.external_input_values
-            input_must_match = [input_state.defaults.value for input_state in node.input_states if not input_state.internal_only]
-
-            if input_must_match == []:
-                # all input states are internal_only
-                continue
-
-            check_spec_type = self._input_matches_variable(stim_list, input_must_match)
-            # If a node provided a single input, wrap it in one more list in order to represent trials
-            if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
-                if check_spec_type == "homogeneous":
-                    # np.atleast_2d will catch any single-input states specified without an outer list
-                    # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                    adjusted_stimuli[node] = [np.atleast_2d(stim_list)]
-                else:
-                    adjusted_stimuli[node] = [stim_list]
-                nums_input_sets.add(1)
-
-            else:
-                adjusted_stimuli[node] = []
-                for stim in stimuli[node]:
-                    check_spec_type = self._input_matches_variable(stim, input_must_match)
-                    # loop over each input to verify that it matches variable
-                    if check_spec_type == False:
-                        err_msg = "Input stimulus ({}) for {} is incompatible with its external_input_values ({}).". \
-                            format(stim, node.name, input_must_match)
-                        # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
-                        # for "functionality" but rather a hack for user clarity
-                        if "KWTA" in str(type(node)):
-                            err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
-                                                " to represent the outside stimulus for the inhibition input state, and " \
-                                                "for systems, put your inputs"
-                        raise RunError(err_msg)
-                    elif check_spec_type == "homogeneous":
-                        # np.atleast_2d will catch any single-input states specified without an outer list
-                        # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                        adjusted_stimuli[node].append(np.atleast_2d(stim))
-                    else:
-                        adjusted_stimuli[node].append(stim)
-                nums_input_sets.add(len(stimuli[node]))
-        if len(nums_input_sets) > 1:
-            if 1 in nums_input_sets:
-                nums_input_sets.remove(1)
-                if len(nums_input_sets) > 1:
-                    raise CompositionError("The input dictionary for {} contains input specifications of different "
-                                           "lengths ({}). The same number of inputs must be provided for each node "
-                                           "in a Composition.".format(self.name, nums_input_sets))
-            else:
-                raise CompositionError("The input dictionary for {} contains input specifications of different "
-                                       "lengths ({}). The same number of inputs must be provided for each node "
-                                       "in a Composition.".format(self.name, nums_input_sets))
-        num_input_sets = nums_input_sets.pop()
-        return adjusted_stimuli, num_input_sets, autodiff_stimuli
-
-    def _adjust_execution_stimuli(self, stimuli):
-        adjusted_stimuli = {}
-        for node, stimulus in stimuli.items():
-            if isinstance(node, Composition):
-                input_must_match = node.default_external_input_values
-                if isinstance(stimulus, dict):
-                    adjusted_stimulus_dict = node._adjust_stimulus_dict(stimulus)
-                    adjusted_stimuli[node] = adjusted_stimulus_dict
-                    continue
-            else:
-                input_must_match = node.default_external_input_values
-
-            check_spec_type = self._input_matches_variable(stimulus, input_must_match)
-            # If a node provided a single input, wrap it in one more list in order to represent trials
-            if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
-                if check_spec_type == "homogeneous":
-                    # np.atleast_2d will catch any single-input states specified without an outer list
-                    # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                    adjusted_stimuli[node] = np.atleast_2d(stimulus)
-                else:
-                    adjusted_stimuli[node] = stimulus
-            else:
-                raise CompositionError("Input stimulus ({}) for {} is incompatible with its variable ({})."
-                                       .format(stimulus, node.name, input_must_match))
-        return adjusted_stimuli
-
-    def reshape_control_signal(self,
-                                         arr):
-
-        current_shape = np.shape(arr)
-        if len(current_shape) > 2:
-            newshape = (current_shape[0], current_shape[1])
-            newarr = np.reshape(arr, newshape)
-            arr = tuple(newarr[i].item() for i in range(len(newarr)))
-
-        return np.array(arr)
-
-    def _get_total_cost_of_control_allocation(self, control_allocation, execution_id, runtime_params, context):
-        total_cost = 0.
-        if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
-
-            base_control_allocation = self.reshape_control_signal(self.controller.parameters.value._get(execution_id))
-
-            candidate_control_allocation = self.reshape_control_signal(control_allocation)
-
-            # Get reconfiguration cost for candidate control signal
-            reconfiguration_cost = 0.
-            if callable(self.controller.compute_reconfiguration_cost):
-                reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
-                                                                                     base_control_allocation])
-                self.controller.reconfiguration_cost.set(reconfiguration_cost, execution_id)
-
-            # Apply candidate control signal
-            self.controller._apply_control_allocation(candidate_control_allocation,
-                                                                execution_id=execution_id,
-                                                                runtime_params=runtime_params,
-                                                                context=context)
-
-            # Get control signal costs
-            all_costs = self.controller.parameters.costs._get(execution_id) + [reconfiguration_cost]
-            # Compute a total for the candidate control signal(s)
-            total_cost = self.controller.combine_costs(all_costs)
-        return total_cost
-
-    def _build_predicted_inputs_dict(self, predicted_input):
-        inputs = {}
-        # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
-        # If this is not a good assumption, we need another way to look up the feature InputStates
-        # of the OCM and know which InputState maps to which predicted_input value
-
-        nested_nodes = dict(self._get_nested_nodes())
-        for j in range(len(self.controller.input_states) - 1):
-            input_state = self.controller.input_states[j + 1]
-            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
-                owner = input_state.shadow_inputs.owner
-                if not owner in nested_nodes:
-                    inputs[input_state.shadow_inputs.owner] = predicted_input[j]
-                else:
-                    comp = nested_nodes[owner]
-                    if not comp in inputs:
-                        inputs[comp]=[[predicted_input[j]]]
-                    else:
-                        inputs[comp]=np.concatenate([[predicted_input[j]],inputs[comp][0]])
-        return inputs
-
-    def evaluate(
-            self,
-            predicted_input=None,
-            control_allocation=None,
-            num_simulation_trials=None,
-            runtime_params=None,
-            base_execution_id=None,
-            execution_id=None,
-            context=None,
-            execution_mode=False,
-    ):
-        """Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
-           `controller <Composition.controller>` in order to return the
-           `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
-           `controller <Composition.controller>` under that control_allocation. All values are
-           reset to pre-simulation values at the end of the simulation.
-        """
-        # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
-        total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
-
-        # Build input dictionary for simulation
-        inputs = self._build_predicted_inputs_dict(predicted_input)
-
-        # Run Composition in "SIMULATION" context
-        # MODIFIED 6/12/19 NEW: [JDC]
-        if self._animate is not False and self._animate_simulations is not False:
-            animate = self._animate
-            buffer_animate_state = None
-        else:
-            animate = False
-            buffer_animate_state = self._animate
-        entry_execution_phase = self.parameters.context._get(execution_id).execution_phase
-        # MODIFIED 6/12/19 END
-        self.parameters.context._get(execution_id).execution_phase = ContextFlags.SIMULATION
-        self.run(inputs=inputs,
-                 execution_id=execution_id,
-                 runtime_params=runtime_params,
-                 num_trials=num_simulation_trials,
-                 animate=animate,
-                 context=context,
-                 bin_execute=execution_mode,
-                 skip_initialization=True,
-                 )
-        # # MODIFIED 6/12/19 OLD:
-        # self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-        # MODIFIED 6/12/19 NEW: [JDC]
-        self.parameters.context._get(execution_id).execution_phase = entry_execution_phase
-        if buffer_animate_state:
-            self._animate = buffer_animate_state
-        # MODIFIED 6/12/19 END
-
-        # Store simulation results on "base" composition
-        if context.initialization_status != ContextFlags.INITIALIZING:
-            try:
-                self.parameters.simulation_results._get(base_execution_id).append(
-                    self.get_output_values(execution_id))
-            except AttributeError:
-                self.parameters.simulation_results._set([self.get_output_values(execution_id)], base_execution_id)
-
-        # Update input states in order to get correct value for "outcome" (from objective mech)
-        self.controller._update_input_states(execution_id, runtime_params, context.flags_string)
-        outcome = self.controller.input_state.parameters.value._get(execution_id)
-
-        # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
-        net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
-
-        return net_outcome
-
-    def disable_all_history(self):
-        """
-            When run, disables history tracking for all Parameters of all Components used in this Composition
-        """
-        self._set_all_parameter_properties_recursively(history_max_length=0)
-
     def _dict_summary(self):
         scheduler_dict = {
             'schedulers': {
@@ -7090,6 +7369,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             **nodes_dict,
             **projections_dict,
         }
+
+
+    # ******************************************************************************************************************
+    #                                           PROPERTIES
+    # ******************************************************************************************************************
 
     @property
     def input_states(self):
@@ -7229,3 +7513,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def efferents(self):
         return ContentAddressableList(component_type=Projection,
                                       list=[proj for proj in self.output_CIM.efferents])
+
+    @property
+    def _all_nodes(self):
+        for n in self.nodes:
+            yield n
+        yield self.input_CIM
+        yield self.output_CIM
+        if self.controller:
+            yield self.controller

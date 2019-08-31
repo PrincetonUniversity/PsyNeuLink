@@ -99,7 +99,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
         my_component = SomeComponent(function=SomeFunction)
 
       This will create a default instance of the specified subclass, using default values for its parameters.
-    |
+
     * **Function** - this can be either an existing `Function <Function>` object or the constructor for one, as in the
       following examples::
 
@@ -935,7 +935,7 @@ class Component(object, metaclass=ComponentsMeta):
 
     class _CompilationData(ParametersBase):
         parameter_struct = None
-        context_struct = None
+        state_struct = None
 
     def __init__(self,
                  default_variable,
@@ -1150,7 +1150,7 @@ class Component(object, metaclass=ComponentsMeta):
     def _gen_llvm_function(self, extra_args=[]):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_param_struct_type(self).as_pointer(),
-                    ctx.get_context_struct_type(self).as_pointer(),
+                    ctx.get_state_struct_type(self).as_pointer(),
                     ctx.get_input_struct_type(self).as_pointer(),
                     ctx.get_output_struct_type(self).as_pointer()]
             builder = ctx.create_llvm_function(args + extra_args, self)

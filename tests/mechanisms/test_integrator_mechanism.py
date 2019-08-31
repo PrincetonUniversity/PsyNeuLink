@@ -1009,9 +1009,12 @@ class TestIntegratorRate:
             )
             result = I.execute(10.0)
             float(result)
-        error_msg_a = 'Length (1) of input ([10.]) does not match required length (3) for input to '
+        returned_error_msg = str(error_text.value)
+        # Need to break up error message because length value returned ([10.0] vs. [ 10.0]) may differ by Python vers.
+        error_msg_a1 = 'Length (1) of input'
+        error_msg_a2 = 'does not match required length (3) for input to '
         error_msg_b = 'InputState-0 InputState of IntegratorMechanism'
-        assert error_msg_a in str(error_text.value)
+        assert [msg in returned_error_msg for msg in {error_msg_a1, error_msg_a2, '10'}]
         assert error_msg_b in str(error_text.value)
 
     # rate = list len 2, incrment = list len 3, integration_type = accumulator

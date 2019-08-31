@@ -146,7 +146,9 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.core.globals.keywords import \
+    ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
+    MODULATORY_PROJECTION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -251,13 +253,13 @@ class ModulationParam(Enum):
     """Specify parameter of a `Function <Function>` for `modulation <ModulatorySignal_Modulation>` by a ModulatorySignal
 
     COMMENT:
-        Each term specifies a different type of modulation used by a `ModulatorySignal <ModulatorySignal>`.  The first
-        two refer to classes that define the following terms:
-            * attrib_name (*ADDITIVE_PARAM* or *MULTIPLICATIVE_PARAM*):  specifies which meta-parameter of the function
+        Each term specifies a different type of modulation used by a `ModulatorySignal <ModulatorySignal>`.
+        The first two refer to classes that define the following terms:
+            * attrib_name (*ADDITIVE_PARAM* or *MULTIPLICATIVE_PARAM*): specifies which meta-parameter of the function
               to use for modulation;
-            * name (str): name of the meta-parameter
-            * init_val (int or float): value with which to initialize the parameter being modulated if it is not otherwise
-              specified
+            * name (str): name of the meta-parameter;
+            * init_val (int or float): value with which to initialize the parameter being modulated
+              if it is not otherwise specified;
             * reduce (function): the manner by which to aggregate multiple ModulatorySignals of that type, if the
               `ParameterState` receives more than one `ModulatoryProjection <ModulatoryProjection>` of that type.
     COMMENT
@@ -320,7 +322,8 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
     from psyneulink.core.globals.parameters import parse_execution_context
 
     if not isinstance(mod_proj, ModulatoryProjection_Base):
-        raise FunctionError('mod_proj ({0}) is not a ModulatoryProjection_Base'.format(mod_proj))
+        raise FunctionError(f'Specification of {MODULATORY_PROJECTION} to {owner.full_name} ({mod_proj}) '
+                            f'is not a {ModulatoryProjection_Base.__name__}')
 
     execution_id = parse_execution_context(execution_context)
 
@@ -842,15 +845,25 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
-    def _get_context_initializer(self, execution_id):
+    def _get_compilation_state(self):
         try:
-            stateful = (getattr(self.parameters, sa)._get(execution_id) for sa in self.stateful_attributes)
-            # Skip first element of random state (id string)
-            lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
-
-            return pnlvm._tupleize(lists)
+            stateful = self.stateful_attributes
         except AttributeError:
-            return tuple()
+            return ()
+        return (getattr(self.parameters, sa) for sa in stateful)
+
+    def _get_state_ids(self):
+        return [sp.name for sp in self._get_compilation_state()]
+
+    def _get_state_values(self, execution_id=None):
+        return tuple(sp._get(execution_id) for sp in self._get_compilation_state())
+
+    def _get_state_initializer(self, execution_id):
+        stateful = self._get_state_values(execution_id)
+        # Skip first element of random state (id string)
+        lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
+
+        return pnlvm._tupleize(lists)
 
     def _get_compilation_params(self, execution_id=None):
         # Filter out known unused/invalid params

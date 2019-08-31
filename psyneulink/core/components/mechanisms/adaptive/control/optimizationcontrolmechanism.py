@@ -156,14 +156,14 @@ other constiuents, as described below.
 *ObjectiveMechanism*
 ^^^^^^^^^^^^^^^^^^^^
 
-Like any `ControlMechanism`, an OptimizationControlMechanism has an associated `objective_mechanism
-<ControlMechanism.objective_mechanism>` that is used to evaluate the outcome of processing for a given trial and pass
-the result to the OptimizationControlMechanism, which it places in its `outcome <OptimizationControlMechanism.outcome>`
-attribute.  This is used by its `compute_net_outcome <ControlMechanism.compute_net_outcome>` function, together with
-the `costs <ControlMechanism.costs>` of its `control_signals <ControlMechanism.control_signals>`, to compute the
-`net_outcome <ControlMechanism.net_outcome>` of processing for a given `state <OptimizationControlMechanism_State>`,
-and that is returned by `evaluation` method of the OptimizationControlMechanism's `agent_rep
-<OptimizationControlMechanism.agent_rep>`.
+Like any `ControlMechanism`, an OptimizationControlMechanism may be assigned an `objective_mechanism
+<ControlMechanism.objective_mechanism>` that is used to evaluate the outcome of processing for a given trial (see
+`ControlMechanism_Objective_ObjectiveMechanism). This passes the result to the OptimizationControlMechanism, which it
+places in its `outcome <OptimizationControlMechanism.outcome>` attribute.  This is used by its `compute_net_outcome
+<ControlMechanism.compute_net_outcome>` function, together with the `costs <ControlMechanism.costs>` of its
+`control_signals <ControlMechanism.control_signals>`, to compute the `net_outcome <ControlMechanism.net_outcome>` of
+processing for a given `state <OptimizationControlMechanism_State>`, and that is returned by `evaluation` method of the
+OptimizationControlMechanism's `agent_rep <OptimizationControlMechanism.agent_rep>`.
 
 .. note::
     The `objective_mechanism <ControlMechanism.objective_mechanism>` is distinct from, and should not be
@@ -182,8 +182,8 @@ and that is returned by `evaluation` method of the OptimizationControlMechanism'
 *Features*
 ^^^^^^^^^^
 
-In addition to its `primary InputState <InputState_Primary>` (which receives a projection from the *OUTCOME*
-OutpuState of the `objective_mechanism <ControlMechanism.objective_mechanism>`,
+In addition to its `primary InputState <InputState_Primary>` (which typically receives a projection from the
+*OUTCOME* OutpuState of the `objective_mechanism <ControlMechanism.objective_mechanism>`,
 an OptimizationControlMechanism also has an `InputState` for each of its features. By default, these are the current
 `input <Composition.input_values>` for the Composition to which the OptimizationControlMechanism belongs.  However,
 different values can be specified, as can a `feature_function <OptimizationControlMechanism_Feature_Function>` that
@@ -853,11 +853,11 @@ class OptimizationControlMechanism(ControlMechanism):
         """
         # "Outcome"
         outcome_input_state = self.input_state
-        outcome_input_state.update(execution_id=execution_id, params=runtime_params, context=context)
+        outcome_input_state._update(execution_id=execution_id, params=runtime_params, context=context)
         state_values = [np.atleast_2d(outcome_input_state.parameters.value._get(execution_id))]
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
-            state.update(execution_id=execution_id, params=runtime_params, context=context)
+            state._update(execution_id=execution_id, params=runtime_params, context=context)
             state_values.append(state.parameters.value._get(execution_id))
         return np.array(state_values)
 
@@ -993,13 +993,13 @@ class OptimizationControlMechanism(ControlMechanism):
         intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
         return (intensity_cost, num_estimates)
 
-    def _get_evaluate_context_struct_type(self, ctx):
-        intensity_cost = [ctx.get_context_struct_type(os.intensity_cost_function) for os in self.output_states]
+    def _get_evaluate_state_struct_type(self, ctx):
+        intensity_cost = [ctx.get_state_struct_type(os.intensity_cost_function) for os in self.output_states]
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
         return pnlvm.ir.LiteralStructType([intensity_cost_struct])
 
-    def _get_evaluate_context_initializer(self, execution_id):
-        intensity_cost = tuple((os.intensity_cost_function._get_context_initializer(execution_id) for os in self.output_states))
+    def _get_evaluate_state_initializer(self, execution_id):
+        intensity_cost = tuple((os.intensity_cost_function._get_state_initializer(execution_id) for os in self.output_states))
         return (intensity_cost,)
 
     def _get_evaluate_input_struct_type(self, ctx):
@@ -1016,7 +1016,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _gen_llvm_net_outcome_function(self, ctx):
         args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
-                self._get_evaluate_context_struct_type(ctx).as_pointer(),
+                self._get_evaluate_state_struct_type(ctx).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                 ctx.float_ty.as_pointer(),
                 ctx.float_ty.as_pointer()]
@@ -1070,12 +1070,12 @@ class OptimizationControlMechanism(ControlMechanism):
     def _gen_llvm_evaluate_function(self):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
-                    self._get_evaluate_context_struct_type(ctx).as_pointer(),
+                    self._get_evaluate_state_struct_type(ctx).as_pointer(),
                     self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                     self._get_evaluate_output_struct_type(ctx).as_pointer(),
                     self._get_evaluate_input_struct_type(ctx).as_pointer(),
                     ctx.get_param_struct_type(self.agent_rep).as_pointer(),
-                    ctx.get_context_struct_type(self.agent_rep).as_pointer(),
+                    ctx.get_state_struct_type(self.agent_rep).as_pointer(),
                     ctx.get_data_struct_type(self.agent_rep).as_pointer()]
 
             builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
@@ -1093,10 +1093,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # Create a simulation copy of composition data
             comp_data = builder.alloca(base_comp_data.type.pointee, name="data_copy")
-            if "clear_run_data" in pnlvm.debug.debug_env:
-                builder.store(comp_data.type.pointee(None), comp_data)
-            else:
-                builder.store(builder.load(base_comp_data), comp_data)
+            builder.store(builder.load(base_comp_data), comp_data)
 
             # Apply allocation sample to simulation data
             assert len(self.output_states) == len(allocation_sample.type.pointee)
@@ -1153,9 +1150,9 @@ class OptimizationControlMechanism(ControlMechanism):
                                             [ctx.int32_ty(0), ctx.int32_ty(0),
                                              ctx.int32_ty(0)], "obj_val_ptr")
 
-            net_outcome_f = self._gen_llvm_net_outcome_function(ctx);
+            net_outcome_f = self._gen_llvm_net_outcome_function(ctx)
             builder.call(net_outcome_f, [params, state, allocation_sample,
-                                         objective_val_ptr, arg_out]);
+                                         objective_val_ptr, arg_out])
 
             builder.ret_void()
 
@@ -1167,7 +1164,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if is_comp:
             ctx = pnlvm.LLVMBuilderContext.get_global()
             extra_args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
-                          ctx.get_context_struct_type(self.agent_rep).as_pointer(),
+                          ctx.get_state_struct_type(self.agent_rep).as_pointer(),
                           ctx.get_data_struct_type(self.agent_rep).as_pointer()]
         else:
             extra_args = []

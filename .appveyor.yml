@@ -12,7 +12,9 @@ branches:
 
 environment:
   PYTHONWARNINGS: ignore::DeprecationWarning
-  PATH: '%APPDATA%\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;C:\Program Files (x86)\Graphviz2.38\bin;%PATH%'
+  GRAPHVIZ_VERSION: 2.38
+  GRAPHVIZ_INSTALLER: graphviz-%GRAPHVIZ_VERSION%.msi
+  PATH: '%APPDATA%\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;C:\Program Files (x86)\Graphviz%GRAPHVIZ_VERSION%\bin;%PATH%'
   matrix:
   - PYTHON: Python36
     EXTRA_ARGS: -m llvm
@@ -24,8 +26,8 @@ environment:
     ARCH: -x64
 
 install:
-  - if not exist graphviz-2.38.msi appveyor-retry curl https://graphviz.gitlab.io/_pages/Download/windows/graphviz-2.38.msi -o graphviz-2.38.msi
-  - msiexec.exe /i graphviz-2.38.msi /passive
+  - if not exist %GRAPHVIZ_INSTALLER% appveyor-retry curl https://graphviz.gitlab.io/_pages/Download/windows/%GRAPHVIZ_INSTALLER% -o %GRAPHVIZ_INSTALLER%
+  - msiexec.exe /i %GRAPHVIZ_INSTALLER% /passive
   - pip --version
   - pip install --user -U pip
   - pip --version
@@ -42,7 +44,7 @@ install:
 
 cache:
     - '%LOCALAPPDATA%\pip\Cache'
-    - 'graphviz-2.38.msi'
+    - '%GRAPHVIZ_INSTALLER%'
 
 build: off
 

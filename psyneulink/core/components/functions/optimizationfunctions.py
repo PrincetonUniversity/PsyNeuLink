@@ -1350,7 +1350,7 @@ class GridSearch(OptimizationFunction):
             ocm = self.objective_function.__self__
             ctx = pnlvm.LLVMBuilderContext.get_global()
             extra_args = [ctx.get_param_struct_type(ocm.agent_rep).as_pointer(),
-                          ctx.get_context_struct_type(ocm.agent_rep).as_pointer(),
+                          ctx.get_state_struct_type(ocm.agent_rep).as_pointer(),
                           ctx.get_data_struct_type(ocm.agent_rep).as_pointer()]
         except AttributeError:
             extra_args = []
@@ -1421,26 +1421,26 @@ class GridSearch(OptimizationFunction):
             obj_func_param_init = self.objective_function._get_param_initializer(execution_id)
         return (obj_func_param_init, tuple(grid_init), select_randomly)
 
-    def _get_context_struct_type(self, ctx):
+    def _get_state_struct_type(self, ctx):
         try:
             # self.objective_function may be bound method of
             # an OptimizationControlMechanism
             ocm = self.objective_function.__self__
-            obj_func_state = ocm._get_evaluate_context_struct_type(ctx)
+            obj_func_state = ocm._get_evaluate_state_struct_type(ctx)
         except AttributeError:
-            obj_func_state = ctx.get_context_struct_type(self.objective_function)
+            obj_func_state = ctx.get_state_struct_type(self.objective_function)
         # Get random state
         random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state"))
         return pnlvm.ir.LiteralStructType([obj_func_state, random_state_struct])
 
-    def _get_context_initializer(self, execution_id):
+    def _get_state_initializer(self, execution_id):
         try:
             # self.objective_function may be bound method of
             # an OptimizationControlMechanism
             ocm = self.objective_function.__self__
-            obj_func_state_init = ocm._get_evaluate_context_initializer(execution_id)
+            obj_func_state_init = ocm._get_evaluate_state_initializer(execution_id)
         except AttributeError:
-            obj_func_state_init = self.objective_function._get_context_initializer(execution_id)
+            obj_func_state_init = self.objective_function._get_state_initializer(execution_id)
         random_state = self.get_current_function_param("random_state", execution_id).get_state()[1:]
         return (obj_func_state_init, pnlvm._tupleize(random_state))
 
