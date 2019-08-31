@@ -254,9 +254,12 @@ class PytorchModelCreator(torch.nn.Module):
         return llvm_func
 
     #FIXME: Move _gen functions to helper or change builtins to directly accept aggregate types
-    def _gen_inject_bin_function_call(self,ctx,builder,bin_func,vector,dim,output_vec=None):
+    def _gen_inject_bin_function_call(self, ctx, builder, bin_func, vector, output_vec=None):
+        dim = len(vector.type.pointee)
         if output_vec is None:
             output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
+        assert len(output_vec.type.pointee) == dim
+
         # Get the pointer to the first element of the array to convert from [? x double]* -> double*
         vec_in = builder.gep(vector, [ctx.int32_ty(0), ctx.int32_ty(0)])
         vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -264,9 +267,12 @@ class PytorchModelCreator(torch.nn.Module):
         builder.call(bin_func, [vec_in, ctx.int32_ty(dim), vec_out])
         return output_vec
 
-    def _gen_inject_vec_copy(self, ctx, builder, vector, dim, output_vec=None):
+    def _gen_inject_vec_copy(self, ctx, builder, vector, output_vec=None):
+        dim = len(vector.type.pointee)
         if output_vec is None:
             output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
+        assert len(output_vec.type.pointee) == dim
+
         # Get the pointer to the first element of the array to convert from [? x double]* -> double*
         vec_in = builder.gep(vector, [ctx.int32_ty(0), ctx.int32_ty(0)])
         vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -290,13 +296,13 @@ class PytorchModelCreator(torch.nn.Module):
         builder.call(ctx.get_llvm_function(op), [vec_u, vec_v, ctx.int32_ty(dim), vec_out])
         return output_vec
 
-    def _gen_inject_vec_add(self, ctx, builder, u, v, dim, output_vec=None):
+    def _gen_inject_vec_add(self, ctx, builder, u, v, output_vec=None):
         return self._gen_inject_vec_binop(ctx, builder, "__pnl_builtin_vec_add", u, v, output_vec)
 
-    def _gen_inject_vec_sub(self, ctx, builder, u, v, dim, output_vec=None):
+    def _gen_inject_vec_sub(self, ctx, builder, u, v, output_vec=None):
         return self._gen_inject_vec_binop(ctx, builder, "__pnl_builtin_vec_sub", u, v, output_vec)
 
-    def _gen_inject_vec_hadamard(self,ctx,builder,u,v,dim,output_vec = None):
+    def _gen_inject_vec_hadamard(self, ctx, builder, u ,v, output_vec=None):
         return self._gen_inject_vec_binop(ctx, builder, "__pnl_builtin_vec_hadamard", u, v, output_vec)
 
     def _gen_inject_mat_binop(self, ctx, builder, op, m1, m2, output_mat=None):
@@ -424,19 +430,19 @@ class PytorchModelCreator(torch.nn.Module):
                             ctx, builder, input_value, weights_llvmlite, weights_dim_x, weights_dim_y)
                         if is_set == False:
                             # copy weighted_inp to value
-                            self._gen_inject_vec_copy(ctx,builder,weighted_inp,weights_dim_y,value)
+                            self._gen_inject_vec_copy(ctx, builder, weighted_inp, value)
                             is_set = True
                         else:
                             # add to value
-                            self._gen_inject_vec_add(ctx,builder,weighted_inp,value,weights_dim_y,value)
+                            self._gen_inject_vec_add(ctx, builder, weighted_inp, value, value)
 
                     cmp_arg = value
                     
                 # Apply Activation Func to values
                 if store_z_values is True:
-                    z_values[component] = self._gen_inject_vec_copy(ctx,builder,cmp_arg,dim_y)
+                    z_values[component] = self._gen_inject_vec_copy(ctx, builder, cmp_arg)
                 bin_func = ctx.get_llvm_function(self.bin_function_creator(ctx,component).name)
-                self._gen_inject_bin_function_call(ctx,builder,bin_func,cmp_arg,dim_y,value)
+                self._gen_inject_bin_function_call(ctx, builder, bin_func, cmp_arg, value)
 
                 # TODO: Add bias to value
                 # if biases is not None:
@@ -503,7 +509,7 @@ class PytorchModelCreator(torch.nn.Module):
             node_input_array_ptr = builder.gep(node_input_arrays[node], [
                                                 input_idx, ctx.int32_ty(0)])
             node_model_input = builder.gep(model_input,[ctx.int32_ty(0),ctx.int32_ty(node_idx)])
-            self._gen_inject_vec_copy(ctx,builder,node_input_array_ptr,node_dim,node_model_input)
+            self._gen_inject_vec_copy(ctx, builder, node_input_array_ptr, node_model_input)
             
             ctx.inject_printf_float_array(
                 builder, node_input_array_ptr, node_dim, prefix=f"\tNODE {node_idx} INPUT: ")
@@ -538,10 +544,9 @@ class PytorchModelCreator(torch.nn.Module):
 
 
             activation_func_derivative_bin_func = ctx.get_llvm_function(self.bin_function_derivative_creator(ctx,node).name)
-            activation_func_derivative = self._gen_inject_bin_function_call(ctx,builder,activation_func_derivative_bin_func,z_values[node],node_dim)
+            activation_func_derivative = self._gen_inject_bin_function_call(ctx, builder, activation_func_derivative_bin_func, z_values[node])
             
-            error_val = builder.alloca(
-                    pnlvm.ir.ArrayType(ctx.float_ty, node_dim))
+            error_val = builder.alloca(pnlvm.ir.ArrayType(ctx.float_ty, node_dim))
             
             error_dict[node] = error_val
             
@@ -561,7 +566,7 @@ class PytorchModelCreator(torch.nn.Module):
                 loss_derivative = loss._gen_inject_loss_differential(ctx,builder,node_output,node_target,node_dim)
                 # compute δ_l = dσ/da ⊙ σ'(z)
                 
-                self._gen_inject_vec_hadamard(ctx,builder,activation_func_derivative,loss_derivative,node_dim,error_val)
+                self._gen_inject_vec_hadamard(ctx, builder, activation_func_derivative, loss_derivative, error_val)
                 
             else:
                 # We propagate error backwards from next layer
@@ -584,9 +589,9 @@ class PytorchModelCreator(torch.nn.Module):
                         new_val = self._gen_inject_vxm_transposed(
                             ctx, builder, efferent_node_error, weights_llvmlite, weights_dim_x, weights_dim_y)
                         
-                        self._gen_inject_vec_add(ctx,builder,new_val,error_val,node_dim,error_val)
+                        self._gen_inject_vec_add(ctx, builder, new_val, error_val, error_val)
 
-                self._gen_inject_vec_hadamard(ctx,builder,activation_func_derivative,error_val,node_dim,error_val)
+                self._gen_inject_vec_hadamard(ctx, builder, activation_func_derivative, error_val, error_val)
             
             ctx.inject_printf_float_array(builder,activation_func_derivative,node_dim,prefix=f"dSIGMA VALUE FOR {node}:\t")
             ctx.inject_printf_float_array(builder,error_val,node_dim,prefix=f"ERROR VALUE FOR {node}:\t")

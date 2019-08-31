@@ -72,9 +72,9 @@ class MSELoss(Loss):
             builder.store(output.type.pointee(None), output)
 
         if sum_loss is False:
-            self._pytorch_model._gen_inject_vec_sub(ctx,builder,value,target,dim,output)
+            self._pytorch_model._gen_inject_vec_sub(ctx, builder, value, target, output)
         else:
             # in this case, we add the loss
-            tmp = self._pytorch_model._gen_inject_vec_sub(ctx,builder,value,target,dim)
-            self._pytorch_model._gen_inject_vec_add(ctx,builder,output,tmp,dim,output)
+            tmp = self._pytorch_model._gen_inject_vec_sub(ctx, builder, value, target)
+            self._pytorch_model._gen_inject_vec_add(ctx, builder, output, tmp, output)
         return output
