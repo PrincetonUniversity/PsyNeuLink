@@ -857,14 +857,12 @@ class PytorchModelCreator(torch.nn.Module):
             return llvm_func
         except Exception as e:
             pass
-        float_ty = ctx.float_ty
-        float_ptr_ty = float_ty.as_pointer()
-        int32_ty = ctx.int32_ty
+
 
         # args: 1) ptr to input vector
         #       2) sizeof vector
         #       3) ptr to output vector
-        
+        float_ptr_ty = ctx.float_ty.as_pointer()
         args = [float_ptr_ty, ctx.int32_ty, float_ptr_ty]
         
         builder = ctx.create_llvm_function(args, self, name)
@@ -878,7 +876,7 @@ class PytorchModelCreator(torch.nn.Module):
             if val is None:
                 val = node.function.get_current_function_param(
                     param_name, None)
-            return float_ty(val[0])
+            return ctx.float_ty(val[0])
 
         if isinstance(node.function, Linear):
             slope = get_fct_param_value('slope')
@@ -888,11 +886,11 @@ class PytorchModelCreator(torch.nn.Module):
                 return ret
 
         elif isinstance(node.function, Logistic):
-            neg_one = float_ty(-1)
+            neg_one = ctx.float_ty(-1)
             gain = builder.fmul(neg_one, get_fct_param_value('gain'))
             bias = get_fct_param_value('bias')
             offset = get_fct_param_value('offset')
-            one = float_ty(1)
+            one = ctx.float_ty(1)
             exp = ctx.get_llvm_function("__pnl_builtin_exp")
             def modify_value(x):
                 arg = builder.fadd(
@@ -909,7 +907,7 @@ class PytorchModelCreator(torch.nn.Module):
             gain = get_fct_param_value('gain')
             bias = get_fct_param_value('bias')
             leak = get_fct_param_value('leak')
-            zero = float_ty(0)
+            zero = ctx.float_ty(0)
             def modify_value(x):
                 val = builder.fsub(x, bias)
                 pred = builder.fcmp_ordered(">", val, zero)
@@ -954,13 +952,11 @@ class PytorchModelCreator(torch.nn.Module):
         except Exception as e:
             pass
 
-        float_ty = ctx.float_ty
-        float_ptr_ty = float_ty.as_pointer()
-        int32_ty = ctx.int32_ty
 
         # args: 1) ptr to input vector
         #       2) sizeof vector
         #       3) ptr to output vector
+        float_ptr_ty = ctx.float_ty.as_pointer()
         args = [float_ptr_ty, ctx.int32_ty, float_ptr_ty]
         builder = ctx.create_llvm_function(args, self,name )
         llvm_func = builder.function
@@ -973,7 +969,7 @@ class PytorchModelCreator(torch.nn.Module):
             if val is None:
                 val = node.function.get_current_function_param(
                     param_name, None)
-            return float_ty(val[0])
+            return ctx.float_ty(val[0])
 
         if isinstance(node.function, Linear): # f(x) = mx + b, f'(x) = m
             slope = get_fct_param_value('slope')
@@ -982,11 +978,11 @@ class PytorchModelCreator(torch.nn.Module):
 
         elif isinstance(node.function, Logistic):# f'(x) = f(x)(1-f(x))
 
-            neg_one = float_ty(-1)
+            neg_one = ctx.float_ty(-1)
             gain = builder.fmul(neg_one, get_fct_param_value('gain'))
             bias = get_fct_param_value('bias')
             offset = get_fct_param_value('offset')
-            one = float_ty(1)
+            one = ctx.float_ty(1)
             exp = ctx.get_llvm_function("__pnl_builtin_exp")
             
             def modify_value(x):
@@ -997,7 +993,7 @@ class PytorchModelCreator(torch.nn.Module):
 
                 ret = builder.fdiv(one, builder.fadd(
                     one, builder.call(exp, [arg])))
-                ret = builder.fmul(ret,builder.fsub(float_ty(1),ret))
+                ret = builder.fmul(ret,builder.fsub(ctx.float_ty(1),ret))
                 return ret
 
         else:
