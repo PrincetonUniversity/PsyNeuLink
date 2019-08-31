@@ -1,17 +1,4 @@
-import numpy as np
-from psyneulink.core.scheduling.time import TimeScale
-from psyneulink.core.globals.utilities import NodeRole
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core import llvm as pnlvm
-import numpy
-import ctypes
-import functools
-import timeit
-import pprint
-from collections import deque
-
-debug_env = pnlvm.debug_env
 
 __all__ = ['AdamOptimizer','SGDOptimizer']
 
