@@ -15,6 +15,7 @@ from psyneulink.core import llvm as pnlvm
 debug = pnlvm.debug
 debug_env = debug.debug_env
 
+
 def setup_vxm(ctx):
     # Setup types
     double_ptr_ty = ctx.float_ty.as_pointer()
@@ -116,6 +117,7 @@ def setup_vxm(ctx):
     # Return
     with builder.goto_block(outer_out_block):
         builder.ret_void()
+
 
 def setup_vxm_transposed(ctx):
     # Setup types
@@ -219,6 +221,7 @@ def setup_vxm_transposed(ctx):
     with builder.goto_block(outer_out_block):
         builder.ret_void()
 
+
 # Setup vector addition builtin
 def setup_vec_add(ctx):
      # Setup types
@@ -246,8 +249,6 @@ def setup_vec_add(ctx):
         a.attributes.add('nonnull')
         a.attributes.add('noalias')
 
-    index = None
-
     # Addition
     with helpers.for_loop_zero_inc(builder, x, "zero") as (b1, index):
         u_ptr = b1.gep(u,[index])
@@ -260,6 +261,7 @@ def setup_vec_add(ctx):
         b1.store(u_v_sum, o_ptr)
 
     builder.ret_void()
+
 
 # Setup vector copy builtin
 def setup_vec_copy(ctx):
@@ -287,8 +289,6 @@ def setup_vec_copy(ctx):
         a.attributes.add('nonnull')
         a.attributes.add('noalias')
 
-    index = None
-
     # Addition
     with helpers.for_loop_zero_inc(builder, x, "zero") as (b1, index):
         u_ptr = b1.gep(u,[index])
@@ -298,6 +298,8 @@ def setup_vec_copy(ctx):
         b1.store(u_val, o_ptr)
 
     builder.ret_void()
+
+
 # Setup vector subtraction builtin
 def setup_vec_sub(ctx):
     # Setup types
@@ -325,8 +327,6 @@ def setup_vec_sub(ctx):
        a.attributes.add('nonnull')
        a.attributes.add('noalias')
 
-   index = None
-
    # Addition
    with helpers.for_loop_zero_inc(builder, x, "zero") as (b1, index):
        u_ptr = b1.gep(u,[index])
@@ -339,6 +339,7 @@ def setup_vec_sub(ctx):
        b1.store(u_v_sum, o_ptr)
 
    builder.ret_void()
+
 
 # Setup vector hadamard product (ie elementwise product)
 def setup_vec_hadamard(ctx):
@@ -367,8 +368,6 @@ def setup_vec_hadamard(ctx):
        a.attributes.add('nonnull')
        a.attributes.add('noalias')
 
-   index = None
-
    # Addition
    with helpers.for_loop_zero_inc(builder, x, "zero") as (b1, index):
        u_ptr = b1.gep(u,[index])
@@ -381,6 +380,7 @@ def setup_vec_hadamard(ctx):
        b1.store(u_v_product, o_ptr)
 
    builder.ret_void()
+
 
 # vec multiply by scalar constant
 def setup_vec_scalar_mult(ctx):
@@ -409,8 +409,6 @@ def setup_vec_scalar_mult(ctx):
        a.attributes.add('nonnull')
        a.attributes.add('noalias')
 
-   index = None
-
    # mult
    with helpers.for_loop_zero_inc(builder, x, "scalar_mult_loop") as (b1, index):
        u_ptr = b1.gep(u, [index])
@@ -420,6 +418,7 @@ def setup_vec_scalar_mult(ctx):
        b1.store(u_product, o_ptr)
 
    builder.ret_void()
+
 
 # hadamard multiplication for matrices
 def setup_mat_scalar_mult(ctx):
@@ -450,9 +449,7 @@ def setup_mat_scalar_mult(ctx):
        a.attributes.add('nonnull')
        a.attributes.add('noalias')
 
-    x = None
     with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (b1, x):
-        y = None
         with helpers.for_loop_zero_inc(b1, dim_y, "zero_inner") as (b2, y):
             matrix_index = b2.mul(x, dim_y)
             matrix_index = b2.add(matrix_index, y)
@@ -466,6 +463,7 @@ def setup_mat_scalar_mult(ctx):
             b2.store(o_val,o_ptr)
 
     builder.ret_void()
+
 
 # scalar add a value to a matrix
 def setup_mat_scalar_add(ctx):
@@ -496,9 +494,7 @@ def setup_mat_scalar_add(ctx):
        a.attributes.add('nonnull')
        a.attributes.add('noalias')
 
-    x = None
     with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (b1, x):
-        y = None
         with helpers.for_loop_zero_inc(b1, dim_y, "zero_inner") as (b2, y):
             matrix_index = b2.mul(x, dim_y)
             matrix_index = b2.add(matrix_index, y)
@@ -512,6 +508,7 @@ def setup_mat_scalar_add(ctx):
             b2.store(o_val,o_ptr)
 
     builder.ret_void()
+
 
 # hadamard multiplication for matrices
 def setup_mat_hadamard(ctx):
@@ -542,9 +539,7 @@ def setup_mat_hadamard(ctx):
        a.attributes.add('nonnull')
        a.attributes.add('noalias')
 
-    x = None
     with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (b1, x):
-        y = None
         with helpers.for_loop_zero_inc(b1, dim_y, "zero_inner") as (b2, y):
             matrix_index = b2.mul(x, dim_y)
             matrix_index = b2.add(matrix_index, y)
@@ -558,6 +553,7 @@ def setup_mat_hadamard(ctx):
             b2.store(o_val,o_ptr)
 
     builder.ret_void()
+
 
 # matrix subtraction
 def setup_mat_sub(ctx):
@@ -588,9 +584,7 @@ def setup_mat_sub(ctx):
        a.attributes.add('nonnull')
        a.attributes.add('noalias')
 
-    x = None
     with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (b1, x):
-        y = None
         with helpers.for_loop_zero_inc(b1, dim_y, "zero_inner") as (b2, y):
             matrix_index = b2.mul(x, dim_y)
             matrix_index = b2.add(matrix_index, y)
@@ -604,6 +598,7 @@ def setup_mat_sub(ctx):
             b2.store(o_val,o_ptr)
 
     builder.ret_void()
+
 
 # matrix addition
 def setup_mat_add(ctx):
@@ -634,9 +629,7 @@ def setup_mat_add(ctx):
        a.attributes.add('nonnull')
        a.attributes.add('noalias')
 
-    x = None
     with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (b1, x):
-        y = None
         with helpers.for_loop_zero_inc(b1, dim_y, "zero_inner") as (b2, y):
             matrix_index = b2.mul(x, dim_y)
             matrix_index = b2.add(matrix_index, y)
@@ -651,49 +644,6 @@ def setup_mat_add(ctx):
 
     builder.ret_void()
 
-# copy matrix 
-def setup_mat_copy(ctx):
-    # Setup types
-    double_ptr_ty = ctx.float_ty.as_pointer()
-
-    # builtin vector magnitude func
-    # param1: ptr to matrix 1
-    # param2: dim_x of matrix
-    # param3: dim_y of matrix
-    # param4: output ptr
-    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
-
-    # Create function
-    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_mat_copy")
-    function.attributes.add('argmemonly')
-    function.attributes.add('alwaysinline')
-
-    block = function.append_basic_block(name="entry")
-    builder = ir.IRBuilder(block)
-    builder.debug_metadata = LLVMBuilderContext.get_debug_location(
-        function, None)
-    m1,dim_x,dim_y,o  = function.args
-
-    # Add function arg attributes
-    for a in m1, o:
-       a.attributes.add('nonnull')
-       a.attributes.add('noalias')
-
-    x = None
-    with helpers.for_loop_zero_inc(builder, dim_x, "zero") as (b1, x):
-        y = None
-        with helpers.for_loop_zero_inc(builder, dim_y, "zero_inner") as (b2, y):
-            matrix_index = b2.mul(x, dim_y)
-            matrix_index = b2.add(matrix_index, y)
-            
-            m1_ptr = b2.gep(m1, [matrix_index])
-            o_ptr = b2.gep(o, [matrix_index])
-            
-            m1_val = b2.load(m1_ptr)
-
-            b2.store(m1_val,o_ptr)
-
-    builder.ret_void()
 
 def setup_pnl_intrinsics(ctx):
     # Setup types
