@@ -637,7 +637,6 @@ def _learning_signal_getter(owning_component=None, execution_id=None):
     except (TypeError, IndexError):
         return None
 
-
 def _error_signal_getter(owning_component=None, execution_id=None):
     try:
         return owning_component.parameters.value._get(execution_id)[1]
