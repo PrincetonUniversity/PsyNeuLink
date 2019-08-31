@@ -324,30 +324,40 @@ class PytorchModelCreator(torch.nn.Module):
                                builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
         return output_mat
     
-    def _gen_inject_mat_add(self, ctx, builder, m1, m2, x, y, output_mat=None):
+    def _gen_inject_mat_add(self, ctx, builder, m1, m2, output_mat=None):
         return self._gen_inject_mat_binop(ctx, builder, "__pnl_builtin_mat_add", m1, m2, output_mat)
     
-    def _gen_inject_mat_sub(self, ctx, builder, m1, m2, x, y, output_mat=None):
+    def _gen_inject_mat_sub(self, ctx, builder, m1, m2, output_mat=None):
         return self._gen_inject_mat_binop(ctx, builder, "__pnl_builtin_mat_sub", m1, m2, output_mat)
 
-    def _gen_inject_mat_hadamard(self, ctx, builder, m1, m2, x, y, output_mat=None):
+    def _gen_inject_mat_hadamard(self, ctx, builder, m1, m2, output_mat=None):
         return self._gen_inject_mat_binop(ctx, builder, "__pnl_builtin_mat_hadamard", m1, m2, output_mat)
     
-    def _gen_inject_mat_scalar_mult(self, ctx, builder, m1, s, x, y, output_mat=None):
+    def _gen_inject_mat_scalar_mult(self, ctx, builder, m1, s, output_mat=None):
+        x = len(m1.type.pointee)
+        y = len(m1.type.pointee.element)
         if output_mat is None:
             output_mat = builder.alloca(
                 pnlvm.ir.types.ArrayType(
                     pnlvm.ir.types.ArrayType(ctx.float_ty, y), x))
+        assert len(output_mat.type.pointee) == x
+        assert len(output_mat.type.pointee.element) == y
+
         builtin = ctx.get_llvm_function("__pnl_builtin_mat_scalar_mult")
         builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()),
                                s, ctx.int32_ty(x), ctx.int32_ty(y),
                                builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
         return output_mat
     
-    def _gen_inject_vxm(self, ctx, builder, m1, m2, y, z, output_vec=None):
+    def _gen_inject_vxm(self, ctx, builder, m1, m2, output_vec=None):
+        y = len(m2.type.pointee)
+        z = len(m2.type.pointee.element)
+        assert len(m1.type.pointee) == y
         # create output vec
         if output_vec is None:
             output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, z))
+        assert len(output_vec.type.pointee) == z
+
         # Get the pointer to the first element of the array to convert from [? x double]* -> double*
         v = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0)])
         out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -357,10 +367,15 @@ class PytorchModelCreator(torch.nn.Module):
                                ctx.int32_ty(y), ctx.int32_ty(z), out])
         return output_vec
 
-    def _gen_inject_vxm_transposed(self, ctx, builder, m1, m2, y, z, output_vec=None):
+    def _gen_inject_vxm_transposed(self, ctx, builder, m1, m2, output_vec=None):
+        y = len(m2.type.pointee)
+        z = len(m2.type.pointee.element)
+        assert len(m1.type.pointee) == z
         # create output vec
         if output_vec is None:
             output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, y))
+        assert len(output_vec.type.pointee) == y
+
         # Get the pointer to the first element of the array to convert from [? x double]* -> double*
         v = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0)])
         out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -426,8 +441,7 @@ class PytorchModelCreator(torch.nn.Module):
 
                         # We cast the ctype weights array to llvmlite pointer
                         weights_llvmlite, weights_dim_x, weights_dim_y = self._gen_get_node_weight_ptr(ctx,builder,params,component,input_node)
-                        weighted_inp = self._gen_inject_vxm(
-                            ctx, builder, input_value, weights_llvmlite, weights_dim_x, weights_dim_y)
+                        weighted_inp = self._gen_inject_vxm(ctx, builder, input_value, weights_llvmlite)
                         if is_set == False:
                             # copy weighted_inp to value
                             self._gen_inject_vec_copy(ctx, builder, weighted_inp, value)
@@ -582,12 +596,10 @@ class PytorchModelCreator(torch.nn.Module):
                     weights_llvmlite, weights_dim_x, weights_dim_y = self._gen_get_node_weight_ptr(ctx,builder,model_params,efferent_node,node)
                     
                     if is_set is False:
-                        self._gen_inject_vxm_transposed(
-                            ctx, builder, efferent_node_error, weights_llvmlite, weights_dim_x, weights_dim_y, error_val)
+                        self._gen_inject_vxm_transposed(ctx, builder, efferent_node_error, weights_llvmlite, error_val)
                         is_set = True
                     else:
-                        new_val = self._gen_inject_vxm_transposed(
-                            ctx, builder, efferent_node_error, weights_llvmlite, weights_dim_x, weights_dim_y)
+                        new_val = self._gen_inject_vxm_transposed(ctx, builder, efferent_node_error, weights_llvmlite)
                         
                         self._gen_inject_vec_add(ctx, builder, new_val, error_val, error_val)
 
