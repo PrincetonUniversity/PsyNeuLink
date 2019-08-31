@@ -57,10 +57,10 @@ class PytorchModelCreator(torch.nn.Module):
 
         self._composition = composition
 
-        for i in range(len(self.execution_sets)):
+        for i, current_exec_set in enumerate(self.execution_sets):
             # SKG: We have to add a counter to map components to an internal int id (for bin execute purposes, since there is no concept of a 'dict' in llvm)
             id_map_ct = 0
-            for component in self.execution_sets[i]:
+            for component in current_exec_set:
                 id_map_ct += 1
 
                 value = None  # the node's (its mechanism's) value
@@ -92,10 +92,9 @@ class PytorchModelCreator(torch.nn.Module):
                         self.params.append(biases)
                         self.mechanisms_to_pytorch_biases[component] = biases
                     # iterate over incoming projections and set up pytorch weights for them
-                    for k in range(len(component.path_afferents)):
+                    for mapping_proj in component.path_afferents:
 
                         # get projection, sender node--pdb for projection
-                        mapping_proj = component.path_afferents[k]
                         input_component = mapping_proj.sender.owner
                         input_node = processing_graph.comp_to_vertex[input_component]
 
@@ -413,8 +412,7 @@ class PytorchModelCreator(torch.nn.Module):
        
         if store_z_values is True:
             z_values = {}
-        for i in range(len(self.execution_sets)):
-            current_exec_set = self.execution_sets[i]
+        for i, current_exec_set in enumerate(self.execution_sets):
 
             for component in current_exec_set:
                 component_id = self._composition._get_node_index(component)
@@ -748,8 +746,7 @@ class PytorchModelCreator(torch.nn.Module):
     def forward(self, inputs, execution_id=None, do_logging=True, scheduler=None):
         outputs = {}  # dict for storing values of terminal (output) nodes
 
-        for i in range(len(self.execution_sets)):
-            current_exec_set = self.execution_sets[i]
+        for i, current_exec_set in enumerate(self.execution_sets):
             frozen_values = {}
             for component in current_exec_set:
                 frozen_values[component] = self.component_to_forward_info[component][0]
