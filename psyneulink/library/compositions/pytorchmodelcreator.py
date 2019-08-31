@@ -149,21 +149,6 @@ class PytorchModelCreator(torch.nn.Module):
         struct_ty = pnlvm.ir.types.LiteralStructType(input_ty)
         return struct_ty
 
-    # Converts tensor input to ctype
-    def _get_input_struct(self, input):
-        bin_func = self._bin_exec_func
-        inp_cty = bin_func.byref_arg_types[2]
-        vals = [None]*len(self.execution_sets[0])
-        for component, value in input.items():
-            component_id = self._id_map[0][component]
-            if "no_ref_pass" not in debug_env:
-                vals[component_id] = value.numpy().ctypes.data_as(
-                    ctypes.c_void_p).value
-            else:
-                vals[component_id] = value.numpy()
-        vals = pnlvm.execution._tupleize(vals)
-        return inp_cty(*vals)
-
     def _get_data_struct_type(self, ctx):
         # Ensures that data struct is the same as the autodiffcomp
         return self._composition._get_data_struct_type(ctx)
@@ -319,15 +304,6 @@ class PytorchModelCreator(torch.nn.Module):
         builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()), s, ctx.int32_ty(x), ctx.int32_ty(y), builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
         return output_mat
     
-    def _gen_inject_mat_copy(self,ctx,builder,m1,x,y,output_mat = None):
-        if output_mat is None:
-            output_mat = builder.alloca(
-                pnlvm.ir.types.ArrayType(
-                    pnlvm.ir.types.ArrayType(ctx.float_ty, y), x))
-        builtin = ctx.get_llvm_function("__pnl_builtin_mat_copy")
-        builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()), ctx.int32_ty(x), ctx.int32_ty(y), builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
-        return output_mat
-    
     def _gen_inject_vec_sub(self,ctx,builder,u,v,dim,output_vec = None):
         if output_vec is None:
             output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
@@ -395,21 +371,6 @@ class PytorchModelCreator(torch.nn.Module):
                 pnlvm.ir.types.ArrayType(ctx.float_ty, dim_y), dim_x).as_pointer())
     
         return node_weights,dim_x,dim_y
-
-    # gets a pointer for the bias vector for a node
-    def _gen_get_node_bias_pointer(self, ctx, builder,model_params,node):
-        node_idx = self._composition._get_node_index(node)
-        forward_info_bias = self.component_to_forward_info[node][1]
-        dim = forward_info_bias.detach().numpy().shape
-        node_bias = builder.gep(model_params,[ctx.int32_ty(0),
-                                                ctx.int32_ty(node_idx),
-                                                ctx.int32_ty(1)])
-        if "no_ref_pass" not in debug_env:
-            mem_addr = builder.load(node_bias)
-            node_bias = builder.inttoptr(mem_addr,
-                pnlvm.ir.types.ArrayType(ctx.float_ty, dim).as_pointer())
-    
-        return node_bias,dim
 
     def _gen_llvm_forward_function_body(self, ctx, builder, _, params, arg_in, arg_out, store_z_values=False):
         out_t = arg_out.type.pointee
@@ -761,12 +722,6 @@ class PytorchModelCreator(torch.nn.Module):
                 ctx.inject_printf(b2, "OPTIMIZER STEP %d\n", input_idx)
                 b2.call(optimizer_step,[optimizer_struct,model_params])
     
-    # inserts a value into the forward computation output array struct
-    def _output_forward_computation(self, ctx, builder, arg_out, index, y, value):
-        loc = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(
-            index), ctx.int32_ty(0), ctx.int32_ty(y)])
-        builder.store(value, loc)
-
     def _get_output_value_ptr(self, ctx, builder, arg_out, index):
         return builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(index), ctx.int32_ty(0)])
     
