@@ -103,7 +103,8 @@ class LLVMBuilderContext:
     def create_llvm_function(self, args, component, name=None, return_type=ir.VoidType()):
         name = str(component) if name is None else name
 
-        func_name = self.get_unique_name(name)
+        # Builtins are already unique and need to keep their special name
+        func_name = name if name.startswith(_BUILTIN_PREFIX) else self.get_unique_name(name)
         func_ty = pnlvm.ir.FunctionType(return_type, args)
         llvm_func = pnlvm.ir.Function(self.module, func_ty, name=func_name)
         llvm_func.attributes.add('argmemonly')

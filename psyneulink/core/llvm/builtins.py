@@ -10,26 +10,18 @@
 
 from llvmlite import ir
 from . import helpers
-from .builder_context import LLVMBuilderContext
+from .builder_context import LLVMBuilderContext, _BUILTIN_PREFIX
 from psyneulink.core import llvm as pnlvm
 debug = pnlvm.debug
 debug_env = debug.debug_env
 
 
 def _setup_builtin_func_builder(ctx, name, args):
-    func_ty = ir.FunctionType(ir.VoidType(), args)
+    builder = ctx.create_llvm_function(args, None, _BUILTIN_PREFIX + name)
 
-    function = ir.Function(ctx.module, func_ty, name="__pnl_builtin_" + name)
-    function.attributes.add('argmemonly')
-
-    block = function.append_basic_block(name="entry")
-    builder = ir.IRBuilder(block)
-    builder.debug_metadata = ctx.get_debug_location(function, None)
-
-    # Add function arg attributes
-    for a in function.args:
+    # Add noalias attribute
+    for a in builder.function.args:
         if isinstance(a.type, ir.PointerType):
-            a.attributes.add('nonnull')
             a.attributes.add('noalias')
 
     return builder
@@ -399,9 +391,9 @@ def setup_pnl_intrinsics(ctx):
     double_intr_ty = ir.FunctionType(ctx.float_ty, (ctx.float_ty, ctx.float_ty))
 
     # Create function declarations
-    ir.Function(ctx.module, single_intr_ty, name="__pnl_builtin_exp")
-    ir.Function(ctx.module, single_intr_ty, name="__pnl_builtin_log")
-    ir.Function(ctx.module, double_intr_ty, name="__pnl_builtin_pow")
+    ir.Function(ctx.module, single_intr_ty, name=_BUILTIN_PREFIX + "exp")
+    ir.Function(ctx.module, single_intr_ty, name=_BUILTIN_PREFIX + "log")
+    ir.Function(ctx.module, double_intr_ty, name=_BUILTIN_PREFIX + "pow")
 
     # Printf declaration
     printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
@@ -412,7 +404,7 @@ def _generate_intrinsic_wrapper(module, name, ret, args):
     intrinsic = module.declare_intrinsic("llvm." + name, list(set(args)))
 
     func_ty = ir.FunctionType(ret, args)
-    function = ir.Function(module, func_ty, name="__pnl_builtin_" + name)
+    function = ir.Function(module, func_ty, name=_BUILTIN_PREFIX + name)
     function.attributes.add('alwaysinline')
     block = function.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
