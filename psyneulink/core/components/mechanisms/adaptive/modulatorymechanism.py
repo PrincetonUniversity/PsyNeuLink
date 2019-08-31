@@ -1360,7 +1360,11 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             if not type(modulatory_signal) in convert_to_list(self.outputStateTypes):
                 raise ProjectionError(f'{type(modulatory_signal)} inappropriate for {self.name}')
 
-        except:
+        # MODIFIED 8/30/19 OLD:
+        # except Exception as e:
+        # MODIFIED 8/30/19 NEW: [JDC]
+        except ProjectionError:
+        # MODIFIED 8/30/19 END
             try:
                 modulatory_signal = _instantiate_state(state_type=GatingSignal,
                                                        owner=self,

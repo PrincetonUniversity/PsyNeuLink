@@ -136,8 +136,11 @@ at the end of the previous `TRIAL` (i.e., when the ControlMechanism last execute
 `ControlMechanism Execution <ControlMechanism_Execution>`); its value from the previous `TRIAL` is assigned to the
 `last_intensity` attribute.
 
-FIX: 8/30/19 -- ADD DESCRIPTION OF REQUIREMENTS AND BEHAVIOR OF TransferWithCosts
-                AND MODIFY DOCUMENTATION OF COSTS AND COST FUNCTIONS BELOW ACCORDINGLY
+FIX: 8/30/19 -- ADD DESCRIPTION OF function AS ACTUALLY IMPLEMENTED AS TransferWithCosts
+                AND MODIFY DOCUMENTATION OF COSTS AND COST FUNCTIONS BELOW, AND THEIR Attributes ENTRIES ACCORDINGLY:
+                - cost functions can be specified, but attributes are pointers to function's cost functions
+                - cost attributes get value of corresponding attributes of cost function
+                - ?handling of cost_options
 *Function*. A ControlSignal's `allocation <ControlSignal.alloction>` serves as its`variable <ControlSignal.variable>`,
 and is used by its `function <ControlSignal.function>` to generate an `intensity`. The default `function
 <ControlSignal.function>` for a ControlSignal is an identity function (`Linear` with `slope <Linear.slope>` \\=1 and
@@ -313,7 +316,7 @@ from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, Reduce
 from psyneulink.core.components.functions.function import _is_modulation_param, is_function_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction, SimpleIntegrator
-# from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, TransferFunction, TransferWithCosts
+from psyneulink.core.components.functions.transferfunctions import Exponential, Linear
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, _output_state_variable_getter
@@ -772,6 +775,16 @@ class ControlSignal(ModulatorySignal):
         # _validate_intensity_cost_function = get_validator_by_function(is_function_type)
         # _validate_adjustment_cost_function = get_validator_by_function(is_function_type)
         # _validate_duration_cost_function = get_validator_by_function(is_function_type)
+        # MODIFIED 8/30/19 NEW [JDC]:
+        intensity_cost_function = Parameter(Exponential, read_only=True)
+        adjustment_cost_function = Parameter(Linear, read_only=True)
+        duration_cost_function = Parameter(SimpleIntegrator, read_only=True)
+        combine_costs_function = Parameter(Reduce(operation=SUM), read_only=True)
+        modulation = None
+        _validate_cost_options = get_validator_by_type_only([ControlSignalCosts, list])
+        _validate_intensity_cost_function = get_validator_by_function(is_function_type)
+        _validate_adjustment_cost_function = get_validator_by_function(is_function_type)
+        _validate_duration_cost_function = get_validator_by_function(is_function_type)
         # MODIFIED 8/30/19 END
 
         # below cannot validate because the default value is None and this is considered
@@ -815,17 +828,12 @@ class ControlSignal(ModulatorySignal):
                  default_allocation=None,
                  size=None,
                  index=None,
-                 # # MODIFIED 8/30/19 OLD:
-                 # function=Linear(),
+                 function=Linear(),
                  cost_options:tc.optional(tc.any(ControlSignalCosts, list))=None,
-                 # intensity_cost_function:(is_function_type)=Exponential,
-                 # adjustment_cost_function:tc.optional(is_function_type)=Linear,
-                 # duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
-                 # combine_costs_function:tc.optional(is_function_type)=Reduce(operation=SUM),
-                 # # MODIFIED 8/30/19 NEW [JDC]:
-                 # function=TransferWithCosts(),
-                 function=None,
-                 # MODIFIED 8/30/19 END
+                 intensity_cost_function:(is_function_type)=Exponential,
+                 adjustment_cost_function:tc.optional(is_function_type)=Linear,
+                 duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
+                 combine_costs_function:tc.optional(is_function_type)=Reduce(operation=SUM),
                  allocation_samples=Parameters.allocation_samples.default_value,
                  modulation:tc.optional(_is_modulation_param)=None,
                  modulates=None,
@@ -833,11 +841,6 @@ class ControlSignal(ModulatorySignal):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
-
-        # MODIFIED 8/30/19 NEW: [JDC]
-        from psyneulink.core.components.functions.transferfunctions import TransferWithCosts
-        function = function or TransferWithCosts
-        # MODIFIED 8/30/19 END
 
         # This is included in case ControlSignal was created by another Component (such as ControlProjection)
         #    that specified ALLOCATION_SAMPLES in params
@@ -850,13 +853,11 @@ class ControlSignal(ModulatorySignal):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
-                                                  # # MODIFIED 8/30/19 OLD:
-                                                  # cost_options=cost_options,
-                                                  # intensity_cost_function=intensity_cost_function,
-                                                  # adjustment_cost_function=adjustment_cost_function,
-                                                  # duration_cost_function=duration_cost_function,
-                                                  # combine_costs_function=combine_costs_function,
-                                                  # MODIFIED 8/30/19 END
+                                                  cost_options=cost_options,
+                                                  intensity_cost_function=intensity_cost_function,
+                                                  adjustment_cost_function=adjustment_cost_function,
+                                                  duration_cost_function=duration_cost_function,
+                                                  combine_costs_function=combine_costs_function,
                                                   allocation_samples=allocation_samples,
                                                   params=params)
 
@@ -889,6 +890,7 @@ class ControlSignal(ModulatorySignal):
 
         """
 
+        # FIX: REINSTATE IF WANT VALIDATION ON CONTROLSIGNAL RATHER THAN ITS FUNCTION (TO HIDE FROM USER)
         # # MODIFIED 8/30/19 OLD:
         # # Validate cost functions in request_set
         # #   This should be all of them if this is an initialization call;
@@ -972,14 +974,17 @@ class ControlSignal(ModulatorySignal):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        # ControlProjection Cost Functions
-        for cost_function_name in [item for item in target_set if item in costFunctionNames]:
-            cost_function = target_set[cost_function_name]
-            if not cost_function:
-                continue
-            if ((not isinstance(cost_function, (Function, function_type, method_type)) and
-                     not issubclass(cost_function, Function))):
-                raise ControlSignalError("{0} not a valid Function".format(cost_function))
+        # FIX: ??REINSTATE IF ABOVE IS REINSTATED??
+        # # MODIFIED 8/30/19 OLD:
+        # # ControlProjection Cost Functions
+        # for cost_function_name in [item for item in target_set if item in costFunctionNames]:
+        #     cost_function = target_set[cost_function_name]
+        #     if not cost_function:
+        #         continue
+        #     if ((not isinstance(cost_function, (Function, function_type, method_type)) and
+        #              not issubclass(cost_function, Function))):
+        #         raise ControlSignalError("{0} not a valid Function".format(cost_function))
+        # MODIFIED 8/30/19 END
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
@@ -990,6 +995,17 @@ class ControlSignal(ModulatorySignal):
         # # MODIFIED 8/30/19 OLD:
         # self._instantiate_cost_functions(context=context)
         # self._initialize_cost_attributes(context=context)
+        # # MODIFIED 8/30/19 NEW [JDC]:
+        transfer_fct = function
+        from psyneulink.core.components.functions.transferfunctions import TransferWithCosts
+        self.function = TransferWithCosts(default_variable=self.defaults.variable,
+                                          transfer_fct=transfer_fct,
+                                          enabled_cost_functions=self.cost_options,
+                                          intensity_cost_fct=self.intensity_cost_function,
+                                          adjustment_cost_fct=self.adjustment_cost_function,
+                                          duration_cost_fct=self.duration_cost_function,
+                                          combine_costs_fct=self.combine_costs_function,
+                                          owner=self)
         # MODIFIED 8/30/19 END
 
     def _instantiate_allocation_samples(self, context=None):
@@ -1122,8 +1138,6 @@ class ControlSignal(ModulatorySignal):
         # if self.parameters.cost_options._get(execution_id):
         #     intensity = self.parameters.value._get(execution_id)
         #     self.parameters.cost._set(self.compute_costs(intensity, execution_id), execution_id)
-        # MODIFIED 8/30/19 NEW: [JDC]
-        self.parameters.cost._set(self.function.parameters.combined_cost._get(execution_id))
         # MODIFIED 8/30/19 END
 
     # # MODIFIED 8/30/19 OLD:
