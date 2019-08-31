@@ -2237,9 +2237,6 @@ class Mechanism_Base(Mechanism):
             <Mechanism_OutputStates>` after either one `TIME_STEP` or a `TRIAL`.
 
         """
-        # initialize context for this execution_id if not done already
-        if self.parameters.context._get(execution_id) is None:
-            self._assign_context_values(execution_id)
 
         if self.initialization_status == ContextFlags.INITIALIZED:
             context.string = "{} EXECUTING {}: {}".format(context.source.name,self.name,

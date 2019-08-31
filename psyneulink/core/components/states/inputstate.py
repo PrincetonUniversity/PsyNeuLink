@@ -487,7 +487,7 @@ from psyneulink.core.components.functions.combinationfunctions import Combinatio
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.core.globals.context import Context, ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     COMBINE, COMMAND_LINE, CONTEXT, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
     LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
@@ -780,6 +780,7 @@ class InputState(State_Base):
                                })
     #endregion
 
+    @handle_external_context()
     @tc.typecheck
     def __init__(self,
                  owner=None,
@@ -795,13 +796,8 @@ class InputState(State_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
+                 context=None,
                  **kwargs):
-
-        context = kwargs.pop(CONTEXT, None)
-        if context is None:
-            context = Context(source=ContextFlags.COMMAND_LINE, string=COMMAND_LINE)
-            self.context.source = ContextFlags.COMMAND_LINE
-            self.context.string = COMMAND_LINE
 
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
@@ -1120,8 +1116,6 @@ class InputState(State_Base):
                         try:
                             sender_dim = np.array(projection_spec.state.value).ndim
                         except AttributeError as e:
-                            # KDM 10/23/18: if DEFERRED_INIT is set, it will be set on the non-stateful .context
-                            # attr so these should be ok
                             if (isinstance(projection_spec.state, type) or
                                      projection_spec.state.initialization_status == ContextFlags.DEFERRED_INIT):
                                 continue

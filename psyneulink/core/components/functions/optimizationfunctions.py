@@ -1613,7 +1613,6 @@ class GridSearch(OptimizationFunction):
                 stop = len(self.search_space)
 
             # # TEST PRINT
-            # print("\nContext: {}".format(self.context.flags_string))
             # print("search_space length: {}".format(len(self.search_space)))
             # print("Rank: {}\tSize: {}\tChunk size: {}".format(rank, size, chunk_size))
             # print("START: {0}\tEND: {1}\tPROCESSED: {2}".format(start,stop,stop-start))

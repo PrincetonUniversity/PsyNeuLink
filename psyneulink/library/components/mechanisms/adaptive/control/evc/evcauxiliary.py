@@ -346,12 +346,6 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         EVC_values = []
         EVC_policies = []
 
-        # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
-        # FIX 3/30/18 - IS controller CORRECT FOR THIS, OR SHOULD IT BE System (controller.system)??
-        controller.parameters.context._get(execution_id).execution_phase = ContextFlags.SIMULATION
-        controller.parameters.context._get(execution_id).string = "{0} EXECUTING {1} of {2}".format(controller.name,
-                                                                      EVC_SIMULATION,
-                                                                      controller.system.name)
         context.execution_phase = ContextFlags.SIMULATION
         # Get allocation_samples for all ControlSignals
         num_control_signals = len(controller.control_signals)

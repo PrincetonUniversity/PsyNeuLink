@@ -444,7 +444,6 @@ class KohonenLearningMechanism(LearningMechanism):
             context.add_flag(ContextFlags.LEARNING)
             self.learned_projection.execute(execution_id=execution_id, context=context)
             context.remove_flag(ContextFlags.LEARNING)
-            self.learned_projection.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
     @property
     def learned_projection(self):

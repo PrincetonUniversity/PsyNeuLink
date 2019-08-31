@@ -1107,7 +1107,6 @@ class State_Base(State):
                 pass
             try:
                 context = kargs[STATE_CONTEXT]
-                self.context.string = kargs[STATE_CONTEXT]
             except (KeyError, NameError):
                 pass
 
@@ -1143,8 +1142,6 @@ class State_Base(State):
         self._mod_proj_values = {}
         for (attrib, value) in ModulationParam.__members__.items():
             self._mod_proj_values[getattr(ModulationParam,attrib)] = []
-
-        self.context.string = context.__class__.__name__
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(default_variable=variable,
@@ -1905,15 +1902,6 @@ class State_Base(State):
         Call self.function (default: LinearCombination function) to combine their values
         Returns combined values of projections, modulated by any mod_afferents
         """
-
-        # Set context to owner's context:
-        self._assign_context_values(
-            execution_id,
-            execution_phase=self.owner.parameters.context._get(execution_id).execution_phase,
-        )
-        # self.parameters.context._get(execution_id).execution_phase = self.owner.parameters.context._get(execution_id).execution_phase
-        self.parameters.context._get(execution_id).string = self.owner.parameters.context._get(execution_id).string
-
         # SET UP ------------------------------------------------------------------------------------------------
 
         # Get State-specific param_specs
@@ -1977,7 +1965,6 @@ class State_Base(State):
             if not self.afferents_info[projection].is_active_in_composition(context.composition):
                 continue
 
-            projection._assign_context_values(execution_id, composition=self.parameters.context._get(execution_id).composition)
             # Only accept projections from a Process to which the owner Mechanism belongs
             if isinstance(sender, ProcessInputState):
                 if not sender.owner in self.owner.processes.keys():

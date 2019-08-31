@@ -828,7 +828,6 @@ class AutodiffComposition(Composition):
         execution_id = self._assign_execution_ids(execution_id, context)
         context.composition = self
         context.source = ContextFlags.COMPOSITION
-        self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
 
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
@@ -852,14 +851,8 @@ class AutodiffComposition(Composition):
 
             output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id, context, do_logging, scheduler_processing)
             self.parameters.pytorch_representation._get(execution_id).copy_weights_to_psyneulink(execution_id)
-            ctx = self.output_CIM.parameters.context._get(execution_id)
 
-            # new_ctx = copy.deepcopy(ctx)
-            # new_ctx.execution_phase = ContextFlags.PROCESSING
-            # self.output_CIM.parameters.context._set(new_ctx, execution_id=execution_id)
-            if ctx is not None:  # HACK: CW 12/18/18 for some reason context isn't set correctly
-                ctx.execution_phase = ContextFlags.PROCESSING
-                context.add_flag(ContextFlags.PROCESSING)
+            context.add_flag(ContextFlags.PROCESSING)
             # note that output[-1] might not be the truly most recent value
             # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
             # is not having its parameters populated correctly, and this should be fixed in the long run.
@@ -909,7 +902,6 @@ class AutodiffComposition(Composition):
         # TBI: Handle trials, timesteps, etc
         execution_id = self._assign_execution_ids(execution_id, context)
         context.composition = self
-        self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
 
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing

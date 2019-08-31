@@ -1425,8 +1425,6 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
             # OutputState object
             if isinstance(output_state, OutputState):
-                # KDM 10/23/18: if DEFERRED_INIT is set, it will be set on the non-stateful .context
-                # attr so these should be ok
                 if output_state.initialization_status == ContextFlags.DEFERRED_INIT:
                     try:
                         output_state_value = OutputState._get_state_function_value(owner,

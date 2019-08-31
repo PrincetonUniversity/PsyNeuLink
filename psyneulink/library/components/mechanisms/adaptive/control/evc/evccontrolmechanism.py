@@ -1264,7 +1264,6 @@ class EVCControlMechanism(ControlMechanism):
         animate_buffer = self.system._animate
 
         # Run simulation
-        self.system.parameters.context._get(execution_id).execution_phase = ContextFlags.SIMULATION
         context.execution_phase = ContextFlags.SIMULATION
         self.system.run(
             inputs=inputs,
@@ -1274,7 +1273,6 @@ class EVCControlMechanism(ControlMechanism):
             context=context
         )
         context.execution_phase = ContextFlags.CONTROL
-        self.system.parameters.context._get(execution_id).execution_phase = ContextFlags.CONTROL
 
         # Restore System attributes
         self.system._animate = animate_buffer

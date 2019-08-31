@@ -443,7 +443,7 @@ class Context():
 
     def update_execution_time(self):
         if self.execution & ContextFlags.EXECUTING:
-            self.execution_time = _get_time(self.owner, self.context.flags)
+            self.execution_time = _get_time(self.owner, self.most_recent_context.flags)
         else:
             raise ContextError("PROGRAM ERROR: attempt to call update_execution_time for {} "
                                "when 'EXECUTING' was not in its context".format(self.owner.name))
@@ -551,7 +551,6 @@ def _get_time(component, context, execution_id=None):
                        format(component.__class__.__name__,
                               Mechanism.__name__, State.__name__, Projection.__name__))
 
-    # FIX: Modify to use component.owner.context.composition once that is implemented
     # Get System in which it is being (or was last) executed (if any):
 
     system = context.composition

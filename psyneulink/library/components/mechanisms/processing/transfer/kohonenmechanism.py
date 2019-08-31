@@ -536,8 +536,6 @@ class KohonenMechanism(TransferMechanism):
 
         self.matrix = self.learned_projection.parameter_states[MATRIX]
 
-        self.context.source = self.context.source or ContextFlags.COMMAND_LINE
-
         self.learning_mechanism = self._instantiate_learning_mechanism(learning_function=self.learning_function,
                                                                        learning_rate=self.learning_rate,
                                                                        learned_projection=self.learned_projection,

@@ -362,7 +362,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         return variable
-    
+
     def _instantiate_attributes_after_function(self, context=None):
         super(AutoAssociativeLearningMechanism, self)._instantiate_attributes_after_function(context=context)
         # KAM 2/27/19 added the line below to set the learning rate of the hebbian learning function to the learning
@@ -420,19 +420,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal._get(execution_id)))
 
-        # # TEST PRINT
-        # if not self.initialization_status == ContextFlags.INITIALIZING:
-        #     if self.context.composition:
-        #         time = self.context.composition.scheduler_processing.clock.simple_time
-        #     else:
-        #         time = self.current_execution_time
-        #     print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]\nTRIAL:  {}  TIME-STEP: {}".
-        #         format(self.context.flags_string,
-        #                time.trial,
-        #                # self.pass_,
-        #                time.time_step))
-        #     print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
-
         value = np.array([learning_signal])
 
         self.parameters.value._set(value, execution_id)
@@ -455,7 +442,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             context.execution_phase = ContextFlags.LEARNING
             learned_projection.execute(execution_id=execution_id, context=context)
             context.execution_phase = old_exec_phase
-            learned_projection.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
     @property
     def activity_source(self):

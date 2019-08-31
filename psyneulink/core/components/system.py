@@ -959,7 +959,6 @@ class System(System_Base):
         if not context:
             context = Context(source=ContextFlags.COMPOSITION)
             self.initialization_status = ContextFlags.INITIALIZING
-            self.context.string = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
 
         self.default_execution_id = self.name
 
@@ -2713,13 +2712,6 @@ class System(System_Base):
                 execution_phase=ContextFlags.PROCESSING,
                 composition=self
             )
-            self._assign_context_values(
-                execution_id,
-                propagate=True,
-                execution_phase=ContextFlags.PROCESSING,
-                string=EXECUTING + " " + SYSTEM + " " + self.name,
-                composition=self
-            )
 
         context.execution_id = execution_id
         context.composition = self
@@ -2833,19 +2825,9 @@ class System(System_Base):
         # Execute learning except for simulation runs
         if ContextFlags.SIMULATION not in context.execution_phase and self.learning:
             context.add_flag(ContextFlags.LEARNING)
-            self._assign_context_values(
-                execution_id,
-                execution_phase=ContextFlags.LEARNING,
-                string=self.parameters.context._get(execution_id).string.replace(EXECUTING, LEARNING + ' ')
-            )
             self._execute_learning(target=target, execution_id=execution_id, context=context)
 
             context.remove_flag(ContextFlags.LEARNING)
-            self._assign_context_values(
-                execution_id,
-                execution_phase=ContextFlags.IDLE,
-                string=self.parameters.context._get(execution_id).string.replace(LEARNING, EXECUTING)
-            )
 
         # EXECUTE CONTROLLER
         # FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
@@ -2853,8 +2835,6 @@ class System(System_Base):
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
         if ContextFlags.SIMULATION not in context.execution_phase and self.enable_controller:
-            self.parameters.context._get(execution_id).execution_phase = ContextFlags.CONTROL
-            self.controller.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
             context.add_flag(ContextFlags.CONTROL)
             context.add_flag(ContextFlags.PROCESSING)
             try:
@@ -2876,7 +2856,6 @@ class System(System_Base):
                     error_msg.args += ("PROGRAM ERROR: Problem executing controller ({}) for {}".format(self.controller.name, self.name),)
                     raise
 
-            self.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
             context.remove_flag(ContextFlags.CONTROL)
             context.remove_flag(ContextFlags.PROCESSING)
 
@@ -2910,12 +2889,6 @@ class System(System_Base):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
 
-                mechanism._assign_context_values(
-                    execution_id,
-                    string="Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]",
-                    composition=self
-                )
-
                 # Set up runtime params and context
                 execution_runtime_params = {}
                 if mechanism in runtime_params:
@@ -2923,14 +2896,10 @@ class System(System_Base):
                         if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing, execution_context=execution_id):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
 
-                mechanism.parameters.context._get(execution_id).execution_phase = self.parameters.context._get(execution_id).execution_phase
-
                 # FIX: DO THIS LOCALLY IN LearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
                 if (isinstance(mechanism, LearningMechanism) and
                         mechanism.learning_timing is LearningTiming.EXECUTION_PHASE):
                     context.execution_phase = ContextFlags.LEARNING
-                    mechanism.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
-
                 # Execute
                 # # TEST PRINT:
                 # print("\nEXECUTING System._execute_processing\n")
@@ -2950,8 +2919,6 @@ class System(System_Base):
                     for key in mechanism.function._runtime_params_reset[execution_id]:
                         mechanism.function._set_parameter_value(key, mechanism.function._runtime_params_reset[execution_id][key], execution_id)
                 mechanism.function._runtime_params_reset[execution_id] = {}
-
-                mechanism.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
                 if self._report_system_output and  self._report_process_output:
 
@@ -3029,9 +2996,6 @@ class System(System_Base):
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
 
-                component.parameters.context._get(execution_id).composition = self
-                component.parameters.context._get(execution_id).execution_phase = ContextFlags.LEARNING
-
                 context.execution_phase = ContextFlags.LEARNING
 
                 if isinstance(component, Mechanism):
@@ -3050,8 +3014,6 @@ class System(System_Base):
                                              component_type,
                                              component.name,
                                              re.sub(r'[\[,\],\n]','',str(process_names))))
-                    component.parameters.context._get(execution_id).string = context_str
-
                     # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                     component.execute(execution_id=execution_id, runtime_params=params, context=context)
 
@@ -3060,27 +3022,19 @@ class System(System_Base):
 
                 elif isinstance(component, MappingProjection):
                     processes = list(component.sender.owner.processes.keys())
-                    component.parameters.context._get(execution_id).string = "Updating {ParameterState.__name__} for " \
-                                                                             "{component.name} in {self.name}"
                     component._parameter_states[MATRIX]._update(execution_id=execution_id, context=context)
-
-                component.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
                 if not self._animate is False:
                     if (self._animate_unit is COMPONENT and
                             SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
-                            self.show_graph(active_items=component, **self._animate, output_fmt='gif')
+                            self.show_graph(active_items=component, **self._animate, output_fmt='gif', context=context)
 
                 self._component_execution_count += 1
-
-                component.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
                 # # TEST PRINT LEARNING:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
                 # # TEST PRINT LEARNING:
-                # print ("UPDATING WEIGHT UPDATES FOR {} in System [CONTEXT: {}]:".
-                #        format(component.name, component.parameters.context._get(execution_id).flags_string))
                 # print(component._parameter_states[MATRIX].value)
 
         # FINALLY report outputs
@@ -3729,7 +3683,6 @@ class System(System_Base):
 
     @controller.setter
     def controller(self, control_mech_spec):
-        self.context.string = 'System.controller setter'
         self._instantiate_controller(control_mech_spec, context=Context(source=ContextFlags.PROPERTY))
 
     @property
@@ -5088,7 +5041,6 @@ class SystemInputState(OutputState):
         else:
             self.name = owner.name + "_" + name
         self.initialization_status = ContextFlags.INITIALIZING
-        self.context.string = context
         self.prefs = prefs
         self.log = Log(owner=self)
         self.path_afferents = []

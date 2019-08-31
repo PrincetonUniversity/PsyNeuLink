@@ -894,7 +894,6 @@ class Process(Process_Base):
 
         if not context:
             self.initialization_status = ContextFlags.INITIALIZING
-            self.context.string = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
         if default_variable is None and len(pathway) > 0:
             default_variable = pathway[0].defaults.variable
@@ -2235,14 +2234,6 @@ class Process(Process_Base):
 
         context.composition = self
         context.execution_id = execution_id
-        if self.parameters.context._get(execution_id) is None:
-            self._assign_context_values(
-                execution_id,
-                propagate=True,
-                execution_phase=ContextFlags.PROCESSING,
-                string=EXECUTING + " " + PROCESS + " " + self.name,
-                composition=self
-            )
 
         # initialize from base context but don't overwrite any values already set for this execution_id
         self._initialize_from_context(execution_id, base_execution_id, override=False)
@@ -2272,12 +2263,10 @@ class Process(Process_Base):
 
             # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            mechanism.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
             context.source = ContextFlags.PROCESS
             context.execution_phase = ContextFlags.PROCESSING
             mechanism.execute(execution_id=execution_id, context=context)
             context.execution_phase = ContextFlags.IDLE
-            mechanism.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
 
             if report_output:
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
@@ -2342,18 +2331,10 @@ class Process(Process_Base):
         # THEN, execute ComparatorMechanism and LearningMechanism
         context.add_flag(ContextFlags.LEARNING)
         for mechanism in self._learning_mechs:
-            mechanism._assign_context_values(execution_id, execution_phase=ContextFlags.LEARNING)
             mechanism.execute(execution_id=execution_id, context=context)
-            mechanism._assign_context_values(execution_id, execution_phase=ContextFlags.IDLE)
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
-            mech._assign_context_values(
-                execution_id,
-                string=self.parameters.context._get(execution_id).string.replace(EXECUTING, LEARNING + ' '),
-                execution_phase=ContextFlags.LEARNING
-            )
-
             # IMPLEMENTATION NOTE:
             #    This implementation restricts learning to ParameterStates of projections to input_states
             #    That means that other parameters (e.g. object or function parameters) are not currenlty learnable
@@ -2376,11 +2357,6 @@ class Process(Process_Base):
                     #    as the ParameterStates are assigned their owner's context in their update methods
                     # Note: do this rather just calling LearningSignals directly
                     #       since parameter_state._update() handles parsing of LearningProjection-specific params
-                    projection._assign_context_values(
-                        execution_id,
-                        string=self.parameters.context._get(execution_id).string.replace(EXECUTING, LEARNING + ' '),
-                        execution_phase=ContextFlags.LEARNING
-                    )
 
                     # For each parameter_state of the Projection
                     try:
@@ -2405,13 +2381,6 @@ class Process(Process_Base):
                                                format(e.args[0], parameter_state.name, ParameterState.__name__,
                                                       projection.name))
 
-                    projection._assign_context_values(execution_id, execution_phase=ContextFlags.IDLE)
-
-            mech._assign_context_values(
-                execution_id,
-                execution_phase=ContextFlags.IDLE,
-                string=self.parameters.context._get(execution_id).string.replace(LEARNING, EXECUTING)
-            )
         context.remove_flag(ContextFlags.LEARNING)
 
     def run(self,

@@ -952,16 +952,12 @@ class Projection_Base(Projection):
         if variable is None:
             variable = self.sender.parameters.value._get(execution_id)
 
-        self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-        self.parameters.context._get(execution_id).string = context
-
         value = super()._execute(
             variable=variable,
             execution_id=execution_id,
             runtime_params=runtime_params,
             context=context
         )
-        self.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
         return value
 
     def _activate_for_compositions(self, composition):

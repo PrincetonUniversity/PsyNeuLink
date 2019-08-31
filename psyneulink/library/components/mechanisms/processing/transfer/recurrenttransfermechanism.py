@@ -1497,8 +1497,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             elif self.learning_condition is UPDATE:
                 self.learning_condition = None
 
-        self.context.source = self.context.source or ContextFlags.COMMAND_LINE
-
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self._learning_signal_source,
                                                                        learning_function=self.learning_function,
                                                                        learning_rate=self.learning_rate,

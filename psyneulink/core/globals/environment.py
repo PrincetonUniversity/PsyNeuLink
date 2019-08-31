@@ -96,20 +96,6 @@ or Mechanism.input_states, as these are added in the proper classes' _dependent_
     under **new_execution_id**
     - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
 
-Debugging Tips
-^^^^^^^^^^^^^^
-If you receive an error like below, while checking for a context value for example,
-
-::
-
-    self.parameters.context._get(execution_id).execution_phase == ContextFlags.PROCESSING
-    AttributeError: 'NoneType' object has no attribute 'execution_phase'
-
-this means that there was no context value found for execution_id, and can be indicative that execution_id
-was not initialized to the values of another execution context, which normally happens during execution.
-See `Execution Contexts initialization <Run_Execution_Contexts_Init>`.
-
-
 .. _Run_Timing:
 
 *Timing*
@@ -919,8 +905,6 @@ def run(obj,
             if context.source == ContextFlags.COMMAND_LINE or ContextFlags.SIMULATION not in context.execution_phase:
                 context.execution_phase = ContextFlags.PROCESSING
                 context.composition = obj
-                obj._assign_context_values(execution_id, execution_phase=ContextFlags.PROCESSING, composition=obj, propagate=True)
-                obj.parameters.context._get(execution_id).string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
 
             result = obj.execute(
                 input=execution_inputs,
