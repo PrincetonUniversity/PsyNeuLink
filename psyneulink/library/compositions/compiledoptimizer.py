@@ -89,9 +89,7 @@ class Optimizer():
 
 
 class AdamOptimizer(Optimizer):
-    '''
-    Implements compiled ADAM Optimizer ( from paper https://arxiv.org/pdf/1412.6980.pdf  )
-    '''
+    """Implements compiled ADAM Optimizer ( from paper https://arxiv.org/pdf/1412.6980.pdf  )"""
     # sets up parameters of model & the information required for forward computation
     def __init__(self, pytorch_model, lr=1e-3, betas=(.9, .999), eps=1e-8, weight_decay=0,):
         super().__init__(pytorch_model)
@@ -298,9 +296,7 @@ class AdamOptimizer(Optimizer):
 
 
 class SGDOptimizer(Optimizer):
-    '''
-    Implements compiled Stocastic Gradient Descent optimizer (without momentum)
-    '''
+    """Implements compiled Stocastic Gradient Descent optimizer (without momentum)"""
     # sets up parameters of model & the information required for forward computation
     def __init__(self, pytorch_model, lr=1e-3):
         super().__init__(pytorch_model)
