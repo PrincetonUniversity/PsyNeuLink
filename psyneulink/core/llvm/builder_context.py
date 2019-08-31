@@ -227,12 +227,6 @@ class LLVMBuilderContext:
 
         return ir.LiteralStructType([])
 
-    def get_autodiff_stimuli_struct_type(self, component):
-        if hasattr(component, '_get_autodiff_stimuli_struct_type'):
-            return component._get_autodiff_stimuli_struct_type(self)
-
-        return ir.LiteralStructType([])
-
     def get_param_ptr(self, component, builder, params_ptr, param_name):
         idx = self.int32_ty(component._get_param_ids().index(param_name))
         return builder.gep(params_ptr, [self.int32_ty(0), idx],
