@@ -40,9 +40,7 @@ class Loss():
 
 
 class MSELoss(Loss):
-    '''
-    Implements compiled MSE Loss
-    '''
+    """Implements compiled MSE Loss"""
     def __init__(self,pytorch_model, reduction='sum'):
         if reduction not in ['sum']:
             raise Exception("Unsupported compiled reduction type "+reduction)

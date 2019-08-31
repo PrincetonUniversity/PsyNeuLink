@@ -81,7 +81,7 @@ c_rels = np.shape(rels_onehot)[1]
 
 #For the input layers, we will use linear transfer mechanisms
 
-n_units=16;
+n_units=16
 
 #This number of hidden units is taken directly from Rumelhart's paper
 

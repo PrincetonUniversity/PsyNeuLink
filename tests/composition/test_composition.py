@@ -2020,7 +2020,7 @@ class TestRun:
                                       ])
     @pytest.mark.parametrize("vector_length", [2**x for x in range(1)])
     def test_run_composition_vector(self, benchmark, mode, vector_length):
-        var = [1.0 for x in range(vector_length)];
+        var = [1.0 for x in range(vector_length)]
         comp = Composition()
         A = IntegratorMechanism(default_variable=var, function=Linear(slope=5.0))
         B = TransferMechanism(default_variable=var, function=Linear(slope=5.0))

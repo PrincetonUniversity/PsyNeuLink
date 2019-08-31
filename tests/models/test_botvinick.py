@@ -30,9 +30,8 @@ import psyneulink.core.components.functions.transferfunctions
                                   pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                   pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                   pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-
 def test_botvinick_model(benchmark, mode, reps):
-    benchmark.group = "Botvinick (scale " + str(reps/100) + ")";
+    benchmark.group = "Botvinick (scale " + str(reps/100) + ")"
 
     # SET UP MECHANISMS ----------------------------------------------------------------------------------------------------
     # Linear input layer

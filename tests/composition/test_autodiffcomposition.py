@@ -27,7 +27,6 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.pytorch
 @pytest.mark.acconstructor
-
 class TestACConstructor:
 
     def test_no_args(self):
@@ -1838,12 +1837,12 @@ class TestACLogging:
 @pytest.mark.pytorch
 @pytest.mark.acnested
 class TestNested:
+
     @pytest.mark.parametrize(
         'num_epochs, learning_rate, patience, min_delta', [
             (2000, 4, 10, .00001),
         ]
     )
-
     @pytest.mark.parametrize("mode", ['Python',
                                     pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.xfail]),
                                     ])

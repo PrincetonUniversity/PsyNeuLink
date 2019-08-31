@@ -2236,7 +2236,7 @@ class State_Base(State):
 
     @property
     def full_name(self):
-        '''Return name relative to owner as:  <owner.name>[<self.name>]'''
+        """Return name relative to owner as:  <owner.name>[<self.name>]"""
         if self.owner:
             return f'{self.owner.name}[{self.name}]'
         else:
