@@ -51,7 +51,6 @@ _int32_ty = ir.IntType(32)
 _float_ty = ir.DoubleType()
 _global_context = None
 
-_printf_count = 0
 _BUILTIN_PREFIX = "__pnl_builtin_"
 _builtin_intrinsics = frozenset(('pow', 'log', 'exp'))
 
@@ -243,26 +242,32 @@ class LLVMBuilderContext:
             return builder.gep(element, [self.int32_ty(0), self.int32_ty(0)])
         return element
 
-    def inject_printf(self, builder,fmt,*args,override_debug=False):
+    def inject_printf(self, builder, fmt, *args, override_debug=False):
         if "print_values" not in debug_env and override_debug is False:
             return
         fmt += "\0"
-        llvm_func = builder.function
+
         import llvmlite.binding as llvm
         llvm.load_library_permanently("libc.so.6")
-        printfc = llvm.address_of_symbol("printf")
-        voidptr_ty = ir.IntType(8).as_pointer()
-        printf = builder.inttoptr(pnlvm.ir.IntType(64)(printfc),ir.FunctionType(ir.IntType(32), [voidptr_ty], var_arg=True).as_pointer())
-        arr = pnlvm.ir.Constant(pnlvm.ir.ArrayType(pnlvm.ir.IntType(8), len(fmt)),
-        bytearray(fmt.encode("utf8")))
-        global _printf_count
-        global_fmt = ir.GlobalVariable(llvm_func.module, arr.type, name="fstr"+str(_printf_count))
-        _printf_count += 1
-        global_fmt.linkage = 'internal'
-        global_fmt.global_constant = True
-        global_fmt.initializer = arr
-        fmt_ptr = builder.bitcast(global_fmt,pnlvm.ir.IntType(8).as_pointer())
-        builder.call(printf,[fmt_ptr]+list(args))
+        printf_address = llvm.address_of_symbol("printf")
+        int8_ptr = ir.IntType(8).as_pointer()
+
+        printf_ty = ir.FunctionType(self.int32_ty, [int8_ptr], var_arg=True).as_pointer()
+        # Direct pointer constants don't work in llvmlite
+        printf = builder.inttoptr(pnlvm.ir.IntType(64)(printf_address), printf_ty)
+
+        stack_save = self.get_builtin("stacksave", [], ir.FunctionType(int8_ptr, []))
+        old_stack = builder.call(stack_save, [])
+        fmt_data = bytearray(fmt.encode("utf8"))
+
+        # Allocate array so ease initialization
+        fmt = builder.alloca(ir.ArrayType(ir.IntType(8), len(fmt_data)))
+        builder.store(fmt.type.pointee(fmt_data), fmt)
+        fmt_ptr = builder.gep(fmt, [self.int32_ty(0), self.int32_ty(0)])
+
+        builder.call(printf, [fmt_ptr] + list(args))
+        stack_restore = self.get_builtin("stackrestore", [], ir.FunctionType(ir.VoidType(), [int8_ptr]))
+        builder.call(stack_restore, [old_stack])
 
 
     def inject_printf_float_array(self,builder,array,dim,prefix="",suffix="\n",ctype_dimension=False,override_debug=False):
