@@ -857,29 +857,6 @@ class PytorchModelCreator(torch.nn.Module):
                     one, builder.call(exp, [arg])))
                 return ret
 
-        # if we have relu function (the only other kind of function allowed by the autodiff composition)
-        elif isinstance(node.function, ReLU):
-            gain = get_fct_param_value('gain')
-            bias = get_fct_param_value('bias')
-            leak = get_fct_param_value('leak')
-            zero = ctx.float_ty(0)
-            def modify_value(x):
-                val = builder.fsub(x, bias)
-                pred = builder.fcmp_ordered(">", val, zero)
-                then = None
-                otherwise = None
-                with builder.if_else(pred) as (then, otherwise):
-                    with then:
-                        max = val
-                        min = zero
-                    with otherwise:
-                        max = zero
-                        min = val
-
-                ret = builder.fadd(
-                    builder.fmul(max, gain),
-                    builder.fmul(min, leak))
-                return ret
         else:
             raise Exception(f"Unsupported compiled activation function {node.function}")
         
