@@ -4,7 +4,6 @@ from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core import llvm as pnlvm
-from llvmlite import ir
 import numpy
 import ctypes
 import functools
@@ -84,12 +83,7 @@ class MSELoss(Loss):
     def _gen_inject_loss_differential(self,ctx,builder,value,target,dim,output=None,sum_loss=False):
         
         if output is None:
-            output = builder.alloca(
-                ir.types.ArrayType(
-                    ctx.float_ty,
-                    dim
-                )
-            )
+            output = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
             # zero output vector
             self._pytorch_model._gen_inject_vec_scalar_mult(ctx,builder,output,ctx.float_ty(0),dim,output)
 

@@ -6,7 +6,6 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer,SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss
-from llvmlite import ir
 import numpy
 import ctypes
 import functools
@@ -151,7 +150,7 @@ class PytorchModelCreator(torch.nn.Module):
             component_id = self._composition._get_node_index(component)
             input_ty[component_id] = ctx.convert_python_struct_to_llvm_ir(
                 component.defaults.variable[0])
-        struct_ty = ir.types.LiteralStructType(input_ty)
+        struct_ty = pnlvm.ir.types.LiteralStructType(input_ty)
         return struct_ty
 
     # Converts tensor input to ctype
@@ -193,24 +192,24 @@ class PytorchModelCreator(torch.nn.Module):
                 afferent_node = afferent_vertex.component
                 afferent_index = self._get_afferent_node_index(node,afferent_node)
                 if "no_ref_pass" not in debug_env:
-                    afferent_weight = ir.types.IntType(64)
+                    afferent_weight = pnlvm.ir.types.IntType(64)
                 else:
                     afferent_weight = ctx.convert_python_struct_to_llvm_ir(
                         weights.detach().numpy())
                 weight_array[afferent_index] = afferent_weight
-            node_params[0] = ir.types.LiteralStructType(weight_array)
+            node_params[0] = pnlvm.ir.types.LiteralStructType(weight_array)
 
             # 2) setup bias
             bias = forward_info[1]
             if bias is not None:
                 if "no_ref_pass" not in debug_env:
-                    node_params += [ir.types.IntType(64)]
+                    node_params += [pnlvm.ir.types.IntType(64)]
                 else:
                     node_params += [ctx.convert_python_struct_to_llvm_ir(
                         bias.detach().numpy())]
 
-            param_list[node_idx] = ir.types.LiteralStructType(node_params)
-        struct_ty = ir.types.LiteralStructType(
+            param_list[node_idx] = pnlvm.ir.types.LiteralStructType(node_params)
+        struct_ty = pnlvm.ir.types.LiteralStructType(
             param_list)
         return struct_ty
 
@@ -280,7 +279,7 @@ class PytorchModelCreator(torch.nn.Module):
         # create output vec
         if output_vec is None:
             output_vec = builder.alloca(
-                ir.types.ArrayType(ir.types.DoubleType(), z))
+                pnlvm.ir.types.ArrayType(pnlvm.ir.types.DoubleType(), z))
         builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()), builder.bitcast(m2, ctx.float_ty.as_pointer(
         )), ctx.int32_ty(y), ctx.int32_ty(z), builder.bitcast(output_vec, ctx.float_ty.as_pointer())])
@@ -289,7 +288,7 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_inject_vec_copy(self,ctx,builder,vector,dim,output_vec = None):
         if output_vec is None:
             output_vec = builder.alloca(
-                ir.types.ArrayType(ir.types.DoubleType(), dim))
+                pnlvm.ir.types.ArrayType(pnlvm.ir.types.DoubleType(), dim))
         builtin = ctx.get_llvm_function("__pnl_builtin_vec_copy")
         builder.call(builtin, [builder.bitcast(vector, ctx.float_ty.as_pointer()), ctx.int32_ty(dim), builder.bitcast(output_vec, ctx.float_ty.as_pointer())])
         return output_vec
@@ -297,7 +296,7 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_inject_vec_add(self,ctx,builder,u,v,dim,output_vec = None):
         if output_vec is None:
             output_vec = builder.alloca(
-                ir.types.ArrayType(ir.types.DoubleType(), dim))
+                pnlvm.ir.types.ArrayType(pnlvm.ir.types.DoubleType(), dim))
         builtin = ctx.get_llvm_function("__pnl_builtin_vec_add")
         builder.call(builtin, [builder.bitcast(u, ctx.float_ty.as_pointer()), builder.bitcast(v, ctx.float_ty.as_pointer()),ctx.int32_ty(dim), builder.bitcast(output_vec, ctx.float_ty.as_pointer())])
         return output_vec
@@ -305,7 +304,7 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_inject_vec_scalar_mult(self,ctx,builder,u,s,dim,output_vec = None):
         if output_vec is None:
             output_vec = builder.alloca(
-                ir.types.ArrayType(ir.types.DoubleType(), dim))
+                pnlvm.ir.types.ArrayType(pnlvm.ir.types.DoubleType(), dim))
         builtin = ctx.get_llvm_function("__pnl_builtin_vec_scalar_mult")
         builder.call(builtin, [builder.bitcast(u, ctx.float_ty.as_pointer()), s,ctx.int32_ty(dim), builder.bitcast(output_vec, ctx.float_ty.as_pointer())])
         return output_vec
@@ -313,8 +312,8 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_inject_mat_add(self,ctx,builder,m1,m2,x,y,output_mat = None):
         if output_mat is None:
             output_mat = builder.alloca(
-                ir.types.ArrayType(
-                    ir.types.ArrayType(
+                pnlvm.ir.types.ArrayType(
+                    pnlvm.ir.types.ArrayType(
                         ctx.float_ty,y
                     ),x
                 )
@@ -326,8 +325,8 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_inject_mat_scalar_mult(self,ctx,builder,m1,s,x,y,output_mat = None):
         if output_mat is None:
             output_mat = builder.alloca(
-                ir.types.ArrayType(
-                    ir.types.ArrayType(
+                pnlvm.ir.types.ArrayType(
+                    pnlvm.ir.types.ArrayType(
                         ctx.float_ty,y
                     ),x
                 )
@@ -339,8 +338,8 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_inject_mat_copy(self,ctx,builder,m1,x,y,output_mat = None):
         if output_mat is None:
             output_mat = builder.alloca(
-                ir.types.ArrayType(
-                    ir.types.ArrayType(
+                pnlvm.ir.types.ArrayType(
+                    pnlvm.ir.types.ArrayType(
                         ctx.float_ty,y
                     ),x
                 )
@@ -352,7 +351,7 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_inject_vec_sub(self,ctx,builder,u,v,dim,output_vec = None):
         if output_vec is None:
             output_vec = builder.alloca(
-                ir.types.ArrayType(ir.types.DoubleType(), dim))
+                pnlvm.ir.types.ArrayType(pnlvm.ir.types.DoubleType(), dim))
         builtin = ctx.get_llvm_function("__pnl_builtin_vec_sub")
         builder.call(builtin, [builder.bitcast(u, ctx.float_ty.as_pointer()), builder.bitcast(v, ctx.float_ty.as_pointer()),ctx.int32_ty(dim), builder.bitcast(output_vec, ctx.float_ty.as_pointer())])
         return output_vec
@@ -360,8 +359,8 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_inject_mat_sub(self,ctx,builder,m1,m2,x,y,output_mat = None):
         if output_mat is None:
             output_mat = builder.alloca(
-                ir.types.ArrayType(
-                    ir.types.ArrayType(
+                pnlvm.ir.types.ArrayType(
+                    pnlvm.ir.types.ArrayType(
                         ctx.float_ty,y
                     ),x
                 )
@@ -373,7 +372,7 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_inject_vec_hadamard(self,ctx,builder,u,v,dim,output_vec = None):
         if output_vec is None:
             output_vec = builder.alloca(
-                ir.types.ArrayType(ir.types.DoubleType(), dim))
+                pnlvm.ir.types.ArrayType(pnlvm.ir.types.DoubleType(), dim))
         builtin = ctx.get_llvm_function("__pnl_builtin_vec_hadamard")
         builder.call(builtin, [builder.bitcast(u, ctx.float_ty.as_pointer()), builder.bitcast(v, ctx.float_ty.as_pointer()),ctx.int32_ty(dim), builder.bitcast(output_vec, ctx.float_ty.as_pointer())])
         return output_vec
@@ -381,8 +380,8 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_inject_mat_hadamard(self,ctx,builder,m1,m2,x,y,output_mat = None):
         if output_mat is None:
             output_mat = builder.alloca(
-                ir.types.ArrayType(
-                    ir.types.ArrayType(
+                pnlvm.ir.types.ArrayType(
+                    pnlvm.ir.types.ArrayType(
                         ctx.float_ty,y
                     ),x
                 )
@@ -395,7 +394,7 @@ class PytorchModelCreator(torch.nn.Module):
         # create output vec
         if output_vec is None:
             output_vec = builder.alloca(
-                ir.types.ArrayType(ctx.float_ty, y))
+                pnlvm.ir.types.ArrayType(ctx.float_ty, y))
         builtin = ctx.get_llvm_function("__pnl_builtin_vxm_transposed")
         builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()), builder.bitcast(m2, ctx.float_ty.as_pointer(
         )), ctx.int32_ty(y), ctx.int32_ty(z), builder.bitcast(output_vec, ctx.float_ty.as_pointer())])
@@ -404,7 +403,7 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_inject_bin_function_call(self,ctx,builder,bin_func,vector,dim,output_vec=None):
         if output_vec is None:
             output_vec = builder.alloca(
-                ir.types.ArrayType(ctx.float_ty, dim))
+                pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
         builder.call(bin_func, [builder.bitcast(vector, ctx.float_ty.as_pointer()), ctx.int32_ty(dim), builder.bitcast(output_vec, ctx.float_ty.as_pointer())])
         return output_vec
     
@@ -424,8 +423,8 @@ class PytorchModelCreator(torch.nn.Module):
                                                 ctx.int32_ty(afferent_node_index)])
         if "no_ref_pass" not in debug_env:
             mem_addr = builder.load(node_weights)
-            node_weights = builder.inttoptr(mem_addr, ir.types.ArrayType(
-                ir.types.ArrayType(ir.types.DoubleType(), dim_y), dim_x).as_pointer())
+            node_weights = builder.inttoptr(mem_addr, pnlvm.ir.types.ArrayType(
+                pnlvm.ir.types.ArrayType(pnlvm.ir.types.DoubleType(), dim_y), dim_x).as_pointer())
     
         return node_weights,dim_x,dim_y
 
@@ -440,7 +439,7 @@ class PytorchModelCreator(torch.nn.Module):
         if "no_ref_pass" not in debug_env:
             mem_addr = builder.load(node_bias)
             node_bias = builder.inttoptr(mem_addr,
-                ir.types.ArrayType(ir.types.DoubleType(), dim).as_pointer())
+                pnlvm.ir.types.ArrayType(pnlvm.ir.types.DoubleType(), dim).as_pointer())
     
         return node_bias,dim
 

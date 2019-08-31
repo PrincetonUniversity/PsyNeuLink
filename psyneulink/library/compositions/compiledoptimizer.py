@@ -4,7 +4,6 @@ from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core import llvm as pnlvm
-from llvmlite import ir
 import numpy
 import ctypes
 import functools
@@ -45,15 +44,15 @@ class Optimizer():
                     weights_dim_x
                 )
                 delta_w[node_idx][afferent_node_index] = delta_w_array
-            delta_w[node_idx] = ir.types.LiteralStructType(delta_w[node_idx])
-        delta_w = ir.types.LiteralStructType(delta_w)
+            delta_w[node_idx] = pnlvm.ir.types.LiteralStructType(delta_w[node_idx])
+        delta_w = pnlvm.ir.types.LiteralStructType(delta_w)
         return delta_w
 
     def _get_optimizer_struct_type(self, ctx, extra_types=[]):
         structs = []
         structs.append(self._get_delta_w_struct_type(ctx))
         structs += extra_types
-        return ir.types.LiteralStructType(structs)
+        return pnlvm.ir.types.LiteralStructType(structs)
 
     def _get_listof_gradient_struct_values(self):
         values = []
