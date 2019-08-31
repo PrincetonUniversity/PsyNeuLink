@@ -21,9 +21,10 @@ class Loss():
 
         self._DELTA_W_NUM = 0
 
-    def _gen_inject_lossfunc_call(self,ctx,builder,bin_func,value,target,dim):
-        return builder.call(bin_func, [builder.bitcast(value, ctx.float_ty.as_pointer()), ctx.int32_ty(dim),
-                                       builder.bitcast(target, ctx.float_ty.as_pointer())])
+    def _gen_inject_lossfunc_call(self, ctx, builder, bin_func, value, target, dim):
+        return builder.call(bin_func, [builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0)]),
+                                       ctx.int32_ty(len(value.type.pointee)),
+                                       builder.gep(target, [ctx.int32_ty(0), ctx.int32_ty(0)])])
 # Class that is used to represent a compiled optimizer - aims to reimplement the logic of torch.optimizer in the form of llvmlite compileable code
 
 
