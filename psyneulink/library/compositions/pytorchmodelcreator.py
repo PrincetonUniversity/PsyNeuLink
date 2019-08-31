@@ -116,9 +116,7 @@ class PytorchModelCreator(torch.nn.Module):
                         afferents[input_node] = weights
                         self.params.append(weights)
                         self.projections_to_pytorch_weights[mapping_proj] = weights
-                node_forward_info = [value, biases,
-                                     function, afferents, component]
-                # node_forward_info = [value, biases, function, afferents, value]
+                node_forward_info = [value, biases, function, afferents, component]
 
                 self.component_to_forward_info[component] = node_forward_info
 
@@ -457,31 +455,23 @@ class PytorchModelCreator(torch.nn.Module):
         builder = ctx.create_llvm_function(args+extra_args, self, name)
         llvm_func = builder.function
         for a in llvm_func.args:
-            if isinstance(a.type,type(ctx.int32_ty)) or isinstance(a.type,type(ctx.float_ty)):
-                continue
-            a.attributes.add('noalias')
+            if isinstance(a.type, pnlvm.ir.PointerType):
+                a.attributes.add('noalias')
 
-        model_context, model_params, model_input, model_output, optim_struct, input_struct_ptr, target_struct_ptr, input_idx = llvm_func.args[:len(
-            args)]
+        model_context, model_params, model_input, model_output, optim_struct, input_struct_ptr, target_struct_ptr, input_idx = llvm_func.args[:len(args)]
         # setup useful mappings
         input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
 
-        node_value_ir_types = {node: pnlvm.ir.ArrayType(
-            pnlvm.ir.ArrayType(
-                ctx.float_ty,
-                len(node.defaults.value[0])
-            ),
-            1
-        ) for node in composition.nodes}
+        node_value_ir_types = {node:
+            pnlvm.ir.ArrayType(pnlvm.ir.ArrayType(ctx.float_ty, len(node.defaults.value[0])), 1)
+                for node in composition.nodes}
 
         def _get_node_array_ptr(node, struct_ptr):
             node_idx = composition._get_node_index(node)
-            array_ptr = builder.gep(
-                struct_ptr, [ctx.int32_ty(node_idx), ctx.int32_ty(2)])
+            array_ptr = builder.gep(struct_ptr, [ctx.int32_ty(node_idx), ctx.int32_ty(2)])
             array_ptr = builder.load(array_ptr)
-            return builder.inttoptr(
-                array_ptr, node_value_ir_types[node].as_pointer())
+            return builder.inttoptr(array_ptr, node_value_ir_types[node].as_pointer())
 
         node_input_arrays = {node: _get_node_array_ptr(node, input_struct_ptr) for node in input_nodes}
 
@@ -604,22 +594,21 @@ class PytorchModelCreator(torch.nn.Module):
                 
                 with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "weight_update_loop_outer") as (b1, weight_row):
                     with pnlvm.helpers.for_loop_zero_inc(b1, ctx.int32_ty(weights_dim_y), "weight_update_loop_inner") as (b2, weight_column):
-                        a_val = b2.load(b2.gep(afferent_node_activation, [
-                                                    ctx.int32_ty(0), weight_row]))
-                        d_val = b2.load(b2.gep(
-                            err_val, [ctx.int32_ty(0), weight_column]))
-                        old_val = b2.load(b2.gep(node_delta_w, [
-                                                ctx.int32_ty(0), weight_row, weight_column]))
-                        new_val = b2.fadd(
-                            old_val, b2.fmul(a_val, d_val))
-                        b2.store(new_val, b2.gep(node_delta_w, [
-                                        ctx.int32_ty(0), weight_row, weight_column]))
+                        a_val = b2.load(b2.gep(afferent_node_activation,
+                                               [ctx.int32_ty(0), weight_row]))
+                        d_val = b2.load(b2.gep(err_val,
+                                               [ctx.int32_ty(0), weight_column]))
+                        old_val = b2.load(b2.gep(node_delta_w,
+                                                 [ctx.int32_ty(0), weight_row, weight_column]))
+                        new_val = b2.fadd(old_val, b2.fmul(a_val, d_val))
+                        b2.store(new_val, b2.gep(node_delta_w,
+                                                 [ctx.int32_ty(0), weight_row, weight_column]))
                         
         builder.store(builder.fmul(ctx.float_ty(.5),builder.load(total_loss)),total_loss)
         ctx.inject_printf(builder,"TOTAL LOSS: %f\n",builder.load(total_loss),override_debug=False)
         builder.ret_void()
-        llvm_func = builder.function
-        return llvm_func
+
+        return builder.function
         
     def _gen_llvm_training_function_body(self, ctx, builder, context, params, comp_in, data_arg, cond):
         # 1) Setup autodiff learning stuff
@@ -687,8 +676,7 @@ class PytorchModelCreator(torch.nn.Module):
                                          ctx.int32_ty(input_cim_idx)])
         model_output = builder.gep(data, [ctx.int32_ty(0),
                                           ])
-        epoch_idx = None
-        
+
         # setup optimizer
         optimizer_type = self._composition.optimizer_type
         if optimizer_type == 'adam':
@@ -712,7 +700,6 @@ class PytorchModelCreator(torch.nn.Module):
 
         with pnlvm.helpers.for_loop_zero_inc(builder, epochs, "epoch_loop") as (b1, epoch_idx):
             ctx.inject_printf(builder, "\033[0;32mEPOCH %d\033[0m\n", epoch_idx)
-            input_idx = None
             with pnlvm.helpers.for_loop_zero_inc(b1, num_inputs, "input_loop") as (b2, input_idx):
                 ctx.inject_printf(b2, "\n\033[0;31mINPUT %d\033[0m\n", input_idx)
                 ctx.inject_printf(b2, "OPTIMIZER ZERO GRAD %d\n", input_idx)
@@ -848,20 +835,19 @@ class PytorchModelCreator(torch.nn.Module):
             one = ctx.float_ty(1)
             exp = ctx.get_llvm_function("__pnl_builtin_exp")
             def modify_value(x):
-                arg = builder.fadd(
-                    builder.fmul(
-                        gain, builder.fsub(x, bias)
-                    ), offset)
+                arg = builder.fsub(x, bias)
+                arg = builder.fmul(gain, arg)
+                arg = builder.fadd(arg, offset)
 
-                ret = builder.fdiv(one, builder.fadd(
-                    one, builder.call(exp, [arg])))
+                ret = builder.call(exp, [arg])
+                ret = builder.fadd(one, ret)
+                ret = builder.fdiv(one, ret)
                 return ret
 
         else:
             raise Exception(f"Unsupported compiled activation function {node.function}")
         
         #do computations
-        iterator = None
         with pnlvm.helpers.for_loop_zero_inc(builder, dim, "function_loop") as (b1, iterator):
             val_ptr = b1.gep(input_vector,[iterator])
             val = b1.load(val_ptr)
@@ -918,21 +904,22 @@ class PytorchModelCreator(torch.nn.Module):
             exp = ctx.get_llvm_function("__pnl_builtin_exp")
             
             def modify_value(x):
-                arg = builder.fadd(
-                    builder.fmul(
-                        gain, builder.fsub(x, bias)
-                    ), offset)
+                arg = builder.fsub(x, bias)
+                arg = builder.fmul(gain, arg)
+                arg = builder.fadd(arg, offset)
 
-                ret = builder.fdiv(one, builder.fadd(
-                    one, builder.call(exp, [arg])))
-                ret = builder.fmul(ret,builder.fsub(ctx.float_ty(1),ret))
+                f_x = builder.call(exp, [arg])
+                f_x = builder.fadd(one, f_x)
+                f_x = builder.fdiv(one, f_x)
+
+                ret = builder.fsub(one ,f_x)
+                ret = builder.fmul(f_x, ret)
                 return ret
 
         else:
             raise Exception(f"Function type {node.function} is currently unsupported by compiled execution!")
         
         # do computations
-        iterator = None
         with pnlvm.helpers.for_loop_zero_inc(builder, dim, "derivative_loop") as (builder, iterator):
             val_ptr = builder.gep(input_vector,[iterator])
             val = builder.load(val_ptr)

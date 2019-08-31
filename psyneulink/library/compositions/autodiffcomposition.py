@@ -1072,19 +1072,20 @@ class AutodiffComposition(Composition):
         # We only need input/output params (rest should be in pytorch model params)
         mech_param_type_list = (ctx.get_param_struct_type(m) if (m is self.input_CIM or m is self.output_CIM)
                                 else pnlvm.ir.LiteralStructType([]) for m in self._all_nodes)
+
         proj_param_type_list = (ctx.get_param_struct_type(p) if (p.sender in self.input_CIM.input_states or p.receiver in self.output_CIM.input_states)
                                 else pnlvm.ir.LiteralStructType([]) for p in self.projections)
+
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation._get(
             self.default_execution_id)
         pytorch_params = model._get_param_struct_type(ctx)
 
-        param_args = [pnlvm.ir.LiteralStructType(mech_param_type_list),
-                      pnlvm.ir.LiteralStructType(proj_param_type_list), 
-                      pytorch_params]
-        #if self.learning_enabled is True:
+        # Unused for now, but should match the layout expected by
+        # pytorch model creator
         learning_targets = pnlvm.ir.LiteralStructType([
             pnlvm.ir.IntType(32), # idx of the node
+            pnlvm.ir.IntType(32), # dimensionality
             pnlvm.ir.IntType(64) 
         ])
         learning_params = pnlvm.ir.LiteralStructType([
@@ -1095,7 +1096,9 @@ class AutodiffComposition(Composition):
             pnlvm.ir.IntType(32), # number input nodes
             pnlvm.ir.IntType(64), # addr of beginning of input struct arr
         ])
-        param_args += [learning_params]
+        param_args = [pnlvm.ir.LiteralStructType(mech_param_type_list),
+                      pnlvm.ir.LiteralStructType(proj_param_type_list),
+                      pytorch_params, learning_params]
         return pnlvm.ir.LiteralStructType(param_args)
 
     def _get_param_initializer(self, execution_id, simulation=False):
@@ -1112,17 +1115,9 @@ class AutodiffComposition(Composition):
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation._get(self.default_execution_id)
         pytorch_params = model._get_param_initializer()
-        param_args = [tuple(mech_params),tuple(proj_params),pytorch_params]
-        
-        learning_params = (
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
-        )
-        param_args += [learning_params]
+        learning_params = (0, 0, 0, 0, 0, 0)
+        param_args = (tuple(mech_params), tuple(proj_params),
+                      pytorch_params, learning_params)
         return tuple(param_args)
 
 class EarlyStopping(object):
