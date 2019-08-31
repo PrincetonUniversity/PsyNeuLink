@@ -274,42 +274,6 @@ class PytorchModelCreator(torch.nn.Module):
         builtin = ctx.get_llvm_function("__pnl_builtin_vec_copy")
         builder.call(builtin, [vec_in, ctx.int32_ty(dim), vec_out])
         return output_vec
-    
-    def _gen_inject_vec_add(self, ctx, builder, u, v, dim, output_vec=None):
-        if output_vec is None:
-            output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
-        # Get the pointer to the first element of the array to convert from [? x double]* -> double*
-        vec_u = builder.gep(u, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_v = builder.gep(v, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        builtin = ctx.get_llvm_function("__pnl_builtin_vec_add")
-        builder.call(builtin, [vec_u, vec_v, ctx.int32_ty(dim), vec_out])
-        return output_vec
-    
-    def _gen_inject_vec_sub(self, ctx, builder, u, v, dim, output_vec=None):
-        if output_vec is None:
-            output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
-        # Get the pointer to the first element of the array to convert from [? x double]* -> double*
-        vec_u = builder.gep(u, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_v = builder.gep(v, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        builtin = ctx.get_llvm_function("__pnl_builtin_vec_sub")
-        builder.call(builtin, [vec_u, vec_v, ctx.int32_ty(dim), vec_out])
-        return output_vec
-
-    def _gen_inject_vec_hadamard(self,ctx,builder,u,v,dim,output_vec = None):
-        if output_vec is None:
-            output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
-        # Get the pointer to the first element of the array to convert from [? x double]* -> double*
-        vec_u = builder.gep(u, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_v = builder.gep(v, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        builtin = ctx.get_llvm_function("__pnl_builtin_vec_hadamard")
-        builder.call(builtin, [vec_u, vec_v, ctx.int32_ty(dim), vec_out])
-        return output_vec
 
     def _gen_inject_vec_scalar_mult(self, ctx, builder, u, s, dim, output_vec=None):
         if output_vec is None:
@@ -321,6 +285,30 @@ class PytorchModelCreator(torch.nn.Module):
         builtin = ctx.get_llvm_function("__pnl_builtin_vec_scalar_mult")
         builder.call(builtin, [vec_u, s, ctx.int32_ty(dim), vec_out])
         return output_vec
+
+    def _gen_inject_vec_binop(self, ctx, builder, op, u, v, output_vec=None):
+        dim = len(u.type.pointee)
+        assert len(v.type.pointee) == dim
+        if output_vec is None:
+            output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
+        assert len(output_vec.type.pointee) == dim
+
+        # Get the pointer to the first element of the array to convert from [? x double]* -> double*
+        vec_u = builder.gep(u, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vec_v = builder.gep(v, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        builder.call(ctx.get_llvm_function(op), [vec_u, vec_v, ctx.int32_ty(dim), vec_out])
+        return output_vec
+
+    def _gen_inject_vec_add(self, ctx, builder, u, v, dim, output_vec=None):
+        return self._gen_inject_vec_binop(ctx, builder, "__pnl_builtin_vec_add", u, v, output_vec)
+
+    def _gen_inject_vec_sub(self, ctx, builder, u, v, dim, output_vec=None):
+        return self._gen_inject_vec_binop(ctx, builder, "__pnl_builtin_vec_sub", u, v, output_vec)
+
+    def _gen_inject_vec_hadamard(self,ctx,builder,u,v,dim,output_vec = None):
+        return self._gen_inject_vec_binop(ctx, builder, "__pnl_builtin_vec_hadamard", u, v, output_vec)
 
     def _gen_inject_mat_add(self, ctx, builder, m1, m2, x, y, output_mat=None):
         if output_mat is None:
