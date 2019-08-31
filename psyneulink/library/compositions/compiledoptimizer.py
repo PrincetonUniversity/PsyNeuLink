@@ -316,13 +316,12 @@ class SGDOptimizer(Optimizer):
         gradient_struct_values = self._get_listof_gradient_struct_values()
         
         # update weights
-        for (node, node_idx, afferent_node, afferent_node_index, matrix, weights_dim_x, weights_dim_y) in gradient_struct_values:
+        for (node, node_idx, afferent_node, afferent_node_index, matrix, _, _) in gradient_struct_values:
             node_idx_ir = ctx.int32_ty(node_idx)
             afferent_node_index_ir = ctx.int32_ty(afferent_node_index)
 
             delta_w_ptr = builder.gep(delta_w,[zero,node_idx_ir,afferent_node_index_ir])            
-            weights_llvmlite, weights_dim_x, weights_dim_y = self._pytorch_model._gen_get_node_weight_ptr(
-                ctx, builder, model_params, node, afferent_node)
+            weights_llvmlite, _, _ = self._pytorch_model._gen_get_node_weight_ptr(ctx, builder, model_params, node, afferent_node)
             
             multiplied_delta_w = self._pytorch_model._gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, lr)
             self._pytorch_model._gen_inject_mat_sub(ctx, builder, weights_llvmlite, multiplied_delta_w, weights_llvmlite)

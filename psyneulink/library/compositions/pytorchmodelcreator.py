@@ -422,7 +422,7 @@ class PytorchModelCreator(torch.nn.Module):
                 value = self._get_output_value_ptr(
                     ctx, builder, arg_out, component_id)
                 afferents = self.component_to_forward_info[component][3]
-                dim_x, dim_y = component.defaults.variable.shape
+                _, dim_y = component.defaults.variable.shape
                 
                 if i == 0:
                     cmp_arg = builder.gep(
@@ -440,7 +440,7 @@ class PytorchModelCreator(torch.nn.Module):
                             ctx, builder, arg_out, input_node_idx)
 
                         # We cast the ctype weights array to llvmlite pointer
-                        weights_llvmlite, weights_dim_x, weights_dim_y = self._gen_get_node_weight_ptr(ctx,builder,params,component,input_node)
+                        weights_llvmlite, _, _ = self._gen_get_node_weight_ptr(ctx, builder, params, component, input_node)
                         weighted_inp = self._gen_inject_vxm(ctx, builder, input_value, weights_llvmlite)
                         if is_set == False:
                             # copy weighted_inp to value
@@ -593,7 +593,7 @@ class PytorchModelCreator(torch.nn.Module):
                 for efferent_node in efferents:
                     efferent_node_error = error_dict[efferent_node]
                     
-                    weights_llvmlite, weights_dim_x, weights_dim_y = self._gen_get_node_weight_ptr(ctx,builder,model_params,efferent_node,node)
+                    weights_llvmlite, _, _ = self._gen_get_node_weight_ptr(ctx, builder, model_params, efferent_node, node)
                     
                     if is_set is False:
                         self._gen_inject_vxm_transposed(ctx, builder, efferent_node_error, weights_llvmlite, error_val)
