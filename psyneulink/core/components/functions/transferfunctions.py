@@ -3174,23 +3174,23 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 #     note: are assigned to TransferWithCosts Function to make them accesible for modulation
 INTENSITY_COST = 'INTENSITY COST'
 INTENSITY_COST_FUNCTION = 'intensity_cost_function'
-INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM = 'intensity_cost_fct_multiplicative_param'
-INTENSITY_COST_FCT_ADDITIVE_PARAM = 'intensity_cost_fct_additive_param'
+INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM = 'intensity_cost_fct_mult_param'
+INTENSITY_COST_FCT_ADDITIVE_PARAM = 'intensity_cost_fct_add_param'
 
 ADJUSTMENT_COST = 'ADJUSTMENT COST'
 ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
-ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM = 'adjustment_cost_fct_multiplicative_param'
-ADJUSTMENT_COST_FCT_ADDITIVE_PARAM = 'adjustment_cost_fct_additive_param'
+ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM = 'adjustment_cost_fct_mult_param'
+ADJUSTMENT_COST_FCT_ADDITIVE_PARAM = 'adjustment_cost_fct_add_param'
 
 DURATION_COST = 'DURATION COST'
 DURATION_COST_FUNCTION = 'duration_cost_function'
-DURATION_COST_FCT_MULTIPLICATIVE_PARAM = 'duration_cost_fct_multiplicative_param'
-DURATION_COST_FCT_ADDITIVE_PARAM = 'duration_cost_fct_additive_param'
+DURATION_COST_FCT_MULTIPLICATIVE_PARAM = 'duration_cost_fct_mult_param'
+DURATION_COST_FCT_ADDITIVE_PARAM = 'duration_cost_fct_add_param'
 
 COMBINED_COSTS = 'COMBINED COSTS'
 COMBINE_COSTS_FUNCTION = 'combine_costs_function'
-COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM = 'combine_costs_fct_multiplicative_param'
-COMBINE_COSTS_FCT_ADDITIVE_PARAM = 'combine_costs_fct_additive_param'
+COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM = 'combine_costs_fct_mult_param'
+COMBINE_COSTS_FCT_ADDITIVE_PARAM = 'combine_costs_fct_add_param'
 
 costFunctionNames = [INTENSITY_COST_FUNCTION,
                      ADJUSTMENT_COST_FUNCTION,
@@ -3506,14 +3506,14 @@ class TransferWithCosts(TransferFunction):
     bounds = None
     multiplicative_param = SLOPE
     additive_param = INTERCEPT
-    intensity_cost_fct_multiplicative_param = INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
-    intensity_cost_fct_additive_param = INTENSITY_COST_FCT_ADDITIVE_PARAM
-    adjustment_cost_fct_multiplicative_param = ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM
-    adjustment_cost_fct_additive_param = ADJUSTMENT_COST_FCT_ADDITIVE_PARAM
-    duration_cost_fct_multiplicative_param = DURATION_COST_FCT_MULTIPLICATIVE_PARAM
-    duration_cost_fct_additive_param = DURATION_COST_FCT_ADDITIVE_PARAM
-    combine_costs_fct_multiplicative_param = COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM
-    combine_costs_fct_additive_param = COMBINE_COSTS_FCT_ADDITIVE_PARAM
+    intensity_cost_fct_mult_param = INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
+    intensity_cost_fct_add_param = INTENSITY_COST_FCT_ADDITIVE_PARAM
+    adjustment_cost_fct_mult_param = ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM
+    adjustment_cost_fct_add_param = ADJUSTMENT_COST_FCT_ADDITIVE_PARAM
+    duration_cost_fct_mult_param = DURATION_COST_FCT_MULTIPLICATIVE_PARAM
+    duration_cost_fct_add_param = DURATION_COST_FCT_ADDITIVE_PARAM
+    combine_costs_fct_mult_param = COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM
+    combine_costs_fct_add_param = COMBINE_COSTS_FCT_ADDITIVE_PARAM
 
     classPreferences = {
         kwPreferenceSetName: 'TransferWithCostssClassPreferences',
@@ -3597,28 +3597,32 @@ class TransferWithCosts(TransferFunction):
 
         intensity_cost_fct = Exponential
         _validate_intensity_cost_fct = get_validator_by_function(is_function_type)
-        intensity_cost_fct_multiplicative_param  = Parameter()
-        intensity_cost_fct_additive_param  = Parameter()
-        intensity_cost = None
+        intensity_cost_fct_mult_param  = Parameter()
+        intensity_cost_fct_add_param  = Parameter()
+        # # MODIFIED 8/30/19 OLD:
+        # intensity_cost = None
+        # MODIFIED 8/30/19 NEW: [JDC]
+        intensity_cost = 0
+        # MODIFIED 8/30/19 END
 
         adjustment_cost_fct = Linear
         _validate_adjustment_cost_fct = get_validator_by_function(is_function_type)
-        adjustment_cost_fct_multiplicative_param = Parameter()
-        adjustment_cost_fct_additive_param = Parameter()
+        adjustment_cost_fct_mult_param = Parameter()
+        adjustment_cost_fct_add_param = Parameter()
         adjustment_cost = 0
 
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
         duration_cost_fct = SimpleIntegrator
         _validate_duration_cost_fct = get_validator_by_function(is_function_type)
-        duration_cost_fct_multiplicative_param  = Parameter()
-        duration_cost_fct_additive_param  = Parameter()
+        duration_cost_fct_mult_param  = Parameter()
+        duration_cost_fct_add_param  = Parameter()
         duration_cost = 0
 
         from psyneulink.core.components.functions.combinationfunctions import Reduce, SUM
         combine_costs_fct = Reduce(operation=SUM)
         _validate_combine_costs_fct = get_validator_by_function(is_function_type)
-        combine_costs_multiplicative_param = Parameter()
-        combine_costs_additive_param = Parameter()
+        combine_costs_fct_mult_param = Parameter()
+        combine_costs_fct_add_param = Parameter()
         combined_costs = 0
 
     @tc.typecheck
@@ -3697,8 +3701,8 @@ class TransferWithCosts(TransferFunction):
         self.d_cost_fct_additive_param = self.duration_cost_fct.params[ADDITIVE_PARAM]
 
         self.combine_costs_fct = instantiate_fct(COMBINE_COSTS_FUNCTION, self.combine_costs_fct)
-        self.combine_costs_fct_multiplicative_param = self.combine_costs_fct.params[MULTIPLICATIVE_PARAM]
-        self.combine_costs_fct_additive_param = self.combine_costs_fct.params[ADDITIVE_PARAM]
+        self.combine_costs_fct_mult_param = self.combine_costs_fct.params[MULTIPLICATIVE_PARAM]
+        self.combine_costs_fct_add_param = self.combine_costs_fct.params[ADDITIVE_PARAM]
 
         # Initialize intensity attributes
         if self.enabled_cost_functions:
@@ -3758,7 +3762,7 @@ class TransferWithCosts(TransferFunction):
         intensity_cost = self.parameters.intensity_cost._get(execution_id)
         adjustment_cost = self.parameters.adjustment_cost._get(execution_id)
         duration_cost = self.parameters.duration_cost._get(execution_id)
-        combined_costs = self.parameters.combined_costs._get(execution_id)
+        # combined_costs = self.parameters.combined_costs._get(execution_id)
 
         # Get cost functions to compute
         enabled_cost_functions = self.parameters.enabled_cost_functions._get(execution_id)
@@ -3774,8 +3778,8 @@ class TransferWithCosts(TransferFunction):
                 # Execute intensity cost function
                 intensity_cost = self.intensity_cost_fct(intensity,
                                                          runtime_params={
-                                                             self._i_cost_fct_mult_param: i_cost_fct_mult_param_val,
-                                                             self._i_cost_fct_add_param: i_cost_fct_add_param_val})
+                                                             self.i_cost_fct_mult_param: i_cost_fct_mult_param_val,
+                                                             self.i_cost_fct_add_param: i_cost_fct_add_param_val})
                 self.parameters.intensity_cost._set(intensity_cost, execution_id)
 
             # Compute adjustment cost
@@ -3788,8 +3792,8 @@ class TransferWithCosts(TransferFunction):
                 # Execute duration cost function
                 adjustment_cost = self.adjustment_cost_fct(intensity_change,
                                                            runtime_params={
-                                                               self._a_cost_fct_mult_param: a_cost_fct_mult_param_val,
-                                                               self._a_cost_fct_add_param: a_cost_fct_add_param_val})
+                                                               self.a_cost_fct_mult_param: a_cost_fct_mult_param_val,
+                                                               self.a_cost_fct_add_param: a_cost_fct_add_param_val})
                 self.parameters.intensity_cost._set(adjustment_cost, execution_id)
 
             # Compute duration cost
@@ -3802,8 +3806,8 @@ class TransferWithCosts(TransferFunction):
                 # Execute duration cost function
                 duration_cost = self.duration_cost_fct(self.parameters.combined_costs._get(execution_id),
                                                        runtime_params={
-                                                           self._d_cost_fct_add_param: d_cost_fct_mult_param_val,
-                                                           self._d_cost_fct_add_param: d_cost_fct_add_param_val})
+                                                           self.d_cost_fct_mult_param: d_cost_fct_mult_param_val,
+                                                           self.d_cost_fct_add_param: d_cost_fct_add_param_val})
                 self.parameters.duration_cost._set(duration_cost, execution_id)
 
         # Always compute combined costs
@@ -3813,10 +3817,11 @@ class TransferWithCosts(TransferFunction):
         costs_fct_add_param_val = self.get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM,
                                                                    execution_id)
         # Execute combine_costs function
-        combined_costs = self.combined_costs_fct([intensity_cost, adjustment_cost, duration_cost],
-                                                 runtime_params={
-                                                     self._combine_costs_fct_mult_param: costs_fct_mult_param_val,
-                                                     self._combine_costs_fct_add_param: costs_fct_add_param_val})
+        # FIX: intensity_cost is None HERE
+        combined_costs = self.combine_costs_fct([intensity_cost, adjustment_cost, duration_cost],
+                                                runtime_params={
+                                                    self.combine_costs_fct_mult_param: costs_fct_mult_param_val,
+                                                    self.combine_costs_fct_add_param: costs_fct_add_param_val})
         self.parameters.combined_costs._set(combined_costs, execution_id)
 
         return intensity

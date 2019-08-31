@@ -702,21 +702,21 @@ class Function_Base(Function):
         """
         if not parameter_spec(param, numeric_only):
             owner_name = 'of ' + self.owner_name if self.owner else ""
-            raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
-                                format(param, param_name, self.__class__.__name__, owner_name))
+            raise FunctionError(f"{param} is not a valid specification for "
+                                f"the {param_name} argument of {self.__class__.__name__}{owner_name}.")
 
     def get_current_function_param(self, param_name, execution_id=None):
         if param_name == "variable":
-            raise FunctionError("The method 'get_current_function_param' is intended for retrieving the current value "
-                                "of a function parameter. 'variable' is not a function parameter. If looking for {}'s "
-                                "default variable, try {}.defaults.variable.".format(self.name, self.name))
+            raise FunctionError(f"The method 'get_current_function_param' is intended for retrieving "
+                                f"the current value of a function parameter. 'variable' is not a function parameter. "
+                                f"If looking for {self.name}'s default variable, try {self.name}.defaults.variable.")
         try:
             return self.owner._parameter_states[param_name].parameters.value._get(execution_id)
         except (AttributeError, TypeError):
             try:
                 return getattr(self.parameters, param_name)._get(execution_id)
             except AttributeError:
-                raise FunctionError("{0} has no parameter '{1}'".format(self, param_name))
+                raise FunctionError(f"{self} has no parameter '{param_name}'.")
 
     def get_previous_value(self, execution_id=None):
         # temporary method until previous values are integrated for all parameters
@@ -768,14 +768,14 @@ class Function_Base(Function):
                 if len(value) == 1:
                     value = value[0]
                 else:
-                    raise FunctionError(f"Can't convert value ({value}: 2D np.ndarray object with more than one array)"
-                                        " to 1D array.")
+                    raise FunctionError(f"Can't convert value ({value}: 2D np.ndarray object "
+                                        f"with more than one array) to 1D array.")
             elif value.ndim == 1:
                 value = value
             elif value.ndim == 0:
                 value = np.atleast_1d(value)
             else:
-                raise FunctionError("Can't convert value ({0} to 1D array".format(value))
+                raise FunctionError(f"Can't convert value ({value} to 1D array.")
 
         # Convert to raw number, irrespective of value type:
         # Note: if 2D or 1D array has more than two items, generate exception
@@ -783,7 +783,7 @@ class Function_Base(Function):
             if object_has_single_value(value):
                 value = float(value)
             else:
-                raise FunctionError("Can't convert value ({0}) with more than a single number to a raw number".format(value))
+                raise FunctionError(f"Can't convert value ({value}) with more than a single number to a raw number.")
 
         return value
 
@@ -795,8 +795,8 @@ class Function_Base(Function):
     def output_type(self, value):
         # Bad outputType specification
         if value is not None and not isinstance(value, FunctionOutputType):
-            raise FunctionError("value ({0}) of output_type attribute must be FunctionOutputType for {1}".
-                                format(self.output_type, self.__class__.__name__))
+            raise FunctionError(f"value ({self.output_type}) of output_type attribute "
+                                f"must be FunctionOutputType for {self.__class__.__name__}.")
 
         # Can't convert from arrays of length > 1 to number
         if (
@@ -804,9 +804,8 @@ class Function_Base(Function):
             and safe_len(self.defaults.variable) > 1
             and self.output_type is FunctionOutputType.RAW_NUMBER
         ):
-            raise FunctionError(
-                "{0} can't be set to return a single number since its variable has more than one number".
-                format(self.__class__.__name__))
+            raise FunctionError(f"{self.__class__.__name__} can't be set to return a single number "
+                                f"since its variable has more than one number.")
 
         # warn if user overrides the 2D setting for mechanism functions
         # may be removed when https://github.com/PrincetonUniversity/PsyNeuLink/issues/895 is solved properly
@@ -816,10 +815,8 @@ class Function_Base(Function):
             # so no need to warn unecessarily
             import llvmlite
             if (isinstance(self.owner, Mechanism) and (value == FunctionOutputType.RAW_NUMBER or value == FunctionOutputType.NP_1D_ARRAY)):
-                warnings.warn(
-                    'Functions that are owned by a Mechanism but do not return a 2D numpy array may cause unexpected behavior if '
-                    'llvm compilation is enabled.'
-                )
+                warnings.warn(f'Functions that are owned by a Mechanism but do not return a 2D numpy array '
+                              f'may cause unexpected behavior if llvm compilation is enabled.')
         except (AttributeError, ImportError):
             pass
 
@@ -1053,7 +1050,7 @@ class ArgumentTherapy(Function_Base):
                 (isinstance(variable, numbers.Number) and isinstance(self.class_defaults.variable, numbers.Number)):
             return variable
         else:
-            raise FunctionError("Variable must be {0}".format(type(self.class_defaults.variable)))
+            raise FunctionError(f"Variable must be {type(self.class_defaults.variable)}.")
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validates variable and /or params and assigns to targets

@@ -1340,6 +1340,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         """
         from psyneulink.core.components.states.state import _instantiate_state
         from psyneulink.core.components.projections.projection import ProjectionError
+        from psyneulink.core.components.states.state import StateError
 
         if self._output_states is None:
             self._output_states = []
@@ -1363,7 +1364,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # MODIFIED 8/30/19 OLD:
         # except Exception as e:
         # MODIFIED 8/30/19 NEW: [JDC]
-        except ProjectionError:
+        except (ProjectionError, StateError):
         # MODIFIED 8/30/19 END
             try:
                 modulatory_signal = _instantiate_state(state_type=GatingSignal,

@@ -787,8 +787,12 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         """
         variable = super()._validate_variable(variable=variable, context=context)
         if not is_numeric(variable):
-            raise FunctionError("All elements of {} must be scalar values".
-                                format(self.__class__.__name__))
+            if self.owner:
+                err_msg = f"{self.__class__.__name__} function of {repr(self.owner.name)} " \
+                          f"passed variable ({variable}) with non-scalar element."
+            else:
+                err_msg = f"All elements of variable ({variable}) for {self.__class__.__name__} must be scalar values."
+            raise FunctionError(err_msg)
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
