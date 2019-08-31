@@ -54,47 +54,8 @@ def setup_vxm(ctx):
         b1.store(ctx.float_ty(0), ptr)
 
     # Multiplication
-
-    # Initialize outer loop variable
-    index_i_var = builder.alloca(ctx.int32_ty)
-    builder.store(ctx.int32_ty(0), index_i_var)
-
-    # Outer loop cond BB
-    outer_cond_block = builder.append_basic_block("outer-cond")
-    outer_body_block = builder.append_basic_block("outer-body")
-    outer_out_block = builder.append_basic_block("outer-out")
-
-    # Loop condition
-    builder.branch(outer_cond_block)
-    with builder.goto_block(outer_cond_block):
-        tmp = builder.load(index_i_var)
-        cond = builder.icmp_signed("<", tmp, x)
-        builder.cbranch(cond, outer_body_block, outer_out_block).set_weights([99, 1])
-
-    # Loop body
-    with builder.goto_block(outer_body_block):
-        index_i = builder.load(index_i_var)
-
-        # Initialize outer loop variable
-        index_j_var = builder.alloca(ctx.int32_ty)
-        builder.store(ctx.int32_ty(0), index_j_var)
-
-        # Outer loop cond BB
-        inner_cond_block = builder.append_basic_block("inner-cond")
-        inner_body_block = builder.append_basic_block("inner-body")
-        inner_out_block = builder.append_basic_block("inner-out")
-
-        # Loop condition
-        builder.branch(inner_cond_block)
-        with builder.goto_block(inner_cond_block):
-            tmp = builder.load(index_j_var)
-            cond = builder.icmp_signed("<", tmp, y)
-            builder.cbranch(cond, inner_body_block, inner_out_block).set_weights([99, 1])
-
-        # Loop body
-        with builder.goto_block(inner_body_block):
-            index_j = builder.load(index_j_var)
-
+    with helpers.for_loop_zero_inc(builder, x, "vxm_outer") as (b1, index_i):
+        with helpers.for_loop_zero_inc(b1, y, "vxm_inner") as (b2, index_j):
             # Multiplication and accumulation
             vector_ptr = builder.gep(v, [index_i])
             matrix_index = builder.mul(index_i, y)
@@ -111,18 +72,7 @@ def setup_vxm(ctx):
 
             builder.store(new_el, out_ptr)
 
-            next_index_j = builder.add(index_j, ctx.int32_ty(1))
-            builder.store(next_index_j, index_j_var)
-            builder.branch(inner_cond_block)
-
-        with builder.goto_block(inner_out_block):
-            next_index_i = builder.add(index_i, ctx.int32_ty(1))
-            builder.store(next_index_i, index_i_var)
-            builder.branch(outer_cond_block)
-
-    # Return
-    with builder.goto_block(outer_out_block):
-        builder.ret_void()
+    builder.ret_void()
 
 
 def setup_vxm_transposed(ctx):
@@ -143,46 +93,8 @@ def setup_vxm_transposed(ctx):
         b1.store(ctx.float_ty(0), ptr)
 
     # Multiplication
-
-    # Initialize outer loop variable
-    index_i_var = builder.alloca(ctx.int32_ty)
-    builder.store(ctx.int32_ty(0), index_i_var)
-
-    # Outer loop cond BB
-    outer_cond_block = builder.append_basic_block("outer-cond")
-    outer_body_block = builder.append_basic_block("outer-body")
-    outer_out_block = builder.append_basic_block("outer-out")
-
-    # Loop condition
-    builder.branch(outer_cond_block)
-    with builder.goto_block(outer_cond_block):
-        tmp = builder.load(index_i_var)
-        cond = builder.icmp_signed("<", tmp, y)
-        builder.cbranch(cond, outer_body_block, outer_out_block).set_weights([99, 1])
-
-    # Loop body
-    with builder.goto_block(outer_body_block):
-        index_i = builder.load(index_i_var)
-
-        # Initialize outer loop variable
-        index_j_var = builder.alloca(ctx.int32_ty)
-        builder.store(ctx.int32_ty(0), index_j_var)
-
-        # Outer loop cond BB
-        inner_cond_block = builder.append_basic_block("inner-cond")
-        inner_body_block = builder.append_basic_block("inner-body")
-        inner_out_block = builder.append_basic_block("inner-out")
-
-        # Loop condition
-        builder.branch(inner_cond_block)
-        with builder.goto_block(inner_cond_block):
-            tmp = builder.load(index_j_var)
-            cond = builder.icmp_signed("<", tmp, x)
-            builder.cbranch(cond, inner_body_block, inner_out_block).set_weights([99, 1])
-
-        # Loop body
-        with builder.goto_block(inner_body_block):
-            index_j = builder.load(index_j_var)
+    with helpers.for_loop_zero_inc(builder, y, "vxm_outer") as (b1, index_i):
+        with helpers.for_loop_zero_inc(b1, x, "vxm_inner") as (b2, index_j):
             
             # Multiplication and accumulation
             vector_ptr = builder.gep(v, [index_i])
@@ -200,18 +112,7 @@ def setup_vxm_transposed(ctx):
 
             builder.store(new_el, out_ptr)
 
-            next_index_j = builder.add(index_j, ctx.int32_ty(1))
-            builder.store(next_index_j, index_j_var)
-            builder.branch(inner_cond_block)
-
-        with builder.goto_block(inner_out_block):
-            next_index_i = builder.add(index_i, ctx.int32_ty(1))
-            builder.store(next_index_i, index_i_var)
-            builder.branch(outer_cond_block)
-
-    # Return
-    with builder.goto_block(outer_out_block):
-        builder.ret_void()
+    builder.ret_void()
 
 
 # Setup vector addition builtin
