@@ -22,7 +22,8 @@ class Loss():
         self._DELTA_W_NUM = 0
 
     def _gen_inject_lossfunc_call(self,ctx,builder,bin_func,value,target,dim):
-        return builder.call(bin_func, [builder.bitcast(value, ctx.float_ty.as_pointer()), builder.bitcast(target, ctx.float_ty.as_pointer()), ctx.int32_ty(dim)])
+        return builder.call(bin_func, [builder.bitcast(value, ctx.float_ty.as_pointer()), ctx.int32_ty(dim),
+                                       builder.bitcast(target, ctx.float_ty.as_pointer())])
 # Class that is used to represent a compiled optimizer - aims to reimplement the logic of torch.optimizer in the form of llvmlite compileable code
 
 
@@ -43,19 +44,13 @@ class MSELoss(Loss):
         # 1) pointer to network output
         # 2) pointer to target
         # 3) dimensionality
-        args = [ctx.float_ty.as_pointer(),
-                ctx.float_ty.as_pointer(),
-                ctx.int32_ty
-                ]
+        args = [ctx.float_ty.as_pointer(), ctx.int32_ty, ctx.float_ty.as_pointer()]
         builder = ctx.create_llvm_function(args, self, name,return_type=ctx.float_ty)
-        llvm_func = builder.function
-        llvm_func.attributes.add('alwaysinline')
-        value, target, dim = llvm_func.args
+        value, dim, target = builder.function.args
 
         sum = builder.alloca(ctx.float_ty)
-        builder.store(ctx.float_ty(0),sum)
+        builder.store(ctx.float_ty(-0.0), sum)
 
-        index = None
         with pnlvm.helpers.for_loop_zero_inc(builder, dim, "mse_sum_loop") as (b1, index):
             value_ptr = b1.gep(value,[index])
             target_ptr = b1.gep(target,[index])
@@ -65,7 +60,7 @@ class MSELoss(Loss):
 
         builder.ret(builder.load(sum))
 
-        return llvm_func
+        return builder.function
 
     # inserts the computation for dC/da
     def _gen_inject_loss_differential(self,ctx,builder,value,target,dim,output=None,sum_loss=False):
