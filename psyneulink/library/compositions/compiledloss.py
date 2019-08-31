@@ -21,7 +21,7 @@ class Loss():
 
         self._DELTA_W_NUM = 0
 
-    def _gen_inject_lossfunc_call(self, ctx, builder, bin_func, value, target, dim):
+    def _gen_inject_lossfunc_call(self, ctx, builder, bin_func, value, target):
         return builder.call(bin_func, [builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0)]),
                                        ctx.int32_ty(len(value.type.pointee)),
                                        builder.gep(target, [ctx.int32_ty(0), ctx.int32_ty(0)])])
@@ -64,12 +64,14 @@ class MSELoss(Loss):
         return builder.function
 
     # inserts the computation for dC/da
-    def _gen_inject_loss_differential(self,ctx,builder,value,target,dim,output=None,sum_loss=False):
-        
+    def _gen_inject_loss_differential(self, ctx, builder, value, target, output=None, sum_loss=False):
+        dim = len(value.type.pointee)
+        assert len(target.type.pointee) == dim
         if output is None:
             output = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
             # zero output vector
             builder.store(output.type.pointee(None), output)
+        assert len(output.type.pointee) == dim
 
         if sum_loss is False:
             self._pytorch_model._gen_inject_vec_sub(ctx, builder, value, target, output)

@@ -569,13 +569,13 @@ class PytorchModelCreator(torch.nn.Module):
                                             input_idx, ctx.int32_ty(0)])
                 node_output = self._get_output_value_ptr(ctx,builder,model_output,node_idx)
 
-                tmp_loss = loss._gen_inject_lossfunc_call(ctx,builder,loss_fn,node_output,node_target,node_dim)
+                tmp_loss = loss._gen_inject_lossfunc_call(ctx, builder, loss_fn, node_output, node_target)
                
                 ctx.inject_printf_float_array(builder,node_output,node_dim,override_debug=False)
                 
                 ctx.inject_printf(builder,f"tmp loss for {node} :%f\n",tmp_loss,override_debug=False)
                 builder.store(builder.fadd(builder.load(total_loss),tmp_loss),total_loss)
-                loss_derivative = loss._gen_inject_loss_differential(ctx,builder,node_output,node_target,node_dim)
+                loss_derivative = loss._gen_inject_loss_differential(ctx, builder, node_output, node_target)
                 # compute δ_l = dσ/da ⊙ σ'(z)
                 
                 self._gen_inject_vec_hadamard(ctx, builder, activation_func_derivative, loss_derivative, error_val)
