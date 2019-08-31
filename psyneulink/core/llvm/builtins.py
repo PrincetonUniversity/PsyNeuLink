@@ -93,8 +93,8 @@ def setup_vxm_transposed(ctx):
         b1.store(ctx.float_ty(0), ptr)
 
     # Multiplication
-    with helpers.for_loop_zero_inc(builder, y, "vxm_outer") as (b1, index_i):
-        with helpers.for_loop_zero_inc(b1, x, "vxm_inner") as (b2, index_j):
+    with helpers.for_loop_zero_inc(builder, x, "trans_vxm_outer") as (b1, index_j):
+        with helpers.for_loop_zero_inc(b1, y, "trans_vxm_inner") as (b2, index_i):
             
             # Multiplication and accumulation
             vector_ptr = builder.gep(v, [index_i])
