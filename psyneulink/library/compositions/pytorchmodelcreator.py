@@ -6,11 +6,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer,SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss
-import numpy
 import ctypes
-import functools
-import timeit
-import pprint
 from collections import deque
 
 debug_env = pnlvm.debug_env
