@@ -52,6 +52,8 @@ _float_ty = ir.DoubleType()
 _global_context = None
 
 _printf_count = 0
+_BUILTIN_PREFIX = "__pnl_builtin_"
+_builtin_intrinsics = frozenset(('pow', 'log', 'exp'))
 
 class LLVMBuilderContext:
     uniq_counter = 0
@@ -93,8 +95,8 @@ class LLVMBuilderContext:
         return name + '_' + str(LLVMBuilderContext.uniq_counter)
 
     def get_builtin(self, name: str, args, function_type=None):
-        if name in ('pow', 'log', 'exp'):
-            return self.get_llvm_function("__pnl_builtin_" + name)
+        if name in _builtin_intrinsics:
+            return self.get_llvm_function(_BUILTIN_PREFIX + name)
         if name in ('maxnum'):
             function_type = pnlvm.ir.FunctionType(args[0], [args[0], args[0]])
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
