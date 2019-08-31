@@ -26,7 +26,6 @@ except ImportError:
 
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.keywords import AFTER, BEFORE
-from psyneulink.core.globals.utilities import NodeRole
 
 from psyneulink.core import llvm as pnlvm
 from .debug import debug_env
