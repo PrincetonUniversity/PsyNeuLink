@@ -100,7 +100,7 @@ class LLVMBuilderContext:
             function_type = pnlvm.ir.FunctionType(args[0], [args[0], args[0]])
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
 
-    def create_llvm_function(self, args, component, name = None, return_type=pnlvm.ir.VoidType()):
+    def create_llvm_function(self, args, component, name=None, return_type=ir.VoidType()):
         name = str(component) if name is None else name
 
         func_name = self.get_unique_name(name)
@@ -108,9 +108,8 @@ class LLVMBuilderContext:
         llvm_func = pnlvm.ir.Function(self.module, func_ty, name=func_name)
         llvm_func.attributes.add('argmemonly')
         for a in llvm_func.args:
-            if not isinstance(a.type, ir.PointerType):
-                continue
-            a.attributes.add('nonnull')
+            if isinstance(a.type, ir.PointerType):
+                a.attributes.add('nonnull')
 
         metadata = self.get_debug_location(llvm_func, component)
         if metadata is not None:

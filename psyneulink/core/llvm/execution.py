@@ -481,7 +481,7 @@ class CompExecution(CUDAExecution):
         return self.__bin_run_multi_func
 
     # inserts autodiff params into the param struct (this unfortunately needs to be done dynamically, as we don't know autodiff inputs ahead of time)
-    def _initialize_autodiff_param_struct(self,autodiff_stimuli):
+    def _initialize_autodiff_param_struct(self, autodiff_stimuli):
         inputs = {}
         targets = {} 
         epochs = 0
@@ -492,6 +492,7 @@ class CompExecution(CUDAExecution):
             targets = autodiff_stimuli["targets"]
         if "epochs" in autodiff_stimuli:
             epochs = autodiff_stimuli["epochs"]
+
         autodiff_stimuli_struct = [
             epochs,
             len(next(iter(inputs.values())))
@@ -511,7 +512,7 @@ class CompExecution(CUDAExecution):
         autodiff_values = []
         def make_val_arr(dictionary):
             value_struct_array = [()] * len(self._composition.nodes)
-            for node,values in dictionary.items():
+            for node, values in dictionary.items():
                 dimensionality = len(values[0])
                 idx = self._composition._get_node_index(node)
                 values_ir_ty = ctx.convert_python_struct_to_llvm_ir(values)
@@ -557,7 +558,8 @@ class CompExecution(CUDAExecution):
         setattr(self._param_struct, my_field_name[0], autodiff_stimuli_struct)
         
         return autodiff_values
-    def run(self, inputs, runs, num_input_sets,autodiff_stimuli = {"targets" : {}, "epochs": 0}):
+
+    def run(self, inputs, runs, num_input_sets, autodiff_stimuli={"targets" : {}, "epochs": 0}):
         inputs = self._get_run_input_struct(inputs, num_input_sets)
         # Special casing for autodiff
         if hasattr(self._composition,"learning_enabled") and self._composition.learning_enabled is True:

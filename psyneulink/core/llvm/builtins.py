@@ -24,7 +24,7 @@ def _setup_builtin_func_builder(ctx, name, args):
 
     block = function.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
-    builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
+    builder.debug_metadata = ctx.get_debug_location(function, None)
 
     # Add function arg attributes
     for a in function.args:
