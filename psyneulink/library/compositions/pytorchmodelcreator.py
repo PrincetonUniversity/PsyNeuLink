@@ -310,41 +310,33 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_inject_vec_hadamard(self,ctx,builder,u,v,dim,output_vec = None):
         return self._gen_inject_vec_binop(ctx, builder, "__pnl_builtin_vec_hadamard", u, v, output_vec)
 
-    def _gen_inject_mat_add(self, ctx, builder, m1, m2, x, y, output_mat=None):
+    def _gen_inject_mat_binop(self, ctx, builder, op, m1, m2, output_mat=None):
+        x = len(m1.type.pointee)
+        y = len(m1.type.pointee.element)
+        assert len(m2.type.pointee) == x and len(m2.type.pointee.element) == y
+
         if output_mat is None:
             output_mat = builder.alloca(
                 pnlvm.ir.types.ArrayType(
                     pnlvm.ir.types.ArrayType(ctx.float_ty, y), x))
-        builtin = ctx.get_llvm_function("__pnl_builtin_mat_add")
+        assert len(output_mat.type.pointee) == x
+        assert len(output_mat.type.pointee.element) == y
+
+        builtin = ctx.get_llvm_function(op)
         builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()),
                                builder.bitcast(m2, ctx.float_ty.as_pointer()),
                                ctx.int32_ty(x), ctx.int32_ty(y),
                                builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
         return output_mat
+    
+    def _gen_inject_mat_add(self, ctx, builder, m1, m2, x, y, output_mat=None):
+        return self._gen_inject_mat_binop(ctx, builder, "__pnl_builtin_mat_add", m1, m2, output_mat)
     
     def _gen_inject_mat_sub(self, ctx, builder, m1, m2, x, y, output_mat=None):
-        if output_mat is None:
-            output_mat = builder.alloca(
-                pnlvm.ir.types.ArrayType(
-                    pnlvm.ir.types.ArrayType(ctx.float_ty, y), x))
-        builtin = ctx.get_llvm_function("__pnl_builtin_mat_sub")
-        builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()),
-                               builder.bitcast(m2, ctx.float_ty.as_pointer()),
-                               ctx.int32_ty(x), ctx.int32_ty(y),
-                               builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
-        return output_mat
-    
+        return self._gen_inject_mat_binop(ctx, builder, "__pnl_builtin_mat_sub", m1, m2, output_mat)
+
     def _gen_inject_mat_hadamard(self, ctx, builder, m1, m2, x, y, output_mat=None):
-        if output_mat is None:
-            output_mat = builder.alloca(
-                pnlvm.ir.types.ArrayType(
-                    pnlvm.ir.types.ArrayType(ctx.float_ty, y), x))
-        builtin = ctx.get_llvm_function("__pnl_builtin_mat_hadamard")
-        builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()),
-                               builder.bitcast(m2, ctx.float_ty.as_pointer()),
-                               ctx.int32_ty(x), ctx.int32_ty(y),
-                               builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
-        return output_mat
+        return self._gen_inject_mat_binop(ctx, builder, "__pnl_builtin_mat_hadamard", m1, m2, output_mat)
     
     def _gen_inject_mat_scalar_mult(self, ctx, builder, m1, s, x, y, output_mat=None):
         if output_mat is None:
