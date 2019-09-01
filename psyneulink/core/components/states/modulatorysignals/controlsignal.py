@@ -1003,14 +1003,14 @@ class ControlSignal(ModulatorySignal):
         # # - pass specified cost_options and cost functions to it
         transfer_fct = function
         from psyneulink.core.components.functions.transferfunctions import TransferWithCosts
-        self.function = TransferWithCosts(default_variable=self.defaults.variable,
-                                          transfer_fct=transfer_fct,
-                                          enabled_cost_functions=self.cost_options,
-                                          intensity_cost_fct=self.intensity_cost_function,
-                                          adjustment_cost_fct=self.adjustment_cost_function,
-                                          duration_cost_fct=self.duration_cost_function,
-                                          combine_costs_fct=self.combine_costs_function,
-                                          owner=self)
+        return TransferWithCosts(default_variable=self.defaults.variable,
+                                 transfer_fct=transfer_fct,
+                                 enabled_cost_functions=self.cost_options,
+                                 intensity_cost_fct=self.intensity_cost_function,
+                                 adjustment_cost_fct=self.adjustment_cost_function,
+                                 duration_cost_fct=self.duration_cost_function,
+                                 combine_costs_fct=self.combine_costs_function,
+                                 owner=self)
         # # MODIFIED 8/30/19 NEW [JDC]:
         # FIX: VERSION USED IN __init__;  HERE FOR REFERENCE ONLY;  IMPLEMENT THERE OR DELETE ON CLEAN-UP
         # # Implement TransferWithCosts as ControlSignal's primary function
@@ -1082,22 +1082,23 @@ class ControlSignal(ModulatorySignal):
         #     self.intensity_change = [0]
         # MODIFIED 8/30/19 NEW: [JDC]
         for cost_function_name in costFunctionNames:
-            self.paramsCurrent[cost_function_name] = getattr(self.function, cost_function_name)
+            self.paramsCurrent[cost_function_name] = getattr(self.function,
+                                                             cost_function_name.replace('function','fct'))
         # MODIFIED 8/30/19 END
 
     # # MODIFIED 8/30/19 OLD:
-    # def _instantiate_cost_attributes(self, context=None):
-    #
-    #     # if self.cost_options:
-    #     #     # Default cost params
-    #     #     if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
-    #     #         self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
-    #     #     else:
-    #     #         self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
-    #     #     self.defaults.intensity_cost = self.intensity_cost
-    #     #     self.adjustment_cost = 0
-    #     #     self.duration_cost = 0
-    #     #     self.cost = self.defaults.cost = self.intensity_cost
+    def _instantiate_cost_attributes(self, context=None):
+
+        if self.cost_options:
+            # Default cost params
+            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
+            else:
+                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
+            self.defaults.intensity_cost = self.intensity_cost
+            self.adjustment_cost = 0
+            self.duration_cost = 0
+            self.cost = self.defaults.cost = self.intensity_cost
     # MODIFIED 8/30/19 END
 
     # def _initialize_cost_attributes(self, context=None):
