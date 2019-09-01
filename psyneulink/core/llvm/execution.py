@@ -500,22 +500,18 @@ class CompExecution(CUDAExecution):
         epochs = autodiff_stimuli.get("epochs", 0)
 
         autodiff_stimuli_struct = [epochs, len(next(iter(inputs.values())))]
-        ctx = pnlvm.builder_context.LLVMBuilderContext.get_global()
         
-        # autodiff_values keeps the ctype values on the stack, so it doesn't get gc'd TODO: Make sure this works as intended
+        # autodiff_values keeps the ctype values on the stack, so it doesn't get gc'd
         autodiff_values = []
         def make_node_data(dictionary, node):
             values = dictionary.get(node)
             if values is not None:
                 dimensionality = len(values[0])
                 idx = self._composition._get_node_index(node)
-                values_ir_ty = ctx.convert_python_struct_to_llvm_ir(values)
-                values_c_ty = _convert_llvm_ir_to_ctype(values_ir_ty)
-                values = values_c_ty(*_tupleize(values))
+                values = np.asfarray(values)
                 autodiff_values.append(values)
 
-                return (idx, dimensionality,
-                    ctypes.cast(values,ctypes.c_void_p).value)
+                return (idx, dimensionality, values.ctypes.data)
             return tuple()
 
         autodiff_param_cty = self._bin_run_func.byref_arg_types[1]
