@@ -31,7 +31,7 @@ from psyneulink.core import llvm as pnlvm
 from .debug import debug_env
 from .helpers import ConditionGenerator
 
-__all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function', '_convert_llvm_ir_to_ctype']
+__all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function']
 
 
 _modules = set()
