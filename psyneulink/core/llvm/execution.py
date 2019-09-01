@@ -514,9 +514,9 @@ class CompExecution(CUDAExecution):
         
         # autodiff_values keeps the ctype values on the stack, so it doesn't get gc'd TODO: Make sure this works as intended
         autodiff_values = []
-        def make_val_arr(dictionary):
-            value_struct_array = [()] * len(self._composition.nodes)
-            for node, values in dictionary.items():
+        def make_node_data(dictionary, node):
+            values = dictionary.get(node)
+            if values is not None:
                 dimensionality = len(values[0])
                 idx = self._composition._get_node_index(node)
                 values_ir_ty = ctx.convert_python_struct_to_llvm_ir(values)
@@ -524,26 +524,22 @@ class CompExecution(CUDAExecution):
                 values = values_c_ty(*_tupleize(values))
                 autodiff_values.append(values)
 
-                value_struct = tuple([
-                    idx,
-                    dimensionality,
-                    ctypes.cast(values,ctypes.c_void_p).value
-                ])
-                value_struct_array[idx] = value_struct
-            return value_struct_array
+                return (idx, dimensionality,
+                    ctypes.cast(values,ctypes.c_void_p).value)
+            return tuple()
 
         autodiff_param_cty = self._bin_run_func.byref_arg_types[1]
         autodiff_stimuli_cty = autodiff_param_cty._fields_[3][1]
 
-        target_struct_val = make_val_arr(targets)
+        target_struct_val = (make_node_data(targets, node) for node in self._composition.nodes)
         autodiff_stimuli_struct.append(len(targets))
-        autodiff_stimuli_struct.append(target_struct_val)
+        autodiff_stimuli_struct.append(tuple(target_struct_val))
 
-        input_struct_val = make_val_arr(inputs)
+        input_struct_val = (make_node_data(inputs, node) for node in self._composition.nodes)
         autodiff_stimuli_struct.append(len(inputs))
-        autodiff_stimuli_struct.append(input_struct_val)
+        autodiff_stimuli_struct.append(tuple(input_struct_val))
 
-        autodiff_stimuli_struct = autodiff_stimuli_cty(*_tupleize(autodiff_stimuli_struct))
+        autodiff_stimuli_struct = autodiff_stimuli_cty(*tuple(autodiff_stimuli_struct))
         my_field_name = self._param_struct._fields_[3][0]
         
         setattr(self._param_struct, my_field_name, autodiff_stimuli_struct)
