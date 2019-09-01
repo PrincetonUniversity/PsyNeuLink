@@ -1081,20 +1081,24 @@ class AutodiffComposition(Composition):
             self.default_execution_id)
         pytorch_params = model._get_param_struct_type(ctx)
 
-        # Unused for now, but should match the layout expected by
-        # pytorch model creator
-        learning_targets = pnlvm.ir.LiteralStructType((
-            pnlvm.ir.LiteralStructType((
+        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+        output_nodes = self.get_nodes_by_role(NodeRole.OUTPUT)
+
+        learning_ty = pnlvm.ir.LiteralStructType([
                 ctx.int32_ty, # dimensionality
-                pnlvm.ir.IntType(64)
-            )) for node in self.nodes))
+                pnlvm.ir.IntType(64) # Data ptr
+            ])
+        learning_inputs = pnlvm.ir.LiteralStructType(
+            (learning_ty for node in input_nodes))
+        learning_targets = pnlvm.ir.LiteralStructType(
+            (learning_ty for node in output_nodes))
         learning_params = pnlvm.ir.LiteralStructType([
             ctx.int32_ty, # epochs
             ctx.int32_ty, # number of targets/inputs to train with
             ctx.int32_ty, # number target nodes
             learning_targets, # target struct array
             ctx.int32_ty, # number input nodes
-            learning_targets, # input struct array
+            learning_inputs, # input struct array
         ])
         param_args = [pnlvm.ir.LiteralStructType(mech_param_type_list),
                       pnlvm.ir.LiteralStructType(proj_param_type_list),

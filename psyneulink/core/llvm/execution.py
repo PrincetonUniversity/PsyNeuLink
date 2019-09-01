@@ -504,19 +504,19 @@ class CompExecution(CUDAExecution):
         # autodiff_values keeps the ctype values on the stack, so it doesn't get gc'd
         autodiff_values = []
         def make_node_data(dictionary, node):
-            values = dictionary.get(node)
-            if values is not None:
-                assert len(values) == num_inputs
-                dimensionality = len(values[0])
-                values = np.asfarray(values)
-                autodiff_values.append(values)
+            values = dictionary[node]
+            assert len(values) == num_inputs
+            dimensionality = len(values[0])
+            values = np.asfarray(values)
+            autodiff_values.append(values)
 
-                return (dimensionality, values.ctypes.data)
-            return tuple()
+            return (dimensionality, values.ctypes.data)
 
+        input_nodes = self._composition.get_nodes_by_role(NodeRole.INPUT)
+        output_nodes = self._composition.get_nodes_by_role(NodeRole.OUTPUT)
 
-        target_struct_val = (make_node_data(targets, node) for node in self._composition.nodes)
-        input_struct_val = (make_node_data(inputs, node) for node in self._composition.nodes)
+        input_struct_val = (make_node_data(inputs, node) for node in input_nodes)
+        target_struct_val = (make_node_data(targets, node) for node in output_nodes)
 
         autodiff_param_cty = self._bin_run_func.byref_arg_types[1]
         autodiff_stimuli_cty = autodiff_param_cty._fields_[3][1]

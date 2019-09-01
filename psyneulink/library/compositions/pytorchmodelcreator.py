@@ -491,19 +491,15 @@ class PytorchModelCreator(torch.nn.Module):
         input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
 
-        node_value_ir_types = {node:
-            pnlvm.ir.ArrayType(pnlvm.ir.ArrayType(ctx.float_ty, len(node.defaults.value[0])), 1)
-                for node in composition.nodes}
-
-        def _get_node_array_ptr(node, struct_ptr):
-            node_idx = composition._get_node_index(node)
+        def _get_node_array_ptr(node, node_idx, struct_ptr):
             array_ptr = builder.gep(struct_ptr, [ctx.int32_ty(node_idx), ctx.int32_ty(1)])
             array_ptr = builder.load(array_ptr)
-            return builder.inttoptr(array_ptr, node_value_ir_types[node].as_pointer())
+            array_ty = pnlvm.ir.ArrayType(pnlvm.ir.ArrayType(ctx.float_ty, len(node.defaults.value[0])), 1)
+            return builder.inttoptr(array_ptr, array_ty.as_pointer())
 
-        node_input_arrays = {node: _get_node_array_ptr(node, input_struct_ptr) for node in input_nodes}
+        node_input_arrays = {node: _get_node_array_ptr(node, i, input_struct_ptr) for i, node in enumerate(input_nodes)}
 
-        node_target_arrays = {node: _get_node_array_ptr(node, target_struct_ptr) for node in output_nodes}
+        node_target_arrays = {node: _get_node_array_ptr(node, i, target_struct_ptr) for i, node in enumerate(output_nodes)}
 
         
         # initialize optimizer params:
@@ -512,9 +508,9 @@ class PytorchModelCreator(torch.nn.Module):
         # first we copy input values to data struct of input_CIM
         for node in input_nodes:
             node_idx = composition._get_node_index(node)
-            node_input_array_ptr = builder.gep(node_input_arrays[node], [
-                                                input_idx, ctx.int32_ty(0)])
-            node_model_input = builder.gep(model_input,[ctx.int32_ty(0),ctx.int32_ty(node_idx)])
+            node_input_array_ptr = builder.gep(node_input_arrays[node],
+                                               [input_idx, ctx.int32_ty(0)])
+            node_model_input = builder.gep(model_input,[ctx.int32_ty(0), ctx.int32_ty(node_idx)])
             self._gen_inject_vec_copy(ctx, builder, node_input_array_ptr, node_model_input)
             
             ctx.inject_printf_float_array(builder, node_input_array_ptr, prefix=f"\tNODE {node_idx} INPUT: ")
