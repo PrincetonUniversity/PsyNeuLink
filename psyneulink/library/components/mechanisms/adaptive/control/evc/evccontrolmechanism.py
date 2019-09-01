@@ -388,7 +388,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.shellclasses import Function, System_Base
-from psyneulink.core.components.states.modulatorysignals.controlsignal import COST_OPTIONS, ControlSignal, CostFunctions
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, CostFunctions
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags

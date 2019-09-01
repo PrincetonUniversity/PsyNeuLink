@@ -3189,6 +3189,7 @@ __all__.extend(['ENABLED_COST_FUNCTIONS',
                 'COMBINE_COSTS_FUNCTION',
                 'COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM',
                 'COMBINE_COSTS_FCT_ADDITIVE_PARAM',
+                'costFunctionNames'
                 ])
 
 ENABLED_COST_FUNCTIONS = 'enabled_cost_functions'

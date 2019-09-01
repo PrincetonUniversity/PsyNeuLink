@@ -328,12 +328,7 @@ from psyneulink.core.globals.utilities import \
     is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 
-# FIX: ??DELETE AND USE FROM TransferWithCosts FUNCTION OR KEEP AS SPECIFIC TO ControlSignal
-__all__ = [
-    'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalError',
-    'COMBINE_COSTS_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DURATION_COST',
-    'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION',
-]
+__all__ = []
 
 # class OutputStateLog(IntEnum):
 #     NONE            = 0
@@ -344,17 +339,6 @@ __all__ = [
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
-# FIX: ??DELETE AND USE FROM TransferWithCosts FUNCTION OR KEEP AS SPECIFIC TO ControlSignal
-# ControlSignal Cost Function Names
-INTENSITY_COST_FUNCTION = 'intensity_cost_function'
-ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
-DURATION_COST_FUNCTION = 'duration_cost_function'
-COMBINE_COSTS_FUNCTION = 'combine_costs_function'
-costFunctionNames = [INTENSITY_COST_FUNCTION,
-                     ADJUSTMENT_COST_FUNCTION,
-                     DURATION_COST_FUNCTION,
-                     COMBINE_COSTS_FUNCTION]
-COST_OPTIONS = 'cost_options'
 
 # class CostFunctions(IntEnum):
 #     """Options for selecting `cost functions <ControlSignal_Costs>` to be used by a ControlSignal.
@@ -398,7 +382,10 @@ COST_OPTIONS = 'cost_options'
 # Getters for cost attributes (from TransferWithCosts function)
 
 from psyneulink.core.components.functions.transferfunctions import \
-    ENABLED_COST_FUNCTIONS, INTENSITY_COST, DURATION_COST, ADJUSTMENT_COST, COMBINED_COSTS
+    ENABLED_COST_FUNCTIONS, INTENSITY_COST_FUNCTION, INTENSITY_COST, DURATION_COST_FUNCTION, DURATION_COST, \
+    ADJUSTMENT_COST_FUNCTION, ADJUSTMENT_COST, COMBINE_COSTS_FUNCTION, COMBINED_COSTS, costFunctionNames
+
+COST_OPTIONS = 'cost_options'
 
 
 def _cost_options_getter(owning_component=None, execution_id=None):
