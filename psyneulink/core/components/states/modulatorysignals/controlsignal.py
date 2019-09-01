@@ -861,6 +861,7 @@ class ControlSignal(ModulatorySignal):
                                                   allocation_samples=allocation_samples,
                                                   params=params)
 
+        # FIX: ??MOVE THIS TO _validate_params OR ANOTHER _instantiate METHOD??
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.output_states here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
@@ -990,12 +991,17 @@ class ControlSignal(ModulatorySignal):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
+
         self._instantiate_allocation_samples(context=context)
 
         # # MODIFIED 8/30/19 OLD:
         # self._instantiate_cost_functions(context=context)
         # self._initialize_cost_attributes(context=context)
-        # # MODIFIED 8/30/19 NEW [JDC]:
+        # MODIFIED 8/30/19 NEW [JDC]:
+        # FIX: PROBLEM HERE IS THAT Component.__init__ USES function arg PASSED TO IT, NOT self.function ASSIGNED HERE:
+        # # Implement TransferWithCosts as ControlSignal's primary function
+        # # - assign function as its transfer_fct
+        # # - pass specified cost_options and cost functions to it
         transfer_fct = function
         from psyneulink.core.components.functions.transferfunctions import TransferWithCosts
         self.function = TransferWithCosts(default_variable=self.defaults.variable,
@@ -1006,6 +1012,20 @@ class ControlSignal(ModulatorySignal):
                                           duration_cost_fct=self.duration_cost_function,
                                           combine_costs_fct=self.combine_costs_function,
                                           owner=self)
+        # # MODIFIED 8/30/19 NEW [JDC]:
+        # FIX: VERSION USED IN __init__;  HERE FOR REFERENCE ONLY;  IMPLEMENT THERE OR DELETE ON CLEAN-UP
+        # # Implement TransferWithCosts as ControlSignal's primary function
+        # # - assign function as its transfer_fct
+        # # - pass specified cost_options and cost functions to it
+        # from psyneulink.core.components.functions.transferfunctions import TransferWithCosts
+        # function = TransferWithCosts(default_variable=default_allocation,
+        #                              transfer_fct=function,
+        #                              enabled_cost_functions=cost_options,
+        #                              intensity_cost_fct=intensity_cost_function,
+        #                              adjustment_cost_fct=adjustment_cost_function,
+        #                              duration_cost_fct=duration_cost_function,
+        #                              combine_costs_fct=combine_costs_function,
+        #                              owner=self)
         # MODIFIED 8/30/19 END
 
     def _instantiate_allocation_samples(self, context=None):
