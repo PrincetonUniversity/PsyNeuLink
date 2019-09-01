@@ -499,13 +499,14 @@ class CompExecution(CUDAExecution):
         targets = autodiff_stimuli.get("targets", {})
         epochs = autodiff_stimuli.get("epochs", 0)
 
-        autodiff_stimuli_struct = [epochs, len(next(iter(inputs.values())))]
+        num_inputs = len(next(iter(inputs.values())))
         
         # autodiff_values keeps the ctype values on the stack, so it doesn't get gc'd
         autodiff_values = []
         def make_node_data(dictionary, node):
             values = dictionary.get(node)
             if values is not None:
+                assert len(values) == num_inputs
                 dimensionality = len(values[0])
                 values = np.asfarray(values)
                 autodiff_values.append(values)
@@ -513,18 +514,16 @@ class CompExecution(CUDAExecution):
                 return (dimensionality, values.ctypes.data)
             return tuple()
 
-        autodiff_param_cty = self._bin_run_func.byref_arg_types[1]
-        autodiff_stimuli_cty = autodiff_param_cty._fields_[3][1]
 
         target_struct_val = (make_node_data(targets, node) for node in self._composition.nodes)
-        autodiff_stimuli_struct.append(len(targets))
-        autodiff_stimuli_struct.append(tuple(target_struct_val))
-
         input_struct_val = (make_node_data(inputs, node) for node in self._composition.nodes)
-        autodiff_stimuli_struct.append(len(inputs))
-        autodiff_stimuli_struct.append(tuple(input_struct_val))
 
-        autodiff_stimuli_struct = autodiff_stimuli_cty(*tuple(autodiff_stimuli_struct))
+        autodiff_param_cty = self._bin_run_func.byref_arg_types[1]
+        autodiff_stimuli_cty = autodiff_param_cty._fields_[3][1]
+        autodiff_stimuli_struct = (epochs, num_inputs,
+                                   len(targets), tuple(target_struct_val),
+                                   len(inputs), tuple(input_struct_val))
+        autodiff_stimuli_struct = autodiff_stimuli_cty(*autodiff_stimuli_struct)
         my_field_name = self._param_struct._fields_[3][0]
         
         setattr(self._param_struct, my_field_name, autodiff_stimuli_struct)
@@ -535,6 +534,8 @@ class CompExecution(CUDAExecution):
         inputs = self._get_run_input_struct(inputs, num_input_sets)
         # Special casing for autodiff
         if hasattr(self._composition,"learning_enabled") and self._composition.learning_enabled is True:
+            assert num_input_sets == len(next(iter(autodiff_stimuli["inputs"].values())))
+            assert num_input_sets == len(next(iter(autodiff_stimuli["targets"].values())))
             keep_on_stack = self._initialize_autodiff_param_struct(autodiff_stimuli)
 
         if "force_runs" in debug_env:
