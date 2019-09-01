@@ -1116,7 +1116,12 @@ class Component(object, metaclass=ComponentsMeta):
         # INSTANTIATE ATTRIBUTES BEFORE FUNCTION
         # Stub for methods that need to be executed before instantiating function
         #    (e.g., _instantiate_sender and _instantiate_receiver in Projection)
-        self._instantiate_attributes_before_function(function=function, context=context)
+        # # MODIFIED 8/30/19 OLD:
+        # self._instantiate_attributes_before_function(function=function, context=context)
+        # MODIFIED 8/30/19 NEW: [JDC]
+        # Allow _instantiate_attributes_before_function to parse and modify function arg
+        function = self._instantiate_attributes_before_function(function=function, context=context) or function
+        # MODIFIED 8/30/19 END
 
         # INSTANTIATE FUNCTION
         #    - assign initial function parameter values from ParameterStates,
