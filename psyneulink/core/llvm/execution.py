@@ -93,15 +93,16 @@ class CUDAExecution:
         return ty.from_buffer(out_buf)
 
     def __getattr__(self, attribute):
-        if not attribute.startswith("_cuda"):
-            return getattr(super(), attribute)
+        assert attribute.startswith("_cuda")
 
-        private_attr = "_buffer" + attribute
-        if getattr(self, private_attr) is None:
-            new_buffer = self.upload_ctype(getattr(self, attribute[5:]))
-            setattr(self, private_attr, new_buffer)
+        private_attr_name = "_buffer" + attribute
+        private_attr = getattr(self, private_attr_name)
+        if private_attr is None:
+            # Set private attribute to a new buffer
+            private_attr = self.upload_ctype(getattr(self, attribute[5:]))
+            setattr(self, private_attr_name, private_attr)
 
-        return getattr(self, private_attr)
+        return private_attr
 
     @property
     def _cuda_out_buf(self):
