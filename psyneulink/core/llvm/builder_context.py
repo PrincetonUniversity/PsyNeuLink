@@ -52,7 +52,7 @@ _float_ty = ir.DoubleType()
 _global_context = None
 
 _BUILTIN_PREFIX = "__pnl_builtin_"
-_builtin_intrinsics = frozenset(('pow', 'log', 'exp'))
+_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'printf'))
 
 class LLVMBuilderContext:
     uniq_counter = 0
@@ -93,7 +93,7 @@ class LLVMBuilderContext:
         name = re.sub(r"[- ()\[\]]", "_", name)
         return name + '_' + str(LLVMBuilderContext.uniq_counter)
 
-    def get_builtin(self, name: str, args, function_type=None):
+    def get_builtin(self, name: str, args=[], function_type=None):
         if name in _builtin_intrinsics:
             return self.get_llvm_function(_BUILTIN_PREFIX + name)
         if name in ('maxnum'):
@@ -243,30 +243,27 @@ class LLVMBuilderContext:
         return element
 
     def inject_printf(self, builder, fmt, *args, override_debug=False):
-        if "print_values" not in debug_env and override_debug is False:
+        if "print_values" not in debug_env and not override_debug:
             return
         fmt += "\0"
 
-        import llvmlite.binding as llvm
-        llvm.load_library_permanently("libc.so.6")
-        printf_address = llvm.address_of_symbol("printf")
-        int8_ptr = ir.IntType(8).as_pointer()
+        int8 = ir.IntType(8)
+        stack_save = self.get_builtin("stacksave", [],
+                                      ir.FunctionType(int8.as_pointer(), []))
+        stack_restore = self.get_builtin("stackrestore", [],
+                                         ir.FunctionType(ir.VoidType(), [int8.as_pointer()]))
 
-        printf_ty = ir.FunctionType(self.int32_ty, [int8_ptr], var_arg=True).as_pointer()
-        # Direct pointer constants don't work in llvmlite
-        printf = builder.inttoptr(pnlvm.ir.IntType(64)(printf_address), printf_ty)
-
-        stack_save = self.get_builtin("stacksave", [], ir.FunctionType(int8_ptr, []))
         old_stack = builder.call(stack_save, [])
         fmt_data = bytearray(fmt.encode("utf8"))
 
-        # Allocate array so ease initialization
-        fmt = builder.alloca(ir.ArrayType(ir.IntType(8), len(fmt_data)))
+        # Allocate array to ease initialization
+        fmt = builder.alloca(ir.ArrayType(int8, len(fmt_data)))
         builder.store(fmt.type.pointee(fmt_data), fmt)
         fmt_ptr = builder.gep(fmt, [self.int32_ty(0), self.int32_ty(0)])
 
+        printf = self.get_builtin("printf")
         builder.call(printf, [fmt_ptr] + list(args))
-        stack_restore = self.get_builtin("stackrestore", [], ir.FunctionType(ir.VoidType(), [int8_ptr]))
+
         builder.call(stack_restore, [old_stack])
 
 
