@@ -3192,7 +3192,7 @@ COMBINE_COSTS_FUNCTION = 'combine_costs_function'
 COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM = 'combine_costs_fct_mult_param'
 COMBINE_COSTS_FCT_ADDITIVE_PARAM = 'combine_costs_fct_add_param'
 
-costFunctionNames = [INTENSITY_COST_FUNCTION,
+costFunctionNames = [DURATION_COST_FUNCTION,
                      ADJUSTMENT_COST_FUNCTION,
                      DURATION_COST_FUNCTION,
                      COMBINE_COSTS_FUNCTION]
@@ -3210,7 +3210,7 @@ class CostFunctions(IntEnum):
         `cost <TransferWithCosts.cost>` is not computed.
 
     INTENSITY
-        `intensity_cost_fct` is used to calculate a contribution to the `cost <TransferWithCosts.cost>`
+        `duration_cost_fct` is used to calculate a contribution to the `cost <TransferWithCosts.cost>`
         based its current `intensity <TransferWithCosts.intensity>` value.
 
     ADJUSTMENT
@@ -3247,21 +3247,6 @@ class CostModulationParam(Enum):
     Attributes
     ----------
 
-     COMBINED_COST_MULTIPLICATIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
-        of the TransferWithCosts's `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
-
-    COMBINED_COST_ADDITIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
-        of the TransferWithCosts's `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
-
-    COMBINED_COST_OVERRIDE
-        return the `value <ModulatorySignal.value>` of the ModulatorySignal directly in place of the TransferWithCosts's
-        `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
-
-    COMBINED_COST_DISABLE
-        ignore the ModulatorySignal when calculating the TransferWithCosts's `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
-
     INTENSITY_COST_MULTIPLICATIVE
         assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
         of the TransferWithCosts's `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`.
@@ -3275,7 +3260,7 @@ class CostModulationParam(Enum):
         `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`.
 
     INTENSITY_COST_DISABLE
-        ignore the `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` when calculating the TransferWithCosts's
+        ignore the `duration_cost_fct <TransferWithCosts.duration_cost_fct>` when calculating the TransferWithCosts's
         `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
 
     ADJUSTMENT_COST_MULTIPLICATIVE
@@ -3309,6 +3294,22 @@ class CostModulationParam(Enum):
     DURATION_COST_DISABLE
         ignore the `duration_cost_fct <TransferWithCosts.duration_cost_fct>` when calculating the TransferWithCosts's
         `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
+
+    COMBINED_COST_MULTIPLICATIVE
+        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
+        of the TransferWithCosts's `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
+
+    COMBINED_COST_ADDITIVE
+        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
+        of the TransferWithCosts's `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
+
+    COMBINED_COST_OVERRIDE
+        return the `value <ModulatorySignal.value>` of the ModulatorySignal directly in place of the TransferWithCosts's
+        `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
+
+    COMBINED_COST_DISABLE
+        ignore the ModulatorySignal when calculating the TransferWithCosts's `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
+
     """
     # FIX: EXTEND THE ENUM (https://stackoverflow.com/questions/33679930/how-to-extend-python-enum)
     #      THEN DELETE THESE:
@@ -3580,7 +3581,7 @@ class TransferWithCosts(TransferFunction):
                     :type: `Function`
 
                 transfer_fct
-                    see `intensity_cost_fct <TransferWithCosts.transfer_fct>`
+                    see `transfer_fct <TransferWithCosts.transfer_fct>`
 
                     :default value: `Linear`
                     :type: `Function`
@@ -3595,6 +3596,7 @@ class TransferWithCosts(TransferFunction):
         enabled_cost_functions = CostFunctions.DEFAULTS
         _validate_cost_functions = get_validator_by_type_only([CostFunctions, list])
 
+        # Create versions cost functions' modulation params for TransferWithCosts
         intensity_cost_fct = Exponential
         _validate_intensity_cost_fct = get_validator_by_function(is_function_type)
         intensity_cost_fct_mult_param  = Parameter()
@@ -3689,20 +3691,32 @@ class TransferWithCosts(TransferFunction):
                 raise FunctionError(f"{fct} is not a valid cost function for {fct_name}.")
 
         self.intensity_cost_fct = instantiate_fct(INTENSITY_COST_FUNCTION, self.intensity_cost_fct)
-        self.i_cost_fct_multiplicative_param = self.intensity_cost_fct.params[MULTIPLICATIVE_PARAM]
-        self.i_cost_fct_additive_param = self.intensity_cost_fct.params[ADDITIVE_PARAM]
+        # Initialize TransferWithCosts' versions of intensity_cost_fct modulation params
+        self.parameters.intensity_cost_fct_mult_param.default_value = \
+            getattr(self.intensity_cost_fct, self.intensity_cost_fct.params[MULTIPLICATIVE_PARAM])
+        self.parameters.intensity_cost_fct_add_param.default_value = \
+            getattr(self.intensity_cost_fct, self.intensity_cost_fct.params[ADDITIVE_PARAM])
 
         self.adjustment_cost_fct = instantiate_fct(ADJUSTMENT_COST_FUNCTION, self.adjustment_cost_fct)
-        self.a_cost_fct_multiplicative_param = self.adjustment_cost_fct.params[MULTIPLICATIVE_PARAM]
-        self.a_cost_fct_additive_param = self.adjustment_cost_fct.params[ADDITIVE_PARAM]
+        # Initialize TransferWithCosts' versions of adjustment_cost_fct modulation params
+        self.parameters.adjustment_cost_fct_mult_param.default_value = \
+            getattr(self.adjustment_cost_fct, self.adjustment_cost_fct.params[MULTIPLICATIVE_PARAM])
+        self.parameters.adjustment_cost_fct_add_param.default_value = \
+            getattr(self.adjustment_cost_fct, self.adjustment_cost_fct.params[ADDITIVE_PARAM])
 
         self.duration_cost_fct = instantiate_fct(DURATION_COST_FUNCTION, self.duration_cost_fct)
-        self.d_cost_fct_multiplicative_param = self.duration_cost_fct.params[MULTIPLICATIVE_PARAM]
-        self.d_cost_fct_additive_param = self.duration_cost_fct.params[ADDITIVE_PARAM]
+        # Initialize TransferWithCosts' versions of duration_cost_fct modulation params
+        self.parameters.duration_cost_fct_mult_param.default_value = \
+            getattr(self.duration_cost_fct, self.duration_cost_fct.params[MULTIPLICATIVE_PARAM])
+        self.parameters.duration_cost_fct_add_param.default_value = \
+            getattr(self.duration_cost_fct, self.duration_cost_fct.params[ADDITIVE_PARAM])
 
         self.combine_costs_fct = instantiate_fct(COMBINE_COSTS_FUNCTION, self.combine_costs_fct)
-        self.combine_costs_fct_mult_param = self.combine_costs_fct.params[MULTIPLICATIVE_PARAM]
-        self.combine_costs_fct_add_param = self.combine_costs_fct.params[ADDITIVE_PARAM]
+        # Initialize TransferWithCosts' versions of combine_costs_fct modulation params
+        self.parameters.combine_costs_fct_mult_param.default_value = \
+            getattr(self.combine_costs_fct, self.combine_costs_fct.params[MULTIPLICATIVE_PARAM])
+        self.parameters.combine_costs_fct_add_param.default_value = \
+            getattr(self.combine_costs_fct, self.combine_costs_fct.params[ADDITIVE_PARAM])
 
         # Initialize intensity attributes
         if self.enabled_cost_functions:
@@ -3770,58 +3784,85 @@ class TransferWithCosts(TransferFunction):
 
             # Compute intensity cost
             if enabled_cost_functions & CostFunctions.INTENSITY:
-                # Get parameters for cost fcts if set by ParameterState of owner Mechanism, or by ModulatorySignal
-                i_cost_fct_mult_param_val = self.get_current_function_param(INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM,
-                                                                             execution_id)
-                i_cost_fct_add_param_val = self.get_current_function_param(INTENSITY_COST_FCT_ADDITIVE_PARAM,
-                                                                            execution_id)
-                # Execute intensity cost function
-                intensity_cost = self.intensity_cost_fct(intensity,
-                                                         runtime_params={
-                                                             self.i_cost_fct_mult_param: i_cost_fct_mult_param_val,
-                                                             self.i_cost_fct_add_param: i_cost_fct_add_param_val})
+                # # Get parameters for cost fcts if set by ParameterState of owner Mechanism, or by ModulatorySignal
+                # i_cost_fct_mult_param_val = self.get_current_function_param(INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM,
+                #                                                              execution_id)
+                # i_cost_fct_add_param_val = self.get_current_function_param(INTENSITY_COST_FCT_ADDITIVE_PARAM,
+                #                                                             execution_id)
+                # # Execute intensity cost function
+                # intensity_cost = self.intensity_cost_fct(intensity,
+                #                                          runtime_params={
+                #                                              self.i_cost_fct_mult_param: i_cost_fct_mult_param_val,
+                #                                              self.i_cost_fct_add_param: i_cost_fct_add_param_val})
+                # self.parameters.intensity_cost._set(intensity_cost, execution_id)
+
+                # Get params for intensity_cost_fct if set by ParameterState of owner Mechanism, or by ModulatorySignal
+                mult_param_val = self.get_current_function_param(INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM, execution_id)
+                add_param_val = self.get_current_function_param(INTENSITY_COST_FCT_ADDITIVE_PARAM, execution_id)
+                # Set those parameters on combine_cost_fct
+                setattr(self.intensity_cost_fct, self.intensity_cost_fct_mult_param, mult_param_val)
+                setattr(self.intensity_cost_fct, self.intensity_cost_fct_add_param, add_param_val)
+                # Execute intensity_cost function
+                intensity_cost = self.intensity_cost_fct(intensity)
                 self.parameters.intensity_cost._set(intensity_cost, execution_id)
 
             # Compute adjustment cost
             if enabled_cost_functions & CostFunctions.ADJUSTMENT:
-                # Get parameters for cost fcts if set by ParameterState of owner Mechanism, or by ModulatorySignal
-                a_cost_fct_mult_param_val = self.get_current_function_param(ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM,
-                                                                             execution_id)
-                a_cost_fct_add_param_val = self.get_current_function_param(ADJUSTMENT_COST_FCT_ADDITIVE_PARAM,
-                                                                            execution_id)
-                # Execute duration cost function
-                adjustment_cost = self.adjustment_cost_fct(intensity_change,
-                                                           runtime_params={
-                                                               self.a_cost_fct_mult_param: a_cost_fct_mult_param_val,
-                                                               self.a_cost_fct_add_param: a_cost_fct_add_param_val})
-                self.parameters.intensity_cost._set(adjustment_cost, execution_id)
+                # # Get parameters for cost fcts if set by ParameterState of owner Mechanism, or by ModulatorySignal
+                # a_cost_fct_mult_param_val = self.get_current_function_param(ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM,
+                #                                                              execution_id)
+                # a_cost_fct_add_param_val = self.get_current_function_param(ADJUSTMENT_COST_FCT_ADDITIVE_PARAM,
+                #                                                             execution_id)
+                # # Execute duration cost function
+                # adjustment_cost = self.adjustment_cost_fct(intensity_change,
+                #                                            runtime_params={
+                #                                                self.a_cost_fct_mult_param: a_cost_fct_mult_param_val,
+                #                                                self.a_cost_fct_add_param: a_cost_fct_add_param_val})
+                # self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
+
+                # Get params for adjustment_cost_fct if set by ParameterState of owner Mechanism, or by ModulatorySignal
+                mult_param_val = self.get_current_function_param(ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM, execution_id)
+                add_param_val = self.get_current_function_param(ADJUSTMENT_COST_FCT_ADDITIVE_PARAM, execution_id)
+                # Set those parameters on combine_cost_fct
+                setattr(self.adjustment_cost_fct, self.adjustment_cost_fct_mult_param, mult_param_val)
+                setattr(self.adjustment_cost_fct, self.adjustment_cost_fct_add_param, add_param_val)
+                # Execute adjustment_cost function
+                adjustment_cost = self.adjustment_cost_fct(intensity_change)
+                self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
 
             # Compute duration cost
             if enabled_cost_functions & CostFunctions.DURATION:
-                # Get parameters for cost fcts if set by ParameterState of owner Mechanism, or by ModulatorySignal
-                d_cost_fct_mult_param_val = self.get_current_function_param(DURATION_COST_FCT_MULTIPLICATIVE_PARAM,
-                                                                             execution_id)
-                d_cost_fct_add_param_val = self.get_current_function_param(DURATION_COST_FCT_ADDITIVE_PARAM,
-                                                                            execution_id)
-                # Execute duration cost function
-                duration_cost = self.duration_cost_fct(self.parameters.combined_costs._get(execution_id),
-                                                       runtime_params={
-                                                           self.d_cost_fct_mult_param: d_cost_fct_mult_param_val,
-                                                           self.d_cost_fct_add_param: d_cost_fct_add_param_val})
+                # # Get parameters for cost fcts if set by ParameterState of owner Mechanism, or by ModulatorySignal
+                # d_cost_fct_mult_param_val = self.get_current_function_param(DURATION_COST_FCT_MULTIPLICATIVE_PARAM,
+                #                                                              execution_id)
+                # d_cost_fct_add_param_val = self.get_current_function_param(DURATION_COST_FCT_ADDITIVE_PARAM,
+                #                                                             execution_id)
+                # # Execute duration cost function
+                # duration_cost = self.duration_cost_fct(self.parameters.combined_costs._get(execution_id),
+                #                                        runtime_params={
+                #                                            self.d_cost_fct_mult_param: d_cost_fct_mult_param_val,
+                #                                            self.d_cost_fct_add_param: d_cost_fct_add_param_val})
+                # self.parameters.duration_cost._set(duration_cost, execution_id)
+
+                # Get params for duration_cost_fct if set by ParameterState of owner Mechanism, or by ModulatorySignal
+                mult_param_val = self.get_current_function_param(DURATION_COST_FCT_MULTIPLICATIVE_PARAM, execution_id)
+                add_param_val = self.get_current_function_param(DURATION_COST_FCT_ADDITIVE_PARAM, execution_id)
+                # Set those parameters on combine_cost_fct
+                setattr(self.duration_cost_fct, self.duration_cost_fct_mult_param, mult_param_val)
+                setattr(self.duration_cost_fct, self.duration_cost_fct_add_param, add_param_val)
+                # Execute duration_cost function
+                duration_cost = self.duration_cost_fct(self.parameters.combined_costs._get(execution_id))
                 self.parameters.duration_cost._set(duration_cost, execution_id)
 
-        # Always compute combined costs
-        # Get parameters for cost fcts if set by ParameterState of owner Mechanism, or by ModulatorySignal
-        costs_fct_mult_param_val = self.get_current_function_param(COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM,
-                                                                    execution_id)
-        costs_fct_add_param_val = self.get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM,
-                                                                   execution_id)
+        # Always compute and assign combined costs
+        # Get parameters for combine_costs_fct if set by ParameterState of owner Mechanism, or by ModulatorySignal
+        cc_fct_mult_param_val = self.get_current_function_param(COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM, execution_id)
+        cc_fct_add_param_val = self.get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, execution_id)
+        # Set those parameters on combine_cost_fct
+        setattr(self.combine_costs_fct, self.combine_costs_fct_mult_param, cc_fct_mult_param_val)
+        setattr(self.combine_costs_fct, self.combine_costs_fct_add_param, cc_fct_add_param_val)
         # Execute combine_costs function
-        # FIX: intensity_cost is None HERE
-        combined_costs = self.combine_costs_fct([intensity_cost, adjustment_cost, duration_cost],
-                                                runtime_params={
-                                                    self.combine_costs_fct_mult_param: costs_fct_mult_param_val,
-                                                    self.combine_costs_fct_add_param: costs_fct_add_param_val})
+        combined_costs = self.combine_costs_fct([intensity_cost, adjustment_cost, duration_cost])
         self.parameters.combined_costs._set(combined_costs, execution_id)
 
         return intensity
@@ -3908,10 +3949,10 @@ class TransferWithCosts(TransferFunction):
         """
         if cost_function_name == INTENSITY_COST_FUNCTION:
             cost_function = CostFunctions.INTENSITY
-        elif cost_function_name == DURATION_COST_FUNCTION:
-            cost_function = CostFunctions.DURATION
         elif cost_function_name == ADJUSTMENT_COST_FUNCTION:
             cost_function = CostFunctions.ADJUSTMENT
+        elif cost_function_name == DURATION_COST_FUNCTION:
+            cost_function = CostFunctions.DURATION
         elif cost_function_name == COMBINE_COSTS_FUNCTION:
             raise FunctionError("{} cannot be disabled".format(COMBINE_COSTS_FUNCTION))
         else:
