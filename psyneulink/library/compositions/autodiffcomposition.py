@@ -1084,16 +1084,16 @@ class AutodiffComposition(Composition):
         # Unused for now, but should match the layout expected by
         # pytorch model creator
         learning_targets = pnlvm.ir.LiteralStructType([
-            pnlvm.ir.IntType(32), # idx of the node
-            pnlvm.ir.IntType(32), # dimensionality
+            ctx.int32_ty, # idx of the node
+            ctx.int32_ty, # dimensionality
             pnlvm.ir.IntType(64) 
         ])
         learning_params = pnlvm.ir.LiteralStructType([
-            pnlvm.ir.IntType(32), # epochs
-            pnlvm.ir.IntType(32), # number of targets/inputs to train with
-            pnlvm.ir.IntType(32), # number target nodes
+            ctx.int32_ty, # epochs
+            ctx.int32_ty, # number of targets/inputs to train with
+            ctx.int32_ty, # number target nodes
             pnlvm.ir.IntType(64), # addr of beginning of target struct arr
-            pnlvm.ir.IntType(32), # number input nodes
+            ctx.int32_ty, # number input nodes
             pnlvm.ir.IntType(64), # addr of beginning of input struct arr
         ])
         param_args = [pnlvm.ir.LiteralStructType(mech_param_type_list),

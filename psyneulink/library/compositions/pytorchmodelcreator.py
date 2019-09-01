@@ -471,8 +471,8 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_llvm_training_backprop(self, ctx, optimizer, loss, extra_args=[]):
         composition = self._composition
         learning_targets = pnlvm.ir.LiteralStructType([
-            pnlvm.ir.IntType(32),  # idx of the node
-            pnlvm.ir.IntType(32),  # idx of the node
+            ctx.int32_ty,  # idx of the node
+            ctx.int32_ty,  # idx of the node
             pnlvm.ir.IntType(64)
         ])
         args = [ctx.get_state_struct_type(self).as_pointer(),
@@ -650,16 +650,16 @@ class PytorchModelCreator(torch.nn.Module):
             params, [ctx.int32_ty(0), ctx.int32_ty(3)])
 
         learning_targets = pnlvm.ir.LiteralStructType([
-            pnlvm.ir.IntType(32),  # idx of the node
-            pnlvm.ir.IntType(32),  # dimensionality
+            ctx.int32_ty,  # idx of the node
+            ctx.int32_ty,  # dimensionality
             pnlvm.ir.IntType(64),  # array of input/output values
         ])
         learning_params = pnlvm.ir.LiteralStructType([
-            pnlvm.ir.IntType(32),  # epochs
-            pnlvm.ir.IntType(32),  # number of targets/inputs to train with
-            pnlvm.ir.IntType(32),  # number target nodes
+            ctx.int32_ty,  # epochs
+            ctx.int32_ty,  # number of targets/inputs to train with
+            ctx.int32_ty,  # number target nodes
             pnlvm.ir.IntType(64),  # addr of beginning of target struct arr
-            pnlvm.ir.IntType(32),  # number input nodes
+            ctx.int32_ty,  # number input nodes
             pnlvm.ir.IntType(64),  # addr of beginning of input struct arr
         ])
 
