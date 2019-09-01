@@ -420,7 +420,6 @@ class PytorchModelCreator(torch.nn.Module):
                 value = self._get_output_value_ptr(
                     ctx, builder, arg_out, component_id)
                 afferents = self.component_to_forward_info[component][3]
-                _, dim_y = component.defaults.variable.shape
                 
                 if i == 0:
                     cmp_arg = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(component_id)])
@@ -459,10 +458,8 @@ class PytorchModelCreator(torch.nn.Module):
                 # if biases is not None:
                 #   value = value + biases
                 if store_z_values is True:
-                    ctx.inject_printf_float_array(
-                        builder, z_values[component], dim_y, prefix=f"Z VALUE FOR {component} :\t")
-                ctx.inject_printf_float_array(
-                    builder, value, dim_y, prefix=f"FORWARD VALUE FOR {component} :\t")
+                    ctx.inject_printf_float_array(builder, z_values[component], prefix=f"Z VALUE FOR {component} :\t")
+                ctx.inject_printf_float_array(builder, value, prefix=f"FORWARD VALUE FOR {component} :\t")
         if store_z_values is True:
             return z_values
 
@@ -515,14 +512,12 @@ class PytorchModelCreator(torch.nn.Module):
         # first we copy input values to data struct of input_CIM
         for node in input_nodes:
             node_idx = composition._get_node_index(node)
-            _, node_dim = node.defaults.variable.shape
             node_input_array_ptr = builder.gep(node_input_arrays[node], [
                                                 input_idx, ctx.int32_ty(0)])
             node_model_input = builder.gep(model_input,[ctx.int32_ty(0),ctx.int32_ty(node_idx)])
             self._gen_inject_vec_copy(ctx, builder, node_input_array_ptr, node_model_input)
             
-            ctx.inject_printf_float_array(
-                builder, node_input_array_ptr, node_dim, prefix=f"\tNODE {node_idx} INPUT: ")
+            ctx.inject_printf_float_array(builder, node_input_array_ptr, prefix=f"\tNODE {node_idx} INPUT: ")
 
         # 2) call forward computation
         z_values = self._gen_llvm_forward_function_body(
@@ -549,12 +544,12 @@ class PytorchModelCreator(torch.nn.Module):
                 backprop_queue.append(afferent_node)
 
             node_idx = composition._get_node_index(node)
-            _, node_dim = node.defaults.value.shape
 
 
             activation_func_derivative_bin_func = ctx.get_llvm_function(self.bin_function_derivative_creator(ctx,node).name)
             activation_func_derivative = self._gen_inject_bin_function_call(ctx, builder, activation_func_derivative_bin_func, z_values[node])
             
+            _, node_dim = node.defaults.value.shape
             error_val = builder.alloca(pnlvm.ir.ArrayType(ctx.float_ty, node_dim))
             
             error_dict[node] = error_val
@@ -568,7 +563,7 @@ class PytorchModelCreator(torch.nn.Module):
 
                 tmp_loss = loss._gen_inject_lossfunc_call(ctx, builder, loss_fn, node_output, node_target)
                
-                ctx.inject_printf_float_array(builder,node_output,node_dim,override_debug=False)
+                ctx.inject_printf_float_array(builder, node_output, override_debug=False)
                 
                 ctx.inject_printf(builder,f"tmp loss for {node} :%f\n",tmp_loss,override_debug=False)
                 builder.store(builder.fadd(builder.load(total_loss),tmp_loss),total_loss)
@@ -600,8 +595,8 @@ class PytorchModelCreator(torch.nn.Module):
 
                 self._gen_inject_vec_hadamard(ctx, builder, activation_func_derivative, error_val, error_val)
             
-            ctx.inject_printf_float_array(builder,activation_func_derivative,node_dim,prefix=f"dSIGMA VALUE FOR {node}:\t")
-            ctx.inject_printf_float_array(builder,error_val,node_dim,prefix=f"ERROR VALUE FOR {node}:\t")
+            ctx.inject_printf_float_array(builder, activation_func_derivative, prefix=f"dSIGMA VALUE FOR {node}:\t")
+            ctx.inject_printf_float_array(builder, error_val, prefix=f"ERROR VALUE FOR {node}:\t")
             
         # 4) compute weight gradients
         for (node, err_val) in error_dict.items():

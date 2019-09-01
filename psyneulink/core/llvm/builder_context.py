@@ -267,22 +267,12 @@ class LLVMBuilderContext:
         builder.call(stack_restore, [old_stack])
 
 
-    def inject_printf_float_array(self,builder,array,dim,prefix="",suffix="\n",ctype_dimension=False,override_debug=False):
-        if "print_values" not in debug_env and override_debug is False:
-            return
+    def inject_printf_float_array(self, builder, array, prefix="", suffix="\n", override_debug=False):
         self.inject_printf(builder,prefix,override_debug=override_debug)
 
-        if ctype_dimension:
-            loop_iterator = None
-            b1 = None
-            with pnlvm.helpers.for_loop_zero_inc(builder, dim, "print_vector_loop") as (b1, loop_iterator):
-                if array.type == self.float_ty.as_pointer():
-                    self.inject_printf(b1,"%f ",b1.load(b1.gep(array,[loop_iterator])),override_debug=override_debug)
-                else:
-                    self.inject_printf(b1,"%f ",b1.load(b1.gep(array,[self.int32_ty(0),loop_iterator])),override_debug=override_debug)
-        else:
-            for i in range(0,dim):
-                self.inject_printf(builder,"%f ",builder.load(builder.gep(array,[self.int32_ty(0),self.int32_ty(i)])),override_debug=override_debug)
+        with pnlvm.helpers.array_ptr_loop(builder, array, "print_array_loop") as (b1, i):
+            self.inject_printf(b1, "%f ", b1.load(b1.gep(array, [self.int32_ty(0), i])), override_debug=override_debug)
+
         self.inject_printf(builder,suffix,override_debug=override_debug)
 
     def gen_autodiffcomp_learning_exec(self,composition,simulation=False):
