@@ -495,21 +495,11 @@ class CompExecution(CUDAExecution):
 
     # inserts autodiff params into the param struct (this unfortunately needs to be done dynamically, as we don't know autodiff inputs ahead of time)
     def _initialize_autodiff_param_struct(self, autodiff_stimuli):
-        inputs = {}
-        targets = {} 
-        epochs = 0
+        inputs = autodiff_stimuli.get("inputs", {})
+        targets = autodiff_stimuli.get("targets", {})
+        epochs = autodiff_stimuli.get("epochs", 0)
 
-        if "inputs" in autodiff_stimuli:
-            inputs = autodiff_stimuli["inputs"]
-        if "targets" in autodiff_stimuli:
-            targets = autodiff_stimuli["targets"]
-        if "epochs" in autodiff_stimuli:
-            epochs = autodiff_stimuli["epochs"]
-
-        autodiff_stimuli_struct = [
-            epochs,
-            len(next(iter(inputs.values())))
-        ]
+        autodiff_stimuli_struct = [epochs, len(next(iter(inputs.values())))]
         ctx = pnlvm.builder_context.LLVMBuilderContext.get_global()
         
         # autodiff_values keeps the ctype values on the stack, so it doesn't get gc'd TODO: Make sure this works as intended
