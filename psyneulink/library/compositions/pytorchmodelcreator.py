@@ -647,12 +647,6 @@ class PytorchModelCreator(torch.nn.Module):
         autodiff_stimuli_struct = builder.gep(
             params, [ctx.int32_ty(0), ctx.int32_ty(3)])
 
-        learning_targets = pnlvm.ir.LiteralStructType([
-            ctx.int32_ty,  # idx of the node
-            ctx.int32_ty,  # dimensionality
-            pnlvm.ir.IntType(64),  # array of input/output values
-        ])
-
         epochs = builder.load(builder.gep(autodiff_stimuli_struct, [
                               ctx.int32_ty(0), ctx.int32_ty(0)]))
         num_inputs = builder.load(builder.gep(autodiff_stimuli_struct, [
@@ -660,17 +654,15 @@ class PytorchModelCreator(torch.nn.Module):
 
         num_target_structs = builder.load(builder.gep(
             autodiff_stimuli_struct, [ctx.int32_ty(0), ctx.int32_ty(2)]))
-        target_struct_ptr = builder.load(builder.gep(
-            autodiff_stimuli_struct, [ctx.int32_ty(0), ctx.int32_ty(3)]))
-        target_struct_ptr = builder.inttoptr(
-            target_struct_ptr, learning_targets.as_pointer())
+        # Get pointer to the first element
+        target_struct_ptr = builder.gep(
+            autodiff_stimuli_struct, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(0)])
 
         num_input_structs = builder.load(builder.gep(
             autodiff_stimuli_struct, [ctx.int32_ty(0), ctx.int32_ty(4)]))
-        input_struct_ptr = builder.load(builder.gep(
-            autodiff_stimuli_struct, [ctx.int32_ty(0), ctx.int32_ty(5)]))
-        input_struct_ptr = builder.inttoptr(
-            input_struct_ptr, learning_targets.as_pointer())
+        # Get pointer to the first element
+        input_struct_ptr = builder.gep(
+            autodiff_stimuli_struct, [ctx.int32_ty(0), ctx.int32_ty(5), ctx.int32_ty(0)])
 
         if "const_params" in debug_env:
             const_params = params.type.pointee(

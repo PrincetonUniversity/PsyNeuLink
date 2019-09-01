@@ -511,15 +511,6 @@ class CompExecution(CUDAExecution):
             len(next(iter(inputs.values())))
         ]
         ctx = pnlvm.builder_context.LLVMBuilderContext.get_global()
-
-       
-        value_struct_ir_ty = pnlvm.ir.LiteralStructType([
-            ctx.int32_ty, # idx of the node
-            ctx.int32_ty, # dimensionality of value
-            pnlvm.ir.IntType(64) # int memaddr of beginning of input/output list
-        ]
-        )
-        value_struct_c_ty = _convert_llvm_ir_to_ctype(value_struct_ir_ty) * len(self._composition.nodes)
         
         # autodiff_values keeps the ctype values on the stack, so it doesn't get gc'd TODO: Make sure this works as intended
         autodiff_values = []
@@ -543,18 +534,14 @@ class CompExecution(CUDAExecution):
 
         autodiff_param_cty = self._bin_run_func.byref_arg_types[1]
         autodiff_stimuli_cty = autodiff_param_cty._fields_[3][1]
-        
-        target_struct_array = value_struct_c_ty(*_tupleize(make_val_arr(targets)))
-        autodiff_values.append(target_struct_array)
-        target_struct_array_ptr = ctypes.cast(target_struct_array,ctypes.c_void_p).value
+
+        target_struct_val = make_val_arr(targets)
         autodiff_stimuli_struct.append(len(targets))
-        autodiff_stimuli_struct.append(target_struct_array_ptr)
-        
-        input_struct_array = value_struct_c_ty(*_tupleize(make_val_arr(inputs)))
-        autodiff_values.append(input_struct_array)
-        input_struct_array_ptr = ctypes.cast(input_struct_array,ctypes.c_void_p).value
+        autodiff_stimuli_struct.append(target_struct_val)
+
+        input_struct_val = make_val_arr(inputs)
         autodiff_stimuli_struct.append(len(inputs))
-        autodiff_stimuli_struct.append(input_struct_array_ptr)
+        autodiff_stimuli_struct.append(input_struct_val)
 
         autodiff_stimuli_struct = autodiff_stimuli_cty(*_tupleize(autodiff_stimuli_struct))
         my_field_name = self._param_struct._fields_[3][0]
