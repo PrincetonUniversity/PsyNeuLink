@@ -511,7 +511,7 @@ class CompExecution(CUDAExecution):
             len(next(iter(inputs.values())))
         ]
         ctx = pnlvm.builder_context.LLVMBuilderContext.get_global()
-        
+
        
         value_struct_ir_ty = pnlvm.ir.LiteralStructType([
             ctx.int32_ty, # idx of the node
@@ -540,8 +540,9 @@ class CompExecution(CUDAExecution):
                 ])
                 value_struct_array[idx] = value_struct
             return value_struct_array
-        
-   
+
+        autodiff_param_cty = self._bin_run_func.byref_arg_types[1]
+        autodiff_stimuli_cty = autodiff_param_cty._fields_[3][1]
         
         target_struct_array = value_struct_c_ty(*_tupleize(make_val_arr(targets)))
         autodiff_values.append(target_struct_array)
@@ -555,20 +556,10 @@ class CompExecution(CUDAExecution):
         autodiff_stimuli_struct.append(len(inputs))
         autodiff_stimuli_struct.append(input_struct_array_ptr)
 
-        learning_params = pnlvm.ir.LiteralStructType([
-            ctx.int32_ty, # epochs
-            ctx.int32_ty, # number of targets/inputs to train with
-            ctx.int32_ty, # number target nodes
-            pnlvm.ir.IntType(64), # addr of beginning of target struct arr
-            ctx.int32_ty, # number input nodes
-            pnlvm.ir.IntType(64), # addr of beginning of input struct arr
-        ])
-        
-        autodiff_stimuli_cty = _convert_llvm_ir_to_ctype(learning_params)
         autodiff_stimuli_struct = autodiff_stimuli_cty(*_tupleize(autodiff_stimuli_struct))
-        my_field_name = self._param_struct._fields_[3]
+        my_field_name = self._param_struct._fields_[3][0]
         
-        setattr(self._param_struct, my_field_name[0], autodiff_stimuli_struct)
+        setattr(self._param_struct, my_field_name, autodiff_stimuli_struct)
         
         return autodiff_values
 
