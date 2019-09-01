@@ -991,7 +991,6 @@ class ControlSignal(ModulatorySignal):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
-
         self._instantiate_allocation_samples(context=context)
 
         # # MODIFIED 8/30/19 OLD:
