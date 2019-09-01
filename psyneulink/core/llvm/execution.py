@@ -64,6 +64,11 @@ class CUDAExecution:
             print("{} CUDA downloaded: {}".format(name, self._downloaded_bytes))
 
     @property
+    def _bin_func_multirun(self):
+        # CUDA uses the same function for single and multi run
+        return self._bin_func
+
+    @property
     def _vo_ty(self):
         if self.__vo_ty is None:
             self.__vo_ty = self._bin_func.byref_arg_types[3]
@@ -133,16 +138,12 @@ class FuncExecution(CUDAExecution):
 
         if len(execution_ids) > 1:
             self._bin_multirun = self._bin_func.get_multi_run()
-            par_struct_ty = par_struct_ty * len(execution_ids)
-            ctx_struct_ty = ctx_struct_ty * len(execution_ids)
+            self._ct_len = ctypes.c_int(len(execution_ids))
             vo_ty = vo_ty * len(execution_ids)
             vi_ty = vi_ty * len(execution_ids)
 
-            par_initializer = (component._get_param_initializer(ex_id) for ex_id in execution_ids)
-            ctx_initializer = (component._get_state_initializer(ex_id) for ex_id in execution_ids)
-            self.__param_struct = par_struct_ty(*par_initializer)
-            self.__state_struct = ctx_struct_ty(*ctx_initializer)
-            self._ct_len = ctypes.c_int(len(execution_ids))
+            self.__param_struct = None
+            self.__state_struct = None
 
         self._ct_vo = vo_ty()
         self._vi_ty = vi_ty
@@ -158,9 +159,16 @@ class FuncExecution(CUDAExecution):
 
         return struct
 
+    def _get_multirun_struct(self, arg, init):
+        struct_ty = self._bin_multirun.byref_arg_types[arg] * len(self._execution_ids)
+        initializer = (getattr(self._component, init)(ex_id) for ex_id in self._execution_ids)
+        return struct_ty(*initializer)
+
     @property
     def _param_struct(self):
         if len(self._execution_ids) > 1:
+            if self.__param_struct is None:
+                self.__param_struct = self._get_multirun_struct(0, '_get_param_initializer')
             return self.__param_struct
 
         return self._get_compilation_param('parameter_struct', '_get_param_initializer', 0, self._execution_ids[0])
@@ -168,6 +176,8 @@ class FuncExecution(CUDAExecution):
     @property
     def _state_struct(self):
         if len(self._execution_ids) > 1:
+            if self.__state_struct is None:
+                self.__state_struct = self._get_multirun_struct(1, '_get_state_initializer')
             return self.__state_struct
 
         return self._get_compilation_param('state_struct', '_get_state_initializer', 1, self._execution_ids[0])
@@ -218,27 +228,9 @@ class CompExecution(CUDAExecution):
 
         # TODO: Consolidate these
         if len(execution_ids) > 1:
-            # At least the input_CIM wrapper should be generated
-            wrapper = composition._get_node_wrapper(composition.input_CIM)
-            input_cim_fn = pnlvm.LLVMBuilderContext.get_global().gen_llvm_function(wrapper)
-
-            # Input structures
-            # TODO: Use the compiled version to get these
-            c_context = _convert_llvm_ir_to_ctype(input_cim_fn.args[0].type.pointee)
-            c_param = _convert_llvm_ir_to_ctype(input_cim_fn.args[1].type.pointee)
-            c_data = _convert_llvm_ir_to_ctype(input_cim_fn.args[3].type.pointee)
-
-            c_context = c_context * len(execution_ids)
-            c_param = c_param * len(execution_ids)
-            c_data = c_data * len(execution_ids)
-
-            ctx_initializer = (composition._get_state_initializer(ex_id) for ex_id in execution_ids)
-            par_initializer = (composition._get_param_initializer(ex_id) for ex_id in execution_ids)
-            data_initializer = (composition._get_data_initializer(ex_id) for ex_id in execution_ids)
-            # Instantiate structures
-            self.__state_struct = c_context(*ctx_initializer)
-            self.__param_struct = c_param(*par_initializer)
-            self.__data_struct = c_data(*data_initializer)
+            self.__state_struct = None
+            self.__param_struct = None
+            self.__data_struct = None
             self.__conds = None
             self._ct_len = ctypes.c_int(len(execution_ids))
 
@@ -254,6 +246,15 @@ class CompExecution(CUDAExecution):
 
         assert False, "Binary function not set for execution!"
 
+    @property
+    def _bin_func_multirun(self):
+        if self.__bin_exec_multi_func is not None:
+            return self.__bin_exec_multi_func
+        if self.__bin_run_multi_func is not None:
+            return self.__bin_run_multi_func
+
+        return super()._bin_func_multirun
+
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
         wrapper = self._composition._get_node_wrapper(node)
@@ -263,7 +264,7 @@ class CompExecution(CUDAExecution):
     def _conditions(self):
         if len(self._execution_ids) > 1:
             if self.__conds is None:
-                cond_type = self._bin_func.byref_arg_types[4] * len(self._execution_ids)
+                cond_type = self._bin_func_multirun.byref_arg_types[4] * len(self._execution_ids)
                 gen = helpers.ConditionGenerator(None, self._composition)
                 cond_initializer = (gen.get_condition_initializer() for _ in self._execution_ids)
                 self.__conds = cond_type(*cond_initializer)
@@ -289,9 +290,16 @@ class CompExecution(CUDAExecution):
 
         return struct
 
+    def _get_multirun_struct(self, arg, init):
+        struct_ty = self._bin_func_multirun.byref_arg_types[arg] * len(self._execution_ids)
+        initializer = (getattr(self._composition, init)(ex_id) for ex_id in self._execution_ids)
+        return struct_ty(*initializer)
+
     @property
     def _param_struct(self):
         if len(self._execution_ids) > 1:
+            if self.__param_struct is None:
+                self.__param_struct = self._get_multirun_struct(1, '_get_param_initializer')
             return self.__param_struct
 
         return self._get_compilation_param('parameter_struct', '_get_param_initializer', 1, self._execution_ids[0])
@@ -299,17 +307,21 @@ class CompExecution(CUDAExecution):
     @property
     def _state_struct(self):
         if len(self._execution_ids) > 1:
+            if self.__state_struct is None:
+                self.__state_struct = self._get_multirun_struct(0, '_get_state_initializer')
             return self.__state_struct
 
         return self._get_compilation_param('state_struct', '_get_state_initializer', 0, self._execution_ids[0])
 
     @property
     def _data_struct(self):
-        if len(self._execution_ids) > 1:
-            return self.__data_struct
-
         # Run wrapper changed argument order
         arg = 2 if len(self._bin_func.byref_arg_types) > 5 else 3
+
+        if len(self._execution_ids) > 1:
+            if self.__data_struct is None:
+                self.__data_struct = self._get_multirun_struct(arg, '_get_data_initializer')
+            return self.__data_struct
 
         return self._get_compilation_param('data_struct', '_get_data_initializer', arg, self._execution_ids[0])
 
