@@ -423,8 +423,7 @@ class PytorchModelCreator(torch.nn.Module):
                 _, dim_y = component.defaults.variable.shape
                 
                 if i == 0:
-                    cmp_arg = builder.gep(
-                            arg_in, [ctx.int32_ty(0), ctx.int32_ty(component_id)])
+                    cmp_arg = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(component_id)])
                 else:
                     # is_set keeps track of if we already have valid (i.e. non-garbage) values inside the alloc'd value
                     is_set = False
@@ -546,7 +545,6 @@ class PytorchModelCreator(torch.nn.Module):
             node = backprop_queue.popleft()
             if node in error_dict or not hasattr(node, "afferents") or node == composition.input_CIM or node in input_nodes:
                 continue
-            forward_info_weights = self.component_to_forward_info[node][3]
 
             for (afferent_node,weights) in self._get_afferent_nodes(node):
                 backprop_queue.append(afferent_node)
@@ -653,14 +651,6 @@ class PytorchModelCreator(torch.nn.Module):
             ctx.int32_ty,  # idx of the node
             ctx.int32_ty,  # dimensionality
             pnlvm.ir.IntType(64),  # array of input/output values
-        ])
-        learning_params = pnlvm.ir.LiteralStructType([
-            ctx.int32_ty,  # epochs
-            ctx.int32_ty,  # number of targets/inputs to train with
-            ctx.int32_ty,  # number target nodes
-            pnlvm.ir.IntType(64),  # addr of beginning of target struct arr
-            ctx.int32_ty,  # number input nodes
-            pnlvm.ir.IntType(64),  # addr of beginning of input struct arr
         ])
 
         epochs = builder.load(builder.gep(autodiff_stimuli_struct, [

@@ -133,11 +133,9 @@ class AdamOptimizer(Optimizer):
 
         # setup values
         zero = ctx.int32_ty(0)
-        one = ctx.int32_ty(1)
         one_float = ctx.float_ty(1)
 
-        delta_w = builder.gep(
-            optim_struct, [zero, ctx.int32_ty(self._DELTA_W_NUM)])
+        delta_w = builder.gep(optim_struct, [zero, ctx.int32_ty(self._DELTA_W_NUM)])
         m_t = builder.gep(optim_struct, [zero, ctx.int32_ty(self._M_T_NUM)])
         v_t = builder.gep(optim_struct, [zero, ctx.int32_ty(self._V_T_NUM)])
         t = builder.gep(optim_struct, [zero, ctx.int32_ty(self._T_NUM)])
@@ -303,13 +301,8 @@ class SGDOptimizer(Optimizer):
         llvm_func.attributes.add('alwaysinline')
         optim_struct, model_params = llvm_func.args
 
-        # setup values
         zero = ctx.int32_ty(0)
-        one = ctx.int32_ty(1)
-        one_float = ctx.float_ty(1)
-
-        delta_w = builder.gep(
-            optim_struct, [zero, ctx.int32_ty(self._DELTA_W_NUM)])
+        delta_w = builder.gep(optim_struct, [zero, ctx.int32_ty(self._DELTA_W_NUM)])
 
         lr = ctx.float_ty(self.lr)
        

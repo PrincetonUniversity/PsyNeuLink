@@ -1,14 +1,6 @@
 from psyneulink.core import llvm as pnlvm
 
 
-try:
-    import torch
-    from torch import nn
-    torch_available = True
-except ImportError:
-    torch_available = False
-
-
 __all__ = ['MSELoss']
 
 
