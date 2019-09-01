@@ -549,8 +549,7 @@ class PytorchModelCreator(torch.nn.Module):
             activation_func_derivative_bin_func = ctx.get_llvm_function(self.bin_function_derivative_creator(ctx,node).name)
             activation_func_derivative = self._gen_inject_bin_function_call(ctx, builder, activation_func_derivative_bin_func, z_values[node])
             
-            _, node_dim = node.defaults.value.shape
-            error_val = builder.alloca(pnlvm.ir.ArrayType(ctx.float_ty, node_dim))
+            error_val = builder.alloca(z_values[node].type.pointee)
             
             error_dict[node] = error_val
             
