@@ -507,11 +507,10 @@ class CompExecution(CUDAExecution):
             values = dictionary.get(node)
             if values is not None:
                 dimensionality = len(values[0])
-                idx = self._composition._get_node_index(node)
                 values = np.asfarray(values)
                 autodiff_values.append(values)
 
-                return (idx, dimensionality, values.ctypes.data)
+                return (dimensionality, values.ctypes.data)
             return tuple()
 
         autodiff_param_cty = self._bin_run_func.byref_arg_types[1]

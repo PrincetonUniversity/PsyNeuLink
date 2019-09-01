@@ -1085,7 +1085,6 @@ class AutodiffComposition(Composition):
         # pytorch model creator
         learning_targets = pnlvm.ir.LiteralStructType((
             pnlvm.ir.LiteralStructType((
-                ctx.int32_ty, # idx of the node
                 ctx.int32_ty, # dimensionality
                 pnlvm.ir.IntType(64)
             )) for node in self.nodes))

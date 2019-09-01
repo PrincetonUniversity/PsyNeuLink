@@ -470,8 +470,7 @@ class PytorchModelCreator(torch.nn.Module):
     def _gen_llvm_training_backprop(self, ctx, optimizer, loss, extra_args=[]):
         composition = self._composition
         learning_targets = pnlvm.ir.LiteralStructType([
-            ctx.int32_ty,  # idx of the node
-            ctx.int32_ty,  # idx of the node
+            ctx.int32_ty,  # dimensionality
             pnlvm.ir.IntType(64)
         ])
         args = [ctx.get_state_struct_type(self).as_pointer(),
@@ -501,7 +500,7 @@ class PytorchModelCreator(torch.nn.Module):
 
         def _get_node_array_ptr(node, struct_ptr):
             node_idx = composition._get_node_index(node)
-            array_ptr = builder.gep(struct_ptr, [ctx.int32_ty(node_idx), ctx.int32_ty(2)])
+            array_ptr = builder.gep(struct_ptr, [ctx.int32_ty(node_idx), ctx.int32_ty(1)])
             array_ptr = builder.load(array_ptr)
             return builder.inttoptr(array_ptr, node_value_ir_types[node].as_pointer())
 
