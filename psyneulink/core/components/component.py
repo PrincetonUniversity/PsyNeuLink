@@ -1116,7 +1116,7 @@ class Component(object, metaclass=ComponentsMeta):
         # INSTANTIATE ATTRIBUTES BEFORE FUNCTION
         # Stub for methods that need to be executed before instantiating function
         #    (e.g., _instantiate_sender and _instantiate_receiver in Projection)
-        self._instantiate_attributes_before_function(function=function, context=context)
+        function = self._instantiate_attributes_before_function(function=function, context=context) or function
 
         # INSTANTIATE FUNCTION
         #    - assign initial function parameter values from ParameterStates,
