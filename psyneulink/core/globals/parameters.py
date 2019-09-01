@@ -1167,7 +1167,7 @@ class ParametersBase(ParametersTemplate):
             except AttributeError:
                 owner_string = ''
 
-            raise AttributeError("No attribute '{0}' exists in the parameter hierarchy{1}".format(attr, owner_string)) from None
+            raise AttributeError(f"No attribute '{attr}' exists in the parameter hierarchy{owner_string}.") from None
 
     def __setattr__(self, attr, value):
         # handles parsing: Parameter or ParameterAlias housekeeping if assigned, or creation of a Parameter

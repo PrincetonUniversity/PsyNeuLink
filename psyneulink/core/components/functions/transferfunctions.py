@@ -74,7 +74,6 @@ __all__ = ['Exponential', 'Gaussian', 'GaussianDistort', 'get_matrix', 'Identity
            'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
 ]
 
-
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape.
 
@@ -3170,8 +3169,31 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     return None
 
 
-# Keywords for TransferWithCosts cost functions and their parameters;
-#     note: are assigned to TransferWithCosts Function to make them accesible for modulation
+# Keywords for TransferWithCosts arguments, cost functions and their parameters
+
+# Make accessible externally
+__all__.extend(['ENABLED_COST_FUNCTIONS',
+                'INTENSITY_COST',
+                'INTENSITY_COST_FUNCTION',
+                'INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM',
+                'INTENSITY_COST_FCT_ADDITIVE_PARAM',
+                'ADJUSTMENT_COST',
+                'ADJUSTMENT_COST_FUNCTION',
+                'ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM',
+                'ADJUSTMENT_COST_FCT_ADDITIVE_PARAM',
+                'DURATION_COST',
+                'DURATION_COST_FUNCTION',
+                'DURATION_COST_FCT_MULTIPLICATIVE_PARAM',
+                'DURATION_COST_FCT_ADDITIVE_PARAM',
+                'COMBINED_COSTS',
+                'COMBINE_COSTS_FUNCTION',
+                'COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM',
+                'COMBINE_COSTS_FCT_ADDITIVE_PARAM',
+                ])
+
+ENABLED_COST_FUNCTIONS = 'enabled_cost_functions'
+
+# These are assigned to TransferWithCosts Function to make them accesible for modulation
 INTENSITY_COST = 'INTENSITY COST'
 INTENSITY_COST_FUNCTION = 'intensity_cost_function'
 INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM = 'intensity_cost_fct_mult_param'
@@ -3192,10 +3214,11 @@ COMBINE_COSTS_FUNCTION = 'combine_costs_function'
 COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM = 'combine_costs_fct_mult_param'
 COMBINE_COSTS_FCT_ADDITIVE_PARAM = 'combine_costs_fct_add_param'
 
-costFunctionNames = [DURATION_COST_FUNCTION,
+costFunctionNames = [INTENSITY_COST_FUNCTION,
                      ADJUSTMENT_COST_FUNCTION,
                      DURATION_COST_FUNCTION,
                      COMBINE_COSTS_FUNCTION]
+
 
 class CostFunctions(IntEnum):
     """Options for selecting constituent cost functions to be used by a `TransferWithCosts` Function.

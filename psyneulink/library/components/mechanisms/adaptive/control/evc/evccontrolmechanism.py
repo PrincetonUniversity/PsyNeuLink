@@ -388,7 +388,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.shellclasses import Function, System_Base
-from psyneulink.core.components.states.modulatorysignals.controlsignal import COST_OPTIONS, ControlSignal, ControlSignalCosts
+from psyneulink.core.components.states.modulatorysignals.controlsignal import COST_OPTIONS, ControlSignal, CostFunctions
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
@@ -1111,13 +1111,13 @@ class EVCControlMechanism(ControlMechanism):
                                           num_control_projections))
 
     def _instantiate_control_signal(self, control_signal, context=None):
-        """Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
+        """Implement CostFunctions.DEFAULTS as default for cost_option of ControlSignals
         EVCControlMechanism requires use of at least one of the cost options
         """
         control_signal = super()._instantiate_control_signal(control_signal, context)
 
         if control_signal.cost_options is None:
-            control_signal.cost_options = ControlSignalCosts.DEFAULTS
+            control_signal.cost_options = CostFunctions.DEFAULTS
             control_signal._instantiate_cost_attributes()
         return control_signal
 

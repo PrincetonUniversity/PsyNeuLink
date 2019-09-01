@@ -181,7 +181,7 @@ class ControlProjection(ModulatoryProjection_Base):
                 FUNCTION:Linear,
                 FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
                 PROJECTION_SENDER: ControlMechanism
-                CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCosts.DEFAULTS,
+                CONTROL_SIGNAL_COST_OPTIONS:CostFunctions.DEFAULTS,
                 ALLOCATION_SAMPLES: DEFAULT_ALLOCATION_SAMPLES,
     COMMENT
 

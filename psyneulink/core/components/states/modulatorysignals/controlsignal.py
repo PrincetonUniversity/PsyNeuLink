@@ -178,7 +178,7 @@ computes a different component of the cost, and a function that combines them, a
 
 The components used to determine the ControlSignal's `cost <ControlSignal.cost>` can be specified in the
 **costs_options** argument of its constructor, or using its `enable_costs`, `disable_costs` and `assign_costs`
-methods.  All of these take one or more values of `ControlSignalCosts`, each of which specifies a cost component.
+methods.  All of these take one or more values of `CostFunctions`, each of which specifies a cost component.
 How the enabled components are combined is determined by the `combine_costs_function`.  By default, the values of
 the enabled cost components are summed, however this can be modified by specifying the `combine_costs_function`.
 
@@ -301,31 +301,25 @@ Class Reference
 
 """
 
-import inspect
-import warnings
-
 from enum import IntEnum
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import function_type, method_type
-# import Components
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, Reduce
+from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.functions.function import _is_modulation_param, is_function_type
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction, SimpleIntegrator
-from psyneulink.core.components.functions.transferfunctions import Exponential, Linear
-from psyneulink.core.components.shellclasses import Function
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
+from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, CostFunctions
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, _output_state_variable_getter
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, OFF, ON, \
-    OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM, VARIABLE
+    ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, \
+    OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.core.globals.parameters import Parameter, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.sampleiterator import is_sample_spec
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -334,8 +328,9 @@ from psyneulink.core.globals.utilities import \
     is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 
+# FIX: ??DELETE AND USE FROM TransferWithCosts FUNCTION OR KEEP AS SPECIFIC TO ControlSignal
 __all__ = [
-    'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
+    'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalError',
     'COMBINE_COSTS_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DURATION_COST',
     'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION',
 ]
@@ -349,11 +344,7 @@ __all__ = [
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
-# ControlSignal Costs
-INTENSITY_COST = 'INTENSITY COST'
-ADJUSTMENT_COST = 'ADJUSTMENT COST'
-DURATION_COST = 'DURATION COST'
-
+# FIX: ??DELETE AND USE FROM TransferWithCosts FUNCTION OR KEEP AS SPECIFIC TO ControlSignal
 # ControlSignal Cost Function Names
 INTENSITY_COST_FUNCTION = 'intensity_cost_function'
 ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
@@ -365,70 +356,89 @@ costFunctionNames = [INTENSITY_COST_FUNCTION,
                      COMBINE_COSTS_FUNCTION]
 COST_OPTIONS = 'cost_options'
 
-class ControlSignalCosts(IntEnum):
-    """Options for selecting `cost functions <ControlSignal_Costs>` to be used by a ControlSignal.
+# class CostFunctions(IntEnum):
+#     """Options for selecting `cost functions <ControlSignal_Costs>` to be used by a ControlSignal.
+#
+#     These can be used alone or in combination with one another, by `enabling or disabling <ControlSignal_Toggle_Costs>`
+#     each using the ControlSignal's `toggle_cost_function` method.
+#
+#     Attributes
+#     ----------
+#
+#     NONE
+#         ControlSignal's `cost` is not computed.
+#
+#     INTENSITY
+#         `intensity_cost_function` is used to calculate a contribution to the ControlSignal's `cost
+#         <ControlSignal.cost>` based its current `intensity` value.
+#
+#     ADJUSTMENT
+#         `adjustment_cost_function` is used to calculate a contribution to the `cost` based on the change in its
+#         `intensity` from its last value.
+#
+#     DURATION
+#         `duration_cost_function` is used to calculate a contribitution to the `cost` based on an integral of the
+#         ControlSignal's `cost <ControlSignal.cost>` (i.e., it accumulated value over multiple executions).
+#
+#     ALL
+#         all of the `cost functions <ControlSignal_Costs> are used to calculate the ControlSignal's
+#         `cost <ControlSignal.cost>`.
+#
+#     DEFAULTS
+#         assign default set of `cost functions <ControlSignal_Costs>` as `INTENSITY`).
+#
+#     """
+#     NONE          = 0
+#     INTENSITY     = 1 << 1
+#     ADJUSTMENT    = 1 << 2
+#     DURATION      = 1 << 3
+#     ALL           = INTENSITY | ADJUSTMENT | DURATION
+#     DEFAULTS      = INTENSITY
 
-    These can be used alone or in combination with one another, by `enabling or disabling <ControlSignal_Toggle_Costs>`
-    each using the ControlSignal's `toggle_cost_function` method.
+# Getters for cost attributes (from TransferWithCosts function)
 
-    Attributes
-    ----------
+from psyneulink.core.components.functions.transferfunctions import \
+    ENABLED_COST_FUNCTIONS, INTENSITY_COST, DURATION_COST, ADJUSTMENT_COST, COMBINED_COSTS
 
-    NONE
-        ControlSignal's `cost` is not computed.
 
-    INTENSITY
-        `intensity_cost_function` is used to calculate a contribution to the ControlSignal's `cost
-        <ControlSignal.cost>` based its current `intensity` value.
+def _cost_options_getter(owning_component=None, execution_id=None):
+    try:
+        return getattr(owning_component.function.parameters, ENABLED_COST_FUNCTIONS)._get(execution_id)
+    except (TypeError, IndexError):
+        return None
 
-    ADJUSTMENT
-        `adjustment_cost_function` is used to calculate a contribution to the `cost` based on the change in its
-        `intensity` from its last value.
 
-    DURATION
-        `duration_cost_function` is used to calculate a contribitution to the `cost` based on an integral of the
-        ControlSignal's `cost <ControlSignal.cost>` (i.e., it accumulated value over multiple executions).
-
-    ALL
-        all of the `cost functions <ControlSignal_Costs> are used to calculate the ControlSignal's
-        `cost <ControlSignal.cost>`.
-
-    DEFAULTS
-        assign default set of `cost functions <ControlSignal_Costs>` as `INTENSITY`).
-
-    """
-    NONE          = 0
-    INTENSITY     = 1 << 1
-    ADJUSTMENT    = 1 << 2
-    DURATION      = 1 << 3
-    ALL           = INTENSITY | ADJUSTMENT | DURATION
-    DEFAULTS      = INTENSITY
+def _cost_options_setter(value, owning_component=None, execution_id=None):
+    if hasattr(owning_component, "function") and owning_component.function:
+        if hasattr(owning_component.function.parameters, ENABLED_COST_FUNCTIONS):
+            getattr(owning_component.function.parameters, ENABLED_COST_FUNCTIONS)._set(value, execution_id)
+    return value
 
 
 def _intensity_cost_getter(owning_component=None, execution_id=None):
     try:
-        return owning_component.function.intensity_cost._get(execution_id)[0]
+        return getattr(owning_component.function.parameters, INTENSITY_COST)._get(execution_id)
     except (TypeError, IndexError):
         return None
 
 
 def _adjustment_cost_getter(owning_component=None, execution_id=None):
     try:
-        return owning_component.function.adjustment_cost._get(execution_id)[0]
+        return getattr(owning_component.function.parameters, ADJUSTMENT_COST)._get(execution_id)
     except (TypeError, IndexError):
         return None
 
 
 def _duration_cost_getter(owning_component=None, execution_id=None):
     try:
-        return owning_component.function.duration_cost._get(execution_id)[0]
+        return getattr(owning_component.function.parameters, DURATION_COST)._get(execution_id)
     except (TypeError, IndexError):
         return None
 
 
 def _cost_getter(owning_component=None, execution_id=None):
     try:
-        return owning_component.function.combined_costs._get(execution_id)[0]
+        return getattr(owning_component.function.parameters, COMBINED_COSTS)._get(execution_id)
     except (TypeError, IndexError):
         return None
 
@@ -508,7 +518,7 @@ class ControlSignal(ModulatorySignal):
         must be TransferWithCosts or a subclass of that, or one that meets the requirements described see `above
         <ControlSignal_Function>`);  see `function <ControlSignal.function>` for default behavior.
 
-    cost_options : ControlSignalCosts or List[ControlSignalCosts] : None
+    cost_options : CostFunctions or List[CostsFunctions] : None
         specifies the cost components to include in the computation of the ControlSignal's `cost <ControlSignal.cost>`.
 
     intensity_cost_function : Optional[TransferFunction] : default Exponential
@@ -597,8 +607,8 @@ class ControlSignal(ModulatorySignal):
     control_signal : float
         result of the ControlSignal's `function <ControlSignal.function>`; same as `intensity`.
 
-    cost_options : ControlSignalCosts or None
-        boolean combination of currently assigned ControlSignalCosts. Specified initially in **costs** argument of
+    cost_options : CostFunctions or None
+        boolean combination of currently assigned `CostFunctions`. Specified initially in **costs** argument of
         ControlSignal's constructor;  can be modified using the `assign_cost_options` method.
 
     intensity_cost_function : TransferFunction : default default Exponential
@@ -720,8 +730,8 @@ class ControlSignal(ModulatorySignal):
                 cost_options
                     see `cost_options <ControlSignal.cost_options>`
 
-                    :default value: ControlSignalCosts.INTENSITY
-                    :type: `ControlSignalCosts`
+                    :default value: CostFunctions.INTENSITY
+                    :type: `CostFunctions`
 
                 duration_cost
                     see `duration_cost <ControlSignal.duration_cost>`
@@ -758,7 +768,7 @@ class ControlSignal(ModulatorySignal):
                           history_min_length=1)
         allocation_samples = Parameter(None, modulable=True)
 
-        cost_options = ControlSignalCosts.DEFAULTS
+        cost_options = Parameter(CostFunctions.DEFAULTS, getter=_cost_options_getter, setter=_cost_options_setter)
         intensity_cost = Parameter(None, read_only=True, getter=_intensity_cost_getter)
         adjustment_cost = Parameter(0, read_only=True, getter=_adjustment_cost_getter)
         duration_cost = Parameter(0, read_only=True, getter=_duration_cost_getter)
@@ -771,7 +781,7 @@ class ControlSignal(ModulatorySignal):
         # combine_costs_function = Reduce(operation=SUM)
         # modulation = None
         #
-        # _validate_cost_options = get_validator_by_type_only([ControlSignalCosts, list])
+        # _validate_cost_options = get_validator_by_type_only([CostFunctions, list])
         # _validate_intensity_cost_function = get_validator_by_function(is_function_type)
         # _validate_adjustment_cost_function = get_validator_by_function(is_function_type)
         # _validate_duration_cost_function = get_validator_by_function(is_function_type)
@@ -781,7 +791,7 @@ class ControlSignal(ModulatorySignal):
         duration_cost_function = Parameter(SimpleIntegrator, read_only=True)
         combine_costs_function = Parameter(Reduce(operation=SUM), read_only=True)
         modulation = None
-        _validate_cost_options = get_validator_by_type_only([ControlSignalCosts, list])
+        _validate_cost_options = get_validator_by_type_only([CostFunctions, list])
         _validate_intensity_cost_function = get_validator_by_function(is_function_type)
         _validate_adjustment_cost_function = get_validator_by_function(is_function_type)
         _validate_duration_cost_function = get_validator_by_function(is_function_type)
@@ -829,7 +839,7 @@ class ControlSignal(ModulatorySignal):
                  size=None,
                  index=None,
                  function=Linear(),
-                 cost_options:tc.optional(tc.any(ControlSignalCosts, list))=None,
+                 cost_options:tc.optional(tc.any(CostFunctions, list))=None,
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
@@ -1002,7 +1012,7 @@ class ControlSignal(ModulatorySignal):
         # # - assign function as its transfer_fct
         # # - pass specified cost_options and cost functions to it
         transfer_fct = function
-        from psyneulink.core.components.functions.transferfunctions import TransferWithCosts
+        from psyneulink.core.components.functions.transferfunctions import TransferWithCosts, ENABLED_COST_FUNCTIONS
         return TransferWithCosts(default_variable=self.defaults.variable,
                                  transfer_fct=transfer_fct,
                                  enabled_cost_functions=self.cost_options,
@@ -1011,6 +1021,7 @@ class ControlSignal(ModulatorySignal):
                                  duration_cost_fct=self.duration_cost_function,
                                  combine_costs_fct=self.combine_costs_function,
                                  owner=self)
+        assert True
         # # MODIFIED 8/30/19 NEW [JDC]:
         # FIX: VERSION USED IN __init__;  HERE FOR REFERENCE ONLY;  IMPLEMENT THERE OR DELETE ON CLEAN-UP
         # # Implement TransferWithCosts as ControlSignal's primary function
@@ -1045,11 +1056,26 @@ class ControlSignal(ModulatorySignal):
             a = list(a)
         self.parameters.allocation_samples._set(SampleIterator(specification=a))
 
-    # MODIFIED 8/30/19 NEW [JDC]:
-    def _instantiate_attributes_after_function(self, context=None):
+    # # MODIFIED 8/30/19 NEW [JDC]:
+    # def _instantiate_attributes_after_function(self, context=None):
+    #
+    #     super()._instantiate_attributes_after_function(context=context)
+    #     self._instantiate_cost_functions(context=context)
+    # # MODIFIED 8/30/19 END
 
-        super()._instantiate_attributes_after_function(context=context)
-        self._instantiate_cost_functions(context=context)
+    # # MODIFIED 8/30/19 OLD:
+    def _instantiate_cost_attributes(self, context=None):
+
+        if self.cost_options:
+            # Default cost params
+            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
+            else:
+                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
+            self.defaults.intensity_cost = self.intensity_cost
+            self.adjustment_cost = 0
+            self.duration_cost = 0
+            self.cost = self.defaults.cost = self.intensity_cost
     # MODIFIED 8/30/19 END
 
     def _instantiate_cost_functions(self, context=None):
@@ -1085,21 +1111,6 @@ class ControlSignal(ModulatorySignal):
             self.paramsCurrent[cost_function_name] = getattr(self.function,
                                                              cost_function_name.replace('function','fct'))
         # MODIFIED 8/30/19 END
-
-    # # MODIFIED 8/30/19 OLD:
-    def _instantiate_cost_attributes(self, context=None):
-
-        if self.cost_options:
-            # Default cost params
-            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
-                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
-            else:
-                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
-            self.defaults.intensity_cost = self.intensity_cost
-            self.adjustment_cost = 0
-            self.duration_cost = 0
-            self.cost = self.defaults.cost = self.intensity_cost
-    # MODIFIED 8/30/19 END
 
     # def _initialize_cost_attributes(self, context=None):
     #     if self.cost_options:
@@ -1174,15 +1185,15 @@ class ControlSignal(ModulatorySignal):
     #     # COMPUTE COST(S)
     #     intensity_cost = adjustment_cost = duration_cost = 0
     #
-    #     if ControlSignalCosts.INTENSITY & cost_options:
+    #     if CostFunctions.INTENSITY & cost_options:
     #         intensity_cost = self.intensity_cost_function(intensity)
     #         self.parameters.intensity_cost._set(intensity_cost, execution_id)
     #
-    #     if ControlSignalCosts.ADJUSTMENT & cost_options:
+    #     if CostFunctions.ADJUSTMENT & cost_options:
     #         adjustment_cost = self.adjustment_cost_function(intensity_change)
     #         self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
     #
-    #     if ControlSignalCosts.DURATION & cost_options:
+    #     if CostFunctions.DURATION & cost_options:
     #         duration_cost = self.duration_cost_function(self.parameters.cost._get(execution_id))
     #         self.parameters.duration_cost._set(duration_cost, execution_id)
     #
@@ -1190,41 +1201,41 @@ class ControlSignal(ModulatorySignal):
     #                self.combine_costs_function([intensity_cost, adjustment_cost, duration_cost]))
     #
     # @tc.typecheck
-    # def assign_costs(self, costs: tc.any(ControlSignalCosts, list), execution_context=None):
+    # def assign_costs(self, costs: tc.any(CostFunctions, list), execution_context=None):
     #     """assign_costs(costs)
     #     Assigns specified costs; all others are disabled.
     #
     #     Arguments
     #     ---------
-    #     costs: ControlSignalCost or List[ControlSignalCosts]
+    #     costs: ControlSignalCost or List[CostFunctions]
     #         cost or list of costs to be used;  all other will be disabled.
     #     Returns
     #     -------
-    #     cost_options :  boolean combination of ControlSignalCosts
+    #     cost_options :  boolean combination of CostFunctions
     #         current value of `cost_options`.
     #
     #     """
-    #     if isinstance(costs, ControlSignalCosts):
+    #     if isinstance(costs, CostFunctions):
     #         costs = [costs]
-    #     self.parameters.cost_options.set(ControlSignalCosts.NONE, execution_context)
+    #     self.parameters.cost_options.set(CostFunctions.NONE, execution_context)
     #     return self.enable_costs(costs, execution_context)
     #
     # @tc.typecheck
-    # def enable_costs(self, costs: tc.any(ControlSignalCosts, list), execution_context=None):
+    # def enable_costs(self, costs: tc.any(CostFunctions, list), execution_context=None):
     #     """enable_costs(costs)
     #     Enables specified costs; settings for all other costs are left intact.
     #
     #     Arguments
     #     ---------
-    #     costs: ControlSignalCost or List[ControlSignalCosts]
+    #     costs: ControlSignalCost or List[CostFunctions]
     #         cost or list of costs to be enabled, in addition to any that are already enabled.
     #     Returns
     #     -------
-    #     cost_options :  boolean combination of ControlSignalCosts
+    #     cost_options :  boolean combination of CostFunctions
     #         current value of `cost_options`.
     #
     #     """
-    #     if isinstance(costs, ControlSignalCosts):
+    #     if isinstance(costs, CostFunctions):
     #         options = [costs]
     #     cost_options = self.parameters.cost_options.get(execution_context)
     #     for cost in costs:
@@ -1234,21 +1245,21 @@ class ControlSignal(ModulatorySignal):
     #     return cost_options
     #
     # @tc.typecheck
-    # def disable_costs(self, costs: tc.any(ControlSignalCosts, list), execution_context=None):
+    # def disable_costs(self, costs: tc.any(CostFunctions, list), execution_context=None):
     #     """disable_costs(costs)
     #     Disables specified costs; settings for all other costs are left intact.
     #
     #     Arguments
     #     ---------
-    #     costs: ControlSignalCost or List[ControlSignalCosts]
+    #     costs: ControlSignalCost or List[CostFunctions]
     #         cost or list of costs to be disabled.
     #     Returns
     #     -------
-    #     cost_options :  boolean combination of ControlSignalCosts
+    #     cost_options :  boolean combination of CostFunctions
     #         current value of `cost_options`.
     #
     #     """
-    #     if isinstance(costs, ControlSignalCosts):
+    #     if isinstance(costs, CostFunctions):
     #         options = [costs]
     #     cost_options = self.parameters.cost_options.get(execution_context)
     #     for cost in costs:
@@ -1260,11 +1271,11 @@ class ControlSignal(ModulatorySignal):
     # def get_cost_options(self, execution_context=None):
     #     options = []
     #     cost_options = self.parameters.cost_options.get(execution_context)
-    #     if cost_options & ControlSignalCosts.INTENSITY:
+    #     if cost_options & CostFunctions.INTENSITY:
     #         options.append(INTENSITY_COST)
-    #     if cost_options & ControlSignalCosts.ADJUSTMENT:
+    #     if cost_options & CostFunctions.ADJUSTMENT:
     #         options.append(ADJUSTMENT_COST)
-    #     if cost_options & ControlSignalCosts.DURATION:
+    #     if cost_options & CostFunctions.DURATION:
     #         options.append(DURATION_COST)
     #     return options
     #
@@ -1274,11 +1285,11 @@ class ControlSignal(ModulatorySignal):
     #     ``cost_function_name`` should be a keyword (list under :ref:`Structure <ControlProjection_Structure>`).
     #     """
     #     if cost_function_name == INTENSITY_COST_FUNCTION:
-    #         cost_option = ControlSignalCosts.INTENSITY
+    #         cost_option = CostFunctions.INTENSITY
     #     elif cost_function_name == DURATION_COST_FUNCTION:
-    #         cost_option = ControlSignalCosts.DURATION
+    #         cost_option = CostFunctions.DURATION
     #     elif cost_function_name == ADJUSTMENT_COST_FUNCTION:
-    #         cost_option = ControlSignalCosts.ADJUSTMENT
+    #         cost_option = CostFunctions.ADJUSTMENT
     #     elif cost_function_name == COMBINE_COSTS_FUNCTION:
     #         raise ControlSignalError("{} cannot be disabled".format(COMBINE_COSTS_FUNCTION))
     #     else:
