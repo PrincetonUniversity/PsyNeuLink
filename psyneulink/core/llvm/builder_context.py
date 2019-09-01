@@ -842,6 +842,8 @@ def _convert_llvm_ir_to_ctype(t):
             return ctypes.c_int
         elif t.width == 64:
             return ctypes.c_longlong
+        else:
+            assert False, "Integer type too big!"
     elif type_t is ir.DoubleType:
         return ctypes.c_double
     elif type_t is ir.FloatType:
