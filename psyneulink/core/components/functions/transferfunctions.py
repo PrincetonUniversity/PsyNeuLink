@@ -3504,6 +3504,7 @@ def _combine_costs_fct_add_param_setter(value, owning_component=None, execution_
             owning_component.combine_costs_fct.additive_param).set(value, execution_id)
     return value
 
+
 class TransferWithCosts(TransferFunction):
     """
     TransferWithCosts(                          \
@@ -3624,6 +3625,10 @@ class TransferWithCosts(TransferFunction):
         <TransferWithCosts_Cost_Functions>` are calculated when `function <TransferWithCosts.function>` is called, and
         are included in the computation of `combined_cost <TransferWithCosts.combined_cost>`.
 
+    intensity_cost : float
+        cost computed by `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` for current `variable 
+        <TransferWithCosts.variable>`.
+
     intensity_cost_fct : TransferFunction : default default Exponential
         calculates `intensity_cost` from the current value of `variable <TransferWithCosts.variable>`. It can be any
         `TransferFunction`, or any other function that takes and returns a scalar value. The default is
@@ -3633,33 +3638,54 @@ class TransferWithCosts(TransferFunction):
         references value of the `multiplicative_param` of `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`.
 
     intensity_cost_fct_add_param : value
-        contains the value of the `additive_param` of `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`.
+        references value of the `additive_param` of `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`.
 
-    intensity_cost : float
-        cost associated with the current `variable <TransferWithCosts.variable>`.
+    adjustment_cost : float
+        cost of change in `intensity <TransferWithCosts.intensity>` computed by `adjustment_cost_fct 
+        <TransferWithCosts.adjustment_cost_fct>` for current `variable <TransferWithCosts.variable>`.
 
     adjustment_cost_fct : TransferFunction : default Linear
         calculates `adjustment_cost <TransferWithCosts.adjustment_cost>` based on the change in `variable
         <TransferWithCosts.variable>` from its previous value.  It can be any `TransferFunction`, or any other
         function that takes and returns a scalar value.
 
-    adjustment_cost : float
-        cost associated with last change to `variable <TransferWithCosts.variable>`.
+    adjustment_cost_fct_mult_param : value
+        references value of the `multiplicative_param` of `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>`.
+
+    adjustment_cost_fct_add_param : value
+        references value of the `additive_param` of `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>`.
+
+    COMMENT:
+    FIX: 8/30/19 -- CHECK FOR ACCURUACY: 
+    duration_cost : float
+        integral of `cost <combined_costs <TransferWithCosts.combined_costs>,  computed by `duration_cost_fct 
+        <TransferWithCosts.duration_cost_fct>` for current `variable <TransferWithCosts.variable>`.
 
     duration_cost_fct : IntegratorFunction : default Linear
         calculates an integral of `cost <TransferWithCosts.cost>`.  It can be any `IntegratorFunction`, or any other
         function that takes a list or array of two values and returns a scalar value.
 
-    duration_cost : float
-        intregral of `cost <TransferWithCosts.cost>`.
+    duration_cost_fct_mult_param : value
+        references value of the `multiplicative_param` of `duration_cost_fct <TransferWithCosts.duration_cost_fct>`.
+
+    duration_cost_fct_add_param : value
+        references value of the `additive_param` of `duration_cost_fct <TransferWithCosts.duration_cost_fct>`.
+
+    combined_costs : float
+        combined result of all `cost functions <TransferWithCostss_Cost_Functions>` that are enabled;
+        computed by `combined_costs_fct <TransferWithCosts.combined_costs_fct>` for current `variable 
+        <TransferWithCosts.variable>`. 
 
     combine_costs_fct : function : default Reduce(operation=SUM)
         combines the results of all `cost functions <TransferWithCostss_Cost_Functions>` that are enabled, and assigns
         the result to `cost <TransferWithCosts.cost>`. It can be any function that takes an array and returns a scalar
         value.
 
-    combined_costs : float
-        combined result of all `cost functions <TransferWithCostss_Cost_Functions>` that are enabled.
+    combined_costs_fct_mult_param : value
+        references value of the `multiplicative_param` of `combined_costs_fct <TransferWithCosts.combined_costs_fct>`.
+
+    combined_costs_fct_add_param : value
+        references value of the `additive_param` of `combined_costs_fct <TransferWithCosts.combined_costs_fct>`.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -3684,14 +3710,6 @@ class TransferWithCosts(TransferFunction):
     bounds = None
     multiplicative_param = SLOPE
     additive_param = INTERCEPT
-    intensity_cost_fct_mult_param = INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
-    intensity_cost_fct_add_param = INTENSITY_COST_FCT_ADDITIVE_PARAM
-    adjustment_cost_fct_mult_param = ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM
-    adjustment_cost_fct_add_param = ADJUSTMENT_COST_FCT_ADDITIVE_PARAM
-    duration_cost_fct_mult_param = DURATION_COST_FCT_MULTIPLICATIVE_PARAM
-    duration_cost_fct_add_param = DURATION_COST_FCT_ADDITIVE_PARAM
-    combine_costs_fct_mult_param = COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM
-    combine_costs_fct_add_param = COMBINE_COSTS_FCT_ADDITIVE_PARAM
 
     classPreferences = {
         kwPreferenceSetName: 'TransferWithCostssClassPreferences',
