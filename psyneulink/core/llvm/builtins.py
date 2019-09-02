@@ -9,6 +9,7 @@
 # ********************************************* PNL LLVM builtins **************************************************************
 
 import ctypes
+from ctypes import util
 from llvmlite import ir
 from . import helpers
 from .builder_context import LLVMBuilderContext, _BUILTIN_PREFIX
