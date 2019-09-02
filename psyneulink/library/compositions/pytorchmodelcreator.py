@@ -185,9 +185,7 @@ class PytorchModelCreator(torch.nn.Module):
                         bias.detach().numpy())]
 
             param_list[node_idx] = pnlvm.ir.types.LiteralStructType(node_params)
-        struct_ty = pnlvm.ir.types.LiteralStructType(
-            param_list)
-        return struct_ty
+        return pnlvm.ir.types.LiteralStructType(param_list)
 
     def _get_param_initializer(self):
         if self._cached_param_list is None:
@@ -204,7 +202,7 @@ class PytorchModelCreator(torch.nn.Module):
                     afferent_node = afferent_vertex.component
                     afferent_index = self._get_afferent_node_index(node,afferent_node)
                     if "no_ref_pass" not in debug_env: # this gets the actual memory address of the weights - is static (according to https://github.com/numpy/numpy/issues/13906)
-                        afferent_weight = weights.detach().numpy().ctypes.data_as(ctypes.c_void_p).value
+                        afferent_weight = weights.detach().numpy().ctypes.data
                     else:
                         afferent_weight = weights.detach().numpy()
                     weight_array[afferent_index] = afferent_weight
@@ -214,7 +212,7 @@ class PytorchModelCreator(torch.nn.Module):
                 bias = forward_info[1]
                 if bias is not None:
                     if "no_ref_pass" not in debug_env:
-                        node_params += [bias.detach().numpy().ctypes.data_as(ctypes.c_void_p).value]
+                        node_params += [bias.detach().numpy().ctypes.data]
                     else:
                         node_params += [bias.detach().numpy()]
                 
