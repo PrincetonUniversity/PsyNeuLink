@@ -445,6 +445,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                     v = state_spec_dict[VARIABLE]
                     v = v or ControlSignal.defaults.variable
                 control_allocation.append(v)
+            # Get primary function and compute_costs function for each ControlSignal (called in compute_terms)
             self.control_signal_functions = [c.function for c in control_signals]
             self._compute_costs = [c.compute_costs for c in control_signals]
 

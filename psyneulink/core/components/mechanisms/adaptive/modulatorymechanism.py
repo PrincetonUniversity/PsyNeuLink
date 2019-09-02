@@ -491,8 +491,14 @@ def _gating_allocation_setter(value, owning_component=None, execution_id=None):
 def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
-        costs = [c.compute_costs(c.parameters.variable._get(execution_id), execution_id=execution_id)
+        # # MODIFIED 8/30/19 OLD:
+        # costs = [c.compute_costs(c.parameters.variable._get(execution_id), execution_id=execution_id)
+        #          for c in owning_component.control_signals]
+        # MODIFIED 8/30/19 NEW: [JDC]
+        # FIX 8/30/19: SHOULDN'T THIS JUST GET ControlSignal.cost FOR EACH ONE?
+        costs = [c.compute_costs(c.parameters.value._get(execution_id), execution_id=execution_id)
                  for c in owning_component.control_signals]
+        # MODIFIED 8/30/19 END
         return costs
 
     except TypeError:
@@ -505,9 +511,7 @@ def _outcome_getter(owning_component=None, execution_id=None):
         return None
 
 def _net_outcome_getter(owning_component=None, execution_id=None):
-    # NOTE: In cases where there is a reconfiguration_cost,
-    # that cost is not included in the net_outcome
-
+    # NOTE: In cases where there is a reconfiguration_cost, that cost is not included in the net_outcome
     try:
         c = owning_component
         return c.compute_net_outcome(c.parameters.outcome._get(execution_id),

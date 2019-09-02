@@ -388,6 +388,18 @@ from psyneulink.core.components.functions.transferfunctions import \
 COST_OPTIONS = 'cost_options'
 
 
+# # FIX: DOESN'T WORK SINCE DON'T HAVE ACCESS TO OTHER ARGS
+# def _function_parser(function):
+#     from psyneulink.core.components.functions.transferfunctions import TransferWithCosts
+#     return TransferWithCosts(default_variable=self.defaults.variable,
+#                              transfer_fct=function,
+#                              enabled_cost_functions=cost_options,
+#                              intensity_cost_fct=intensity_cost_function,
+#                              adjustment_cost_fct=adjustment_cost_function,
+#                              duration_cost_fct=duration_cost_function,
+#                              combine_costs_fct=combine_costs_function)
+
+
 def _cost_options_getter(owning_component=None, execution_id=None):
     try:
         return getattr(owning_component.function.parameters, ENABLED_COST_FUNCTIONS)._get(execution_id)
@@ -751,6 +763,11 @@ class ControlSignal(ModulatorySignal):
         variable = Parameter(np.array([defaultControlAllocation]),
                              aliases='allocation',
                              getter=_output_state_variable_getter)
+
+        # # FIX: DOESN'T WORK, SINCE DON'T HAVE ACCESS TO OTHER ARGS
+        # function = Parameter(TransferWithCosts, stateful=False, loggable=False, )
+        # _parse_function = _function_parser
+
         value = Parameter(np.array([defaultControlAllocation]), read_only=True, aliases=['intensity'],
                           history_min_length=1)
         allocation_samples = Parameter(None, modulable=True)
@@ -838,6 +855,15 @@ class ControlSignal(ModulatorySignal):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
+
+        from psyneulink.core.components.functions.transferfunctions import TransferWithCosts
+        function = TransferWithCosts(default_variable=self.defaults.variable,
+                                     transfer_fct=function,
+                                     enabled_cost_functions=cost_options,
+                                     intensity_cost_fct=intensity_cost_function,
+                                     adjustment_cost_fct=adjustment_cost_function,
+                                     duration_cost_fct=duration_cost_function,
+                                     combine_costs_fct=combine_costs_function)
 
         # This is included in case ControlSignal was created by another Component (such as ControlProjection)
         #    that specified ALLOCATION_SAMPLES in params
@@ -987,7 +1013,7 @@ class ControlSignal(ModulatorySignal):
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         super()._instantiate_attributes_before_function(function=function, context=context)
-
+        self._instantiate_cost_functions(context=context)
         self._instantiate_allocation_samples(context=context)
 
         # # MODIFIED 8/30/19 OLD:
@@ -998,17 +1024,19 @@ class ControlSignal(ModulatorySignal):
         # # Implement TransferWithCosts as ControlSignal's primary function
         # # - assign function as its transfer_fct
         # # - pass specified cost_options and cost functions to it
-        transfer_fct = function
-        from psyneulink.core.components.functions.transferfunctions import TransferWithCosts, ENABLED_COST_FUNCTIONS
-        return TransferWithCosts(default_variable=self.defaults.variable,
-                                 transfer_fct=transfer_fct,
-                                 enabled_cost_functions=self.cost_options,
-                                 intensity_cost_fct=self.intensity_cost_function,
-                                 adjustment_cost_fct=self.adjustment_cost_function,
-                                 duration_cost_fct=self.duration_cost_function,
-                                 combine_costs_fct=self.combine_costs_function,
-                                 owner=self)
-        assert True
+
+        # transfer_fct = function
+        # from psyneulink.core.components.functions.transferfunctions import TransferWithCosts, ENABLED_COST_FUNCTIONS
+        # return TransferWithCosts(default_variable=self.defaults.variable,
+        #                          transfer_fct=transfer_fct,
+        #                          enabled_cost_functions=self.cost_options,
+        #                          intensity_cost_fct=self.intensity_cost_function,
+        #                          adjustment_cost_fct=self.adjustment_cost_function,
+        #                          duration_cost_fct=self.duration_cost_function,
+        #                          combine_costs_fct=self.combine_costs_function,
+        #                          owner=self)
+        # assert True
+
         # # MODIFIED 8/30/19 NEW [JDC]:
         # FIX: VERSION USED IN __init__;  HERE FOR REFERENCE ONLY;  IMPLEMENT THERE OR DELETE ON CLEAN-UP
         # # Implement TransferWithCosts as ControlSignal's primary function
@@ -1153,40 +1181,46 @@ class ControlSignal(ModulatorySignal):
         super()._update(execution_id=execution_id, params=params, context=context)
 
         # # MODIFIED 8/30/19 OLD:
+        # Compute Costs
         # if self.parameters.cost_options._get(execution_id):
         #     intensity = self.parameters.value._get(execution_id)
         #     self.parameters.cost._set(self.compute_costs(intensity, execution_id), execution_id)
         # MODIFIED 8/30/19 END
 
+    def compute_costs(self, intensity,
+                      # previous_intensity,
+                      # duration,
+                      execution_id=None):
+        """Compute costs for cost_functions enabled in cost_options using specified values."""
+
+        # FIX 8/30/19: NEED TO DEAL WITH DURATION_COST AS STATEFUL:  DON'T WANT TO MESS UP MAIN VALUE
+
+        cost_options = self.parameters.cost_options._get(execution_id)
+
+        # COMPUTE COST(S)
+        # Initialize as backups for cost function that are not enabled
+        intensity_cost = adjustment_cost = duration_cost = 0
+
+        if CostFunctions.INTENSITY & cost_options:
+            intensity_cost = self.intensity_cost_function(intensity)
+            self.parameters.intensity_cost._set(intensity_cost, execution_id)
+
+        if CostFunctions.ADJUSTMENT & cost_options:
+            try:
+                intensity_change = intensity - self.parameters.intensity.get_previous(execution_id)
+            except TypeError:
+                intensity_change = [0]
+            adjustment_cost = self.adjustment_cost_function(intensity_change)
+            self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
+
+        if CostFunctions.DURATION & cost_options:
+            duration_cost = self.duration_cost_function(self.parameters.cost._get(execution_id))
+            self.parameters.duration_cost._set(duration_cost, execution_id)
+
+        return max(0.0,
+                   self.combine_costs_function([intensity_cost, adjustment_cost, duration_cost]))
+
     # # MODIFIED 8/30/19 OLD:
-    # def compute_costs(self, intensity, execution_id=None):
-    #     """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
-    #
-    #     cost_options = self.parameters.cost_options._get(execution_id)
-    #
-    #     try:
-    #         intensity_change = intensity - self.parameters.intensity.get_previous(execution_id)
-    #     except TypeError:
-    #         intensity_change = [0]
-    #
-    #     # COMPUTE COST(S)
-    #     intensity_cost = adjustment_cost = duration_cost = 0
-    #
-    #     if CostFunctions.INTENSITY & cost_options:
-    #         intensity_cost = self.intensity_cost_function(intensity)
-    #         self.parameters.intensity_cost._set(intensity_cost, execution_id)
-    #
-    #     if CostFunctions.ADJUSTMENT & cost_options:
-    #         adjustment_cost = self.adjustment_cost_function(intensity_change)
-    #         self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
-    #
-    #     if CostFunctions.DURATION & cost_options:
-    #         duration_cost = self.duration_cost_function(self.parameters.cost._get(execution_id))
-    #         self.parameters.duration_cost._set(duration_cost, execution_id)
-    #
-    #     return max(0.0,
-    #                self.combine_costs_function([intensity_cost, adjustment_cost, duration_cost]))
-    #
     # @tc.typecheck
     # def assign_costs(self, costs: tc.any(CostFunctions, list), execution_context=None):
     #     """assign_costs(costs)
