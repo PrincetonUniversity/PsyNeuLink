@@ -70,11 +70,9 @@ class PytorchModelCreator(torch.nn.Module):
                 afferents = {}  # dict for keeping track of afferent nodes and their connecting weights
                 if param_init_from_pnl:
                     if component.parameters.value._get(execution_id) is None:
-                        value = torch.tensor(
-                            component.parameters.value._get(None)[0])
+                        value = torch.tensor(component.parameters.value._get(None)[0], device=self.device)
                     else:
-                        value = torch.tensor(
-                            component.parameters.value._get(execution_id)[0])
+                        value = torch.tensor(component.parameters.value._get(execution_id)[0], device=self.device)
                 else:
                     input_length = len(
                         component.input_states[0].parameters.value._get(None))
@@ -119,8 +117,8 @@ class PytorchModelCreator(torch.nn.Module):
 
                 self.component_to_forward_info[component] = node_forward_info
 
-        # CW 12/3/18: this copies by reference so it only needs to be called during init, rather than
-        # every time the weights are updated
+        # CW 12/3/18: this copies by reference so in theory it only needs to be called during init
+        # but we call copy_weights_to_psyneulink after every run in order to make Autodiff less stateful
         self.copy_weights_to_psyneulink(execution_id)
 
 
@@ -748,9 +746,8 @@ class PytorchModelCreator(torch.nn.Module):
                 # store the current value of the node
                 self.component_to_forward_info[component][0] = value
                 if do_logging:
-                    detached_value = value.detach().numpy()
-                    component.parameters.value._log_value(
-                        detached_value, execution_id, ContextFlags.COMMAND_LINE)
+                    detached_value = value.detach().cpu().numpy()
+                    component.parameters.value._log_value(detached_value, execution_id, ContextFlags.COMMAND_LINE)
 
                 # save value in output list if we're at a node in the last execution set
                 if i == len(self.execution_sets) - 1:
@@ -760,9 +757,12 @@ class PytorchModelCreator(torch.nn.Module):
                 scheduler.get_clock(execution_id)._increment_time(
                     TimeScale.TIME_STEP)
 
+        # Maybe need to comment this out!
         self.copy_outputs_to_psyneulink(outputs, execution_id)
+
         if do_logging:
             self.log_weights(execution_id)
+            self.copy_outputs_to_psyneulink(outputs, execution_id)
         return outputs
 
     def detach_all(self):
@@ -774,11 +774,11 @@ class PytorchModelCreator(torch.nn.Module):
     def copy_weights_to_psyneulink(self, execution_id=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
             projection.parameters.matrix._set(
-                weights.detach().numpy(), execution_id)
+                weights.detach().cpu().numpy(), execution_id)
 
     def copy_outputs_to_psyneulink(self, outputs, execution_id=None):
         for component, value in outputs.items():
-            detached_value = value.detach().numpy()
+            detached_value = value.detach().cpu().numpy()
             component.parameters.value._set(
                 detached_value, execution_id, skip_history=True, skip_log=True)
             component.output_state.parameters.value._set(
@@ -787,7 +787,7 @@ class PytorchModelCreator(torch.nn.Module):
     def log_weights(self, execution_id=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
             projection.parameters.matrix._log_value(
-                weights.detach().numpy(), execution_id, ContextFlags.COMMAND_LINE)
+                weights.detach().cpu().numpy(), execution_id, ContextFlags.COMMAND_LINE)
 
     # Helper method that functions the same as function_creator, but instead injects the computation to the builder
     # FIXME: Change to directly using compiled function methods
@@ -967,7 +967,7 @@ class PytorchModelCreator(torch.nn.Module):
     def get_weights_for_projections(self):
         weights_in_numpy = {}
         for projection, weights in self.projections_to_pytorch_weights.items():
-            weights_in_numpy[projection] = weights.detach().numpy().copy()
+            weights_in_numpy[projection] = weights.detach().cpu().numpy().copy()
         return weights_in_numpy
 
     # returns dict mapping psyneulink mechanisms to corresponding pytorch biases, the same way as the above function.
@@ -976,5 +976,5 @@ class PytorchModelCreator(torch.nn.Module):
     def get_biases_for_mechanisms(self):
         biases_in_numpy = {}
         for mechanism, biases in self.mechanisms_to_pytorch_biases.items():
-            biases_in_numpy[mechanism] = biases.detach().numpy().copy()
+            biases_in_numpy[mechanism] = biases.detach().cpu().numpy().copy()
         return biases_in_numpy
