@@ -16,7 +16,7 @@ from llvmlite import ir
 
 from . import builtins
 from .builder_context import *
-from .builder_context import _all_modules
+from .builder_context import _all_modules, _convert_llvm_ir_to_ctype
 from .debug import debug_env
 from .execution import *
 from .execution import _tupleize
