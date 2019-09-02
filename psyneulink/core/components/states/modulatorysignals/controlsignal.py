@@ -328,7 +328,7 @@ from psyneulink.core.globals.utilities import \
     is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 
-__all__ = []
+__all__ = ['ControlSignal', 'ControlSignalError']
 
 # class OutputStateLog(IntEnum):
 #     NONE            = 0
