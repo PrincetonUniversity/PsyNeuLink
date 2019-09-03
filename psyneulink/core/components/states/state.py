@@ -2740,9 +2740,14 @@ def _parse_state_spec(state_type=None,
 
     if state_spec:
         if owner.verbosePref:
-            print('Args other than standard args and state_spec were in _instantiate_state ({})'.
-                  format(state_spec))
-        state_specific_args.update(state_spec)
+            print(f'Args other than standard args and state_spec were in _instantiate_state ({state_spec}).')
+        # # MODIFIED 8/30/19 OLD:
+        # state_specific_args.update(state_spec)
+        # MODIFIED 8/30/19 NEW: [JDC]
+        # Give precedence for any duplicate keys to state_specific_args
+        state_spec.update(state_specific_args)
+        state_specific_args = state_spec
+        # MODIFIED 8/30/19 END
 
     state_dict = standard_args
     context = state_dict.pop(CONTEXT, None)
@@ -3260,11 +3265,10 @@ def _get_state_for_socket(owner,
                              format(mech_state_attribute, mech.name, mech.__class__.__name__))
         if state is None:
             if len(mech_state_attribute)==1:
-                attr_name = mech_state_attribute[0] + " attribute."
+                attr_name = mech_state_attribute[0] + " attribute"
             else:
-                attr_name = " or ".join(", ".format(attr) for (attr) in mech_state_attribute) + " attributes."
-            raise StateError("{} does not have a {} named \'{}\' in its {}".
-                             format(mech.name, State.__name__, state_spec, attr_name))
+                attr_name = " or ".join(f"{repr(attr)}" for (attr) in mech_state_attribute) + " attributes"
+            raise StateError(f"{mech.name} does not have a {State.__name__} named \'{state_spec}\' in its {attr_name}.")
 
     # Get primary State of specified type
     elif isinstance(state_spec, Mechanism):

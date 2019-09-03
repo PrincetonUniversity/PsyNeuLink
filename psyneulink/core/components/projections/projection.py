@@ -1642,9 +1642,8 @@ def _parse_connection_specs(connectee_state_type,
                                               mech_state_attribute=mech_state_attribute,
                                               projection_socket=projection_socket)
             except StateError as e:
-                raise ProjectionError("Problem with specification for {} in {} specification for {}: ".
-                                      format(State.__name__, Projection.__name__, owner.name) + e.error_value)
-
+                raise ProjectionError(f"Problem with specification for {State.__name__} in {Projection.__name__} "
+                                      f"specification for {owner.name}: " + e.error_value)
 
             # Check compatibility with any State(s) returned by _get_state_for_socket
 

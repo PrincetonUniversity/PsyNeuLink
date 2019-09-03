@@ -3232,7 +3232,7 @@ __all__.extend(['ENABLED_COST_FUNCTIONS',
                 'COMBINE_COSTS_FUNCTION',
                 'COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM',
                 'COMBINE_COSTS_FCT_ADDITIVE_PARAM',
-                'costFunctionNames'
+                'costFunctionNames', 'CostModulationParam', 'CostFunctions'
                 ])
 
 ENABLED_COST_FUNCTIONS = 'enabled_cost_functions'
@@ -3529,6 +3529,9 @@ class TransferWithCosts(TransferFunction):
 
     .. _TransferWithCosts_Cost_Functions:
 
+    Cost Functions
+    ~~~~~~~~~~~~~~
+
     The TransferWithCosts function has three individual cost functions that it can execute when its `function
     <TransferWithCosts.function>` is executed, which assign their results to the attributes indicated below:
 
@@ -3543,10 +3546,25 @@ class TransferWithCosts(TransferFunction):
     of the functions enabled in `enabled_cost_functions <TransferWithCosts.enabled_cost_functions>`, and stores the
     result in the `combined_costs <TransferWithCosts.combined_costs>` attribute.
 
+    .. _TransferWithCosts_Modulation_of_Cost_Params:
+
+    Modulation of Cost Function Parameters
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     The `multiplicative_param` and `additive_param` of each cost function is assigned as a parameter of the
     TransferWIthCost Function.  This makes them accessible for `modulation <ModulatorySignal_Modulation>` when the
     Function is assigned to a `State` (e.g., as the default `function <ControlSignal.function>` of a `ControlSignal`),
     or a `Mechanism`.
+
+    For example, the following scripts shows how modulate the `intensity_cost_function
+    <ControlSignal.intensity_cost_function>` of a `ControlSignal`::
+
+        >>> mech_1 = ProcessingMechanism()
+        >>> mech_2 = ProcessingMechanism()
+        >>> ctrl_mech_A = ControlMechanism(monitor_for_control=mech_1,
+              contol_signals)
+
+
 
     COMMENT:
     FIX 8/30/19: ADD EXAMPLES HERE FOR ASSIGNMENT TO ControlSignal AND DIRECTLY TO A MECHANISM
@@ -4193,5 +4211,3 @@ class TransferWithCosts(TransferFunction):
 
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
-
-

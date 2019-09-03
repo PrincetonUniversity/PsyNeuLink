@@ -622,25 +622,26 @@ class TestModelBasedOptimizationControlMechanisms:
         Input = pnl.TransferMechanism(name='Input')
         reward = pnl.TransferMechanism(output_states=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE],
                                        name='reward')
-        Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0,
-                                                                             pnl.ControlProjection(function=pnl.Linear,
-                                                                                                   control_signal_params={
-                                                                                                       pnl.ALLOCATION_SAMPLES: np.arange(
-                                                                                                           0.1, 1.01,
-                                                                                                           0.3)})),
-                                                                 threshold=(1.0,
-                                                                            pnl.ControlProjection(function=pnl.Linear,
-                                                                                                  control_signal_params={
-                                                                                                      pnl.ALLOCATION_SAMPLES: np.arange(
-                                                                                                          0.1, 1.01,
-                                                                                                          0.3)})),
-                                                                 noise=0.5,
-                                                                 starting_point=0,
-                                                                 t0=0.45),
-                           output_states=[pnl.DECISION_VARIABLE,
-                                          pnl.RESPONSE_TIME,
-                                          pnl.PROBABILITY_UPPER_THRESHOLD],
-                           name='Decision')
+        Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                            drift_rate=(1.0,
+                                                        pnl.ControlProjection(function=pnl.Linear,
+                                                                              control_signal_params={
+                                                                                  pnl.ALLOCATION_SAMPLES: np.arange(
+                                                                                          0.1, 1.01,
+                                                                                          0.3)})),
+                                            threshold=(1.0,
+                                                       pnl.ControlProjection(function=pnl.Linear,
+                                                                             control_signal_params={
+                                                                                 pnl.ALLOCATION_SAMPLES: np.arange(
+                                                                                         0.1, 1.01,
+                                                                                         0.3)})),
+                                            noise=0.5,
+                                            starting_point=0,
+                                            t0=0.45),
+                                            output_states=[pnl.DECISION_VARIABLE,
+                                                                      pnl.RESPONSE_TIME,
+                                                                      pnl.PROBABILITY_UPPER_THRESHOLD],
+                                                       name='Decision')
 
         comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])

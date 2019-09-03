@@ -319,7 +319,10 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, \
-    OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SUM
+    INPUT_STATE, INPUT_STATES, \
+    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, \
+    PARAMETER_STATE, PARAMETER_STATES, \
+    PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.core.globals.parameters import Parameter, get_validator_by_function, get_validator_by_type_only
 from psyneulink.core.globals.sampleiterator import is_sample_spec
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -382,8 +385,14 @@ __all__ = ['ControlSignal', 'ControlSignalError']
 # Getters for cost attributes (from TransferWithCosts function)
 
 from psyneulink.core.components.functions.transferfunctions import \
-    ENABLED_COST_FUNCTIONS, INTENSITY_COST_FUNCTION, INTENSITY_COST, DURATION_COST_FUNCTION, DURATION_COST, \
-    ADJUSTMENT_COST_FUNCTION, ADJUSTMENT_COST, COMBINE_COSTS_FUNCTION, COMBINED_COSTS, costFunctionNames
+    ENABLED_COST_FUNCTIONS, \
+    INTENSITY_COST, INTENSITY_COST_FUNCTION, INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM, \
+    INTENSITY_COST_FCT_ADDITIVE_PARAM, \
+    ADJUSTMENT_COST, ADJUSTMENT_COST_FUNCTION, ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM, \
+    ADJUSTMENT_COST_FCT_ADDITIVE_PARAM, \
+    DURATION_COST, DURATION_COST_FUNCTION, DURATION_COST_FCT_MULTIPLICATIVE_PARAM, DURATION_COST_FCT_ADDITIVE_PARAM, \
+    COMBINED_COSTS, COMBINE_COSTS_FUNCTION, COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM, COMBINE_COSTS_FCT_ADDITIVE_PARAM, \
+    costFunctionNames
 
 COST_OPTIONS = 'cost_options'
 
@@ -806,17 +815,20 @@ class ControlSignal(ModulatorySignal):
         # construction?
         # _validate_modulation = get_validator_by_function(_is_modulation_param)
 
-    # MODIFIED 8/30/19 OLD:
     stateAttributes = ModulatorySignal.stateAttributes | {ALLOCATION_SAMPLES,
                                                           COST_OPTIONS,
                                                           INTENSITY_COST_FUNCTION,
                                                           ADJUSTMENT_COST_FUNCTION,
                                                           DURATION_COST_FUNCTION,
                                                           COMBINE_COSTS_FUNCTION}
-    # MODIFIED 8/30/19 END
 
-    connectsWith = [PARAMETER_STATE]
-    connectsWithAttribute = [PARAMETER_STATES]
+    # # MODIFIED 8/30/19 OLD:
+    # connectsWith = [PARAMETER_STATE]
+    # connectsWithAttribute = [PARAMETER_STATES]
+    # MODIFIED 8/30/19 NEW: [JDC]
+    connectsWith = [PARAMETER_STATE, INPUT_STATE, OUTPUT_STATE]
+    connectsWithAttribute = [PARAMETER_STATES, INPUT_STATES, OUTPUT_STATES]
+    # MODIFIED 8/30/19 END
     projectionSocket = RECEIVER
     modulators = []
 
