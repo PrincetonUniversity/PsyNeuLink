@@ -3906,9 +3906,11 @@ class TransferWithCosts(TransferFunction):
         intensity_cost_fct = Parameter(Exponential, stateful=False)
         _validate_intensity_cost_fct = get_validator_by_function(is_function_type)
         intensity_cost_fct_mult_param = Parameter(modulable=True,
+                                                  aliases=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM,
                                                   getter=_intensity_cost_fct_mult_param_getter,
                                                   setter=_intensity_cost_fct_mult_param_setter)
         intensity_cost_fct_add_param = Parameter(modulable=True,
+                                                 aliases=INTENSITY_COST_FCT_ADDITIVE_PARAM,
                                                  getter=_intensity_cost_fct_add_param_getter,
                                                  setter=_intensity_cost_fct_mult_param_getter)
         # # MODIFIED 8/30/19 OLD:
@@ -3920,9 +3922,11 @@ class TransferWithCosts(TransferFunction):
         adjustment_cost_fct = Parameter(Linear, stateful=False)
         _validate_adjustment_cost_fct = get_validator_by_function(is_function_type)
         adjustment_cost_fct_mult_param = Parameter(modulable=True,
+                                                   aliases=ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM,
                                                    getter=_adjustment_cost_fct_mult_param_getter,
                                                    setter=_adjustment_cost_fct_mult_param_setter)
         adjustment_cost_fct_add_param = Parameter(modulable=True,
+                                                  aliases=ADJUSTMENT_COST_FCT_ADDITIVE_PARAM,
                                                   getter=_adjustment_cost_fct_add_param_getter,
                                                   setter=_adjustment_cost_fct_add_param_setter)
         adjustment_cost = 0
@@ -3931,9 +3935,11 @@ class TransferWithCosts(TransferFunction):
         duration_cost_fct = Parameter(SimpleIntegrator, stateful=False)
         _validate_duration_cost_fct = get_validator_by_function(is_function_type)
         duration_cost_fct_mult_param = Parameter(modulable=True,
+                                                 aliases=DURATION_COST_FCT_MULTIPLICATIVE_PARAM,
                                                  getter=_duration_cost_fct_mult_param_getter,
                                                  setter=_duration_cost_fct_mult_param_setter)
         duration_cost_fct_add_param = Parameter(modulable=True,
+                                                 aliases=DURATION_COST_FCT_ADDITIVE_PARAM,
                                                 getter=_duration_cost_fct_add_param_getter,
                                                 setter=_duration_cost_fct_add_param_setter)
         duration_cost = 0
@@ -3942,9 +3948,11 @@ class TransferWithCosts(TransferFunction):
         combine_costs_fct = Parameter(Reduce(operation=SUM), stateful=False)
         _validate_combine_costs_fct = get_validator_by_function(is_function_type)
         combine_costs_fct_mult_param=Parameter(modulable=True,
+                                               aliases=COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM,
                                                getter=_combine_costs_fct_mult_param_getter,
                                                setter=_combine_costs_fct_mult_param_setter)
         combine_costs_fct_add_param=Parameter(modulable=True,
+                                              aliases=COMBINE_COSTS_FCT_ADDITIVE_PARAM,
                                               getter=_combine_costs_fct_add_param_getter,
                                               setter=_combine_costs_fct_add_param_setter)
         combined_costs = 0
@@ -4001,8 +4009,8 @@ class TransferWithCosts(TransferFunction):
 
         Parse specification of cost functions to enable
         Instantiate cost functions specified in construtor arguments, and enable ones in enabled_cost_functions
-        Assign default value for multipicative and additive parameters for each, from their respective values
-            of each instantiated cost function.
+        Assign default value for multipicative and additive parameters for each, from the values of those parameters
+            on the respective cost functions just instantiated.
         Initialize intensity_cost
         '''
 
