@@ -3416,7 +3416,7 @@ def _transfer_fct_mult_param_getter(owning_component=None, execution_id=None):
         return None
 
 def _transfer_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.transfer_fct.parameters,
+    setattr(owning_component.transfer_fct.parameters,
             owning_component.transfer_fct.multiplicative_param).set(value, execution_id)
     return value
 
@@ -3428,7 +3428,7 @@ def _transfer_fct_add_param_getter(owning_component=None, execution_id=None):
         return None
 
 def _transfer_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.transfer_fct.parameters,
+    setattr(owning_component.transfer_fct.parameters,
             owning_component.transfer_fct.additive_param).set(value, execution_id)
     return value
 
@@ -3440,7 +3440,7 @@ def _intensity_cost_fct_mult_param_getter(owning_component=None, execution_id=No
         return None
 
 def _intensity_cost_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.intensity_cost_fct.parameters,
+    setattr(owning_component.intensity_cost_fct.parameters,
             owning_component.intensity_cost_fct.multiplicative_param).set(value, execution_id)
     return value
 
@@ -3452,7 +3452,7 @@ def _intensity_cost_fct_add_param_getter(owning_component=None, execution_id=Non
         return None
 
 def _intensity_cost_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.intensity_cost_fct.parameters,
+    setattr(owning_component.intensity_cost_fct.parameters,
             owning_component.intensity_cost_fct.additive_param).set(value, execution_id)
     return value
 
@@ -3464,7 +3464,7 @@ def _adjustment_cost_fct_mult_param_getter(owning_component=None, execution_id=N
         return None
 
 def _adjustment_cost_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.adjustment_cost_fct.parameters,
+    setattr(owning_component.adjustment_cost_fct.parameters,
             owning_component.adjustment_cost_fct.multiplicative_param).set(value, execution_id)
     return value
 
@@ -3476,7 +3476,7 @@ def _adjustment_cost_fct_add_param_getter(owning_component=None, execution_id=No
         return None
 
 def _adjustment_cost_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.adjustment_cost_fct.parameters,
+    setattr(owning_component.adjustment_cost_fct.parameters,
             owning_component.adjustment_cost_fct.additive_param).set(value, execution_id)
     return value
 
@@ -3488,7 +3488,7 @@ def _duration_cost_fct_mult_param_getter(owning_component=None, execution_id=Non
         return None
 
 def _duration_cost_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.duration_cost_fct.parameters,
+    setattr(owning_component.duration_cost_fct.parameters,
             owning_component.duration_cost_fct.multiplicative_param).set(value, execution_id)
     return value
 
@@ -3500,7 +3500,7 @@ def _duration_cost_fct_add_param_getter(owning_component=None, execution_id=None
         return None
 
 def _duration_cost_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.duration_cost_fct.parameters,
+    setattr(owning_component.duration_cost_fct.parameters,
             owning_component.duration_cost_fct.additive_param).set(value, execution_id)
     return value
 
@@ -3512,7 +3512,7 @@ def _combine_costs_fct_mult_param_getter(owning_component=None, execution_id=Non
         return None
 
 def _combine_costs_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.combine_costs_fct.parameters,
+    setattr(owning_component.combine_costs_fct.parameters,
             owning_component.combine_costs_fct.multiplicative_param).set(value, execution_id)
     return value
 
@@ -3524,7 +3524,7 @@ def _combine_costs_fct_add_param_getter(owning_component=None, execution_id=None
         return None
 
 def _combine_costs_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.combine_costs_fct.parameters,
+    setattr(owning_component.combine_costs_fct.parameters,
             owning_component.combine_costs_fct.additive_param).set(value, execution_id)
     return value
 
