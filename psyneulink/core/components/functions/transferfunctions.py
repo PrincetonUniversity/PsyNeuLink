@@ -3233,7 +3233,7 @@ __all__.extend(['ENABLED_COST_FUNCTIONS',
                 'COMBINE_COSTS_FUNCTION',
                 'COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM',
                 'COMBINE_COSTS_FCT_ADDITIVE_PARAM',
-                'costFunctionNames', 'CostModulationParam', 'CostFunctions'
+                'costFunctionNames', 'CostFunctions'
                 ])
 
 ENABLED_COST_FUNCTIONS = 'enabled_cost_functions'
@@ -3263,8 +3263,6 @@ costFunctionNames = [INTENSITY_COST_FUNCTION,
                      ADJUSTMENT_COST_FUNCTION,
                      DURATION_COST_FUNCTION,
                      COMBINE_COSTS_FUNCTION]
-
-# Classes for CostFunctions and CostModulationParam --------------------------------------------------------------------
 
 class CostFunctions(IntEnum):
     """Options for selecting constituent cost functions to be used by a `TransferWithCosts` Function.
@@ -3303,108 +3301,6 @@ class CostFunctions(IntEnum):
     DURATION      = 1 << 3
     ALL           = INTENSITY | ADJUSTMENT | DURATION
     DEFAULTS      = INTENSITY
-
-
-class CostModulationParam(Enum):
-    """Specify parameter of a `TransferWithCosts` Function for each type of `modulation <ModulatorySignal_Modulation>`
-    specified by a ModulatorySignal.
-
-    Builds on `ModulationParam`, defining the additional members listed below.
-
-    FIX: ??Maps... to...
-
-    Attributes
-    ----------
-
-    INTENSITY_COST_MULTIPLICATIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
-        of the TransferWithCosts's `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`.
-
-    INTENSITY_COST_ADDITIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
-        of the TransferWithCosts's `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`.
-
-    INTENSITY_COST_OVERRIDE
-        return the `value <ModulatorySignal.value>` of the ModulatorySignal directly in place of the TransferWithCosts's
-        `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`.
-
-    INTENSITY_COST_DISABLE
-        ignore the `duration_cost_fct <TransferWithCosts.duration_cost_fct>` when calculating the TransferWithCosts's
-        `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
-
-    ADJUSTMENT_COST_MULTIPLICATIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
-        of the TransferWithCosts's `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>`.
-
-    ADJUSTMENT_COST_ADDITIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
-        of the TransferWithCosts's `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>`.
-
-    ADJUSTMENT_COST_OVERRIDE
-        return the `value <ModulatorySignal.value>` of the ModulatorySignal directly in place of the TransferWithCosts's
-        `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>`.
-
-    ADJUSTMENT_COST_DISABLE
-        ignore the `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>` when calculating the TransferWithCosts's
-        `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
-
-    DURATION_COST_MULTIPLICATIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
-        of the TransferWithCosts's `duration_cost_fct <TransferWithCosts.duration_cost_fct>`.
-
-    DURATION_COST_ADDITIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
-        of the TransferWithCosts's `duration_cost_fct <TransferWithCosts.duration_cost_fct>`.
-
-    DURATION_COST_OVERRIDE
-        return the `value <ModulatorySignal.value>` of the ModulatorySignal directly in place of the TransferWithCosts's
-        `duration_cost_fct <TransferWithCosts.duration_cost_fct>`.
-
-    DURATION_COST_DISABLE
-        ignore the `duration_cost_fct <TransferWithCosts.duration_cost_fct>` when calculating the TransferWithCosts's
-        `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
-
-    COMBINED_COST_MULTIPLICATIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
-        of the TransferWithCosts's `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
-
-    COMBINED_COST_ADDITIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
-        of the TransferWithCosts's `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
-
-    COMBINED_COST_OVERRIDE
-        return the `value <ModulatorySignal.value>` of the ModulatorySignal directly in place of the TransferWithCosts's
-        `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
-
-    COMBINED_COST_DISABLE
-        ignore the ModulatorySignal when calculating the TransferWithCosts's `combined_cost_fct <TransferWithCosts.combined_cost_fct>`.
-
-    """
-    # FIX: EXTEND THE ENUM (https://stackoverflow.com/questions/33679930/how-to-extend-python-enum)
-    #      THEN DELETE THESE:
-    # From ModulationParam
-    MULTIPLICATIVE = ModulationParam.MULTIPLICATIVE
-    ADDITIVE = ModulationParam.ADDITIVE
-    OVERRIDE = ModulationParam.OVERRIDE
-    DISABLE = ModulationParam.DISABLE
-
-    # Cost-specific values
-    INTENSITY_COST_MULTIPLICATIVE = MultiplicativeParam
-    INTENSITY_COST_ADDITIVE = AdditiveParam
-    INTENSITY_COST_OVERRIDE = OVERRIDE_PARAM
-    INTENSITY_COST_DISABLE = DISABLE_PARAM
-    ADJUSTMENT_COST_MULTIPLICATIVE = MultiplicativeParam
-    ADJUSTMENT_COST_ADDITIVE = AdditiveParam
-    ADJUSTMENT_COST_OVERRIDE = OVERRIDE_PARAM
-    ADJUSTMENT_COST_DISABLE = DISABLE_PARAM
-    DURATION_COST_MULTIPLICATIVE = MultiplicativeParam
-    DURATION_COST_ADDITIVE = AdditiveParam
-    DURATION_COST_OVERRIDE = OVERRIDE_PARAM
-    DURATION_COST_DISABLE = DISABLE_PARAM
-    COMBINED_COST_MULTIPLICATIVE = MultiplicativeParam
-    COMBINED_COST_ADDITIVE = AdditiveParam
-    COMBINED_COST_COST_OVERRIDE = OVERRIDE_PARAM
-    COMBINED_COST_DISABLE = DISABLE_PARAM
 
 
 # Getters and setters for transfer and cost function multiplicative and additive parameters 
