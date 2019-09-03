@@ -35,7 +35,7 @@ def validate_learning_mechs(sys):
 
 
 class TestRumelhartSemanticNetwork:
-    """
+    r"""
     Tests construction and training of network with both convergent and divergent pathways
     with the following structure:
 
