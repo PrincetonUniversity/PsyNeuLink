@@ -3997,6 +3997,14 @@ class TransferWithCosts(TransferFunction):
         self._instantiate_cost_functions(context=context)
 
     def _instantiate_cost_functions(self, context):
+        '''Instantiate cost functions and the multiplicative and additive modulatory parameters for them.
+
+        Parse specification of cost functions to enable
+        Instantiate cost functions specified in construtor arguments, and enable ones in enabled_cost_functions
+        Assign default value for multipicative and additive parameters for each, from their respective values
+            of each instantiated cost function.
+        Initialize intensity_cost
+        '''
 
         if self.enabled_cost_functions:
             self.assign_costs(self.enabled_cost_functions)
@@ -4013,50 +4021,40 @@ class TransferWithCosts(TransferFunction):
                 raise FunctionError(f"{fct} is not a valid cost function for {fct_name}.")
 
         self.intensity_cost_fct = instantiate_fct(INTENSITY_COST_FUNCTION, self.intensity_cost_fct)
-        # Initialize TransferWithCosts' versions of intensity_cost_fct modulation params
+        # Initialize default_value for TransferWithCosts' modulation params from intensity_cost_fct's values
         self.parameters.intensity_cost_fct_mult_param.default_value = \
             self.parameters.intensity_cost_fct_mult_param.get()
-            # getattr(self.intensity_cost_fct, self.intensity_cost_fct.multiplicative_param)
         self.parameters.intensity_cost_fct_add_param.default_value = \
             self.parameters.intensity_cost_fct_add_param.get()
-            # getattr(self.intensity_cost_fct, self.intensity_cost_fct.additive_param)
 
         self.adjustment_cost_fct = instantiate_fct(ADJUSTMENT_COST_FUNCTION, self.adjustment_cost_fct)
-        # Initialize TransferWithCosts' versions of adjustment_cost_fct modulation params
+        # Initialize default_value for TransferWithCosts' modulation params from adjustment_cost_fct's values
         self.parameters.adjustment_cost_fct_mult_param.default_value = \
             self.parameters.adjustment_cost_fct_mult_param.get()
-            # getattr(self.adjustment_cost_fct, self.adjustment_cost_fct.multiplicative_param)
         self.parameters.adjustment_cost_fct_add_param.default_value = \
             self.parameters.adjustment_cost_fct_add_param.get()
-            # getattr(self.adjustment_cost_fct, self.adjustment_cost_fct.additive_param)
 
         self.duration_cost_fct = instantiate_fct(DURATION_COST_FUNCTION, self.duration_cost_fct)
-        # Initialize TransferWithCosts' versions of duration_cost_fct modulation params
+        # Initialize default_value for TransferWithCosts' modulation params from duration_cost_fct's values
         self.parameters.duration_cost_fct_mult_param.default_value = \
             self.parameters.duration_cost_fct_add_param.get()
-            # getattr(self.duration_cost_fct, self.duration_cost_fct.multiplicative_param)
         self.parameters.duration_cost_fct_add_param.default_value = \
             self.parameters.duration_cost_fct_add_param.get()
-            # getattr(self.duration_cost_fct, self.duration_cost_fct.additive_param)
 
         self.combine_costs_fct = instantiate_fct(COMBINE_COSTS_FUNCTION, self.combine_costs_fct)
-        # Initialize TransferWithCosts' versions of combine_costs_fct modulation params
+        # Initialize default_value for TransferWithCosts' modulation params from combined_costs_fct's values
         self.parameters.combine_costs_fct_mult_param.default_value = \
             self.parameters.combine_costs_fct_mult_param.get()
-            # getattr(self.combine_costs_fct, self.combine_costs_fct.multiplicative_param)
         self.parameters.combine_costs_fct_add_param.default_value = \
             self.parameters.combine_costs_fct_add_param.get()
-            # getattr(self.combine_costs_fct, self.combine_costs_fct.additive_param)
 
         # Initialize intensity attributes
         if self.enabled_cost_functions:
             # Default cost params
             if self.owner:
                 if self.owner.context.initialization_status != ContextFlags.DEFERRED_INIT:
-                    # self.intensity_cost = self.intensity_cost_function(self.owner.defaults.allocation)
                     self.intensity_cost = self.intensity_cost_function(self.owner.defaults.variable)
                 else:
-                    # self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
                     self.intensity_cost = self.intensity_cost_function(self.owner.class_defaults.variable)
             else:
                 self.intensity_cost._set(self.intensity_cost_fct(self.defaults.variable))
