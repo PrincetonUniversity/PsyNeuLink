@@ -172,7 +172,7 @@ class TestMiscTrainingFunctionality:
         'loss', ['l1', 'poissonnll']
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.xfail]), # these loss specs remain unimplemented at the moment
+                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.skip]), # these loss specs remain unimplemented at the moment
                                     ])
     def test_various_loss_specs(self, loss, mode):
         xor_in = TransferMechanism(name='xor_in',
@@ -215,7 +215,7 @@ class TestMiscTrainingFunctionality:
                           "epochs": 10}, bin_execute = mode)
 
     @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.xfail]), 
+                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.skip]), # Not implemented?
                                     ])
     def test_pytorch_loss_spec(self,mode):
         import torch
@@ -1844,7 +1844,7 @@ class TestNested:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.xfail]),
+                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.skip]), # Not implemented
                                     ])
     def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate, patience, min_delta,mode):
         xor_inputs = np.array(  # the inputs we will provide to the model

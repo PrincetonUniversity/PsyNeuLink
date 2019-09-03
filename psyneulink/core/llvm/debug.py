@@ -46,10 +46,12 @@ import os
 
 debug_env = dict()
 
+
 def _update():
     """Update debug_env variable with the latest state of PNL_LLVM_DEBUG env var."""
     global debug_env
     debug_env.clear()
     debug_env.update({x.partition('=')[0:3:2] for x in str(os.environ.get("PNL_LLVM_DEBUG")).split(';')})
+
 
 _update()

@@ -13,6 +13,8 @@ branches:
 
 
 install:
+  # Downgrade numpy early if needed.
+  - pip install -U 'numpy<1.16'
   - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then pip install coveralls; fi
   - pip install git+https://github.com/benureau/leabra.git@master
   # Travis bundles pytest 4.3.1 in Linux Xenial, new pytest-xdist

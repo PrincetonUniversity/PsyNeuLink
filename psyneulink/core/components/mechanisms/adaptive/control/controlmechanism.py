@@ -249,7 +249,7 @@ specified for the **objective_mechanism** `argument <ControlMechanism_Objective_
 constructor), then the ObjectiveMechanism is created with its standard default `function <ObjectiveMechanism.function>`
 (`LinearCombination`), but using *PRODUCT* (rather than the default, *SUM*) as the value of the function's `operation
 <LinearCombination.operation>` parameter. The result is that the `objective_mechanism
-<ControlMechanism.objective_mechanism>` multiplies the `value <OutputState.value>`\s of the OutputStates that it
+<ControlMechanism.objective_mechanism>` multiplies the `value <OutputState.value>`\\s of the OutputStates that it
 monitors, which it passes to the ControlMechanism.  However, if the **objective_mechanism** is specified using either
 a constructor for, or an existing ObjectiveMechanism, then the defaults for the `ObjectiveMechanism` class -- and any
 attributes explicitly specified in its construction -- are used.  In that case, if the `LinearCombination` with

@@ -837,7 +837,7 @@ for a more detailed description and figure showing these Components.
 If the learning sequence involves more than two ProcessingMechanisms (e.g. using `add_backpropagation_learning_pathway`
 for a multilayered neural network), then additional LearningMechanisms are created, along with MappingProjections
 that provides them with the `error_signal <LearningMechanism.error_signal>` from the preceding LearningMechanism,
-and `LearningProjections <LearningProjection>` that modify the additional MappingProjections (*LEARNED_PROJECTION*\s)
+and `LearningProjections <LearningProjection>` that modify the additional MappingProjections (*LEARNED_PROJECTION*\\s)
 in the sequence, as shown for an example in the figure below.  These additional learning components are listed in the
 *LEARNING_MECHANISM* and *LEARNED_PROJECTION* entries of the dictionary returned by the learning method.
 
