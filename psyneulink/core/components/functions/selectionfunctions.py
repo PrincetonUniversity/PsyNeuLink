@@ -322,15 +322,15 @@ class OneHot(SelectionFunction):
             prob_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (builder, index):
-            idx = builder.load(idx_ptr)
-            prev_ptr = builder.gep(arg_in, [ctx.int32_ty(0), idx])
-            current_ptr = builder.gep(arg_in, [ctx.int32_ty(0), index])
-            prev = builder.load(prev_ptr)
-            current = builder.load(current_ptr)
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (b1, index):
+            idx = b1.load(idx_ptr)
+            prev_ptr = b1.gep(arg_in, [ctx.int32_ty(0), idx])
+            current_ptr = b1.gep(arg_in, [ctx.int32_ty(0), index])
+            prev = b1.load(prev_ptr)
+            current = b1.load(current_ptr)
 
-            prev_res_ptr = builder.gep(arg_out, [ctx.int32_ty(0), idx])
-            cur_res_ptr = builder.gep(arg_out, [ctx.int32_ty(0), index])
+            prev_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), idx])
+            cur_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), index])
             if self.mode not in {PROB, PROB_INDICATOR}:
                 fabs = ctx.get_builtin("fabs", [current.type])
             if self.mode is MAX_VAL:
@@ -340,8 +340,8 @@ class OneHot(SelectionFunction):
                 val = current
             elif self.mode is MAX_ABS_VAL:
                 cmp_op = ">="
-                cmp_prev = builder.call(fabs, [prev])
-                cmp_curr = builder.call(fabs, [current])
+                cmp_prev = b1.call(fabs, [prev])
+                cmp_curr = b1.call(fabs, [current])
                 val = current
             elif self.mode is MAX_INDICATOR:
                 cmp_op = ">="
@@ -350,8 +350,8 @@ class OneHot(SelectionFunction):
                 val = current.type(1.0)
             elif self.mode is MAX_ABS_INDICATOR:
                 cmp_op = ">="
-                cmp_prev = builder.call(fabs, [prev])
-                cmp_curr = builder.call(fabs, [current])
+                cmp_prev = b1.call(fabs, [prev])
+                cmp_curr = b1.call(fabs, [current])
                 val = current.type(1.0)
             elif self.mode is MIN_VAL:
                 cmp_op = "<="
@@ -360,8 +360,8 @@ class OneHot(SelectionFunction):
                 val = current
             elif self.mode is MIN_ABS_VAL:
                 cmp_op = "<="
-                cmp_prev = builder.call(fabs, [prev])
-                cmp_curr = builder.call(fabs, [current])
+                cmp_prev = b1.call(fabs, [prev])
+                cmp_curr = b1.call(fabs, [current])
                 val = current
             elif self.mode is MIN_INDICATOR:
                 cmp_op = "<="
@@ -370,21 +370,21 @@ class OneHot(SelectionFunction):
                 val = current.type(1.0)
             elif self.mode is MIN_ABS_INDICATOR:
                 cmp_op = "<="
-                cmp_prev = builder.call(fabs, [prev])
-                cmp_curr = builder.call(fabs, [current])
+                cmp_prev = b1.call(fabs, [prev])
+                cmp_curr = b1.call(fabs, [current])
                 val = current.type(1.0)
             elif self.mode in {PROB, PROB_INDICATOR}:
                 # Update prefix sum
-                current_prob_ptr = builder.gep(prob_in, [ctx.int32_ty(0), index])
-                sum_old = builder.load(sum_ptr)
-                sum_new = builder.fadd(sum_old, builder.load(current_prob_ptr))
-                builder.store(sum_new, sum_ptr)
+                current_prob_ptr = b1.gep(prob_in, [ctx.int32_ty(0), index])
+                sum_old = b1.load(sum_ptr)
+                sum_new = b1.fadd(sum_old, b1.load(current_prob_ptr))
+                b1.store(sum_new, sum_ptr)
 
-                old_below = builder.fcmp_ordered("<=", sum_old, dice)
-                new_above = builder.fcmp_ordered("<", dice, sum_new)
-                cond = builder.and_(new_above, old_below)
+                old_below = b1.fcmp_ordered("<=", sum_old, dice)
+                new_above = b1.fcmp_ordered("<", dice, sum_new)
+                cond = b1.and_(new_above, old_below)
                 cmp_prev = ctx.float_ty(1.0)
-                cmp_curr = builder.select(cond, cmp_prev, ctx.float_ty(0.0))
+                cmp_curr = b1.select(cond, cmp_prev, ctx.float_ty(0.0))
                 cmp_op = "=="
                 if self.mode is PROB:
                     val = current

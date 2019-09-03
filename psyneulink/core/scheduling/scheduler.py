@@ -447,10 +447,10 @@ class Scheduler(object):
             return self._dfs_for_cycles(dependencies, next_node, loop_start_set, visited, loop)
 
     def _call_toposort(self, graph):
-        '''
+        """
         execution_depenencies stored in self.depdency_sets
         :return:
-        '''
+        """
 
         execution_dependencies = {}         # stores  a modified version of the graph in which cycles are "flattened"
         removed_dependencies = {}           # stores dependencies that were removed in order to flatten cycles

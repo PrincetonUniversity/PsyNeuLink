@@ -266,12 +266,13 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import SOFT_CLAMP
+from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
-
+from psyneulink.core import llvm as pnlvm
 import copy
 import numpy as np
-
+import ctypes
 from collections.abc import Iterable
 from toposort import toposort
 
@@ -465,7 +466,7 @@ class AutodiffComposition(Composition):
                  loss_spec='mse',
                  randomize=None,
                  refresh_losses=False,
-                 disable_cuda=False,
+                 disable_cuda=True,
                  cuda_index=None,
                  force_no_retain_graph=False,
                  name="autodiff_composition"):
@@ -495,6 +496,15 @@ class AutodiffComposition(Composition):
         self.loss = None
         self.force_no_retain_graph = force_no_retain_graph
 
+
+        self.__forward_bin_run_func = None
+        self.__learning_bin_run_func = None
+        # stores compiled binary execute function
+        self.__forward_bin_exec_func = None
+        self.__learning_bin_exec_func = None
+        self.__generated_learning_run = None
+        self.__generated_forward_run = None
+        
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
 
@@ -531,7 +541,8 @@ class AutodiffComposition(Composition):
                                         self.param_init_from_pnl,
                                         self.execution_sets,
                                         self.device,
-                                        execution_id)
+                                        execution_id,
+                                        composition = self)
             self.parameters.pytorch_representation._set(model, execution_id)
 
         # Set up optimizer function
@@ -587,8 +598,13 @@ class AutodiffComposition(Composition):
         required_keys = {"inputs", "targets"}
         return required_keys.issubset(set(input_dict.keys()))
 
-    def _adjust_stimulus_dict(self, inputs):
-
+    def _adjust_stimulus_dict(self, inputs, bin_execute=False):
+        # for bin executes, we manually parse out the autodiff stimuli
+        if bin_execute is True or str(bin_execute).endswith('Run'):
+            if not self.learning_enabled and isinstance(inputs, dict) and self._has_required_keys(inputs):
+                inputs = inputs["inputs"]
+            return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
+        
         if self.learning_enabled:
             if isinstance(inputs, dict):
                 if self._has_required_keys(inputs):
@@ -608,7 +624,7 @@ class AutodiffComposition(Composition):
         return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
 
     # performs forward computation for one input
-    def autodiff_processing(self, inputs, execution_id=None, do_logging=False, scheduler=None):
+    def autodiff_processing(self, inputs, execution_id=None, do_logging=False, scheduler=None,bin_execute=False):
         pytorch_representation = self.parameters.pytorch_representation._get(execution_id)
         # run the model on inputs - switch autograd off for this (we don't need it)
         with torch.no_grad():
@@ -622,7 +638,7 @@ class AutodiffComposition(Composition):
         return outputs
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
-    def autodiff_training(self, inputs, targets, epochs, execution_id=None, do_logging=False, scheduler=None):
+    def autodiff_training(self, inputs, targets, epochs, execution_id=None, do_logging=False, scheduler=None,bin_execute=False):
 
         # FIX CW 11/1/18: this value of num_inputs assumes all inputs have same length, and that the length of
         # the input for an origin component equals the number of desired trials. We could clean this up
@@ -685,16 +701,15 @@ class AutodiffComposition(Composition):
                     curr_tensor_inputs,
                     execution_id,
                     do_logging,
-                    scheduler=scheduler
+                    scheduler=scheduler,
                 )
-
                 # compute total loss across output neurons for current trial
                 curr_loss = torch.zeros(1).double()
                 for component in curr_tensor_outputs.keys():
                     # possibly add custom loss option, which is a loss function that takes many args
                     # (outputs, targets, weights, and more) and returns a scalar
-                    curr_loss += self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
-
+                    new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
+                    curr_loss += new_loss
                 # save average loss across all output neurons on current trial
                 curr_losses[t] = (curr_loss[0].item())/out_size
 
@@ -703,13 +718,16 @@ class AutodiffComposition(Composition):
                 # backpropagate to compute gradients and perform learning update for parameters
                 optimizer.zero_grad()
                 curr_loss = curr_loss/2
+                printable = {}
+                for component in curr_tensor_outputs.keys():
+                    printable[component] = curr_tensor_outputs[component].detach().numpy()
+                np.set_printoptions(precision=3)
                 if self.force_no_retain_graph:
                     curr_loss.backward(retain_graph=False)
                 else:
                     curr_loss.backward(retain_graph=True)
                 self.parameters.pytorch_representation._get(execution_id).copy_weights_to_psyneulink(execution_id)
                 optimizer.step()
-
                 # save outputs of model if this is final epoch
                 curr_output_list = []
                 for input_state in self.output_CIM.input_states:
@@ -746,6 +764,34 @@ class AutodiffComposition(Composition):
             return outputs_list
         else:
             return outputs
+
+    @property
+    def _bin_exec_func(self):
+        if self.learning_enabled is True:
+            if self.__learning_bin_exec_func is None:
+                with pnlvm.LLVMBuilderContext.get_global() as ctx:
+                    self.__learning_bin_exec_func = ctx.gen_autodiffcomp_learning_exec(self)
+            return self.__learning_bin_exec_func
+        else:
+            if self.__forward_bin_exec_func is None:
+                with pnlvm.LLVMBuilderContext.get_global() as ctx:
+                    self.__forward_bin_exec_func = ctx.gen_autodiffcomp_exec(self)
+            return self.__forward_bin_exec_func
+    
+    @property
+    def _llvm_run(self):
+        if self.learning_enabled is True:
+            if self.__generated_learning_run is None:
+                with pnlvm.LLVMBuilderContext.get_global() as ctx:
+                    self.__generated_learning_run = ctx.gen_composition_run(self)
+            return self.__generated_learning_run
+        if self.__generated_forward_run is None:
+            with pnlvm.LLVMBuilderContext.get_global() as ctx:
+                self.__generated_forward_run = ctx.gen_composition_run(self)
+        return self.__generated_forward_run
+    
+    def _gen_llvm_function(self):
+        return self._bin_exec_func
 
     def execute(self,
                 inputs=None,
@@ -803,7 +849,6 @@ class AutodiffComposition(Composition):
 
             return output
 
-        # learning not enabled. execute as a normal composition
         return super(AutodiffComposition, self).execute(inputs=inputs,
                                                         scheduler_processing=scheduler_processing,
                                                         termination_processing=termination_processing,
@@ -850,24 +895,75 @@ class AutodiffComposition(Composition):
         scheduler_processing._init_clock(execution_id)
 
         if self.learning_enabled:
+            if bin_execute is True or str(bin_execute).endswith('Run'):
+                # Since the automatically generated llvm function is overwritten in the event that learning_enabled is true, we can just rely on the super function
+                results = super(AutodiffComposition, self).run(inputs=inputs,
+                                                    scheduler_processing=scheduler_processing,
+                                                    termination_processing=termination_processing,
+                                                    execution_id=execution_id,
+                                                    num_trials=num_trials,
+                                                    call_before_time_step=call_before_time_step,
+                                                    call_after_time_step=call_after_time_step,
+                                                    call_before_pass=call_before_pass,
+                                                    call_after_pass=call_after_pass,
+                                                    call_before_trial=call_before_trial,
+                                                    call_after_trial=call_after_trial,
+                                                    clamp_input=clamp_input,
+                                                    bin_execute=bin_execute,
+                                                    initial_values=initial_values,
+                                                    reinitialize_values=reinitialize_values,
+                                                    runtime_params=runtime_params,
+                                                    context=context)
+                self.parameters.pytorch_representation._get(execution_id).copy_weights_to_psyneulink(execution_id)
+                # HACK: manually call forward function to get final outputs
+                results = []
+                self.learning_enabled = False
+                input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+                forward_inputs = inputs["inputs"]
+                for input_num in range(0,len(forward_inputs[input_nodes[0]])):
+                    curr_input_dict = {}
+                    for node in input_nodes:
+                        curr_input_dict[node] = [forward_inputs[node][input_num]]
+                    results.append(self.run(
+                        inputs=curr_input_dict,
+                        scheduler_processing=scheduler_processing,
+                        termination_processing=termination_processing,
+                        execution_id=execution_id,
+                        num_trials=num_trials,
+                        call_before_time_step=call_before_time_step,
+                        call_after_time_step=call_after_time_step,
+                        call_before_pass=call_before_pass,
+                        call_after_pass=call_after_pass,
+                        call_before_trial=call_before_trial,
+                        call_after_trial=call_after_trial,
+                        clamp_input=clamp_input,
+                        bin_execute=bin_execute,
+                        initial_values=initial_values,
+                        reinitialize_values=reinitialize_values,
+                        runtime_params=runtime_params,
+                        context=context    
+                    ))
+                self.learning_enabled = True
+                results = [results]
+            else:
+                self._analyze_graph()
 
-            self._analyze_graph()
+                if self.refresh_losses or (self.parameters.losses._get(execution_id) is None):
+                    self.parameters.losses._set([], execution_id)
+                adjusted_stimuli = self._adjust_stimulus_dict(inputs)
+                if num_trials is None:
+                    num_trials = len(adjusted_stimuli)
 
-            if self.refresh_losses or (self.parameters.losses._get(execution_id) is None):
-                self.parameters.losses._set([], execution_id)
-            adjusted_stimuli = self._adjust_stimulus_dict(inputs)
-            if num_trials is None:
-                num_trials = len(adjusted_stimuli)
-
-            results = []
-            for trial_num in range(num_trials):
-                stimulus_index = trial_num % len(adjusted_stimuli)
-                trial_output = self.execute(
-                    inputs=adjusted_stimuli[stimulus_index],
-                    execution_id=execution_id,
-                    do_logging=do_logging,
-                )
-                results.append(trial_output)
+                results = []
+                for trial_num in range(num_trials):
+                    stimulus_index = trial_num % len(adjusted_stimuli)
+                    trial_output = self.execute(
+                        inputs=adjusted_stimuli[stimulus_index],
+                        execution_id=execution_id,
+                        do_logging=do_logging,
+                        bin_execute = bin_execute
+                    )
+                    results.append(trial_output)
 
         else:
             results = super(AutodiffComposition, self).run(inputs=inputs,
@@ -972,6 +1068,62 @@ class AutodiffComposition(Composition):
 
         return weights, biases
 
+    def _get_param_struct_type(self, ctx):
+        # We only need input/output params (rest should be in pytorch model params)
+        mech_param_type_list = (ctx.get_param_struct_type(m) if (m is self.input_CIM or m is self.output_CIM)
+                                else pnlvm.ir.LiteralStructType([]) for m in self._all_nodes)
+        proj_param_type_list = (ctx.get_param_struct_type(p) if (p.sender in self.input_CIM.input_states or p.receiver in self.output_CIM.input_states)
+                                else pnlvm.ir.LiteralStructType([]) for p in self.projections)
+        self._build_pytorch_representation(self.default_execution_id)
+        model = self.parameters.pytorch_representation._get(
+            self.default_execution_id)
+        pytorch_params = model._get_param_struct_type(ctx)
+
+        param_args = [pnlvm.ir.LiteralStructType(mech_param_type_list),
+                      pnlvm.ir.LiteralStructType(proj_param_type_list), 
+                      pytorch_params]
+        #if self.learning_enabled is True:
+        learning_targets = pnlvm.ir.LiteralStructType([
+            pnlvm.ir.IntType(32), # idx of the node
+            pnlvm.ir.IntType(64) 
+        ])
+        learning_params = pnlvm.ir.LiteralStructType([
+            pnlvm.ir.IntType(32), # epochs
+            pnlvm.ir.IntType(32), # number of targets/inputs to train with
+            pnlvm.ir.IntType(32), # number target nodes
+            pnlvm.ir.IntType(64), # addr of beginning of target struct arr
+            pnlvm.ir.IntType(32), # number input nodes
+            pnlvm.ir.IntType(64), # addr of beginning of input struct arr
+        ])
+        param_args += [learning_params]
+        return pnlvm.ir.LiteralStructType(param_args)
+
+    def _get_param_initializer(self, execution_id, simulation=False):
+        def _parameterize_node(node):
+            if node is self.input_CIM or node is self.output_CIM:
+                return tuple(node._get_param_initializer(execution_id))
+            else:
+                return tuple()
+        
+        mech_params = (_parameterize_node(m)
+                       for m in self._all_nodes if m is not self.controller or not simulation)
+        proj_params = (tuple(p._get_param_initializer(execution_id)) if (p.sender in self.input_CIM.input_states or p.receiver in self.output_CIM.input_states) 
+                       else tuple() for p in self.projections)
+        self._build_pytorch_representation(self.default_execution_id)
+        model = self.parameters.pytorch_representation._get(self.default_execution_id)
+        pytorch_params = model._get_param_initializer()
+        param_args = [tuple(mech_params),tuple(proj_params),pytorch_params]
+        
+        learning_params = (
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        )
+        param_args += [learning_params]
+        return tuple(param_args)
 
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):

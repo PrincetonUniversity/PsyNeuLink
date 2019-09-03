@@ -2996,11 +2996,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return False
 
     def _check_feedback(self, scheduler):
-        '''Check that feedback specification is required for projections to which it has been assigned
+        """Check that feedback specification is required for projections to which it has been assigned
         Note:
         - graph_processing and graph_processing.dependency_dict are used as indications of structural dependencies
         - scheduler.dependency_dict is used as indication of execution dependencies
-        '''
+        """
 
         if scheduler:
             # If an external scheduler is provided, update it with current processing graph
@@ -3107,7 +3107,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         from psyneulink.core.globals.keywords import PROJECTION, NODE
         def is_spec(entry, desired_type:tc.enum(NODE, PROJECTION)):
-            '''Test whether pathway entry is specified type (NODE or PROJECTION)'''
+            """Test whether pathway entry is specified type (NODE or PROJECTION)"""
             node_specs = (Mechanism, Composition)
             proj_specs = (Projection, np.ndarray, np.matrix, str, list)
             if desired_type == NODE:
@@ -3561,7 +3561,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             learned_projection,
                                             learning_rate,
                                             learning_update):
-        '''Creates *TARGET_MECHANISM*, *COMPARATOR_MECHANISM* and *LEARNING_MECHANISM* for RL and TD learning'''
+        """Creates *TARGET_MECHANISM*, *COMPARATOR_MECHANISM* and *LEARNING_MECHANISM* for RL and TD learning"""
 
         if isinstance(learning_function, type):
             if issubclass(learning_function, TDLearning):
@@ -3612,7 +3612,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return target_mechanism, comparator_mechanism, learning_mechanism
 
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
-        ''' Construct MappingProjections among `learning components <Composition_Learning_Components>` for pathway'''
+        """Construct MappingProjections among `learning components <Composition_Learning_Components>` for pathway"""
 
         # FIX 5/29/19 [JDC]:  INTEGRATE WITH _get_back_prop_error_sources (RIGHT NOW, ONLY CALLED FOR TERMINAL SEQUENCE)
         try:
@@ -3635,7 +3635,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return [target_projection, sample_projection, error_signal_projection, act_out_projection, act_in_projection]
 
     def _create_learning_projection(self, learning_mechanism, learned_projection):
-        '''Construct LearningProjections from LearningMechanisms to learned_projections in processing pathway'''
+        """Construct LearningProjections from LearningMechanisms to learned_projections in processing pathway"""
 
         learning_projection = LearningProjection(name="Learning Projection",
                                                  sender=learning_mechanism.learning_signals[0],
@@ -6022,6 +6022,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
         # if there is only one INPUT Node, allow inputs to be specified in a list
+        # if there is only one INPUT Node, allow inputs to be specified in a list
         if isinstance(inputs, (list, np.ndarray)):
             if len(input_nodes) == 1:
                 inputs = {next(iter(input_nodes)): inputs}
@@ -6046,7 +6047,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     format(self.name, len(input_nodes), input_node_names))
         if not callable(inputs):
             # Currently, no validation if 'inputs' arg is a function
-            inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
+            ad_tmp = {}
+            if hasattr(self,'learning_enabled') and self.learning_enabled is True:
+                ad_tmp = inputs
+                inputs = inputs["inputs"]
+            inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs,bin_execute=bin_execute)
+            #HACK: basically checks to see if we retrieved info from the _adjust_stimulus_dict call, and replaces it with our own parsed version if learning is enabled
+            if hasattr(self,'learning_enabled') and self.learning_enabled is True:
+                autodiff_stimuli = ad_tmp
 
         if num_trials is not None:
             num_trials = num_trials
@@ -6075,7 +6083,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             try:
                 if bin_execute is True or bin_execute.startswith('LLVM'):
                     _comp_ex = pnlvm.CompExecution(self, [execution_id])
-                    results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
+                    results += _comp_ex.run(inputs, num_trials, num_inputs_sets,autodiff_stimuli=autodiff_stimuli)
                 elif bin_execute.startswith('PTX'):
                     self.__ptx_initialize(execution_id)
                     EX = self._compilation_data.ptx_execution._get(execution_id)
@@ -6863,7 +6871,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return "heterogeneous"
         return False
 
-    def _adjust_stimulus_dict(self, stimuli):
+    def _adjust_stimulus_dict(self, stimuli,bin_execute=False):
 
         autodiff_stimuli = {}
         all_stimuli_keys = list(stimuli.keys())

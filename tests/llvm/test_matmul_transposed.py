@@ -10,14 +10,14 @@ DIM_X=1000
 DIM_Y=2000
 
 matrix = np.random.rand(DIM_X, DIM_Y)
-vector = np.random.rand(DIM_X)
-llvm_res = np.random.rand(DIM_Y)
-result = np.dot(vector, matrix)
+vector = np.random.rand(DIM_Y)
+llvm_res = np.random.rand(DIM_X)
+result = np.dot(vector, matrix.transpose())
 
 @pytest.mark.llvm
 @pytest.mark.benchmark
-def test_matmul_numpy(benchmark):
-    numpy_res = benchmark(np.dot, vector, matrix)
+def test_matmul_transposed_numpy(benchmark):
+    numpy_res = benchmark(np.dot, vector, matrix.transpose())
     assert np.allclose(numpy_res, result)
 
 ct_vec = vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
@@ -27,16 +27,16 @@ x, y = matrix.shape
 
 @pytest.mark.llvm
 @pytest.mark.benchmark
-def test_matmul_llvm(benchmark):
-    llvm_fun = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm")
+def test_matmul_transposed_llvm(benchmark):
+    llvm_fun = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm_transposed")
     benchmark(llvm_fun, ct_vec, ct_mat, x, y, ct_res)
     assert np.allclose(llvm_res, result)
 
 @pytest.mark.llvm
 @pytest.mark.cuda
 @pytest.mark.benchmark
-def test_matmul_cuda(benchmark):
-    llvm_fun = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm")
+def test_matmul_transposed_cuda(benchmark):
+    llvm_fun = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm_transposed")
     cuda_vec = pnlvm.jit_engine.pycuda.driver.In(vector)
     cuda_mat = pnlvm.jit_engine.pycuda.driver.In(matrix)
     cuda_res = pnlvm.jit_engine.pycuda.driver.Out(llvm_res)
@@ -47,7 +47,7 @@ def test_matmul_cuda(benchmark):
 @pytest.mark.benchmark
 @pytest.mark.parametrize('mode', ['CPU',
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
-def test_matmul_llvm_constant_dim(benchmark, mode):
+def test_matmul_transposed_llvm_constant_dim(benchmark, mode):
     custom_name = None
 
     with pnlvm.LLVMBuilderContext() as ctx:
@@ -56,7 +56,7 @@ def test_matmul_llvm_constant_dim(benchmark, mode):
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
 
         # get builtin IR
-        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
+        builtin = ctx.get_llvm_function("__pnl_builtin_vxm_transposed")
 
         # Create square vector matrix multiply
         function = ir.Function(ctx.module, func_ty, name=custom_name)

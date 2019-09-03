@@ -45,7 +45,7 @@ GROUP_PREFIX="IntegratorFunction "
 @pytest.mark.benchmark
 def test_basic(func, variable, params, expected, benchmark):
     f = func(default_variable=variable, **params)
-    benchmark.group = GROUP_PREFIX + func.componentName;
+    benchmark.group = GROUP_PREFIX + func.componentName
     f(variable)
     f(variable)
     res = benchmark(f, variable)
@@ -60,7 +60,7 @@ def test_basic(func, variable, params, expected, benchmark):
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_llvm(func, variable, params, expected, benchmark):
-    benchmark.group = GROUP_PREFIX + func.componentName;
+    benchmark.group = GROUP_PREFIX + func.componentName
     f = func(default_variable=variable, **params)
     m = pnlvm.execution.FuncExecution(f)
     m.execute(variable)
@@ -77,7 +77,7 @@ def test_llvm(func, variable, params, expected, benchmark):
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_ptx_cuda(func, variable, params, expected, benchmark):
-    benchmark.group = GROUP_PREFIX + func.componentName;
+    benchmark.group = GROUP_PREFIX + func.componentName
     f = func(default_variable=variable, **params)
     m = pnlvm.execution.FuncExecution(f)
     m.cuda_execute(variable)

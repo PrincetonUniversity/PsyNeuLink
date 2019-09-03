@@ -992,7 +992,6 @@ def run(obj,
 
 
 @tc.typecheck
-
 def _input_matches_external_input_state_values(input, value_to_compare):
     # input states are uniform
     if np.shape(np.atleast_2d(input)) == np.shape(value_to_compare):

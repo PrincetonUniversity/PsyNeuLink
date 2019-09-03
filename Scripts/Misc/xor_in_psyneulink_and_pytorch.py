@@ -260,7 +260,7 @@ xor_targets_pt = torch.tensor(xor_targets).double()
 
 
 # Set up function for training the XOR model object
-
+total_forward_pt = 0
 def xor_pt_training(model, inputs, targets, epochs, loss_measure, optimizer):
 
     # iterate over epochs
@@ -268,10 +268,12 @@ def xor_pt_training(model, inputs, targets, epochs, loss_measure, optimizer):
 
         # iterate over inputs
         for i in range(len(inputs)):
-
+            
+            global total_forward_pt
             # perform forward computation on input to get output
+            forward_time_start = time.time()
             output = model.forward(inputs[i])
-
+            total_forward_pt += time.time() - forward_time_start
             # calculate loss on output
             loss = loss_measure(output, targets[i])
 
@@ -324,6 +326,7 @@ print([proc_results1.item(),
        proc_results3.item(),
        proc_results4.item()])
 print('Initializing and training PyTorch XOR took ', pytorch_total_time, ' seconds.')
+print('total forward time',total_forward_pt)
 
 
 

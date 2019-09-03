@@ -1408,13 +1408,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         if clip is not None:
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                with pnlvm.helpers.array_ptr_loop(builder, mf_out_local, "clip") as (builder, index):
-                    ptri = builder.gep(mf_out_local, [ctx.int32_ty(0), index])
-                    ptro = builder.gep(mf_out_local, [ctx.int32_ty(0), index])
+                with pnlvm.helpers.array_ptr_loop(builder, mf_out_local, "clip") as (b1, index):
+                    ptri = b1.gep(mf_out_local, [ctx.int32_ty(0), index])
+                    ptro = b1.gep(mf_out_local, [ctx.int32_ty(0), index])
 
-                    val = builder.load(ptri)
-                    val = pnlvm.helpers.fclamp(builder, val, clip[0], clip[1])
-                    builder.store(val, ptro)
+                    val = b1.load(ptri)
+                    val = pnlvm.helpers.fclamp(b1, val, clip[0], clip[1])
+                    b1.store(val, ptro)
 
         builder = self._gen_llvm_output_states(ctx, builder, params, context, mf_out, arg_out)
 
