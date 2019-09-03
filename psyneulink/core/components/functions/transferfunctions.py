@@ -3890,7 +3890,7 @@ class TransferWithCosts(TransferFunction):
 
         # Create primary functions' modulation params for TransferWithCosts
         transfer_fct = Parameter(Linear, stateful=False)
-        _validate_tranfer_fct = get_validator_by_function(is_function_type)
+        _validate_transfer_fct = get_validator_by_function(is_function_type)
         transfer_fct_mult_param = Parameter(modulable=True, aliases=MULTIPLICATIVE_PARAM,
                                             getter=_transfer_fct_mult_param_getter,
                                             setter=_transfer_fct_mult_param_setter)
