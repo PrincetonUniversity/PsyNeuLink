@@ -336,7 +336,7 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
         # function_param_name = owner.function.params[function_mod_meta_param_obj.value.attrib_name]
         # # Get the function parameter's value
         # function_param_value = owner.function.params[function_param_name]
-        # MODIFIED 8/30/19 NEW: [JDC] ::GENERAL::
+        # MODIFIED 8/30/19 NEW: [JDC] ::GENERAL:::
         # Get the name of the actual parameter of owner.function to be modulated
         # CAUSED CRASH:
         # function_param_name = getattr(owner.function.parameters,
