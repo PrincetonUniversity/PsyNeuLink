@@ -338,10 +338,8 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
         # function_param_value = owner.function.params[function_param_name]
         # MODIFIED 8/30/19 NEW: [JDC] ::GENERAL::
         # FIX Assign relevant params to CostModulatonParam
-        # function_param_name = getattr(owner.function.parameters, function_mod_meta_param_obj.value.attrib_name)
-        # function_param_name = function_mod_meta_param_obj.value.attrib_name
-        function_param_name = getattr(owner.function.parameters, function_mod_meta_param_obj.value.attrib_name).source.name
-        # function_param_value = owner.function.params[function_param_name]
+        function_param_name = getattr(owner.function.parameters,
+                                      function_mod_meta_param_obj.value.attrib_name).source.name
         function_param_value = getattr(owner.function.parameters,
                                        function_mod_meta_param_obj.value.attrib_name).get(execution_context)
         # MODIFIED 8/30/19 END
