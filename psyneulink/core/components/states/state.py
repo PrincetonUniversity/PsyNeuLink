@@ -2743,7 +2743,7 @@ def _parse_state_spec(state_type=None,
             print(f'Args other than standard args and state_spec were in _instantiate_state ({state_spec}).')
         # # MODIFIED 8/30/19 OLD:
         # state_specific_args.update(state_spec)
-        # MODIFIED 8/30/19 NEW: [JDC]
+        # MODIFIED 8/30/19 NEW: [JDC] ::GENERAL::
         # Give precedence for any duplicate keys to state_specific_args
         state_spec.update(state_specific_args)
         state_specific_args = state_spec

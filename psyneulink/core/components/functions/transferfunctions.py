@@ -3406,7 +3406,31 @@ class CostModulationParam(Enum):
     COMBINED_COST_DISABLE = DISABLE_PARAM
 
 
-# Getters and setters for cost function multiplicative and additive parameters -----------------------------------------
+# Getters and setters for transfer and cost function multiplicative and additive parameters 
+# -----------------------------------------
+def _transfer_fct_mult_param_getter(owning_component=None, execution_id=None):
+    try:
+        return getattr(owning_component.transfer_fct.parameters,
+                       owning_component.transfer_fct.multiplicative_param).get(execution_id)
+    except (TypeError, IndexError):
+        return None
+
+def _transfer_fct_mult_param_setter(value, owning_component=None, execution_id=None):
+    getattr(owning_component.transfer_fct.parameters,
+            owning_component.transfer_fct.multiplicative_param).set(value, execution_id)
+    return value
+
+def _transfer_fct_add_param_getter(owning_component=None, execution_id=None):
+    try:
+        return getattr(owning_component.transfer_fct.parameters,
+                       owning_component.transfer_fct.additive_param).get(execution_id)
+    except (TypeError, IndexError):
+        return None
+
+def _transfer_fct_add_param_setter(value, owning_component=None, execution_id=None):
+    getattr(owning_component.transfer_fct.parameters,
+            owning_component.transfer_fct.additive_param).set(value, execution_id)
+    return value
 
 def _intensity_cost_fct_mult_param_getter(owning_component=None, execution_id=None):
     try:
@@ -3846,22 +3870,47 @@ class TransferWithCosts(TransferFunction):
 
                     :default value: `Linear`
                     :type: `Function`
+
+                transfer_fct_mult_param
+                    serves as `multiplicative_param` for TransferWithCosts
+
+                    :default value:  transfer.multiplicative.param
+                    :type: number
+
+                transfer_fct_add_param
+                    serves as `additive_param` for TransferWithCosts
+
+                    :default value: transfer.additive.param
+                    :type: number
+
         """
         variable = Parameter(np.array([0]),
                              aliases='intensity',
                              history_min_length=1)
 
+        # Create primary functions' modulation params for TransferWithCosts
         transfer_fct = Parameter(Linear, stateful=False)
         _validate_tranfer_fct = get_validator_by_function(is_function_type)
+        transfer_fct_mult_param = Parameter(modulable=True, aliases=MULTIPLICATIVE_PARAM,
+                                            getter=_transfer_fct_mult_param_getter,
+                                            setter=_transfer_fct_mult_param_setter)
+        transfer_fct_add_param = Parameter(modulable=True, aliases=ADDITIVE_PARAM,
+                                           getter=_transfer_fct_add_param_getter,
+                                           setter=_transfer_fct_add_param_setter)
 
         enabled_cost_functions = CostFunctions.DEFAULTS
         _validate_cost_functions = get_validator_by_type_only([CostFunctions, list])
 
-        # Create versions cost functions' modulation params for TransferWithCosts
+        # Create versions of cost functions' modulation params for TransferWithCosts
+        
         intensity_cost_fct = Parameter(Exponential, stateful=False)
         _validate_intensity_cost_fct = get_validator_by_function(is_function_type)
-        intensity_cost_fct_mult_param = Parameter(modulable=True, getter=_intensity_cost_fct_mult_param_getter)
-        intensity_cost_fct_add_param = Parameter(modulable=True, getter=_intensity_cost_fct_add_param_getter)
+        intensity_cost_fct_mult_param = Parameter(modulable=True,
+                                                  getter=_intensity_cost_fct_mult_param_getter,
+                                                  setter=_intensity_cost_fct_mult_param_setter)
+        intensity_cost_fct_add_param = Parameter(modulable=True,
+                                                 getter=_intensity_cost_fct_add_param_getter,
+                                                 setter=_intensity_cost_fct_mult_param_getter)
         # # MODIFIED 8/30/19 OLD:
         # intensity_cost = None
         # MODIFIED 8/30/19 NEW: [JDC]
@@ -3870,22 +3919,34 @@ class TransferWithCosts(TransferFunction):
 
         adjustment_cost_fct = Parameter(Linear, stateful=False)
         _validate_adjustment_cost_fct = get_validator_by_function(is_function_type)
-        adjustment_cost_fct_mult_param = Parameter(modulable=True, getter=_adjustment_cost_fct_mult_param_getter)
-        adjustment_cost_fct_add_param = Parameter(modulable=True, getter=_adjustment_cost_fct_add_param_getter)
+        adjustment_cost_fct_mult_param = Parameter(modulable=True,
+                                                   getter=_adjustment_cost_fct_mult_param_getter,
+                                                   setter=_adjustment_cost_fct_mult_param_setter)
+        adjustment_cost_fct_add_param = Parameter(modulable=True,
+                                                  getter=_adjustment_cost_fct_add_param_getter,
+                                                  setter=_adjustment_cost_fct_add_param_setter)
         adjustment_cost = 0
 
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
         duration_cost_fct = Parameter(SimpleIntegrator, stateful=False)
         _validate_duration_cost_fct = get_validator_by_function(is_function_type)
-        duration_cost_fct_mult_param = Parameter(modulable=True, getter=_duration_cost_fct_mult_param_getter)
-        duration_cost_fct_add_param = Parameter(modulable=True, getter=_duration_cost_fct_add_param_getter)
+        duration_cost_fct_mult_param = Parameter(modulable=True,
+                                                 getter=_duration_cost_fct_mult_param_getter,
+                                                 setter=_duration_cost_fct_mult_param_setter)
+        duration_cost_fct_add_param = Parameter(modulable=True,
+                                                getter=_duration_cost_fct_add_param_getter,
+                                                setter=_duration_cost_fct_add_param_setter)
         duration_cost = 0
 
         from psyneulink.core.components.functions.combinationfunctions import Reduce, SUM
         combine_costs_fct = Parameter(Reduce(operation=SUM), stateful=False)
         _validate_combine_costs_fct = get_validator_by_function(is_function_type)
-        combine_costs_fct_mult_param=Parameter(modulable=True,getter=_combine_costs_fct_mult_param_getter)
-        combine_costs_fct_add_param=Parameter(modulable=True,getter=_combine_costs_fct_add_param_getter)
+        combine_costs_fct_mult_param=Parameter(modulable=True,
+                                               getter=_combine_costs_fct_mult_param_getter,
+                                               setter=_combine_costs_fct_mult_param_setter)
+        combine_costs_fct_add_param=Parameter(modulable=True,
+                                              getter=_combine_costs_fct_add_param_getter,
+                                              setter=_combine_costs_fct_add_param_setter)
         combined_costs = 0
 
     @tc.typecheck
