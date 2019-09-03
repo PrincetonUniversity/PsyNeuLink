@@ -3912,7 +3912,7 @@ class TransferWithCosts(TransferFunction):
         intensity_cost_fct_add_param = Parameter(modulable=True,
                                                  aliases=INTENSITY_COST_FCT_ADDITIVE_PARAM,
                                                  getter=_intensity_cost_fct_add_param_getter,
-                                                 setter=_intensity_cost_fct_mult_param_getter)
+                                                 setter=_intensity_cost_fct_add_param_setter)
         # # MODIFIED 8/30/19 OLD:
         # intensity_cost = None
         # MODIFIED 8/30/19 NEW: [JDC]
