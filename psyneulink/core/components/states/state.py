@@ -2742,7 +2742,9 @@ def _parse_state_spec(state_type=None,
         if owner.verbosePref:
             print('Args other than standard args and state_spec were in _instantiate_state ({})'.
                   format(state_spec))
-        state_specific_args.update(state_spec)
+        # state_specific_args.update(state_spec)
+        state_spec.update(state_specific_args)
+        state_specific_args = state_spec
 
     state_dict = standard_args
     context = state_dict.pop(CONTEXT, None)
