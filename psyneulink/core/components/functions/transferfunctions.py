@@ -41,6 +41,7 @@ All TransferFunctions have the following attributes:
 
 """
 
+import itertools
 import numbers
 from enum import Enum, IntEnum
 
@@ -4103,7 +4104,7 @@ class TransferWithCosts(TransferFunction):
         # FIRST, DEAL WITH CURRENT INTENSITY
 
         # Compute current intensity
-        intensity = self.parameters.transfer_fct._get(execution_id)(variable)
+        intensity = self.parameters.transfer_fct._get(execution_id)(variable, execution_id=execution_id)
 
         # Compute intensity change
         try:
@@ -4138,7 +4139,7 @@ class TransferWithCosts(TransferFunction):
                 self.intensity_cost_fct_add_param = \
                     self.get_current_function_param(INTENSITY_COST_FCT_ADDITIVE_PARAM, execution_id)
                 # Execute intensity_cost function
-                intensity_cost = self.intensity_cost_fct(intensity)
+                intensity_cost = self.intensity_cost_fct(intensity, execution_id=execution_id)
                 self.parameters.intensity_cost._set(intensity_cost, execution_id)
 
             # Compute adjustment cost
@@ -4149,7 +4150,7 @@ class TransferWithCosts(TransferFunction):
                 self.adjustment_cost_fct_add_param = \
                     self.get_current_function_param(ADJUSTMENT_COST_FCT_ADDITIVE_PARAM, execution_id)
                 # Execute adjustment_cost function
-                adjustment_cost = self.adjustment_cost_fct(intensity_change)
+                adjustment_cost = self.adjustment_cost_fct(intensity_change, execution_id=execution_id)
                 self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
 
             # Compute duration cost
@@ -4160,7 +4161,7 @@ class TransferWithCosts(TransferFunction):
                 self.duration_cost_fct_add_param = \
                     self.get_current_function_param(DURATION_COST_FCT_ADDITIVE_PARAM, execution_id)
                 # Execute duration_cost function
-                duration_cost = self.duration_cost_fct(self.parameters.combined_costs._get(execution_id))
+                duration_cost = self.duration_cost_fct(self.parameters.combined_costs._get(execution_id), execution_id=execution_id)
                 self.parameters.duration_cost._set(duration_cost, execution_id)
 
         # Always execute combined costs
@@ -4171,7 +4172,7 @@ class TransferWithCosts(TransferFunction):
         self.combine_costs_fct_add_param = \
             self.get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, execution_id)
         # Execute combine_costs function
-        combined_costs = self.combine_costs_fct([intensity_cost, adjustment_cost, duration_cost])
+        combined_costs = self.combine_costs_fct([intensity_cost, adjustment_cost, duration_cost], execution_id=execution_id)
         self.parameters.combined_costs._set(combined_costs, execution_id)
 
         return intensity
@@ -4278,3 +4279,16 @@ class TransferWithCosts(TransferFunction):
 
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [
+                self.transfer_fct,
+                self.intensity_cost_fct,
+                self.adjustment_cost_fct,
+                self.duration_cost_fct,
+                self.combine_costs_fct,
+            ],
+        ))
