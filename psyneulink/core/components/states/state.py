@@ -2063,7 +2063,11 @@ class State_Base(State):
             elif isinstance(projection, ModulatoryProjection_Base):
                 # Get the meta_param to be modulated from modulation attribute of the  projection's ModulatorySignal
                 #    and get the function parameter to be modulated to type_match the projection value below
-                mod_meta_param, mod_param_name, mod_param_value = _get_modulated_param(self, projection, execution_id)
+                # # MODIFIED 9/3/19 OLD:
+                # mod_meta_param, mod_param_name, mod_param_value = _get_modulated_param(self, projection, execution_id)
+                # MODIFIED 9/3/19 NEW: [JDC]
+                mod_meta_param, mod_param_value = _get_modulated_param(self, projection, execution_id)
+                # MODIFIED 9/3/19 END
                 # If meta_param is DISABLE, ignore the ModulatoryProjection
                 if mod_meta_param is Modulation.DISABLE:
                     continue

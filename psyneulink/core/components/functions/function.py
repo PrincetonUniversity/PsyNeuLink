@@ -311,7 +311,7 @@ def _is_modulation_param(val):
         return False
 
 
-ModulatedParam = namedtuple('ModulatedParam', 'meta_param, function_param, function_param_val')
+ModulatedParam = namedtuple('ModulatedParam', 'meta_param, function_param_val')
 
 
 def _get_modulated_param(owner, mod_proj, execution_context=None):
@@ -344,8 +344,8 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
         # function_param_value = owner.function.params[function_param_name]
         # MODIFIED 8/30/19 NEW: [JDC] ::GENERAL::
         # Get the name of the actual parameter of owner.function to be modulated
-        function_param_name = getattr(owner.function.parameters,
-                                      function_mod_meta_param_obj.value.attrib_name).source.name
+        # function_param_name = getattr(owner.function.parameters,
+        #                               function_mod_meta_param_obj.value.attrib_name).source.name
         # Get the value of function's parameter
         function_param_value = getattr(owner.function.parameters,
                                        function_mod_meta_param_obj.value.attrib_name).get(execution_context)
@@ -366,7 +366,11 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
     # MODIFIED 6/27/18 END
 
     # Return the meta_parameter object, function_param name, and function_param_value
-    return ModulatedParam(function_mod_meta_param_obj, function_param_name, function_param_value)
+    # # MODIFIED 8/30/19 OLD:
+    # return ModulatedParam(function_mod_meta_param_obj, function_param_name, function_param_value)
+    # MODIFIED 8/30/19 NEW: [JDC]
+    return ModulatedParam(function_mod_meta_param_obj, function_param_value)
+    # MODIFIED 8/30/19 END
 
 
 # *******************************   get_param_value_for_keyword ********************************************************
