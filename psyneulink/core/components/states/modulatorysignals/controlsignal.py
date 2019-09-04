@@ -247,7 +247,7 @@ In the example below, this is changed by specifying the `modulation <ControlSign
 ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
 function::
 
-    >>> my_mech = TransferMechanism(function=Logistic(gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+    >>> my_mech = TransferMechanism(function=Logistic(gain=(1.0, ControlSignal(modulation=ADDITIVE))))
 
 Note that the `ModulationParam` specified for the `ControlSignal` refers to how the parameter of the *Logistic*
 Function (in this case, its `gain <Logistic.gain>` parameter) is modified, and not directly to input Logistic function;
@@ -270,7 +270,7 @@ COMMENT:
                                           control_signals=[(GAIN, my_mech_A),
                                                            {NAME: INTERCEPT,
                                                             MECHANISM: my_mech_B,
-                                                            MODULATION:ModulationParam.ADDITIVE}],
+                                                            MODULATION:ADDITIVE}],
                                           name='my_ocm')
 
 *Modulate the parameters of several Mechanisms in a System*.  The following example assigns ControlSignals to modulate
@@ -290,7 +290,7 @@ the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`
     ...                        control_signals=[(GAIN, my_mech_A),
     ...                                         {NAME: INTERCEPT,
     ...                                          MECHANISM: my_mech_B,
-    ...                                          MODULATION: ModulationParam.ADDITIVE}],
+    ...                                          MODULATION: ADDITIVE}],
     ...                        name='My Test System')
 
 COMMENT
@@ -473,7 +473,7 @@ class ControlSignal(ModulatorySignal):
         duration_cost_function=IntegratorFunction,                 \
         combine_costs_function=Reduce(operation=SUM),              \
         allocation_samples=self.class_defaults.allocation_samples, \
-        modulation=ModulationParam.MULTIPLICATIVE                  \
+        modulation=MULTIPLICATIVE                                  \
         projections=None                                           \
         params=None,                                               \
         name=None,                                                 \

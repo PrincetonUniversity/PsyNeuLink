@@ -133,7 +133,7 @@ class KohonenLearningMechanism(LearningMechanism):
         matrix=None,                         \
         learning_rate=None,                  \
         learning_signals=LEARNING_SIGNAL,    \
-        modulation=ModulationParam.ADDITIVE, \
+        modulation=ADDITIVE,v                \
         params=None,                         \
         name=None,                           \
         prefs=None)
@@ -157,7 +157,7 @@ class KohonenLearningMechanism(LearningMechanism):
         specifies the `matrix <AutoAssociativeProjection.matrix>` to be learned (see `learning_signals
         <LearningMechanism.learning_signals>` for details of specification).
 
-    modulation : ModulationParam : default ModulationParam.ADDITIVE
+    modulation : ModulationParam : default ADDITIVE
         specifies the default form of modulation used by the KohonenLearningMechanism's LearningSignals,
         unless they are `individually specified <LearningSignal_Specification>`.
 
@@ -326,7 +326,7 @@ class KohonenLearningMechanism(LearningMechanism):
                 modulation
                     see `modulation <KohonenLearningMechanism.modulation>`
 
-                    :default value: ModulationParam.ADDITIVE
+                    :default value: ADDITIVE
                     :type: `ModulationParam`
 
         """

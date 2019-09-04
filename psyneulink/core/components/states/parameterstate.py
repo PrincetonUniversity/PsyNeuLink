@@ -176,7 +176,7 @@ In the following example, a Mechanism is created by specifying two of its parame
     ...                         noise=pnl.ControlSignal(),
     ...                         function=pnl.Logistic(
     ...                                         gain=(0.5, pnl.ControlSignal),
-    ...                                         bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
+    ...                                         bias=(1.0, pnl.ControlSignal(modulation=pnl.ADDITIVE))))
 
 COMMENT:
     If assigning a default ControlSignal makes the noise value the same as the
@@ -218,7 +218,7 @@ The example below shows how to specify the parameters in the first example using
     ...                              pnl.FUNCTION: pnl.Logistic,
     ...                              pnl.FUNCTION_PARAMS:{
     ...                                     pnl.GAIN:(0.5,pnl.ControlSignal),
-    ...                                     pnl.BIAS:(1.0,pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))}})
+    ...                                     pnl.BIAS:(1.0,pnl.ControlSignal(modulation=pnl.ADDITIVE))}})
 
 There are several things to note here.
 

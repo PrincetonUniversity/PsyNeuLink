@@ -38,7 +38,6 @@ All TransferFunctions have the following attributes:
   parameters and used by `ModulatoryProjections <ModulatoryProjection>` to modulate the output of the
   TransferFunction's function (see `Function_Modulatory_Params`).
 
-
 """
 
 import itertools

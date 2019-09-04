@@ -484,7 +484,7 @@ Each ParameterState uses the value it receives from the `LearningProjection` tha
 parameter of its `function <ParameterState.function>`, in a manner specified by the `modulation
 <LearningSignal.modulation>` attribute of the `LearningSignal` from which it receives the LearningProjection (see
 `Modulation <ModulatorySignal_Modulation>` for a description of how modulation operates). By default, the
-`modulation <LearningSignal.modulation>` attribute of a LearningSignal is `ModulationParam.ADDITIVE`, the `function
+`modulation <LearningSignal.modulation>` attribute of a LearningSignal is `ADDITIVE`, the `function
 <ParameterState.function>` of a *MATRIX* ParameterState for a MappingProjection is `AccumulatorIntegrator`,
 and the parameter it uses for additive modulation is its `increment <AccumulatorIntegrator.increment>` parameter.
 These assignments cause the value of the LearningProjection to be added to the previous value of the *MATRIX*

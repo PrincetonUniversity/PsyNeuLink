@@ -112,10 +112,10 @@ The `function <State_Base.function>` of every State designates one of its parame
 are assigned its value, or which of two other actions to take when the State updates its `value <State_Base.value>`.
 It is specified using a value of `ModulationParam <Function.ModulationParam>`.
 
-The default for `ControlSignals <ControlSignal>` and `GatingSignals <GatingSignal>` is `ModulationParam.MULTIPLICATIVE`,
+The default for `ControlSignals <ControlSignal>` and `GatingSignals <GatingSignal>` is `MULTIPLICATIVE`,
 which multiplicatively modifies the State's `variable <State_Base.variable>` by the `value <ModulatorySignal>` of the
 ModulatorySignal before passing it to the State's `function <State_Base.function>`.  The default for `LearningSignals
-<LearningSignal>` is `ModulationParam.ADDITIVE`, which additively modifies the `value <LearningSignal.value>` of the
+<LearningSignal>` is `ADDITIVE`, which additively modifies the `value <LearningSignal.value>` of the
 LearningSignal (i.e., the weight changes computed by the `LearningMechanism`) to the State's `variable
 <State_Base.variable>` (i.e., the current weight `matrix <MappingProjection.matrix>` for the `MappingProjection` being
 learned).
@@ -189,7 +189,7 @@ When those Projections execute, they convey the ModulatorySignal's `value <Modul
 For example, consider a `ControlSignal` that modulates the `bias f<Logistic.bias>` parameter of a `Logistic` Function
 used by a `TransferMechanism, and assume that the `ParameterState` for the bias parameter (to which the ControlSignal
 projects) uses a `Linear` function to update its value (which is the default for a ParameterState).  If the
-`modulation  <ModulatorySignal.modulation>` attribute of the `ControlSignal` is `ModulationParam.MULTIPLICATIVE`,
+`modulation  <ModulatorySignal.modulation>` attribute of the `ControlSignal` is `MULTIPLICATIVE`,
 then it will be assigned to the `slope <Linear>` parameter of the ParameterState's `function <ParameterState.function>`.
 Accordingly, when the ParameterState is updated it will multiply the bias parameter's value by the value of the
 ControlSignal to determine the value of the bias parameter.  The result will used as the value of the bias for the
@@ -249,7 +249,7 @@ class ModulatorySignal(OutputState):
         owner,                                         \
         default_allocation=defaultModulatoryAllocation \
         function=LinearCombination(operation=SUM),     \
-        modulation=ModulationParam.MULTIPLICATIVE      \
+        modulation=MULTIPLICATIVE                      \
         projections=None,                              \
         params=None,                                   \
         name=None,                                     \
@@ -300,7 +300,7 @@ class ModulatorySignal(OutputState):
         specifies the function used to determine the value of the ModulatorySignal from the value of its
         `owner <GatingMechanism.owner>`.
 
-    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
+    modulation : ModulationParam : default MULTIPLICATIVE
         specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.
 
     params : Dict[param keyword: param value] : default None

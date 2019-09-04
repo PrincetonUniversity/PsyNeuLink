@@ -242,7 +242,7 @@ class GatingMechanism(ModulatoryMechanism):
         function=Linear(slope=1, intercept=0),      \
         default_allocation=None,                    \
         gating_signals:tc.optional(list) = None,    \
-        modulation=ModulationParam.MULTIPLICATIVE,  \
+        modulation=MULTIPLICATIVE,                  \
         params=None,                                \
         name=None,                                  \
         prefs=None)
@@ -298,7 +298,7 @@ class GatingMechanism(ModulatoryMechanism):
         argument; if a `Mechanism <Mechanism>` is specified, its `primary InputState <InputState_Primary>`
         is used (see `GatingMechanism_GatingSignals for details).
 
-    modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
+    modulation : ModulationParam : MULTIPLICATIVE
         specifies the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
         unless they are `individually specified <GatingSignal_Specification>`.
 

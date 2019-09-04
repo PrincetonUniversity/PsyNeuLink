@@ -616,7 +616,7 @@ class ControlMechanism(ModulatoryMechanism):
         function=Linear,                            \
         default_allocation=None,                    \
         control_signals=None,                       \
-        modulation=ModulationParam.MULTIPLICATIVE,  \
+        modulation=MULTIPLICATIVE,                  \
         combine_costs=np.sum,                       \
         compute_reconfiguration_cost=None,          \
         compute_net_outcome=lambda x,y:x-y,         \
@@ -699,7 +699,7 @@ class ControlMechanism(ModulatoryMechanism):
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
         (see `ControlSignal_Specification` for details of specification).
 
-    modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
+    modulation : ModulationParam : MULTIPLICATIVE
         specifies the default form of modulation used by the ControlMechanism's `ControlSignals <ControlSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
