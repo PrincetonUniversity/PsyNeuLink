@@ -2162,8 +2162,7 @@ class State_Base(State):
         )
 
     def _get_modulated_param(self, mod_proj, receiver=None, execution_context=None):
-        """Return Modulation specification, and name and value of param modulated by ModulatoryProjection
-        """
+        """Return modulation specification from ModulatoryProjection, and name and value of param modulated."""
 
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.core.globals.parameters import parse_execution_context
@@ -2179,19 +2178,18 @@ class State_Base(State):
         # Get modulation specification from the Projection sender's modulation attribute
         mod_spec = mod_proj.sender.parameters.modulation._get(execution_id)
 
-        mod_param = getattr(receiver.function.parameters,mod_spec)
-        try:
-            mod_param_name = mod_param.source.name
-        except:
-            mod_param_name = mod_param.name
-
         if mod_spec in {OVERRIDE, DISABLE}:
-            from psyneulink.core.globals.utilities import Modulation
-            mod_spec = getattr(Modulation, mod_spec)
+            mod_param_name = mod_proj.receiver.name
             mod_param_value = mod_proj.sender.parameters.value.get(execution_context)
         else:
+            mod_param = getattr(receiver.function.parameters, mod_spec)
+            try:
+                mod_param_name = mod_param.source.name
+            except:
+                mod_param_name = mod_param.name
+
             # Get the value of the modulated parameter
-            mod_param_value = getattr(receiver.function.parameters,mod_spec).get(execution_context)
+            mod_param_value = getattr(receiver.function.parameters, mod_spec).get(execution_context)
 
         return mod_spec, mod_param_name, mod_param_value
 
