@@ -835,14 +835,10 @@ class LCControlMechanism(ControlMechanism):
                 self._modulated_mechanisms = [self.modulated_mechanisms]
             multiplicative_param_names = []
             for mech in self.modulated_mechanisms:
-                # # MODIFIED 9/3/19 OLD:
-                # multiplicative_param_names.append(mech.function.multiplicative_param)
-                # MODIFIED 9/3/19 NEW: [JDC]
                 if isinstance(mech.function.parameters.multiplicative_param, ParameterAlias):
                     multiplicative_param_names.append(mech.function.parameters.multiplicative_param.source.name)
                 else:
                     multiplicative_param_names.append(mech.function.parameters.multiplicative_param.name)
-                # MODIFIED 9/3/19 END
             ctl_sig_projs = []
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))

@@ -1686,8 +1686,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     # parameter_keywords.update({STANDARD_DEVIATION, BIAS, SCALE, OFFSET})
 
     bounds = (None,None)
-    # multiplicative_param = STANDARD_DEVIATION
-    # additive_param = BIAS
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 

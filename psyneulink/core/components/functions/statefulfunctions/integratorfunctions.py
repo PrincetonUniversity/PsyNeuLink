@@ -3039,9 +3039,6 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         NOISE: None
     })
 
-    # multiplicative_param = RATE
-    # additive_param = OFFSET
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
