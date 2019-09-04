@@ -113,10 +113,9 @@ __all__ = [
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
-    'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
-    'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d',
-    'object_has_single_value', 'optional_parameter_spec',
-    'normpdf',
+    'make_readonly_property', 'merge_param_dicts',
+    'Modulation', 'ModulationReduce', 'MODULATION_ADD', 'MODULATION_MULTIPLY','MODULATION_OVERRIDE',
+    'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf',
     'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy'
@@ -137,12 +136,15 @@ MODULATION_OVERRIDE = 'Modulation.OVERRIDE'
 MODULATION_MULTIPLY = 'Modulation.MULTIPLY'
 MODULATION_ADD = 'Modulation.ADD'
 
-
 class Modulation(Enum):
     MULTIPLY = lambda runtime, default : runtime * default
     ADD = lambda runtime, default : runtime + default
     OVERRIDE = lambda runtime, default : runtime
     DISABLE = 0
+
+class ModulationReduce(Enum):
+    MULTIPLICATIVE = lambda x: np.product(np.array(x), axis=0)
+    ADDITIVE = lambda x: np.sum(np.array(x), axis=0)
 
 def is_modulation_operation(val):
     # try:

@@ -10,7 +10,7 @@ from itertools import product
 
 import psyneulink.core.llvm as pnlvm
 import psyneulink as pnl
-from psyneulink.core.components.functions.function import ModulationParam
+from psyneulink.core.components.functions.function import ADDITIVE, DISABLE, OVERRIDE
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
@@ -1121,7 +1121,7 @@ class TestExecutionOrder:
         A = ObjectiveMechanism(function=Linear,
                                monitor=[B],
                                name="A")
-        LC = LCControlMechanism(name="LC", modulation=ModulationParam.ADDITIVE,
+        LC = LCControlMechanism(name="LC", modulation=ADDITIVE,
                                modulated_mechanisms=C,
                                objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
@@ -1166,7 +1166,7 @@ class TestExecutionOrder:
         A = ObjectiveMechanism(function=Linear,
                                monitor=[B],
                                name="A")
-        LC = LCControlMechanism(name="LC", modulation=ModulationParam.OVERRIDE,
+        LC = LCControlMechanism(name="LC", modulation=OVERRIDE,
                                modulated_mechanisms=C,
                                objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
@@ -1216,7 +1216,7 @@ class TestExecutionOrder:
         A = ObjectiveMechanism(function=Linear,
                                monitor=[B],
                                name="A")
-        LC = LCControlMechanism(name="LC", modulation=ModulationParam.DISABLE,
+        LC = LCControlMechanism(name="LC", modulation=DISABLE,
                                modulated_mechanisms=C,
                                objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))

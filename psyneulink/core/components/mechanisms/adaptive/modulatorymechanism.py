@@ -404,8 +404,7 @@ import threading
 import typecheck as tc
 import warnings
 
-from psyneulink.core.components.functions.function import \
-    Function_Base, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import Function_Base, is_function_type, MULTIPLICATIVE
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
@@ -560,7 +559,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         function=DefaultAllocationFunction,                      \
         default_allocation=None,                                 \
         modulatory_signals=None,                                 \
-        modulation=ModulationParam.MULTIPLICATIVE                \
+        modulation=MULTIPLICATIVE                                \
         combine_costs=np.sum,                                    \
         compute_reconfiguration_cost=None,                       \
         compute_net_outcome=lambda x,y:x-y,                      \
@@ -919,7 +918,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                 modulation
                     see `modulation <ModulatoryMechanism.modulation>`
 
-                    :default value: ModulationParam.MULTIPLICATIVE
+                    :default value: MULTIPLICATIVE
                     :type: `ModulationParam`
 
                 net_outcome
@@ -957,7 +956,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         simulation_ids = Parameter([], user=False)
 
-        modulation = ModulationParam.MULTIPLICATIVE
+        modulation = MULTIPLICATIVE
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -980,7 +979,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                        OutputState,
                                                        ControlSignal,
                                                        GatingSignal))=None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
+                 modulation:tc.optional(str)=MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
                  compute_net_outcome:is_function_type=lambda outcome, cost : outcome - cost,

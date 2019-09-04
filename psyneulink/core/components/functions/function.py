@@ -155,11 +155,10 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import object_has_single_value, parameter_spec, safe_len
 
 __all__ = [
-    'ADDITIVE', 'ADDITIVE_PARAM', 'AdditiveParam', 'ArgumentTherapy', 'DISABLE', 'DISABLE_PARAM', 'EPSILON',
+    'ADDITIVE', 'ADDITIVE_PARAM', 'ArgumentTherapy', 'DISABLE', 'DISABLE_PARAM', 'EPSILON',
     'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
     'get_param_value_for_function', 'get_param_value_for_keyword', 'is_Function', 'is_function_type',
-    'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MultiplicativeParam',
-    'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY'
+    'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY'
 ]
 
 
@@ -217,37 +216,37 @@ OVERRIDE = OVERRIDE_PARAM = 'OVERRIDE'
 DISABLE = DISABLE_PARAM = 'DISABLE'
 
 
-class MultiplicativeParam():
-    attrib_name = MULTIPLICATIVE_PARAM
-    name = 'MULTIPLICATIVE'
-    init_val = 1
-    reduce = lambda x: np.product(np.array(x), axis=0)
-
-
-class AdditiveParam():
-    attrib_name = ADDITIVE_PARAM
-    name = 'ADDITIVE'
-    init_val = 0
-    reduce = lambda x: np.sum(np.array(x), axis=0)
-
-
-# class OverrideParam():
-#     attrib_name = OVERRIDE_PARAM
-#     name = 'OVERRIDE'
-#     init_val = None
-#     reduce = lambda x : None
-#
-# class DisableParam():
-#     attrib_name = OVERRIDE_PARAM
-#     name = 'DISABLE'
-#     init_val = None
-#     reduce = lambda x : None
-
-
-# IMPLEMENTATION NOTE:  USING A namedtuple DOESN'T WORK, AS CAN'T COPY PARAM IN Component._validate_param
-# ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
-
 # # MODIFIED 8/30/19 OLD:
+# class MultiplicativeParam():
+#     attrib_name = MULTIPLICATIVE_PARAM
+#     name = 'MULTIPLICATIVE'
+#     init_val = 1
+#     reduce = lambda x: np.product(np.array(x), axis=0)
+#
+#
+# class AdditiveParam():
+#     attrib_name = ADDITIVE_PARAM
+#     name = 'ADDITIVE'
+#     init_val = 0
+#     reduce = lambda x: np.sum(np.array(x), axis=0)
+#
+#
+# # class OverrideParam():
+# #     attrib_name = OVERRIDE_PARAM
+# #     name = 'OVERRIDE'
+# #     init_val = None
+# #     reduce = lambda x : None
+# #
+# # class DisableParam():
+# #     attrib_name = OVERRIDE_PARAM
+# #     name = 'DISABLE'
+# #     init_val = None
+# #     reduce = lambda x : None
+#
+#
+# # IMPLEMENTATION NOTE:  USING A namedtuple DOESN'T WORK, AS CAN'T COPY PARAM IN Component._validate_param
+# # ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
+#
 # class ModulationParam(Enum):
 #     """Specify parameter of a `Function <Function>` for each type of `modulation <ModulatorySignal_Modulation>`
 #     specified by a ModulatorySignal.
@@ -318,19 +317,18 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
     execution_id = parse_execution_context(execution_context)
 
     # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
-    function_mod_meta_param_obj = mod_proj.sender.parameters.modulation._get(execution_id)
+    modulation_spec = mod_proj.sender.parameters.modulation._get(execution_id)
 
-    if function_mod_meta_param_obj in {OVERRIDE, DISABLE}:
+    if modulation_spec in {OVERRIDE, DISABLE}:
         from psyneulink.core.globals.utilities import Modulation
-        function_mod_meta_param_obj = getattr(Modulation, function_mod_meta_param_obj.name)
+        modulation_spec = getattr(Modulation, modulation_spec)
         function_param_value = mod_proj.sender.parameters.value.get(execution_context)
     else:
         # Get the value of function's parameter
-        function_param_value = getattr(owner.function.parameters,
-                                       function_mod_meta_param_obj.value.attrib_name).get(execution_context)
+        function_param_value = getattr(owner.function.parameters,modulation_spec).get(execution_context)
 
     # Return the meta_parameter object, function_param name, and function_param_value
-    return function_mod_meta_param_obj, function_param_value
+    return modulation_spec, function_param_value
 
 
 # *******************************   get_param_value_for_keyword ********************************************************

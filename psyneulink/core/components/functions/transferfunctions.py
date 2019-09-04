@@ -51,8 +51,8 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords, method_type
 from psyneulink.core.components.functions.function import \
-    ADDITIVE_PARAM, AdditiveParam, DISABLE_PARAM, Function, Function_Base, FunctionError, function_keywords, \
-    is_function_type, ModulationParam, MULTIPLICATIVE_PARAM, MultiplicativeParam, OVERRIDE_PARAM
+    ADDITIVE_PARAM, DISABLE_PARAM, Function, Function_Base, FunctionError, function_keywords, \
+    is_function_type, MULTIPLICATIVE_PARAM, OVERRIDE_PARAM
 from psyneulink.core.components.component import function_type
 from psyneulink.core.globals.keywords import \
     ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, TRANSFER_WITH_COSTS_FUNCTION, \

@@ -231,7 +231,6 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import _is_modulation_param
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
 from psyneulink.core.components.states.outputstate import PRIMARY, SEQUENTIAL, _output_state_variable_getter
@@ -469,7 +468,7 @@ class GatingSignal(ModulatorySignal):
                  index=None,
                  assign=None,
                  function=Linear(),
-                 modulation:tc.optional(_is_modulation_param)=None,
+                 modulation:tc.optional(str)=None,
                  modulates=None,
                  params=None,
                  name=None,

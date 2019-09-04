@@ -743,7 +743,7 @@ import typecheck as tc
 from psyneulink.core.components.component import Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.function import \
-    DISABLE, Function, _get_modulated_param, get_param_value_for_keyword, ModulationParam, , OVERRIDE
+    DISABLE, Function, _get_modulated_param, get_param_value_for_keyword, OVERRIDE
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, State
 from psyneulink.core.globals.context import ContextFlags
@@ -1142,15 +1142,6 @@ class State_Base(State):
                           # sub_group_attr='owner',
                           context=context)
 
-        self.path_afferents = []
-        self.mod_afferents = []
-
-        self._path_proj_values = []
-        # Create dict with entries for each ModualationParam and initialize - used in _update()
-        self._mod_proj_values = {}
-        for (attrib, value) in ModulationParam.__members__.items():
-            self._mod_proj_values[getattr(ModulationParam,attrib)] = []
-
         self.context.string = context.__class__.__name__
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
@@ -1161,6 +1152,20 @@ class State_Base(State):
                                          name=name,
                                          prefs=prefs
         )
+
+        self.path_afferents = []
+        self.mod_afferents = []
+
+        self._path_proj_values = []
+        # Create dict with entries for each ModualationParam and initialize - used in _update()
+        self._mod_proj_values = {}
+        # MODIFIED 9/3/19 OLD:
+        # for (attrib, value) in ModulationParam.__members__.items():
+        #     self._mod_proj_values[getattr(ModulationParam,attrib)] = []
+        # MODIFIED 9/3/19 NEW: [JDC]
+        for param_name in [p.name for p in self.function.parameters if p.modulable]:
+            self._mod_proj_values[param_name] = []
+        # MODIFIED 9/3/19 END
 
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
@@ -2064,11 +2069,11 @@ class State_Base(State):
             elif isinstance(projection, ModulatoryProjection_Base):
                 # Get the meta_param to be modulated from modulation attribute of the  projection's ModulatorySignal
                 #    and get the function parameter to be modulated to type_match the projection value below
-                mod_meta_param, mod_param_value = _get_modulated_param(self, projection, execution_id)
+                mod_spec, mod_param_value = _get_modulated_param(self, projection, execution_id)
                 # If meta_param is DISABLE, ignore the ModulatoryProjection
-                if mod_meta_param is DISABLE:
+                if mod_spec is DISABLE:
                     continue
-                if mod_meta_param is OVERRIDE:
+                if mod_spec is OVERRIDE:
                     # If paramValidationPref is set, allow all projections to be processed
                     #    to be sure there are no other conflicting OVERRIDES assigned
                     if self.owner.paramValidationPref:
@@ -2083,7 +2088,7 @@ class State_Base(State):
                         return
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
-                    self._mod_proj_values[mod_meta_param].append(mod_value)
+                    self._mod_proj_values[mod_spec].append(mod_value)
 
         # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
         # a bit handwavy just to make stuff work
@@ -2096,21 +2101,29 @@ class State_Base(State):
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
 
-        # For each modulated parameter of the State's function,
+        # For each modulable parameter of the State's function,
         #    combine any values received from the relevant projections into a single modulation value
         #    and assign that to the relevant entry in the params dict for the State's function.
         for mod_param, value_list in self._mod_proj_values.items():
-            # check if override or disable ever have a nonempty value_list here..
-            if value_list:
-                # KDM 12/10/18: below is confusing - why does the mod_param "enum" value refer to a class?
-                # FIX: 9/3/19:  THIS NEED TO BE DEALT WITH IF ModulationParam iS RETIRED
-                aggregated_mod_val = mod_param.value.reduce(value_list)
-                getattr(self.function.parameters, mod_param.value.attrib_name)._set(aggregated_mod_val, execution_id)
-                function_param = self.function.params[mod_param.value.attrib_name]
-                if not FUNCTION_PARAMS in self.stateParams:
-                    self.stateParams[FUNCTION_PARAMS] = {function_param: aggregated_mod_val}
-                else:
-                    self.stateParams[FUNCTION_PARAMS].update({function_param: aggregated_mod_val})
+            # If the param has no modulatory values, skip
+            if not value_list:
+                continue
+            if len(value_list)==1:
+                # If the param has a single modulatory value, use that
+                mod_val = value_list[0]
+            else:
+                # If the param has multiple modulatory values, aggregate them
+                # FIX: 9/3/19:  THIS NEED TO BE DEALT WITH NOW THAT ModulationParam iS RETIRED
+                #               ADD ATTRIBUTE TO MODULABLE PARAMETERS?
+                # mod_val = mod_param.value.reduce(value_list)
+                mod_val = ModulationReduce(value_list)
+            getattr(self.function.parameters, mod_param)._set(mod_val, execution_id)
+
+            function_param = self.function.params[mod_param]
+            if not FUNCTION_PARAMS in self.stateParams:
+                self.stateParams[FUNCTION_PARAMS] = {function_param: mod_val}
+            else:
+                self.stateParams[FUNCTION_PARAMS].update({function_param: mod_val})
 
         # CALL STATE'S function TO GET ITS VALUE  ----------------------------------------------------------------------
         # FIX: THIS IS INEFFICIENT;  SHOULD REPLACE WITH IF STATEMENTS

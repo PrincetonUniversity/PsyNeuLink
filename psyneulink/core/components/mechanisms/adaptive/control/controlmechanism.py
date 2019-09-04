@@ -530,7 +530,7 @@ import numpy as np
 import typecheck as tc
 import warnings
 
-from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import is_function_type, MULTIPLICATIVE
 from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
@@ -901,7 +901,7 @@ class ControlMechanism(ModulatoryMechanism):
                  function=None,
                  default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
                  control_signals:tc.optional(tc.any(is_iterable, ParameterState, ControlSignal))=None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
+                 modulation:tc.optional(str)=MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
                  compute_net_outcome:is_function_type=lambda outcome, cost : outcome - cost,

@@ -358,7 +358,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, function_type, method_type, parameter_keywords
-from psyneulink.core.components.functions.function import ModulationParam, get_param_value_for_keyword
+from psyneulink.core.components.functions.function import get_param_value_for_keyword
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
@@ -862,13 +862,13 @@ class ParameterState(State_Base):
 
             f_mod = builder.load(f_mod_ptr)
 
-            if afferent.sender.modulation is ModulationParam.MULTIPLICATIVE:
+            if afferent.sender.modulation is MULTIPLICATIVE:
                 name = self.function.multiplicative_param
-            elif afferent.sender.modulation is ModulationParam.ADDITIVE:
+            elif afferent.sender.modulation is ADDITIVE:
                 name = self.function.additive_param
-            elif afferent.sender.modulation is ModulationParam.DISABLE:
+            elif afferent.sender.modulation is DISABLE:
                 name = None
-            elif afferent.sender.modulation is ModulationParam.OVERRIDE:
+            elif afferent.sender.modulation is OVERRIDE:
                 # Directly store the value in the output array
                 output_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(f_mod, output_ptr)

@@ -309,7 +309,7 @@ import typecheck as tc
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
 from psyneulink.core.components.functions.combinationfunctions import Reduce
-from psyneulink.core.components.functions.function import _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, CostFunctions
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
@@ -861,7 +861,7 @@ class ControlSignal(ModulatorySignal):
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
                  combine_costs_function:tc.optional(is_function_type)=Reduce(operation=SUM),
                  allocation_samples=Parameters.allocation_samples.default_value,
-                 modulation:tc.optional(_is_modulation_param)=None,
+                 modulation:tc.optional(str)=None,
                  modulates=None,
                  params=None,
                  name=None,

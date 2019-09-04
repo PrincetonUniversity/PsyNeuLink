@@ -84,7 +84,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import is_function_type, ADDITIVE
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LearningMechanism, LearningTiming, LearningType
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -303,7 +303,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         """
         learning_signals = None
-        modulation = ModulationParam.ADDITIVE
+        modulation = ADDITIVE
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -324,7 +324,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  size=None,
                  function:is_function_type=Hebbian,
                  learning_signals:tc.optional(list) = None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
+                 modulation:tc.optional(str)=ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,

@@ -165,7 +165,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
+from psyneulink.core.components.functions.function import MULTIPLICATIVE
 from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.core.globals.context import ContextFlags
@@ -428,7 +428,7 @@ class GatingMechanism(ModulatoryMechanism):
                  function=None,
                  default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
                  gating_signals:tc.optional(list) = None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
+                 modulation:tc.optional(str)=MULTIPLICATIVE,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
