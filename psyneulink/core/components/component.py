@@ -1118,8 +1118,8 @@ class Component(object, metaclass=ComponentsMeta):
         #    (e.g., _instantiate_sender and _instantiate_receiver in Projection)
         # # MODIFIED 8/30/19 OLD:
         # self._instantiate_attributes_before_function(function=function, context=context)
-        # MODIFIED 8/30/19 NEW: [JDC]
-        # Allow _instantiate_attributes_before_function to parse and modify function arg
+        # MODIFIED 8/30/19 NEW: [JDC] ::GENERAL::
+        # Allow _instantiate_attributes_before_function to modify/replace function arg (e.g. TransferWithCosts)
         function = self._instantiate_attributes_before_function(function=function, context=context) or function
         # MODIFIED 8/30/19 END
 
