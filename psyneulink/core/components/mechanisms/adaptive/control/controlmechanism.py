@@ -530,7 +530,7 @@ import numpy as np
 import typecheck as tc
 import warnings
 
-from psyneulink.core.components.functions.function import is_function_type, MULTIPLICATIVE
+from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
@@ -540,8 +540,9 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, \
-    GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, PROJECTION_TYPE
+from psyneulink.core.globals.keywords import \
+    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, \
+    INIT_EXECUTE_METHOD_ONLY, MULTIPLICATIVE, PROJECTION_TYPE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable

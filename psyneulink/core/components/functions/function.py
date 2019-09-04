@@ -160,9 +160,6 @@ __all__ = [
     'is_function_type', 'PERTINACITY', 'PROPENSITY'
 ]
 
-__all__.extend()
-
-
 EPSILON = np.finfo(float).eps
 
 FunctionRegistry = {}
