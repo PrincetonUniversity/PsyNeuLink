@@ -51,20 +51,17 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords, method_type
 from psyneulink.core.components.functions.function import \
-    ADDITIVE_PARAM, DISABLE_PARAM, Function, Function_Base, FunctionError, function_keywords, \
-    is_function_type, MULTIPLICATIVE_PARAM, OVERRIDE_PARAM
+    Function, Function_Base, FunctionError, function_keywords, is_function_type
 from psyneulink.core.components.component import function_type
 from psyneulink.core.globals.keywords import \
-    ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, TRANSFER_WITH_COSTS_FUNCTION, \
-    EXPONENTIAL_FUNCTION, FULL_CONNECTIVITY_MATRIX, \
-    GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
+    ADDITIVE_PARAM, ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, \
+    FULL_CONNECTIVITY_MATRIX, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, INVERSE_HOLLOW_MATRIX,\
     LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
-    MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, OFF, OFFSET, ON, \
-    PARAMETER_STATE_PARAMS, PER_ITEM, PROB, OUTPUT_TYPE, PROB_INDICATOR, \
-    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, \
-    SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE,\
-    VARIANCE, VARIABLE, X_0, kwPreferenceSetName
+    MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, \
+    OFF, OFFSET, ON, PARAMETER_STATE_PARAMS, PER_ITEM, PROB, OUTPUT_TYPE, PROB_INDICATOR, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, \
+    TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter, get_validator_by_type_only, get_validator_by_function
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
 from psyneulink.core.globals.context import ContextFlags
@@ -4057,7 +4054,8 @@ class TransferWithCosts(TransferFunction):
                 self.duration_cost_fct_add_param = \
                     self.get_current_function_param(DURATION_COST_FCT_ADDITIVE_PARAM, execution_id)
                 # Execute duration_cost function
-                duration_cost = self.duration_cost_fct(self.parameters.combined_costs._get(execution_id), execution_id=execution_id)
+                duration_cost = self.duration_cost_fct(self.parameters.combined_costs._get(execution_id),
+                                                       execution_id=execution_id)
                 self.parameters.duration_cost._set(duration_cost, execution_id)
 
         # Always execute combined costs
@@ -4068,7 +4066,8 @@ class TransferWithCosts(TransferFunction):
         self.combine_costs_fct_add_param = \
             self.get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, execution_id)
         # Execute combine_costs function
-        combined_costs = self.combine_costs_fct([intensity_cost, adjustment_cost, duration_cost], execution_id=execution_id)
+        combined_costs = self.combine_costs_fct([intensity_cost, adjustment_cost, duration_cost],
+                                                execution_id=execution_id)
         self.parameters.combined_costs._set(combined_costs, execution_id)
 
         return intensity

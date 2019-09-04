@@ -29,13 +29,11 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import \
-    Function, Function_Base, MULTIPLICATIVE_PARAM, FunctionError, ADDITIVE_PARAM
+from psyneulink.core.components.functions.function import Function, Function_Base, FunctionError
 from psyneulink.core.globals.keywords import \
-    SELECTION_FUNCTION_TYPE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, \
-    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, \
+    ADDITIVE_PARAM, MULTIPLICATIVE_PARAM, MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, \
     MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
-    MODE, PROB, PROB_INDICATOR, kwPreferenceSetName
+    MODE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \

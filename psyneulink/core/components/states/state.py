@@ -743,22 +743,21 @@ import typecheck as tc
 from psyneulink.core.components.component import \
     Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination
-from psyneulink.core.components.functions.function import \
-    DISABLE, Function, _get_modulated_param, get_param_value_for_keyword, OVERRIDE
+from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword,
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, State
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, \
-    EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_STATES, \
+    DISABLE, EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_STATES, \
     LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, \
-    MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OWNER, \
+    MODULATORY_PROJECTION, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OVERRIDE, OWNER, \
     PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
     PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_STATES, \
     STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, \
     VALUE, VARIABLE, WEIGHT, kwStateComponentCategory
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -1164,7 +1163,8 @@ class State_Base(State):
         # for (attrib, value) in ModulationParam.__members__.items():
         #     self._mod_proj_values[getattr(ModulationParam,attrib)] = []
         # MODIFIED 9/3/19 NEW: [JDC]
-        for param_name in [p.name for p in self.function.parameters if p.modulable]:
+        for param_name in [p.name for p in self.function.parameters
+                           if (p.modulable and not isinstance(p, ParameterAlias))]:
             self._mod_proj_values[param_name] = []
         # MODIFIED 9/3/19 END
 
@@ -1529,7 +1529,7 @@ class State_Base(State):
                 # ModualatoryProjection:
                 #    - check that projection's value is compatible with value of the function param being modulated
                 elif isinstance(projection, ModulatoryProjection_Base):
-                    mod_op, function_param_value = _get_modulated_param(self, projection)
+                    mod_spec, function_param_value = _get_modulated_param(self, projection)
                     # Match the projection's value with the value of the function parameter
                     mod_proj_spec_value = type_match(projection.defaults.value, type(function_param_value))
                     if (function_param_value is not None
@@ -1864,14 +1864,14 @@ class State_Base(State):
                     # ModualatoryProjection:
                     #    - check that projection's value is compatible with value of the function param being modulated
                     elif isinstance(projection, ModulatoryProjection_Base):
-                        mod_op, function_param_value = _get_modulated_param(receiver, projection)
+                        mod_spec, mod_param_name, mod_param_value = _get_modulated_param(receiver, projection)
                         # Match the projection's value with the value of the function parameter
                         # should be defaults.value?
-                        mod_proj_spec_value = type_match(projection.value, type(function_param_value))
-                        if (function_param_value is not None
-                            and not iscompatible(function_param_value, mod_proj_spec_value)):
-                            raise StateError("Output of {} ({}) is not compatible with the value of {} ({}).".
-                                             format(projection.name,mod_proj_spec_value,receiver.name,function_param_value))
+                        mod_proj_spec_value = type_match(projection.value, type(mod_param_value))
+                        if (mod_param_value is not None
+                            and not iscompatible(mod_param_value, mod_proj_spec_value)):
+                            raise StateError(f"Output of {projection.name} ({mod_proj_spec_value}) is not compatible "
+                                             f"with the value of {receiver.name} ({mod_param_value}).")
 
 
             # ASSIGN TO STATE
@@ -2070,7 +2070,7 @@ class State_Base(State):
             elif isinstance(projection, ModulatoryProjection_Base):
                 # Get the meta_param to be modulated from modulation attribute of the  projection's ModulatorySignal
                 #    and get the function parameter to be modulated to type_match the projection value below
-                mod_spec, mod_param_value = _get_modulated_param(self, projection, execution_id)
+                mod_spec, mod_param_name, mod_param_value = _get_modulated_param(self, projection, execution_id)
                 # If meta_param is DISABLE, ignore the ModulatoryProjection
                 if mod_spec is DISABLE:
                     continue
@@ -2089,7 +2089,7 @@ class State_Base(State):
                         return
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
-                    self._mod_proj_values[mod_spec].append(mod_value)
+                    self._mod_proj_values[mod_param_name].append(mod_value)
 
         # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
         # a bit handwavy just to make stuff work
@@ -2105,7 +2105,8 @@ class State_Base(State):
         # For each modulable parameter of the State's function,
         #    combine any values received from the relevant projections into a single modulation value
         #    and assign that to the relevant entry in the params dict for the State's function.
-        for mod_param, value_list in self._mod_proj_values.items():
+        for mod_param_name, value_list in self._mod_proj_values.items():
+            param = getattr(self.function.parameters, mod_param_name)
             # If the param has no modulatory values, skip
             if not value_list:
                 continue
@@ -2117,11 +2118,15 @@ class State_Base(State):
             else:
                 # FIX: 9/3/19:  THIS NEED TO BE DEALT WITH NOW THAT ModulationParam iS RETIRED
                 #               ADD ATTRIBUTE TO MODULABLE PARAMETERS?
-                # mod_val = mod_param.value.reduce(value_list)
-                mod_val = ModulationReduce.__dict__[mod_param](value_list)
-            getattr(self.function.parameters, mod_param)._set(mod_val, execution_id)
+                mod_val = ModulationReduce.__dict__[mod_param_name](value_list)
+                - OR -
+                mod_val = param.mod_reduce_fct(value_list)
 
-            function_param = self.function.params[mod_param]
+            # FIX: SHOULD THIS REALLY BE GETTING SET HERE??
+            # Set modulatory parameter's value
+            param._set(mod_val, execution_id)
+
+            function_param = self.function.params[mod_param_name]
             if not FUNCTION_PARAMS in self.stateParams:
                 self.stateParams[FUNCTION_PARAMS] = {function_param: mod_val}
             else:
@@ -2666,7 +2671,6 @@ def _parse_state_type(owner, state_spec):
             return state_spec[STATE_TYPE]
 
     raise StateError("{} is not a legal State specification for {}".format(state_spec, owner.name))
-
 
 
 STATE_SPEC_INDEX = 0
@@ -3366,3 +3370,40 @@ def _is_legal_state_spec_tuple(owner, state_spec, state_type_name=None):
         raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
                          "for a Mechanism, State, or Projection".
                          format(state_type_name, owner.__class__.__name__, state_spec[1]))
+
+# Modulatory Parameters ************************************************************************************************
+
+def _get_modulated_param(owner, mod_proj, execution_context=None):
+    """Return Modulation specification, and name and value of param modulated by ModulatoryProjection
+    """
+
+    from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+    from psyneulink.core.globals.parameters import parse_execution_context
+
+    if not isinstance(mod_proj, ModulatoryProjection_Base):
+        raise StateError(f'Specification of {MODULATORY_PROJECTION} to {owner.full_name} ({mod_proj}) '
+                            f'is not a {ModulatoryProjection_Base.__name__}')
+
+    execution_id = parse_execution_context(execution_context)
+
+    # Get modulation specification from the Projection sender's modulation attribute
+    mod_spec = mod_proj.sender.parameters.modulation._get(execution_id)
+
+    mod_param = getattr(owner.function.parameters,mod_spec)
+    try:
+        mod_param_name = mod_param.source.name
+    except:
+        mod_param_name = mod_param.name
+
+    if mod_spec in {OVERRIDE, DISABLE}:
+        from psyneulink.core.globals.utilities import Modulation
+        mod_spec = getattr(Modulation, mod_spec)
+        mod_param_value = mod_proj.sender.parameters.value.get(execution_context)
+    else:
+        # Get the value of the modulated parameter
+        mod_param_value = getattr(owner.function.parameters,mod_spec).get(execution_context)
+
+    return mod_spec, mod_param_name, mod_param_value
+
+
+

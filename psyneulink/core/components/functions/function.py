@@ -147,7 +147,7 @@ from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
-    MODULATORY_PROJECTION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
+    NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -155,11 +155,12 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import object_has_single_value, parameter_spec, safe_len
 
 __all__ = [
-    'ADDITIVE', 'ADDITIVE_PARAM', 'ArgumentTherapy', 'DISABLE', 'DISABLE_PARAM', 'EPSILON',
-    'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
-    'get_param_value_for_function', 'get_param_value_for_keyword', 'is_Function', 'is_function_type',
-    'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY'
+    'ArgumentTherapy', 'EPSILON', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType',
+    'FunctionRegistry', 'get_param_value_for_function', 'get_param_value_for_keyword', 'is_Function',
+    'is_function_type', 'PERTINACITY', 'PROPENSITY'
 ]
+
+__all__.extend()
 
 
 EPSILON = np.finfo(float).eps
@@ -206,130 +207,6 @@ def is_function_type(x):
         return True
     else:
         return False
-
-
-# Modulatory Parameters ************************************************************************************************
-
-ADDITIVE = ADDITIVE_PARAM = 'additive_param'
-MULTIPLICATIVE = MULTIPLICATIVE_PARAM = 'multiplicative_param'
-OVERRIDE = OVERRIDE_PARAM = 'OVERRIDE'
-DISABLE = DISABLE_PARAM = 'DISABLE'
-
-
-# # MODIFIED 8/30/19 OLD:
-# class MultiplicativeParam():
-#     attrib_name = MULTIPLICATIVE_PARAM
-#     name = 'MULTIPLICATIVE'
-#     init_val = 1
-#     reduce = lambda x: np.product(np.array(x), axis=0)
-#
-#
-# class AdditiveParam():
-#     attrib_name = ADDITIVE_PARAM
-#     name = 'ADDITIVE'
-#     init_val = 0
-#     reduce = lambda x: np.sum(np.array(x), axis=0)
-#
-#
-# # class OverrideParam():
-# #     attrib_name = OVERRIDE_PARAM
-# #     name = 'OVERRIDE'
-# #     init_val = None
-# #     reduce = lambda x : None
-# #
-# # class DisableParam():
-# #     attrib_name = OVERRIDE_PARAM
-# #     name = 'DISABLE'
-# #     init_val = None
-# #     reduce = lambda x : None
-#
-#
-# # IMPLEMENTATION NOTE:  USING A namedtuple DOESN'T WORK, AS CAN'T COPY PARAM IN Component._validate_param
-# # ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
-#
-# class ModulationParam(Enum):
-#     """Specify parameter of a `Function <Function>` for each type of `modulation <ModulatorySignal_Modulation>`
-#     specified by a ModulatorySignal.
-#
-#     COMMENT:
-#         Each term specifies a different type of modulation used by a `ModulatorySignal <ModulatorySignal>`.
-#         The first two refer to classes that define the following terms:
-#             * attrib_name (*ADDITIVE_PARAM* or *MULTIPLICATIVE_PARAM*): specifies which meta-parameter of the function
-#               to use for modulation;
-#             * name (str): name of the meta-parameter;
-#             * init_val (int or float): value with which to initialize the parameter being modulated
-#               if it is not otherwise specified;
-#             * reduce (function): the manner by which to aggregate multiple ModulatorySignals of that type, if the
-#               `ParameterState` receives more than one `ModulatoryProjection <ModulatoryProjection>` of that type.
-#     COMMENT
-#
-#     Attributes
-#     ----------
-#
-#     MULTIPLICATIVE
-#         assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
-#         of the State's `function <State_Base.function>`
-#
-#     ADDITIVE
-#         assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
-#         of the State's `function <State_Base.function>`
-#
-#     OVERRIDE
-#         assign the `value <ModulatorySignal.value>` of the ModulatorySignal directly to the State's
-#         `value <State_Base.value>` (ignoring its `variable <State_Base.variable>` and `function <State_Base.function>`)
-#
-#     DISABLE
-#         ignore the ModulatorySignal when calculating the State's `value <State_Base.value>`
-#     """
-#     MULTIPLICATIVE = MultiplicativeParam
-#     ADDITIVE = AdditiveParam
-#     OVERRIDE = OVERRIDE_PARAM
-#     # OVERRIDE = OverrideParam
-#     DISABLE = DISABLE_PARAM
-#     # DISABLE = DisableParam
-#
-#
-# MULTIPLICATIVE = ModulationParam.MULTIPLICATIVE
-# ADDITIVE = ModulationParam.ADDITIVE
-# OVERRIDE = ModulationParam.OVERRIDE
-# DISABLE = ModulationParam.DISABLE
-#
-#
-# def _is_modulation_param(val):
-#     if val in ModulationParam.__dict__.values():
-#         return True
-#     else:
-#         return False
-# MODIFIED 8/30/19 END
-
-
-def _get_modulated_param(owner, mod_proj, execution_context=None):
-    """Return ModulationParam object, function param name and value of param modulated by ModulatoryProjection
-    """
-
-    from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-    from psyneulink.core.globals.parameters import parse_execution_context
-
-    if not isinstance(mod_proj, ModulatoryProjection_Base):
-        raise FunctionError(f'Specification of {MODULATORY_PROJECTION} to {owner.full_name} ({mod_proj}) '
-                            f'is not a {ModulatoryProjection_Base.__name__}')
-
-    execution_id = parse_execution_context(execution_context)
-
-    # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
-    modulation_spec = mod_proj.sender.parameters.modulation._get(execution_id)
-
-    if modulation_spec in {OVERRIDE, DISABLE}:
-        from psyneulink.core.globals.utilities import Modulation
-        modulation_spec = getattr(Modulation, modulation_spec)
-        function_param_value = mod_proj.sender.parameters.value.get(execution_context)
-    else:
-        # Get the value of function's parameter
-        function_param_value = getattr(owner.function.parameters,modulation_spec).get(execution_context)
-
-    # Return the meta_parameter object, function_param name, and function_param_value
-    return modulation_spec, function_param_value
-
 
 # *******************************   get_param_value_for_keyword ********************************************************
 
