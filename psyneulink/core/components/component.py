@@ -2914,10 +2914,17 @@ class Component(object, metaclass=ComponentsMeta):
         #    execute method, not its function
         try:
             value = self.execute(variable=self.defaults.variable, context=context)
-        except TypeError:
+        except TypeError as e:
+            # don't hide other TypeErrors
+            if "execute() got an unexpected keyword argument 'variable'" != str(e):
+                raise
+
             try:
                 value = self.execute(input=self.defaults.variable, context=context)
-            except TypeError:
+            except TypeError as e:
+                if "execute() got an unexpected keyword argument 'input'" != str(e):
+                    raise
+
                 value = self.execute(context=context)
         if value is None:
             raise ComponentError(f"PROGRAM ERROR: Execute method for {self.name} must return a value.")
