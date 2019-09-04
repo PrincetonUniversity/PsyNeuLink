@@ -138,7 +138,6 @@ import numpy as np
 import typecheck as tc
 import warnings
 
-from collections import namedtuple
 from enum import Enum, IntEnum
 from random import randint
 
@@ -159,7 +158,7 @@ __all__ = [
     'ADDITIVE', 'ADDITIVE_PARAM', 'AdditiveParam', 'ArgumentTherapy', 'DISABLE', 'DISABLE_PARAM', 'EPSILON',
     'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
     'get_param_value_for_function', 'get_param_value_for_keyword', 'is_Function', 'is_function_type',
-    'ModulatedParam', 'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MultiplicativeParam',
+    'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MultiplicativeParam',
     'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY'
 ]
 
@@ -212,10 +211,10 @@ def is_function_type(x):
 
 # Modulatory Parameters ************************************************************************************************
 
-ADDITIVE_PARAM = 'additive_param'
-MULTIPLICATIVE_PARAM = 'multiplicative_param'
-OVERRIDE_PARAM = 'OVERRIDE'
-DISABLE_PARAM = 'DISABLE'
+ADDITIVE = ADDITIVE_PARAM = 'additive_param'
+MULTIPLICATIVE = MULTIPLICATIVE_PARAM = 'multiplicative_param'
+OVERRIDE = OVERRIDE_PARAM = 'OVERRIDE'
+DISABLE = DISABLE_PARAM = 'DISABLE'
 
 
 class MultiplicativeParam():
@@ -248,63 +247,61 @@ class AdditiveParam():
 # IMPLEMENTATION NOTE:  USING A namedtuple DOESN'T WORK, AS CAN'T COPY PARAM IN Component._validate_param
 # ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
 
-
-class ModulationParam(Enum):
-    """Specify parameter of a `Function <Function>` for each type of `modulation <ModulatorySignal_Modulation>`
-    specified by a ModulatorySignal.
-
-    COMMENT:
-        Each term specifies a different type of modulation used by a `ModulatorySignal <ModulatorySignal>`.
-        The first two refer to classes that define the following terms:
-            * attrib_name (*ADDITIVE_PARAM* or *MULTIPLICATIVE_PARAM*): specifies which meta-parameter of the function
-              to use for modulation;
-            * name (str): name of the meta-parameter;
-            * init_val (int or float): value with which to initialize the parameter being modulated
-              if it is not otherwise specified;
-            * reduce (function): the manner by which to aggregate multiple ModulatorySignals of that type, if the
-              `ParameterState` receives more than one `ModulatoryProjection <ModulatoryProjection>` of that type.
-    COMMENT
-
-    Attributes
-    ----------
-
-    MULTIPLICATIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
-        of the State's `function <State_Base.function>`
-
-    ADDITIVE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
-        of the State's `function <State_Base.function>`
-
-    OVERRIDE
-        assign the `value <ModulatorySignal.value>` of the ModulatorySignal directly to the State's
-        `value <State_Base.value>` (ignoring its `variable <State_Base.variable>` and `function <State_Base.function>`)
-
-    DISABLE
-        ignore the ModulatorySignal when calculating the State's `value <State_Base.value>`
-    """
-    MULTIPLICATIVE = MultiplicativeParam
-    ADDITIVE = AdditiveParam
-    OVERRIDE = OVERRIDE_PARAM
-    # OVERRIDE = OverrideParam
-    DISABLE = DISABLE_PARAM
-    # DISABLE = DisableParam
-
-
-MULTIPLICATIVE = ModulationParam.MULTIPLICATIVE
-ADDITIVE = ModulationParam.ADDITIVE
-OVERRIDE = ModulationParam.OVERRIDE
-DISABLE = ModulationParam.DISABLE
-
-
-def _is_modulation_param(val):
-    if val in ModulationParam.__dict__.values():
-        return True
-    else:
-        return False
-
-
-ModulatedParam = namedtuple('ModulatedParam', 'meta_param, function_param_val')
+# # MODIFIED 8/30/19 OLD:
+# class ModulationParam(Enum):
+#     """Specify parameter of a `Function <Function>` for each type of `modulation <ModulatorySignal_Modulation>`
+#     specified by a ModulatorySignal.
+#
+#     COMMENT:
+#         Each term specifies a different type of modulation used by a `ModulatorySignal <ModulatorySignal>`.
+#         The first two refer to classes that define the following terms:
+#             * attrib_name (*ADDITIVE_PARAM* or *MULTIPLICATIVE_PARAM*): specifies which meta-parameter of the function
+#               to use for modulation;
+#             * name (str): name of the meta-parameter;
+#             * init_val (int or float): value with which to initialize the parameter being modulated
+#               if it is not otherwise specified;
+#             * reduce (function): the manner by which to aggregate multiple ModulatorySignals of that type, if the
+#               `ParameterState` receives more than one `ModulatoryProjection <ModulatoryProjection>` of that type.
+#     COMMENT
+#
+#     Attributes
+#     ----------
+#
+#     MULTIPLICATIVE
+#         assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
+#         of the State's `function <State_Base.function>`
+#
+#     ADDITIVE
+#         assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
+#         of the State's `function <State_Base.function>`
+#
+#     OVERRIDE
+#         assign the `value <ModulatorySignal.value>` of the ModulatorySignal directly to the State's
+#         `value <State_Base.value>` (ignoring its `variable <State_Base.variable>` and `function <State_Base.function>`)
+#
+#     DISABLE
+#         ignore the ModulatorySignal when calculating the State's `value <State_Base.value>`
+#     """
+#     MULTIPLICATIVE = MultiplicativeParam
+#     ADDITIVE = AdditiveParam
+#     OVERRIDE = OVERRIDE_PARAM
+#     # OVERRIDE = OverrideParam
+#     DISABLE = DISABLE_PARAM
+#     # DISABLE = DisableParam
+#
+#
+# MULTIPLICATIVE = ModulationParam.MULTIPLICATIVE
+# ADDITIVE = ModulationParam.ADDITIVE
+# OVERRIDE = ModulationParam.OVERRIDE
+# DISABLE = ModulationParam.DISABLE
+#
+#
+# def _is_modulation_param(val):
+#     if val in ModulationParam.__dict__.values():
+#         return True
+#     else:
+#         return False
+# MODIFIED 8/30/19 END
 
 
 def _get_modulated_param(owner, mod_proj, execution_context=None):
@@ -323,50 +320,17 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
     # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
     function_mod_meta_param_obj = mod_proj.sender.parameters.modulation._get(execution_id)
 
-    # # MODIFIED 6/27/18 NEW:
     if function_mod_meta_param_obj in {OVERRIDE, DISABLE}:
-        # function_param_name = function_mod_meta_param_obj
         from psyneulink.core.globals.utilities import Modulation
         function_mod_meta_param_obj = getattr(Modulation, function_mod_meta_param_obj.name)
-        function_param_name = function_mod_meta_param_obj
         function_param_value = mod_proj.sender.parameters.value.get(execution_context)
     else:
-        # # MODIFIED 8/30/19 OLD:
-        # # Get the actual parameter of owner.function to be modulated
-        # function_param_name = owner.function.params[function_mod_meta_param_obj.value.attrib_name]
-        # # Get the function parameter's value
-        # function_param_value = owner.function.params[function_param_name]
-        # MODIFIED 8/30/19 NEW: [JDC] ::GENERAL::
-        # Get the name of the actual parameter of owner.function to be modulated
-        # CAUSED CRASH:
-        # function_param_name = getattr(owner.function.parameters,
-        #                               function_mod_meta_param_obj.value.attrib_name).source.name
         # Get the value of function's parameter
         function_param_value = getattr(owner.function.parameters,
                                        function_mod_meta_param_obj.value.attrib_name).get(execution_context)
-        # MODIFIED 8/30/19 END
-    # # MODIFIED 6/27/18 NEWER:
-    # from psyneulink.core.globals.utilities import Modulation
-    # mod_spec = function_mod_meta_param_obj.value.attrib_name
-    # if mod_spec == OVERRIDE_PARAM:
-    #     function_param_name = mod_spec
-    #     function_param_value = mod_proj.sender.value
-    # elif mod_spec == DISABLE_PARAM:
-    #     function_param_name = mod_spec
-    #     function_param_value = None
-    # else:
-    #     # Get name of the actual parameter of owner.function to be modulated
-    #     function_param_name = owner.function.params[mod_spec]
-    #     # Get the function parameter's value
-    #     function_param_value = owner.function.params[mod_spec]
-    # MODIFIED 6/27/18 END
 
     # Return the meta_parameter object, function_param name, and function_param_value
-    # # MODIFIED 8/30/19 OLD:
-    # return ModulatedParam(function_mod_meta_param_obj, function_param_name, function_param_value)
-    # MODIFIED 8/30/19 NEW: [JDC]
-    return ModulatedParam(function_mod_meta_param_obj, function_param_value)
-    # MODIFIED 8/30/19 END
+    return function_mod_meta_param_obj, function_param_value
 
 
 # *******************************   get_param_value_for_keyword ********************************************************

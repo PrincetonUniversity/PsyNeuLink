@@ -742,7 +742,8 @@ import typecheck as tc
 
 from psyneulink.core.components.component import Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination
-from psyneulink.core.components.functions.function import Function, ModulationParam, _get_modulated_param, get_param_value_for_keyword
+from psyneulink.core.components.functions.function import \
+    DISABLE, Function, _get_modulated_param, get_param_value_for_keyword, ModulationParam, , OVERRIDE
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, State
 from psyneulink.core.globals.context import ContextFlags
@@ -1522,7 +1523,7 @@ class State_Base(State):
                 # ModualatoryProjection:
                 #    - check that projection's value is compatible with value of the function param being modulated
                 elif isinstance(projection, ModulatoryProjection_Base):
-                    function_param_value = _get_modulated_param(self, projection).function_param_val
+                    mod_op, function_param_value = _get_modulated_param(self, projection)
                     # Match the projection's value with the value of the function parameter
                     mod_proj_spec_value = type_match(projection.defaults.value, type(function_param_value))
                     if (function_param_value is not None
@@ -1857,7 +1858,7 @@ class State_Base(State):
                     # ModualatoryProjection:
                     #    - check that projection's value is compatible with value of the function param being modulated
                     elif isinstance(projection, ModulatoryProjection_Base):
-                        function_param_value = _get_modulated_param(receiver, projection).function_param_val
+                        mod_op, function_param_value = _get_modulated_param(receiver, projection)
                         # Match the projection's value with the value of the function parameter
                         # should be defaults.value?
                         mod_proj_spec_value = type_match(projection.value, type(function_param_value))
@@ -2063,25 +2064,20 @@ class State_Base(State):
             elif isinstance(projection, ModulatoryProjection_Base):
                 # Get the meta_param to be modulated from modulation attribute of the  projection's ModulatorySignal
                 #    and get the function parameter to be modulated to type_match the projection value below
-                # # MODIFIED 9/3/19 OLD:
-                # mod_meta_param, mod_param_name, mod_param_value = _get_modulated_param(self, projection, execution_id)
-                # MODIFIED 9/3/19 NEW: [JDC]
                 mod_meta_param, mod_param_value = _get_modulated_param(self, projection, execution_id)
-                # MODIFIED 9/3/19 END
                 # If meta_param is DISABLE, ignore the ModulatoryProjection
-                if mod_meta_param is Modulation.DISABLE:
+                if mod_meta_param is DISABLE:
                     continue
-                if mod_meta_param is Modulation.OVERRIDE:
+                if mod_meta_param is OVERRIDE:
                     # If paramValidationPref is set, allow all projections to be processed
                     #    to be sure there are no other conflicting OVERRIDES assigned
                     if self.owner.paramValidationPref:
                         if modulatory_override:
-                            raise StateError("Illegal assignment of {} to more than one {} ({} and {})".
-                                             format(MODULATION_OVERRIDE, MODULATORY_SIGNAL,
-                                                    projection.name, modulatory_override[2]))
+                            raise StateError(f"Illegal assignment of {MODULATION_OVERRIDE} to more than one "
+                                             f"{MODULATORY_SIGNAL} ({projection.name} and {modulatory_override[2]}).")
                         modulatory_override = (MODULATION_OVERRIDE, projection_value, projection)
                         continue
-                    # Otherwise, for efficiency, assign OVERRIDE value to State here and return
+                    # Otherwise, for efficiency, assign first OVERRIDE value encountered and return
                     else:
                         self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), execution_id)
                         return
@@ -2107,6 +2103,7 @@ class State_Base(State):
             # check if override or disable ever have a nonempty value_list here..
             if value_list:
                 # KDM 12/10/18: below is confusing - why does the mod_param "enum" value refer to a class?
+                # FIX: 9/3/19:  THIS NEED TO BE DEALT WITH IF ModulationParam iS RETIRED
                 aggregated_mod_val = mod_param.value.reduce(value_list)
                 getattr(self.function.parameters, mod_param.value.attrib_name)._set(aggregated_mod_val, execution_id)
                 function_param = self.function.params[mod_param.value.attrib_name]
