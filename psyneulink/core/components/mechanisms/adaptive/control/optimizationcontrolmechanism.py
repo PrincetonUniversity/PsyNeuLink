@@ -435,26 +435,26 @@ class OptimizationControlMechanismError(Exception):
 
 
 class OptimizationControlMechanism(ControlMechanism):
-    """OptimizationControlMechanism(            \
-    objective_mechanism=None,                   \
-    monitor_for_control=None,                   \
-    objective_mechanism=None,                   \
-    origin_objective_mechanism=False            \
-    terminal_objective_mechanism=False          \
-    features=None,                              \
-    feature_function=None,                      \
-    function=None,                              \
-    agent_rep=None,                             \
-    search_function=None,                       \
-    search_termination_function=None,           \
-    search_space=None,                          \
-    control_signals=None,                       \
-    modulation=ModulationParam.MULTIPLICATIVE,  \
-    combine_costs=np.sum,                       \
-    compute_reconfiguration_cost=None,          \
-    compute_net_outcome=lambda x,y:x-y,         \
-    params=None,                                \
-    name=None,                                  \
+    """OptimizationControlMechanism(     \
+    objective_mechanism=None,            \
+    monitor_for_control=None,            \
+    objective_mechanism=None,            \
+    origin_objective_mechanism=False     \
+    terminal_objective_mechanism=False   \
+    features=None,                       \
+    feature_function=None,               \
+    function=None,                       \
+    agent_rep=None,                      \
+    search_function=None,                \
+    search_termination_function=None,    \
+    search_space=None,                   \
+    control_signals=None,                \
+    modulation=MULTIPLICATIVE,           \
+    combine_costs=np.sum,                \
+    compute_reconfiguration_cost=None,   \
+    compute_net_outcome=lambda x,y:x-y,  \
+    params=None,                         \
+    name=None,                           \
     prefs=None)
 
     Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize

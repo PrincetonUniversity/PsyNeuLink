@@ -634,7 +634,7 @@ class LCControlMechanism(ControlMechanism):
 
         scaling_factor_gain = k
 
-    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
+    modulation : ModulationParam : default MULTIPLICATIVE
         the default value of `ModulationParam` that specifies the form of modulation used by the LCControlMechanism's
         `ControlProjections <ControlProjection>` unless they are `individually specified <ControlSignal_Specification>`.
 

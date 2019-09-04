@@ -174,7 +174,7 @@ it *adds* the `value <GatingSignal.value>` of the `GatingSignal` to the `value <
     ...                                                            pnl.PROJECTIONS: [my_input_layer,
     ...                                                                              my_hidden_layer,
     ...                                                                              my_output_layer]}],
-    ...                                           modulation=pnl.ModulationParam.ADDITIVE)
+    ...                                           modulation=pnl.ADDITIVE)
 
 Note that, again, the **gating_signals** are listed as Mechanisms, since in this case it is their primary InputStates
 that are to be gated. Since they are all listed in a single entry of a
@@ -193,7 +193,7 @@ using a single GatingSignal.  In the example below, a different GatingSignal is 
 Mechanism::
 
     >>> my_gating_mechanism = pnl.GatingMechanism(gating_signals=[{pnl.NAME: 'GATING_SIGNAL_A',
-    ...                                                            pnl.MODULATION: pnl.ModulationParam.ADDITIVE,
+    ...                                                            pnl.MODULATION: pnl.ADDITIVE,
     ...                                                            pnl.PROJECTIONS: my_input_layer},
     ...                                                           {pnl.NAME: 'GATING_SIGNAL_B',
     ...                                                            pnl.PROJECTIONS: [my_hidden_layer,
@@ -214,7 +214,7 @@ assigned to a GatingMechanism.  In the example below, the same GatingSignals spe
 created directly and then assigned to ``my_gating_mechanism``::
 
     >>> my_gating_signal_A = pnl.GatingSignal(name='GATING_SIGNAL_A',
-    ...                                       modulation=pnl.ModulationParam.ADDITIVE,
+    ...                                       modulation=pnl.ADDITIVE,
     ...                                       projections=my_input_layer)
     >>> my_gating_signal_B = pnl.GatingSignal(name='GATING_SIGNAL_B',
     ...                                       projections=[my_hidden_layer,
@@ -268,7 +268,7 @@ class GatingSignal(ModulatorySignal):
         index=PRIMARY                               \
         variable=defaultGatingAllocation            \
         function=Linear(),                          \
-        modulation=ModulationParam.MULTIPLICATIVE,  \
+        modulation=MULTIPLICATIVE,                  \
         projections=None,                           \
         params=None,                                \
         name=None,                                  \

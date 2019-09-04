@@ -639,7 +639,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         which the **default_allocation** was not specified in its constructor (see default_allocation
         <ModulatoryMechanism.default_allocation>` for additional details).
 
-    modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
+    modulation : ModulationParam : MULTIPLICATIVE
         specifies the default form of modulation used by the ModulatoryMechanism's `ControlSignals <ControlSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
