@@ -1158,19 +1158,6 @@ class State_Base(State):
         self.path_afferents = []
         self.mod_afferents = []
 
-        self._path_proj_values = []
-        # Create dict with entries for each ModualationParam and initialize - used in _update()
-        self._mod_proj_values = {}
-        # MODIFIED 9/3/19 OLD:
-        # for (attrib, value) in ModulationParam.__members__.items():
-        #     self._mod_proj_values[getattr(ModulationParam,attrib)] = []
-        # MODIFIED 9/3/19 NEW: [JDC]
-        # FIX: MOVE THIS TO _update AND BUILD DICT ON DEMAND
-        for param_name in [p.name for p in self.function.parameters
-                           if (p.modulable and not isinstance(p, ParameterAlias))]:
-            self._mod_proj_values[param_name] = []
-        # MODIFIED 9/3/19 END
-
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
         if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
@@ -1960,9 +1947,6 @@ class State_Base(State):
         gating_projection_params = merge_param_dicts(self.stateParams, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS)
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
-        self._path_proj_values = []
-        for value in self._mod_proj_values:
-            self._mod_proj_values[value] = []
 
         from psyneulink.core.components.process import ProcessInputState
         from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
@@ -1977,6 +1961,9 @@ class State_Base(State):
 
         # Get values of all Projections
         variable = []
+        # self._path_proj_values = []
+        mod_proj_values = {}
+
         for projection in self.all_afferents:
 
             # Only update if sender has also executed in this round
@@ -2068,7 +2055,7 @@ class State_Base(State):
             # into separate methods
             if isinstance(projection, PathwayProjection_Base):
                 # Add projection_value to list of PathwayProjection values (for aggregation below)
-                self._path_proj_values.append(projection_value)
+                # self._path_proj_values.append(projection_value)
                 variable.append(projection_value)
 
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
@@ -2095,7 +2082,10 @@ class State_Base(State):
                         return
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
-                    self._mod_proj_values[mod_param_name].append(mod_value)
+                    if mod_param_name not in mod_proj_values.keys():
+                        mod_proj_values[mod_param_name]=[mod_value]
+                    else:
+                        mod_proj_values[mod_param_name].append(mod_value)
 
         # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
         # a bit handwavy just to make stuff work
@@ -2108,22 +2098,13 @@ class State_Base(State):
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
 
-        # For each modulable parameter of the State's function,
-        #    combine any values received from the relevant projections into a single modulation value
-        #    and assign that to the relevant entry in the params dict for the State's function.
-        for mod_param_name, value_list in self._mod_proj_values.items():
-            # If the param has no modulatory values, skip
-            if not value_list:
-                continue
+        for mod_param_name, value_list in mod_proj_values.items():
             param = getattr(self.function.parameters, mod_param_name)
             # If the param has a single modulatory value, use that
             if len(value_list)==1:
                 mod_val = value_list[0]
             # If the param has multiple modulatory values, aggregate them
             else:
-                # FIX: 9/3/19:  THIS NEED TO BE DEALT WITH NOW THAT ModulationParam iS RETIRED
-                #               ADD ATTRIBUTE TO MODULABLE PARAMETERS?
-                # mod_val = ModulationReduce.__dict__[mod_param_name](value_list)
                 mod_val = self._get_aggregated_mod_val(mod_param_name, value_list)
 
             # FIX: SHOULD THIS REALLY BE GETTING SET HERE??
@@ -2218,7 +2199,7 @@ class State_Base(State):
         # class ModulationReduce(Enum):
         #     MULTIPLICATIVE = lambda x: np.product(np.array(x), axis=0)
         #     ADDITIVE = lambda x: np.sum(np.array(x), axis=0)
-        # FIX: 9/3/19 - MODIFY ONCE modulation_reduce_fct OR THE LIKE IS ADDED AS A Parameter ATTRIBUTE
+        # FIX: 9/3/19 - MODIFY ONCE modulation_aggregation_fct OR THE LIKE IS ADDED AS AN ATTRIBUTE OF Parameter CLASS
         if any(mod_spec in getattr(self.function.parameters, mod_param_name).aliases
                for mod_spec in {MULTIPLICATIVE, MULTIPLICATIVE_PARAM}):
             return np.product(np.array(values), axis=0)
@@ -2812,13 +2793,8 @@ def _parse_state_spec(state_type=None,
     if state_spec:
         if owner.verbosePref:
             print(f'Args other than standard args and state_spec were in _instantiate_state ({state_spec}).')
-        # # MODIFIED 8/30/19 OLD:
-        # state_specific_args.update(state_spec)
-        # MODIFIED 8/30/19 NEW: [JDC] ::GENERAL::
-        # Give precedence for any duplicate keys to state_specific_args
         state_spec.update(state_specific_args)
         state_specific_args = state_spec
-        # MODIFIED 8/30/19 END
 
     state_dict = standard_args
     context = state_dict.pop(CONTEXT, None)
