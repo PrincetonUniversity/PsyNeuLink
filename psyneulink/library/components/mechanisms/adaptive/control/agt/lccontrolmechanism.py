@@ -288,7 +288,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ALL, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT_EXECUTE_METHOD_ONLY, \
     MULTIPLICATIVE, MULTIPLICATIVE_PARAM, PROJECTIONS
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
@@ -835,7 +835,14 @@ class LCControlMechanism(ControlMechanism):
                 self._modulated_mechanisms = [self.modulated_mechanisms]
             multiplicative_param_names = []
             for mech in self.modulated_mechanisms:
-                multiplicative_param_names.append(mech.function.multiplicative_param)
+                # # MODIFIED 9/3/19 OLD:
+                # multiplicative_param_names.append(mech.function.multiplicative_param)
+                # MODIFIED 9/3/19 NEW: [JDC]
+                if isinstance(mech.function.parameters.multiplicative_param, ParameterAlias):
+                    multiplicative_param_names.append(mech.function.parameters.multiplicative_param.source.name)
+                else:
+                    multiplicative_param_names.append(mech.function.parameters.multiplicative_param.name)
+                # MODIFIED 9/3/19 END
             ctl_sig_projs = []
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))

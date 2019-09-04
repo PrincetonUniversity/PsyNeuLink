@@ -525,9 +525,9 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         NOISE: None,
     })
 
-    # multiplicative param does not make sense in this case
-    multiplicative_param = RATE
-    additive_param = INCREMENT
+    # # multiplicative param does not make sense in this case
+    # multiplicative_param = RATE
+    # additive_param = INCREMENT
 
     @tc.typecheck
     def __init__(self,
@@ -782,8 +782,8 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         OFFSET: None
     })
 
-    multiplicative_param = RATE
-    additive_param = OFFSET
+    # multiplicative_param = RATE
+    # additive_param = OFFSET
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -998,8 +998,8 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
     componentName = ADAPTIVE_INTEGRATOR_FUNCTION
 
-    multiplicative_param = RATE
-    additive_param = OFFSET
+    # multiplicative_param = RATE
+    # additive_param = OFFSET
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -1444,8 +1444,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
     componentName = DUAL_ADAPTIVE_INTEGRATOR_FUNCTION
 
-    # multiplicative_param = RATE
-    additive_param = OFFSET
+    # # multiplicative_param = RATE
+    # additive_param = OFFSET
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -1997,8 +1997,8 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         NOISE: None,
     })
 
-    multiplicative_param = RATE
-    # additive_param = OFFSET
+    # multiplicative_param = RATE
+    # # additive_param = OFFSET
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -2368,8 +2368,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
     componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
 
-    multiplicative_param = RATE
-    additive_param = OFFSET
+    # multiplicative_param = RATE
+    # additive_param = OFFSET
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -2718,8 +2718,8 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
     componentName = ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION
 
-    multiplicative_param = RATE
-    additive_param = OFFSET
+    # multiplicative_param = RATE
+    # additive_param = OFFSET
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -3056,8 +3056,8 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         NOISE: None
     })
 
-    multiplicative_param = RATE
-    additive_param = OFFSET
+    # multiplicative_param = RATE
+    # additive_param = OFFSET
 
     @tc.typecheck
     def __init__(self,

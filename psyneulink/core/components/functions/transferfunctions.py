@@ -112,13 +112,28 @@ class TransferFunction(Function_Base):
             raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
                                 format(self.__class__.__name__, BOUNDS))
 
-        if not hasattr(self, MULTIPLICATIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
-
-        if not hasattr(self, ADDITIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
-                                format(self.__class__.__name__, ADDITIVE_PARAM))
+        # # MODIFIED 9/3/19 OLD:
+        # if not hasattr(self, MULTIPLICATIVE_PARAM):
+        #     raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
+        #                         format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
+        #
+        # if not hasattr(self, ADDITIVE_PARAM):
+        #     raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
+        #                         format(self.__class__.__name__, ADDITIVE_PARAM))
+        # # MODIFIED 9/3/19 NEW:
+        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE PredictionErrorDeltaFunction DOESN"T IMPLEMENT MODULATORY PARAMS
+        # try:
+        #     self.parameters.multiplicative_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(MULTIPLICATIVE_PARAM)} Parameter or alias to one.")
+        #
+        # try:
+        #     self.parameters.additive_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(ADDITIVE_PARAM)} Parameter or alias to one.")
+        # MODIFIED 9/3/19 END
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -126,21 +141,21 @@ class TransferFunction(Function_Base):
                          prefs=prefs,
                          context=context)
 
-    @property
-    def multiplicative(self):
-        return getattr(self, self.multiplicative_param)
-
-    @multiplicative.setter
-    def multiplicative(self, val):
-        setattr(self, self.multiplicative_param, val)
-
-    @property
-    def additive(self):
-        return getattr(self, self.additive_param)
-
-    @additive.setter
-    def additive(self, val):
-        setattr(self, self.additive_param, val)
+    # @property
+    # def multiplicative(self):
+    #     return getattr(self, self.multiplicative_param)
+    #
+    # @multiplicative.setter
+    # def multiplicative(self, val):
+    #     setattr(self, self.multiplicative_param, val)
+    #
+    # @property
+    # def additive(self):
+    #     return getattr(self, self.additive_param)
+    #
+    # @additive.setter
+    # def additive(self, val):
+    #     setattr(self, self.additive_param, val)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Pretend we have one huge array to work on
@@ -225,8 +240,8 @@ class Identity(TransferFunction):  # -------------------------------------------
     componentName = IDENTITY_FUNCTION
 
     bounds = None
-    multiplicative_param = None
-    additive_param = None
+    # multiplicative_param = None
+    # additive_param = None
 
     classPreferences = {
         kwPreferenceSetName: 'IdentityClassPreferences',
@@ -401,8 +416,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
     componentName = LINEAR_FUNCTION
 
     bounds = None
-    multiplicative_param = SLOPE
-    additive_param = INTERCEPT
+    # multiplicative_param = SLOPE
+    # additive_param = INTERCEPT
 
     classPreferences = {
         kwPreferenceSetName: 'LinearClassPreferences',
@@ -653,8 +668,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
     componentName = EXPONENTIAL_FUNCTION
 
     bounds = (0, None)
-    multiplicative_param = RATE
-    additive_param = BIAS
+    # multiplicative_param = RATE
+    # additive_param = BIAS
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -918,8 +933,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
     parameter_keywords.update({GAIN, BIAS, OFFSET})
 
     bounds = (0, 1)
-    multiplicative_param = GAIN
-    additive_param = BIAS
+    # multiplicative_param = GAIN
+    # additive_param = BIAS
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -1221,8 +1236,8 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     parameter_keywords.update({GAIN, BIAS, OFFSET})
 
     bounds = (0, 1)
-    multiplicative_param = GAIN
-    additive_param = BIAS
+    # multiplicative_param = GAIN
+    # additive_param = BIAS
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -1470,8 +1485,8 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     parameter_keywords.update({GAIN, BIAS, LEAK})
 
     bounds = (None,None)
-    multiplicative_param = GAIN
-    additive_param = BIAS
+    # multiplicative_param = GAIN
+    # additive_param = BIAS
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -1707,8 +1722,8 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     # parameter_keywords.update({STANDARD_DEVIATION, BIAS, SCALE, OFFSET})
 
     bounds = (None,None)
-    multiplicative_param = STANDARD_DEVIATION
-    additive_param = BIAS
+    # multiplicative_param = STANDARD_DEVIATION
+    # additive_param = BIAS
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -1981,8 +1996,8 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     # parameter_keywords.update({VARIANCE, BIAS, SCALE, OFFSET})
 
     bounds = (None,None)
-    multiplicative_param = VARIANCE
-    additive_param = BIAS
+    # multiplicative_param = VARIANCE
+    # additive_param = BIAS
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -2267,8 +2282,8 @@ class SoftMax(TransferFunction):
     componentName = SOFTMAX_FUNCTION
 
     bounds = (0, 1)
-    multiplicative_param = GAIN
-    additive_param = None
+    # multiplicative_param = GAIN
+    # additive_param = None
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -2684,8 +2699,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     componentName = LINEAR_MATRIX_FUNCTION
 
     bounds = None
-    multiplicative_param = None
-    additive_param = None
+    # multiplicative_param = None
+    # additive_param = None
 
     DEFAULT_FILLER_VALUE = 0
 
@@ -3299,105 +3314,88 @@ class CostFunctions(IntEnum):
     DEFAULTS      = INTENSITY
 
 
-# Getters and setters for transfer and cost function multiplicative and additive parameters 
-# -----------------------------------------
+# Getters and setters for transfer and cost function multiplicative and additive parameters ----------------------------
+
 def _transfer_fct_mult_param_getter(owning_component=None, execution_id=None):
     try:
-        return getattr(owning_component.transfer_fct.parameters,
-                       owning_component.transfer_fct.multiplicative_param).get(execution_id)
+        return owning_component.parameters.transfer_fct.get().parameters.multiplicative_param.get(execution_id)
     except (TypeError, IndexError):
         return None
 
 def _transfer_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.transfer_fct.parameters,
-            owning_component.transfer_fct.multiplicative_param)._set(value, execution_id)
+    owning_component.parameters.transfer_fct.get().parameters.multiplicative_param._set(value, execution_id)
     return value
 
 def _transfer_fct_add_param_getter(owning_component=None, execution_id=None):
     try:
-        return getattr(owning_component.transfer_fct.parameters,
-                       owning_component.transfer_fct.additive_param).get(execution_id)
+        return owning_component.parameters.transfer_fct.get().parameters.additve_param.get(execution_id)
     except (TypeError, IndexError):
         return None
 
 def _transfer_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.transfer_fct.parameters,
-            owning_component.transfer_fct.additive_param)._set(value, execution_id)
+    owning_component.parameters.transfer_fct.get().parameters.additive_param._set(value, execution_id)
     return value
 
 def _intensity_cost_fct_mult_param_getter(owning_component=None, execution_id=None):
     try:
-        return getattr(owning_component.intensity_cost_fct.parameters,
-                       owning_component.intensity_cost_fct.multiplicative_param).get(execution_id)
+        return owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param.get(execution_id)
     except (TypeError, IndexError):
         return None
 
 def _intensity_cost_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.intensity_cost_fct.parameters,
-            owning_component.intensity_cost_fct.multiplicative_param)._set(value, execution_id)
+    owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param._set(value, execution_id)
     return value
 
 def _intensity_cost_fct_add_param_getter(owning_component=None, execution_id=None):
     try:
-        return getattr(owning_component.intensity_cost_fct.parameters,
-                       owning_component.intensity_cost_fct.additive_param).get(execution_id)
+        return owning_component.parameters.intensity_cost_fct.get().parameters.additive_param.get(execution_id)
     except (TypeError, IndexError):
         return None
 
 def _intensity_cost_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.intensity_cost_fct.parameters,
-            owning_component.intensity_cost_fct.additive_param)._set(value, execution_id)
+    owning_component.parameters.intensity_cost_fct.get().parameters.additive_param._set(value, execution_id)
     return value
 
 def _adjustment_cost_fct_mult_param_getter(owning_component=None, execution_id=None):
     try:
-        return getattr(owning_component.adjustment_cost_fct.parameters,
-                       owning_component.adjustment_cost_fct.multiplicative_param).get(execution_id)
+        return owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param.get(execution_id)
     except (TypeError, IndexError):
         return None
 
 def _adjustment_cost_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.adjustment_cost_fct.parameters,
-            owning_component.adjustment_cost_fct.multiplicative_param)._set(value, execution_id)
+    owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param._set(value, execution_id)
     return value
 
 def _adjustment_cost_fct_add_param_getter(owning_component=None, execution_id=None):
     try:
-        return getattr(owning_component.adjustment_cost_fct.parameters,
-                       owning_component.adjustment_cost_fct.additive_param).get(execution_id)
+        return owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param.get(execution_id)
     except (TypeError, IndexError):
         return None
 
 def _adjustment_cost_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.adjustment_cost_fct.parameters,
-            owning_component.adjustment_cost_fct.additive_param)._set(value, execution_id)
+    owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param._set(value, execution_id)
     return value
 
 def _duration_cost_fct_mult_param_getter(owning_component=None, execution_id=None):
     try:
-        return getattr(owning_component.duration_cost_fct.parameters,
-                       owning_component.duration_cost_fct.multiplicative_param).get(execution_id)
+        return owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param.get(execution_id)
     except (TypeError, IndexError):
         return None
 
 def _duration_cost_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.duration_cost_fct.parameters,
-            owning_component.duration_cost_fct.multiplicative_param)._set(value, execution_id)
+    owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param._set(value, execution_id)
     return value
 
 def _duration_cost_fct_add_param_getter(owning_component=None, execution_id=None):
     try:
-        return getattr(owning_component.duration_cost_fct.parameters,
-                       owning_component.duration_cost_fct.additive_param).get(execution_id)
+        return owning_component.parameters.duration_cost_fct.get().parameters.additive_param.get(execution_id)
     except (TypeError, IndexError):
         return None
 
 def _duration_cost_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.duration_cost_fct.parameters,
-            owning_component.duration_cost_fct.additive_param)._set(value, execution_id)
+    owning_component.parameters.duration_cost_fct.get().parameters.additive_param._set(value, execution_id)
     return value
 
-# FIX 9/3/19:  FIX ALL ABOVE LIKE THESE:
 def _combine_costs_fct_mult_param_getter(owning_component=None, execution_id=None):
     try:
         return owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param.get(execution_id)
@@ -3640,8 +3638,8 @@ class TransferWithCosts(TransferFunction):
     componentName = TRANSFER_WITH_COSTS_FUNCTION
 
     bounds = None
-    multiplicative_param = SLOPE
-    additive_param = INTERCEPT
+    # multiplicative_param = SLOPE
+    # additive_param = INTERCEPT
 
     classPreferences = {
         kwPreferenceSetName: 'TransferWithCostssClassPreferences',

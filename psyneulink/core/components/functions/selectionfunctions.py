@@ -71,13 +71,28 @@ class SelectionFunction(Function_Base):
                  prefs,
                  context):
 
-        if not hasattr(self, MULTIPLICATIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
-
-        if not hasattr(self, ADDITIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
-                                format(self.__class__.__name__, ADDITIVE_PARAM))
+        # # MODIFIED 9/3/19 OLD:
+        # if not hasattr(self, MULTIPLICATIVE_PARAM):
+        #     raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
+        #                         format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
+        #
+        # if not hasattr(self, ADDITIVE_PARAM):
+        #     raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
+        #                         format(self.__class__.__name__, ADDITIVE_PARAM))
+        # # MODIFIED 9/3/19 NEW:
+        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE PredictionErrorDeltaFunction DOESN"T IMPLEMENT MODULATORY PARAMS
+        # try:
+        #     self.parameters.multiplicative_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(MULTIPLICATIVE_PARAM)} Parameter or alias to one.")
+        #
+        # try:
+        #     self.parameters.additive_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(ADDITIVE_PARAM)} Parameter or alias to one.")
+        # MODIFIED 9/3/19 END
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -85,21 +100,21 @@ class SelectionFunction(Function_Base):
                          prefs=prefs,
                          context=context)
 
-    @property
-    def multiplicative(self):
-        return getattr(self, self.multiplicative_param)
-
-    @multiplicative.setter
-    def multiplicative(self, val):
-        setattr(self, self.multiplicative_param, val)
-
-    @property
-    def additive(self):
-        return getattr(self, self.additive_param)
-
-    @additive.setter
-    def additive(self, val):
-        setattr(self, self.additive_param, val)
+    # @property
+    # def multiplicative(self):
+    #     return getattr(self, self.multiplicative_param)
+    #
+    # @multiplicative.setter
+    # def multiplicative(self, val):
+    #     setattr(self, self.multiplicative_param, val)
+    #
+    # @property
+    # def additive(self):
+    #     return getattr(self, self.additive_param)
+    #
+    # @additive.setter
+    # def additive(self, val):
+    #     setattr(self, self.additive_param, val)
 
 
 class OneHot(SelectionFunction):
@@ -198,8 +213,8 @@ class OneHot(SelectionFunction):
     componentName = ONE_HOT_FUNCTION
 
     bounds = None
-    multiplicative_param = None
-    additive_param = None
+    # multiplicative_param = None
+    # additive_param = None
 
     classPreferences = {
         kwPreferenceSetName: 'OneHotClassPreferences',

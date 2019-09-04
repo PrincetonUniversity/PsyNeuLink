@@ -86,6 +86,7 @@ class CombinationFunction(Function_Base):
                  prefs,
                  context):
 
+        # # MODIFIED 9/3/19 OLD:
         # if not hasattr(self, MULTIPLICATIVE_PARAM):
         #     raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
         #                         format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
@@ -93,6 +94,20 @@ class CombinationFunction(Function_Base):
         # if not hasattr(self, ADDITIVE_PARAM):
         #     raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
         #                         format(self.__class__.__name__, ADDITIVE_PARAM))
+        # # MODIFIED 9/3/19 NEW:
+        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE PredictionErrorDeltaFunction DOESN"T IMPLEMENT MODULATORY PARAMS
+        # try:
+        #     self.parameters.multiplicative_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(MULTIPLICATIVE_PARAM)} Parameter or alias to one.")
+        #
+        # try:
+        #     self.parameters.additive_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(ADDITIVE_PARAM)} Parameter or alias to one.")
+        # MODIFIED 9/3/19 END
 
         super().__init__(default_variable=default_variable,
                          params=params,

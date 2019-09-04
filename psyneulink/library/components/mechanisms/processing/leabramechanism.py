@@ -189,8 +189,8 @@ class LeabraFunction(Function_Base):
     componentType = LEABRA_FUNCTION_TYPE
     componentName = LEABRA_FUNCTION
 
-    multiplicative_param = NotImplemented
-    additive_param = NotImplemented  # very hacky
+    # multiplicative_param = NotImplemented
+    # additive_param = NotImplemented  # very hacky
 
     classPreferences = {
         kwPreferenceSetName: 'LeabraFunctionClassPreferences',
