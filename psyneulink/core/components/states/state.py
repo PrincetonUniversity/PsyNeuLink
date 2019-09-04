@@ -1921,7 +1921,6 @@ class State_Base(State):
         # SET UP ------------------------------------------------------------------------------------------------
 
         # Get State-specific param_specs
-        # FIX: 9/3/19 -- MODIFY TO USE parameters?
         try:
             # Get State params
             self.stateParams = params[self.paramsType]

@@ -112,7 +112,7 @@ class TransferFunction(Function_Base):
             raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
                                 format(self.__class__.__name__, BOUNDS))
 
-        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE PredictionErrorDeltaFunction DOESN"T IMPLEMENT MODULATORY PARAMS
+        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE IdentityFunction DOESN"T IMPLEMENT MODULATORY PARAMS
         # try:
         #     self.parameters.multiplicative_param
         # except:

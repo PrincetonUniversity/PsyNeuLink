@@ -71,7 +71,7 @@ class SelectionFunction(Function_Base):
                  prefs,
                  context):
 
-        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE PredictionErrorDeltaFunction DOESN"T IMPLEMENT MODULATORY PARAMS
+        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE OneHot DOESN"T IMPLEMENT MODULATORY PARAMS
         # try:
         #     self.parameters.multiplicative_param
         # except:
