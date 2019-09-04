@@ -3397,30 +3397,25 @@ def _duration_cost_fct_add_param_setter(value, owning_component=None, execution_
             owning_component.duration_cost_fct.additive_param)._set(value, execution_id)
     return value
 
+# FIX 9/3/19:  FIX ALL ABOVE LIKE THESE:
 def _combine_costs_fct_mult_param_getter(owning_component=None, execution_id=None):
     try:
-    #     return getattr(owning_component.combine_costs_fct.parameters,
-    #                    owning_component.combine_costs_fct.multiplicative_param).get(execution_id)
         return owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param.get(execution_id)
     except (TypeError, IndexError):
         return None
 
 def _combine_costs_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    # getattr(owning_component.combine_costs_fct.parameters,
-    #         owning_component.combine_costs_fct.multiplicative_param)._set(value, execution_id)
     owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param._set(value, execution_id)
     return value
 
 def _combine_costs_fct_add_param_getter(owning_component=None, execution_id=None):
     try:
-        return getattr(owning_component.combine_costs_fct.parameters,
-                       owning_component.combine_costs_fct.additive_param).get(execution_id)
+        return owning_component.parameters.combine_costs_fct.get().parameters.additive_param.get(execution_id)
     except (TypeError, IndexError):
         return None
 
 def _combine_costs_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    getattr(owning_component.combine_costs_fct.parameters,
-            owning_component.combine_costs_fct.additive_param)._set(value, execution_id)
+    owning_component.parameters.combine_costs_fct.get().parameters.additive_param._set(value, execution_id)
     return value
 
 
