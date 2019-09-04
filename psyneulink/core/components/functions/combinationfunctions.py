@@ -86,13 +86,13 @@ class CombinationFunction(Function_Base):
                  prefs,
                  context):
 
-        if not hasattr(self, MULTIPLICATIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
-
-        if not hasattr(self, ADDITIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
-                                format(self.__class__.__name__, ADDITIVE_PARAM))
+        # if not hasattr(self, MULTIPLICATIVE_PARAM):
+        #     raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
+        #                         format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
+        #
+        # if not hasattr(self, ADDITIVE_PARAM):
+        #     raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
+        #                         format(self.__class__.__name__, ADDITIVE_PARAM))
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -100,21 +100,23 @@ class CombinationFunction(Function_Base):
                          prefs=prefs,
                          context=context)
 
-    @property
-    def multiplicative(self):
-        return getattr(self, self.multiplicative_param)
-
-    @multiplicative.setter
-    def multiplicative(self, val):
-        setattr(self, self.multiplicative_param, val)
-
-    @property
-    def additive(self):
-        return getattr(self, self.additive_param)
-
-    @additive.setter
-    def additive(self, val):
-        setattr(self, self.additive_param, val)
+    # # MODIFIED 9/3/19 OLD:
+    # @property
+    # def multiplicative(self):
+    #     return getattr(self, self.multiplicative_param)
+    #
+    # @multiplicative.setter
+    # def multiplicative(self, val):
+    #     setattr(self, self.multiplicative_param, val)
+    #
+    # @property
+    # def additive(self):
+    #     return getattr(self, self.additive_param)
+    #
+    # @additive.setter
+    # def additive(self, val):
+    #     setattr(self, self.additive_param, val)
+    # MODIFIED 9/3/19 END
 
 
 class Concatenate(CombinationFunction):  # ------------------------------------------------------------------------
@@ -192,8 +194,8 @@ class Concatenate(CombinationFunction):  # -------------------------------------
     """
     componentName = CONCATENATE_FUNCTION
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
+    # multiplicative_param = SCALE
+    # additive_param = OFFSET
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -213,8 +215,8 @@ class Concatenate(CombinationFunction):  # -------------------------------------
                     :type: float
 
         """
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -412,8 +414,8 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
     """
     componentName = REARRANGE_FUNCTION
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
+    # multiplicative_param = SCALE
+    # additive_param = OFFSET
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -437,8 +439,8 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
 
         """
         arrangement = Parameter(None, modulable=False)
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -703,8 +705,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     """
     componentName = REDUCE_FUNCTION
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
+    # multiplicative_param = SCALE
+    # additive_param = OFFSET
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -745,8 +747,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         weights = None
         exponents = None
         operation = SUM
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -1085,8 +1087,8 @@ class LinearCombination(
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
+    # multiplicative_param = SCALE
+    # additive_param = OFFSET
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -1688,8 +1690,8 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
+    # multiplicative_param = SCALE
+    # additive_param = OFFSET
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -1998,8 +2000,8 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         gamma = Parameter(1.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    multiplicative_param = None
-    additive_param = None
+    # multiplicative_param = None
+    # additive_param = None
 
     @tc.typecheck
     def __init__(self,
