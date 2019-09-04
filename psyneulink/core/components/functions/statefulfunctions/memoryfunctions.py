@@ -198,8 +198,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         RATE: None
     })
 
-    multiplicative_param = RATE
-    # no additive_param?
 
     @tc.typecheck
     def __init__(self,
@@ -682,8 +680,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         STORAGE_PROB: 1.0
     })
 
-    multiplicative_param = RETRIEVAL_PROB
-    # no additive_param?
 
     @tc.typecheck
     def __init__(self,
