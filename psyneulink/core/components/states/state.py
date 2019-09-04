@@ -740,7 +740,8 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
+from psyneulink.core.components.component import \
+    Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.function import \
     DISABLE, Function, _get_modulated_param, get_param_value_for_keyword, OVERRIDE
@@ -763,8 +764,8 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, MODULATION_OVERRIDE, Modulation, convert_to_np_array, get_args, get_class_attributes, \
-    is_value_spec, iscompatible, merge_param_dicts, type_match
+    ContentAddressableList, convert_to_np_array, get_args, is_value_spec, iscompatible, \
+    merge_param_dicts, MODULATION_OVERRIDE, ModulationReduce, type_match
 
 __all__ = [
     'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry'
@@ -2108,15 +2109,16 @@ class State_Base(State):
             # If the param has no modulatory values, skip
             if not value_list:
                 continue
+            # If the param has a single modulatory value, use that
             if len(value_list)==1:
-                # If the param has a single modulatory value, use that
+                from psyneulink.core.globals.utilities import Modulation, ModulationReduce
                 mod_val = value_list[0]
+            # If the param has multiple modulatory values, aggregate them
             else:
-                # If the param has multiple modulatory values, aggregate them
                 # FIX: 9/3/19:  THIS NEED TO BE DEALT WITH NOW THAT ModulationParam iS RETIRED
                 #               ADD ATTRIBUTE TO MODULABLE PARAMETERS?
                 # mod_val = mod_param.value.reduce(value_list)
-                mod_val = ModulationReduce(value_list)
+                mod_val = ModulationReduce.__dict__[mod_param](value_list)
             getattr(self.function.parameters, mod_param)._set(mod_val, execution_id)
 
             function_param = self.function.params[mod_param]
