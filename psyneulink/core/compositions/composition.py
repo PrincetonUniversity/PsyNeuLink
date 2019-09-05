@@ -2195,10 +2195,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #    - not used for Learning;
                     #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
                     #    - do not project to any other nodes.
-                    # FIX: STILL NOT ASSIGNING A1 AS TERMINAL IN SCRATCH PAD;
-                    #      BUT ALSO RISKS ASSIGNING BOTH A1 AND A2 SINCE BOTH ARE IN THE SAME CONSIDERATION_SET
-                    # First, find last consideration_set in scheduler_processing that does not contain
-                    #    learning-related nodes or a ControlMechanism
+
+                    # First, find last consideration_set in scheduler_processing that does not contain only
+                    #    learning-related nodes, ControlMechanism(s) or control-related ObjectiveMechanism(s);
+                    #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
                     output_nodes = list([items for items in self.scheduler_processing.consideration_queue
                                            if any([item for item in items if
                                                    (not NodeRole.LEARNING in self.nodes_to_roles[item]
@@ -2206,7 +2206,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                     and not (isinstance(item, ObjectiveMechanism)
                                                              and item._role == CONTROL))
                                                    ])]
-                                          )[-1]
+                                          )[-1].copy()
+
+                    # Next, remove any learning-related nodes, ControlMechanism(s) or control-related
+                    #    ObjectiveMechanism(s) that may have "snuck in" (i.e., happen to be in the set)
+                    output_nodes_copy = output_nodes.copy()
+                    for node in output_nodes_copy:
+                        if (NodeRole.LEARNING in self.nodes_to_roles[node]
+                                or isinstance(node, ControlMechanism)
+                                or (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)):
+                            output_nodes.remove(node)
+                    assert True
+
                     # Then, add any nodes that are not learning-related or a ControlMechanism,
                     #    and that have *no* efferent Projections
                     # IMPLEMENTATION NOTE:
@@ -2871,6 +2882,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # InputState spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
             receiver_mechanism = graph_receiver = receiver.owner
 
+        elif isinstance(sender, (ControlSignal, ControlMechanism)) and isinstance(receiver, ParameterState):
+            # ParameterState spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
+            receiver_mechanism = graph_receiver = receiver.owner
+
         elif isinstance(receiver, Composition):
             # Nested Composition Spec -- update receiver_mechanism to CIM; receiver_input_state to CIM's primary I.S.
             receiver_mechanism = receiver.input_CIM
@@ -2906,8 +2921,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nested_compositions.append(graph_receiver)
             # Otherwise, there was a mistake in the spec
             if receiver is None:
-                raise CompositionError(f"receiver arg ({repr(receiver_arg)}) in call to add_projection method of "
-                                       f"{self.name} is not in it or any of its nested {Composition.__name__}s.")
+                if isinstance(receiver_arg, State):
+                    receiver_name = f'{repr(receiver_arg.name)} {receiver_arg.__class__.__name__} ' \
+                                    f'of {receiver_arg.owner.name}'
+                else:
+                    receiver_name = f'{receiver_arg.name}'
+                raise CompositionError(f"Receiver ({receiver_name}) or Projection from {sender.name} in call to "
+                                       f"add_projection method of {self.name} is not in it or any of its nested "
+                                       f"{Composition.__name__}s.")
 
         return receiver, receiver_mechanism, graph_receiver, receiver_input_state, \
                nested_compositions, learning_projection
