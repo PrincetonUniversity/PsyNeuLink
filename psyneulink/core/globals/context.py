@@ -13,8 +13,8 @@
 
 Overview
 --------
-The Context class is used for the `context <Component.context>` attribute of all `Components <Component>`.  It is
-set when a Component is first instantiated, and updated under various operating conditions.  Its primary
+The Context class is used to pass information about execution and state.  It is generally
+created at runtime, and updated under various operating conditions. Its primary
 attribute is `flags <Context.flags>` - a binary vector, the individual flags of which are specified using the
 `ContextFlags` enum.  The `flags <Context.flags>` attribute is divided functionally into the two fields:
 
@@ -22,8 +22,9 @@ attribute is `flags <Context.flags>` - a binary vector, the individual flags of 
 
   * `source <Context.source>` - source of a call to a method belonging to or operating on the Component.
 
-Each field can be addressed using the corresponding property of the class, and in general only one of the flags
-in a field is set (although see individual property documentation for exceptions).
+Each field can be addressed using the corresponding property of the class; only one source
+flag may be set, but in some cases multiple execution_phase flags may be set
+(although see individual property documentation for exceptions).
 
 Context and Logging
 -------------------
@@ -37,8 +38,9 @@ are a subset of (and are aliased to) the flags in `ContextFlags`.
 Additional Attributes
 ---------------------
 
-In addition to `flags <Context.flags>`, Context has four other attributes that record information relevant to the
-operating state of the Component:
+In addition to `flags <Context.flags>`, `execution_phase <Context.execution_phase>`, and
+`source <Context.source>`, Context has four other attributes that record information
+relevant to the operating state of the Component:
 
     `owner <Context.owner>`
       the Component to which the Context belongs (assigned to its `context <Component.context>` attribute;
