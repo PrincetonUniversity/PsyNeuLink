@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.5.3.2+628.g2a705ae documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.5.3.2+639.g437b277 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+628.g2a705ae',
+              VERSION:'0.5.3.2+639.g437b277',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+628
+                0.5.3.2+639
               </div>
             
           
@@ -535,6 +535,23 @@ It should be instantiated using the constructor for a subclass.</p>
 <dd><p>an object that provides access to the default values of a <code class="xref any docutils literal"><span class="pre">Component's</span></code> <a class="reference internal" href="#psyneulink.core.components.component.Component.parameters" title="psyneulink.core.components.component.Component.parameters"><code class="xref any py py-attr docutils literal"><span class="pre">parameters</span></code></a></p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="psyneulink.core.components.component.Component.initialization_status">
+<code class="descname">initialization_status</code><a class="headerlink" href="#psyneulink.core.components.component.Component.initialization_status" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>field of flags attribute</em> – indicates the state of initialization of the Component;
+one and only one of the following flags is always set:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="xref any docutils literal"><span class="pre">DEFERRED_INIT</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">INITIALIZING</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">VALIDATING</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">INITIALIZED</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">REINITIALIZED</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">UNINITIALIZED</span></code></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.components.component.Component.assign_params">
 <code class="descname">assign_params</code><span class="sig-paren">(</span><em>request_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.assign_params" title="Permalink to this definition">¶</a></dt>
@@ -582,14 +599,14 @@ This is a convenience method that calls the <a class="reference internal" href="
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.component.Component.most_recent_execution_id">
-<code class="descname">most_recent_execution_id</code><a class="headerlink" href="#psyneulink.core.components.component.Component.most_recent_execution_id" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.component.Component.most_recent_context">
+<code class="descname">most_recent_context</code><a class="headerlink" href="#psyneulink.core.components.component.Component.most_recent_context" title="Permalink to this definition">¶</a></dt>
 <dd><p>used to set a default behavior for attributes that correspond to parameters</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="psyneulink.core.components.component.Component.reinitialize">
-<code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>execution_context=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reinitialize" title="Permalink to this definition">¶</a></dt>
+<code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>execution_context=NotImplemented</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reinitialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>If the component’s execute method involves execution of an <code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code> Function, this method
 effectively begins the function’s accumulation over again at the specified value, and may update related
 values on the component, depending on the component type.  Otherwise, it simply reassigns the Component’s

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Context &mdash; PsyNeuLink 0.5.3.2+628.g2a705ae documentation</title>
+  <title>Context &mdash; PsyNeuLink 0.5.3.2+639.g437b277 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+628.g2a705ae',
+              VERSION:'0.5.3.2+639.g437b277',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.5.3.2+628
+                0.5.3.2+639
               </div>
             
           
@@ -167,19 +167,19 @@
 <span id="context"></span><h1>Context<a class="headerlink" href="#module-psyneulink.core.globals.context" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <span id="context-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>The Context class is used for the <code class="xref any docutils literal"><span class="pre">context</span></code> attribute of all <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>.  It is
-set when a Component is first instantiated, and updated under various operating conditions.  Its primary
+<p>The Context class is used to pass information about execution and state.  It is generally
+created at runtime, and updated under various operating conditions. Its primary
 attribute is <a class="reference internal" href="#psyneulink.core.globals.context.Context.flags" title="psyneulink.core.globals.context.Context.flags"><code class="xref any py py-attr docutils literal"><span class="pre">flags</span></code></a> - a binary vector, the individual flags of which are specified using the
-<a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags" title="psyneulink.core.globals.context.ContextFlags"><code class="xref any py py-class docutils literal"><span class="pre">ContextFlags</span></code></a> enum.  The <a class="reference internal" href="#psyneulink.core.globals.context.Context.flags" title="psyneulink.core.globals.context.Context.flags"><code class="xref any py py-attr docutils literal"><span class="pre">flags</span></code></a> attribute is divided functionally into the three fields:</p>
+<a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags" title="psyneulink.core.globals.context.ContextFlags"><code class="xref any py py-class docutils literal"><span class="pre">ContextFlags</span></code></a> enum.  The <a class="reference internal" href="#psyneulink.core.globals.context.Context.flags" title="psyneulink.core.globals.context.Context.flags"><code class="xref any py py-attr docutils literal"><span class="pre">flags</span></code></a> attribute is divided functionally into the two fields:</p>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="#psyneulink.core.globals.context.Context.initialization_status" title="psyneulink.core.globals.context.Context.initialization_status"><code class="xref any py py-attr docutils literal"><span class="pre">initialization_status</span></code></a> - state of initialization of the Component;</li>
 <li><a class="reference internal" href="#psyneulink.core.globals.context.Context.execution_phase" title="psyneulink.core.globals.context.Context.execution_phase"><code class="xref any py py-attr docutils literal"><span class="pre">execution_phase</span></code></a> - phase of execution of the Component;</li>
 <li><a class="reference internal" href="#psyneulink.core.globals.context.Context.source" title="psyneulink.core.globals.context.Context.source"><code class="xref any py py-attr docutils literal"><span class="pre">source</span></code></a> - source of a call to a method belonging to or operating on the Component.</li>
 </ul>
 </div></blockquote>
-<p>Each field can be addressed using the corresponding property of the class, and in general only one of the flags
-in a field is set (although see individual property documentation for exceptions).</p>
+<p>Each field can be addressed using the corresponding property of the class; only one source
+flag may be set, but in some cases multiple execution_phase flags may be set
+(although see individual property documentation for exceptions).</p>
 </div>
 <div class="section" id="context-and-logging">
 <h2>Context and Logging<a class="headerlink" href="#context-and-logging" title="Permalink to this headline">¶</a></h2>
@@ -189,8 +189,9 @@ are a subset of (and are aliased to) the flags in <a class="reference internal" 
 </div>
 <div class="section" id="additional-attributes">
 <span id="context-additional-attributes"></span><h2>Additional Attributes<a class="headerlink" href="#additional-attributes" title="Permalink to this headline">¶</a></h2>
-<p>In addition to <a class="reference internal" href="#psyneulink.core.globals.context.Context.flags" title="psyneulink.core.globals.context.Context.flags"><code class="xref any py py-attr docutils literal"><span class="pre">flags</span></code></a>, Context has four other attributes that record information relevant to the
-operating state of the Component:</p>
+<p>In addition to <a class="reference internal" href="#psyneulink.core.globals.context.Context.flags" title="psyneulink.core.globals.context.Context.flags"><code class="xref any py py-attr docutils literal"><span class="pre">flags</span></code></a>, <a class="reference internal" href="#psyneulink.core.globals.context.Context.execution_phase" title="psyneulink.core.globals.context.Context.execution_phase"><code class="xref any py py-attr docutils literal"><span class="pre">execution_phase</span></code></a>, and
+<a class="reference internal" href="#psyneulink.core.globals.context.Context.source" title="psyneulink.core.globals.context.Context.source"><code class="xref any py py-attr docutils literal"><span class="pre">source</span></code></a>, Context has four other attributes that record information
+relevant to the operating state of the Component:</p>
 <blockquote>
 <div><dl class="docutils">
 <dt><a class="reference internal" href="#psyneulink.core.globals.context.Context.owner" title="psyneulink.core.globals.context.Context.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></dt>
@@ -219,124 +220,8 @@ information as the string returned by the <a class="reference internal" href="#p
 <div class="section" id="class-reference">
 <span id="context-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="psyneulink.core.globals.context.ContextFlags">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.context.</code><code class="descname">ContextFlags</code><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to identify the initialization and execution status of a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>.</p>
-<p>Used when a Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> or one of its attributes is being accessed.
-Also used to specify the context in which a value of the Component or its attribute is <a class="reference internal" href="Log.html#log-conditions"><span class="std std-ref">logged</span></a>..</p>
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.DEFERRED_INIT">
-<code class="descname">DEFERRED_INIT</code><em class="property"> = 2</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.DEFERRED_INIT" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set if flagged for deferred initialization.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.INITIALIZING">
-<code class="descname">INITIALIZING</code><em class="property"> = 4</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.INITIALIZING" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set during initialization of the Component.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.VALIDATING">
-<code class="descname">VALIDATING</code><em class="property"> = 8</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.VALIDATING" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set during validation of the value of a Component or its attribute.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.INITIALIZED">
-<code class="descname">INITIALIZED</code><em class="property"> = 16</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.INITIALIZED" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set after completion of initialization of the Component.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.REINITIALIZED">
-<code class="descname">REINITIALIZED</code><em class="property"> = 16</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.REINITIALIZED" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set on stateful Components when they are re-initialized.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.PROCESSING">
-<code class="descname">PROCESSING</code><em class="property"> = 32</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.PROCESSING" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set during the <a class="reference internal" href="System.html#system-execution-processing"><span class="std std-ref">processing phase</span></a> of execution of a Composition.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.LEARNING">
-<code class="descname">LEARNING</code><em class="property"> = 64</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.LEARNING" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set during the <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">learning phase</span></a> of execution of a Composition.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.CONTROL">
-<code class="descname">CONTROL</code><em class="property"> = 128</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.CONTROL" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set during the <code class="xref any docutils literal"><span class="pre">control</span> <span class="pre">phase</span> <span class="pre">System_Execution_Control&gt;</span></code> of execution of a Composition.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.SIMULATION">
-<code class="descname">SIMULATION</code><em class="property"> = 256</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.SIMULATION" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set during simulation by Composition.controller</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.IDLE">
-<code class="descname">IDLE</code><em class="property"> = -481</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.IDLE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Identifies condition in which no flags in the <a class="reference internal" href="#psyneulink.core.globals.context.Context.execution_phase" title="psyneulink.core.globals.context.Context.execution_phase"><code class="xref any py py-attr docutils literal"><span class="pre">execution_phase</span></code></a> are set.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.COMMAND_LINE">
-<code class="descname">COMMAND_LINE</code><em class="property"> = 512</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.COMMAND_LINE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Direct call by user (either interactively from the command line, or in a script).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.CONSTRUCTOR">
-<code class="descname">CONSTRUCTOR</code><em class="property"> = 1024</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.CONSTRUCTOR" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call from Component’s constructor method.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.INSTANTIATE">
-<code class="descname">INSTANTIATE</code><em class="property"> = 2048</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.INSTANTIATE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call by an instantiation method.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.COMPONENT">
-<code class="descname">COMPONENT</code><em class="property"> = 4096</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.COMPONENT" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call by Component __init__.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.METHOD">
-<code class="descname">METHOD</code><em class="property"> = 8192</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.METHOD" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call by method of the Component other than its constructor.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.PROPERTY">
-<code class="descname">PROPERTY</code><em class="property"> = 16384</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.PROPERTY" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call by property of the Component.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.COMPOSITION">
-<code class="descname">COMPOSITION</code><em class="property"> = 32768</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.COMPOSITION" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call by a/the Composition to which the Component belongs.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.context.ContextFlags.PROCESS">
-<code class="descname">PROCESS</code><em class="property"> = 32768</em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.PROCESS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call by a/the Composition to which the Component belongs.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="psyneulink.core.globals.context.Context">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.context.</code><code class="descname">Context</code><span class="sig-paren">(</span><em>owner=None</em>, <em>composition=None</em>, <em>flags=None</em>, <em>initialization_status=&lt;ContextFlags.UNINITIALIZED: -31&gt;</em>, <em>execution_phase=None</em>, <em>source=&lt;ContextFlags.NONE: -56833&gt;</em>, <em>execution_id: uuid.UUID = None</em>, <em>string: str = ''</em>, <em>time=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.context.Context" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.context.</code><code class="descname">Context</code><span class="sig-paren">(</span><em>owner=None</em>, <em>composition=None</em>, <em>flags=None</em>, <em>execution_phase=&lt;ContextFlags.IDLE: 131072&gt;</em>, <em>source=&lt;ContextFlags.NONE: 262144&gt;</em>, <em>execution_id: uuid.UUID = None</em>, <em>string: str = ''</em>, <em>time=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.context.Context" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to indicate the state of initialization and phase of execution of a Component, as well as the source of
 call of a method;  also used to specify and identify <a class="reference internal" href="Log.html#log-conditions"><span class="std std-ref">conditions</span></a> for <a class="reference internal" href="Log.html"><span class="doc">logging</span></a>.</p>
 <dl class="attribute">
@@ -348,8 +233,8 @@ call of a method;  also used to specify and identify <a class="reference interna
 <dl class="attribute">
 <dt id="psyneulink.core.globals.context.Context.flags">
 <code class="descname">flags</code><a class="headerlink" href="#psyneulink.core.globals.context.Context.flags" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>binary vector</em> – represents the current operating context of the <a class="reference internal" href="#psyneulink.core.globals.context.Context.owner" title="psyneulink.core.globals.context.Context.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>; contains three fields
-<a class="reference internal" href="#psyneulink.core.globals.context.Context.initialization_status" title="psyneulink.core.globals.context.Context.initialization_status"><code class="xref any py py-attr docutils literal"><span class="pre">initialization_status</span></code></a>, <a class="reference internal" href="#psyneulink.core.globals.context.Context.initialization_status" title="psyneulink.core.globals.context.Context.initialization_status"><code class="xref any py py-attr docutils literal"><span class="pre">execution_phase</span></code></a>,
+<dd><p><em>binary vector</em> – represents the current operating context of the <a class="reference internal" href="#psyneulink.core.globals.context.Context.owner" title="psyneulink.core.globals.context.Context.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>; contains two fields
+<a class="reference internal" href="#psyneulink.core.globals.context.Context.execution_phase" title="psyneulink.core.globals.context.Context.execution_phase"><code class="xref any py py-attr docutils literal"><span class="pre">execution_phase</span></code></a>,
 and <a class="reference internal" href="#psyneulink.core.globals.context.Context.source" title="psyneulink.core.globals.context.Context.source"><code class="xref any py py-attr docutils literal"><span class="pre">source</span></code></a> (described below).</p>
 </dd></dl>
 
@@ -361,35 +246,20 @@ note that this is <em>not</em> the same as the <a class="reference internal" hre
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.globals.context.Context.initialization_status">
-<code class="descname">initialization_status</code><a class="headerlink" href="#psyneulink.core.globals.context.Context.initialization_status" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>field of flags attribute</em> – indicates the state of initialization of the Component;
-one and only one of the following flags is always set:</p>
-<blockquote>
-<div><ul class="simple">
-<li><a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags.DEFERRED_INIT" title="psyneulink.core.globals.context.ContextFlags.DEFERRED_INIT"><code class="xref any py py-attr docutils literal"><span class="pre">DEFERRED_INIT</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags.INITIALIZING" title="psyneulink.core.globals.context.ContextFlags.INITIALIZING"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZING</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags.VALIDATING" title="psyneulink.core.globals.context.ContextFlags.VALIDATING"><code class="xref any py py-attr docutils literal"><span class="pre">VALIDATING</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags.INITIALIZED" title="psyneulink.core.globals.context.ContextFlags.INITIALIZED"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZED</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags.REINITIALIZED" title="psyneulink.core.globals.context.ContextFlags.REINITIALIZED"><code class="xref any py py-attr docutils literal"><span class="pre">REINITIALIZED</span></code></a></li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="attribute">
 <dt id="psyneulink.core.globals.context.Context.execution_phase">
 <code class="descname">execution_phase</code><a class="headerlink" href="#psyneulink.core.globals.context.Context.execution_phase" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>field of flags attribute</em> – indicates the phase of execution of the Component;
 one or more of the following flags can be set:</p>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags.PROCESSING" title="psyneulink.core.globals.context.ContextFlags.PROCESSING"><code class="xref any py py-attr docutils literal"><span class="pre">PROCESSING</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags.LEARNING" title="psyneulink.core.globals.context.ContextFlags.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags.CONTROL" title="psyneulink.core.globals.context.ContextFlags.CONTROL"><code class="xref any py py-attr docutils literal"><span class="pre">CONTROL</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags.SIMULATION" title="psyneulink.core.globals.context.ContextFlags.SIMULATION"><code class="xref any py py-attr docutils literal"><span class="pre">SIMULATION</span></code></a></li>
+<li><code class="xref any docutils literal"><span class="pre">PROCESSING</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">LEARNING</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">CONTROL</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">SIMULATION</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">IDLE</span></code></li>
 </ul>
 </div></blockquote>
-<p>If no flags are set, the Component is not being executed at the current time, and <a class="reference internal" href="#psyneulink.core.globals.context.Context.flags_string" title="psyneulink.core.globals.context.Context.flags_string"><code class="xref any py py-attr docutils literal"><span class="pre">flags_string</span></code></a> will include <em>IDLE</em> in the string.  In some circumstances all of the
+<p>If <code class="xref any docutils literal"><span class="pre">IDLE</span></code> is set, the Component is not being executed at the current time, and <a class="reference internal" href="#psyneulink.core.globals.context.Context.flags_string" title="psyneulink.core.globals.context.Context.flags_string"><code class="xref any py py-attr docutils literal"><span class="pre">flags_string</span></code></a> will include <em>IDLE</em> in the string.  In some circumstances all of the
 <a class="reference internal" href="#psyneulink.core.globals.context.Context.execution_phase" title="psyneulink.core.globals.context.Context.execution_phase"><code class="xref any py py-attr docutils literal"><span class="pre">execution_phase</span></code></a> flags may be set, in which case <a class="reference internal" href="#psyneulink.core.globals.context.Context.flags_string" title="psyneulink.core.globals.context.Context.flags_string"><code class="xref any py py-attr docutils literal"><span class="pre">flags_string</span></code></a> will include <em>EXECUTING</em> in the string.</p>
 </dd></dl>
 
@@ -400,10 +270,10 @@ one or more of the following flags can be set:</p>
 one of the following flags is always set:</p>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags.CONSTRUCTOR" title="psyneulink.core.globals.context.ContextFlags.CONSTRUCTOR"><code class="xref any py py-attr docutils literal"><span class="pre">CONSTRUCTOR</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags.COMMAND_LINE" title="psyneulink.core.globals.context.ContextFlags.COMMAND_LINE"><code class="xref any py py-attr docutils literal"><span class="pre">COMMAND_LINE</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags.COMPONENT" title="psyneulink.core.globals.context.ContextFlags.COMPONENT"><code class="xref any py py-attr docutils literal"><span class="pre">COMPONENT</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags.COMPOSITION" title="psyneulink.core.globals.context.ContextFlags.COMPOSITION"><code class="xref any py py-attr docutils literal"><span class="pre">COMPOSITION</span></code></a></li>
+<li><code class="xref any docutils literal"><span class="pre">CONSTRUCTOR</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">COMMAND_LINE</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">COMPONENT</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">COMPOSITION</span></code></li>
 </ul>
 </div></blockquote>
 </dd></dl>
@@ -435,6 +305,14 @@ references it, but it is possible that future uses will involve other messages. 
 same as the <a class="reference internal" href="#psyneulink.core.globals.context.Context.flags_string" title="psyneulink.core.globals.context.Context.flags_string"><code class="xref any py py-attr docutils literal"><span class="pre">flags_string</span></code></a> attribute (see <a class="reference internal" href="#context-string-note"><span class="std std-ref">note</span></a>).</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.globals.context.ContextFlags">
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.context.</code><code class="descname">ContextFlags</code><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to identify the initialization and execution status of a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>.</p>
+<p>Used when a Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> or one of its attributes is being accessed.
+Also used to specify the context in which a value of the Component or its attribute is <a class="reference internal" href="Log.html#log-conditions"><span class="std std-ref">logged</span></a>..</p>
 </dd></dl>
 
 </div>
