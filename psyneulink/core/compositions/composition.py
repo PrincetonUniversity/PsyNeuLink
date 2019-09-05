@@ -2195,10 +2195,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #    - not used for Learning;
                     #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
                     #    - do not project to any other nodes.
-                    # FIX: STILL NOT ASSIGNING A1 AS TERMINAL IN SCRATCH PAD;
-                    #      BUT ALSO RISKS ASSIGNING BOTH A1 AND A2 SINCE BOTH ARE IN THE SAME CONSIDERATION_SET
+
                     # First, find last consideration_set in scheduler_processing that does not contain only
-                    #    learning-related nodes, ControlMechanism(s) or control-related ObjectiveMechanism(s)
+                    #    learning-related nodes, ControlMechanism(s) or control-related ObjectiveMechanism(s);
+                    #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
                     output_nodes = list([items for items in self.scheduler_processing.consideration_queue
                                            if any([item for item in items if
                                                    (not NodeRole.LEARNING in self.nodes_to_roles[item]
@@ -2206,7 +2206,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                     and not (isinstance(item, ObjectiveMechanism)
                                                              and item._role == CONTROL))
                                                    ])]
-                                          )[-1]
+                                          )[-1].copy()
 
                     # Next, remove any learning-related nodes, ControlMechanism(s) or control-related
                     #    ObjectiveMechanism(s) that may have "snuck in" (i.e., happen to be in the set)
@@ -2217,6 +2217,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 or (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)):
                             output_nodes.remove(node)
                     assert True
+
                     # Then, add any nodes that are not learning-related or a ControlMechanism,
                     #    and that have *no* efferent Projections
                     # IMPLEMENTATION NOTE:
