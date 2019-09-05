@@ -2216,7 +2216,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 or isinstance(node, ControlMechanism)
                                 or (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)):
                             output_nodes.remove(node)
-
+                    assert True
                     # Then, add any nodes that are not learning-related or a ControlMechanism,
                     #    and that have *no* efferent Projections
                     # IMPLEMENTATION NOTE:
