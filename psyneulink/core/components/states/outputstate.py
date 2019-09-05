@@ -594,7 +594,7 @@ from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function, function_type, method_type
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ALL, ASSIGN, CALCULATE, COMMAND_LINE, CONTEXT, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, \
     MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MECHANISM_VALUE, NAME, \
@@ -975,6 +975,7 @@ class OutputState(State_Base):
     #endregion
 
     @tc.typecheck
+    @handle_external_context()
     def __init__(self,
                  owner=None,
                  reference_value=None,
@@ -988,13 +989,6 @@ class OutputState(State_Base):
                  **kwargs):
 
         context = kwargs.pop(CONTEXT, None)
-        if context is None:
-            context = ContextFlags.COMMAND_LINE
-            self.context.source = ContextFlags.COMMAND_LINE
-            self.context.string = COMMAND_LINE
-        else:
-            context = ContextFlags.CONSTRUCTOR
-            self.context.source = ContextFlags.CONSTRUCTOR
 
         # For backward compatibility with CALCULATE, ASSIGN and INDEX
         if 'calculate' in kwargs:
@@ -1024,7 +1018,7 @@ class OutputState(State_Base):
             self.init_args['projections'] = projections
 
             # Flag for deferred initialization
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
+            self.initialization_status = ContextFlags.DEFERRED_INIT
             return
 
         self.reference_value = reference_value
@@ -1261,7 +1255,7 @@ class OutputState(State_Base):
         )
         return np.atleast_1d(value)
 
-    def _get_fallback_variable(self, execution_id=None):
+    def _get_fallback_variable(self, execution_id=None, context=None):
         # fall back to specified item(s) of owner's value
         try:
             return self.parameters.variable._get(execution_id)
@@ -1431,9 +1425,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
             # OutputState object
             if isinstance(output_state, OutputState):
-                # KDM 10/23/18: if DEFERRED_INIT is set, it will be set on the non-stateful .context
-                # attr so these should be ok
-                if output_state.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                if output_state.initialization_status == ContextFlags.DEFERRED_INIT:
                     try:
                         output_state_value = OutputState._get_state_function_value(owner,
                                                                                    output_state.function,
@@ -1504,7 +1496,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
-    if context & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
+    if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
         owner.output_states.extend(state_list)
     else:
         owner._output_states = state_list

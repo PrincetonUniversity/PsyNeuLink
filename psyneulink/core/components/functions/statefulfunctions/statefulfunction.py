@@ -31,7 +31,7 @@ from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, iscompatible
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 
 __all__ = ['StatefulFunction']
 
@@ -406,7 +406,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."
                     .format(noise, self.name))
 
-    def _try_execute_param(self, param, var):
+    def _try_execute_param(self, param, var, context=None):
 
         # FIX: [JDC 12/18/18 - HACK TO DEAL WITH ENFORCEMENT OF 2D BELOW]
         param_shape = np.array(param).shape
@@ -476,7 +476,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         return val
 
-    def reinitialize(self, *args, execution_context=NotImplemented):
+    @handle_external_context()
+    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
         """
             Resets `value <StatefulFunction.previous_value>`  and `previous_value <StatefulFunction.previous_value>`
             to the specified value(s).
@@ -503,7 +504,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         """
 
         if execution_context is NotImplemented:
-            execution_context = self.most_recent_execution_id
+            execution_context = self.most_recent_context.execution_id
 
         reinitialization_values = []
 

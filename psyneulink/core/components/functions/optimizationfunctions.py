@@ -32,7 +32,7 @@ from numbers import Number
 from typing import Iterator
 
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
@@ -424,7 +424,8 @@ class OptimizationFunction(Function_Base):
                                                        repr(SEARCH_TERMINATION_FUNCTION),
                                                        self.__class__.__name__))
 
-    def reinitialize(self, *args, execution_id=NotImplemented):
+    @handle_external_context()
+    def reinitialize(self, *args, execution_id=NotImplemented, context=None):
         """Reinitialize parameters of the OptimizationFunction
 
         Parameters to be reinitialized should be specified in a parameter specification dictionary, in which they key
@@ -437,7 +438,7 @@ class OptimizationFunction(Function_Base):
             * `search_termination_function <OptimizationFunction.search_termination_function>`
         """
         if execution_id is NotImplemented:
-            execution_id = self.most_recent_execution_id
+            execution_id = self.most_recent_context.execution_id
         self._validate_params(request_set=args[0])
 
         if DEFAULT_VARIABLE in args[0]:
@@ -483,7 +484,7 @@ class OptimizationFunction(Function_Base):
             for all the samples in the order they were evaluated; otherwise it is empty.
         """
 
-        if self._unspecified_args and self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZED:
+        if self._unspecified_args and self.initialization_status == ContextFlags.INITIALIZED:
             warnings.warn("The following arg(s) were not specified for {}: {} -- using default(s)".
                           format(self.name, ', '.join(self._unspecified_args)))
             self._unspecified_args = []
@@ -525,7 +526,7 @@ class OptimizationFunction(Function_Base):
             # Get next sample of sample
             new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, execution_id=execution_id)
             # Compute new value based on new sample
-            new_value = call_with_pruned_args(self.objective_function, new_sample, execution_id=execution_id)
+            new_value = call_with_pruned_args(self.objective_function, new_sample, execution_id=execution_id, context=context)
             self._report_value(new_value)
             iteration += 1
             max_iterations = self.parameters.max_iterations._get(execution_id)
@@ -892,7 +893,7 @@ class GradientOptimization(OptimizationFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -916,7 +917,8 @@ class GradientOptimization(OptimizationFunction):
                     raise OptimizationFunctionError(f"All items in {repr(SEARCH_SPACE)} arg for {self.name}{owner_str} "
                                                     f"must be or resolve a 2-item list or tuple; this doesn't: {s}.")
 
-    def reinitialize(self, *args):
+    @handle_external_context()
+    def reinitialize(self, *args, context=None):
         super().reinitialize(*args)
 
         # Differentiate objective_function using autograd.grad()
@@ -1291,7 +1293,7 @@ class GridSearch(OptimizationFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         self.stateful_attributes = ["random_state"]
 
@@ -1317,12 +1319,12 @@ class GridSearch(OptimizationFunction):
             #                                            self.__class__.__name__,
             #                                            ))
 
-
-    def reinitialize(self, *args, execution_id=NotImplemented):
+    @handle_external_context()
+    def reinitialize(self, *args, execution_id=NotImplemented, context=None):
         """Assign size of `search_space <GridSearch.search_space>"""
         if execution_id is NotImplemented:
-            execution_id = self.most_recent_execution_id
-        super(GridSearch, self).reinitialize(*args, execution_id=execution_id)
+            execution_id = self.most_recent_context.execution_id
+        super(GridSearch, self).reinitialize(*args, execution_id=execution_id, context=context)
         sample_iterators = args[0]['search_space']
         owner_str = ''
         if self.owner:
@@ -1611,7 +1613,6 @@ class GridSearch(OptimizationFunction):
                 stop = len(self.search_space)
 
             # # TEST PRINT
-            # print("\nContext: {}".format(self.context.flags_string))
             # print("search_space length: {}".format(len(self.search_space)))
             # print("Rank: {}\tSize: {}\tChunk size: {}".format(rank, size, chunk_size))
             # print("START: {0}\tEND: {1}\tPROCESSED: {2}".format(start,stop,stop-start))
@@ -1733,7 +1734,7 @@ class GridSearch(OptimizationFunction):
         """Get next sample from grid.
         This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
         """
-        initialization_status = self.parameters.context._get(execution_id).initialization_status
+        initialization_status = self.initialization_status
         if initialization_status == ContextFlags.INITIALIZING:
             return [signal.start for signal in self.search_space]
         try:
@@ -1940,7 +1941,7 @@ class GaussianProcess(OptimizationFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)

@@ -196,9 +196,6 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         # Template for memory_store entries
         default_variable = [np.zeros(content_size)]
 
@@ -219,7 +216,6 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          **kwargs
                          )
 

@@ -418,7 +418,7 @@ from psyneulink.core.components.states.modulatorysignals.gatingsignal import Gat
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGatingAllocation
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTEXT, \
     CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, EID_SIMULATION, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
@@ -535,7 +535,7 @@ class DefaultAllocationFunction(Function_Base):
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _function(self,
                  variable=None,
@@ -985,9 +985,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                  prefs:is_pref_set=None,
                  **kwargs
                  ):
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         function = function or DefaultAllocationFunction
         modulatory_signals = modulatory_signals or []
         if not isinstance(modulatory_signals, list):
@@ -1015,7 +1012,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                   name=name,
                                                   function=function,
                                                   prefs=prefs,
-                                                  context=context,
                                                   **kwargs)
 
         if system is not None:
@@ -1469,7 +1465,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
     # FIX: TBI FOR COMPOSITION
     @tc.typecheck
-    def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
+    @handle_external_context()
+    def assign_as_controller(self, system:System_Base, context=None):
         """Assign ModulatoryMechanism as `controller <System.controller>` for a `System`.
 
         **system** must be a System for which the ModulatoryMechanism should be assigned as the `controller
@@ -1502,7 +1499,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         COMMENT
         """
 
-        if context == ContextFlags.COMMAND_LINE:
+        if context.source == ContextFlags.COMMAND_LINE:
             system.controller = self
             return
 
@@ -1580,7 +1577,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # Flag ObjectiveMechanism as associated with a ModulatoryMechanism that is a controller for the System
         self._objective_mechanism.for_controller = True
 
-        if context != ContextFlags.PROPERTY:
+        if context.source != ContextFlags.PROPERTY:
             system._controller = self
 
         self._activate_projections_for_compositions(system)
@@ -1619,7 +1616,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self.parameters.value._set(value, execution_id)
         self._update_output_states(execution_id=execution_id,
                                    runtime_params=runtime_params,
-                                   context=ContextFlags.COMPOSITION)
+                                   context=context)
 
     @property
     def monitored_output_states(self):

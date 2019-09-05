@@ -285,7 +285,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.shellclasses import Mechanism, System_Base
 from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import ALL, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT_EXECUTE_METHOD_ONLY, PROJECTIONS
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -917,7 +917,7 @@ class LCControlMechanism(ControlMechanism):
         super()._add_system(system, role)
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
             # Call with ContextFlags.COMPONENT so that OutputStates are replaced rather than added
-            self._instantiate_output_states(context=ContextFlags.COMPONENT)
+            self._instantiate_output_states(context=Context(source=ContextFlags.COMPONENT))
 
     @tc.typecheck
     def add_modulated_mechanisms(self, mechanisms:list):

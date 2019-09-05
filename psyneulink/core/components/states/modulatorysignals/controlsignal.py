@@ -730,10 +730,10 @@ class ControlSignal(ModulatorySignal):
         duration_cost = 0
         cost = None
 
-        intensity_cost_function = Exponential
-        adjustment_cost_function = Linear
-        duration_cost_function = SimpleIntegrator
-        combine_costs_function = Reduce(operation=SUM)
+        intensity_cost_function = Parameter(Exponential, stateful=False, loggable=False)
+        adjustment_cost_function = Parameter(Linear, stateful=False, loggable=False)
+        duration_cost_function = Parameter(SimpleIntegrator, stateful=False, loggable=False)
+        combine_costs_function = Parameter(Reduce(operation=SUM), stateful=False, loggable=False)
         modulation = None
 
         _validate_cost_options = get_validator_by_type_only([ControlSignalCosts, list])
@@ -960,7 +960,7 @@ class ControlSignal(ModulatorySignal):
     def _instantiate_cost_attributes(self, context=None):
         if self.cost_options:
             # Default cost params
-            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+            if self.initialization_status != ContextFlags.DEFERRED_INIT:
                 self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
             else:
                 self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
@@ -999,7 +999,7 @@ class ControlSignal(ModulatorySignal):
     def _initialize_cost_attributes(self, context=None):
         if self.cost_options:
             # Default cost params
-            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+            if self.initialization_status != ContextFlags.DEFERRED_INIT:
                 self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
             else:
                 self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)

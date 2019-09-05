@@ -389,7 +389,7 @@ from collections import OrderedDict, namedtuple
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.globals.context import ContextFlags, _get_time
+from psyneulink.core.globals.context import ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.keywords import ALL, CONTEXT, EID_SIMULATION, FUNCTION_PARAMETER_PREFIX, MODULATED_PARAMETER_PREFIX, TIME, VALUE
 from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, is_component
@@ -840,7 +840,7 @@ class Log:
         value,
         time=None,
         condition:tc.optional(LogCondition)=None,
-        context:tc.optional(tc.enum(ContextFlags.COMMAND_LINE))=None,
+        context=None,
         execution_id=None
     ):
         """Add LogEntry to an entry in the Log
@@ -875,16 +875,14 @@ class Log:
             self.entries[self.owner.name] = value
 
         else:
-            condition = condition or context
+            condition = condition or context.execution_phase
             if not condition:
                 # IMPLEMENTATION NOTE:  Functions not supported for logging at this time.
                 if isinstance(self.owner, Function):
                     return
-                elif self.owner.parameters.context._get(execution_id).flags:
-                    condition = self.owner.parameters.context._get(execution_id).flags
                 else:
                     raise LogError("PROGRAM ERROR: No condition or context specified in call to _log_value for "
-                                   "{} and it has not context.flags".format(self.owner.name))
+                                   "{}".format(self.owner.name))
 
             condition_string = ContextFlags._get_context_string(condition)
 
@@ -895,11 +893,9 @@ class Log:
                 time = time or _get_time(self.owner, condition)
                 self.entries[self.owner.name] = LogEntry(time, condition_string, value)
 
-        if not condition & ContextFlags.COMMAND_LINE:
-            self.owner.prev_context = self.owner.context
-
     @tc.typecheck
-    def log_values(self, entries, execution_context=None):
+    @handle_external_context()
+    def log_values(self, entries, execution_context=None, context=None):
         from psyneulink.core.globals.parameters import parse_execution_context
         """Log the value of one or more Components programmatically.
 
@@ -925,7 +921,7 @@ class Log:
         for entry in entries:
             param = self._get_parameter_from_item_string(entry)
             execution_id = parse_execution_context(execution_context)
-            param._log_value(param._get(execution_id), execution_id, ContextFlags.COMMAND_LINE)
+            param._log_value(param._get(execution_id), execution_id, context)
 
     def get_logged_entries(self, entries=ALL, execution_contexts=NotImplemented, exclude_sims=False):
         from psyneulink.core.globals.parameters import parse_execution_context
@@ -1769,7 +1765,7 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
                 #                  curr_condition,
                 #                  component.value)
                 # component.log._log_value(value=value, context=context)
-                component.log._log_value(value=component.parameters.value._get(execution_id), condition=curr_condition.name)
+                component.log._log_value(value=component.parameters.value._get(execution_id), condition=curr_condition)
 
         for proj in mech.afferents:
             for component in proj.log.loggable_components:
@@ -1780,7 +1776,7 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
                     #                  context,
                     #                  component.value)
                     # component.log._log_value(value, context)
-                    component.log._log_value(value=component.parameters.value._get(execution_id), condition=curr_condition.name)
+                    component.log._log_value(value=component.parameters.value._get(execution_id), condition=curr_condition)
 
     # FIX: IMPLEMENT ONCE projections IS ADDED AS ATTRIBUTE OF Composition
     # for proj in composition.projections:

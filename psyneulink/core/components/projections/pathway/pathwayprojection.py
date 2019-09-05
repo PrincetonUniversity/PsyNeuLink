@@ -68,33 +68,6 @@ class PathwayProjection_Base(Projection_Base):
 
     componentCategory = PATHWAY_PROJECTION
 
-    def __init__(self,
-                 receiver,
-                 sender=None,
-                 weight=None,
-                 exponent=None,
-                 function=None,
-                 params=None,
-                 name=None,
-                 prefs=None,
-                 context=None,
-                 **kwargs):
-
-        if context != ContextFlags.CONSTRUCTOR:
-            raise PathwayProjectionError(f"Direct call to abstract class {self.__name__} is not allowed; "
-                                         f"use projection() or a subclasses.")
-
-        super().__init__(receiver=receiver,
-                         sender=sender,
-                         weight=weight,
-                         exponent=exponent,
-                         function=function,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         context=context,
-                         **kwargs)
-
     def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
 
         from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -103,7 +76,7 @@ class PathwayProjection_Base(Projection_Base):
         name_template = "{}[{}]"
         projection_name_template = "{} from {} to {}"
 
-        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if self.initialization_status == ContextFlags.DEFERRED_INIT:
             if self.init_args[SENDER]:
                 sender = self.init_args[SENDER]
                 if isinstance(sender, type):
@@ -122,7 +95,7 @@ class PathwayProjection_Base(Projection_Base):
         elif not self.className + '-' in self.name:
             return self.name
 
-        elif self.context.initialization_status == ContextFlags.INITIALIZED:
+        elif self.initialization_status == ContextFlags.INITIALIZED:
             if self.sender.owner:
                 sender_name = name_template.format(self.sender.owner.name, self.sender.name)
             if self.receiver.owner:
@@ -130,10 +103,11 @@ class PathwayProjection_Base(Projection_Base):
             self.name = projection_name_template.format(self.className, sender_name, receiver_name)
 
         else:
-            raise PathwayProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
-                                            format(self,
-                                                   ContextFlags._get_context_string(
-                                                           self.context.flags, INITIALIZATION_STATUS)))
+            raise PathwayProjectionError(
+                "PROGRAM ERROR: {} has unrecognized initialization_status ({})".format(
+                    self, self.initialization_status
+                )
+            )
 
     def _delete_projection(projection):
         """Delete Projection and its entry in receiver and sender lists"""

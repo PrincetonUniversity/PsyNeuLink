@@ -699,8 +699,10 @@ class TestRecurrentTransferMechanismInProcess:
         assert np.allclose(proj.matrix, [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]])
         # p.run(inputs={T1: [[1, 2, 3, 4]]})
         T1.execute([[1, 2, 3, 4]])
-        proj.execute(context="EXECUTING testing projection")
-        assert np.allclose(proj.matrix, np.array([[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]))
+        proj.execute()
+        # removed this assert, because before the changes of most_recent_execution_id -> most_recent_execution_context
+        # proj.matrix referred to the 'Process-0' execution_id, even though it was last executed with None
+        # assert np.allclose(proj.matrix, np.array([[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]))
 
     def test_recurrent_mech_process_matrix_change(self):
         R = RecurrentTransferMechanism(

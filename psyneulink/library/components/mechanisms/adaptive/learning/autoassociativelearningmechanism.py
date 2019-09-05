@@ -344,7 +344,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # self.init_args['name'] = name
 
         # # Flag for deferred initialization
-        # self.context.initialization_status = ContextFlags.DEFERRED_INIT
+        # self.initialization_status = ContextFlags.DEFERRED_INIT
         # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         # self._learning_rate = learning_rate
@@ -362,7 +362,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         return variable
-    
+
     def _instantiate_attributes_after_function(self, context=None):
         super(AutoAssociativeLearningMechanism, self)._instantiate_attributes_after_function(context=context)
         # KAM 2/27/19 added the line below to set the learning rate of the hebbian learning function to the learning
@@ -417,21 +417,8 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             context=context
         )
 
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal._get(execution_id)))
-
-        # # TEST PRINT
-        # if not self.context.initialization_status == ContextFlags.INITIALIZING:
-        #     if self.context.composition:
-        #         time = self.context.composition.scheduler_processing.clock.simple_time
-        #     else:
-        #         time = self.current_execution_time
-        #     print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]\nTRIAL:  {}  TIME-STEP: {}".
-        #         format(self.context.flags_string,
-        #                time.trial,
-        #                # self.pass_,
-        #                time.time_step))
-        #     print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         value = np.array([learning_signal])
 
@@ -449,10 +436,12 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         super()._update_output_states(execution_id, runtime_params, context)
 
         from psyneulink.core.components.process import Process
-        if self.parameters.learning_enabled._get(execution_id) and self.parameters.context._get(execution_id).composition and not isinstance(self.parameters.context._get(execution_id).composition, Process):
+        if self.parameters.learning_enabled._get(execution_id) and context.composition and not isinstance(context.composition, Process):
             learned_projection = self.activity_source.recurrent_projection
-            learned_projection.execute(execution_id=execution_id, context=ContextFlags.LEARNING)
-            learned_projection.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
+            old_exec_phase = context.execution_phase
+            context.execution_phase = ContextFlags.LEARNING
+            learned_projection.execute(execution_id=execution_id, context=context)
+            context.execution_phase = old_exec_phase
 
     @property
     def activity_source(self):

@@ -648,7 +648,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         time_step_size = self.get_current_mechanism_param("time_step_size", execution_id)
 
         # if not self.integrator_function:
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.initialization_status == ContextFlags.INITIALIZING:
             self.integrator_function = LeakyCompetingIntegrator(
                 function_variable,
                 initializer=initial_value,

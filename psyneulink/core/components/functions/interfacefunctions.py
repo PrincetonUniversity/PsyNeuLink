@@ -34,18 +34,6 @@ class InterfaceFunction(Function_Base):
     """
     componentType = TRANSFER_FUNCTION_TYPE
 
-    def __init__(self,
-                 default_variable,
-                 params,
-                 owner,
-                 prefs,
-                 context):
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
 
 class InterfaceStateMap(InterfaceFunction):
     """
@@ -129,7 +117,7 @@ class InterfaceStateMap(InterfaceFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         # self.functionOutputType = None
 

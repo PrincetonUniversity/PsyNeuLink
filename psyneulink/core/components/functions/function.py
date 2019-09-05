@@ -133,6 +133,7 @@ Class Reference
 
 """
 
+import abc
 import numbers
 import numpy as np
 import typecheck as tc
@@ -145,7 +146,7 @@ from random import randint
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.shellclasses import Function, Mechanism
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
     MODULATORY_PROJECTION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
@@ -450,7 +451,6 @@ def get_param_value_for_function(owner, function):
 #         return convert_output_type(result)
 #     return wrapper
 
-
 class Function_Base(Function):
     """
     Function_Base(           \
@@ -623,6 +623,7 @@ class Function_Base(Function):
         FUNCTION_OUTPUT_TYPE: None  # Default is to not convert
     })
 
+    @abc.abstractmethod
     def __init__(self,
                  default_variable,
                  params,
@@ -645,10 +646,7 @@ class Function_Base(Function):
         :return:
         """
 
-        if context != ContextFlags.CONSTRUCTOR:
-            raise FunctionError("Direct call to abstract class Function() is not allowed; use a Function subclass")
-
-        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if self.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
             self.init_args[NAME] = name
             return
@@ -673,6 +671,7 @@ class Function_Base(Function):
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
 
+    @handle_external_context()
     def function(self,
                  variable=None,
                  execution_id=None,
@@ -691,9 +690,19 @@ class Function_Base(Function):
                                params=params,
                                context=context,
                                **kwargs)
-        self.most_recent_execution_id=execution_id
+        self.most_recent_context.execution_id=execution_id
         self.parameters.value._set(value, execution_context=execution_id)
         return value
+
+    @abc.abstractmethod
+    def _function(
+        self,
+        variable=None,
+        execution_id=None,
+        params=None,
+        context=None
+    ):
+        pass
 
     def _parse_arg_generic(self, arg_val):
         if isinstance(arg_val, list):
@@ -1036,7 +1045,7 @@ class ArgumentTherapy(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         """Validates variable and returns validated value

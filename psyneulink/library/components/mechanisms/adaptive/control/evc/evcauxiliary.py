@@ -23,7 +23,7 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.core.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_PARAMS, NOISE, PREDICTION_MECHANISM, RATE, \
     kwPreferenceSetName, kwProgressBarChar
@@ -148,7 +148,7 @@ class ValueFunction(EVCAuxiliaryFunction):
     def __init__(self, function=None):
         function = function or self.function
         super().__init__(function=function,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _function(
         self,
@@ -201,7 +201,7 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         """
 
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             return (np.array([0]), np.array([0]), np.array([0]))
 
         # remove this in favor of attribute or parameter?
@@ -212,15 +212,15 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         # Aggregate costs
         if isinstance(cost_function, UserDefinedFunction):
-            cost = cost_function._execute(controller=controller, costs=costs, execution_id=execution_id)
+            cost = cost_function._execute(controller=controller, costs=costs, execution_id=execution_id, context=context)
         else:
             cost = cost_function._execute(variable=costs, execution_id=execution_id, context=context)
 
         # Combine outcome and cost to determine value
         if isinstance(combine_function, UserDefinedFunction):
-            value = combine_function._execute(controller=controller, outcome=outcome, cost=cost, execution_id=execution_id)
+            value = combine_function._execute(controller=controller, outcome=outcome, cost=cost, execution_id=execution_id, context=context)
         else:
-            value = combine_function._execute(variable=[outcome, -cost], execution_id=execution_id)
+            value = combine_function._execute(variable=[outcome, -cost], execution_id=execution_id, context=context)
 
         return (value, outcome, cost)
 
@@ -301,7 +301,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         function = function or self.function
         super().__init__(function=function,
                          owner=owner,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _function(
         self,
@@ -333,8 +333,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         """
 
-        if (self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING or
-                self.owner.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
+        if self.is_initializing:
             return [defaultControlAllocation]
 
         # Get value of, or set default for standard args
@@ -347,12 +346,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         EVC_values = []
         EVC_policies = []
 
-        # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
-        # FIX 3/30/18 - IS controller CORRECT FOR THIS, OR SHOULD IT BE System (controller.system)??
-        controller.parameters.context._get(execution_id).execution_phase = ContextFlags.SIMULATION
-        controller.parameters.context._get(execution_id).string = "{0} EXECUTING {1} of {2}".format(controller.name,
-                                                                      EVC_SIMULATION,
-                                                                      controller.system.name)
+        context.execution_phase = ContextFlags.SIMULATION
         # Get allocation_samples for all ControlSignals
         num_control_signals = len(controller.control_signals)
         control_signal_sample_lists = []
@@ -644,7 +638,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
 
     # Re-assign values of reinitialization attributes to their value at entry
     for mechanism in reinitialization_values:
-        mechanism.reinitialize(*reinitialization_values[mechanism], execution_context=execution_id)
+        mechanism.reinitialize(*reinitialization_values[mechanism], execution_context=execution_id, context=context)
 
     EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
 
@@ -876,6 +870,7 @@ class PredictionMechanism(IntegratorMechanism):
         rate = Parameter(1.0, modulable=True)
 
     @tc.typecheck
+    @handle_external_context(source=None)
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -894,9 +889,9 @@ class PredictionMechanism(IntegratorMechanism):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if not context in {ContextFlags.COMPONENT, ContextFlags.COMPOSITION, ContextFlags.COMMAND_LINE}:
+        if not context.source in {ContextFlags.COMPONENT, ContextFlags.COMPOSITION, ContextFlags.COMMAND_LINE}:
             warnings.warn("PredictionMechanism should not be constructed on its own.  If you insist,"
-                          "set context=ContextFlags.COMMAND_LINE, but proceed at your peril!")
+                          "set context=Context(source=ContextFlags.COMMAND_LINE), but proceed at your peril!")
             return
 
         if params and FUNCTION in params:
@@ -944,9 +939,10 @@ class PredictionMechanism(IntegratorMechanism):
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         """Update predicted value on "real" but not simulation runs"""
 
-        if self.parameters.context._get(execution_id).execution_phase == ContextFlags.SIMULATION:
+        if ContextFlags.SIMULATION in context.execution_phase:
             # Just return current value for simulation runs
             value = self.parameters.value._get(execution_id)
+
         else:
             # Update deque with new input for any other type of run
             value = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)

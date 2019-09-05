@@ -385,6 +385,7 @@ COMMENT
 .. _Projection_Class_Reference:
 
 """
+import abc
 import inspect
 import itertools
 import warnings
@@ -627,6 +628,7 @@ class Projection_Base(Projection):
     requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
     requiredParamClassDefaultTypes.update({PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
 
+    @abc.abstractmethod
     def __init__(self,
                  receiver,
                  sender=None,
@@ -688,16 +690,11 @@ class Projection_Base(Projection):
         from psyneulink.core.components.states.parameterstate import ParameterState
         from psyneulink.core.components.states.state import State_Base
 
-        if context != ContextFlags.CONSTRUCTOR:
-            raise ProjectionError("Direct call to abstract class Projection() is not allowed; "
-                                 "use projection() or one of the following subclasses: {0}".
-                                 format(", ".join("{!s}".format(key) for (key) in ProjectionRegistry.keys())))
-
         params = self._assign_args_to_param_dicts(weight=weight,
                                                   exponent=exponent,
                                                   params=params)
 
-        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if self.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
             self.init_args = locals().copy()
             self.init_args[NAME] = name
@@ -943,10 +940,10 @@ class Projection_Base(Projection):
             # params['matrix'] to state.value, calls setattr(state.owner, 'matrix', state.value), which sets the
             # 'matrix' parameter state's variable to ALSO be equal to state.value! If this is unintended, please change.
             value = state.parameters.value._get(execution_id)
-            getattr(self.parameters, state_name)._set(value, execution_id)
+            getattr(self.parameters, state_name)._set(value, execution_id, context)
             # manual setting of previous value to matrix value (happens in above param['matrix'] setting
             if state_name == MATRIX:
-                state.function.parameters.previous_value._set(value, execution_id)
+                state.function.parameters.previous_value._set(value, execution_id, context)
 
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
@@ -955,16 +952,12 @@ class Projection_Base(Projection):
         if variable is None:
             variable = self.sender.parameters.value._get(execution_id)
 
-        self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
-        self.parameters.context._get(execution_id).string = context
-
         value = super()._execute(
             variable=variable,
             execution_id=execution_id,
             runtime_params=runtime_params,
             context=context
         )
-        self.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
         return value
 
     def _activate_for_compositions(self, composition):
@@ -987,7 +980,7 @@ class Projection_Base(Projection):
     @property
     def socket_assignments(self):
 
-        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if self.initialization_status == ContextFlags.DEFERRED_INIT:
             sender = self.init_args[SENDER]
             receiver = self.init_args[RECEIVER]
         else:
@@ -1192,7 +1185,7 @@ def _parse_projection_spec(projection_spec,
                                   "between Projection and ProjectionTuple")
         projection._weight = proj_spec_dict[WEIGHT] or projection.weight
         projection._exponent = proj_spec_dict[EXPONENT] or projection.exponent
-        if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if projection.initialization_status == ContextFlags.DEFERRED_INIT:
             projection.init_args[NAME] = proj_spec_dict[NAME] or projection.init_args[NAME]
         else:
             projection.name = proj_spec_dict[NAME] or projection.name
@@ -1778,7 +1771,7 @@ def _validate_connection_request(
     if isinstance(projection_spec, Projection):
 
         # It is in deferred_init status
-        if projection_spec.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if projection_spec.initialization_status == ContextFlags.DEFERRED_INIT:
 
             # Try to get the State to which the Projection will be connected when fully initialized
             #     as confirmation that it is the correct type for state_type
@@ -1899,7 +1892,7 @@ def _validate_receiver(sender_mech:Mechanism,
     """
     spec_type = " in the {} arg ".format(spec_type) or ""
 
-    if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+    if projection.initialization_status == ContextFlags.DEFERRED_INIT:
         # receiver = projection.init_args['receiver'].owner
         state = projection.init_args['receiver']
         receiver = state.owner
