@@ -363,7 +363,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, StandardOutputStates
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter, parse_execution_context
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
@@ -1124,7 +1124,7 @@ class DDM(ProcessingMechanism):
 
             result = super()._execute(variable, execution_id=execution_id, context=context)
 
-            if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            if self.initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
             return np.array([result[0], [result[1]]])
@@ -1164,20 +1164,21 @@ class DDM(ProcessingMechanism):
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
             return return_value
 
-    def reinitialize(self, *args, execution_context=NotImplemented):
+    @handle_external_context()
+    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
         if execution_context is NotImplemented:
-            execution_id = self.most_recent_execution_id
+            execution_id = self.most_recent_context.execution_id
         else:
             execution_id = parse_execution_context(execution_context)
 
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
         if isinstance(self.function, IntegratorFunction):
-            new_values = self.function.reinitialize(*args, execution_context=execution_id)
-            self.parameters.value._set(np.array(new_values), execution_id)
+            new_values = self.function.reinitialize(*args, execution_context=execution_id, context=context)
+            self.parameters.value._set(np.array(new_values), execution_id, context=context)
             self._update_output_states(execution_id=execution_id,
-                                       context="REINITIALIZING")
+                                       context=context)
 
     def is_finished(self, execution_context=None):
         # find the single numeric entry in previous_value

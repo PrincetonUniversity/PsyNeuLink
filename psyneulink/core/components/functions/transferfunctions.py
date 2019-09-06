@@ -103,10 +103,10 @@ class TransferFunction(Function_Base):
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
-                 params,
-                 owner,
-                 prefs,
-                 context):
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 context=None):
 
         if not hasattr(self, BOUNDS):
             raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
@@ -236,7 +236,7 @@ class Identity(TransferFunction):  # -------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         # self.functionOutputType = None
 
@@ -439,7 +439,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -698,7 +698,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -970,7 +970,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -1271,7 +1271,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -1500,7 +1500,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _function(self,
                  variable=None,
@@ -1745,7 +1745,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -2033,7 +2033,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -2316,7 +2316,7 @@ class SoftMax(TransferFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         if variable is None:
@@ -2706,7 +2706,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 

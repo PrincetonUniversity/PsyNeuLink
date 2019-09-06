@@ -620,9 +620,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             warnings.warn(f'Use of {repr(MONITORED_OUTPUT_STATES)} as arg of {self.__class__.__name__} is deprecated;  '
                           f'use {repr(MONITOR)} instead')
             monitor = kwargs.pop(MONITORED_OUTPUT_STATES)
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         monitor = monitor or None # deal with possibility of empty list
         input_states = monitor
         if output_states is None or output_states is OUTCOME:
@@ -650,7 +647,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          **kwargs)
 
         # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
@@ -685,7 +681,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
 
         # If call is for initialization
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.initialization_status == ContextFlags.INITIALIZING:
             # Use self.input_states (containing specs from **input_states** arg of constructor)
             #    or pass off instantiation of default InputState(s) to super
             input_states = self.input_states or None
@@ -786,9 +782,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             else:
                 reference_value.append(projection_tuple.state.value)
 
+        context.source = ContextFlags.METHOD
         input_states = self._instantiate_input_states(monitor_specs=monitor_specs,
                                                       reference_value=reference_value,
-                                                      context = ContextFlags.METHOD)
+                                                      context=context
+                                                      )
 
         output_states = [[projection.sender for projection in state.path_afferents] for state in input_states]
 
@@ -974,7 +972,7 @@ def _parse_monitor_specs(monitor_specs):
 #         if isinstance(sender, OutputState):
 #             # Projection has been specified for receiver and initialization begun, so call deferred_init()
 #             if receiver.path_afferents:
-#                 if not receiver.path_afferents[0].context.initialization_status == ContextFlags.DEFERRED_INIT:
+#                 if not receiver.path_afferents[0].initialization_status == ContextFlags.DEFERRED_INIT:
 #                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
 #                                                   "implemented and initialized ({})".
 #                                                   format(receiver.name, owner.name, receiver.path_afferents[0].name))
@@ -989,7 +987,7 @@ def _parse_monitor_specs(monitor_specs):
 #                                                          projection_spec,
 #                                                          receiver.path_afferents[0].function_params[MATRIX]))
 #                 receiver.path_afferents[0].init_args[SENDER] = sender
-#                 receiver.path_afferents[0]._deferred_init()
+#                 receiver.path_afferents[0]._deferred_init(context=context)
 #             else:
 #                 projection_spec = MappingProjection(sender=sender,
 #                                                     receiver=receiver,

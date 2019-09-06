@@ -245,7 +245,7 @@ class LeabraFunction(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         if not isinstance(variable, (list, np.ndarray, numbers.Number)):
@@ -272,14 +272,14 @@ class LeabraFunction(Function_Base):
                               format(request_set[NETWORK], type(request_set[NETWORK])))
         super()._validate_params(request_set, target_set, context)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
                  context=None):
         network = self.parameters.network._get(execution_id)
         # HACK: otherwise the INITIALIZING function executions impact the state of the leabra network
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             output_size = len(network.layers[-1].units)
             return np.zeros(output_size)
 
@@ -599,7 +599,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _execute(
         self,

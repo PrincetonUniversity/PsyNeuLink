@@ -40,7 +40,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, ContentAddressableMemory_FUNCTION, \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM
 from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
@@ -237,7 +237,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -253,7 +253,8 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         self.has_initializers = True
 
-    def reinitialize(self, *args, execution_context=NotImplemented):
+    @handle_external_context()
+    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
         """
 
         Clears the `previous_value <Buffer.previous_value>` deque.
@@ -266,7 +267,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         """
         if execution_context is NotImplemented:
-            execution_context = self.most_recent_execution_id
+            execution_context = self.most_recent_context.execution_id
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
@@ -324,7 +325,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
         # Just return current input (for validation).
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             return variable
 
         previous_value = np.array(self.get_previous_value(execution_id))
@@ -555,7 +556,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         If a duplicate key is identified during retrieval (e.g., **duplicate_keys** is changed from True to
         False), a warning is issued and zeros are returned.  If *OVERWRITE*, then retrieval of a cue with an identical
         key causes the value at that entry to be overwritten with the new value.
-        
+
     equidistant_keys_select:  RANDOM | OLDEST | NEWEST
         deterimines which entry is retrieved when duplicate keys are identified or are indistinguishable by the
         `distance_function <ContentAddressableMemory.distance_function>`.
@@ -734,7 +735,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         if self.previous_value.size != 0:
             self.parameters.key_size._set(len(self.previous_value[KEYS][0]))
@@ -1040,7 +1041,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         if isinstance(self.selection_function, type):
             self.selection_function = self.selection_function()
 
-    def reinitialize(self, *args, execution_context=NotImplemented):
+    @handle_external_context()
+    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
         """
         reinitialize(<new_dictionary> default={})
 
@@ -1055,7 +1057,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         `previous_value <ContentAddressableMemory.previous_value>`.
         """
         if execution_context is NotImplemented:
-            execution_context = self.most_recent_execution_id
+            execution_context = self.most_recent_context.execution_id
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
@@ -1125,7 +1127,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # and return current value (variable[1]) for validation.
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             return variable
 
         # Set key_size and val_size if this is the first entry

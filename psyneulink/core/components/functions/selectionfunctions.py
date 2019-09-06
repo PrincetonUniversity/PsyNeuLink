@@ -66,10 +66,10 @@ class SelectionFunction(Function_Base):
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
-                 params,
-                 owner,
-                 prefs,
-                 context):
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 context=None):
 
         # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE OneHot DOESN"T IMPLEMENT MODULATORY PARAMS
         # try:
@@ -263,7 +263,7 @@ class OneHot(SelectionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         if reset_default_variable_flexibility:
             self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
@@ -285,7 +285,7 @@ class OneHot(SelectionFunction):
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
                                     "array of elements each of which is in the (0,1) interval".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
-            if self.context.initialization_status == ContextFlags.INITIALIZING:
+            if self.is_initializing:
                 return
             if not np.sum(prob_dist)==1:
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "

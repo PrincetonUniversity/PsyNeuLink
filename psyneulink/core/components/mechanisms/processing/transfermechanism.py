@@ -369,7 +369,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, \
     MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
@@ -981,7 +981,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 params=params,
                 name=name,
                 prefs=prefs,
-                context=ContextFlags.CONSTRUCTOR,
+
                 **kwargs
         )
 
@@ -1020,9 +1020,9 @@ class TransferMechanism(ProcessingMechanism_Base):
             if isinstance(transfer_function, (function_type, method_type, UserDefinedFunction)):
                 var_shape = self.defaults.variable.shape
                 if isinstance(transfer_function, UserDefinedFunction):
-                    val_shape = transfer_function._execute(self.defaults.variable).shape
+                    val_shape = transfer_function._execute(self.defaults.variable, context=context).shape
                 else:
-                    val_shape = np.array(transfer_function(self.defaults.variable)).shape
+                    val_shape = np.array(transfer_function(self.defaults.variable, context=context)).shape
 
                 if val_shape != var_shape:
                     raise TransferError("The shape ({}) of the value returned by the Python function, method, or UDF "
@@ -1049,7 +1049,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             # If assigned as a Function, set TransferMechanism as its owner, and assign its actual function to noise
             if isinstance(noise, DistributionFunction):
                 noise.owner = self
-                target_set[NOISE] = noise._execute
+                target_set[NOISE] = noise.execute
             self._validate_noise(target_set[NOISE])
 
         # Validate INTEGRATOR_FUNCTION:
@@ -1102,7 +1102,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             else:
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
-                        noise[i] = noise[i]._execute
+                        noise[i] = noise[i].execute
                     if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
                         raise MechanismError("The elements of a noise list or array must be floats or functions. "
                             "{} is not a valid noise element for {}".format(noise[i], self.name))
@@ -1283,10 +1283,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                                     f"size ({variable.shape[-1]}) of the innermost dimension (axis 0) of its "
                                     f"{repr(VARIABLE)} (i.e., the length of its items .")
             self.integrator_function.parameters.variable.default_value = variable
-            function_context_buffer = self.integrator_function.context.initialization_status
-            self.integrator_function.context.initialization_status = ContextFlags.INITIALIZING
-            self.integrator_function.parameters.value.default_value = self.integrator_function(variable)
-            self.integrator_function.context.initialization_status = function_context_buffer
+            function_context_buffer = self.integrator_function.initialization_status
+            self.integrator_function.initialization_status = ContextFlags.INITIALIZING
+            self.integrator_function.parameters.value.default_value = self.integrator_function(variable, context=context)
+            self.integrator_function.initialization_status = function_context_buffer
         # MODIFIED 6/24/19 END
 
         self.has_integrated = True
@@ -1313,7 +1313,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE, execution_id)
 
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.initialization_status == ContextFlags.INITIALIZING:
             self._instantiate_integrator_function(variable=function_variable,
                                                   noise=noise,
                                                   initializer=initial_value,
@@ -1492,8 +1492,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return value
 
-    def reinitialize(self, *args, execution_context=NotImplemented):
-        super().reinitialize(*args, execution_context=execution_context)
+    @handle_external_context()
+    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
+        super().reinitialize(*args, execution_context=execution_context, context=context)
         self.parameters.previous_value.set(None, execution_context, override=True)
 
     def _update_previous_value(self, execution_id=None):
@@ -1504,7 +1505,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             self.parameters.previous_value._set(value, execution_id)
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
-        if context is ContextFlags.INSTANTIATE:
+        if context.source is ContextFlags.INSTANTIATE:
 
             return super(TransferMechanism, self)._parse_function_variable(variable=variable, execution_id=execution_id, context=context)
 
@@ -1547,20 +1548,21 @@ class TransferMechanism(ProcessingMechanism_Base):
             value = self.parameters.value._get(execution_id)
         return self.convergence_function([value[0], self.parameters.previous_value._get(execution_id)[0]])
 
-    def is_converged(self, value=NotImplemented, execution_id=None):
+    @handle_external_context()
+    def is_converged(self, value=NotImplemented, execution_id=None, context=None):
         # Check for convergence
         if (
             self.convergence_criterion is not None
             and self.parameters.previous_value._get(execution_id) is not None
-            and self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING
+            and self.initialization_status != ContextFlags.INITIALIZING
         ):
             if self.delta(value, execution_id) <= self.convergence_criterion:
                 return True
-            elif self.get_current_execution_time(execution_id).pass_ >= self.max_passes:
+            elif self.get_current_execution_time(context).pass_ >= self.max_passes:
                 raise TransferError("Maximum number of executions ({}) has occurred before reaching "
                                     "convergence_criterion ({}) for {} in trial {} of run {}".
                                     format(self.max_passes, self.convergence_criterion, self.name,
-                                           self.get_current_execution_time(execution_id).trial, self.get_current_execution_time(execution_id).run))
+                                           self.get_current_execution_time(context).trial, self.get_current_execution_time(context).run))
             else:
                 return False
         # Otherwise just return True

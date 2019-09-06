@@ -160,7 +160,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
                  params,
                  name,
                  prefs,
-                 context,
+                 context=None,
                  function=None,
                  **kwargs
                  ):

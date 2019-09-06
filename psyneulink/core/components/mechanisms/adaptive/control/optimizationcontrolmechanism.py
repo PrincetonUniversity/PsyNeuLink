@@ -856,7 +856,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         """Find control_allocation that optimizes result of `agent_rep.evaluate`  ."""
 
-        if (self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
+        if self.is_initializing:
             return [defaultControlAllocation]
 
         # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
@@ -927,7 +927,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if not self.agent_rep.parameters.retain_old_simulation_data._get():
             self.agent_rep._delete_contexts(sim_execution_id, check_simulation_storage=True)
 
-    def evaluation_function(self, control_allocation, execution_id=None):
+    def evaluation_function(self, control_allocation, execution_id=None, context=None):
         """Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
         <ControlMechanism.control_allocation>`.
@@ -952,14 +952,20 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 new_execution_id = execution_id
 
+            old_composition = context.composition
+            context.composition = self.agent_rep
+
             result = self.agent_rep.evaluate(self.parameters.feature_values._get(execution_id),
                                              control_allocation,
                                              self.parameters.num_estimates._get(execution_id),
                                              base_execution_id=execution_id,
                                              execution_id=new_execution_id,
-                                             context=self.function.parameters.context._get(execution_id),
+                                             context=context,
                                              execution_mode=self.parameters.comp_execution_mode._get(execution_id)
             )
+            context.composition = old_composition
+            context.execution_id = execution_id
+
             if self.defaults.search_statefulness:
                 self._tear_down_simulation(new_execution_id)
         # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
@@ -968,7 +974,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                              control_allocation,
                                              self.parameters.num_estimates._get(execution_id),
                                              execution_id=execution_id,
-                                             context=self.function.parameters.context._get(execution_id)
+                                             context=context
             )
 
         return result
@@ -1202,7 +1208,7 @@ class OptimizationControlMechanism(ControlMechanism):
         value = [np.atleast_1d(a) for a in control_allocation]
         self.parameters.value._set(value, execution_id)
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
-                                   context=ContextFlags.COMPOSITION)
+                                   context=context)
 
     # @property
     # def feature_values(self):
@@ -1224,7 +1230,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if features:
             features = self._parse_feature_specs(features=features,
-                                                 context=ContextFlags.COMMAND_LINE)
+                                                 context=Context(source=ContextFlags.COMMAND_LINE))
         self.add_states(InputState, features)
 
     @tc.typecheck

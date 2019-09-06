@@ -46,7 +46,7 @@ from psyneulink.core.globals.keywords import \
     RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
 
@@ -274,7 +274,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
         values = list(params_to_check.values())
 
-        # If default_variable was specified by user, check that all function_arg params have same length 
+        # If default_variable was specified by user, check that all function_arg params have same length
         #    as the length of items in the inner-most dimension (axis) of default_variable
         if self.parameters.variable._user_specified:
             default_variable_len = self.parameters.variable.default_value.shape[-1]
@@ -549,7 +549,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -629,7 +629,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         # Don't warn if it belongs to a Component, ans that Component's function may pass in a value for variable
         # (such as a MappingProjection that uses AccumulatorFunction in its matrix ParameterState for learning)
         if (not self.owner
-                and self.context.initialization_status != ContextFlags.INITIALIZING
+                and self.initialization_status != ContextFlags.INITIALIZING
                 and variable is not None
                 and variable is not self.defaults.variable):
             warnings.warn("{} does not use its variable;  value passed ({}) will be ignored".
@@ -652,7 +652,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             self.parameters.previous_value._set(value, execution_id)
 
         return self.convert_output_type(value)
@@ -823,7 +823,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -868,7 +868,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             self.parameters.previous_value._set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
@@ -1044,7 +1044,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -1101,7 +1101,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
             noise = target_set[NOISE]
             if isinstance(noise, DistributionFunction):
                 noise.owner = self
-                target_set[NOISE] = noise._execute
+                target_set[NOISE] = noise.execute
             self._validate_noise(target_set[NOISE])
             # if INITIALIZER in target_set:
             #     self._validate_initializer(target_set[INITIALIZER])
@@ -1212,7 +1212,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             self.parameters.previous_value._set(adjusted_value, execution_id)
 
         # # MODIFIED 6/21/19 OLD:
@@ -1607,7 +1607,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -1681,7 +1681,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
             noise = target_set[NOISE]
             if isinstance(noise, DistributionFunction):
                 noise.owner = self
-                target_set[NOISE] = noise._execute
+                target_set[NOISE] = noise.execute
             self._validate_noise(target_set[NOISE])
             # if INITIALIZER in target_set:
             #     self._validate_initializer(target_set[INITIALIZER])
@@ -1732,7 +1732,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
         value = self._combine_terms(short_term_avg, long_term_avg, execution_id=execution_id)
 
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             self.parameters.previous_short_term_avg._set(short_term_avg, execution_id)
             self.parameters.previous_long_term_avg._set(long_term_avg, execution_id)
 
@@ -1774,7 +1774,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
         return value + offset
 
-    def reinitialize(self, short=None, long=None, execution_context=NotImplemented):
+    @handle_external_context()
+    def reinitialize(self, short=None, long=None, execution_context=NotImplemented, context=None):
         """
         Effectively begins accumulation over again at the specified utilities.
 
@@ -1791,7 +1792,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         <DualAdaptiveIntegrator.initial_long_term_avg>` are used.
         """
         if execution_context is NotImplemented:
-            execution_context = self.most_recent_execution_id
+            execution_context = self.most_recent_context.execution_id
 
         if short is None:
             short = self.get_current_function_param("initial_short_term_avg", execution_context)
@@ -2078,7 +2079,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -2135,7 +2136,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         current_input = variable
 
         # FIX: ?CLEAN THIS UP BY SETTING initializer IN __init__ OR OTHER RELEVANT PLACE?
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             if rest.ndim == 0 or len(rest)==1:
                 # self.parameters.previous_value._set(np.full_like(current_input, rest), execution_id)
                 self._initialize_previous_value(np.full_like(current_input, rest), execution_id)
@@ -2166,7 +2167,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
 
         new_value = previous_value + (rate * (current_input + noise) * dist_from_asymptote) - (decay * dist_from_rest)
 
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             self.parameters.previous_value._set(new_value, execution_id)
 
         return self.convert_output_type(new_value)
@@ -2449,7 +2450,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -2516,7 +2517,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         previous_time = self.get_current_function_param('previous_time', execution_id)
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             previous_value = adjusted_value
             previous_time = previous_time + time_step_size
             if not np.isscalar(variable):
@@ -2800,7 +2801,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.previous_time = self.starting_point
         self.has_initializers = True
@@ -2864,7 +2865,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         adjusted_value = value + offset
 
         previous_time = self.get_current_function_param('previous_time', execution_id)
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             previous_value = adjusted_value
             previous_time = previous_time + time_step_size
             if not np.isscalar(variable):
@@ -3065,7 +3066,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
         self.has_initializers = True
 
@@ -3114,7 +3115,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             self.parameters.previous_value._set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
@@ -3746,7 +3747,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR)
+            )
 
     @property
     def output_type(self):
@@ -4090,7 +4091,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             raise FunctionError("Invalid integration method ({}) selected for {}".
                                 format(integration_method, self.name))
 
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             previous_v = approximate_values[0]
             previous_w = approximate_values[1]
             previous_time = previous_time + time_step_size

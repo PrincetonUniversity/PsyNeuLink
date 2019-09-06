@@ -787,10 +787,10 @@ class ControlSignal(ModulatorySignal):
         duration_cost = Parameter(0, read_only=True, getter=_duration_cost_getter)
         cost = Parameter(None, read_only=True, getter=_cost_getter)
 
-        intensity_cost_function = Parameter(Exponential, read_only=True)
-        adjustment_cost_function = Parameter(Linear, read_only=True)
-        duration_cost_function = Parameter(SimpleIntegrator, read_only=True)
-        combine_costs_function = Parameter(Reduce(operation=SUM), read_only=True)
+        intensity_cost_function = Parameter(Exponential, stateful=False, loggable=False)
+        adjustment_cost_function = Parameter(Linear, stateful=False, loggable=False)
+        duration_cost_function = Parameter(SimpleIntegrator, stateful=False, loggable=False)
+        combine_costs_function = Parameter(Reduce(operation=SUM), stateful=False, loggable=False)
         modulation = None
         _validate_cost_options = get_validator_by_type_only([CostFunctions, list])
         _validate_intensity_cost_function = get_validator_by_function(is_function_type)
@@ -1032,7 +1032,7 @@ class ControlSignal(ModulatorySignal):
 
         if self.cost_options:
             # Default cost params
-            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+            if self.initialization_status != ContextFlags.DEFERRED_INIT:
                 self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
             else:
                 self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
@@ -1051,7 +1051,7 @@ class ControlSignal(ModulatorySignal):
     # def _initialize_cost_attributes(self, context=None):
     #     if self.cost_options:
     #         # Default cost params
-    #         if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+    #         if self.initialization_status != ContextFlags.DEFERRED_INIT:
     #             self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
     #         else:
     #             self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)

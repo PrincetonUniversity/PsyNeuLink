@@ -373,7 +373,7 @@ class KohonenLearningMechanism(LearningMechanism):
         # self.init_args['name'] = name
 
         # # Flag for deferred initialization
-        # self.context.initialization_status = ContextFlags.DEFERRED_INIT
+        # self.initialization_status = ContextFlags.DEFERRED_INIT
         # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         # self._learning_rate = learning_rate
@@ -386,7 +386,7 @@ class KohonenLearningMechanism(LearningMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has only one item: activation_input.
@@ -429,7 +429,7 @@ class KohonenLearningMechanism(LearningMechanism):
             context=context
         )
 
-        if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, learning_signal))
 
         return [learning_signal]
@@ -443,9 +443,10 @@ class KohonenLearningMechanism(LearningMechanism):
 
         super()._update_output_states(execution_id, runtime_params, context)
 
-        if self.parameters.context._get(execution_id).composition is not None:
-            self.learned_projection.execute(execution_id=execution_id, context=ContextFlags.LEARNING)
-            self.learned_projection.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
+        if context.composition is not None:
+            context.add_flag(ContextFlags.LEARNING)
+            self.learned_projection.execute(execution_id=execution_id, context=context)
+            context.remove_flag(ContextFlags.LEARNING)
 
     @property
     def learned_projection(self):

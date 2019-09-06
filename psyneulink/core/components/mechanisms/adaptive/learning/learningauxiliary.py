@@ -149,7 +149,7 @@ from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
     BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
     MATRIX, MONITOR_FOR_LEARNING, NAME, OUTCOME, PREDICTION_ERROR_MECHANISM, PROJECTIONS, RL_FUNCTION, SAMPLE, \
@@ -220,7 +220,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     # Call should generally be from LearningProjection._instantiate_sender,
     #    but may be used more generally in the future
-    if context != ContextFlags.METHOD:
+    if context.source != ContextFlags.METHOD:
         raise LearningAuxiliaryError("PROGRAM ERROR".format("_instantiate_learning_components only supports "
                                                              "calls from a LearningProjection._instantiate_sender()"))
 
@@ -782,8 +782,8 @@ def _assign_error_signal_projections(processing_mech:Mechanism,
                 #                              name=ERROR_SIGNAL))
                 aff_lm.add_states(InputState(projections=eff_lm.output_states[ERROR_SIGNAL],
                                              name=ERROR_SIGNAL,
-                                             context=ContextFlags.METHOD),
-                                  context=ContextFlags.METHOD)
+                                             context=Context(source=ContextFlags.METHOD)),
+                                  context=Context(source=ContextFlags.METHOD))
 
         for projection in aff_lm.projections:
             projection._activate_for_compositions(system)

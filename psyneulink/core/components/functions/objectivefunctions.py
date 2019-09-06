@@ -236,7 +236,7 @@ class Stability(ObjectiveFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         # MODIFIED 6/12/19 NEW: [JDC]
         self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
@@ -788,7 +788,7 @@ class Distance(ObjectiveFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_params(self, request_set, target_set=None, variable=None, context=None):
         """Validate that variable had two items of equal length
@@ -1168,7 +1168,7 @@ class Distance(ObjectiveFunction):
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
             # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
-            if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            if not self.is_initializing:
                 v1 = np.where(v1 == 0, EPSILON, v1)
                 v2 = np.where(v2 == 0, EPSILON, v2)
             # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros

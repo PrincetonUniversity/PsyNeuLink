@@ -35,7 +35,7 @@ from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_FUNCTION, DEFAULT_VARIABLE, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import is_numeric, scalar_distance
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
@@ -449,7 +449,7 @@ class BayesGLM(LearningFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _handle_default_variable(self, default_variable=None, size=None):
 
@@ -509,7 +509,8 @@ class BayesGLM(LearningFunction):
         self.gamma_shape_n = self.gamma_shape_0
         self.gamma_size_n = self.gamma_size_0
 
-    def reinitialize(self, *args):
+    @handle_external_context()
+    def reinitialize(self, *args, context=None):
         # If variable passed during execution does not match default assigned during initialization,
         #    reassign default and re-initialize priors
         if DEFAULT_VARIABLE in args[0]:
@@ -548,7 +549,7 @@ class BayesGLM(LearningFunction):
 
         """
 
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             self.initialize_priors()
 
         # # MODIFIED 10/26/18 OLD:
@@ -769,7 +770,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
 
     def _validate_variable(self, variable, context=None):
@@ -1037,7 +1038,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
 
     def _validate_variable(self, variable, context=None):
@@ -1271,7 +1272,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
 
     def _validate_variable(self, variable, context=None):
@@ -1559,7 +1560,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     @property
     def output_type(self):
@@ -1583,7 +1584,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                                  format(self.name, variable[LEARNING_ERROR_OUTPUT]))
 
         # Allow initialization with zero but not during a run (i.e., when called from check_args())
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
+        if not self.is_initializing:
             if np.count_nonzero(variable[LEARNING_ACTIVATION_OUTPUT]) != 1:
                 raise ComponentError(
                     "Second item ({}) of variable for {} must be an array with only one non-zero value "
@@ -1916,7 +1917,7 @@ class BackPropagation(LearningFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     @property
     def output_type(self):
@@ -2073,7 +2074,7 @@ class BackPropagation(LearningFunction):
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
         if error_matrix is None:
-            if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            if self.is_initializing:
                 error_matrix = np.zeros(
                     (len(variable[LEARNING_ACTIVATION_OUTPUT]), len(variable[LEARNING_ERROR_OUTPUT]))
                 )

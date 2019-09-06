@@ -96,20 +96,6 @@ or Mechanism.input_states, as these are added in the proper classes' _dependent_
     under **new_execution_id**
     - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
 
-Debugging Tips
-^^^^^^^^^^^^^^
-If you receive an error like below, while checking for a context value for example,
-
-::
-
-    self.parameters.context._get(execution_id).execution_phase == ContextStatus.PROCESSING
-    AttributeError: 'NoneType' object has no attribute 'execution_phase'
-
-this means that there was no context value found for execution_id, and can be indicative that execution_id
-was not initialized to the values of another execution context, which normally happens during execution.
-See `Execution Contexts initialization <Run_Execution_Contexts_Init>`.
-
-
 .. _Run_Timing:
 
 *Timing*
@@ -634,7 +620,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, System_Base
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import INPUT_LABELS_DICT, MECHANISM, OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.utilities import call_with_pruned_args
@@ -652,6 +638,7 @@ class RunError(Exception):
          return repr(obj.error_value)
 
 @tc.typecheck
+@handle_external_context()
 def run(obj,
         inputs=None,
         num_trials:tc.optional(int)=None,
@@ -667,7 +654,7 @@ def run(obj,
         termination_learning=None,
         runtime_params=None,
         execution_id=None,
-        context=ContextFlags.COMMAND_LINE):
+        context=None):
     """run(                      \
     inputs,                      \
     num_trials=None,             \
@@ -862,14 +849,9 @@ def run(obj,
                 if isinstance(projection, LearningProjection):
                     projection.function_obj.learning_rate = obj.learning_rate
 
-    # Class-specific validation:
-    if not obj.parameters.context._get(execution_id).flags:
-        obj.parameters.context._get(execution_id).initialization_status = ContextFlags.VALIDATING
-        obj.parameters.context._get(execution_id).string = RUN + "validating " + obj.name
-
     # INITIALIZATION
     if initialize:
-        obj.initialize(execution_context=execution_id)
+        obj.initialize(execution_context=execution_id, context=context)
 
     # SET UP TIMING
     if object_type == MECHANISM:
@@ -896,7 +878,7 @@ def run(obj,
             for mechanism in obj.mechanisms:
                 if hasattr(mechanism, "reinitialize_when") and mechanism.parameters.has_initializers._get(execution_id):
                     if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing, execution_context=execution_id):
-                        mechanism.reinitialize(None, execution_context=execution_id)
+                        mechanism.reinitialize(None, execution_context=execution_id, context=context)
 
             input_num = execution%num_inputs_sets
 
@@ -920,10 +902,9 @@ def run(obj,
                         obj.target = execution_targets
                         obj.current_targets = execution_targets
 
-            # if context == ContextFlags.COMMAND_LINE and not obj.context.execution_phase == ContextFlags.SIMULATION:
-            if context == ContextFlags.COMMAND_LINE or not obj.parameters.context._get(execution_id).execution_phase == ContextFlags.SIMULATION:
-                obj._assign_context_values(execution_id, execution_phase=ContextFlags.PROCESSING, composition=obj, propagate=True)
-                obj.parameters.context._get(execution_id).string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
+            if context.source == ContextFlags.COMMAND_LINE or ContextFlags.SIMULATION not in context.execution_phase:
+                context.execution_phase = ContextFlags.PROCESSING
+                context.composition = obj
 
             result = obj.execute(
                 input=execution_inputs,
@@ -938,7 +919,7 @@ def run(obj,
             if call_after_time_step:
                 call_with_pruned_args(call_after_time_step, execution_context=execution_id)
 
-        if obj.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
+        if ContextFlags.SIMULATION not in context.execution_phase:
             if isinstance(result, Iterable):
                 result_copy = result.copy()
             else:

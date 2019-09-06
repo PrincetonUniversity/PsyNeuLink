@@ -429,8 +429,8 @@ class ModulatorySignal(OutputState):
                 modulates = kwargs.pop(PROJECTIONS, modulates)
 
         # Deferred initialization
-        # if self.context.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
-        if self.context.initialization_status & ContextFlags.DEFERRED_INIT:
+        # if self.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
+        if self.initialization_status & ContextFlags.DEFERRED_INIT:
             # If init was deferred, it may have been because owner was not yet known (see OutputState.__init__),
             #   and so modulation hasn't had a chance to be assigned to the owner's value
             #   (i.e., if it was not specified in the constructor), so do it now;
@@ -456,7 +456,7 @@ class ModulatorySignal(OutputState):
                          prefs=prefs,
                          **kwargs)
 
-        if self.context.initialization_status == ContextFlags.INITIALIZED:
+        if self.initialization_status == ContextFlags.INITIALIZED:
             self._assign_default_state_name()
 
     def _instantiate_attributes_after_function(self, context=None):

@@ -730,6 +730,7 @@ Class Reference
 """
 
 import abc
+import abc
 import inspect
 import itertools
 import numbers
@@ -746,7 +747,7 @@ from psyneulink.core.components.functions.combinationfunctions import Combinatio
 from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, State
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
     DEFERRED_INITIALIZATION, DISABLE, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
@@ -1051,6 +1052,7 @@ class State_Base(State):
     paramClassDefaults.update({STATE_TYPE: None})
 
     @tc.typecheck
+    @abc.abstractmethod
     def __init__(self,
                  owner:tc.any(Mechanism, Projection),
                  variable=None,
@@ -1108,17 +1110,8 @@ class State_Base(State):
                 pass
             try:
                 context = kargs[STATE_CONTEXT]
-                self.context.string = kargs[STATE_CONTEXT]
             except (KeyError, NameError):
                 pass
-
-        # Enforce that only called from subclass
-        if (not isinstance(context, State_Base) and
-                not (self.context.initialization_status == ContextFlags.INITIALIZING or
-                     context & (ContextFlags.COMMAND_LINE | ContextFlags.CONSTRUCTOR))):
-            raise StateError("Direct call to abstract class State() is not allowed; "
-                                      "use state() or one of the following subclasses: {0}".
-                                      format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
 
         # Enforce that subclass must implement and _execute method
         if not hasattr(self, '_execute'):
@@ -1144,8 +1137,6 @@ class State_Base(State):
                           # sub_group_attr='owner',
                           context=context)
 
-        self.context.string = context.__class__.__name__
-
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(default_variable=variable,
                                          size=size,
@@ -1170,7 +1161,7 @@ class State_Base(State):
 
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
-        if context == ContextFlags.COMMAND_LINE:
+        if context.source == ContextFlags.COMMAND_LINE:
             owner.add_states([self])
 
     def _handle_size(self, size, variable):
@@ -1425,7 +1416,7 @@ class State_Base(State):
             # ASSIGN PARAMS
 
             # Deferred init
-            if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            if projection.initialization_status == ContextFlags.DEFERRED_INIT:
 
                 proj_sender = projection.init_args[SENDER]
                 proj_receiver = projection.init_args[RECEIVER]
@@ -1472,7 +1463,7 @@ class State_Base(State):
 
                 # Construct and assign name
                 if isinstance(sender, State):
-                    if sender.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                    if sender.initialization_status == ContextFlags.DEFERRED_INIT:
                         sender_name = sender.init_args[NAME]
                     else:
                         sender_name = sender.name
@@ -1488,13 +1479,13 @@ class State_Base(State):
 
                 # If sender has been instantiated, try to complete initialization
                 # If not, assume it will be handled later (by Mechanism or Composition)
-                if isinstance(sender, State) and sender.context.initialization_status == ContextFlags.INITIALIZED:
-                    projection._deferred_init()
+                if isinstance(sender, State) and sender.initialization_status == ContextFlags.INITIALIZED:
+                    projection._deferred_init(context=context)
 
 
             # VALIDATE (if initialized)
 
-            if projection.context.initialization_status == ContextFlags.INITIALIZED:
+            if projection.initialization_status == ContextFlags.INITIALIZED:
 
                 # FIX: 10/3/17 - VERIFY THE FOLLOWING:
                 # IMPLEMENTATION NOTE:
@@ -1725,7 +1716,7 @@ class State_Base(State):
                 projection = projection_spec
                 projection_type = projection.__class__
 
-                if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                if projection.initialization_status == ContextFlags.DEFERRED_INIT:
                     projection.init_args[RECEIVER] = projection.init_args[RECEIVER] or receiver
                     proj_recvr = projection.init_args[RECEIVER]
                 else:
@@ -1772,13 +1763,13 @@ class State_Base(State):
             # ASSIGN REMAINING PARAMS
 
             # Deferred init
-            if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            if projection.initialization_status == ContextFlags.DEFERRED_INIT:
 
                 projection.init_args[SENDER] = self
 
                 # Construct and assign name
                 if isinstance(receiver, State):
-                    if receiver.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                    if receiver.initialization_status == ContextFlags.DEFERRED_INIT:
                         receiver_name = receiver.init_args[NAME]
                     else:
                         receiver_name = receiver.name
@@ -1804,15 +1795,15 @@ class State_Base(State):
 
                 # If receiver has been instantiated, try to complete initialization
                 # If not, assume it will be handled later (by Mechanism or Composition)
-                if isinstance(receiver, State) and receiver.context.initialization_status == ContextFlags.INITIALIZED:
-                    projection._deferred_init()
+                if isinstance(receiver, State) and receiver.initialization_status == ContextFlags.INITIALIZED:
+                    projection._deferred_init(context=context)
 
             # VALIDATE (if initialized or being initialized (INITIALIZA))
 
-            if projection.context.initialization_status & (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
+            if projection.initialization_status & (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
 
                 # If still being initialized, then assign sender and receiver as necessary
-                if projection.context.initialization_status == ContextFlags.INITIALIZING:
+                if projection.initialization_status == ContextFlags.INITIALIZING:
                     if not isinstance(projection.sender, State):
                         projection.sender = self
 
@@ -1909,15 +1900,6 @@ class State_Base(State):
         Call self.function (default: LinearCombination function) to combine their values
         Returns combined values of projections, modulated by any mod_afferents
         """
-
-        # Set context to owner's context:
-        self._assign_context_values(
-            execution_id,
-            execution_phase=self.owner.parameters.context._get(execution_id).execution_phase,
-        )
-        # self.parameters.context._get(execution_id).execution_phase = self.owner.parameters.context._get(execution_id).execution_phase
-        self.parameters.context._get(execution_id).string = self.owner.parameters.context._get(execution_id).string
-
         # SET UP ------------------------------------------------------------------------------------------------
 
         # Get State-specific param_specs
@@ -1978,10 +1960,9 @@ class State_Base(State):
                                                                                      self.owner.name))
                 continue
 
-            if not self.afferents_info[projection].is_active_in_composition(self.parameters.context._get(execution_id).composition):
+            if not self.afferents_info[projection].is_active_in_composition(context.composition):
                 continue
 
-            projection._assign_context_values(execution_id, composition=self.parameters.context._get(execution_id).composition)
             # Only accept projections from a Process to which the owner Mechanism belongs
             if isinstance(sender, ProcessInputState):
                 if not sender.owner in self.owner.processes.keys():
@@ -2002,8 +1983,7 @@ class State_Base(State):
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # IMPLEMENTATION NOTE: done here rather than in its own method in order to exploit parsing of params above
             is_learning_projection = isinstance(projection, LearningProjection)
-            if (is_learning_projection
-                    and self.parameters.context._get(execution_id).execution_phase != ContextFlags.LEARNING):
+            if (is_learning_projection and ContextFlags.LEARNING not in context.execution_phase):
                 projection_value = projection.defaults.value * 0.0
             elif (
                 # learning projections add extra behavior in _execute that invalidates identity function
@@ -2028,14 +2008,14 @@ class State_Base(State):
                 projection_value = projection._parse_function_variable(projection_variable)
                 projection.parameters.value._set(projection_value, execution_id)
 
-                # KDM 8/14/19: a caveat about the dot notation/most_recent_execution_id here!
+                # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
                 # should these be manually set despite it not actually being executed?
                 # explicitly getting/setting based on execution_context will be more clear
-                projection.most_recent_execution_id = execution_id
-                projection.function.most_recent_execution_id = execution_id
+                projection.most_recent_context = context
+                projection.function.most_recent_context = context
                 for pstate in projection.parameter_states:
-                    pstate.most_recent_execution_id = execution_id
-                    pstate.function.most_recent_execution_id = execution_id
+                    pstate.most_recent_context = context
+                    pstate.function.most_recent_context = context
 
             else:
                 projection_value = projection.execute(variable=projection.sender.parameters.value._get(execution_id),
@@ -2045,7 +2025,7 @@ class State_Base(State):
 
             # If this is initialization run and projection initialization has been deferred, pass
             try:
-                if projection.parameters.context._get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
+                if projection.initialization_status == ContextFlags.DEFERRED_INIT:
                     continue
             except AttributeError:
                 pass
@@ -2132,20 +2112,20 @@ class State_Base(State):
             and self.function._is_identity(execution_id)
             and function_params is None
         ):
-            variable = self._parse_function_variable(self._get_fallback_variable(execution_id))
+            variable = self._parse_function_variable(self._get_fallback_variable(execution_id, context))
             self.parameters.variable._set(variable, execution_id)
             # below conversion really should not be happening ultimately, but it is
             # in _validate_variable. Should be removed eventually
             variable = convert_to_np_array(variable, 1)
-            self.parameters.value._set(variable, execution_id)
-            self.most_recent_execution_id = execution_id
-            self.function.most_recent_execution_id = execution_id
+            self.parameters.value._set(variable, execution_id, context)
+            self.most_recent_context = context
+            self.function.most_recent_context = context
         else:
             self.execute(execution_id=execution_id, runtime_params=function_params, context=context)
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         if variable is None:
-            variable = self._get_fallback_variable(execution_id)
+            variable = self._get_fallback_variable(execution_id, context)
 
             # if the fallback is also None
             # return None, so that this state is ignored
@@ -2207,7 +2187,7 @@ class State_Base(State):
             return np.product(np.array(values), axis=0)
 
     @abc.abstractmethod
-    def _get_fallback_variable(self, execution_id=None):
+    def _get_fallback_variable(self, execution_id=None, context=None):
         """
             Returns a variable to be used for self.execute when the variable passed in is None
         """
@@ -2332,7 +2312,7 @@ class State_Base(State):
         Used primarily during validation, when the function may not have been fully instantiated yet
         (e.g., InputState must sometimes embed its variable in a list-- see InputState._get_state_function_value).
         """
-        return function.execute(variable)
+        return function.execute(variable, context=Context(source=ContextFlags.UNSET))
 
     @property
     def _dependent_components(self):
@@ -2559,7 +2539,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
         # State initialization was deferred (owner or reference_value was missing), so
         #    assign owner, variable, and/or reference_value if they were not already specified
-        if state.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if state.initialization_status == ContextFlags.DEFERRED_INIT:
             if not state.init_args[OWNER]:
                 state.init_args[OWNER] = owner
             # If variable was not specified by user or State's constructor:
@@ -2576,8 +2556,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
                 else:
                     # state.reference_value = owner.defaults.variable[0]
                     state.reference_value = state.init_args[VARIABLE]
-            state.init_args[CONTEXT]=context
-            state._deferred_init()
+            state._deferred_init(context=context)
 
         # # FIX: 10/3/17 - CHECK THE FOLLOWING BY CALLING STATE-SPECIFIC METHOD?
         # # FIX: DO THIS IN _parse_connection_specs?
@@ -2871,7 +2850,7 @@ def _parse_state_spec(state_type=None,
         #    so assume it is a reference to the State itself that is being (or has been) instantiated
         elif isinstance(state_specification, state_type):
             # Make sure that the specified State belongs to the Mechanism passed in the owner arg
-            if state_specification.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            if state_specification.initialization_status == ContextFlags.DEFERRED_INIT:
                 state_owner = state_specification.init_args[OWNER]
             else:
                 state_owner = state_specification.owner
@@ -2918,8 +2897,8 @@ def _parse_state_spec(state_type=None,
 
         # Projection has been instantiated
         if isinstance(projection_spec, Projection):
-            if projection_spec.context.initialization_status == ContextFlags.INITIALIZED:
-            # if projection_spec.context.initialization_status != ContextFlags.DEFERRED_INIT:
+            if projection_spec.initialization_status == ContextFlags.INITIALIZED:
+            # if projection_spec.initialization_status != ContextFlags.DEFERRED_INIT:
                 projection_value = projection_spec.value
             # If deferred_init, need to get sender and matrix to determine value
             else:

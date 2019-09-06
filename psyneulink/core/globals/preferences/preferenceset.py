@@ -8,6 +8,7 @@
 #
 # **********************************************  PreferenceSet **********************************************************
 #
+import abc
 import inspect
 
 from collections import namedtuple
@@ -46,6 +47,7 @@ class PreferenceSetError(Exception):
          return repr(self.error_value)
 
 
+@abc.abstractmethod
 class PreferenceSet(object):
     """Abstract class for PreferenceSets that stores preferences and provides access to level-specific settings
 
@@ -184,12 +186,6 @@ class PreferenceSet(object):
         """
 
         # VALIDATE ATTRIBUTES AND ARGS
-        # PreferenceSet is an abstract class, and so should only be initialized from the constructor of a subclass
-        if context != ContextFlags.CONSTRUCTOR:
-            raise PreferenceSetError("Direct call to abstract class PreferenceSet() is not allowed; "
-                                     "use one of the following subclasses: {0}".
-                                     format(", ".join("{!s}".format(key) for (key) in PreferenceSetRegistry.keys())))
-
         # Make sure subclass implements a baseClass class attribute and that owner is a subclass or instance of it
         try:
             base_class_NOT_A_CLASS = not inspect.isclass(self.baseClass)

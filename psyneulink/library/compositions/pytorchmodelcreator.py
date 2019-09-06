@@ -2,7 +2,7 @@ import numpy as np
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer,SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss
@@ -32,7 +32,7 @@ __all__ = ['PytorchModelCreator']
 class PytorchModelCreator(torch.nn.Module):
 
     # sets up parameters of model & the information required for forward computation
-    def __init__(self, processing_graph, param_init_from_pnl, execution_sets, device, execution_id=None, composition=None):
+    def __init__(self, processing_graph, param_init_from_pnl, execution_sets, device, execution_id=None, composition=None, context=None):
 
         if not torch_available:
             raise Exception('Pytorch python module (torch) is not installed. Please install it with '
@@ -119,7 +119,7 @@ class PytorchModelCreator(torch.nn.Module):
 
         # CW 12/3/18: this copies by reference so in theory it only needs to be called during init
         # but we call copy_weights_to_psyneulink after every run in order to make Autodiff less stateful
-        self.copy_weights_to_psyneulink(execution_id)
+        self.copy_weights_to_psyneulink(execution_id, context)
 
 
     # gets the index of 'afferent_node' in the forward info weights list
@@ -712,7 +712,8 @@ class PytorchModelCreator(torch.nn.Module):
         return builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(index), ctx.int32_ty(0)])
     
     # performs forward computation for the model
-    def forward(self, inputs, execution_id=None, do_logging=True, scheduler=None):
+    @handle_external_context()
+    def forward(self, inputs, execution_id=None, context=None, do_logging=True, scheduler=None):
         outputs = {}  # dict for storing values of terminal (output) nodes
 
         for i, current_exec_set in enumerate(self.execution_sets):
@@ -746,8 +747,11 @@ class PytorchModelCreator(torch.nn.Module):
                 # store the current value of the node
                 self.component_to_forward_info[component][0] = value
                 if do_logging:
+                    old_source = context.source
+                    context.source = ContextFlags.COMMAND_LINE
                     detached_value = value.detach().cpu().numpy()
-                    component.parameters.value._log_value(detached_value, execution_id, ContextFlags.COMMAND_LINE)
+                    component.parameters.value._log_value(detached_value, execution_id, context)
+                    context.source = old_source
 
                 # save value in output list if we're at a node in the last execution set
                 if i == len(self.execution_sets) - 1:
@@ -761,8 +765,12 @@ class PytorchModelCreator(torch.nn.Module):
         self.copy_outputs_to_psyneulink(outputs, execution_id)
 
         if do_logging:
-            self.log_weights(execution_id)
+            old_source = context.source
+            context.source = ContextFlags.COMMAND_LINE
+            self.log_weights(execution_id, context)
             self.copy_outputs_to_psyneulink(outputs, execution_id)
+            context.source = old_source
+
         return outputs
 
     def detach_all(self):
@@ -771,10 +779,10 @@ class PytorchModelCreator(torch.nn.Module):
             if info[1] is not None:
                 info[1].detach_()
 
-    def copy_weights_to_psyneulink(self, execution_id=None):
+    def copy_weights_to_psyneulink(self, execution_id=None, context=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
             projection.parameters.matrix._set(
-                weights.detach().cpu().numpy(), execution_id)
+                weights.detach().cpu().numpy(), execution_id, context)
 
     def copy_outputs_to_psyneulink(self, outputs, execution_id=None):
         for component, value in outputs.items():
@@ -784,10 +792,11 @@ class PytorchModelCreator(torch.nn.Module):
             component.output_state.parameters.value._set(
                 detached_value, execution_id, skip_history=True, skip_log=True)
 
-    def log_weights(self, execution_id=None):
+    @handle_external_context()
+    def log_weights(self, execution_id=None, context=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
             projection.parameters.matrix._log_value(
-                weights.detach().cpu().numpy(), execution_id, ContextFlags.COMMAND_LINE)
+                weights.detach().cpu().numpy(), execution_id, context)
 
     # Helper method that functions the same as function_creator, but instead injects the computation to the builder
     # FIXME: Change to directly using compiled function methods

@@ -315,9 +315,6 @@ class GatingProjection(ModulatoryProjection_Base):
                  prefs:is_pref_set=None,
                  **kwargs
                  ):
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
                                                   gating_signal_params=gating_signal_params,
@@ -326,7 +323,7 @@ class GatingProjection(ModulatoryProjection_Base):
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
+            self.initialization_status = ContextFlags.DEFERRED_INIT
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
@@ -338,7 +335,6 @@ class GatingProjection(ModulatoryProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          **kwargs)
 
     def _instantiate_sender(self, sender, params=None, context=None):
@@ -370,7 +366,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.initialization_status == ContextFlags.INITIALIZING:
             from psyneulink.core.components.states.inputstate import InputState
             from psyneulink.core.components.states.outputstate import OutputState
             if not isinstance(self.receiver, (InputState, OutputState, Mechanism)):

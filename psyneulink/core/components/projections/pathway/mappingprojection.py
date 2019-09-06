@@ -528,9 +528,6 @@ class MappingProjection(PathwayProjection_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         # Assign args to params and functionParams dicts
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
         # (7/12/17 CW) this is a PATCH to allow the user to set matrix as an np.matrix... I still don't know why
@@ -546,7 +543,7 @@ class MappingProjection(PathwayProjection_Base):
 
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
+            self.initialization_status = ContextFlags.DEFERRED_INIT
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(sender=sender,
@@ -557,7 +554,6 @@ class MappingProjection(PathwayProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          **kwargs)
 
         try:
@@ -584,7 +580,8 @@ class MappingProjection(PathwayProjection_Base):
                 default_variable=matrix,
                 initializer=matrix,
                 # rate=initial_rate
-            )
+            ),
+            context=context
         )
         self._parameter_states[MATRIX]._instantiate_value(context)
 
@@ -688,10 +685,6 @@ class MappingProjection(PathwayProjection_Base):
         super()._instantiate_receiver(context=context)
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-
-        self.parameters.context._get(execution_id).execution_phase = \
-            self.receiver.owner.parameters.context._get(execution_id).execution_phase
-        self.parameters.context._get(execution_id).string = context
 
         self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 

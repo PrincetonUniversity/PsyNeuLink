@@ -537,7 +537,7 @@ from psyneulink.core.components.shellclasses import Composition_Base, System_Bas
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
@@ -937,7 +937,7 @@ class ControlMechanism(ModulatoryMechanism):
                                                params=params,
                                                name=name,
                                                prefs=prefs,
-                                               context=ContextFlags.CONSTRUCTOR,
+
                                                **kwargs)
 
     def _instantiate_output_states(self, context=None):
@@ -948,8 +948,9 @@ class ControlMechanism(ModulatoryMechanism):
         return super()._instantiate_modulatory_signal(modulatory_signal=control_signal, context=context)
 
     # FIX: TBI FOR COMPOSITION
+    @handle_external_context()
     @tc.typecheck
-    def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
+    def assign_as_controller(self, system:System_Base, context=None):
         """Assign ControlMechanism as `controller <System.controller>` for a `System`.
 
         **system** must be a System for which the ControlMechanism should be assigned as the `controller
@@ -982,7 +983,7 @@ class ControlMechanism(ModulatoryMechanism):
         COMMENT
         """
 
-        if context == ContextFlags.COMMAND_LINE:
+        if context.source == ContextFlags.COMMAND_LINE:
             system.controller = self
             return
 
@@ -1016,7 +1017,7 @@ class ControlMechanism(ModulatoryMechanism):
         # Add all other monitored_output_states to the ControlMechanism's monitored_output_states attribute
         #    and to its ObjectiveMechanisms monitored_output_states attribute
         if monitored_output_states:
-            self.add_to_monitor(monitored_output_states)
+            self.add_to_monitor(monitored_output_states, context=context)
 
         # The system does NOT already have a controller,
         #    so assign it ControlSignals for any parameters in the System specified for control
@@ -1059,7 +1060,7 @@ class ControlMechanism(ModulatoryMechanism):
         # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
         self._objective_mechanism.for_controller = True
 
-        if context != ContextFlags.PROPERTY:
+        if context.source != ContextFlags.PROPERTY:
             system._controller = self
 
         self._activate_projections_for_compositions(system)

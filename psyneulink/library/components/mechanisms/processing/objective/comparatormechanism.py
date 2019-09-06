@@ -399,7 +399,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         # context=ContextFlags.CONSTRUCTOR,
+
                          **kwargs
                          )
 

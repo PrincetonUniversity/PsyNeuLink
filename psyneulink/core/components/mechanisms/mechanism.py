@@ -931,6 +931,7 @@ Class Reference
 
 """
 
+import abc
 import inspect
 import itertools
 import logging
@@ -953,7 +954,7 @@ from psyneulink.core.components.states.modulatorysignals.modulatorysignal import
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import REMOVE_STATES, _parse_state_spec
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
@@ -1415,6 +1416,7 @@ class Mechanism_Base(Mechanism):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
 
     @tc.typecheck
+    @abc.abstractmethod
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -1440,11 +1442,6 @@ class Mechanism_Base(Mechanism):
 
         """
 
-        # Forbid direct call to base class constructor
-        if context is None or (context !=ContextFlags.CONSTRUCTOR and
-                               not self.context.initialization_status == ContextFlags.VALIDATING):
-            raise MechanismError("Direct call to abstract class Mechanism() is not allowed; use a subclass")
-
         # IMPLEMENT **kwargs (PER State)
 
         self._is_finished = False
@@ -1452,12 +1449,11 @@ class Mechanism_Base(Mechanism):
         self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
         self.aux_components = []
         # Register with MechanismRegistry or create one
-        if self.context.initialization_status != ContextFlags.VALIDATING:
-            register_category(entry=self,
-                              base_class=Mechanism_Base,
-                              name=name,
-                              registry=MechanismRegistry,
-                              context=context)
+        register_category(entry=self,
+                          base_class=Mechanism_Base,
+                          name=name,
+                          registry=MechanismRegistry,
+                          context=context)
 
         # Create Mechanism's _stateRegistry and state type entries
         from psyneulink.core.components.states.state import State_Base
@@ -1613,7 +1609,7 @@ class Mechanism_Base(Mechanism):
                 parsed_input_state_spec = _parse_state_spec(owner=self,
                                                             state_type=InputState,
                                                             state_spec=s,
-                                                            context='_handle_arg_input_states')
+                )
             except AttributeError as e:
                 if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
                     default_variable_from_input_states.append(InputState.defaults.variable)
@@ -1632,7 +1628,7 @@ class Mechanism_Base(Mechanism):
                 except KeyError:
                     pass
             elif isinstance(parsed_input_state_spec, (Projection, Mechanism, State)):
-                if parsed_input_state_spec.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                if parsed_input_state_spec.initialization_status == ContextFlags.DEFERRED_INIT:
                     args = parsed_input_state_spec.init_args
                     if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
                         mech_variable_item = args[REFERENCE_VALUE]
@@ -1822,17 +1818,12 @@ class Mechanism_Base(Mechanism):
             except AttributeError as e:
                 if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
                     pass
-        # INPUT_STATES is not specified and call is from constructor (i.e., not assign_params):
-        elif context & ContextFlags.CONSTRUCTOR:
-            # - set to None, so it is set to default (self.defaults.variable) in instantiate_inputState
-            # - warning (if in VERBOSE mode) will be issued in instantiate_inputState, where default value is known
-            params[INPUT_STATES] = None
 
         # VALIDATE FUNCTION_PARAMS
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
-            if context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
+            if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
                 pass
             elif self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
@@ -1903,14 +1894,6 @@ class Mechanism_Base(Mechanism):
                                      self.execute.__self__.name))
                 i += 1
             params[OUTPUT_STATES] = param_value
-
-        # OUTPUT_STATES is not specified and call is from construct (i.e., not assign_params)
-        elif context & ContextFlags.CONSTRUCTOR:
-            # - set to None, so that it is set to default (self.value) in instantiate_output_state
-            # - warning (if in VERBOSE mode) will be issued in instantiate_inputState, where default value is known
-            # - number of OutputStates is validated against length of owner Mechanism's execute method output (EMO)
-            #     in instantiate_output_state, where an OutputState is assigned to each item (value) of the EMO
-            params[OUTPUT_STATES] = None
 
         def validate_labels_dict(lablel_dict, type):
             for label, value in labels_dict.items():
@@ -2019,7 +2002,10 @@ class Mechanism_Base(Mechanism):
             warnings.simplefilter(action='ignore', category=UserWarning)
             self.function.output_type = FunctionOutputType.NP_2D_ARRAY
             self.function.enable_output_type_conversion = True
+
+        self.function.initialization_status = ContextFlags.INITIALIZING
         self.function._instantiate_value(context)
+        self.function.initialization_status = ContextFlags.INITIALIZED
 
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.states.parameterstate import _instantiate_parameter_state
@@ -2084,7 +2070,8 @@ class Mechanism_Base(Mechanism):
         """Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism"""
         pass
 
-    def reinitialize(self, *args, execution_context=NotImplemented):
+    @handle_external_context()
+    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
         """
             If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
             `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
@@ -2132,31 +2119,32 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
         if execution_context is NotImplemented:
-            execution_id = self.most_recent_execution_id
+            execution_id = self.most_recent_context.execution_id
         else:
             execution_id = parse_execution_context(execution_context)
 
         # If the primary function of the mechanism is stateful:
         # (1) reinitialize it, (2) update value, (3) update output states
         if isinstance(self.function, StatefulFunction):
-            new_value = self.function.reinitialize(*args, execution_context=execution_id)
-            self.parameters.value._set(np.atleast_2d(new_value), execution_id=execution_id)
+            new_value = self.function.reinitialize(*args, execution_context=execution_id, context=context)
+            self.parameters.value._set(np.atleast_2d(new_value), execution_id=execution_id, context=context)
             self._update_output_states(execution_id=execution_id,
-                                       context="REINITIALIZING")
+                                       context=context)
 
         # If the mechanism has an auxiliary integrator function:
         # (1) reinitialize it, (2) run the primary function with the new "previous_value" as input
         # (3) update value, (4) update output states
         elif hasattr(self, "integrator_function"):
             if isinstance(self.integrator_function, IntegratorFunction):
-                new_input = self.integrator_function.reinitialize(*args, execution_context=execution_context)[0]
+                new_input = self.integrator_function.reinitialize(*args, execution_context=execution_context, context=context)[0]
                 self.parameters.value._set(
-                    self.function.execute(variable=new_input, execution_id=execution_id, context="REINITIALIZING"),
+                    self.function.execute(variable=new_input, execution_id=execution_id, context=context),
                     execution_id=execution_id,
+                    context=context,
                     override=True
                 )
                 self._update_output_states(execution_id=execution_id,
-                                           context="REINITIALIZING")
+                                           context=context)
 
             elif self.integrator_function is None or isinstance(self.integrator_function, type):
                 if hasattr(self, "integrator_mode"):
@@ -2190,6 +2178,9 @@ class Mechanism_Base(Mechanism):
         except (AttributeError, TypeError):
             return getattr(self.parameters, param_name)._get(execution_id)
 
+    # when called externally, ContextFlags.PROCESSING is not set. Maintain this behavior here
+    # even though it will not update input states for example
+    @handle_external_context(execution_phase=ContextFlags.IDLE)
     def execute(self,
                 input=None,
                 execution_id=None,
@@ -2248,28 +2239,21 @@ class Mechanism_Base(Mechanism):
             <Mechanism_OutputStates>` after either one `TIME_STEP` or a `TRIAL`.
 
         """
-        context = context or ContextFlags.COMMAND_LINE
 
-        # initialize context for this execution_id if not done already
-        if self.parameters.context._get(execution_id) is None:
-            self._assign_context_values(execution_id)
-
-        if not self.parameters.context._get(execution_id).source or context & ContextFlags.COMMAND_LINE:
-            self.parameters.context._get(execution_id).source = ContextFlags.COMMAND_LINE
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZED:
-            self.parameters.context._get(execution_id).string = "{} EXECUTING {}: {}".format(context.name,self.name,
+        if self.initialization_status == ContextFlags.INITIALIZED:
+            context.string = "{} EXECUTING {}: {}".format(context.source.name,self.name,
                                                                ContextFlags._get_context_string(
-                                                                       self.parameters.context._get(execution_id).flags, EXECUTION_PHASE))
+                                                                       context.flags, EXECUTION_PHASE))
         else:
-            self.parameters.context._get(execution_id).string = "{} INITIALIZING {}".format(context.name, self.name)
+            context.string = "{} INITIALIZING {}".format(context.source.name, self.name)
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
 
         # Limit init to scope specified by context
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
-            if self.parameters.context._get(execution_id).composition:
+        if self.initialization_status == ContextFlags.INITIALIZING:
+            if context.composition:
                 # Run full execute method for init of Process and System
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
@@ -2327,14 +2311,14 @@ class Mechanism_Base(Mechanism):
         # Executing or simulating Process, System or Composition, so get input by updating input_states
 
         if (input is None
-            and (self.parameters.context._get(execution_id).execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))
+            and (context.execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))
             and (self.input_state.path_afferents != [])):
             variable = self._update_input_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
-            if context & ContextFlags.COMMAND_LINE:
-                self.parameters.context._get(execution_id).execution_phase = ContextFlags.PROCESSING
+            if context.source & ContextFlags.COMMAND_LINE:
+                context.execution_phase = ContextFlags.PROCESSING
             if input is None:
                 input = self.defaults.variable
             #     FIX:  this input value is sent to input CIMs when compositions are nested
@@ -2378,14 +2362,13 @@ class Mechanism_Base(Mechanism):
                 # return converted_to_2d
                 value = converted_to_2d
 
-        self.parameters.value._set(value, execution_id=execution_id)
+        self.parameters.value._set(value, execution_id=execution_id, context=context)
 
         # UPDATE OUTPUT STATE(S)
         self._update_output_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         # REPORT EXECUTION
-        if self.prefs.reportOutputPref and (self.parameters.context._get(execution_id).execution_phase &
-                                            ContextFlags.PROCESSING|ContextFlags.LEARNING):
+        if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
             self._report_mechanism_execution(self.get_input_values(execution_id), self.user_params, self.output_state.parameters.value._get(execution_id))
         return value
 
@@ -2482,10 +2465,10 @@ class Mechanism_Base(Mechanism):
             state._update(execution_id=execution_id, params=runtime_params, context=context)
         self._update_attribs_dicts(context=context)
 
-    def _update_attribs_dicts(self, context=None):
+    def _update_attribs_dicts(self, context):
         from psyneulink.core.globals.keywords import NOISE
         for state in self._parameter_states:
-            if NOISE in state.name and self.parameters.context.get().initialization_status == ContextFlags.INITIALIZING:
+            if NOISE in state.name and self.initialization_status == ContextFlags.INITIALIZING:
                 continue
             if state.name in self.user_params:
                 self.user_params.__additem__(state.name, state.value)
@@ -2503,7 +2486,7 @@ class Mechanism_Base(Mechanism):
             state = self.output_states[i]
             state._update(execution_id=execution_id, params=runtime_params, context=context)
 
-    def initialize(self, value, execution_context=None):
+    def initialize(self, value, execution_context=None, context=None):
         """Assign an initial value to the Mechanism's `value <Mechanism_Base.value>` attribute and update its
         `OutputStates <Mechanism_OutputStates>`.
 
@@ -2518,8 +2501,8 @@ class Mechanism_Base(Mechanism):
             if not iscompatible(value, self.defaults.value):
                 raise MechanismError("Initialization value ({}) is not compatiable with value of {}".
                                      format(value, append_type_to_name(self)))
-        self.parameters.value.set(np.atleast_1d(value), execution_context, override=True)
-        self._update_output_states(execution_id=execution_context, context="INITIAL_VALUE")
+        self.parameters.value.set(np.atleast_1d(value), execution_context, context=context, override=True)
+        self._update_output_states(execution_id=execution_context, context=context)
 
     def _get_input_param_struct_type(self, ctx):
         gen = (ctx.get_param_struct_type(state) for state in self.input_states)
@@ -3267,7 +3250,7 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.states.inputstate import InputState, _instantiate_input_states
         from psyneulink.core.components.states.outputstate import OutputState, _instantiate_output_states
 
-        context = ContextFlags.METHOD
+        context = Context(source=ContextFlags.METHOD)
 
         # Put in list to standardize treatment below
         if not isinstance(states, list):

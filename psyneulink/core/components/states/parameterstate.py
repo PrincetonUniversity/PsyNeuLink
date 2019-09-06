@@ -560,9 +560,7 @@ class ParameterState(State_Base):
 
         # If context is not COMPONENT or CONSTRUCTOR, raise exception
         context = kwargs.pop(CONTEXT, None)
-        if context == ContextFlags.COMPONENT:
-            context = ContextFlags.CONSTRUCTOR
-        if not context == ContextFlags.CONSTRUCTOR:
+        if context is None:
             raise ParameterStateError(f"Contructor for {self.__class__.__name__} cannot be called directly"
                                       f"(context: {context}")
 
@@ -768,7 +766,7 @@ class ParameterState(State_Base):
                                                                      ControlProjection.__name__,
                                                                      LearningProjection.__name__,
                                                                      mod_projection, state_dict[NAME], owner.name))
-                                elif mod_projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                                elif mod_projection.initialization_status == ContextFlags.DEFERRED_INIT:
                                     continue
                                 mod_proj_value = mod_projection.defaults.value
                             else:
@@ -814,7 +812,7 @@ class ParameterState(State_Base):
         """Return parameter variable (since ParameterState's function never changes the form of its variable"""
         return variable
 
-    def _get_fallback_variable(self, execution_id=None):
+    def _get_fallback_variable(self, execution_id=None, context=None):
         """
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs.
         """

@@ -200,7 +200,7 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -1025,7 +1025,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_size
         except AttributeError:
             self.recurrent_size = len(variable[0])
-        super()._instantiate_defaults(variable,request_set,assign_missing,target_set,default_set,context)
+        super()._instantiate_defaults(variable,request_set,assign_missing,target_set,default_set, context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of auto, hetero, matrix.
@@ -1460,6 +1460,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         self.aux_components.append((lproj, True))
         return learning_mechanism
 
+    @handle_external_context()
     def configure_learning(self,
                            learning_function:tc.optional(tc.any(is_function_type))=None,
                            learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
@@ -1496,9 +1497,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             elif self.learning_condition is UPDATE:
                 self.learning_condition = None
 
-        context = context or ContextFlags.COMMAND_LINE
-        self.context.source = self.context.source or ContextFlags.COMMAND_LINE
-
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self._learning_signal_source,
                                                                        learning_function=self.learning_function,
                                                                        learning_rate=self.learning_rate,
@@ -1512,7 +1510,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
-        # if self.context.initialization_status != ContextFlags.INITIALIZING:
+        # if not self.is_initializing
         #     self.parameters.previous_value._set(self.value)
         # self._output = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
         # return self._output
@@ -1536,9 +1534,10 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._get_variable_from_input(input, execution_id)
 
-    def reinitialize(self, *args, execution_context=NotImplemented):
+    @handle_external_context()
+    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
         if self.parameters.integrator_mode.get(execution_context):
-            super().reinitialize(*args, execution_context=execution_context)
+            super().reinitialize(*args, execution_context=execution_context, context=context)
         self.parameters.previous_value.set(None, execution_context, override=True)
 
     @property

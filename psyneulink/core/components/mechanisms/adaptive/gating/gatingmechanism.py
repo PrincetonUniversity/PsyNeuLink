@@ -446,7 +446,7 @@ class GatingMechanism(ModulatoryMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR,
+
                          **kwargs)
 
     def _instantiate_output_states(self, context=None):
@@ -479,7 +479,7 @@ class GatingMechanism(ModulatoryMechanism):
         if GATING_PROJECTIONS in self.paramsCurrent:
             if self.paramsCurrent[GATING_PROJECTIONS]:
                 for key, projection in self.paramsCurrent[GATING_PROJECTIONS].items():
-                    self._instantiate_gating_projection(projection, context=ContextFlags.METHOD)
+                    self._instantiate_gating_projection(projection, context=context)
 
     def _assign_as_gating_mechanism(self, context=None):
 
@@ -491,7 +491,7 @@ class GatingMechanism(ModulatoryMechanism):
             for state in mech._input_states + mech._output_states:
                 for projection in state.mod_afferents:
                     # If projection was deferred for init, initialize it now and instantiate for self
-                    if (projection.context.initialization_status == ContextFlags.DEFERRED_INIT
+                    if (projection.initialization_status == ContextFlags.DEFERRED_INIT
                         and projection.init_args['sender'] is None):
                         # FIX 5/23/17: MODIFY THIS WHEN (param, GatingProjection) tuple
                         # FIX:         IS REPLACED WITH (param, GatingSignal) tuple

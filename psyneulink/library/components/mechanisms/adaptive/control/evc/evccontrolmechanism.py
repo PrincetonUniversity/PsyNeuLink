@@ -390,7 +390,7 @@ from psyneulink.core.components.shellclasses import Function, System_Base
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal, CostFunctions
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, INIT_FUNCTION_METHOD_ONLY, \
     MULTIPLICATIVE, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
@@ -1122,8 +1122,9 @@ class EVCControlMechanism(ControlMechanism):
             control_signal._instantiate_cost_attributes()
         return control_signal
 
+    @handle_external_context()
     @tc.typecheck
-    def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
+    def assign_as_controller(self, system:System_Base, context=None):
         self._instantiate_prediction_mechanisms(system=system, context=context)
         super().assign_as_controller(system=system, context=context)
 
@@ -1145,7 +1146,7 @@ class EVCControlMechanism(ControlMechanism):
         Return an control_allocation
         """
 
-        if context != ContextFlags.PROPERTY:
+        if context.source != ContextFlags.PROPERTY:
             self._update_predicted_input(execution_id=execution_id)
         # self.system._cache_state()
 
@@ -1264,7 +1265,7 @@ class EVCControlMechanism(ControlMechanism):
         animate_buffer = self.system._animate
 
         # Run simulation
-        self.system.parameters.context._get(execution_id).execution_phase = ContextFlags.SIMULATION
+        context.execution_phase = ContextFlags.SIMULATION
         self.system.run(
             inputs=inputs,
             execution_id=execution_id,
@@ -1272,7 +1273,7 @@ class EVCControlMechanism(ControlMechanism):
             animate=False,
             context=context
         )
-        self.system.parameters.context._get(execution_id).execution_phase = ContextFlags.CONTROL
+        context.execution_phase = ContextFlags.CONTROL
 
         # Restore System attributes
         self.system._animate = animate_buffer
