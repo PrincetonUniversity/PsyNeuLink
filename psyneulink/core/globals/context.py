@@ -84,14 +84,15 @@ Class Reference
 
 import enum
 import functools
+import inspect
 import warnings
 
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from uuid import UUID
 
 import typecheck as tc
 
-from psyneulink.core.globals.keywords import CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
+from psyneulink.core.globals.keywords import CONTEXT, CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 
 
@@ -614,6 +615,9 @@ def _get_time(component, context, execution_id=None):
     return t or no_time
 
 
+_handle_external_context_arg_cache = defaultdict(dict)
+
+
 def handle_external_context(
     source=ContextFlags.COMMAND_LINE,
     execution_phase=ContextFlags.IDLE,
@@ -643,8 +647,51 @@ def handle_external_context(
 
     """
     def decorator(func):
+        # try to detect the position of the 'context' argument in function's
+        # signature, to handle non-keyword specification in calls
+        try:
+            context_arg_index = _handle_external_context_arg_cache[func][CONTEXT]
+        except KeyError:
+            # this is true when there is a variable positional argument
+            # (like *args). don't try to infer context position in this case,
+            # because it can vary. I don't see a good way to get around this
+            # restriction in general
+            if len([
+                sig_param for name, sig_param in inspect.signature(func).parameters.items()
+                if sig_param.kind is sig_param.VAR_POSITIONAL
+            ]):
+                context_arg_index = None
+            else:
+                try:
+                    context_arg_index = list(inspect.signature(func).parameters.keys()).index(CONTEXT)
+                except ValueError:
+                    context_arg_index = None
+
+            _handle_external_context_arg_cache[func][CONTEXT] = context_arg_index
+
         @functools.wraps(func)
         def wrapper(*args, context=None, execution_id=None, **kwargs):
+            if context is not None and not isinstance(context, Context):
+                try:
+                    execution_id = context.default_execution_id
+                except AttributeError:
+                    execution_id = context
+                context = None
+            else:
+                try:
+                    if args[context_arg_index] is not None:
+                        if isinstance(args[context_arg_index], Context):
+                            context = args[context_arg_index]
+                            execution_id = context.execution_id
+                        else:
+                            try:
+                                execution_id = args[context_arg_index].default_execution_id
+                            except AttributeError:
+                                execution_id = args[context_arg_index]
+                            context = None
+                except (TypeError, IndexError):
+                    pass
+
             if context is None:
                 context = Context(
                     source=source,
@@ -652,6 +699,11 @@ def handle_external_context(
                     execution_id=execution_id,
                     **context_kwargs
                 )
+                try:
+                    args = list(args)
+                    args[context_arg_index] = context
+                except (TypeError, IndexError):
+                    pass
 
             try:
                 return func(*args, context=context, execution_id=execution_id, **kwargs)
@@ -660,19 +712,16 @@ def handle_external_context(
                 # but we should be able to handle either. additionally execution_id
                 # parameter may be passed as a non keyword arg in some cases
                 if (
-                    "unexpected keyword argument 'execution_id'" not in str(e)
-                    and "got multiple values for argument" not in str(e)
+                    f"{func.__name__}() got an unexpected keyword argument 'execution_id'" not in str(e)
+                    and f"{func.__name__}() got multiple values for argument" not in str(e)
                 ):
                     raise e
                 else:
                     try:
-                        # context parameter may be passed as a non keyword arg in some
-                        # cases, so we assume that it's not None.
-                        # There's not really a good way to handle the situation in which
-                        # it is None, so leave this case for the developer to debug
+                        # context parameter may be passed as a positional arg
                         return func(*args, context=context, **kwargs)
                     except TypeError as e:
-                        if "got multiple values for argument 'context'" not in str(e):
+                        if f"{func.__name__}() got multiple values for argument 'context'" not in str(e):
                             raise e
 
             return func(*args, **kwargs)
