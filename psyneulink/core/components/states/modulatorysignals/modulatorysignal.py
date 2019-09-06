@@ -151,7 +151,9 @@ which it belongs.
       |     Modulatory     |Default ModulationParam|                                      |Default Function (mod param)|
       |     Component      |for ModulatorySignal   |           Recipient State            |for Recipient State         |
       +====================+=======================+======================================+============================+
-      | **Control** (blue) |   *MULTIPLICATIVE*    | Mechanism `ParameterState`           | `Linear` (`slope`)         |
+      | **Control** (blue) |   *MULTIPLICATIVE*    | Mechanism `ParameterState` by default| `Linear` (`slope`)         |
+      |                    |                       |            but can also be           |                            |
+      |                    |                       |    `InputState` or `OutputState`     |                            |
       +--------------------+-----------------------+--------------------------------------+----------------------------+
       | **Gating** (brown) |   *MULTIPLICATIVE*    | Mechanism `InputState`/`OutputState` | `Linear` (`slope`)         |
       +--------------------+-----------------------+--------------------------------------+----------------------------+
