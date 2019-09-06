@@ -986,7 +986,7 @@ class AutodiffComposition(Composition):
                 full_results.extend(results)
 
             self.parameters.results._set(full_results, execution_id)
-            self.most_recent_execution_context = execution_id
+            self.most_recent_context = context
             return results
 
 

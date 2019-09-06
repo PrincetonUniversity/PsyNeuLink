@@ -700,7 +700,7 @@ class TestRecurrentTransferMechanismInProcess:
         # p.run(inputs={T1: [[1, 2, 3, 4]]})
         T1.execute([[1, 2, 3, 4]])
         proj.execute()
-        # removed this assert, because before the changes of most_recent_execution_id -> most_recent_execution_context
+        # removed this assert, because before the changes of most_recent_execution_id -> most_recent_context
         # proj.matrix referred to the 'Process-0' execution_id, even though it was last executed with None
         # assert np.allclose(proj.matrix, np.array([[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]))
 

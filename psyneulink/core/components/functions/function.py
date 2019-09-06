@@ -690,7 +690,7 @@ class Function_Base(Function):
                                params=params,
                                context=context,
                                **kwargs)
-        self.most_recent_context.execution_id=execution_id
+        self.most_recent_context = context
         self.parameters.value._set(value, execution_context=execution_id)
         return value
 
