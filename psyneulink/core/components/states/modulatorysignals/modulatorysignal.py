@@ -157,7 +157,7 @@ modulate the parameters of another ControlMechanism.  For example, in the follow
     ...                               control_signals=ControlSignal(modulates=(SLOPE,my_mech),
     >>>                                                              cost_options = CostFunctions.INTENSITY))
     >>> ctl_mech_B = ControlMechanism(monitor_for_control=my_mech,
-    ...                               control_signals=ControlSignal(modulates=ctl_mech_A.controls[0],
+    ...                               control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
     ...                                                             modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
 
 

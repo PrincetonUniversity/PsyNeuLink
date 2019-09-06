@@ -3918,7 +3918,7 @@ class TransferWithCosts(TransferFunction):
                 else:
                     self.intensity_cost = self.intensity_cost_function(self.owner.class_defaults.variable)
             else:
-                self.intensity_cost._set(self.intensity_cost_fct(self.defaults.variable))
+                self.intensity_cost = self.intensity_cost_fct(self.defaults.variable)
                 self.defaults.intensity_cost = self.intensity_cost
 
     def _function(self,
