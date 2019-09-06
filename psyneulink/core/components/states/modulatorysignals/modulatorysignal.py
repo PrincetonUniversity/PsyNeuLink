@@ -107,7 +107,7 @@ Projections when creating a State.
 *Modulation*
 ~~~~~~~~~~~~
 
-# FIX: 9/3/19 - REFERENCE FIGURES AND TABLE BELOW, AND UPDATE THEM RE: MODULATION OF ANY PARAMETER
+# FIX: 9/3/19 - REFERENCE FIGURES AND TABLE BELOW
 
 A ModulatorySignal modulates the value of a `State <State>` either by modifying a parameter of the State's `function
 <State_Base.function>` (which determines the State's `value <State_Base.value>`), or by assigning a value to the State
@@ -166,6 +166,10 @@ modulate the parameters of another ControlMechanism.  For example, in the follow
     >>> ctl_mech_B = ControlMechanism(monitor_for_control=my_mech,
     ...                               control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
     ...                                                             modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
+
+# FIX: 9/3/19 - ADD TRANSITION SENTENCE OR PPG
+
+# FIX: 9/3/19 - UPDATE FIGURES AND TABLE RE: MODULATION OF ANY PARAMETER
 
 .. _ModulatorySignal_Anatomy_Figure:
 
