@@ -971,8 +971,8 @@ class InputState(State_Base):
             return True
         return False
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
-        variable = super()._parse_function_variable(variable, execution_id, context)
+    def _parse_function_variable(self, variable, context=None):
+        variable = super()._parse_function_variable(variable, context)
         try:
             if self._use_1d_variable and variable.ndim > 1:
                 return np.array(variable[0])
@@ -980,7 +980,7 @@ class InputState(State_Base):
             pass
         return variable
 
-    def _get_fallback_variable(self, execution_id=None, context=None):
+    def _get_fallback_variable(self, context=None):
         """
             Call self.function with self._path_proj_values
 
@@ -989,7 +989,7 @@ class InputState(State_Base):
         """
         # Check for Projections that are active in the Composition being run
         path_proj_values = [
-            proj.parameters.value._get(execution_id)
+            proj.parameters.value._get(context)
             for proj in self.path_afferents
             if self.afferents_info[proj].is_active_in_composition(context.composition)
         ]
@@ -1297,12 +1297,12 @@ class InputState(State_Base):
     def label(self):
         return self.get_label()
 
-    def get_label(self, execution_context=None):
+    def get_label(self, context=None):
         try:
             label_dictionary = self.owner.input_labels_dict
         except AttributeError:
             label_dictionary = {}
-        return self._get_value_label(label_dictionary, self.owner.input_states, execution_context=execution_context)
+        return self._get_value_label(label_dictionary, self.owner.input_states, context=context)
 
     @property
     def position_in_mechanism(self):

@@ -581,14 +581,14 @@ class ControlMechanismError(Exception):
         self.error_value = error_value
 
 
-def _control_allocation_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.modulatory_allocation._get(execution_id)
+def _control_allocation_getter(owning_component=None, context=None):
+    return owning_component.parameters.modulatory_allocation._get(context)
 
-def _control_allocation_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.modulatory_allocation._set(np.array(value), execution_id)
+def _control_allocation_setter(value, owning_component=None, context=None):
+    owning_component.parameters.modulatory_allocation._set(np.array(value), context)
     return value
 
-def _gating_allocation_getter(owning_component=None, execution_id=None):
+def _gating_allocation_getter(owning_component=None, context=None):
     from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
     from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
     raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.__name__};  "
@@ -597,7 +597,7 @@ def _gating_allocation_getter(owning_component=None, execution_id=None):
                                 f"{GatingSignal.__name__}s are needed.")
 
 
-def _gating_allocation_setter(value, owning_component=None, execution_id=None, **kwargs):
+def _gating_allocation_setter(value, owning_component=None, context=None, **kwargs):
     from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
     from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
     raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.__name__};  "
@@ -1064,11 +1064,10 @@ class ControlMechanism(ModulatoryMechanism):
 
         self._activate_projections_for_compositions(system)
 
-    def _apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
+    def _apply_control_allocation(self, control_allocation, runtime_params, context):
         self._apply_modulatory_allocation(modulatory_allocation=control_allocation,
                                           runtime_params=runtime_params,
-                                          context=context,
-                                          execution_id=execution_id)
+                                          context=context)
 
     # Override control_signals
     @property

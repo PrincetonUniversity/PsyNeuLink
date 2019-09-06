@@ -956,15 +956,15 @@ class ControlSignal(ModulatorySignal):
 
         if isinstance(a, (range, np.ndarray)):
             a = list(a)
-        self.parameters.allocation_samples._set(SampleIterator(specification=a))
+        self.parameters.allocation_samples._set(SampleIterator(specification=a), context)
 
     def _instantiate_cost_attributes(self, context=None):
         if self.cost_options:
             # Default cost params
             if self.initialization_status != ContextFlags.DEFERRED_INIT:
-                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
+                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation, context=context)
             else:
-                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
+                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation, context=context)
             self.defaults.intensity_cost = self.intensity_cost
             self.adjustment_cost = 0
             self.duration_cost = 0
@@ -1046,22 +1046,22 @@ class ControlSignal(ModulatorySignal):
 
         return state_spec, params_dict
 
-    def _update(self, execution_id=None, params=None, context=None):
+    def _update(self, context=None, params=None):
         """Update value (intensity) and costs
         """
-        super()._update(execution_id=execution_id, params=params, context=context)
+        super()._update(context=context, params=params)
 
-        if self.parameters.cost_options._get(execution_id):
-            intensity = self.parameters.value._get(execution_id)
-            self.parameters.cost._set(self.compute_costs(intensity, execution_id), execution_id)
+        if self.parameters.cost_options._get(context):
+            intensity = self.parameters.value._get(context)
+            self.parameters.cost._set(self.compute_costs(intensity, context), context)
 
-    def compute_costs(self, intensity, execution_id=None):
+    def compute_costs(self, intensity, context=None):
         """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
 
-        cost_options = self.parameters.cost_options._get(execution_id)
+        cost_options = self.parameters.cost_options._get(context)
 
         try:
-            intensity_change = intensity - self.parameters.intensity.get_previous(execution_id)
+            intensity_change = intensity - self.parameters.intensity.get_previous(context)
         except TypeError:
             intensity_change = [0]
 
@@ -1069,16 +1069,16 @@ class ControlSignal(ModulatorySignal):
         intensity_cost = adjustment_cost = duration_cost = 0
 
         if ControlSignalCosts.INTENSITY & cost_options:
-            intensity_cost = self.intensity_cost_function(intensity, execution_id=execution_id)
-            self.parameters.intensity_cost._set(intensity_cost, execution_id)
+            intensity_cost = self.intensity_cost_function(intensity, context=context)
+            self.parameters.intensity_cost._set(intensity_cost, context)
 
         if ControlSignalCosts.ADJUSTMENT & cost_options:
-            adjustment_cost = self.adjustment_cost_function(intensity_change, execution_id=execution_id)
-            self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
+            adjustment_cost = self.adjustment_cost_function(intensity_change, context=context)
+            self.parameters.adjustment_cost._set(adjustment_cost, context)
 
         if ControlSignalCosts.DURATION & cost_options:
-            duration_cost = self.duration_cost_function(self.parameters.cost._get(execution_id), execution_id=execution_id)
-            self.parameters.duration_cost._set(duration_cost, execution_id)
+            duration_cost = self.duration_cost_function(self.parameters.cost._get(context), context=context)
+            self.parameters.duration_cost._set(duration_cost, context)
 
         return max(
             0.0,
@@ -1088,12 +1088,12 @@ class ControlSignal(ModulatorySignal):
                     adjustment_cost,
                     duration_cost
                 ],
-                execution_id=execution_id
+                context=context
             )
         )
 
     @tc.typecheck
-    def assign_costs(self, costs: tc.any(ControlSignalCosts, list), execution_context=None):
+    def assign_costs(self, costs: tc.any(ControlSignalCosts, list), context=None):
         """assign_costs(costs)
         Assigns specified costs; all others are disabled.
 
@@ -1109,11 +1109,11 @@ class ControlSignal(ModulatorySignal):
         """
         if isinstance(costs, ControlSignalCosts):
             costs = [costs]
-        self.parameters.cost_options.set(ControlSignalCosts.NONE, execution_context)
-        return self.enable_costs(costs, execution_context)
+        self.parameters.cost_options.set(ControlSignalCosts.NONE, context)
+        return self.enable_costs(costs, context)
 
     @tc.typecheck
-    def enable_costs(self, costs: tc.any(ControlSignalCosts, list), execution_context=None):
+    def enable_costs(self, costs: tc.any(ControlSignalCosts, list), context=None):
         """enable_costs(costs)
         Enables specified costs; settings for all other costs are left intact.
 
@@ -1129,15 +1129,15 @@ class ControlSignal(ModulatorySignal):
         """
         if isinstance(costs, ControlSignalCosts):
             options = [costs]
-        cost_options = self.parameters.cost_options.get(execution_context)
+        cost_options = self.parameters.cost_options.get(context)
         for cost in costs:
             cost_options |= cost
 
-        self.parameters.cost_options.set(cost_options, execution_context)
+        self.parameters.cost_options.set(cost_options, context)
         return cost_options
 
     @tc.typecheck
-    def disable_costs(self, costs: tc.any(ControlSignalCosts, list), execution_context=None):
+    def disable_costs(self, costs: tc.any(ControlSignalCosts, list), context=None):
         """disable_costs(costs)
         Disables specified costs; settings for all other costs are left intact.
 
@@ -1153,16 +1153,16 @@ class ControlSignal(ModulatorySignal):
         """
         if isinstance(costs, ControlSignalCosts):
             options = [costs]
-        cost_options = self.parameters.cost_options.get(execution_context)
+        cost_options = self.parameters.cost_options.get(context)
         for cost in costs:
             cost_options &= ~cost
 
-        self.parameters.cost_options.set(cost_options, execution_context)
+        self.parameters.cost_options.set(cost_options, context)
         return cost_options
 
-    def get_cost_options(self, execution_context=None):
+    def get_cost_options(self, context=None):
         options = []
-        cost_options = self.parameters.cost_options.get(execution_context)
+        cost_options = self.parameters.cost_options.get(context)
         if cost_options & ControlSignalCosts.INTENSITY:
             options.append(INTENSITY_COST)
         if cost_options & ControlSignalCosts.ADJUSTMENT:
@@ -1171,7 +1171,7 @@ class ControlSignal(ModulatorySignal):
             options.append(DURATION_COST)
         return options
 
-    def toggle_cost_function(self, cost_function_name, assignment=ON, execution_context=None):
+    def toggle_cost_function(self, cost_function_name, assignment=ON, context=None):
         """Enables/disables use of a cost function.
 
         ``cost_function_name`` should be a keyword (list under :ref:`Structure <ControlProjection_Structure>`).
@@ -1187,7 +1187,7 @@ class ControlSignal(ModulatorySignal):
         else:
             raise ControlSignalError("toggle_cost_function: unrecognized cost function: {}".format(cost_function_name))
 
-        cost_options = self.parameters.cost_options.get(execution_context)
+        cost_options = self.parameters.cost_options.get(context)
         if assignment:
             if not self.paramsCurrent[cost_function_name]:
                 raise ControlSignalError("Unable to toggle {} ON as function assignment is \'None\'".
@@ -1196,16 +1196,16 @@ class ControlSignal(ModulatorySignal):
         else:
             cost_options &= ~cost_option
 
-        self.parameters.cost_options.set(cost_options, execution_context)
+        self.parameters.cost_options.set(cost_options, context)
         return cost_options
 
-    def get_costs(self, execution_context=None):
+    def get_costs(self, context=None):
         """Return three-element list with the values of ``intensity_cost``, ``adjustment_cost`` and ``duration_cost``
         """
         return [
-            self.parameters.intensity_cost.get(execution_context),
-            self.parameters.adjustment_cost.get(execution_context),
-            self.parameters.duration_cost.get(execution_context)
+            self.parameters.intensity_cost.get(context),
+            self.parameters.adjustment_cost.get(context),
+            self.parameters.duration_cost.get(context)
         ]
 
     @property

@@ -272,15 +272,15 @@ class MaskedMappingProjection(MappingProjection):
                                                    format(repr(MASK), self.name, mask_shape,
                                                           repr(MATRIX), matrix_shape))
 
-    def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
+    def _update_parameter_states(self, context=None, runtime_params=None):
 
         # Update parameters first, to be sure mask that has been updated if it is being modulated
         #  and that it is applied to the updated matrix param
-        super()._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+        super()._update_parameter_states(context=context, runtime_params=runtime_params)
 
-        mask = self.parameters.mask._get(execution_id)
-        mask_operation = self.parameters.mask_operation._get(execution_id)
-        matrix = self.parameters.matrix._get(execution_id)
+        mask = self.parameters.mask._get(context)
+        mask_operation = self.parameters.mask_operation._get(context)
+        matrix = self.parameters.matrix._get(context)
         # Apply mask to matrix using mask_operation
         if mask is not None:
             if mask_operation is ADD:
@@ -290,4 +290,4 @@ class MaskedMappingProjection(MappingProjection):
             elif mask_operation is EXPONENTIATE:
                 matrix **= mask
 
-        self.parameters.matrix._set(matrix, execution_id)
+        self.parameters.matrix._set(matrix, context)

@@ -509,7 +509,7 @@ class BayesGLM(LearningFunction):
         self.gamma_shape_n = self.gamma_shape_0
         self.gamma_size_n = self.gamma_size_0
 
-    @handle_external_context()
+    @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
         # If variable passed during execution does not match default assigned during initialization,
         #    reassign default and re-initialize priors
@@ -521,9 +521,9 @@ class BayesGLM(LearningFunction):
     def _function(
         self,
         variable=None,
-        execution_id=None,
+        context=None,
         params=None,
-        context=None):
+        ):
         """
 
         Arguments
@@ -561,11 +561,11 @@ class BayesGLM(LearningFunction):
         # MODIFIED 10/26/18 END
 
         # Today's prior is yesterday's posterior
-        Lambda_prior = self.get_current_function_param('Lambda_n', execution_id)
-        mu_prior = self.get_current_function_param('mu_n', execution_id)
+        Lambda_prior = self.get_current_function_param('Lambda_n', context)
+        mu_prior = self.get_current_function_param('mu_n', context)
         # # MODIFIED 6/3/19 OLD: [JDC]: THE FOLLOWING ARE YOTAM'S ADDITION (NOT in FALK's CODE)
-        # gamma_shape_prior = self.get_current_function_param('gamma_shape_n', execution_id)
-        # gamma_size_prior = self.get_current_function_param('gamma_size_n', execution_id)
+        # gamma_shape_prior = self.get_current_function_param('gamma_shape_n', context)
+        # gamma_size_prior = self.get_current_function_param('gamma_size_n', context)
         # MODIFIED 6/3/19 NEW:
         gamma_shape_prior = self.parameters.gamma_shape_n.default_value
         gamma_size_prior = self.parameters.gamma_size_n.default_value
@@ -574,9 +574,8 @@ class BayesGLM(LearningFunction):
 
         variable = self._check_args(
             [np.atleast_2d(variable[0]), np.atleast_2d(variable[1])],
-            execution_id,
             params,
-            context
+            context,
         )
         predictors = variable[0]
         dependent_vars = variable[1].astype(float)
@@ -589,15 +588,15 @@ class BayesGLM(LearningFunction):
             + (mu_prior.T @ Lambda_prior @ mu_prior) \
             - (mu_n.T @ Lambda_n @ mu_n)
 
-        self.parameters.Lambda_prior._set(Lambda_prior, execution_id)
-        self.parameters.mu_prior._set(mu_prior, execution_id)
-        self.parameters.gamma_shape_prior._set(gamma_shape_prior, execution_id)
-        self.parameters.gamma_size_prior._set(gamma_size_prior, execution_id)
+        self.parameters.Lambda_prior._set(Lambda_prior, context)
+        self.parameters.mu_prior._set(mu_prior, context)
+        self.parameters.gamma_shape_prior._set(gamma_shape_prior, context)
+        self.parameters.gamma_size_prior._set(gamma_size_prior, context)
 
-        self.parameters.Lambda_n._set(Lambda_n, execution_id)
-        self.parameters.mu_n._set(mu_n, execution_id)
-        self.parameters.gamma_shape_n._set(gamma_shape_n, execution_id)
-        self.parameters.gamma_size_n._set(gamma_size_n, execution_id)
+        self.parameters.Lambda_n._set(Lambda_n, context)
+        self.parameters.mu_n._set(mu_n, context)
+        self.parameters.gamma_shape_n._set(gamma_shape_n, context)
+        self.parameters.gamma_size_n._set(gamma_size_n, context)
 
         # # TEST PRINT:
         # print(f'MEAN WEIGHTS FOR BayesGLM:\n{mu_n}')
@@ -835,9 +834,9 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -867,7 +866,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
-        learning_rate = self.get_current_function_param(LEARNING_RATE, execution_id)
+        learning_rate = self.get_current_function_param(LEARNING_RATE, context)
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
 
@@ -1067,9 +1066,9 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -1092,7 +1091,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         """
 
-        self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        self._check_args(variable=variable, context=context, params=params)
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -1100,7 +1099,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
-        learning_rate = self.get_current_function_param(LEARNING_RATE, execution_id)
+        learning_rate = self.get_current_function_param(LEARNING_RATE, context)
         # learning_rate = self.learning_rate
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
@@ -1301,9 +1300,9 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -1326,7 +1325,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
         """
 
-        self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        self._check_args(variable=variable, context=context, params=params)
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -1334,7 +1333,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
-        learning_rate = self.get_current_function_param(LEARNING_RATE, execution_id)
+        learning_rate = self.get_current_function_param(LEARNING_RATE, context)
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
 
@@ -1373,16 +1372,16 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         return self.convert_output_type(weight_change_matrix)
 
 
-def _activation_input_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.variable._get(execution_id)[LEARNING_ACTIVATION_INPUT]
+def _activation_input_getter(owning_component=None, context=None):
+    return owning_component.parameters.variable._get(context)[LEARNING_ACTIVATION_INPUT]
 
 
-def _activation_output_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.variable._get(execution_id)[LEARNING_ACTIVATION_OUTPUT]
+def _activation_output_getter(owning_component=None, context=None):
+    return owning_component.parameters.variable._get(context)[LEARNING_ACTIVATION_OUTPUT]
 
 
-def _error_signal_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.variable._get(execution_id)[LEARNING_ERROR_OUTPUT]
+def _error_signal_getter(owning_component=None, context=None):
+    return owning_component.parameters.variable._get(context)[LEARNING_ERROR_OUTPUT]
 
 
 
@@ -1603,9 +1602,8 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
-                 params=None,
                  context=None,
+                 params=None,
                  **kwargs):
         """
 
@@ -1636,11 +1634,11 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
         """
 
-        self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        self._check_args(variable=variable, context=context, params=params)
 
-        output = self.get_current_function_param(ACTIVATION_OUTPUT, execution_id)
-        error = self.get_current_function_param(ERROR_SIGNAL, execution_id)
-        learning_rate = self.get_current_function_param(LEARNING_RATE, execution_id)
+        output = self.get_current_function_param(ACTIVATION_OUTPUT, context)
+        error = self.get_current_function_param(ERROR_SIGNAL, context)
+        learning_rate = self.get_current_function_param(LEARNING_RATE, context)
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -2030,10 +2028,9 @@ class BackPropagation(LearningFunction):
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  error_matrix=None,
                  params=None,
-                 context=None,
                  **kwargs):
         """
         .. note::
@@ -2068,7 +2065,7 @@ class BackPropagation(LearningFunction):
             function of `error_matrix <BackPropagation.error_matrix>`.
         """
 
-        self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        self._check_args(variable=variable, context=context, params=params)
 
         # Manage error_matrix param
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
@@ -2086,8 +2083,8 @@ class BackPropagation(LearningFunction):
                 raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
                                     format(self.__class__.__name__, owner_string))
 
-        self.parameters.error_matrix._set(error_matrix, execution_id)
-        # self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        self.parameters.error_matrix._set(error_matrix, context)
+        # self._check_args(variable=variable, context=context, params=params, context=context)
 
         # Manage learning_rate
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
@@ -2096,19 +2093,19 @@ class BackPropagation(LearningFunction):
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
-        learning_rate = self.get_current_function_param(LEARNING_RATE, execution_id)
+        learning_rate = self.get_current_function_param(LEARNING_RATE, context)
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
 
         # make activation_input a 1D row array
-        activation_input = self.get_current_function_param(ACTIVATION_INPUT, execution_id)
+        activation_input = self.get_current_function_param(ACTIVATION_INPUT, context)
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
-        dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, execution_id))
+        dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, context))
 
         # Derivative of the output activity
-        activation_output = self.get_current_function_param(ACTIVATION_OUTPUT, execution_id)
+        activation_output = self.get_current_function_param(ACTIVATION_OUTPUT, context)
         # FIX: THIS ASSUMES DERIVATIVE CAN BE COMPUTED FROM output OF FUNCTION (AS IT CAN FOR THE Logistic)
         dA_dW = self.activation_derivative_fct(input=None, output=activation_output)
 

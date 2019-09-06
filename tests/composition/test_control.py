@@ -1430,7 +1430,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         comp.run(inputs=inputs,
                  num_trials=10,
-                 execution_id='outer_comp')
+                 context='outer_comp')
 
         log_arr = A.log.nparray_dictionary()
 

@@ -48,9 +48,9 @@ class TestLCControlMechanism:
         base_gain_assigned_to_B = []
 
         def report_trial(system):
-            from psyneulink import parse_execution_context
-            execution_id = parse_execution_context(system)
-            gain_created_by_LC_output_state_1.append(LC.output_states[0].parameters.value._get(execution_id))
+            from psyneulink import parse_context
+            context = parse_context(system)
+            gain_created_by_LC_output_state_1.append(LC.output_states[0].parameters.value._get(context))
             mod_gain_assigned_to_A.append([A.get_mod_gain(system)])
             mod_gain_assigned_to_B.append([B.get_mod_gain(system)])
             base_gain_assigned_to_A.append(A.function.gain)

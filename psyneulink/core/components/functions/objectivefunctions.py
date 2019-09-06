@@ -360,10 +360,10 @@ class Stability(ObjectiveFunction):
         transfer_params = ctx.get_param_struct_type(self.transfer_fct) if self.transfer_fct is not None else pnlvm.ir.LiteralStructType([])
         return pnlvm.ir.LiteralStructType([my_params, metric_params, transfer_params])
 
-    def _get_param_initializer(self, execution_id):
-        my_params = super()._get_param_initializer(execution_id)
-        metric_params = self._metric_fct._get_param_initializer(execution_id)
-        transfer_params = self.transfer_fct._get_param_initializer(execution_id) if self.transfer_fct is not None else tuple()
+    def _get_param_initializer(self, context):
+        my_params = super()._get_param_initializer(context)
+        metric_params = self._metric_fct._get_param_initializer(context)
+        transfer_params = self.transfer_fct._get_param_initializer(context) if self.transfer_fct is not None else tuple()
         return (my_params, metric_params, transfer_params)
 
     def _get_state_struct_type(self, ctx):
@@ -372,10 +372,10 @@ class Stability(ObjectiveFunction):
         transfer_state = ctx.get_state_struct_type(self.transfer_fct) if self.transfer_fct is not None else pnlvm.ir.LiteralStructType([])
         return pnlvm.ir.LiteralStructType([my_state, metric_state, transfer_state])
 
-    def _get_state_initializer(self, execution_id):
-        my_state = super()._get_state_initializer(execution_id)
-        metric_state = self._metric_fct._get_state_initializer(execution_id)
-        transfer_state = self.transfer_fct._get_state_initializer(execution_id) if self.transfer_fct is not None else tuple()
+    def _get_state_initializer(self, context):
+        my_state = super()._get_state_initializer(context)
+        metric_state = self._metric_fct._get_state_initializer(context)
+        transfer_state = self.transfer_fct._get_state_initializer(context) if self.transfer_fct is not None else tuple()
         return (my_state, metric_state, transfer_state)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
@@ -418,9 +418,9 @@ class Stability(ObjectiveFunction):
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """Calculate the stability of `variable <Stability.variable>`.
 
         Compare the value of `variable <Stability.variable>` with its value after transformation by
@@ -441,7 +441,7 @@ class Stability(ObjectiveFunction):
             variable = np.squeeze(variable)
         # MODIFIED 6/12/19 END
 
-        matrix = self.get_current_function_param(MATRIX, execution_id)
+        matrix = self.get_current_function_param(MATRIX, context)
 
         current = variable
 
@@ -449,7 +449,7 @@ class Stability(ObjectiveFunction):
         if self.transfer_fct is not None:
             transformed = self.transfer_fct(transformed)
 
-        result = self._metric_fct(variable=[current, transformed], execution_id=execution_id, context=context)
+        result = self._metric_fct(variable=[current, transformed], context=context)
 
         return self.convert_output_type(result)
 
@@ -1118,9 +1118,9 @@ class Distance(ObjectiveFunction):
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """Calculate the distance between the two vectors in `variable <Stability.variable>`.
 
         Use the `distance metric <DistanceMetrics>` specified in `metric <Distance.metric>` to calculate the distance.

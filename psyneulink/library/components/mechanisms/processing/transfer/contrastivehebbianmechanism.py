@@ -408,22 +408,22 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
     PLUS_PHASE_OUTPUT=PLUS_PHASE_OUTPUT
 
 
-def _CHM_output_activity_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.current_activity._get(execution_id)[owning_component.target_start:owning_component.target_end]
+def _CHM_output_activity_getter(owning_component=None, context=None):
+    return owning_component.parameters.current_activity._get(context)[owning_component.target_start:owning_component.target_end]
 
 
-def _CHM_input_activity_getter(owning_component=None, execution_id=None):
-    return owning_component.parameters.current_activity._get(execution_id)[:owning_component.input_size]
+def _CHM_input_activity_getter(owning_component=None, context=None):
+    return owning_component.parameters.current_activity._get(context)[:owning_component.input_size]
 
 
-def _CHM_hidden_activity_getter(owning_component=None, execution_id=None):
+def _CHM_hidden_activity_getter(owning_component=None, context=None):
     if owning_component.hidden_size:
-        return owning_component.parameters.current_activity._get(execution_id)[owning_component.input_size:owning_component.target_start]
+        return owning_component.parameters.current_activity._get(context)[owning_component.input_size:owning_component.target_start]
 
 
-def _CHM_target_activity_getter(owning_component=None, execution_id=None):
+def _CHM_target_activity_getter(owning_component=None, context=None):
     if owning_component.target_size:
-        return owning_component.parameters.current_activity._get(execution_id)[owning_component.target_start:owning_component.target_end]
+        return owning_component.parameters.current_activity._get(context)[owning_component.target_start:owning_component.target_end]
 
 
 class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
@@ -1284,10 +1284,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     def _execute(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  function_variable=None,
                  runtime_params=None,
-                 context=None):
+                 ):
 
         if self.initialization_status == ContextFlags.INITIALIZING:
             # Set minus_phase activity, plus_phase, current_activity and initial_value
@@ -1305,101 +1305,101 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 self.parameters.output_activity._set(self.input_states[TARGET].socket_template)
 
         # Initialize execution_phase as minus_phase
-        if self.parameters.execution_phase._get(execution_id) is None:
-            self.parameters.execution_phase._set(MINUS_PHASE, execution_id)
+        if self.parameters.execution_phase._get(context) is None:
+            self.parameters.execution_phase._set(MINUS_PHASE, context)
 
-        if self.parameters.execution_phase._get(execution_id) is MINUS_PHASE:
-            self.parameters.current_termination_criterion._set(self.parameters.minus_phase_termination_criterion._get(execution_id), execution_id)
-            self.parameters.current_termination_condition._set(self.minus_phase_termination_condition, execution_id)
-            self.parameters.phase_execution_count._set(0, execution_id)
+        if self.parameters.execution_phase._get(context) is MINUS_PHASE:
+            self.parameters.current_termination_criterion._set(self.parameters.minus_phase_termination_criterion._get(context), context)
+            self.parameters.current_termination_condition._set(self.minus_phase_termination_condition, context)
+            self.parameters.phase_execution_count._set(0, context)
 
-        if self.parameters.is_finished_._get(execution_id):
+        if self.parameters.is_finished_._get(context):
             # If current execution follows completion of a previous trial,
             #    zero activity for input from recurrent projection so that
             #    input does not contain residual activity of previous trial
             variable[RECURRENT_INDEX] = self.input_states[RECURRENT].socket_template
 
-        self.parameters.is_finished_._set(False, execution_id)
+        self.parameters.is_finished_._set(False, context)
 
         # Need to store this, as it will be updated in call to super
-        previous_value = self.parameters.previous_value._get(execution_id)
+        previous_value = self.parameters.previous_value._get(context)
 
         # Note _parse_function_variable selects actual input to function based on execution_phase
         current_activity = super()._execute(variable,
-                                            execution_id=execution_id,
+                                            context=context,
                                             runtime_params=runtime_params,
-                                            context=context)
+                                            )
 
-        self.parameters.phase_execution_count._set(self.parameters.phase_execution_count._get(execution_id) + 1, execution_id)
+        self.parameters.phase_execution_count._set(self.parameters.phase_execution_count._get(context) + 1, context)
 
         current_activity = np.squeeze(current_activity)
         # Set value of primary OutputState to current activity
-        self.parameters.current_activity._set(current_activity, execution_id)
+        self.parameters.current_activity._set(current_activity, context)
 
         # This is the first trial, so can't test for convergence
         #    (since that requires comparison with value from previous trial)
         if previous_value is None:
             return current_activity
 
-        current_termination_condition = self.parameters.current_termination_condition._get(execution_id)
+        current_termination_condition = self.parameters.current_termination_condition._get(context)
 
         if current_termination_condition is CONVERGENCE:
             self.parameters.convergence_criterion._set(
-                self.parameters.current_termination_criterion._get(execution_id),
-                execution_id
+                self.parameters.current_termination_criterion._get(context),
+                context
             )
-            self.parameters.phase_terminated._set(self.is_converged(np.atleast_2d(current_activity), execution_id, context), execution_id)
+            self.parameters.phase_terminated._set(self.is_converged(np.atleast_2d(current_activity), context), context)
         elif current_termination_condition is COUNT:
             self.parameters.phase_terminated._set(
-                (self.parameters.phase_execution_count._get(execution_id) == self.parameters.current_termination_criterion._get(execution_id)),
-                execution_id
+                (self.parameters.phase_execution_count._get(context) == self.parameters.current_termination_criterion._get(context)),
+                context
             )
         else:
             raise ContrastiveHebbianError(
                 "Unrecognized {} specification ({}) in execution of {} of {}".format(
                     repr('current_termination_condition'),
                     current_termination_condition,
-                    repr('PLUS_PHASE') if self.parameters.execution_phase._get(execution_id) is PLUS_PHASE else repr('MINUS_PHASE'),
+                    repr('PLUS_PHASE') if self.parameters.execution_phase._get(context) is PLUS_PHASE else repr('MINUS_PHASE'),
                     self.name
                 )
             )
 
-        if self.parameters.phase_terminated._get(execution_id):
+        if self.parameters.phase_terminated._get(context):
             # Terminate if this is the end of the plus phase, prepare for next trial
-            if self.parameters.execution_phase._get(execution_id) == PLUS_PHASE:
+            if self.parameters.execution_phase._get(context) == PLUS_PHASE:
                 # Store activity from last execution in plus phase
-                self.parameters.plus_phase_activity._set(current_activity, execution_id)
+                self.parameters.plus_phase_activity._set(current_activity, context)
                 # # Set value of primary outputState to activity at end of plus phase
                 # self.current_activity = self.plus_phase_activity
-                self.parameters.current_activity._set(current_activity, execution_id)
+                self.parameters.current_activity._set(current_activity, context)
                 # self.execution_phase = None
-                self.parameters.is_finished_._set(True, execution_id)
+                self.parameters.is_finished_._set(True, context)
 
             # Otherwise, prepare for start of plus phase on next execution
             else:
                 # Store activity from last execution in plus phase
-                self.parameters.minus_phase_activity._set(self.parameters.current_activity._get(), execution_id)
+                self.parameters.minus_phase_activity._set(self.parameters.current_activity._get(), context)
                 # Use initial_value attribute to initialize, for the minus phase,
                 #    both the integrator_function's previous_value
                 #    and the Mechanism's current activity (which is returned as its input)
                 if not self.continuous:
-                    self.reinitialize(self.initial_value, execution_context=execution_id, context=context)
-                    self.parameters.current_activity._set(self.parameters.initial_value._get(execution_id), execution_id)
-                self.parameters.current_termination_criterion._set(self.plus_phase_termination_criterion, execution_id)
-                self.parameters.current_termination_condition._set(self.plus_phase_termination_condition, execution_id)
+                    self.reinitialize(self.initial_value, context=context)
+                    self.parameters.current_activity._set(self.parameters.initial_value._get(context), context)
+                self.parameters.current_termination_criterion._set(self.plus_phase_termination_criterion, context)
+                self.parameters.current_termination_condition._set(self.plus_phase_termination_condition, context)
 
             # Switch execution_phase
-            self.parameters.execution_phase._set(not self.parameters.execution_phase._get(execution_id), execution_id)
-            self.parameters.phase_execution_count._set(0, execution_id)
+            self.parameters.execution_phase._set(not self.parameters.execution_phase._get(context), context)
+            self.parameters.phase_execution_count._set(0, context)
 
         return current_activity
         # return self.current_activity
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
-        function_variable = self.combination_function(variable=variable, execution_id=execution_id, context=context)
-        return super(RecurrentTransferMechanism, self)._parse_function_variable(function_variable, execution_id=execution_id, context=context)
+    def _parse_function_variable(self, variable, context=None):
+        function_variable = self.combination_function(variable=variable, context=context)
+        return super(RecurrentTransferMechanism, self)._parse_function_variable(function_variable, context=context)
 
-    def combination_function(self, variable=None, execution_id=None, context=None):
+    def combination_function(self, variable=None, context=None):
         # IMPLEMENTATION NOTE: use try and except here for efficiency: care more about execution than initialization
         # IMPLEMENTATION NOTE: separated vs. overlapping input and target handled by assignment of target_start in init
 
@@ -1407,7 +1407,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         PLUS_PHASE_INDEX = TARGET_INDEX
 
         try:  # Execution
-            if self.parameters.execution_phase._get(execution_id) == PLUS_PHASE:
+            if self.parameters.execution_phase._get(context) == PLUS_PHASE:
                 if self.clamp == HARD_CLAMP:
                     variable[RECURRENT_INDEX][:self.input_size] = variable[MINUS_PHASE_INDEX]
                     if self.mode is SIMPLE_HEBBIAN:
@@ -1456,6 +1456,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     def recurrent_activity(self):
         return self.current_activity
 
-    def is_finished(self, execution_context=None):
+    def is_finished(self, context=None):
         # is a method, to be compatible with scheduling
-        return self.parameters.is_finished_.get(execution_context)
+        return self.parameters.is_finished_.get(context)

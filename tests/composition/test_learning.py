@@ -363,7 +363,7 @@ class TestBackProp:
         comp.run(inputs={input_layer: [[1.0, 1.0]],
                          target_mechanism: [[1.0, 1.0]]},
                  num_trials=5,
-                 execution_id=eid)
+                 context=eid)
 
         # for node in comp.nodes:
         #     try:

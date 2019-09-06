@@ -444,7 +444,7 @@ class ModulatoryMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-def _control_allocation_getter(owning_component=None, execution_id=None):
+def _control_allocation_getter(owning_component=None, context=None):
     try:
         control_signal_indices = [owning_component.modulatory_signals.index(c)
                                   for c in owning_component.control_signals]
@@ -453,20 +453,20 @@ def _control_allocation_getter(owning_component=None, execution_id=None):
         return owning_component.parameters.default_allocation or \
                [owning_component.parameters.control_allocation.default_value]
 
-def _control_allocation_setter(value, owning_component=None, execution_id=None):
+def _control_allocation_setter(value, owning_component=None, context=None):
     control_signal_indices = [owning_component.modulatory_signals.index(c)
                               for c in owning_component.control_signals]
     if len(value)!=len(control_signal_indices):
         raise ModulatoryMechanismError(f"Attempt to set '{CONTROL_ALLOCATION}' parameter of {owning_component.name} "
                                        f"with value ({value} that has a different length ({len(value)}) "
                                        f"than the number of its {CONTROL_SIGNALS} ({len(control_signal_indices)})")
-    mod_alloc = owning_component.parameters.modulatory_allocation._get(execution_id)
+    mod_alloc = owning_component.parameters.modulatory_allocation._get(context)
     for j, i in enumerate(control_signal_indices):
         mod_alloc[i] = value[j]
-    owning_component.parameters.modulatory_allocation._set(np.array(mod_alloc), execution_id)
+    owning_component.parameters.modulatory_allocation._set(np.array(mod_alloc), context)
     return value
 
-def _gating_allocation_getter(owning_component=None, execution_id=None):
+def _gating_allocation_getter(owning_component=None, context=None):
     try:
         gating_signal_indices = [owning_component.modulatory_signals.index(g)
                                   for g in owning_component.gating_signals]
@@ -475,43 +475,43 @@ def _gating_allocation_getter(owning_component=None, execution_id=None):
         return owning_component.parameters.default_allocation or \
                [owning_component.parameters.gating_allocation.default_value]
 
-def _gating_allocation_setter(value, owning_component=None, execution_id=None):
+def _gating_allocation_setter(value, owning_component=None, context=None):
     gating_signal_indices = [owning_component.modulatory_signals.index(c)
                               for c in owning_component.gating_signals]
     if len(value)!=len(gating_signal_indices):
         raise ModulatoryMechanismError(f"Attempt to set {GATING_ALLOCATION} parameter of {owning_component.name} "
                                        f"with value ({value} that has a different length than the number of its"
                                        f"{GATING_SIGNALS} ({len(gating_signal_indices)})")
-    mod_alloc = owning_component.parameters.modulatory_allocation._get(execution_id)
+    mod_alloc = owning_component.parameters.modulatory_allocation._get(context)
     for j, i in enumerate(gating_signal_indices):
         mod_alloc[i] = value[j]
-    owning_component.parameters.modulatory_allocation._set(np.array(mod_alloc), execution_id)
+    owning_component.parameters.modulatory_allocation._set(np.array(mod_alloc), context)
     return value
 
-def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None):
+def _modulatory_mechanism_costs_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
-        costs = [c.compute_costs(c.parameters.variable._get(execution_id), execution_id=execution_id)
+        costs = [c.compute_costs(c.parameters.variable._get(context), context=context)
                  for c in owning_component.control_signals]
         return costs
 
     except TypeError:
         return None
 
-def _outcome_getter(owning_component=None, execution_id=None):
+def _outcome_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.variable._get(execution_id)[0]
+        return owning_component.parameters.variable._get(context)[0]
     except TypeError:
         return None
 
-def _net_outcome_getter(owning_component=None, execution_id=None):
+def _net_outcome_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost,
     # that cost is not included in the net_outcome
 
     try:
         c = owning_component
-        return c.compute_net_outcome(c.parameters.outcome._get(execution_id),
-                                     c.combine_costs(c.parameters.costs._get(execution_id)))
+        return c.compute_net_outcome(c.parameters.outcome._get(context),
+                                     c.combine_costs(c.parameters.costs._get(context)))
     except TypeError:
         return [0]
 
@@ -539,9 +539,9 @@ class DefaultAllocationFunction(Function_Base):
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         num_mod_sigs = self.get_current_function_param('num_modulatory_signals')
         result = np.array([variable[0]] * num_mod_sigs)
         return self.convert_output_type(result)
@@ -1223,7 +1223,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # Instantiate MappingProjection from ObjectiveMechanism to ModulatoryMechanism
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
                                                       receiver=self,
-                                                      matrix=AUTO_ASSIGN_MATRIX)
+                                                      matrix=AUTO_ASSIGN_MATRIX,
+                                                      context=context)
 
         # CONFIGURE FOR ASSIGNMENT TO COMPOSITION
 
@@ -1375,12 +1376,12 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         if isinstance(modulatory_signal, ControlSignal):
             # Update control_signal_costs to accommodate instantiated Projection
-            control_signal_costs = self.parameters.control_signal_costs._get()
+            control_signal_costs = self.parameters.control_signal_costs._get(context)
             try:
                 control_signal_costs = np.append(control_signal_costs, np.zeros((1, 1)), axis=0)
             except (AttributeError, ValueError):
                 control_signal_costs = np.zeros((1, 1))
-            self.parameters.control_signal_costs._set(control_signal_costs)
+            self.parameters.control_signal_costs._set(control_signal_costs, context)
 
         # UPDATE output_states AND modulatory_projections -------------------------------------------------------------
 
@@ -1607,16 +1608,16 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         for proj in dependent_projections:
             proj._activate_for_compositions(compositions)
 
-    def _apply_modulatory_allocation(self, modulatory_allocation, runtime_params, context, execution_id=None):
+    def _apply_modulatory_allocation(self, modulatory_allocation, runtime_params, context):
         """Update values to `modulatory_signals <ModulatoryMechanism.modulatory_signals>`
         based on specified `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`
         (used by controller of a Composition in simulations)
         """
         value = [np.atleast_1d(a) for a in modulatory_allocation]
-        self.parameters.value._set(value, execution_id)
-        self._update_output_states(execution_id=execution_id,
+        self.parameters.value._set(value, context)
+        self._update_output_states(context=context,
                                    runtime_params=runtime_params,
-                                   context=context)
+                                   )
 
     @property
     def monitored_output_states(self):
@@ -1687,16 +1688,16 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             self.__sim_count_lock = threading.Lock()
             return self.__sim_count_lock
 
-    def get_next_sim_id(self, execution_id):
+    def get_next_sim_id(self, context):
         with self._sim_count_lock:
             try:
-                sim_num = self._sim_counts[execution_id]
-                self._sim_counts[execution_id] += 1
+                sim_num = self._sim_counts[context.execution_id]
+                self._sim_counts[context.execution_id] += 1
             except KeyError:
                 sim_num = 0
-                self._sim_counts[execution_id] = 1
+                self._sim_counts[context.execution_id] = 1
 
-        return '{0}{1}-{2}'.format(execution_id, EID_SIMULATION, sim_num)
+        return '{0}{1}-{2}'.format(context.execution_id, EID_SIMULATION, sim_num)
 
     @property
     def _dependent_components(self):

@@ -295,15 +295,15 @@ class MappingError(Exception):
         self.error_value = error_value
 
 
-def _mapping_projection_matrix_getter(owning_component=None, execution_id=None):
-    return owning_component.function.parameters.matrix.get(execution_id)
+def _mapping_projection_matrix_getter(owning_component=None, context=None):
+    return owning_component.function.parameters.matrix.get(context)
 
 
-def _mapping_projection_matrix_setter(value, owning_component=None, execution_id=None):
-    owning_component.function.parameters.matrix.set(value, execution_id)
+def _mapping_projection_matrix_setter(value, owning_component=None, context=None):
+    owning_component.function.parameters.matrix.set(value, context)
     # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
     # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
-    owning_component.parameter_states["matrix"].function.parameters.previous_value.set(value, execution_id)
+    owning_component.parameter_states["matrix"].function.parameters.previous_value.set(value, context)
 
     return value
 
@@ -527,6 +527,7 @@ class MappingProjection(PathwayProjection_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
+                 context=None,
                  **kwargs):
         # Assign args to params and functionParams dicts
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
@@ -557,7 +558,7 @@ class MappingProjection(PathwayProjection_Base):
                          **kwargs)
 
         try:
-            self._parameter_states[MATRIX].function.reinitialize()
+            self._parameter_states[MATRIX].function.reinitialize(context=context)
         except AttributeError:
             pass
 
@@ -684,15 +685,15 @@ class MappingProjection(PathwayProjection_Base):
 
         super()._instantiate_receiver(context=context)
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, context=None, runtime_params=None):
 
-        self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+        self._update_parameter_states(context=context, runtime_params=runtime_params)
 
         value = super()._execute(
                 variable=variable,
-                execution_id=execution_id,
+                context=context,
                 runtime_params=runtime_params,
-                context=context)
+                )
 
         return value
 

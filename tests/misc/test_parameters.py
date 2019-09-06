@@ -182,7 +182,7 @@ def test_dot_notation():
     assert t.value == 5
     d.run({t: 10})
     assert t.value == 10
-    c.run({t: 20}, execution_id='custom execution id')
+    c.run({t: 20}, context='custom execution id')
     assert t.value == 20
 
     # context None

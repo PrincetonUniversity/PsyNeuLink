@@ -32,7 +32,7 @@ __all__ = ['PytorchModelCreator']
 class PytorchModelCreator(torch.nn.Module):
 
     # sets up parameters of model & the information required for forward computation
-    def __init__(self, processing_graph, param_init_from_pnl, execution_sets, device, execution_id=None, composition=None, context=None):
+    def __init__(self, processing_graph, param_init_from_pnl, execution_sets, device, context=None, composition=None):
 
         if not torch_available:
             raise Exception('Pytorch python module (torch) is not installed. Please install it with '
@@ -66,13 +66,13 @@ class PytorchModelCreator(torch.nn.Module):
                 value = None  # the node's (its mechanism's) value
                 biases = None  # the node's bias parameters
                 function = self.function_creator(
-                    component, execution_id)  # the node's function
+                    component, context)  # the node's function
                 afferents = {}  # dict for keeping track of afferent nodes and their connecting weights
                 if param_init_from_pnl:
-                    if component.parameters.value._get(execution_id) is None:
+                    if component.parameters.value._get(context) is None:
                         value = torch.tensor(component.parameters.value._get(None)[0], device=self.device)
                     else:
-                        value = torch.tensor(component.parameters.value._get(execution_id)[0], device=self.device)
+                        value = torch.tensor(component.parameters.value._get(context)[0], device=self.device)
                 else:
                     input_length = len(
                         component.input_states[0].parameters.value._get(None))
@@ -98,7 +98,7 @@ class PytorchModelCreator(torch.nn.Module):
 
                         # CW 12/3/18: Check this logic later
                         proj_matrix = mapping_proj.parameters.matrix._get(
-                            execution_id)
+                            context)
                         if proj_matrix is None:
                             proj_matrix = mapping_proj.parameters.matrix._get(
                                 None)
@@ -119,7 +119,7 @@ class PytorchModelCreator(torch.nn.Module):
 
         # CW 12/3/18: this copies by reference so in theory it only needs to be called during init
         # but we call copy_weights_to_psyneulink after every run in order to make Autodiff less stateful
-        self.copy_weights_to_psyneulink(execution_id, context)
+        self.copy_weights_to_psyneulink(context)
 
 
     # gets the index of 'afferent_node' in the forward info weights list
@@ -713,7 +713,7 @@ class PytorchModelCreator(torch.nn.Module):
     
     # performs forward computation for the model
     @handle_external_context()
-    def forward(self, inputs, execution_id=None, context=None, do_logging=True, scheduler=None):
+    def forward(self, inputs, context=None, do_logging=True, scheduler=None):
         outputs = {}  # dict for storing values of terminal (output) nodes
 
         for i, current_exec_set in enumerate(self.execution_sets):
@@ -750,7 +750,7 @@ class PytorchModelCreator(torch.nn.Module):
                     old_source = context.source
                     context.source = ContextFlags.COMMAND_LINE
                     detached_value = value.detach().cpu().numpy()
-                    component.parameters.value._log_value(detached_value, execution_id, context)
+                    component.parameters.value._log_value(detached_value, context)
                     context.source = old_source
 
                 # save value in output list if we're at a node in the last execution set
@@ -758,17 +758,17 @@ class PytorchModelCreator(torch.nn.Module):
                     outputs[component] = value
 
             if scheduler is not None:
-                scheduler.get_clock(execution_id)._increment_time(
+                scheduler.get_clock(context)._increment_time(
                     TimeScale.TIME_STEP)
 
         # Maybe need to comment this out!
-        self.copy_outputs_to_psyneulink(outputs, execution_id)
+        self.copy_outputs_to_psyneulink(outputs, context)
 
         if do_logging:
             old_source = context.source
             context.source = ContextFlags.COMMAND_LINE
-            self.log_weights(execution_id, context)
-            self.copy_outputs_to_psyneulink(outputs, execution_id)
+            self.log_weights(context)
+            self.copy_outputs_to_psyneulink(outputs, context)
             context.source = old_source
 
         return outputs
@@ -779,28 +779,28 @@ class PytorchModelCreator(torch.nn.Module):
             if info[1] is not None:
                 info[1].detach_()
 
-    def copy_weights_to_psyneulink(self, execution_id=None, context=None):
+    def copy_weights_to_psyneulink(self, context=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
             projection.parameters.matrix._set(
-                weights.detach().cpu().numpy(), execution_id, context)
+                weights.detach().cpu().numpy(), context)
 
-    def copy_outputs_to_psyneulink(self, outputs, execution_id=None):
+    def copy_outputs_to_psyneulink(self, outputs, context=None):
         for component, value in outputs.items():
             detached_value = value.detach().cpu().numpy()
             component.parameters.value._set(
-                detached_value, execution_id, skip_history=True, skip_log=True)
+                detached_value, context, skip_history=True, skip_log=True)
             component.output_state.parameters.value._set(
-                detached_value, execution_id, skip_history=True, skip_log=True)
+                detached_value, context, skip_history=True, skip_log=True)
 
     @handle_external_context()
-    def log_weights(self, execution_id=None, context=None):
+    def log_weights(self, context=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
             projection.parameters.matrix._log_value(
-                weights.detach().cpu().numpy(), execution_id, context)
+                weights.detach().cpu().numpy(), context)
 
     # Helper method that functions the same as function_creator, but instead injects the computation to the builder
     # FIXME: Change to directly using compiled function methods
-    def bin_function_creator(self, ctx, node, execution_id=None):
+    def bin_function_creator(self, ctx, node, context=None):
         # first try to get cached func
         name = node.name+"_"+node.function.name
         try:
@@ -823,7 +823,7 @@ class PytorchModelCreator(torch.nn.Module):
 
         def get_fct_param_value(param_name):
             val = node.function.get_current_function_param(
-                param_name, execution_id)
+                param_name, context)
             if val is None:
                 val = node.function.get_current_function_param(
                     param_name, None)
@@ -870,7 +870,7 @@ class PytorchModelCreator(torch.nn.Module):
     
     # Helper method that creates a bin func that returns the derivative of the function into the builder
     # FIXME: Add compiled derivative functions, and move these calls there
-    def bin_function_derivative_creator(self, ctx, node, execution_id=None):
+    def bin_function_derivative_creator(self, ctx, node, context=None):
         # first try to get cached func
         name = node.name+"_"+node.function.name+"_derivative"
         try:
@@ -892,7 +892,7 @@ class PytorchModelCreator(torch.nn.Module):
         input_vector, dim, output_vector = llvm_func.args
         def get_fct_param_value(param_name):
             val = node.function.get_current_function_param(
-                param_name, execution_id)
+                param_name, context)
             if val is None:
                 val = node.function.get_current_function_param(
                     param_name, None)
@@ -942,10 +942,10 @@ class PytorchModelCreator(torch.nn.Module):
 
     # helper method that identifies the type of function used by a node, gets the function
     # parameters and uses them to create a function object representing the function, then returns it
-    def function_creator(self, node, execution_id=None):
+    def function_creator(self, node, context=None):
         def get_fct_param_value(param_name):
             val = node.function.get_current_function_param(
-                param_name, execution_id)
+                param_name, context)
             if val is None:
                 val = node.function.get_current_function_param(
                     param_name, None)

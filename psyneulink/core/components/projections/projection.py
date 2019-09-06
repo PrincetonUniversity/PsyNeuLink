@@ -299,7 +299,7 @@ A sender can be specified as:
     `ModulatorySignal <ModulatorySignal>` of the appropriate type is created and assigned to the Mechanism.
 
 If the `sender <Projection_Base.sender>` is not specified and it can't be determined from the context, or an OutputState
-specification is not associated with a Mechanism that can be determined from context, then the initialization of the
+specification is not associated with a Mechanism that can be determined from , then the initialization of the
 Projection is `deferred <Projection_Deferred_Initialization>`.
 
 .. _Projection_Receiver:
@@ -928,10 +928,10 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
+    def _update_parameter_states(self, context=None, runtime_params=None):
         for state in self._parameter_states:
             state_name = state.name
-            state._update(execution_id=execution_id, params=runtime_params, context=context)
+            state._update(context=context, params=runtime_params)
 
             # Assign version of ParameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
@@ -939,24 +939,24 @@ class Projection_Base(Projection):
             # set by the statement below. For example, if state_name is 'matrix', the statement below sets
             # params['matrix'] to state.value, calls setattr(state.owner, 'matrix', state.value), which sets the
             # 'matrix' parameter state's variable to ALSO be equal to state.value! If this is unintended, please change.
-            value = state.parameters.value._get(execution_id)
-            getattr(self.parameters, state_name)._set(value, execution_id, context)
+            value = state.parameters.value._get(context)
+            getattr(self.parameters, state_name)._set(value, context)
             # manual setting of previous value to matrix value (happens in above param['matrix'] setting
             if state_name == MATRIX:
-                state.function.parameters.previous_value._set(value, execution_id, context)
+                state.function.parameters.previous_value._set(value, context)
 
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:
-            variable = self.sender.parameters.value._get(execution_id)
+            variable = self.sender.parameters.value._get(context)
 
         value = super()._execute(
             variable=variable,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
         return value
 
@@ -1019,11 +1019,11 @@ class Projection_Base(Projection):
     def _get_state_struct_type(self, ctx):
         return ctx.get_state_struct_type(self.function)
 
-    def _get_param_initializer(self, execution_id):
-        return self.function._get_param_initializer(execution_id)
+    def _get_param_initializer(self, context):
+        return self.function._get_param_initializer(context)
 
-    def _get_state_initializer(self, execution_id):
-        return self.function._get_state_initializer(execution_id)
+    def _get_state_initializer(self, context):
+        return self.function._get_state_initializer(context)
 
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):

@@ -360,7 +360,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          **kwargs
                          )
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
+    def _parse_function_variable(self, variable, context=None):
         return variable
 
     def _instantiate_attributes_after_function(self, context=None):
@@ -397,9 +397,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     def _execute(
         self,
         variable=None,
-        execution_id=None,
+        context=None,
         runtime_params=None,
-        context=None
+
     ):
         """Execute AutoAssociativeLearningMechanism. function and return learning_signal
 
@@ -412,35 +412,35 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         #                       which are not relevant to an autoassociative projection
         learning_signal = super(LearningMechanism, self)._execute(
             variable=variable,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
 
         if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
-            print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal._get(execution_id)))
+            print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal._get(context)))
 
         value = np.array([learning_signal])
 
-        self.parameters.value._set(value, execution_id)
+        self.parameters.value._set(value, context)
 
         return value
 
-    def _update_output_states(self, execution_id=None, runtime_params=None, context=None):
+    def _update_output_states(self, context=None, runtime_params=None):
         """Update the weights for the AutoAssociativeProjection for which this is the AutoAssociativeLearningMechanism
 
         Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
         This insures that weights are updated within the same trial in which they have been learned
         """
 
-        super()._update_output_states(execution_id, runtime_params, context)
+        super()._update_output_states(context, runtime_params)
 
         from psyneulink.core.components.process import Process
-        if self.parameters.learning_enabled._get(execution_id) and context.composition and not isinstance(context.composition, Process):
+        if self.parameters.learning_enabled._get(context) and context.composition and not isinstance(context.composition, Process):
             learned_projection = self.activity_source.recurrent_projection
             old_exec_phase = context.execution_phase
             context.execution_phase = ContextFlags.LEARNING
-            learned_projection.execute(execution_id=execution_id, context=context)
+            learned_projection.execute(context=context)
             context.execution_phase = old_exec_phase
 
     @property
