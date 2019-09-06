@@ -815,8 +815,8 @@ class Parameter(types.SimpleNamespace):
             execution_id = None
 
         if self.getter is not None:
-            kwargs = {**self._default_getter_kwargs, **{'execution_id': execution_id}, **kwargs}
-            value = call_with_pruned_args(self.getter, **kwargs)
+            kwargs = {**self._default_getter_kwargs, **kwargs}
+            value = call_with_pruned_args(self.getter, execution_id=execution_id, **kwargs)
             if self.stateful:
                 self._set_value(value, execution_id)
             return value
@@ -906,13 +906,9 @@ class Parameter(types.SimpleNamespace):
         if self.setter is not None:
             kwargs = {
                 **self._default_setter_kwargs,
-                **{
-                    'execution_id': execution_id,
-                    'context': context,
-                },
                 **kwargs
             }
-            value = call_with_pruned_args(self.setter, value, **kwargs)
+            value = call_with_pruned_args(self.setter, value, execution_id=execution_id, context=context, **kwargs)
 
         self._set_value(value, execution_id, context, skip_history=skip_history, skip_log=skip_log)
 
