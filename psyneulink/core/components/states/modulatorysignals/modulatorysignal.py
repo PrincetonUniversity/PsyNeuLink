@@ -220,22 +220,27 @@ modulate the parameters of another ControlMechanism.  For example, in the follow
 Execution
 ---------
 
-ModulatorySignals cannot be executed.  They are updated when the `AdaptiveMechanism <AdaptiveMechanism>` to which they
-belong is executed. When a ModulatorySignal is updated, it calculates its value, which is then made available to the
-`ModulatoryProjections <ModulatoryProjection>` listed in its `efferents <ModulatorySignal.efferents>` attribute.
-When those Projections execute, they convey the ModulatorySignal's `value <ModulatorySignal.value>` to the
-`function <State_Base.function>` of the `State <State>` to which they project.  The State's `function
-<State_Base.function>` then uses that value for the parameter designated by the `modulation
-<ModulatorySignal.modulation>` attribute of the ModulatorySignal when the State is updated.
+ModulatorySignals cannot be executed directly.  This done when the `AdaptiveMechanism <AdaptiveMechanism>` to
+which they belong is executed. When a ModulatorySignal is executed, it calculates its `value <ModulatorySignal.value>`,
+which is then assigned as the `variable <ModulatoryProjection.variable>` of the `ModulatoryProjections
+<ModulatoryProjection>` listed in its `efferents <ModulatorySignal.efferents>` attribute.
+When those Projections execute, they convey the ModulatorySignal's `value <ModulatorySignal.value>` to the `function
+<State_Base.function>` of the `State <State>` to which they project.  The State's `function <State_Base.function>`
+then uses that value in determining value of the parameter designated by the `modulation <ModulatorySignal.modulation>`
+attribute of the ModulatorySignal when the State's `value <State_Baselvalue>` is updated.
 
-For example, consider a `ControlSignal` that modulates the `bias f<Logistic.bias>` parameter of a `Logistic` Function
-used by a `TransferMechanism, and assume that the `ParameterState` for the bias parameter (to which the ControlSignal
-projects) uses a `Linear` function to update its value (which is the default for a ParameterState).  If the
-`modulation  <ModulatorySignal.modulation>` attribute of the `ControlSignal` is `MULTIPLICATIVE`,
-then it will be assigned to the `slope <Linear>` parameter of the ParameterState's `function <ParameterState.function>`.
-Accordingly, when the ParameterState is updated it will multiply the bias parameter's value by the value of the
-ControlSignal to determine the value of the bias parameter.  The result will used as the value of the bias for the
-Logistic Function when the TransferMechanism is executed (see `State_Execution` for additional details).
+# FIX: 9/3/19 -- ADD EXAMPLE HERE
+
+For example, consider a `ControlSignal` that modulates the `bias <Logistic.bias>` parameter of a `Logistic` Function
+used by a `TransferMechanism`, and assume that the `ParameterState` for the bias parameter (to which the ControlSignal
+projects) uses a `Linear` function (the default for a ParameterState) to update its `value <ParameterState.value>`.
+If the `modulation  <ModulatorySignal.modulation>` attribute of the `ControlSignal` is *MULTIPLICATIVE* then, when the
+TransferMechanism's `Logistic` `function <TransferMechanism.function>` is executed and, in turn, the ParameterState for
+its `bias <Logistic.bias>` parameter, the ControlSignal's `value <ControlSignal.value>` is used to multiply the value
+of the `bias <Linear.bias>` parameter, before that is used by the TransferMechanism's `Logitic` Function.  Thus, the
+`value <ControlSignal.value>` of the ControlSignal modulates the `bias <Logitics.bias>` parameter of the `Logistic`
+Function when the TransferMechanism's `function <TransferMechanism.function>` is executed (see `State_Execution` for
+additional details).
 
 .. note::
    The change in the value of a `State <State>` in response to a ModulatorySignal does not occur until the Mechanism to
@@ -397,9 +402,9 @@ class ModulatorySignal(OutputState):
         a default name is assigned as follows; if the ModulatorySignal has:
 
         * no projections (which are used to name it) -- the name of its class is used, with an index that is
-        incremented for each ModulatorySignal with a default named assigned to its `owner <ModulatorySignal.owner>`;
+          incremented for each ModulatorySignal with a default named assigned to its `owner <ModulatorySignal.owner>`;
 
-        * one `ModulatoryProjection` -- the following template is used:
+        * one `ModulatoryProjection <ModulatoryProjction>` -- the following template is used:
           "<target Mechanism name> <target State name> <ModulatorySignal type name>"
           (for example, ``'Decision[drift_rate] ControlSignal'``, or ``'Input Layer[InputState-0] GatingSignal'``);
 
