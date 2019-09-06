@@ -712,7 +712,7 @@ class NWhen(Condition):
     def satis(self, condition, n, *args, scheduler=None, execution_context=None, **kwargs):
         if execution_context is None:
             if scheduler is not None:
-                execution_context = scheduler.default_execution_context
+                execution_context = scheduler.default_execution_id
         # if no execution_context or scheduler is provided technically this will still work
         # indexed on None, but that's a bit weird honestly
 
