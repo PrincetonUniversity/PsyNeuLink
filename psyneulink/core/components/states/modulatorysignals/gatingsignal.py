@@ -357,7 +357,7 @@ class GatingSignal(ModulatorySignal):
         <GatingSignal.variable>` of the it `function <GatingSignal.function>` to determine the GatingSignal's
         `GatingSignal.intensity`.
     COMMENT:
-    Implemented as an alias of the GatingSignal's variable Parameter
+    FOR DEVELOPERS:  Implemented as an alias of the GatingSignal's variable Parameter
     COMMENT
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)

@@ -585,7 +585,7 @@ class ControlSignal(ModulatorySignal):
         <ControlSignal.variable>` of its `function <ControlSignal.function>` to determine the ControlSignal's
         `ControlSignal.intensity`.
     COMMENT:
-    Implemented as an alias of the ControlSignal's variable Parameter
+    FOR DEVELOPERS:  Implemented as an alias of the ControlSignal's variable Parameter
     COMMENT
 
     last_allocation : float

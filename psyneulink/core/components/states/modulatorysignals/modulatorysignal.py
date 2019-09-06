@@ -107,6 +107,8 @@ Projections when creating a State.
 *Modulation*
 ~~~~~~~~~~~~
 
+# FIX: 9/3/19 - REFERENCE FIGURES AND TABLE BELOW, AND UPDATE THEM RE: MODULATION OF ANY PARAMETER
+
 A ModulatorySignal modulates the value of a `State <State>` either by modifying a parameter of the State's `function
 <State_Base.function>` (which determines the State's `value <State_Base.value>`), or by assigning a value to the State
 directly, as determined by its `modulation <ModulatorySignal.attribute>`.  This can be specified in the **modulation**
@@ -115,7 +117,7 @@ argument of the ModulatorySignal's constructor, or in a *MODULATION* entry of a 
 created, it is assigned the value of the `modulation <AdaptiveMechanism_Base.modulation>` attribute for the
 `AdaptiveMechanism <AdaptiveMechanism>` to which it belongs.
 
-There are four standard forms of modulation, that can be specified using one of the four following keywords:
+There are four standard options of modulation, that can be specified using one of the four following keywords:
 
   .. _ModulatorySignal_Types_of_Modulation:
 
@@ -138,6 +140,11 @@ There are four standard forms of modulation, that can be specified using one of 
   * *DISABLE* - suppresses the modulatory effect of the ModulatorySignal and any of its `ModulatoryProjections
     <ModulatoryProjection>`.
 
+COMMENT:
+FOR DEVELOPERS:  the MULTPLICATIVE_PARAM and ADDITIVE_PARAM options above are keywords for aliases to the relevant
+parameters of a given Function, declared in its Parameters subclass declaration of the Function's declaration.
+COMMENT
+
 Most `Functions <Function>` specify a `multiplicative_param  <Function_Modulatory_Params>` and/or an `additive_param
 <Function_Modulatory_Params>`.  The default form of modulation for `ControlSignals <ControlSignal>` and `GatingSignals
 <GatingSignal>` is `MULTIPLICATIVE`.  The default for `LearningSignals <LearningSignal>` is `ADDITIVE` (which
@@ -159,11 +166,6 @@ modulate the parameters of another ControlMechanism.  For example, in the follow
     >>> ctl_mech_B = ControlMechanism(monitor_for_control=my_mech,
     ...                               control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
     ...                                                             modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
-
-
-FIX 9/30/19:  REFERENCE FIGURE EARLIER?
-Figure below illustrates these
-
 
 .. _ModulatorySignal_Anatomy_Figure:
 
@@ -365,7 +367,7 @@ class ModulatorySignal(OutputState):
         <ModulatorySignal.variable>` of its `function <ModulatorySignal.function>` to determine the ModulatorySignal's
         `ModulatorySignal.intensity`.
     COMMENT:
-    Implemented as an alias of the ModulatorySignal's variable Parameter
+    FOR DEVELOPERS:  Implemented as an alias of the ModulatorySignal's variable Parameter
     COMMENT
 
     function : TransferFunction
