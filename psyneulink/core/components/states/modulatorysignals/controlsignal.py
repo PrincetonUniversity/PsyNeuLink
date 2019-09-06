@@ -581,8 +581,12 @@ class ControlSignal(ModulatorySignal):
         same as `allocation <ControlSignal.allocation>`.
 
     allocation : float : default: defaultControlAllocation
-        value assigned by the ControlSignal's `owner <ControlSignal.owner>`, and used by the ControlSignal's `function
-        <ControlSignal.function>` to determine its `ControlSignal.intensity`.
+        value assigned by the ControlSignal's `owner <ControlSignal.owner>`, and used as the `variable
+        <ControlSignal.variable>` of its `function <ControlSignal.function>` to determine the ControlSignal's
+        `ControlSignal.intensity`.
+    COMMENT:
+    Implemented as an alias of the ControlSignal's variable Parameter
+    COMMENT
 
     last_allocation : float
         value of `allocation` in the previous execution of ControlSignal's `owner <ControlSignal.owner>`.

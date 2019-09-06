@@ -80,9 +80,10 @@ class TransferFunction(Function_Base):
     `None`;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
     respectively, with `None` as the entry for no bound.
 
-    `multiplicative_param` and `additive_param` -- each of these is assigned the name of one of the function's
-    parameters and used by `ModulatoryProjections <ModulatoryProjection>` to modulate the output of the
-    TransferFunction's function (see `Function_Modulatory_Params`).
+    `multiplicative_param <Function_Modulatory_Params>` and `additive_param <Function_Modulatory_Params>` -- each
+    of these is assigned the name of one of the function's parameters and used by `ModulatoryProjections
+    <ModulatoryProjection>` to modulate the output of the TransferFunction's `function <TransferFunction.function>`
+    (see  `Function_Modulatory_Params`).
 
     """
     componentType = TRANSFER_FUNCTION_TYPE
@@ -3420,14 +3421,15 @@ class TransferWithCosts(TransferFunction):
     Modulation of Cost Function Parameters
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    The `multiplicative_param` and `additive_param` of each cost function is assigned as a parameter of the
-    TransferWIthCost Function.  This makes them accessible for `modulation <ModulatorySignal_Modulation>` when the
-    Function is assigned to a `State` (e.g., as the default `function <ControlSignal.function>` of a `ControlSignal`),
-    or a `Mechanism`.
+    The `multiplicative_param <Function_Modulatory_Params>` and `additive_param <Function_Modulatory_Params>` of each
+    cost function is assigned as a parameter of the TransferWIthCost `Function`.  This makes them accessible for
+    `modulation <ModulatorySignal_Modulation>` when the Function is assigned to a `State` (e.g., as the default
+    `function <ControlSignal.function>` of a `ControlSignal`), or a `Mechanism`.
 
     For example, the following scripts shows how modulate the `intensity_cost_function
     <ControlSignal.intensity_cost_function>` of a `ControlSignal`::
 
+   FIX: 9/3/19 FINISH EXAMPLE
         >>> mech_1 = ProcessingMechanism()
         >>> mech_2 = ProcessingMechanism()
         >>> ctrl_mech_A = ControlMechanism(monitor_for_control=mech_1,
@@ -3522,10 +3524,12 @@ class TransferWithCosts(TransferFunction):
         `Exponential`.
 
     intensity_cost_fct_mult_param : value
-        references value of the `multiplicative_param` of `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`.
+        references value of the `multiplicative_param <Function_Modulatory_Params>` of `intensity_cost_fct
+        <TransferWithCosts.intensity_cost_fct>`.
 
     intensity_cost_fct_add_param : value
-        references value of the `additive_param` of `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`.
+        references value of the `additive_param <Function_Modulatory_Params>` of `intensity_cost_fct
+        <TransferWithCosts.intensity_cost_fct>`.
 
     adjustment_cost : float
         cost of change in `intensity <TransferWithCosts.intensity>` computed by `adjustment_cost_fct 
@@ -3537,10 +3541,12 @@ class TransferWithCosts(TransferFunction):
         function that takes and returns a scalar value.
 
     adjustment_cost_fct_mult_param : value
-        references value of the `multiplicative_param` of `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>`.
+        references value of the `multiplicative_param <Function_Modulatory_Params>` of `adjustment_cost_fct
+        <TransferWithCosts.adjustment_cost_fct>`.
 
     adjustment_cost_fct_add_param : value
-        references value of the `additive_param` of `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>`.
+        references value of the `additive_param <Function_Modulatory_Params>` of `adjustment_cost_fct
+        <TransferWithCosts.adjustment_cost_fct>`.
 
     COMMENT:
     FIX: 8/30/19 -- CHECK FOR ACCURUACY: 
@@ -3553,10 +3559,12 @@ class TransferWithCosts(TransferFunction):
         function that takes a list or array of two values and returns a scalar value.
 
     duration_cost_fct_mult_param : value
-        references value of the `multiplicative_param` of `duration_cost_fct <TransferWithCosts.duration_cost_fct>`.
+        references value of the `multiplicative_param <Function_Modulatory_Params>` of `duration_cost_fct
+        <TransferWithCosts.duration_cost_fct>`.
 
     duration_cost_fct_add_param : value
-        references value of the `additive_param` of `duration_cost_fct <TransferWithCosts.duration_cost_fct>`.
+        references value of the `additive_param <Function_Modulatory_Params>` of `duration_cost_fct
+        <TransferWithCosts.duration_cost_fct>`.
 
     combined_costs : float
         combined result of all `cost functions <TransferWithCostss_Cost_Functions>` that are enabled;
@@ -3569,10 +3577,12 @@ class TransferWithCosts(TransferFunction):
         value.
 
     combined_costs_fct_mult_param : value
-        references value of the `multiplicative_param` of `combined_costs_fct <TransferWithCosts.combined_costs_fct>`.
+        references value of the `multiplicative_param <Function_Modulatory_Params>` of `combined_costs_fct
+        <TransferWithCosts.combined_costs_fct>`.
 
     combined_costs_fct_add_param : value
-        references value of the `additive_param` of `combined_costs_fct <TransferWithCosts.combined_costs_fct>`.
+        references value of the `additive_param <Function_Modulatory_Params>` of `combined_costs_fct
+        <TransferWithCosts.combined_costs_fct>`.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -3715,13 +3725,13 @@ class TransferWithCosts(TransferFunction):
                     :type: `Function`
 
                 transfer_fct_mult_param
-                    serves as `multiplicative_param` for TransferWithCosts
+                    serves as `multiplicative_param <Function_Modulatory_Params>` for TransferWithCosts
 
                     :default value:  transfer.multiplicative.param
                     :type: number
 
                 transfer_fct_add_param
-                    serves as `additive_param` for TransferWithCosts
+                    serves as `additive_param <Function_Modulatory_Params>` for TransferWithCosts
 
                     :default value: transfer.additive.param
                     :type: number

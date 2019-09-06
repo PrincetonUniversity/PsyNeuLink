@@ -543,8 +543,8 @@ class LCControlMechanism(ControlMechanism):
         <FitzHughNagumoIntegrator>` function
 
     time_step_size_FitzHughNagumo : float : default 0.0
-        sets `time_step_size <time_step_size.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator
-        <FitzHughNagumoIntegrator>` function
+        sets `time_step_size <time_step_size.FitzHughNagumoIntegrator>` on the LCControlMechanism's
+        `FitzHughNagumoIntegrator <FitzHughNagumoIntegrator>` function
 
     t_0_FitzHughNagumo : float : default 0.0
         sets `t_0 <t_0.FitzHughNagumoIntegrator>` on the LCControlMechanism's `FitzHughNagumoIntegrator

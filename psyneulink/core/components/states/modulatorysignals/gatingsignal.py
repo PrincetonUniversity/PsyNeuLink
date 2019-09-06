@@ -353,8 +353,12 @@ class GatingSignal(ModulatorySignal):
         same as `allocation <GatingSignal.allocation>`.
 
     allocation : float : default: defaultGatingAllocation
-        value assigned by the GatingSignal's `owner <GatingSignal.owner>`, and used by the GatingSignal's `function
-        <GatingSignal.function>` to determine its `GatingSignal.intensity`.
+        value assigned by the GatingSignal's `owner <GatingSignal.owner>`, and used as the `variable
+        <GatingSignal.variable>` of the it `function <GatingSignal.function>` to determine the GatingSignal's
+        `GatingSignal.intensity`.
+    COMMENT:
+    Implemented as an alias of the GatingSignal's variable Parameter
+    COMMENT
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         provides the GatingSignal's `value <GatingMechanism.value>`; the default is an identity function that
