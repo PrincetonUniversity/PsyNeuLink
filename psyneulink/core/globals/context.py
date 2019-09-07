@@ -529,9 +529,7 @@ def _get_time(component, context, execution_id=None):
     """
 
     from psyneulink.core.globals.context import time
-    from psyneulink.core.components.mechanisms.mechanism import Mechanism
-    from psyneulink.core.components.states.state import State
-    from psyneulink.core.components.projections.projection import Projection
+    from psyneulink.core.components.shellclasses import Mechanism, Projection, State
 
     no_time = time(None, None, None, None)
 
