@@ -2238,7 +2238,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         (see `offset <DriftDiffusionIntegrator.offset>` for details).
 
     starting_point : float, list or 1d array:  default 0.0
-        determspecifies ines the starting value for the integration process; if it is a list or array, it must be the
+        specifies the starting value for the integration process; if it is a list or array, it must be the
         same length as `variable <DriftDiffusionIntegrator.variable>` (see `starting_point
         <DriftDiffusionIntegrator.starting_point>` for details).
 
@@ -2309,7 +2309,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         `modulation <ModulatorySignal_Modulation>` of `function <DriftDiffusionIntegrator.function>`.
 
     starting_point : float or 1d array
-        determines the start the starting value for the integration process; if it is a list or array, it must be the
+        determines the starting value for the integration process; if it is a list or array, it must be the
         same length as `variable <DriftDiffusionIntegrator.variable>`. If `variable <DriftDiffusionIntegrator.variable>`
         is an array and starting_point is a float, starting_point is used for each element of the integral;  if
         starting_point is a list or array, each of its elements is used as the starting point for each element of the

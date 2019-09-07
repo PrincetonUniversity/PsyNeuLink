@@ -3233,6 +3233,7 @@ costFunctionNames = [INTENSITY_COST_FUNCTION,
                      DURATION_COST_FUNCTION,
                      COMBINE_COSTS_FUNCTION]
 
+
 class CostFunctions(IntEnum):
     """Options for selecting constituent cost functions to be used by a `TransferWithCosts` Function.
 
@@ -3270,7 +3271,6 @@ class CostFunctions(IntEnum):
     DURATION      = 1 << 3
     ALL           = INTENSITY | ADJUSTMENT | DURATION
     DEFAULTS      = INTENSITY
-
 
 # Getters and setters for transfer and cost function multiplicative and additive parameters ----------------------------
 
@@ -4030,6 +4030,10 @@ class TransferWithCosts(TransferFunction):
         self.parameters.combined_costs._set(combined_costs, execution_id)
 
         return intensity
+
+    def _is_identity(self, execution_id=None):
+        return (self.parameters.transfer_fct.get()._is_identity(execution_id) and
+                self.parameters.enabled_cost_functions.get(execution_id) == CostFunctions.NONE)
 
     @tc.typecheck
     def assign_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
