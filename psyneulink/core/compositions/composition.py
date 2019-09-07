@@ -1721,7 +1721,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         if self.needs_update_scheduler_processing or not isinstance(self._scheduler_processing, Scheduler):
             old_scheduler = self._scheduler_processing
-            self._scheduler_processing = Scheduler(graph=self.graph_processing, execution_id=self.default_execution_id)
+            self._scheduler_processing = Scheduler(graph=self.graph_processing, default_execution_id=self.default_execution_id)
 
             if old_scheduler is not None:
                 self._scheduler_processing.add_condition_set(old_scheduler.conditions)

@@ -977,7 +977,7 @@ class System(System_Base):
 
         # Assign processing scheduler (learning_scheduler is assigned in _instantiate_learning_graph)
         if self.scheduler_processing is None:
-            self.scheduler_processing = Scheduler(system=self, execution_id=self.default_execution_id)
+            self.scheduler_processing = Scheduler(system=self, default_execution_id=self.default_execution_id)
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -1992,7 +1992,7 @@ class System(System_Base):
 
         # Assign scheduler for _execute_learning:
         if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph, execution_id=self.default_execution_id)
+            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph, default_execution_id=self.default_execution_id)
 
         # Assign conditions to scheduler_learning:
         #   insure that MappingProjections execute after all LearningMechanisms have executed in _execute_learning
@@ -2692,10 +2692,10 @@ class System(System_Base):
         """
 
         if self.scheduler_processing is None:
-            self.scheduler_processing = Scheduler(system=self, execution_id=self.default_execution_id)
+            self.scheduler_processing = Scheduler(system=self, default_execution_id=self.default_execution_id)
 
         if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph, execution_id=self.default_execution_id)
+            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph, default_execution_id=self.default_execution_id)
 
         self._add_mechanism_conditions(context=context)
 

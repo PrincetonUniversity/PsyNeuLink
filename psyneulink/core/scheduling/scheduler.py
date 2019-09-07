@@ -358,7 +358,7 @@ class Scheduler(object):
             TimeScale.RUN: Never(),
             TimeScale.TRIAL: AllHaveRun(),
         },
-        execution_id=None,
+        default_execution_id=None,
         **kwargs
     ):
         """
@@ -385,13 +385,13 @@ class Scheduler(object):
         if composition is not None:
             self.nodes = [vert.component for vert in composition.graph_processing.vertices]
             self._init_consideration_queue_from_graph(composition.graph_processing)
-            if execution_id is None:
-                execution_id = composition.default_execution_id
+            if default_execution_id is None:
+                default_execution_id = composition.default_execution_id
         elif system is not None:
             self.nodes = [m for m in system.execution_list]
             self._init_consideration_queue_from_system(system)
-            if execution_id is None:
-                execution_id = system.default_execution_id
+            if default_execution_id is None:
+                default_execution_id = system.default_execution_id
         elif graph is not None:
             try:
                 self.nodes = [vert.component for vert in graph.vertices]
@@ -406,7 +406,7 @@ class Scheduler(object):
             raise SchedulerError('Must instantiate a Scheduler with either a Composition (kwarg composition) '
                                  'or a graph dependency dict (kwarg graph)')
 
-        self.default_execution_id = execution_id
+        self.default_execution_id = default_execution_id
         self.execution_list = {self.default_execution_id: []}
         self.clocks = {self.default_execution_id: Clock()}
         self.counts_total = {}
