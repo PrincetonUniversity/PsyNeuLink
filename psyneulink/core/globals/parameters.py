@@ -244,10 +244,13 @@ import types
 import warnings
 import weakref
 
+from psyneulink.core.globals.keywords import MULTIPLICATIVE
 from psyneulink.core.globals.context import ContextError, ContextFlags, _get_time
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
-from psyneulink.core.globals.utilities import call_with_pruned_args, copy_dict_or_list_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy
+from psyneulink.core.globals.utilities import \
+    call_with_pruned_args, copy_dict_or_list_with_shared, get_alias_property_getter, get_alias_property_setter, \
+    get_deepcopy_with_shared, unproxy_weakproxy
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'get_validator_by_type_only', 'Parameter', 'ParameterAlias', 'ParameterError',
@@ -470,29 +473,40 @@ class Parameter(types.SimpleNamespace):
     Attributes
     ----------
         default_value
-            the default value of the Parameter
+            the default value of the Parameter.
 
             :default: None
 
         name
-            the name of the Parameter
+            the name of the Parameter.
 
             :default: None
 
         stateful
-            whether the parameter has different values based on execution context
+            whether the parameter has different values based on execution context.
 
             :default: True
 
         modulable
-            if True, the parameter can be modulated (has a ParameterState
+            if True, the parameter can be modulated (has a ParameterState).
 
             :default: False
 
             :Developer Notes: Currently this does not determine what gets a ParameterState, but in the future it should
 
+        modulation_combination_function
+            specifies the function used in State._get_combined_mod_val() to combine values for the parameter if
+            it receives more than one ModulatoryProjections;  must be either the keyword *MULTIPLICATIVE*,
+            *PRODUCT*, *ADDITIVE*, *SUM*, or a function that accepts an n dimensional array and retursn an n-1
+            dimensional array.  If it is None, the an attempt is made to determine it from the an alias for the
+            Parameter's name (i.e., if that is MULTIPLICATIVE_PARAM or ADDITIVE_PARAM);  otherwise the default
+            behavior is determined by State._get_combined_mod_val().
+
+            :default: None
+
         read_only
-            whether the user should be able to set the value or not (e.g. variable and value are just for informational purposes).
+            whether the user should be able to set the value or not
+            (e.g. variable and value are just for informational purposes).
 
             :default: False
 
@@ -507,18 +521,19 @@ class Parameter(types.SimpleNamespace):
             :Developer Notes: specify as a list of strings
 
         user
-            whether the parameter is something the user will care about (e.g. NOT context)
+            whether the parameter is something the user will care about (e.g. NOT context).
 
             :default: True
 
         values
-            stores the parameter's values under different execution contexts
+            stores the parameter's values under different execution contexts.
 
             :type: dict{execution_id: value}
             :default: None
 
         getter
-            hook that allows overriding the retrieval of values based on a supplied method (e.g. _output_state_variable_getter)
+            hook that allows overriding the retrieval of values based on a supplied method
+            (e.g. _output_state_variable_getter).
 
             :type: types.FunctionType
             :default: None
@@ -526,7 +541,8 @@ class Parameter(types.SimpleNamespace):
             :Developer Notes: kwargs self, owning_component, and execution_id will be passed in if your method uses them. self - the Parameter calling the setter; owning_component - the Component to which the Parameter belongs; execution_id - the execution_id the setter is called with; should return the value
 
         setter
-            hook that allows overriding the setting of values based on a supplied method (e.g.  _recurrent_transfer_mechanism_matrix_setter)
+            hook that allows overriding the setting of values based on a supplied method
+            (e.g.  _recurrent_transfer_mechanism_matrix_setter).
 
             :type: types.FunctionType
             :default: None
@@ -534,47 +550,49 @@ class Parameter(types.SimpleNamespace):
             :Developer Notes: should take a positional argument; kwargs self, owning_component, and execution_id will be passed in if your method uses them. self - the Parameter calling the setter; owning_component - the Component to which the Parameter belongs; execution_id - the execution_id the setter is called with; should return the value to be set
 
         loggable
-            whether the parameter can be logged
+            whether the parameter can be logged.
 
             :default: True
 
         log
-            stores the log of the parameter if applicable
+            stores the log of the parameter if applicable.
 
             :type: dict{execution_id: deque([LogEntry])}
             :default: None
 
         log_condition
-            the LogCondition for which the parameter should be logged
+            the LogCondition for which the parameter should be logged.
 
             :type: `LogCondition`
             :default: `OFF <LogCondition.OFF>`
 
         history
-            stores the history of the parameter (previous values). Also see `get_previous`
+            stores the history of the parameter (previous values). Also see `get_previous`.
 
             :type: dict{execution_id: deque([LogEntry])}
             :default: None
 
         history_max_length
-            the maximum length of the stored history
+            the maximum length of the stored history.
 
             :default: 1
 
         history_min_length
             the minimum length of the stored history. generally this does not need to be
-            overridden, but is used to indicate if parameter history is necessary to computation
+            overridden, but is used to indicate if parameter history is necessary to computation.
 
             :default: 0
 
         fallback_default
-            if False, the Parameter will return None if a requested value is not present for a given execution context; if True, the Parameter's default_value will be returned instead
+            if False, the Parameter will return None if a requested value is not present for a given execution context;
+            if True, the Parameter's default_value will be returned instead.
 
             :default: False
 
         retain_old_simulation_data
-            if False, the Parameter signals to other PNL objects that any values generated during simulations may be deleted after they
-            are no longer needed for computation; if True, the values should be saved for later inspection
+            if False, the Parameter signals to other PNL objects that any values generated during simulations may be
+            deleted after they are no longer needed for computation; if True, the values should be saved for later
+            inspection.
 
             :default: False
     """
@@ -604,6 +622,7 @@ class Parameter(types.SimpleNamespace):
         name=None,
         stateful=True,
         modulable=False,
+        modulation_combination_function=None,
         read_only=False,
         function_arg=True,
         aliases=None,
@@ -640,6 +659,7 @@ class Parameter(types.SimpleNamespace):
             name=name,
             stateful=stateful,
             modulable=modulable,
+            modulation_combination_function=modulation_combination_function,
             read_only=read_only,
             function_arg=function_arg,
             aliases=aliases,

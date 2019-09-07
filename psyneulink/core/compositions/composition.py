@@ -1479,7 +1479,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             this Composition
 
         input_CIM : `CompositionInterfaceMechanism`
-            aggregates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
+            mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
             input_CIM and its InputStates serve as proxies for the Composition itself in terms of afferent projections.
 
         input_CIM_states : dict

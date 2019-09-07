@@ -53,13 +53,13 @@ from psyneulink.core.components.functions.function import \
     Function, Function_Base, FunctionError, function_keywords, is_function_type
 from psyneulink.core.components.component import function_type
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, \
+    ADDITIVE, ADDITIVE_PARAM, ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, \
     FULL_CONNECTIVITY_MATRIX, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, INVERSE_HOLLOW_MATRIX,\
     LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
-    MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, \
-    OFF, OFFSET, ON, PARAMETER_STATE_PARAMS, PER_ITEM, PROB, OUTPUT_TYPE, PROB_INDICATOR, \
-    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, \
+    MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
+    OFF, OFFSET, ON, PARAMETER_STATE_PARAMS, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter, get_validator_by_type_only, get_validator_by_function
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
@@ -3745,9 +3745,11 @@ class TransferWithCosts(TransferFunction):
         transfer_fct = Parameter(Linear, stateful=False)
         _validate_transfer_fct = get_validator_by_function(is_function_type)
         transfer_fct_mult_param = Parameter(modulable=True, aliases=MULTIPLICATIVE_PARAM,
+                                            modulation_combination_function=PRODUCT,
                                             getter=_transfer_fct_mult_param_getter,
                                             setter=_transfer_fct_mult_param_setter)
         transfer_fct_add_param = Parameter(modulable=True, aliases=ADDITIVE_PARAM,
+                                           modulation_combination_function=SUM,
                                            getter=_transfer_fct_add_param_getter,
                                            setter=_transfer_fct_add_param_setter)
 
@@ -3759,10 +3761,12 @@ class TransferWithCosts(TransferFunction):
         intensity_cost_fct = Parameter(Exponential, stateful=False)
         _validate_intensity_cost_fct = get_validator_by_function(is_function_type)
         intensity_cost_fct_mult_param = Parameter(modulable=True,
+                                                  modulation_combination_function=PRODUCT,
                                                   aliases=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM,
                                                   getter=_intensity_cost_fct_mult_param_getter,
                                                   setter=_intensity_cost_fct_mult_param_setter)
         intensity_cost_fct_add_param = Parameter(modulable=True,
+                                                 modulation_combination_function=SUM,
                                                  aliases=INTENSITY_COST_FCT_ADDITIVE_PARAM,
                                                  getter=_intensity_cost_fct_add_param_getter,
                                                  setter=_intensity_cost_fct_add_param_setter)
@@ -3775,10 +3779,12 @@ class TransferWithCosts(TransferFunction):
         adjustment_cost_fct = Parameter(Linear, stateful=False)
         _validate_adjustment_cost_fct = get_validator_by_function(is_function_type)
         adjustment_cost_fct_mult_param = Parameter(modulable=True,
+                                                   modulation_combination_function=PRODUCT,
                                                    aliases=ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM,
                                                    getter=_adjustment_cost_fct_mult_param_getter,
                                                    setter=_adjustment_cost_fct_mult_param_setter)
         adjustment_cost_fct_add_param = Parameter(modulable=True,
+                                                  modulation_combination_function=SUM,
                                                   aliases=ADJUSTMENT_COST_FCT_ADDITIVE_PARAM,
                                                   getter=_adjustment_cost_fct_add_param_getter,
                                                   setter=_adjustment_cost_fct_add_param_setter)
@@ -3788,11 +3794,13 @@ class TransferWithCosts(TransferFunction):
         duration_cost_fct = Parameter(SimpleIntegrator, stateful=False)
         _validate_duration_cost_fct = get_validator_by_function(is_function_type)
         duration_cost_fct_mult_param = Parameter(modulable=True,
+                                                 modulation_combination_function=PRODUCT,
                                                  aliases=DURATION_COST_FCT_MULTIPLICATIVE_PARAM,
                                                  getter=_duration_cost_fct_mult_param_getter,
                                                  setter=_duration_cost_fct_mult_param_setter)
         duration_cost_fct_add_param = Parameter(modulable=True,
-                                                 aliases=DURATION_COST_FCT_ADDITIVE_PARAM,
+                                                modulation_combination_function=SUM,
+                                                aliases=DURATION_COST_FCT_ADDITIVE_PARAM,
                                                 getter=_duration_cost_fct_add_param_getter,
                                                 setter=_duration_cost_fct_add_param_setter)
         duration_cost = 0
@@ -3801,10 +3809,12 @@ class TransferWithCosts(TransferFunction):
         combine_costs_fct = Parameter(Reduce(operation=SUM), stateful=False)
         _validate_combine_costs_fct = get_validator_by_function(is_function_type)
         combine_costs_fct_mult_param=Parameter(modulable=True,
+                                               modulation_combination_function=PRODUCT,
                                                aliases=COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM,
                                                getter=_combine_costs_fct_mult_param_getter,
                                                setter=_combine_costs_fct_mult_param_setter)
         combine_costs_fct_add_param=Parameter(modulable=True,
+                                              modulation_combination_function=SUM,
                                               aliases=COMBINE_COSTS_FCT_ADDITIVE_PARAM,
                                               getter=_combine_costs_fct_add_param_getter,
                                               setter=_combine_costs_fct_add_param_setter)

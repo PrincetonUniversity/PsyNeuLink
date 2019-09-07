@@ -51,15 +51,16 @@ Structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An AGTControlMechanism has a single (primary) `InputState <InputState_Primary>` that receives its input via a
-`MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
-The ObjectiveMechanism is created automatically when the AGTControlMechanism is created, using a `DualAdaptiveIntegrator` as its
-`function <ObjectiveMechanism.function>`, and is listed in the AGTControlMechanism's `objective_mechanism
-<AGTControlMechanism.objective_mechanism>` attribute.  The ObjectiveMechanism aggregates the `value <OutputState.value>`\\s
-of the OutputStates that it monitors, integrates their aggregated value at two different rates, and combines those to
-generate the its output, which is used by the AGTControlMechanism as its input. The OutputStates monitored by the
-ObjectiveMechanism, listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
-attribute, are also listed in the AGTControlMechanism's `monitored_output_states <AGTControlMechanism_Base.monitored_output_states>`
-attribute.  They can be displayed using the AGTControlMechanism's `show <AGTControlMechanism.show>` method.
+`MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`. The
+ObjectiveMechanism is created automatically when the AGTControlMechanism is created, using a `DualAdaptiveIntegrator`
+as its `function <ObjectiveMechanism.function>`, and is listed in the AGTControlMechanism's `objective_mechanism
+<AGTControlMechanism.objective_mechanism>` attribute.  The ObjectiveMechanism aggregates the `value
+<OutputState.value>`\\s of the OutputStates that it monitors, integrates their aggregated value at two different
+rates, and combines those to generate the its output, which is used by the AGTControlMechanism as its input. The
+OutputStates monitored by the ObjectiveMechanism, listed in its `monitored_output_states
+<ObjectiveMechanism.monitored_output_states>` attribute, are also listed in the AGTControlMechanism's
+`monitored_output_states <AGTControlMechanism_Base.monitored_output_states>` attribute.  They can be displayed using
+the AGTControlMechanism's `show <AGTControlMechanism.show>` method.
 
 .. _AGTControlMechanism_Function:
 

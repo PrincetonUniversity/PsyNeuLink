@@ -638,18 +638,18 @@ class EVCControlMechanism(ControlMechanism):
             controller.control_allocation - holds current control_allocation
             controller.output_values is a list of current control_signal values
             controller.value_function - calls the three following functions (done explicitly, so each can be specified)
-            controller.cost_function - aggregate costs of control signals
+            controller.cost_function - combines costs of control signals
             controller.combine_outcome_and_cost_function - combines outcomes and costs
     COMMENT
 
     value_function : function : default ValueFunction
         calculates the `EVC <EVCControlMechanism_EVC>` for a given `control_allocation`.  It takes as its arguments an
         `EVCControlMechanism`, an **outcome** value and a list or ndarray of **costs**, uses these to calculate an EVC,
-        and returns a three item tuple with the calculated EVC, and the outcome value and aggregated value of costs
+        and returns a three item tuple with the calculated EVC, and the outcome value and combined value of costs
         used to calculate the EVC.  The default, `ValueFunction`,  calls the EVCControlMechanism's `cost_function
-        <EVCControlMechanism.cost_function>` to aggregate the value of the costs, and then calls its
+        <EVCControlMechanism.cost_function>` to combine the value of the costs, and then calls its
         `combine_outcome_and_costs <EVCControlMechanism.combine_outcome_and_costs>` to calculate the EVC from the
-        outcome and aggregated cost (see `EVCControlMechanism_Default_Configuration` for additional details).  A custom
+        outcome and combined cost (see `EVCControlMechanism_Default_Configuration` for additional details).  A custom
         function can be assigned to `value_function` so long as it returns a tuple with three items: the calculated
         EVC (which must be a scalar value), and the outcome and cost from which it was calculated (these can be scalar
         values or `None`). If used with the EVCControlMechanism's default `function <EVCControlMechanism.function>`, a

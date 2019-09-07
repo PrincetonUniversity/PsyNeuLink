@@ -383,8 +383,8 @@ The three types of States are shown schematically in the figure below, and descr
 InputStates
 ^^^^^^^^^^^
 
-These receive, aggregate and represent the input to a Mechanism, and provide this to the Mechanism's `function
-<Mechanism_Base.function>`. Usually, a Mechanism has only one (`primary <InputState_Primary>`) `InputState`,
+These receive, potentially combine, and represent the input to a Mechanism, and provide this to the Mechanism's
+`function <Mechanism_Base.function>`. Usually, a Mechanism has only one (`primary <InputState_Primary>`) `InputState`,
 identified in its `input_state <Mechanism_Base.input_state>` attribute. However some Mechanisms have more than one
 InputState. For example, a `ComparatorMechanism` has one InputState for its **SAMPLE** and another for its **TARGET**
 input. All of the Mechanism's InputStates (including its primary InputState <InputState_Primary>` are listed in its
@@ -2194,12 +2194,12 @@ class Mechanism_Base(Mechanism):
             Execution sequence:
             - Call self.input_state.execute() for each entry in self.input_states:
                 + execute every self.input_state.path_afferents.[<Projection>.execute()...]
-                + aggregate results and/or gate state using self.input_state.function()
+                + combine results and/or gate state using self.input_state.function()
                 + assign the result in self.input_state.value
             - Call every self.params[<ParameterState>].execute(); for each:
                 + execute self.params[<ParameterState>].mod_afferents.[<Projection>.execute()...]
                     (usually this is just a single ControlProjection)
-                + aggregate results for each ModulationParam or assign value from an OVERRIDE specification
+                + combine results for each ModulationParam or assign value from an OVERRIDE specification
                 + assign the result to self.params[<ParameterState>].value
             - Call subclass' self.execute(params):
                 - use self.input_state.value as its variable,

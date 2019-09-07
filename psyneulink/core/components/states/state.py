@@ -320,7 +320,7 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
       Mechanism's `value <Mechanism_Base.value>` to which the OutputState is assigned (specified by the OutputState's
       `index <OutputState_Index>` attribute.
     ..
-    * `function <State_Base.function>`:  for an `InputState` this aggregates the values of the Projections that the
+    * `function <State_Base.function>`:  for an `InputState` this combines the values of the Projections that the
       State receives (the default is `LinearCombination` that sums the values), under the potential influence of a
       `GatingSignal`;  for a `ParameterState`, it determines the value of the associated parameter, under the potential
       influence of a `ControlSignal` (for a `Mechanism <Mechanism>`) or a `LearningSignal` (for a `MappingProjection`);
@@ -329,7 +329,7 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
       `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated with
       each type for a description of how they can be used to modulate the `function <State_Base.function>` of a State.
     ..
-    * `value <State_Base.value>`:  for an `InputState` this is the aggregated value of the `PathwayProjections` it
+    * `value <State_Base.value>`:  for an `InputState` this is the combined value of the `PathwayProjections` it
       receives;  for a `ParameterState`, this represents the value of the parameter that will be used by the State's
       owner or its `function <Component.function>`; for an `OutputState`, it is the item of the  owner Mechanism's
       `value <Mechanisms.value>` to which the OutputState is assigned, possibly modified by its `assign
@@ -744,7 +744,7 @@ import typecheck as tc
 from psyneulink.core.components.component import \
     Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination
-from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword
+from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, State
 from psyneulink.core.globals.context import Context, ContextFlags
@@ -2082,9 +2082,9 @@ class State_Base(State):
             # If the param has a single modulatory value, use that
             if len(value_list)==1:
                 mod_val = value_list[0]
-            # If the param has multiple modulatory values, aggregate them
+            # If the param has multiple modulatory values, combine them
             else:
-                mod_val = self._get_aggregated_mod_val(mod_param_name, value_list)
+                mod_val = self._get_combined_mod_val(mod_param_name, value_list)
 
             # FIX: SHOULD THIS REALLY BE GETTING SET HERE??
             # Set modulatory parameter's value
@@ -2172,24 +2172,28 @@ class State_Base(State):
 
         return mod_spec, mod_param_name, mod_param_value
 
-    def _get_aggregated_mod_val(self, mod_param_name, values):
-        # class ModulationReduce(Enum):
-        #     MULTIPLICATIVE = lambda x: np.product(np.array(x), axis=0)
-        #     ADDITIVE = lambda x: np.sum(np.array(x), axis=0)
-        # FIX: 9/3/19 - MODIFY ONCE modulation_aggregation_fct OR THE LIKE IS ADDED AS AN ATTRIBUTE OF Parameter CLASS
-        if any(mod_spec in getattr(self.function.parameters, mod_param_name).aliases
-               for mod_spec in {MULTIPLICATIVE, MULTIPLICATIVE_PARAM}):
+    def _get_combined_mod_val(self, mod_param_name, values):
+        '''Combine the modulatory values received by ModulatoryProjections to mod_param_name
+        Uses function specified by modulation_combination_function attribute of param,
+        or MULTIPLICATIVE if not specified
+        '''
+        comb_fct = getattr(self.function.parameters, mod_param_name).modulation_combination_function or MULTIPLICATIVE
+        aliases = getattr(self.function.parameters, mod_param_name).aliases
+
+        if comb_fct==MULTIPLICATIVE or any(mod_spec in aliases for mod_spec in {MULTIPLICATIVE, MULTIPLICATIVE_PARAM}):
             return np.product(np.array(values), axis=0)
-        elif any(mod_spec in getattr(self.function.parameters, mod_param_name).aliases
-                 for mod_spec in {ADDITIVE, ADDITIVE_PARAM}):
+        if comb_fct==ADDITIVE or any(mod_spec in aliases for mod_spec in {MULTIPLICATIVE, ADDITIVE_PARAM}):
             return np.sum(np.array(values), axis=0)
+        elif isinstance(comb_fct, is_function_type):
+            return comb_fct(values)
         else:
-            return np.product(np.array(values), axis=0)
+            assert False, f'PROGRAM ERROR: modulation_combination_function not properly specified ' \
+                          f'for {mod_param_name} {Parameter.__name__} of {self.name}'
 
     @abc.abstractmethod
     def _get_fallback_variable(self, execution_id=None, context=None):
         """
-            Returns a variable to be used for self.execute when the variable passed in is None
+            Return a variable to be used for self.execute when the variable passed in is None
         """
         pass
 
