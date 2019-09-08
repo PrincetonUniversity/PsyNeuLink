@@ -1191,7 +1191,12 @@ class ParametersBase(ParametersTemplate):
             return getattr(self._parent, attr)
         except AttributeError:
             try:
-                owner_string = ' of {0}'.format(self._owner)
+                param_owner = self._owner
+                owner_string = f' of {param_owner.name}'
+                if hasattr(param_owner, 'owner') and param_owner.owner:
+                    owner_string += f' for {param_owner.owner.name}'
+                    if hasattr(param_owner.owner, 'owner') and param_owner.owner.owner:
+                        owner_string += f' of {param_owner.owner.owner.name}'
             except AttributeError:
                 owner_string = ''
 

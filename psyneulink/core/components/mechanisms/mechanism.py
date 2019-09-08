@@ -2370,6 +2370,10 @@ class Mechanism_Base(Mechanism):
         # REPORT EXECUTION
         if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
             self._report_mechanism_execution(self.get_input_values(execution_id), self.user_params, self.output_state.parameters.value._get(execution_id))
+
+        # TEST PRINT 9/7/19:
+        self._report_mechanism_execution(self.get_input_values(execution_id), self.user_params, self.output_state.parameters.value._get(execution_id))
+
         return value
 
     def run(
