@@ -953,6 +953,9 @@ class State_Base(State):
     Attributes
     ----------
 
+    variable : number, list or np.ndarray
+        the State's input, provided as the `variable <State_Base.variable>` to its `function <State_Base.function>`.
+
     owner : Mechanism or Projection
         object to which the State belongs (see `State_Owner` for additional details).
 
