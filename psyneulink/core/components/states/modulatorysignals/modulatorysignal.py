@@ -24,6 +24,12 @@ Sections
   * `ModulatorySignal_Execution`
   * `ModulatorySignal_Class_Reference`
   
+# FIX: 9/3/19 --
+              - Parameter.modulable:  ELIMINATE STATEMENT THAT IT HAS A PARAMETERSTATE
+                (ONLY TRUE FOR MECH OR PATHWAY? MAPPINGPROJ)
+              - AdaptiveMechanism not working (under Structure)
+              - ModulatoryProjection.variable references not working (under Execution)
+
 
 .. _ModulatorySignal_Overview:
 
@@ -135,18 +141,13 @@ one Mechanism or function).
 *Modulation*
 ~~~~~~~~~~~~
 
-# FIX: 9/3/19 - REFERENCE FIGURES AND TABLE BELOW
-              - Parameter.modulable:  ELIMINATE STATEMENT THAT IT HAS A PARAMETERSTATE
-                (ONLY TRUE FOR MECH OR PATHWAY? MAPPINGPROJ)
-              - AdaptiveMechanism not working
-              - ModulatoryProjection.variable references not working
-
 A ModulatorySignal modulates the value of a `State <State>` either by modifying a parameter of the State's `function
 <State_Base.function>` (which determines the State's `value <State_Base.value>`), or by  assigning a value to the State
 directly.  The `type of modulation <ModulatorySignal_Types>` is determined by the ModulatorySignal's
 `modulation <ModulatorySignal.modulation>` attribute, which can be specified in the **modulation** argument of its
 ModulatorySignal's constructor, or in a *MODULATION* entry of a `State specification dictionary
-<State_Specification>` used to create the ModulatorySignal. If the type of `modulation <ModulatorySignal.modulation>`
+<State_Specification>` used to create the ModulatorySignal (see `Type of Modualtion <ModulatorySignal_Types>` and
+`figure <ModulatorySignal_Detail_Figure>` below for details). If the type of `modulation <ModulatorySignal.modulation>`
 is not specified when a ModulatorySignal is created, it is assigned the value of the `modulation
 <AdaptiveMechanism_Base.modulation>` attribute for the `AdaptiveMechanism <AdaptiveMechanism>` to which it belongs.
 
@@ -214,11 +215,13 @@ detail under `ModulatorySignal_Implementation`.
    :alt: Modulation
    :scale: 150 %
 
-   FIX: ModulatoryParam
-   **Three types of Modulatory Components and the States they modulate**.
-   The table below lists the default `ModulatoryParam` for each type of ModulatorySignal, and the default Function
-   and modulated parameter of its recipient State.  The figure shows a detailed view of how ModulatorySignals
-   modulate the parameters of a State's `function <State_Base.function>`.
+   **Three types of Modulatory Components and the States they modulate**. The default `type of modulation
+   <ModulatorySignal_Types>` for each type of ModulatorySignal, and the default Function and modulated parameter of
+   its recipient State are listed in the `table <ModulatorySignal_Table>` above. Note that the `ControlMechanism`
+   and `ControlSignals` are shown in the figure modulating the `ParameterState` of a Mechanism;  however, like Gating
+   components, they can also be used to modulate `InputStates <InputState>` and `OutputStates`. The `figure
+   <ModulatorySignal_Detail_Figure>` below shows a detailed view of how ModulatorySignals modulate the parameters of
+   a State's `function <State_Base.function>`.
 
 
 .. _ModulatorySignal_Types:
@@ -270,8 +273,6 @@ The default type of modulation for `ControlSignals <ControlSignal>` and `GatingS
 `value <LearningSignal.value>` of the LearningSignal (i.e., the weight changes computed by the `LearningMechanism`)
 to the State's `variable <State_Base.variable>` (i.e., the current weight `matrix <MappingProjection.matrix>` for
 the `MappingProjection` being learned).
-
-# FIX: 9/3/19 - UPDATE FIGURES AND TABLE RE: MODULATION OF ANY PARAMETER
 
 
 .. _ModulatorySignal_Implementation:
