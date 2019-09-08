@@ -339,18 +339,24 @@ When those Projections execute, they convey the ModulatorySignal's `value <Modul
 then uses that value in determining value of the parameter designated by the `modulation <ModulatorySignal.modulation>`
 attribute of the ModulatorySignal when the State's `value <State_Baselvalue>` is updated.
 
-# FIX: 9/3/19 -- ADD EXAMPLE HERE
+COMMENT:
+
+# FIX: 9/3/19 -- REWORK AND ADD EXAMPLE HERE
 
 For example, consider a `ControlSignal` that modulates the `bias <Logistic.bias>` parameter of a `Logistic` Function
 used by a `TransferMechanism`, and assume that the `ParameterState` for the bias parameter (to which the ControlSignal
-projects) uses a `Linear` function (the default for a ParameterState) to update its `value <ParameterState.value>`.
-If the `modulation  <ModulatorySignal.modulation>` attribute of the `ControlSignal` is *MULTIPLICATIVE* then, when the
-TransferMechanism's `Logistic` `function <TransferMechanism.function>` is executed and, in turn, the ParameterState for
-its `bias <Logistic.bias>` parameter, the ControlSignal's `value <ControlSignal.value>` is used to multiply the value
-of the `bias <Linear.bias>` parameter, before that is used by the TransferMechanism's `Logistic` Function.  Thus, the
-`value <ControlSignal.value>` of the ControlSignal modulates the `bias <Logistic.bias>` parameter of the `Logistic`
-Function when the TransferMechanism's `function <TransferMechanism.function>` is executed (see State
-Execution <State_Execution>` for additional details).
+projects) uses a `Linear` function (the default for a ParameterState) to set the `value <ParameterState.value>` of
+that parameter. If the `modulation  <ModulatorySignal.modulation>` attribute of the `ControlSignal` is *MULTIPLICATIVE*
+then, when the TransferMechanism's `Logistic` `function <TransferMechanism.function>` is executed, the `function
+<ParameterState.function>` of the ParameterState that sets the value of the `Logistic` Function's `bias <Logistic.bias>`
+parameter is executed;  that is a `Linear` Function, that uses the ControlSignal's `value <ControlSignal.value>` as
+its `slope <Linear.slope>` parameter.  Thus, the effect is that the ControlSignal's `value <ControlSignal.value>` is
+multiplied by the base value of the `bias <Logistic.bias>` parameter, before that is used by the TransferMechanism's
+`Logistic` Function.  Thus, the `value <ControlSignal.value>` of the ControlSignal modulates the `bias
+<Logistic.bias>` parameter of the `Logistic` Function when the TransferMechanism's `function
+<TransferMechanism.function>` is executed (see `State Execution <State_Execution>` for additional details).
+
+COMMENT
 
 .. note::
    The change in the value of a `State <State>` in response to a ModulatorySignal does not occur until the Mechanism to
