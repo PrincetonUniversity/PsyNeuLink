@@ -982,12 +982,12 @@ class State_Base(State):
         InputStates and ParameterStates.
 
     function : TransferFunction : default determined by type
-        used to determine the State's own value from the value of the Projection(s) it receives;  the parameters that
-        the TransferFunction identifies as ADDITIVE and MULTIPLICATIVE are subject to modulation by a
-        `ModulatoryProjection <ModulatoryProjection_Structure>`.
+        used to determine the State's `value <State_Base.value>` from the `value <Projection_Base.value>` of the
+        `Projection(s) <Projection>` it receives;  the parameters that the TransferFunction identifies as *ADDITIVE*
+        and *MULTIPLICATIVE* are subject to modulation by a `ModulatorySignal <ModulatorySignal>`.
 
     value : number, list or np.ndarray
-        current value of the State (updated by `_update <State_Base._update>` method).
+        current value of the State.
 
     name : str
         the name of the State. If the State's `initialization has been deferred <State_Deferred_Initialization>`,

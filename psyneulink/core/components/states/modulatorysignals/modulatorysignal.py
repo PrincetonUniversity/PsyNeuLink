@@ -29,6 +29,7 @@ Sections
                 (ONLY TRUE FOR MECH OR PATHWAY? MAPPINGPROJ)
               - AdaptiveMechanism not working (under Structure)
               - ModulatoryProjection.variable references not working (under Execution)
+              - "Output of Projection, transmitted as variable to InputState of" in Projection
 
 
 .. _ModulatorySignal_Overview:
@@ -199,7 +200,7 @@ and shown in the `figure below <ModulatorySignal_Anatomy_Figure>`.
   | parameter                          |                        |                              |                                        |                            |
   +------------------------------------+------------------------+------------------------------+----------------------------------------+----------------------------+
 
-Colors listed are those used in the `figure <Anatomy of Modulation <ModulatorySignal_Anatomy_Figure>` below.
+Colors listed are those used in the `figure <ModulatorySignal_Anatomy_Figure>` below.
 
 It is important to emphasize that, although the purpose of a ModulatorySignal is to modify the functioning of a
 `Mechanism` or a `MappingProjection`, it does this indirectly by modifying a State that determines the input or
@@ -218,10 +219,10 @@ detail under `ModulatorySignal_Implementation`.
    **Three types of Modulatory Components and the States they modulate**. The default `type of modulation
    <ModulatorySignal_Types>` for each type of ModulatorySignal, and the default Function and modulated parameter of
    its recipient State are listed in the `table <ModulatorySignal_Table>` above. Note that the `ControlMechanism`
-   and `ControlSignals` are shown in the figure modulating the `ParameterState` of a Mechanism;  however, like Gating
-   components, they can also be used to modulate `InputStates <InputState>` and `OutputStates`. The `figure
-   <ModulatorySignal_Detail_Figure>` below shows a detailed view of how ModulatorySignals modulate the parameters of
-   a State's `function <State_Base.function>`.
+   and `ControlSignal <ControlSignal>` are shown in the figure modulating the `ParameterState` of a Mechanism;
+   however, like Gating components, they can also be used to modulate `InputStates <InputState>` and `OutputStates
+   <OutputState>`. The `figure <ModulatorySignal_Detail_Figure>` below shows a detailed view of how ModulatorySignals
+   modulate the parameters of a State's `function <State_Base.function>`.
 
 
 .. _ModulatorySignal_Types:
