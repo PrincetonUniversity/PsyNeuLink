@@ -12,6 +12,21 @@ from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 
 class TestControlMechanisms:
 
+    def test_modulation_of_control_signal_cost_function(self):
+        mech = pnl.ProcessingMechanism()
+        ctl_mech_A = pnl.ControlMechanism(monitor_for_control=mech,
+                                      control_signals=pnl.ControlSignal(modulates=(pnl.INTERCEPT,mech),
+                                                                        cost_options=pnl.CostFunctions.INTENSITY))
+        ctl_mech_B = pnl.ControlMechanism(monitor_for_control=mech,
+                                          control_signals=pnl.ControlSignal(
+                                                              modulates=ctl_mech_A.control_signals[0],
+                                                              modulation=pnl.INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
+        comp = pnl.Composition()
+        comp.add_linear_processing_pathway(pathway=[mech, ctl_mech_A, ctl_mech_B])
+
+        comp.run(inputs={mech:[2]}, num_trials=2)
+        assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 54.598150033144239)
+
     def test_lvoc(self):
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
         m2 = pnl.TransferMechanism()
@@ -55,7 +70,6 @@ class TestControlMechanisms:
                                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
-
 
         c.run(inputs=input_dict)
 
