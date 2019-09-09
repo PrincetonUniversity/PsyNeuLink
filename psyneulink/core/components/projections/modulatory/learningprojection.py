@@ -399,7 +399,7 @@ class LearningProjection(ModulatoryProjection_Base):
        <LearningProjection.exponent>`, and before combining it with any others that project to the `ParameterState`
        for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
        MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
-       <LearningProjection_Weight_and_Exponent>` for additional details, including relationship to `learning_rate
+       <LearningProjection_Weight_Exponent>` for additional details, including relationship to `learning_rate
        <LearningProjection.learning_rate>`).
 
     exponent : number
@@ -407,7 +407,7 @@ class LearningProjection(ModulatoryProjection_Base):
         <ControlProjection.weight>`, and before combining it with any others that project to the `ParameterState`
        for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
        MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
-       <LearningProjection_Weight_and_Exponent>` for additional details, including relationship to `learning_rate
+       <LearningProjection_Weight_Exponent>` for additional details, including relationship to `learning_rate
        <LearningProjection.learning_rate>`).
 
     name : str

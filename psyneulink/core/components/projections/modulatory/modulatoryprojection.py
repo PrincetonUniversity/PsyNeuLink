@@ -26,7 +26,7 @@ that modulate different types of Components and their States:
     `matrix <MappingProjection.matrix>` parameter.
 ..
 * `ControlProjection`
-    takes the `value of a <ControlSignal.value>` of a `ControlSignal` belonging to a `ControlMechanism`,
+    takes the `value <ControlSignal.value>` of a `ControlSignal` belonging to a `ControlMechanism`,
     and conveys it to the `ParameterState` for the parameter of a `Mechanism <Mechanism>` or its
     `function <Mechanism_Base.function>`, for use in modulating the value of the parameter.
 ..
@@ -134,10 +134,10 @@ class ModulatoryProjection_Base(Projection_Base):
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        ModulatoryProjection, its `function <ModulatoryProject.function>`, and/or a custom function and its parameters.
-        By default, it contains an entry for the ModulatoryProjection's default `function <ModulatoryProject.function>`
-        and parameter assignments.  Values specified for parameters in the dictionary override any assigned to those
-        parameters in arguments of the constructor.
+        ModulatoryProjection, its `function <ModulatoryProjection_Base.function>`, and/or a custom function and its
+        parameters. By default, it contains an entry for the ModulatoryProjection's default `function
+        <ModulatoryProjection_Base.function>` and parameter assignments.  Values specified for parameters in the
+        dictionary override any assigned to those parameters in arguments of the constructor.
 
     name : str : default see ModulatoryProjection `name <ModulatoryProjection_Base.name>`
         specifies the name of the ModulatoryProjection; see ModulatoryProjection `name <ModulatoryProjection_Base.name>`
@@ -165,7 +165,7 @@ class ModulatoryProjection_Base(Projection_Base):
         `sender <ModulatoryProjection_Base.sender>`.
 
     function : Function : default Linear
-        assigns the value received from the ModulatoryProjection's `sender <ModualatoryProjection.sender>` to
+        assigns the value received from the ModulatoryProjection's `sender <ModulatoryProjection_Base.sender>` to
         its `value <ModulatoryProjection_Base.value>`.
 
     value : 2d np.array
@@ -175,14 +175,14 @@ class ModulatoryProjection_Base(Projection_Base):
     weight : number
        multiplies the `value <ModulatoryProjection_Base.value>` of the ModulatoryProjection after applying `exponent
        <ModulatoryProjection_Base.exponent>`, and before combining it with any others that project to the same
-       `State` to determine that State's `variable <State.variable>` is modified (see description in `Projection
-       <Projection_Weight_and_Exponent>` for details).
+       `State` to determine that State's `variable <State_Base.variable>` is modified (see description in `Projection
+       <Projection_Weight_Exponent>` for details).
 
     exponent : number
         exponentiates the `value <ModulatoryProjection_Base.value>` of the ModulatoryProjection, before applying
         `weight <ModulatoryProjection_Base.weight>`, and before combining it with any others that project to the same
         `State` to determine that State's `variable <State.variable>` is modified (see description in `Projection
-        <Projection_Weight_and_Exponent>` for details).
+        <Projection_Weight_Exponent>` for details).
 
     name : str
         the name of the ModulatoryProjection. If the ModulatoryProjection's `initialization has been deferred

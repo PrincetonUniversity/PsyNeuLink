@@ -258,13 +258,13 @@ class ControlProjection(ModulatoryProjection_Base):
        multiplies the `value <ControlProjection.value>` of the ControlProjection after applying `exponent
        <ControlProjection.exponent>`, and before combining it with any others that project to the same `ParameterState`
        to determine how that ParameterState's `variable <ParameterState.variable>` is modified (see description in
-       `Projection <Projection_Weight_and_Exponent>` for details).
+       `Projection <Projection_Weight_Exponent>` for details).
 
     exponent : number
         exponentiates the `value <ControlProjection.value>` of the ControlProjection, before applying `weight
         <ControlProjection.weight>`, and before combining it with any others that project to the same `ParameterState`
         to determine how that ParameterState's `variable <ParameterState.variable>` is modified (see description in
-        `Projection <Projection_Weight_and_Exponent>` for details).
+        `Projection <Projection_Weight_Exponent>` for details).
 
     name : str
         name of the ControlProjection; if it is not specified in the **name** argument of its constructor,

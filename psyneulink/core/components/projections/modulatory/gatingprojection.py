@@ -244,13 +244,13 @@ class GatingProjection(ModulatoryProjection_Base):
        multiplies the `value <GatingProjection.value>` of the GatingProjection after applying `exponent
        <GatingProjection.exponent>`, and before combining it with any others that project to the same `InputState`
        or `OutputState` to determine how that State's `variable <State.variable>` is modified (see description in
-       `Projection <Projection_Weight_and_Exponent>` for details).
+       `Projection <Projection_Weight_Exponent>` for details).
 
     exponent : number
         exponentiates the `value <GatingProjection.value>` of the GatingProjection, before applying `weight
         <ControlProjection.weight>`, and before combining it with any others that project to the same `InputState`
        or `OutputState` to determine how that State's `variable <State.variable>` is modified (see description in
-       `Projection <Projection_Weight_and_Exponent>` for details).
+       `Projection <Projection_Weight_Exponent>` for details).
 
     name : str
         name of the GatingProjection; if it is not specified in the **name** argument of its constructor,
