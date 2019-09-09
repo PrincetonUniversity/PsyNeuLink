@@ -21,6 +21,7 @@ this need not be the case.
 
 .. _AdaptiveMechanism_Types:
 
+
 There are four types of AdaptiveMechanism:
 
 * `ModulatoryMechanism`
@@ -68,7 +69,7 @@ be assigned
 different `allocations <ModulatorySignal.allocation>` (for ControlSignals and GatingSignals) or `learning_signals
 <LearningMechanism.learning_signal>` (for LearningSignals).  A single ModulatorySignal can also be assigned multiple
 ModulatoryProjections; however, as described  under `_ModulatorySignal_Projections`, they will all be assigned the
-same `variable <ModulatoryProjection.variable>`.
+same `variable <ModulatoryProjection_Base.variable>`.
 
 
 COMMENT:

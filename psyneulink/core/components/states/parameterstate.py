@@ -484,7 +484,7 @@ class ParameterState(State_Base):
         a list of the `ModulatoryProjection <ModulatoryProjection>` that project to the ParameterState (i.e.,
         for which it is a `receiver <Projection_Base.receiver>`); these can be
         `ControlProjection(s) <ControlProjection>` and/or `LearningProjection(s) <LearningProjection>`,
-        but not `GatingProjection <GatingProjection>`.  The `value <ModulatoryProjection.value>` of each
+        but not `GatingProjection <GatingProjection>`.  The `value <ModulatoryProjection_Base.value>` of each
         must match the format (number and types of elements) of the ParameterState's
         `variable <ParameterState.variable>`.
 

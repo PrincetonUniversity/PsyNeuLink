@@ -125,12 +125,12 @@ class ModulatoryProjection_Base(Projection_Base):
         specifies the Component from which the ModulatoryProjection projects.
 
     weight : number : default None
-       specifies the value by which to multiply the ModulatoryProjection's `value <ModulatoryProjection.value>`
-       before combining it with others (see `weight <ModulatoryProjection.weight>` for additional details).
+       specifies the value by which to multiply the ModulatoryProjection's `value <ModulatoryProjection_Base.value>`
+       before combining it with others (see `weight <ModulatoryProjection_Base.weight>` for additional details).
 
     exponent : number : default None
-       specifies the value by which to exponentiate the ModulatoryProjection's `value <ModulatoryProjection.value>`
-       before combining it with others (see `exponent <ModulatoryProjection.exponent>` for additional details).
+       specifies the value by which to exponentiate the ModulatoryProjection's `value <ModulatoryProjection_Base.value>`
+       before combining it with others (see `exponent <ModulatoryProjection_Base.exponent>` for additional details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -139,13 +139,13 @@ class ModulatoryProjection_Base(Projection_Base):
         and parameter assignments.  Values specified for parameters in the dictionary override any assigned to those
         parameters in arguments of the constructor.
 
-    name : str : default see ModulatoryProjection `name <ModulatoryProjection.name>`
-        specifies the name of the ModulatoryProjection; see ModulatoryProjection `name <ModulatoryProjection.name>`
+    name : str : default see ModulatoryProjection `name <ModulatoryProjection_Base.name>`
+        specifies the name of the ModulatoryProjection; see ModulatoryProjection `name <ModulatoryProjection_Base.name>`
         for details.
 
     prefs : PreferenceSet or specification dict : default Projection.classPreferences
-        specifies the `PreferenceSet` for the ModulatoryProjection; see `prefs <ModulatoryProjection.prefs>` for
-        details.
+        specifies the `PreferenceSet` for the ModulatoryProjection; see `prefs <ModulatoryProjection_Base.prefs>`
+        for details.
 
     context : str : default None
         optional reference to a subclass
@@ -162,26 +162,26 @@ class ModulatoryProjection_Base(Projection_Base):
 
     variable : 2d np.array
         value received from the `ModulatorySignal <ModulatorySignal>` that is the ModulatoryProjection's
-        `sender <ModulatoryProjection.sender`.
+        `sender <ModulatoryProjection_Base.sender>`.
 
     function : Function : default Linear
         assigns the value received from the ModulatoryProjection's `sender <ModualatoryProjection.sender>` to
-        its `value <ModulatoryProjection.value>`.
+        its `value <ModulatoryProjection_Base.value>`.
 
     value : 2d np.array
         value used to modulate the `function <State_Base.function>` of the State that is its `receiver
-        <ModulatoryProjection.receiver>`.
+        <ModulatoryProjection_Base.receiver>`.
 
     weight : number
-       multiplies the `value <ModulatoryProjection.value>` of the ModulatoryProjection after applying `exponent
-       <ModulatoryProjection.exponent>`, and before combining it with any others that project to the same `State` to
-       determine that State's `variable <State.variable>` is modified (see description in `Projection
+       multiplies the `value <ModulatoryProjection_Base.value>` of the ModulatoryProjection after applying `exponent
+       <ModulatoryProjection_Base.exponent>`, and before combining it with any others that project to the same
+       `State` to determine that State's `variable <State.variable>` is modified (see description in `Projection
        <Projection_Weight_and_Exponent>` for details).
 
     exponent : number
-        exponentiates the `value <ModulatoryProjection.value>` of the ModulatoryProjection, before applying `weight
-        <ModulatoryProjection.weight>`, and before combining it with any others that project to the same `State` to
-        determine that State's `variable <State.variable>` is modified (see description in `Projection
+        exponentiates the `value <ModulatoryProjection_Base.value>` of the ModulatoryProjection, before applying
+        `weight <ModulatoryProjection_Base.weight>`, and before combining it with any others that project to the same
+        `State` to determine that State's `variable <State.variable>` is modified (see description in `Projection
         <Projection_Weight_and_Exponent>` for details).
 
     name : str

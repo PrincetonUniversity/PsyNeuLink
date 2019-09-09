@@ -11,5 +11,5 @@ Modulatory Projections
    GatingProjection
 
 .. automodule:: psyneulink.core.components.projections.modulatory.modulatoryprojection
-   :members:
+   :members: ModulatoryProjection_Base
    :exclude-members: Linear, random, Parameters

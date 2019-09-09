@@ -24,11 +24,6 @@ Sections
   * `ModulatorySignal_Execution`
   * `ModulatorySignal_Class_Reference`
   
-# FIX: 9/3/19 --
-              - AdaptiveMechanism not working (under Structure)
-              - ModulatoryProjection.variable references not working (under Execution)
-              - "Output of Projection, transmitted as variable to InputState of" in Projection
-
 
 .. _ModulatorySignal_Overview:
 
@@ -98,11 +93,10 @@ Structure
 ---------
 
 A ModulatorySignal is always assigned to an `AdaptiveMechanism <AdaptiveMechanism>`, and must be assigned to an
-AdaptiveMechanism of the appropriate type (`see types of AdaptiveMechanism` <AdaptiveMechanism_Types>`).  The
-ModulatorySignal receives a
-`modulatory_allocation` from the AdaptiveMechanism to which it is assigned, that it uses as the `variable
-<Function_Base.variable>` for its `function <ModulatorySignal.function>`, the result of which is the modulatory `value
-<ModulatorySignal.value>` of the ModulatorySignal.  A ModulatorySignal is associated with one or more
+AdaptiveMechanism of the appropriate type (`see types of AdaptiveMechanism <AdaptiveMechanism_Types>`).  The
+ModulatorySignal receives a `modulatory_allocation` from the AdaptiveMechanism to which it is assigned, that it uses
+as the `variable <Function_Base.variable>` for its `function <ModulatorySignal.function>`, the result of which is the
+modulatory `value <ModulatorySignal.value>` of the ModulatorySignal.  A ModulatorySignal is associated with one or more
 `ModulatoryProjections <ModulatoryProjection>` of the corresponding type, that that receive the ModulatorySignal's
 `value <ModulatorySignal.value>`, and use this to modulate the State(s) to which they project.  All of the
 ModulatoryProjections from a given ModulatorySignal are assigned the same modulatory `value <ModulatorySignal.value>`
@@ -332,7 +326,7 @@ Execution
 
 ModulatorySignals cannot be executed directly.  This done when the `AdaptiveMechanism <AdaptiveMechanism>` to
 which they belong is executed. When a ModulatorySignal is executed, it calculates its `value <ModulatorySignal.value>`,
-which is then assigned as the `variable <ModulatoryProjection.variable>` of the `ModulatoryProjections
+which is then assigned as the `variable <ModulatoryProjection_Base.variable>` of the `ModulatoryProjections
 <ModulatoryProjection>` listed in its `efferents <ModulatorySignal.efferents>` attribute.
 When those Projections execute, they convey the ModulatorySignal's `value <ModulatorySignal.value>` to the `function
 <State_Base.function>` of the `State <State>` to which they project.  The State's `function <State_Base.function>`
