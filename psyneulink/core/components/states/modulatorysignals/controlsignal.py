@@ -1069,24 +1069,27 @@ class ControlSignal(ModulatorySignal):
         intensity_cost = adjustment_cost = duration_cost = 0
 
         if ControlSignalCosts.INTENSITY & cost_options:
-            intensity_cost = self.intensity_cost_function(intensity)
+            intensity_cost = self.intensity_cost_function(intensity, execution_id=execution_id)
             self.parameters.intensity_cost._set(intensity_cost, execution_id)
 
         if ControlSignalCosts.ADJUSTMENT & cost_options:
-            adjustment_cost = self.adjustment_cost_function(intensity_change)
+            adjustment_cost = self.adjustment_cost_function(intensity_change, execution_id=execution_id)
             self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
 
         if ControlSignalCosts.DURATION & cost_options:
-            duration_cost = self.duration_cost_function(self.parameters.cost._get(execution_id))
+            duration_cost = self.duration_cost_function(self.parameters.cost._get(execution_id), execution_id=execution_id)
             self.parameters.duration_cost._set(duration_cost, execution_id)
 
         return max(
             0.0,
-            self.combine_costs_function([
-                intensity_cost,
-                adjustment_cost,
-                duration_cost
-            ])
+            self.combine_costs_function(
+                [
+                    intensity_cost,
+                    adjustment_cost,
+                    duration_cost
+                ],
+                execution_id=execution_id
+            )
         )
 
     @tc.typecheck
