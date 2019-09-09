@@ -525,7 +525,7 @@ class Projection_Base(Projection):
     ----------
 
     variable : value
-        input to Projection, received from OutputState.value of `sender <Projection_Base.sender>`.
+        input to Projection, received from `value <OutputState.value>` of `sender <Projection_Base.sender>`.
 
     sender : State
         State from which Projection receives its input (see `Projection_Sender` for additional information).
@@ -534,7 +534,7 @@ class Projection_Base(Projection):
         State to which Projection sends its output  (see `Projection_Receiver` for additional information)
 
     value : value
-        Output of Projection, transmitted as variable to InputState of `receiver <Projection_Base.receiver>`.
+        output of Projection, transmitted to variable of function of its `receiver <Projection_Base.receiver>`.
 
     parameter_states : ContentAddressableList[str, ParameterState]
         a list of the Projection's `ParameterStates <Projection_ParameterStates>`, one for each of its specifiable

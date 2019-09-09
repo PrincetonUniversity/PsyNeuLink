@@ -25,8 +25,6 @@ Sections
   * `ModulatorySignal_Class_Reference`
   
 # FIX: 9/3/19 --
-              - Parameter.modulable:  ELIMINATE STATEMENT THAT IT HAS A PARAMETERSTATE
-                (ONLY TRUE FOR MECH OR PATHWAY? MAPPINGPROJ)
               - AdaptiveMechanism not working (under Structure)
               - ModulatoryProjection.variable references not working (under Execution)
               - "Output of Projection, transmitted as variable to InputState of" in Projection

@@ -171,9 +171,9 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 |     stateful     |     True      |whether the parameter has different values  |                                         |
 |                  |               |based on execution context                  |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
-|    modulable     |     False     |if True, the parameter can be modulated (has|Currently this does not determine what   |
-|                  |               |a ParameterState                            |gets a ParameterState, but in the future |
-|                  |               |                                            |it should                                |
+|    modulable     |     False     |if True, the parameter can be modulated     |Currently this does not determine what   |
+|                  |               |(if it belongs to a Mechanism or Projection |gets a ParameterState, but in the future |
+|                  |               | it is assigned a `ParameterState`)         |it should                                |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |    read_only     |     False     |whether the user should be able to set the  |Can be manually set, but will trigger a  |
 |                  |               |value or not (e.g. variable and value are   |warning unless override=True             |
@@ -488,7 +488,8 @@ class Parameter(types.SimpleNamespace):
             :default: True
 
         modulable
-            if True, the parameter can be modulated (has a ParameterState).
+            if True, the parameter can be modulated; if the Parameter belongs to a `Mechanism` or `Projection`,
+            it is assigned a `ParameterState`.
 
             :default: False
 
