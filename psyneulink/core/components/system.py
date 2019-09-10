@@ -2836,7 +2836,6 @@ class System(System_Base):
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
         if ContextFlags.SIMULATION not in context.execution_phase and self.enable_controller:
             context.add_flag(ContextFlags.CONTROL)
-            context.add_flag(ContextFlags.PROCESSING)
             try:
                 self.controller.execute(
                     execution_id=execution_id,
@@ -2857,7 +2856,6 @@ class System(System_Base):
                     raise
 
             context.remove_flag(ContextFlags.CONTROL)
-            context.remove_flag(ContextFlags.PROCESSING)
 
         # Report completion of system execution and value of designated outputs
         if self._report_system_output:

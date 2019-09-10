@@ -4240,6 +4240,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             buffer_animate_state = self._animate
 
         context.add_flag(ContextFlags.SIMULATION)
+        context.remove_flag(ContextFlags.CONTROL)
         self.run(inputs=inputs,
                  execution_id=execution_id,
                  runtime_params=runtime_params,
@@ -4250,6 +4251,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  skip_initialization=True,
                  )
         context.remove_flag(ContextFlags.SIMULATION)
+        context.add_flag(ContextFlags.CONTROL)
         if buffer_animate_state:
             self._animate = buffer_animate_state
 
@@ -6769,16 +6771,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.initialization_status != ContextFlags.INITIALIZING
                     and ContextFlags.SIMULATION not in context.execution_phase
             ):
-
+                context.add_flag(ContextFlags.CONTROL)
                 if self.controller and not bin_execute:
-                    context.execution_phase = ContextFlags.PROCESSING
                     self.controller.execute(execution_id=execution_id, context=context)
 
                 if bin_execute:
                     _comp_ex.freeze_values()
                     _comp_ex.execute_node(self.controller)
 
-                context.add_flag(ContextFlags.CONTROL)
+
 
                 # Animate controller (after execution)
                 if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:

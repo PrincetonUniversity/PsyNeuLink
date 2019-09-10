@@ -407,12 +407,12 @@ class Context():
         else:
             if (
                 flag in EXECUTION_PHASE_FLAGS
-                or (flag & ~(ContextFlags.SIMULATION | ContextFlags.CONTROL)) in EXECUTION_PHASE_FLAGS
+                or (flag & ~ContextFlags.SIMULATION) in EXECUTION_PHASE_FLAGS
             ):
                 self._execution_phase = flag
             else:
                 raise ContextError(
-                    f"Attempt to assign more than one non-SIMULATION/CONTROL flag ({str(flag)}) to execution_phase"
+                    f"Attempt to assign more than one non-SIMULATION flag ({str(flag)}) to execution_phase"
                 )
 
     @property

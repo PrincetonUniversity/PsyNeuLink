@@ -2309,7 +2309,7 @@ class Mechanism_Base(Mechanism):
         # Executing or simulating Process, System or Composition, so get input by updating input_states
 
         if (input is None
-            and (context.execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))
+            and (context.execution_phase is not ContextFlags.IDLE)
             and (self.input_state.path_afferents != [])):
             variable = self._update_input_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
