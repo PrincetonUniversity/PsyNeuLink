@@ -619,6 +619,29 @@ def handle_external_context(
     execution_phase=ContextFlags.IDLE,
     **context_kwargs
 ):
+    """
+        Arguments
+        ---------
+
+        source
+            default ContextFlags to be used for source field when Context is not
+            specified
+
+        execution_phase
+            default ContextFlags to be used for execution_phase field when
+            Context is not specified
+
+        context_kwargs
+            additional keyword arguments to be given to Context.__init__ when
+            Context is not specified
+
+        Returns
+        -------
+
+        a decorator that ensures a Context argument is passed in to the
+        decorated method
+
+    """
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, context=None, execution_id=None, **kwargs):
