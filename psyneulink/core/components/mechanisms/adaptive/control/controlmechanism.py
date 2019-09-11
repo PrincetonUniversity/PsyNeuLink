@@ -582,7 +582,7 @@ class ControlMechanismError(Exception):
 
 
 def _control_allocation_getter(owning_component=None, execution_id=None):
-    return owning_component.modulatory_allocation
+    return owning_component.parameters.modulatory_allocation._get(execution_id)
 
 def _control_allocation_setter(value, owning_component=None, execution_id=None):
     owning_component.parameters.modulatory_allocation._set(np.array(value), execution_id)
