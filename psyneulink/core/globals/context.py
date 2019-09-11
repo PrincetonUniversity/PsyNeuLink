@@ -88,7 +88,6 @@ import inspect
 import warnings
 
 from collections import defaultdict, namedtuple
-from uuid import UUID
 
 import typecheck as tc
 
@@ -304,7 +303,7 @@ class Context():
     composition : Composition
       the `Composition <Composition>` in which the `owner <Context.owner>` is currently being executed.
 
-    execution_id : UUID
+    execution_id
       the execution_id assigned to the Component by the Composition in which it is currently being executed.
 
     execution_time : TimeScale
@@ -328,7 +327,7 @@ class Context():
                  execution_phase=ContextFlags.IDLE,
                  # source=ContextFlags.COMPONENT,
                  source=ContextFlags.NONE,
-                 execution_id:UUID=None,
+                 execution_id=None,
                  string:str='', time=None):
 
         self.owner = owner
