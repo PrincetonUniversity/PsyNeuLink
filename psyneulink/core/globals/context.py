@@ -699,11 +699,12 @@ def handle_external_context(
                     execution_phase=execution_phase,
                     **context_kwargs
                 )
-                try:
-                    args = list(args)
-                    args[context_arg_index] = context
-                except (TypeError, IndexError):
-                    pass
+                if context_arg_index is not None:
+                    try:
+                        args = list(args)
+                        args[context_arg_index] = context
+                    except IndexError:
+                        pass
 
             try:
                 return func(*args, context=context, **kwargs)
