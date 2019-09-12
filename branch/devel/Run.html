@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Run &mdash; PsyNeuLink 0.5.3.2+650.g422a679 documentation</title>
+  <title>Run &mdash; PsyNeuLink 0.5.3.2+654.g0696080 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+650.g422a679',
+              VERSION:'0.5.3.2+654.g0696080',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+650
+                0.5.3.2+654
               </div>
             
           
@@ -213,7 +213,7 @@ looking for values after a run, it’s important to know the execution context y
 <span class="go">[[array([5.])]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">t</span><span class="p">:</span> <span class="mi">10</span><span class="p">})</span>
 <span class="go">[[array([10.])]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">t</span><span class="p">:</span> <span class="mi">20</span><span class="p">},</span> <span class="n">execution_id</span><span class="o">=</span><span class="s1">&#39;custom execution id&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">t</span><span class="p">:</span> <span class="mi">20</span><span class="p">},</span> <span class="n">context</span><span class="o">=</span><span class="s1">&#39;custom execution id&#39;</span><span class="p">)</span>
 <span class="go">[[array([20.])]]</span>
 
 <span class="go"># context None</span>
@@ -238,7 +238,7 @@ occurs in the <code class="xref any docutils literal"><span class="pre">None</sp
 <li><dl class="first docutils">
 <dt><code class="xref any docutils literal"><span class="pre">_dependent_components</span></code> should be added to for any new Component that requires other Components to function properly (beyond “standard” things like Component.function, or Mechanism.input_states, as these are added in the proper classes’ _dependent_components)</dt>
 <dd><ul class="first last">
-<li>the intent is that with <code class="docutils literal"><span class="pre">_dependent_components</span></code> set properly, calling     <code class="docutils literal"><span class="pre">obj._initialize_from_context(new_execution_id,</span> <span class="pre">base_execution_id)</span></code> should be sufficient to run obj     under <strong>new_execution_id</strong></li>
+<li>the intent is that with <code class="docutils literal"><span class="pre">_dependent_components</span></code> set properly, calling     <code class="docutils literal"><span class="pre">obj._initialize_from_context(new_context,</span> <span class="pre">base_context)</span></code> should be sufficient to run obj     under <strong>new_context</strong></li>
 <li>a good example of a “nonstandard” override is <code class="xref any docutils literal"><span class="pre">OptimizationControlMechanism._dependent_components</span></code></li>
 </ul>
 </dd>

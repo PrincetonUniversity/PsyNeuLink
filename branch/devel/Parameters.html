@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.5.3.2+650.g422a679 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.5.3.2+654.g0696080 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+650.g422a679',
+              VERSION:'0.5.3.2+654.g0696080',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.5.3.2+650
+                0.5.3.2+654
               </div>
             
           
@@ -271,9 +271,9 @@ must become stateful Parameters, or they are at risk of computational errors lik
 <blockquote>
 <div><p>For example, <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.costs" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.costs"><code class="xref any py py-attr docutils literal"><span class="pre">costs</span></code></a> of <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> has a special getter method, which computes the cost on-the-fly:</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_modulatory_mechanism_costs_getter</span><span class="p">(</span><span class="n">owning_component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">execution_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_modulatory_mechanism_costs_getter</span><span class="p">(</span><span class="n">owning_component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">compute_costs</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">variable</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">execution_id</span><span class="p">),</span> <span class="n">execution_id</span><span class="o">=</span><span class="n">execution_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">control_signals</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">compute_costs</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">variable</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">context</span><span class="p">),</span> <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">control_signals</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
 </pre></div>
@@ -282,7 +282,7 @@ must become stateful Parameters, or they are at risk of computational errors lik
 <p>and <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> has a special setter method,
 which updates its <code class="xref any docutils literal"><span class="pre">auto</span></code> and <code class="xref any docutils literal"><span class="pre">hetero</span></code> parameter values accordingly</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_recurrent_transfer_mechanism_matrix_setter</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">owning_component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">execution_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_recurrent_transfer_mechanism_matrix_setter</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">owning_component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">get_matrix</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">owning_component</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
@@ -290,9 +290,9 @@ which updates its <code class="xref any docutils literal"><span class="pre">auto
 
     <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">temp_matrix</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">owning_component</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">temp_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">execution_id</span><span class="p">)</span>
+        <span class="n">owning_component</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">temp_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">context</span><span class="p">)</span>
         <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">temp_matrix</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">owning_component</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">hetero</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">temp_matrix</span><span class="p">,</span> <span class="n">execution_id</span><span class="p">)</span>
+        <span class="n">owning_component</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">hetero</span><span class="o">.</span><span class="n">_set</span><span class="p">(</span><span class="n">temp_matrix</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">value</span>
 </pre></div>
@@ -310,9 +310,9 @@ from parents, but will be overridden if necessary, without affecting the parents
 </div>
 <div class="section" id="using-parameters">
 <h4>Using Parameters<a class="headerlink" href="#using-parameters" title="Permalink to this headline">¶</a></h4>
-<p>Methods that are called during runtime in general must take <em>execution_id</em> as an argument and must pass this <em>execution_id</em> along to other
+<p>Methods that are called during runtime in general must take <em>context</em> as an argument and must pass this <em>context</em> along to other
 PNL methods. The most likely place this will come up would be for the <em>function</em> method on a PNL <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> class, or <em>_execute</em> method on other
-<a class="reference internal" href="Components.html"><span class="doc">Components</span></a>. Any getting and setting of stateful parameter values must use this <em>execution_id</em>, and using standard attributes to store data
+<a class="reference internal" href="Components.html"><span class="doc">Components</span></a>. Any getting and setting of stateful parameter values must use this <em>context</em>, and using standard attributes to store data
 must be avoided at risk of causing computation errors. You may use standard attributes only when their values will never change during a
 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">Run</span></code></a>.</p>
 <p>You should avoid using <a class="reference internal" href="#parameter-dot-notation"><span class="std std-ref">dot notation</span></a> in internal code, as it is ambiguous and can potentially break statefulness.</p>
@@ -387,11 +387,11 @@ different execution contexts</td>
 values based on a supplied method
 (e.g. _output_state_variable_getter)</td>
 <td>kwargs self, owning_component, and
-execution_id will be passed in if your
+context will be passed in if your
 method uses them. self - the Parameter
 calling the setter; owning_component -
 the Component to which the Parameter
-belongs; execution_id - the execution_id
+belongs; context - the context
 the setter is called with; should return
 the value</td>
 </tr>
@@ -401,12 +401,12 @@ the value</td>
 values based on a supplied method (e.g.
 _recurrent_transfer_mechanism_matrix_setter)</td>
 <td>should take a positional argument; kwargs
-self, owning_component, and execution_id
+self, owning_component, and context
 will be passed in if your method uses
 them. self - the Parameter calling the
 setter; owning_component - the Component
 to which the Parameter belongs;
-execution_id - the execution_id the
+context - the context the
 setter is called with; should return the
 value to be set</td>
 </tr>
@@ -624,7 +624,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 <tr class="field-even field"><th class="field-name">Default:</th><td class="field-body">None</td>
 </tr>
 <tr class="field-odd field"><th class="field-name" colspan="2">Developer Notes:</th></tr>
-<tr class="field-odd field"><td>&#160;</td><td class="field-body">kwargs self, owning_component, and execution_id will be passed in if your method uses them. self - the Parameter calling the setter; owning_component - the Component to which the Parameter belongs; execution_id - the execution_id the setter is called with; should return the value</td>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">kwargs self, owning_component, and context will be passed in if your method uses them. self - the Parameter calling the setter; owning_component - the Component to which the Parameter belongs; context - the context the setter is called with; should return the value</td>
 </tr>
 </tbody>
 </table>
@@ -643,7 +643,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 <tr class="field-even field"><th class="field-name">Default:</th><td class="field-body">None</td>
 </tr>
 <tr class="field-odd field"><th class="field-name" colspan="2">Developer Notes:</th></tr>
-<tr class="field-odd field"><td>&#160;</td><td class="field-body">should take a positional argument; kwargs self, owning_component, and execution_id will be passed in if your method uses them. self - the Parameter calling the setter; owning_component - the Component to which the Parameter belongs; execution_id - the execution_id the setter is called with; should return the value to be set</td>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">should take a positional argument; kwargs self, owning_component, and context will be passed in if your method uses them. self - the Parameter calling the setter; owning_component - the Component to which the Parameter belongs; context - the context the setter is called with; should return the value to be set</td>
 </tr>
 </tbody>
 </table>
@@ -771,24 +771,18 @@ are no longer needed for computation; if True, the values should be saved for la
 
 <dl class="method">
 <dt id="psyneulink.core.globals.parameters.Parameter.clear_log">
-<code class="descname">clear_log</code><span class="sig-paren">(</span><em>execution_ids=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.clear_log" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears the log of this Parameter for every execution_id in <strong>execution_ids</strong></p>
+<code class="descname">clear_log</code><span class="sig-paren">(</span><em>contexts=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.clear_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the log of this Parameter for every context in <strong>contexts</strong></p>
 </dd></dl>
 
 <dl class="method">
 <dt id="psyneulink.core.globals.parameters.Parameter.get">
-<code class="descname">get</code><span class="sig-paren">(</span><em>execution_context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the value of this <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> in the context of <strong>execution_context</strong>
-If no execution_context is specified, attributes on the associated <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> will be used</p>
-<table class="docutils field-list" frame="void" rules="none">
+<code class="descname">get</code><span class="sig-paren">(</span><em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.get" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>execution_context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><em>execution_id</em></a><em>, </em><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – the execution_id for which the value is stored; if a Composition, uses <strong>execution_context</strong>.default_execution_id</li>
-<li><strong>kwargs</strong> – any additional arguments to be passed to this <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a>’s <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.getter" title="psyneulink.core.globals.parameters.Parameter.getter"><code class="xref any py py-attr docutils literal"><span class="pre">getter</span></code></a> if it exists</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> – any additional arguments to be passed to this <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a>’s <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.getter" title="psyneulink.core.globals.parameters.Parameter.getter"><code class="xref any py py-attr docutils literal"><span class="pre">getter</span></code></a> if it exists</td>
 </tr>
 </tbody>
 </table>
@@ -796,13 +790,13 @@ If no execution_context is specified, attributes on the associated <a class="ref
 
 <dl class="method">
 <dt id="psyneulink.core.globals.parameters.Parameter.get_delta">
-<code class="descname">get_delta</code><span class="sig-paren">(</span><em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.get_delta" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the difference between the current value and previous value of <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> in the context of <strong>execution_context</strong></p>
+<code class="descname">get_delta</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.get_delta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the difference between the current value and previous value of <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> in the context of <strong>ECONTEXT_COMMENT</strong></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>execution_context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><em>execution_id</em></a><em>, </em><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – the execution_id for which the value is stored; if a Composition, uses <strong>execution_context</strong>.default_execution_id</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ECONTEXT_COMMENT</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><em>Context</em></a><em>, </em><a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><em>execution_id</em></a><em>, </em><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – the context for which the value is stored; if a Composition, uses <strong>ECONTEXT_COMMENT</strong>.default_execution_id</td>
 </tr>
 </tbody>
 </table>
@@ -810,14 +804,14 @@ If no execution_context is specified, attributes on the associated <a class="ref
 
 <dl class="method">
 <dt id="psyneulink.core.globals.parameters.Parameter.get_previous">
-<code class="descname">get_previous</code><span class="sig-paren">(</span><em>execution_context=None</em>, <em>index=1</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.get_previous" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the value set before the current value of this <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> in the context of <strong>execution_context</strong></p>
+<code class="descname">get_previous</code><span class="sig-paren">(</span><em>context=None</em>, <em>index=1</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.get_previous" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the value set before the current value of this <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> in the context of <strong>ECONTEXT_COMMENT</strong></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>execution_context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><em>execution_id</em></a><em>, </em><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – the execution_id for which the value is stored; if a Composition, uses <strong>execution_context</strong>.default_execution_id</li>
+<li><strong>ECONTEXT_COMMENT</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><em>Context</em></a><em>, </em><a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><em>execution_id</em></a><em>, </em><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – the context for which the value is stored; if a Composition, uses <strong>ECONTEXT_COMMENT</strong>.default_execution_id</li>
 <li><strong>index</strong> (<em>int : 1</em>) – how far back to look into the history. A value of 1 means the first previous value</li>
 </ul>
 </td>
@@ -835,15 +829,12 @@ inherits from parent <a class="reference internal" href="#"><span class="doc">Pa
 
 <dl class="method">
 <dt id="psyneulink.core.globals.parameters.Parameter.set">
-<code class="descname">set</code><span class="sig-paren">(</span><em>value</em>, <em>execution_context=None</em>, <em>context=None</em>, <em>override=False</em>, <em>skip_history=False</em>, <em>skip_log=False</em>, <em>_ro_warning_stacklevel=3</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.set" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets the value of this <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> in the context of <strong>execution_context</strong>
-If no execution_context is specified, attributes on the associated <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> will be used</p>
-<table class="docutils field-list" frame="void" rules="none">
+<code class="descname">set</code><span class="sig-paren">(</span><em>value</em>, <em>context=None</em>, <em>override=False</em>, <em>skip_history=False</em>, <em>skip_log=False</em>, <em>_ro_warning_stacklevel=3</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.set" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>execution_context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><em>execution_id</em></a><em>, </em><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – the execution_id for which the value is stored; if a Composition, uses <strong>execution_context</strong>.default_execution_id</li>
 <li><strong>override</strong> (<em>False</em>) – if True, ignores a warning when attempting to set a <em>read-only</em> Parameter</li>
 <li><strong>skip_history</strong> (<em>False</em>) – if True, does not modify the Parameter’s <em>history</em></li>
 <li><strong>skip_log</strong> (<em>False</em>) – if True, does not modify the Parameter’s <em>log</em></li>
@@ -871,19 +862,9 @@ refers to another <a class="reference internal" href="#psyneulink.core.globals.p
 </dd></dl>
 
 <dl class="function">
-<dt id="psyneulink.core.globals.parameters.parse_execution_context">
-<code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">parse_execution_context</code><span class="sig-paren">(</span><em>execution_context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.parse_execution_context" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>execution_context</strong> – An execution context (execution_id, Composition)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the execution_id associated with <strong>execution_context</strong></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
+<dt id="psyneulink.core.globals.parameters.parse_context">
+<code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">parse_context</code><span class="sig-paren">(</span><em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.parse_context" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 </div>

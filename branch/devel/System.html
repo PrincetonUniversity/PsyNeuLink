@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.5.3.2+650.g422a679 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.5.3.2+654.g0696080 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+650.g422a679',
+              VERSION:'0.5.3.2+654.g0696080',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.5.3.2+650
+                0.5.3.2+654
               </div>
             
           
@@ -629,14 +629,14 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 </dl>
 <dl class="method">
 <dt id="psyneulink.core.components.system.System.initialize">
-<code class="descname">initialize</code><span class="sig-paren">(</span><em>execution_context=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.system.System.initialize" title="Permalink to this definition">¶</a></dt>
+<code class="descname">initialize</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.system.System.initialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign <a class="reference internal" href="#psyneulink.core.components.system.System.initialize" title="psyneulink.core.components.system.System.initialize"><code class="xref any py py-meth docutils literal"><span class="pre">initial_values</span></code></a> to mechanisms designated as <code class="xref any docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code> nd
 contained in recurrent_init_mechanisms.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="psyneulink.core.components.system.System.execute">
-<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>target=None</em>, <em>execution_id=None</em>, <em>termination_processing=None</em>, <em>termination_learning=None</em>, <em>runtime_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.system.System.execute" title="Permalink to this definition">¶</a></dt>
+<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>target=None</em>, <em>context=None</em>, <em>termination_processing=None</em>, <em>termination_learning=None</em>, <em>runtime_params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.system.System.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute mechanisms in System in order specified by the <a class="reference internal" href="#psyneulink.core.components.system.System.execution_graph" title="psyneulink.core.components.system.System.execution_graph"><code class="xref any py py-attr docutils literal"><span class="pre">execution_graph</span></code></a> attribute.</p>
 <p>Assign items of input to <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms</p>
 <p>Execute any learning components specified at the appropriate phase.</p>
@@ -667,7 +667,7 @@ phase of execution</span></a></p>
 
 <dl class="method">
 <dt id="psyneulink.core.components.system.System.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>num_trials=None</em>, <em>initialize=False</em>, <em>initial_values=None</em>, <em>targets=None</em>, <em>learning=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>termination_processing=None</em>, <em>termination_learning=None</em>, <em>runtime_params=None</em>, <em>reinitialize_values=None</em>, <em>execution_id=None</em>, <em>base_execution_id=None</em>, <em>animate=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.system.System.run" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>num_trials=None</em>, <em>initialize=False</em>, <em>initial_values=None</em>, <em>targets=None</em>, <em>learning=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>termination_processing=None</em>, <em>termination_learning=None</em>, <em>runtime_params=None</em>, <em>reinitialize_values=None</em>, <em>context=None</em>, <em>base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em>, <em>animate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.system.System.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions</p>
 <p>Call execute method for each execution in a sequence specified by inputs.  See <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for details of
 formatting input specifications. The <strong>animate</strong> argument can be used to generate a movie of the execution of
@@ -858,7 +858,7 @@ projections;</p>
 
 <dl class="method">
 <dt id="psyneulink.core.components.system.System.show_graph">
-<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_processes=False</em>, <em>show_learning=False</em>, <em>show_control=False</em>, <em>show_prediction_mechanisms=False</em>, <em>show_roles=False</em>, <em>show_dimensions=False</em>, <em>show_mechanism_structure=False</em>, <em>show_headers=True</em>, <em>show_projection_labels=False</em>, <em>direction='BT'</em>, <em>active_items=None</em>, <em>active_color='bold'</em>, <em>origin_color='green'</em>, <em>terminal_color='red'</em>, <em>origin_and_terminal_color='brown'</em>, <em>learning_color='orange'</em>, <em>control_color='blue'</em>, <em>prediction_mechanism_color='pink'</em>, <em>system_color='purple'</em>, <em>output_fmt='pdf'</em>, <em>execution_id=NotImplemented</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.system.System.show_graph" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_processes=False</em>, <em>show_learning=False</em>, <em>show_control=False</em>, <em>show_prediction_mechanisms=False</em>, <em>show_roles=False</em>, <em>show_dimensions=False</em>, <em>show_mechanism_structure=False</em>, <em>show_headers=True</em>, <em>show_projection_labels=False</em>, <em>direction='BT'</em>, <em>active_items=None</em>, <em>active_color='bold'</em>, <em>origin_color='green'</em>, <em>terminal_color='red'</em>, <em>origin_and_terminal_color='brown'</em>, <em>learning_color='orange'</em>, <em>control_color='blue'</em>, <em>prediction_mechanism_color='pink'</em>, <em>system_color='purple'</em>, <em>output_fmt='pdf'</em>, <em>context=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.system.System.show_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a display of the graph structure of Mechanisms and Projections in the System.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>

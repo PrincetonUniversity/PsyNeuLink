@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+650.g422a679 documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+654.g0696080 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+650.g422a679',
+              VERSION:'0.5.3.2+654.g0696080',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+650
+                0.5.3.2+654
               </div>
             
           
@@ -1215,7 +1215,7 @@ specifying the class or keyword for InputState or OutputState).</li>
 
 <dl class="method">
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute">
-<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>execution_id=None</em>, <em>runtime_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="Permalink to this definition">¶</a></dt>
+<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>context=None</em>, <em>runtime_params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Carry out a single <a class="reference internal" href="#mechanism-execution"><span class="std std-ref">execution</span></a> of the Mechanism.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1251,7 +1251,7 @@ beginning of the next execution.</li>
 
 <dl class="method">
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.initialize">
-<code class="descname">initialize</code><span class="sig-paren">(</span><em>value</em>, <em>execution_context=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.initialize" title="Permalink to this definition">¶</a></dt>
+<code class="descname">initialize</code><span class="sig-paren">(</span><em>value</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.initialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign an initial value to the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute and update its
 <a class="reference internal" href="#mechanism-outputstates"><span class="std std-ref">OutputStates</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1274,7 +1274,7 @@ exists, and the numeric value otherwise.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished">
-<code class="descname">is_finished</code><span class="sig-paren">(</span><em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished" title="Permalink to this definition">¶</a></dt>
+<code class="descname">is_finished</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.is_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>set by a Mechanism to signal completion of its <a class="reference internal" href="#mechanism-execution"><span class="std std-ref">execution</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.Time.trial" title="psyneulink.core.scheduling.time.Time.trial"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>; used by
 <a class="reference internal" href="Condition.html#conditions-component-based"><span class="std std-ref">Component-based Conditions</span></a> to predicate the execution of one or more other
 Components on the Mechanism.</p>
@@ -1348,7 +1348,7 @@ over the specified x_range</td>
 
 <dl class="method">
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize">
-<code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>execution_context=NotImplemented</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="Permalink to this definition">¶</a></dt>
+<code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>If the mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> is an <code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code>, or if the mechanism has and
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> (see <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>), this method
