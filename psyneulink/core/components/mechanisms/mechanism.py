@@ -2157,9 +2157,6 @@ class Mechanism_Base(Mechanism):
             raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
                                  "(It does not have an accumulator to reinitialize).".format(self.name))
 
-        # if hasattr(self, PREVIOUS_VALUE):
-        #     self.parameters.previous_value._set(None)
-
     def get_current_mechanism_param(self, param_name, context=None):
         if param_name == "variable":
             raise MechanismError("The method 'get_current_mechanism_param' is intended for retrieving the current "

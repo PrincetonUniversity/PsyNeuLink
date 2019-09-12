@@ -5046,7 +5046,7 @@ class SystemInputState(OutputState):
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
-        self.parameters.value._set(variable)
+        self.parameters.value._set(variable, context)
 
     @property
     def _dependent_components(self):

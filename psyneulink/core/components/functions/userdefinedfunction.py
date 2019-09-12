@@ -496,10 +496,10 @@ class UserDefinedFunction(Function_Base):
                 if attr_value is None:
                     attr_value = p.default_value
 
-                p._set(attr_value, skip_history=True)
+                p._set(attr_value, context, skip_history=True)
                 delattr(self, attr_name)
             except AttributeError:
-                p._set(p.default_value, skip_history=True)
+                p._set(p.default_value, context, skip_history=True)
 
     def _function(self, variable, context=None, **kwargs):
 

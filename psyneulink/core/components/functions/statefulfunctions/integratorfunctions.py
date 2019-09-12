@@ -48,7 +48,7 @@ from psyneulink.core.globals.keywords import \
     INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
 
@@ -2811,7 +2811,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.parameters.previous_value._set(initializer)
+        self.parameters.previous_value._set(initializer, Context())
         self.previous_time = starting_point
 
         super().__init__(

@@ -902,8 +902,19 @@ class Parameter(types.SimpleNamespace):
 
         self._set(value, context, skip_history, skip_log, _ro_warning_stacklevel, **kwargs)
 
-    @handle_external_context()
     def _set(self, value, context=None, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
+        if not self.stateful:
+            execution_id = None
+        else:
+            try:
+                execution_id = context.execution_id
+            except AttributeError as e:
+                raise ParameterError(
+                    '_set must pass in a Context object as the context '
+                    'argument. To set parameter values using only an '
+                    'execution id, use set.'
+                ) from e
+
         if self.setter is not None:
             kwargs = {
                 **self._default_setter_kwargs,
@@ -911,12 +922,9 @@ class Parameter(types.SimpleNamespace):
             }
             value = call_with_pruned_args(self.setter, value, context=context, **kwargs)
 
-        self._set_value(value, context=context, skip_history=skip_history, skip_log=skip_log)
+        self._set_value(value, execution_id=execution_id, context=context, skip_history=skip_history, skip_log=skip_log)
 
-    def _set_value(self, value, execution_id=NotImplemented, context=None, skip_history=False, skip_log=False):
-        if execution_id is NotImplemented:
-            execution_id = context.execution_id
-
+    def _set_value(self, value, execution_id=None, context=None, skip_history=False, skip_log=False):
         # store history
         if not skip_history:
             if execution_id in self.values:
@@ -930,7 +938,7 @@ class Parameter(types.SimpleNamespace):
             self._log_value(value, context)
 
         # set value
-        self.values[context.execution_id] = value
+        self.values[execution_id] = value
 
     @handle_external_context()
     def delete(self, context=None):

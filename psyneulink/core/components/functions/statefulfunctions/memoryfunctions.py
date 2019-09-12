@@ -742,8 +742,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             )
 
         if self.previous_value.size != 0:
-            self.parameters.key_size._set(len(self.previous_value[KEYS][0]))
-            self.parameters.val_size._set(len(self.previous_value[VALS][0]))
+            self.parameters.key_size._set(len(self.previous_value[KEYS][0]), Context())
+            self.parameters.val_size._set(len(self.previous_value[VALS][0]), Context())
 
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
@@ -976,10 +976,10 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             fct_msg = 'Function type'
         else:
             distance_function.defaults.variable = test_var
-            distance_function._instantiate_value()
+            distance_function._instantiate_value(context)
             fct_msg = 'Function'
         try:
-            distance_result = distance_function(test_var)
+            distance_result = distance_function(test_var, context=context)
             if not np.isscalar(distance_result):
                 raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
                                     format(repr(DISTANCE_FUNCTION), self.__name__.__class__, distance_result))
@@ -995,14 +995,14 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                 else np.zeros_like(distance_result)
                                 for i in range(self.get_current_function_param('max_entries', context))])
         if isinstance(selection_function, type):
-            selection_function = selection_function(default_variable=test_var)
+            selection_function = selection_function(default_variable=test_var, context=context)
             fct_string = 'Function type'
         else:
             selection_function.defaults.variable = test_var
-            selection_function._instantiate_value()
+            selection_function._instantiate_value(context)
             fct_string = 'Function'
         try:
-            result = np.asarray(selection_function(test_var))
+            result = np.asarray(selection_function(test_var, context=context))
         except e:
             raise FunctionError(f'{fct_string} specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
                                 f'({selection_function}) must accept a 1d array as its argument')
@@ -1040,10 +1040,10 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         self.has_initializers = True
 
         if isinstance(self.distance_function, type):
-            self.distance_function = self.distance_function()
+            self.distance_function = self.distance_function(context=context)
 
         if isinstance(self.selection_function, type):
-            self.selection_function = self.selection_function()
+            self.selection_function = self.selection_function(context=context)
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):

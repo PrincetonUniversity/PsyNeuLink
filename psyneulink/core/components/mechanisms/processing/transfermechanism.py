@@ -1151,10 +1151,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_parameter_states(function=function, context=context)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-
-        # if self.integrator_mode:
-        # self.parameters.previous_value._set(None)
-
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         if self.initial_value is None:

@@ -1294,7 +1294,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             #    all  to zeros with size of Mechanism's array
             # Should be OK to use attributes here because initialization should only occur during None context
             self._set_multiple_parameter_values(
-                None,
+                context,
                 initial_value=self.input_states[RECURRENT].socket_template,
                 current_activity=self.input_states[RECURRENT].socket_template,
                 minus_phase_activity=self.input_states[RECURRENT].socket_template,
@@ -1302,7 +1302,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 execution_phase=None,
             )
             if self._target_included:
-                self.parameters.output_activity._set(self.input_states[TARGET].socket_template)
+                self.parameters.output_activity._set(self.input_states[TARGET].socket_template, context)
 
         # Initialize execution_phase as minus_phase
         if self.parameters.execution_phase._get(context) is None:

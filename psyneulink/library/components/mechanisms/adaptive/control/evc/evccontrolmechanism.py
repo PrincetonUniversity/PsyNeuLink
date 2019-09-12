@@ -935,7 +935,7 @@ class EVCControlMechanism(ControlMechanism):
             modulatory_signal._variable_spec = (OWNER_VALUE, i)
             self._modulatory_signals[i] = modulatory_signal
         self.defaults.value = np.tile(modulatory_signal.parameters.variable.default_value, (i+1, 1))
-        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value))
+        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
     def _instantiate_prediction_mechanisms(self, system:System_Base, context=None):
         """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in system
@@ -1076,7 +1076,7 @@ class EVCControlMechanism(ControlMechanism):
         predicted_input = {}
         for i, origin_mech in zip(range(len(system.origin_mechanisms)), system.origin_mechanisms):
             predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].defaults.variable
-        self.parameters.predicted_input._set(predicted_input)
+        self.parameters.predicted_input._set(predicted_input, context)
 
     def _instantiate_attributes_after_function(self, context=None):
         """Validate cost function"""

@@ -1297,7 +1297,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # For DefaultAllocationFunction, set defaults.value to have number of items equal to num modulatory_signals
         if isinstance(self.function, DefaultAllocationFunction):
             self.defaults.value = np.tile(self.function.value, (num_modulatory_signals, 1))
-            self.parameters.modulatory_allocation._set(copy.deepcopy(self.defaults.value))
+            self.parameters.modulatory_allocation._set(copy.deepcopy(self.defaults.value), context)
             self.function.num_modulatory_signals = num_modulatory_signals
 
         # For other functions, assume that if its value has:
@@ -1308,7 +1308,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         #     leave things alone, and allow any errant indices for modulatory_signals to be caught later.
         else:
             self.defaults.value = np.array(self.function.value)
-            self.parameters.value._set(copy.deepcopy(self.defaults.value))
+            self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
 
             len_fct_value = len(self.function.value)
 

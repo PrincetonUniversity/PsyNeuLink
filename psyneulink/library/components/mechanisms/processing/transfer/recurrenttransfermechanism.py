@@ -1127,7 +1127,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         hetero were None in the initialization call.
         :param function:
         """
-        self.parameters.previous_value._set(None)
+        self.parameters.previous_value._set(None, context)
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -1155,7 +1155,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             matrix = hetero.copy()
             np.fill_diagonal(matrix, diag)
 
-        self.parameters.matrix._set(matrix)
+        self.parameters.matrix._set(matrix, context)
 
         # 9/23/17 JDC: DOESN'T matrix arg default to something?
         # If no matrix was specified, then both AUTO and HETERO must be specified
