@@ -520,7 +520,7 @@ def _get_context(context:tc.any(ContextFlags, Context, str)):
     return context_flag
 
 
-def _get_time(component, context, execution_id=None):
+def _get_time(component, context):
     """Get time from Scheduler of System in which Component is being executed.
 
     Returns tuple with (run, trial, time_step) if being executed during Processing or Learning
@@ -564,14 +564,14 @@ def _get_time(component, context, execution_id=None):
         # # MODIFIED 7/15/19 OLD:
         # try:
         #     if execution_flags == ContextFlags.PROCESSING or not execution_flags:
-        #         t = system.scheduler_processing.clocks[execution_id].time
+        #         t = system.scheduler_processing.get_clock(context).time
         #         t = time(t.run, t.trial, t.pass_, t.time_step)
         #     elif execution_flags == ContextFlags.CONTROL:
-        #         t = system.scheduler_processing.clocks[execution_id].time
+        #         t = system.scheduler_processing.get_clock(context).time
         #         t = time(t.run, t.trial, t.pass_, t.time_step)
         #     elif execution_flags == ContextFlags.LEARNING:
         #         if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
-        #             t = system.scheduler_learning.clocks[execution_id].time
+        #             t = system.scheduler_learning.get_clock(context).time
         #             t = time(t.run, t.trial, t.pass_, t.time_step)
         #         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         #         # Add autoassociative learning mechanism + related projections to composition as processing components
@@ -582,14 +582,14 @@ def _get_time(component, context, execution_id=None):
         # MODIFIED 7/15/19 NEW:  ACCOMODATE LEARNING IN COMPOSITION DONE WITH scheduler_processing
         try:
             if execution_flags & (ContextFlags.PROCESSING | ContextFlags.LEARNING | ContextFlags.IDLE):
-                t = system.scheduler_processing.clocks[execution_id].time
+                t = system.scheduler_processing.get_clock(context).time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
             elif execution_flags & ContextFlags.CONTROL:
-                t = system.scheduler_processing.clocks[execution_id].time
+                t = system.scheduler_processing.get_clock(context).time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
             # elif execution_flags == ContextFlags.LEARNING:
             #     if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
-            #         t = system.scheduler_learning.clocks[execution_id].time
+            #         t = system.scheduler_learning.get_clock(context).time
             #         t = time(t.run, t.trial, t.pass_, t.time_step)
             #     # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
             #     # Add autoassociative learning mechanism + related projections to composition as processing components
@@ -619,6 +619,7 @@ _handle_external_context_arg_cache = defaultdict(dict)
 def handle_external_context(
     source=ContextFlags.COMMAND_LINE,
     execution_phase=ContextFlags.IDLE,
+    execution_id=None,
     **context_kwargs
 ):
     """
@@ -668,33 +669,34 @@ def handle_external_context(
             _handle_external_context_arg_cache[func][CONTEXT] = context_arg_index
 
         @functools.wraps(func)
-        def wrapper(*args, context=None, execution_id=None, **kwargs):
+        def wrapper(*args, context=None, **kwargs):
+            eid = execution_id
+
             if context is not None and not isinstance(context, Context):
                 try:
-                    execution_id = context.default_execution_id
+                    eid = context.default_execution_id
                 except AttributeError:
-                    execution_id = context
+                    eid = context
                 context = None
             else:
                 try:
                     if args[context_arg_index] is not None:
                         if isinstance(args[context_arg_index], Context):
                             context = args[context_arg_index]
-                            execution_id = context.execution_id
                         else:
                             try:
-                                execution_id = args[context_arg_index].default_execution_id
+                                eid = args[context_arg_index].default_execution_id
                             except AttributeError:
-                                execution_id = args[context_arg_index]
+                                eid = args[context_arg_index]
                             context = None
                 except (TypeError, IndexError):
                     pass
 
             if context is None:
                 context = Context(
+                    execution_id=eid,
                     source=source,
                     execution_phase=execution_phase,
-                    execution_id=execution_id,
                     **context_kwargs
                 )
                 try:
@@ -704,23 +706,14 @@ def handle_external_context(
                     pass
 
             try:
-                return func(*args, context=context, execution_id=execution_id, **kwargs)
+                return func(*args, context=context, **kwargs)
             except TypeError as e:
-                # we may want to decorate methods without execution_id parameter,
-                # but we should be able to handle either. additionally execution_id
-                # parameter may be passed as a non keyword arg in some cases
+                # context parameter may be passed as a positional arg
                 if (
-                    f"{func.__name__}() got an unexpected keyword argument 'execution_id'" not in str(e)
-                    and f"{func.__name__}() got multiple values for argument" not in str(e)
+                    f"{func.__name__}() got multiple values for argument"
+                    not in str(e)
                 ):
                     raise e
-                else:
-                    try:
-                        # context parameter may be passed as a positional arg
-                        return func(*args, context=context, **kwargs)
-                    except TypeError as e:
-                        if f"{func.__name__}() got multiple values for argument 'context'" not in str(e):
-                            raise e
 
             return func(*args, **kwargs)
 

@@ -2,6 +2,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection
 from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.globals.utilities import NodeRole
 
@@ -84,13 +85,12 @@ class PathwayComposition(Composition):
         call_before_pass=None,
         call_after_time_step=None,
         call_after_pass=None,
-        execution_id=None,
-        base_execution_id=None,
+        context=None,
+        base_context=Context(execution_id=None),
         clamp_input=SOFT_CLAMP,
         runtime_params=None,
         skip_initialization=False,
         bin_execute=False,
-        context=None,
     ):
 
         if isinstance(inputs, list):
@@ -101,11 +101,10 @@ class PathwayComposition(Composition):
                                                          call_before_time_step=call_before_time_step,
                                                          call_before_pass=call_before_pass,
                                                          call_after_time_step=call_after_time_step,
-                                                         call_after_pass=call_after_pass, execution_id=execution_id,
+                                                         call_after_pass=call_after_pass, context=context,
                                                          clamp_input=clamp_input,
                                                          runtime_params=runtime_params,
                                                          skip_initialization=skip_initialization,
                                                          bin_execute=bin_execute,
-                                                         context=context,
         )
         return output

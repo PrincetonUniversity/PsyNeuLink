@@ -1703,12 +1703,12 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.595)
 
-        T.integrator_function.reinitialize(0.9, execution_context=S)
+        T.integrator_function.reinitialize(0.9, context=S)
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.9)
         assert np.allclose(T.parameters.value.get(S), 0.595)
 
-        T.reinitialize(0.5, execution_context=S)
+        T.reinitialize(0.5, context=S)
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.5)
         assert np.allclose(T.parameters.value.get(S), 0.5)
@@ -1746,12 +1746,12 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.595, 0.595, 0.595])
 
-        T.integrator_function.reinitialize([0.9, 0.9, 0.9], execution_context=S)
+        T.integrator_function.reinitialize([0.9, 0.9, 0.9], context=S)
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.9, 0.9, 0.9])
         assert np.allclose(T.parameters.value.get(S), [0.595, 0.595, 0.595])
 
-        T.reinitialize([0.5, 0.5, 0.5], execution_context=S)
+        T.reinitialize([0.5, 0.5, 0.5], context=S)
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.5, 0.5, 0.5])
         assert np.allclose(T.parameters.value.get(S), [0.5, 0.5, 0.5])
@@ -1791,12 +1791,12 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.595, 0.595, 0.595])
 
-        T.integrator_function.reinitialize([0.9, 0.9, 0.9], execution_context=S)
+        T.integrator_function.reinitialize([0.9, 0.9, 0.9], context=S)
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.9, 0.9, 0.9])
         assert np.allclose(T.parameters.value.get(S), [0.595, 0.595, 0.595])
 
-        T.reinitialize(initial_val, execution_context=S)
+        T.reinitialize(initial_val, context=S)
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(S), initial_val)
         assert np.allclose(T.parameters.value.get(S), initial_val)
@@ -1834,7 +1834,7 @@ class TestIntegratorMode:
         assert T.integrator_function is integrator_function
 
         # Switch integrator_mode to False; confirm that T behaves correctly
-        T.parameters.integrator_mode.set(False, execution_context=S)
+        T.parameters.integrator_mode.set(False, context=S)
 
         assert T.parameters.integrator_mode.get(S) is False
 
@@ -1842,7 +1842,7 @@ class TestIntegratorMode:
         assert np.allclose(T.parameters.value.get(S), [[1.0]])
 
         # Switch integrator_mode BACK to True; confirm that T picks up where it left off
-        T.parameters.integrator_mode.set(True, execution_context=S)
+        T.parameters.integrator_mode.set(True, context=S)
 
         assert T.parameters.integrator_mode.get(S) is True
         assert T.has_integrated is True
@@ -1896,14 +1896,14 @@ class TestOnResumeIntegratorMode:
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
         assert np.allclose(T.parameters.value.get(C), [[1.25]])
 
-        T.parameters.integrator_mode.set(False, execution_context=C)    # Switch to "instantaneous mode"
+        T.parameters.integrator_mode.set(False, context=C)    # Switch to "instantaneous mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                               # Run in "instantaneous mode"
         # Trial 0: 1.0 * 1.0 = 1.0
         # Trial 1: 1.0 * 2.0 = 2.0
         assert np.allclose(T.parameters.value.get(C), [[2.0]])
 
-        T.parameters.integrator_mode.set(True, execution_context=C)     # Switch back to "integrator mode"
+        T.parameters.integrator_mode.set(True, context=C)     # Switch back to "integrator mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                               # Run in "integrator mode" and pick up at 1.25
         # Trial 0: 0.5*1.25 + 0.5*1.0 = 1.125 * 1.0 = 1.125
@@ -1922,14 +1922,14 @@ class TestOnResumeIntegratorMode:
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
         assert np.allclose(T.parameters.value.get(C), [[1.25]])
 
-        T.parameters.integrator_mode.set(False, execution_context=C)     # Switch to "instantaneous mode"
+        T.parameters.integrator_mode.set(False, context=C)     # Switch to "instantaneous mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                                # Run in "instantaneous mode"
         # Trial 0: 1.0 * 1.0 = 1.0
         # Trial 1: 1.0 * 2.0 = 2.0
         assert np.allclose(T.parameters.value.get(C), [[2.0]])
 
-        T.parameters.integrator_mode.set(True, execution_context=C)      # Switch back to "integrator mode"
+        T.parameters.integrator_mode.set(True, context=C)      # Switch back to "integrator mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                                # Run in "integrator mode" and pick up at 2.0
         # Trial 0: 0.5*2.0 + 0.5*1.0 = 1.5 * 1.0 = 1.5
@@ -1950,14 +1950,14 @@ class TestOnResumeIntegratorMode:
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
         assert np.allclose(T.parameters.value.get(C), [[1.25]])
 
-        T.parameters.integrator_mode.set(False, execution_context=C)                               # Switch to "instantaneous mode"
+        T.parameters.integrator_mode.set(False, context=C)                               # Switch to "instantaneous mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "instantaneous mode"
         # Trial 0: 1.0 * 1.0 = 1.0
         # Trial 1: 1.0 * 2.0 = 2.0
         assert np.allclose(T.parameters.value.get(C), [[2.0]])
 
-        T.parameters.integrator_mode.set(True, execution_context=C)                                # Switch back to "integrator mode"
+        T.parameters.integrator_mode.set(True, context=C)                                # Switch back to "integrator mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "integrator mode", pick up at 0.0
         # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5

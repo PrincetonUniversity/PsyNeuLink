@@ -530,7 +530,7 @@ When looking for values after a run, it's important to know the execution contex
         [[array([5.])]]
         >>> d.run({t: 10})
         [[array([10.])]]
-        >>> c.run({t: 20}, execution_id='custom execution id')
+        >>> c.run({t: 20}, context='custom execution id')
         [[array([20.])]]
 
         # context None
@@ -649,8 +649,8 @@ and recursively for all of the Component's `_dependent_components <Component._de
 other Components to function properly (beyond "standard" things like Component.function, \
 or Mechanism.input_states, as these are added in the proper classes' _dependent_components)
     - the intent is that with ``_dependent_components`` set properly, calling \
-    ``obj._initialize_from_context(new_execution_id, base_execution_id)`` should be sufficient to run obj \
-    under **new_execution_id**
+    ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
+    under **new_context**
     - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
 
 .. _Composition_TIming:
@@ -1527,7 +1527,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             executes the controller on every trial.
 
         default_execution_id
-            if no *execution_id* is specified in a call to run, this *execution_id* is used;  by default,
+            if no *context* is specified in a call to run, this *context* is used;  by default,
             it is the Composition's `name <Composition.name>`.
 
         execution_ids : set
@@ -1681,7 +1681,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.feedback_senders = set()
         self.feedback_receivers = set()
 
-        self._initialize_parameters(**param_defaults, retain_old_simulation_data=retain_old_simulation_data)
+        self._initialize_parameters(
+            **param_defaults,
+            retain_old_simulation_data=retain_old_simulation_data,
+            context=Context(source=ContextFlags.COMPOSITION)
+        )
 
         # Compiled resources
         self.__generated_node_wrappers = {}
@@ -4181,11 +4185,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return np.array(arr)
 
-    def _get_total_cost_of_control_allocation(self, control_allocation, execution_id, runtime_params, context):
+    def _get_total_cost_of_control_allocation(self, control_allocation, context, runtime_params):
         total_cost = 0.
         if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
 
-            base_control_allocation = self.reshape_control_signal(self.controller.parameters.value._get(execution_id))
+            base_control_allocation = self.reshape_control_signal(self.controller.parameters.value._get(context))
 
             candidate_control_allocation = self.reshape_control_signal(control_allocation)
 
@@ -4194,16 +4198,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if callable(self.controller.compute_reconfiguration_cost):
                 reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
                                                                                      base_control_allocation])
-                self.controller.reconfiguration_cost.set(reconfiguration_cost, execution_id)
+                self.controller.reconfiguration_cost.set(reconfiguration_cost, context)
 
             # Apply candidate control signal
             self.controller._apply_control_allocation(candidate_control_allocation,
-                                                                execution_id=execution_id,
+                                                                context=context,
                                                                 runtime_params=runtime_params,
-                                                                context=context)
+                                                                )
 
             # Get control signal costs
-            all_costs = self.controller.parameters.costs._get(execution_id) + [reconfiguration_cost]
+            all_costs = self.controller.parameters.costs._get(context) + [reconfiguration_cost]
             # Compute a total for the candidate control signal(s)
             total_cost = self.controller.combine_costs(all_costs)
         return total_cost
@@ -4214,8 +4218,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             control_allocation=None,
             num_simulation_trials=None,
             runtime_params=None,
-            base_execution_id=None,
-            execution_id=None,
+            base_context=Context(execution_id=None),
             context=None,
             execution_mode=False,
     ):
@@ -4226,7 +4229,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            reset to pre-simulation values at the end of the simulation.
         """
         # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
-        total_cost = self._get_total_cost_of_control_allocation(control_allocation, execution_id, runtime_params, context)
+        total_cost = self._get_total_cost_of_control_allocation(control_allocation, context, runtime_params)
 
         # Build input dictionary for simulation
         inputs = self._build_predicted_inputs_dict(predicted_input)
@@ -4242,11 +4245,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.add_flag(ContextFlags.SIMULATION)
         context.remove_flag(ContextFlags.CONTROL)
         self.run(inputs=inputs,
-                 execution_id=execution_id,
+                 context=context,
                  runtime_params=runtime_params,
                  num_trials=num_simulation_trials,
                  animate=animate,
-                 context=context,
                  bin_execute=execution_mode,
                  skip_initialization=True,
                  )
@@ -4258,14 +4260,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Store simulation results on "base" composition
         if self.initialization_status != ContextFlags.INITIALIZING:
             try:
-                self.parameters.simulation_results._get(base_execution_id).append(
-                    self.get_output_values(execution_id))
+                self.parameters.simulation_results._get(base_context).append(
+                    self.get_output_values(context))
             except AttributeError:
-                self.parameters.simulation_results._set([self.get_output_values(execution_id)], base_execution_id)
+                self.parameters.simulation_results._set([self.get_output_values(context)], base_context)
 
         # Update input states in order to get correct value for "outcome" (from objective mech)
-        self.controller._update_input_states(execution_id, runtime_params, context)
-        outcome = self.controller.input_state.parameters.value._get(execution_id)
+        self.controller._update_input_states(context, runtime_params)
+        outcome = self.controller.input_state.parameters.value._get(context)
 
         # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
         net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
@@ -4278,7 +4280,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ******************************************************************************************************************
 
     @tc.typecheck
-    @handle_external_context()
+    @handle_external_context(execution_id=NotImplemented)
     def show_graph(self,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             STATE_FUNCTION_PARAMS, ROLES, ALL))=False,
@@ -4304,7 +4306,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    feedback_shape = 'septagon',
                    cim_shape='square',
                    output_fmt:tc.enum('pdf','gv','jupyter','gif')='pdf',
-                   execution_id=NotImplemented,
                    context=None,
                    **kwargs):
         """
@@ -4328,7 +4329,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            feedback_shape = 'septagon',       \
            cim_shape='square',                \
            output_fmt='pdf',                  \
-           execution_id=None)
+           context=None)
 
         Show graphical display of Components in a Composition's graph.
 
@@ -5217,8 +5218,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         INITIAL_FRAME = "INITIAL_FRAME"
 
-        if execution_id is NotImplemented:
-            execution_id = self.default_execution_id
+        if context.execution_id is NotImplemented:
+            context.execution_id = self.default_execution_id
 
         # For backward compatibility
         if 'show_model_based_optimizer' in kwargs:
@@ -5234,8 +5235,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         active_items = active_items or []
         if active_items:
             active_items = convert_to_list(active_items)
-            if (self.scheduler_processing.get_clock(execution_id).time.run >= self._animate_num_runs or
-                    self.scheduler_processing.get_clock(execution_id).time.trial >= self._animate_num_trials):
+            if (self.scheduler_processing.get_clock(context).time.run >= self._animate_num_runs or
+                    self.scheduler_processing.get_clock(context).time.trial >= self._animate_num_trials):
                 return
 
             for item in active_items:
@@ -5391,7 +5392,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Generate images for animation
         elif output_fmt == 'gif':
             if self.active_item_rendered or INITIAL_FRAME in active_items:
-                self._generate_gifs(G, active_items, execution_id, context)
+                self._generate_gifs(G, active_items, context)
 
         # Return graph to show in jupyter
         elif output_fmt == 'jupyter':
@@ -5641,7 +5642,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return name
 
-    def _set_up_animation(self, execution_id):
+    def _set_up_animation(self, context):
 
         self._component_animation_execution_count = None
 
@@ -5696,7 +5697,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               "a dictionary of argument specifications for its {} method".
                               format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
 
-    def _animate_execution(self, active_items, execution_id, context):
+    def _animate_execution(self, active_items, context):
         if self._component_animation_execution_count is None:
             self._component_animation_execution_count = 0
         else:
@@ -5704,11 +5705,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.show_graph(active_items=active_items,
                         **self._animate,
                         output_fmt='gif',
-                        execution_id=execution_id,
                         context=context,
                         )
 
-    def _generate_gifs(self, G, active_items, execution_id, context):
+    def _generate_gifs(self, G, active_items, context):
 
         def create_phase_string(phase):
             return f'%16s' % phase + ' - '
@@ -5725,7 +5725,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         G.format = 'gif'
         execution_phase = context.execution_phase
-        time = self.scheduler_processing.get_clock(execution_id).time
+        time = self.scheduler_processing.get_clock(context).time
         run_num = time.run
         trial_num = time.trial
 
@@ -5737,7 +5737,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             phase_string = create_phase_string('Processing Phase')
             time_string = create_time_string(time, 'TIME')
         # elif ContextFlags.LEARNING in execution_phase:
-        #     time = self.scheduler_learning.get_clock(execution_id).time
+        #     time = self.scheduler_learning.get_clock(context).time
         #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
         #         format(run_num, time.trial, time.pass_, time.time_step)
         #     phase_string = 'Learning Phase - '
@@ -5799,9 +5799,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             skip_initialization=False,
             animate=False,
-            execution_id=None,
-            base_execution_id=None,
-            context=None):
+            context=None,
+            base_context=Context(execution_id=None),
+            ):
         """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.  See `Run` for details of formatting input specifications. See `Run` for details of
         formatting input specifications. Use **animate** to generate a gif of the execution sequence.
@@ -5818,12 +5818,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 the scheduler object that owns the conditions that will instruct the execution of the Composition.
                 If not specified, the Composition will use its automatically generated scheduler.
 
-            execution_id
-                execution_id will be set to self.default_execution_id if unspecified
+            context
+                context will be set to self.default_execution_id if unspecified
 
-            base_execution_id
-                the execution_id corresponding to the execution context from which this execution will be initialized,
-                if values currently do not exist for **execution_id**
+            base_context
+                the context corresponding to the execution context from which this execution will be initialized,
+                if values currently do not exist for **context**
 
             num_trials : int
                 typically, the composition will infer the number of trials from the length of its input specification.
@@ -5965,14 +5965,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             reinitialize_values = {}
 
         for node in reinitialize_values:
-            node.reinitialize(*reinitialize_values[node], execution_context=execution_id, context=context)
+            node.reinitialize(*reinitialize_values[node], context=context)
 
         # MODIFIED 8/27/19 OLD:
         # try:
         #     if ContextFlags.SIMULATION not in context.execution_phase:
         #         self._analyze_graph()
         # except AttributeError:
-        #     # if context is None, it has not been created for this execution_id yet, so it is not
+        #     # if context is None, it has not been created for this context yet, so it is not
         #     # in a simulation
         #     self._analyze_graph()
         # MODIFIED 8/27/19 NEW:
@@ -5986,7 +5986,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if ContextFlags.SIMULATION not in context.execution_phase:
                 self._analyze_graph(scheduler_processing)
         except AttributeError:
-            # if context is None, it has not been created for this execution_id yet,
+            # if context is None, it has not been created for this context yet,
             # so it is not in a simulation
             self._analyze_graph(scheduler_processing)
         # MODIFIED 8/27/19 END
@@ -6004,15 +6004,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             animate = {}
         self._animate = animate
         if self._animate is not False:
-            self._set_up_animation(execution_id)
+            self._set_up_animation(context)
 
         # SET UP EXECUTION -----------------------------------------------
 
         results = []
 
-        execution_id = self._assign_execution_ids(execution_id, context)
+        self._assign_execution_ids(context)
 
-        scheduler_processing._init_counts(execution_id=execution_id)
+        scheduler_processing._init_counts(execution_id=context.execution_id)
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
@@ -6056,15 +6056,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             num_trials = num_inputs_sets
 
-        scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
+        scheduler_processing._reset_counts_total(TimeScale.RUN, context.execution_id)
 
         # KDM 3/29/19: run the following not only during LLVM Run compilation, due to bug where TimeScale.RUN
         # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
         # called repeatedly (this init is repeated in Composition.execute)
-        # initialize from base context but don't overwrite any values already set for this execution_id
+        # initialize from base context but don't overwrite any values already set for this context
         if (not skip_initialization
             and (context is None or ContextFlags.SIMULATION not in context.execution_phase)):
-            self._initialize_from_context(execution_id, base_execution_id, override=False)
+            self._initialize_from_context(context, base_context, override=False)
 
         context.composition = self
 
@@ -6076,20 +6076,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             assert not is_simulation
             try:
                 if bin_execute is True or bin_execute.startswith('LLVM'):
-                    _comp_ex = pnlvm.CompExecution(self, [execution_id])
+                    _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
                     results += _comp_ex.run(inputs, num_trials, num_inputs_sets,autodiff_stimuli=autodiff_stimuli)
                 elif bin_execute.startswith('PTX'):
-                    self.__ptx_initialize(execution_id)
-                    EX = self._compilation_data.ptx_execution._get(execution_id)
+                    self.__ptx_initialize(context)
+                    EX = self._compilation_data.ptx_execution._get(context)
                     results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
 
-                full_results = self.parameters.results._get(execution_id)
+                full_results = self.parameters.results._get(context)
                 if full_results is None:
                     full_results = results
                 else:
                     full_results.extend(results)
 
-                self.parameters.results._set(full_results, execution_id)
+                self.parameters.results._set(full_results, context)
                 # KAM added the [-1] index after changing Composition run()
                 # behavior to return only last trial of run (11/7/18)
                 self.most_recent_context = context
@@ -6111,11 +6111,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Execute call before trial "hook" (user defined function)
             if call_before_trial:
-                call_with_pruned_args(call_before_trial, execution_context=execution_id)
+                call_with_pruned_args(call_before_trial, context=context)
 
             if termination_processing[TimeScale.RUN].is_satisfied(
                 scheduler=scheduler_processing,
-                execution_context=execution_id
+                context=context
             ):
                 break
 
@@ -6143,10 +6143,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_autodiff_stimuli[node] = autodiff_stimuli[node]
 
             for node in self.nodes:
-                if hasattr(node, "reinitialize_when") and node.parameters.has_initializers._get(execution_id):
+                if hasattr(node, "reinitialize_when") and node.parameters.has_initializers._get(context):
                     if node.reinitialize_when.is_satisfied(scheduler=self.scheduler_processing,
-                                                           execution_context=execution_id):
-                        node.reinitialize(None, execution_context=execution_id, context=context)
+                                                           context=context):
+                        node.reinitialize(None, context=context)
 
             # execute processing
             # pass along the stimuli for this trial
@@ -6158,13 +6158,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         call_before_pass=call_before_pass,
                                         call_after_time_step=call_after_time_step,
                                         call_after_pass=call_after_pass,
-                                        execution_id=execution_id,
-                                        base_execution_id=base_execution_id,
+                                        context=context,
+                                        base_context=base_context,
                                         clamp_input=clamp_input,
                                         runtime_params=runtime_params,
                                         skip_initialization=True,
                                         bin_execute=bin_execute,
-                                        context=context)
+                                        )
 
             # ---------------------------------------------------------------------------------
             # store the result of this execute in case it will be the final result
@@ -6182,25 +6182,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if self.controller is not None:
                         # if any other special parameters store simulation info that needs to be cleaned up
                         # consider dedicating a function to it here
-                        # this will not be caught above because it resides in the base context (execution_id)
+                        # this will not be caught above because it resides in the base context (context)
                         if not self.parameters.simulation_results.retain_old_simulation_data:
-                            self.parameters.simulation_results._get(execution_id).clear()
+                            self.parameters.simulation_results._get(context).clear()
 
                         if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
-                            self.controller.parameters.simulation_ids._get(execution_id).clear()
+                            self.controller.parameters.simulation_ids._get(context).clear()
 
             if call_after_trial:
-                call_with_pruned_args(call_after_trial, execution_context=execution_id)
+                call_with_pruned_args(call_after_trial, context=context)
 
-        scheduler_processing.clocks[execution_id]._increment_time(TimeScale.RUN)
+        scheduler_processing.get_clock(context)._increment_time(TimeScale.RUN)
 
-        full_results = self.parameters.results._get(execution_id)
+        full_results = self.parameters.results._get(context)
         if full_results is None:
             full_results = results
         else:
             full_results.extend(results)
 
-        self.parameters.results._set(full_results, execution_id)
+        self.parameters.results._set(full_results, context)
 
         self.most_recent_context = context
 
@@ -6232,13 +6232,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_before_pass=None,
             call_after_time_step=None,
             call_after_pass=None,
-            execution_id=None,
-            base_execution_id=None,
+            context=None,
+            base_context=Context(execution_id=None),
             clamp_input=SOFT_CLAMP,
             runtime_params=None,
             skip_initialization=False,
             bin_execute=False,
-            context=None):
+            ):
         """
             Passes inputs to any Nodes receiving inputs directly from the user (via the "inputs" argument) then
             coordinates with the Scheduler to execute sets of nodes that are eligible to execute until
@@ -6256,28 +6256,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 the scheduler object that owns the conditions that will instruct the execution of this Composition
                 If not specified, the Composition will use its automatically generated scheduler.
 
-            execution_id
-                execution_id will be set to self.default_execution_id if unspecified
+            context
+                context will be set to self.default_execution_id if unspecified
 
-            base_execution_id
-                the execution_id corresponding to the execution context from which this execution will be initialized,
-                if values currently do not exist for **execution_id**
+            base_context
+                the context corresponding to the execution context from which this execution will be initialized,
+                if values currently do not exist for **context**
 
             call_before_time_step : callable
                 called before each `TIME_STEP` is executed
-                passed the current *execution_id* (but it is not necessary for your callable to take)
+                passed the current *context* (but it is not necessary for your callable to take)
 
             call_after_time_step : callable
                 called after each `TIME_STEP` is executed
-                passed the current *execution_id* (but it is not necessary for your callable to take)
+                passed the current *context* (but it is not necessary for your callable to take)
 
             call_before_pass : callable
                 called before each `PASS` is executed
-                passed the current *execution_id* (but it is not necessary for your callable to take)
+                passed the current *context* (but it is not necessary for your callable to take)
 
             call_after_pass : callable
                 called after each `PASS` is executed
-                passed the current *execution_id* (but it is not necessary for your callable to take)
+                passed the current *context* (but it is not necessary for your callable to take)
 
             Returns
             ---------
@@ -6306,7 +6306,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         runtime_params = self._parse_runtime_params(runtime_params)
 
         # Assign the same execution_ids to all nodes in the Composition and get it (if it was None)
-        execution_id = self._assign_execution_ids(execution_id, context)
+        self._assign_execution_ids(context)
 
         context.composition = self
 
@@ -6320,38 +6320,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             termination_processing = self.termination_processing
 
         # Skip initialization if possible (for efficiency):
-        # - and(execution_id and context have not changed
+        # - and(context has not changed
         # -     structure of the graph has not changed
         # -     not a nested composition
         # -     its not a simulation)
         # - or(gym forage env is being used)
         # (e.g., when run is called externally repeated for the same environment)
         # KAM added HACK below "or self.env is None" in order to merge in interactive inputs fix for speed improvement
-        # TBI: Clean way to call _initialize_from_context if execution_id has not changed, BUT composition has changed
+        # TBI: Clean way to call _initialize_from_context if context has not changed, BUT composition has changed
         # for example:
         # comp.run()
         # comp.add_node(new_node)
         # comp.run().
-        # execution_id has not changed on the comp, BUT new_node's execution id needs to be set from None --> ID
-        if self.most_recent_context.execution_id != execution_id or self.env is None:
-            # initialize from base context but don't overwrite any values already set for this execution_id
+        # context has not changed on the comp, BUT new_node's execution id needs to be set from None --> ID
+        if self.most_recent_context != context or self.env is None:
+            # initialize from base context but don't overwrite any values already set for this context
             if (
                 not skip_initialization
                 and not nested
                 or context is None
                 and context.execution_phase is not ContextFlags.SIMULATION
             ):
-                self._initialize_from_context(execution_id, base_execution_id, override=False)
+                self._initialize_from_context(context, base_context, override=False)
                 context.composition = self
 
         # Generate first frame of animation without any active_items
         if self._animate is not False:
-            # If execution_id fails, the scheduler has no data for it yet.
+            # If context fails, the scheduler has no data for it yet.
             # It also may be the first, so fall back to default execution_id
             try:
-                self._animate_execution(INITIAL_FRAME, execution_id, context)
+                self._animate_execution(INITIAL_FRAME, context)
             except KeyError:
-                self._animate_execution(INITIAL_FRAME, self.default_execution_id, context)
+                old_eid = context.execution_id
+                context.execution_id = self.default_execution_id
+                self._animate_execution(INITIAL_FRAME, context)
+                context.execution_id = old_eid
 
         # EXECUTE INPUT CIM ********************************************************************************************
 
@@ -6374,13 +6377,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # check that inputs are specified - autodiff does not in some cases
             if ContextFlags.SIMULATION in context.execution_phase and inputs is not None:
                 inputs = self._adjust_execution_stimuli(inputs)
-                self._assign_values_to_input_CIM(inputs, execution_id=execution_id, context=context)
+                self._assign_values_to_input_CIM(inputs, context=context)
             else:
-                self.input_CIM.execute(execution_id=execution_id, context=context)
-            self.parameter_CIM.execute(execution_id=execution_id, context=context)
+                self.input_CIM.execute(context=context)
+            self.parameter_CIM.execute(context=context)
         else:
             inputs = self._adjust_execution_stimuli(inputs)
-            self._assign_values_to_input_CIM(inputs, execution_id=execution_id)
+            self._assign_values_to_input_CIM(inputs, context=context)
 
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping
@@ -6396,7 +6399,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
         #      (NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THAT)
         if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
-            self._animate_execution(self.input_CIM, execution_id, context)
+            self._animate_execution(self.input_CIM, context)
         # FIX: END
         context.remove_flag(ContextFlags.PROCESSING)
 
@@ -6414,12 +6417,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert not is_simulation
                 try:
                     if bin_execute is True or bin_execute.startswith('LLVM'):
-                        _comp_ex = pnlvm.CompExecution(self, [execution_id])
+                        _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
                         _comp_ex.execute(inputs)
                         return _comp_ex.extract_node_output(self.output_CIM)
                     elif bin_execute.startswith('PTX'):
-                        self.__ptx_initialize(execution_id)
-                        __execution = self._compilation_data.ptx_execution._get(execution_id)
+                        self.__ptx_initialize(context)
+                        __execution = self._compilation_data.ptx_execution._get(context)
                         __execution.cuda_execute(inputs)
                         return __execution.extract_node_output(self.output_CIM)
                 except Exception as e:
@@ -6439,7 +6442,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for m in mechanisms:
                     self._get_node_wrapper(m)
 
-                _comp_ex = pnlvm.CompExecution(self, [execution_id])
+                _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
                 # Compile all mechanism wrappers
                 for m in mechanisms:
                     _comp_ex._set_bin_node(m)
@@ -6458,7 +6461,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if (self.enable_controller and
             self.controller_mode is BEFORE and
             self.controller_condition.is_satisfied(scheduler=execution_scheduler,
-                                                   execution_context=execution_id)):
+                                                   context=context)):
 
             # control phase
             # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
@@ -6470,7 +6473,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                     # FIX: END REMOVE
                     context.add_flag(ContextFlags.PROCESSING)
-                    self.controller.execute(execution_id=execution_id, context=context)
+                    self.controller.execute(context=context)
 
                 if bin_execute:
                     _comp_ex.execute_node(self.controller)
@@ -6480,7 +6483,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Animate controller (before execution)
                 context.add_flag(ContextFlags.CONTROL)
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
-                    self._animate_execution(self.controller, execution_id, context)
+                    self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
 
         # EXECUTE (each execution_set) *********************************************************************************
@@ -6494,12 +6497,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #              WHY DO BOTH?  WHY NOT if-else?
 
         if call_before_pass:
-            call_with_pruned_args(call_before_pass, execution_context=execution_id)
+            call_with_pruned_args(call_before_pass, context=context)
 
         # GET execution_set -------------------------------------------------------------------------
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
         for next_execution_set in execution_scheduler.run(termination_conds=termination_processing,
-                                                          execution_id=execution_id,
+                                                          context=context,
                                                           skip_trial_time_increment=True,
                                                           ):
 
@@ -6508,31 +6511,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: 6/12/19 WHY IS call_*after*_pass BEING CALLED BEFORE THE PASS?
             if call_after_pass:
                 if next_pass_after == \
-                        execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS,
+                        execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
                                                                                           TimeScale.TRIAL):
                     logger.debug('next_pass_after {0}\tscheduler pass {1}'.
                                  format(next_pass_after,
-                                        execution_scheduler.clocks[
-                                            execution_id].get_total_times_relative(
+                                        execution_scheduler.get_clock(
+                                            context).get_total_times_relative(
                                                 TimeScale.PASS, TimeScale.TRIAL)))
-                    call_with_pruned_args(call_after_pass, execution_context=execution_id)
+                    call_with_pruned_args(call_after_pass, context=context)
                     next_pass_after += 1
 
             if call_before_pass:
                 if next_pass_before == \
-                        execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS,
+                        execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
                                                                                           TimeScale.TRIAL):
-                    call_with_pruned_args(call_before_pass, execution_context=execution_id)
+                    call_with_pruned_args(call_before_pass, context=context)
                     logger.debug('next_pass_before {0}\tscheduler pass {1}'.
                                  format(next_pass_before,
-                                        execution_scheduler.clocks[
-                                            execution_id].get_total_times_relative(
+                                        execution_scheduler.get_clock(
+                                            context).get_total_times_relative(
                                                 TimeScale.PASS,
                                                 TimeScale.TRIAL)))
                     next_pass_before += 1
 
             if call_before_time_step:
-                call_with_pruned_args(call_before_time_step, execution_context=execution_id)
+                call_with_pruned_args(call_before_time_step, context=context)
 
             # MANAGE EXECUTION OF FEEDBACK / CYCLIC GRAPHS ------------------------------------------------
             # Set up storage of all node values *before* the start of each timestep
@@ -6552,7 +6555,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if self._animate is not False and self._animate_unit is EXECUTION_SET:
-                self._animate_execution(next_execution_set, execution_id, context)
+                self._animate_execution(next_execution_set, context)
 
             # EXECUTE (each node) --------------------------------------------------------------------------
 
@@ -6561,7 +6564,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Store values of all nodes in this execution_set for use by other nodes in the execution set
                 #    throughout this timestep (e.g., for recurrent Projections)
-                frozen_values[node] = node.get_output_values(execution_id)
+                frozen_values[node] = node.get_output_values(context)
 
                 # FIX: 6/12/19 Deprecate?
                 # Handle input clamping
@@ -6570,10 +6573,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if node in hard_clamp_inputs:
                             # clamp = HARD_CLAMP --> "turn off" recurrent projection
                             if hasattr(node, "recurrent_projection"):
-                                node.recurrent_projection.sender.parameters.value._set([0.0], execution_id)
+                                node.recurrent_projection.sender.parameters.value._set([0.0], context)
                         elif node in no_clamp_inputs:
                             for input_state in node.input_states:
-                                self.input_CIM_states[input_state][1].parameters.value._set(0.0, execution_id)
+                                self.input_CIM_states[input_state][1].parameters.value._set(0.0, context)
 
                 # EXECUTE A MECHANISM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -6585,7 +6588,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for param in runtime_params[node]:
                             if runtime_params[node][param][1].is_satisfied(scheduler=execution_scheduler,
                                                # KAM 5/15/18 - not sure if this will always be the correct execution id:
-                                                                           execution_context=execution_id):
+                                                                           context=context):
                                 execution_runtime_params[param] = runtime_params[node][param][0]
 
                     # Set context.execution_phase
@@ -6609,37 +6612,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if node is not self.controller:
                             if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
                                 for state in node.input_states:
-                                    state._update(execution_id=execution_id,
-                                                 context=context)
+                                    state._update(context=context)
                             node.execute(
-                                execution_id=execution_id,
+                                context=context,
                                 runtime_params=execution_runtime_params,
-                                context=context
+
                             )
 
                     # Reset runtime_params for node and its function if specified
-                        if execution_id in node._runtime_params_reset:
-                            for key in node._runtime_params_reset[execution_id]:
-                                node._set_parameter_value(key, node._runtime_params_reset[execution_id][key],
-                                                          execution_id)
-                        node._runtime_params_reset[execution_id] = {}
+                        if context.execution_id in node._runtime_params_reset:
+                            for key in node._runtime_params_reset[context.execution_id]:
+                                node._set_parameter_value(key, node._runtime_params_reset[context.execution_id][key],
+                                                          context)
+                        node._runtime_params_reset[context.execution_id] = {}
 
-                        if execution_id in node.function._runtime_params_reset:
-                            for key in node.function._runtime_params_reset[execution_id]:
+                        if context.execution_id in node.function._runtime_params_reset:
+                            for key in node.function._runtime_params_reset[context.execution_id]:
                                 node.function._set_parameter_value(
                                         key,
-                                        node.function._runtime_params_reset[execution_id][key],
-                                        execution_id)
+                                        node.function._runtime_params_reset[context.execution_id][key],
+                                        context)
 
-                        node.function._runtime_params_reset[execution_id] = {}
+                        node.function._runtime_params_reset[context.execution_id] = {}
                     #
                     # # TEST PRINT 7/22/19
-                    # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(execution_id)}'
-                    #       f'\n\tvalue: {node.parameters.value.get(execution_id)}')
+                    # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(context)}'
+                    #       f'\n\tvalue: {node.parameters.value.get(context)}')
 
                     # # TEST PRINT 7/22/19
-                    # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(execution_id)}'
-                    #       f'\n\tvalue: {node.parameters.value.get(execution_id)}')
+                    # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(context)}'
+                    #       f'\n\tvalue: {node.parameters.value.get(context)}')
 
                     # Set execution_phase for node's context back to IDLE
                     if self.enable_learning:
@@ -6660,10 +6662,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             data = _comp_ex.extract_frozen_node_output(srnode)
                             for i, v in enumerate(data):
                                 # This sets frozen values
-                                srnode.output_states[i].parameters.value._set(v, execution_id, skip_history=True,
+                                srnode.output_states[i].parameters.value._set(v, context, skip_history=True,
                                                                              skip_log=True)
 
-                    # Pass outer execution_id to nested Composition
+                    # Pass outer context to nested Composition
                     context.composition = node
                     if ContextFlags.SIMULATION in context.execution_phase:
                         is_simulating = True
@@ -6682,12 +6684,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Autodiff execution
                     if pytorch_enabled:
                         ret = node.execute(inputs=autodiff_stimuli[node],
-                                           execution_id=execution_id,
                                            context=context)
                     # Standard execution
                     else:
-                        ret = node.execute(execution_id=execution_id,
-                                           context=context)
+                        ret = node.execute(context=context)
 
                     if is_simulating:
                         context.add_flag(ContextFlags.SIMULATION)
@@ -6700,12 +6700,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         _comp_ex.insert_node_output(node, ret)
                         for i, v in enumerate(ret):
                             # Set current output. This will be stored to "new_values" below
-                            node.output_CIM.output_states[i].parameters.value._set(v, execution_id, skip_history=True,
+                            node.output_CIM.output_states[i].parameters.value._set(v, context, skip_history=True,
                                                                                   skip_log=True)
 
                 # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 if self._animate is not False and self._animate_unit is COMPONENT:
-                    self._animate_execution(node, execution_id, context)
+                    self._animate_execution(node, context)
 
 
                 # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -6717,24 +6717,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if node in pulse_clamp_inputs:
                             for input_state in node.input_states:
                                 # clamp = None --> "turn off" input node
-                                self.input_CIM_states[input_state][1].parameters.value._set(0, execution_id)
+                                self.input_CIM_states[input_state][1].parameters.value._set(0, context)
 
                 # Store new value generated by node,
                 #    then set back to frozen value for use by other nodes in execution_set
-                new_values[node] = node.get_output_values(execution_id)
+                new_values[node] = node.get_output_values(context)
                 for i in range(len(node.output_states)):
-                    node.output_states[i].parameters.value._set(frozen_values[node][i], execution_id,
+                    node.output_states[i].parameters.value._set(frozen_values[node][i], context,
                                                                skip_history=True, skip_log=True)
 
 
             # Set all nodes to new values
             for node in next_execution_set:
                 for i in range(len(node.output_states)):
-                    node.output_states[i].parameters.value._set(new_values[node][i], execution_id,
+                    node.output_states[i].parameters.value._set(new_values[node][i], context,
                                                                skip_history=True, skip_log=True)
 
             if call_after_time_step:
-                call_with_pruned_args(call_after_time_step, execution_context=execution_id)
+                call_with_pruned_args(call_after_time_step, context=context)
 
         context.remove_flag(ContextFlags.PROCESSING)
 
@@ -6745,19 +6745,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
                 matrix_parameter_state = projection.parameter_states[MATRIX]
                 if any([lp for lp in matrix_parameter_state.mod_afferents if lp.learning_enabled == AFTER]):
-                    matrix_parameter_state._update(execution_id=execution_id,
-                                                                context=context)
+                    matrix_parameter_state._update(context=context)
             context.remove_flag(ContextFlags.LEARNING)
 
         if call_after_pass:
-            call_with_pruned_args(call_after_pass, execution_context=execution_id)
+            call_with_pruned_args(call_after_pass, context=context)
 
 
         # Animate output_CIM
         # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
         #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
         if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
-            self._animate_execution(self.output_CIM, execution_id, context)
+            self._animate_execution(self.output_CIM, context)
         # FIX: END
 
         # EXECUTE CONTROLLER (if controller_mode == AFTER) ************************************************************
@@ -6765,7 +6764,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if (self.enable_controller and
                 self.controller_mode == AFTER and
                 self.controller_condition.is_satisfied(scheduler=execution_scheduler,
-                                                       execution_context=execution_id)):
+                                                       context=context)):
             # control phase
             if (
                     self.initialization_status != ContextFlags.INITIALIZING
@@ -6773,7 +6772,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             ):
                 context.add_flag(ContextFlags.CONTROL)
                 if self.controller and not bin_execute:
-                    self.controller.execute(execution_id=execution_id, context=context)
+                    self.controller.execute(context=context)
 
                 if bin_execute:
                     _comp_ex.freeze_values()
@@ -6783,11 +6782,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Animate controller (after execution)
                 if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
-                    self._animate_execution(self.controller, execution_id, context)
+                    self._animate_execution(self.controller, context)
 
                 context.remove_flag(ContextFlags.CONTROL)
 
-        execution_scheduler.clocks[execution_id]._increment_time(TimeScale.TRIAL)
+        execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
         # REPORT RESULTS ***********************************************************************************************
 
@@ -6798,22 +6797,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return _comp_ex.extract_node_output(self.output_CIM)
 
         context.add_flag(ContextFlags.PROCESSING)
-        self.output_CIM.execute(execution_id=execution_id, context=context)
+        self.output_CIM.execute(context=context)
         context.remove_flag(ContextFlags.PROCESSING)
 
         output_values = []
         for state in self.output_CIM.output_states:
-            output_values.append(state.parameters.value._get(execution_id))
+            output_values.append(state.parameters.value._get(context))
 
         return output_values
 
-    @handle_external_context()
-    def reinitialize(self, values, execution_context=NotImplemented, context=None):
-        if execution_context is NotImplemented:
-            execution_context = self.most_recent_context.execution_id
+    @handle_external_context(execution_id=NotImplemented)
+    def reinitialize(self, values, context=NotImplemented):
+        if context.execution_id is NotImplemented:
+            context.execution_id = self.most_recent_context.execution_id
 
         for i in range(self.stateful_nodes):
-            self.stateful_nodes[i].reinitialize(values[i], execution_context=execution_context, context=context)
+            self.stateful_nodes[i].reinitialize(values[i], context=context)
 
     def disable_all_history(self):
         """
@@ -6997,7 +6996,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
-    def _assign_values_to_input_CIM(self, inputs, execution_id=None, context=None):
+    def _assign_values_to_input_CIM(self, inputs, context=None):
         """
             Assign values from input dictionary to the InputStates of the Input CIM, then execute the Input CIM
 
@@ -7027,9 +7026,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             build_CIM_input.append(value)
 
-        self.input_CIM.execute(build_CIM_input, execution_id=execution_id, context=context)
+        self.input_CIM.execute(build_CIM_input, context=context)
 
-    def _assign_execution_ids(self, execution_id=None, context=None):
+    def _assign_execution_ids(self, context=None):
         """
             assigns the same execution id to each Node in the composition's processing graph as well as the CIMs.
             he execution id is either specified in the user's call to run(), or from the Composition's
@@ -7037,15 +7036,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         # Traverse processing graph and assign one uuid to all of its nodes
-        if execution_id is None:
-            execution_id = self.default_execution_id
+        if context.execution_id is None:
+            context.execution_id = self.default_execution_id
 
-        if execution_id not in self.execution_ids:
-            self.execution_ids.add(execution_id)
-
-        context.execution_id = execution_id
-
-        return execution_id
+        if context.execution_id not in self.execution_ids:
+            self.execution_ids.add(context.execution_id)
 
     def _identify_clamp_inputs(self, list_type, input_type, origins):
         # clamp type of this list is same as the one the user set for the whole composition; return all nodes
@@ -7115,20 +7110,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             data.append(nested_data)
         return pnlvm.ir.LiteralStructType(data)
 
-    def _get_state_initializer(self, execution_id=None, simulation=False):
-        mech_contexts = (tuple(m._get_state_initializer(execution_id=execution_id))
+    def _get_state_initializer(self, context=None, simulation=False):
+        mech_contexts = (tuple(m._get_state_initializer(context=context))
                          for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_contexts = (tuple(p._get_state_initializer(execution_id=execution_id)) for p in self.projections)
+        proj_contexts = (tuple(p._get_state_initializer(context=context)) for p in self.projections)
         return (tuple(mech_contexts), tuple(proj_contexts))
 
-    def _get_param_initializer(self, execution_id, simulation=False):
-        mech_params = (tuple(m._get_param_initializer(execution_id))
+    def _get_param_initializer(self, context, simulation=False):
+        mech_params = (tuple(m._get_param_initializer(context))
                        for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_params = (tuple(p._get_param_initializer(execution_id)) for p in self.projections)
+        proj_params = (tuple(p._get_param_initializer(context)) for p in self.projections)
         return (tuple(mech_params), tuple(proj_params))
 
-    def _get_flattened_controller_output(self, execution_id):
-        controller_data = [os.parameters.value._get(execution_id) for os in self.controller.output_states]
+    def _get_flattened_controller_output(self, context):
+        controller_data = [os.parameters.value._get(context) for os in self.controller.output_states]
         # This is an ugly hack to remove 2d arrays
         try:
             controller_data = [[c[0][0]] for c in controller_data]
@@ -7136,11 +7131,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pass
         return controller_data
 
-    def _get_data_initializer(self, execution_id=None):
-        output = [(os.parameters.value._get(execution_id) for os in m.output_states) for m in self._all_nodes]
+    def _get_data_initializer(self, context=None):
+        output = [(os.parameters.value.get(context) for os in m.output_states) for m in self._all_nodes]
         data = [output]
         for node in self.nodes:
-            nested_data = node._get_data_initializer(execution_id=execution_id) \
+            nested_data = node._get_data_initializer(context=context) \
                 if hasattr(node,'_get_data_initializer') else []
             data.append(nested_data)
         return pnlvm._tupleize(data)
@@ -7191,20 +7186,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return self.__generated_sim_run
 
-    @handle_external_context()
-    def reinitialize(self, execution_context=NotImplemented, context=None):
-        if execution_context is NotImplemented:
-            execution_context = self.most_recent_context.execution_id
+    @handle_external_context(execution_id=NotImplemented)
+    def reinitialize(self, context=None):
+        if context.execution_id is NotImplemented:
+            context.execution_id = self.most_recent_context.execution_id
 
-        self._compilation_data.ptx_execution.set(None, execution_context)
-        self._compilation_data.parameter_struct.set(None, execution_context)
-        self._compilation_data.state_struct.set(None, execution_context)
-        self._compilation_data.data_struct.set(None, execution_context)
-        self._compilation_data.scheduler_conditions.set(None, execution_context)
+        self._compilation_data.ptx_execution.set(None, context)
+        self._compilation_data.parameter_struct.set(None, context)
+        self._compilation_data.state_struct.set(None, context)
+        self._compilation_data.data_struct.set(None, context)
+        self._compilation_data.scheduler_conditions.set(None, context)
 
-    def __ptx_initialize(self, execution_id=None):
-        if self._compilation_data.ptx_execution._get(execution_id) is None:
-            self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [execution_id]), execution_id)
+    def __ptx_initialize(self, context=None):
+        if self._compilation_data.ptx_execution._get(context) is None:
+            self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id]), context)
 
     def __gen_node_wrapper(self, node, simulation=False):
         assert node is not self.controller or simulation is False
@@ -7373,8 +7368,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Returns values of all OutputStates that belong to the Output CompositionInterfaceMechanism"""
         return self.get_output_values()
 
-    def get_output_values(self, execution_context=None):
-        return [output_state.parameters.value.get(execution_context) for output_state in self.output_CIM.output_states]
+    def get_output_values(self, context=None):
+        return [output_state.parameters.value.get(context) for output_state in self.output_CIM.output_states]
 
     @property
     def input_state(self):
@@ -7386,8 +7381,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Returns values of all InputStates that belong to the Input CompositionInterfaceMechanism"""
         return self.get_input_values()
 
-    def get_input_values(self, execution_context=None):
-        return [input_state.parameters.value.get(execution_context) for input_state in self.input_CIM.input_states]
+    def get_input_values(self, context=None):
+        return [input_state.parameters.value.get(context) for input_state in self.input_CIM.input_states]
 
     @property
     def runs_simulations(self):
@@ -7395,7 +7390,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def simulation_results(self):
-        return self.parameters.simulation_results._get(self.default_execution_id)
+        return self.parameters.simulation_results.get(self.default_execution_id)
 
     #  For now, external_input_states == input_states and external_input_values == input_values
     #  They could be different in the future depending on new features (ex. if we introduce recurrent compositions)

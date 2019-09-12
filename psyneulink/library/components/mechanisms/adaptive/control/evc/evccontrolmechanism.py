@@ -935,7 +935,7 @@ class EVCControlMechanism(ControlMechanism):
             modulatory_signal._variable_spec = (OWNER_VALUE, i)
             self._modulatory_signals[i] = modulatory_signal
         self.defaults.value = np.tile(modulatory_signal.parameters.variable.default_value, (i+1, 1))
-        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value))
+        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
     def _instantiate_prediction_mechanisms(self, system:System_Base, context=None):
         """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in system
@@ -1076,7 +1076,7 @@ class EVCControlMechanism(ControlMechanism):
         predicted_input = {}
         for i, origin_mech in zip(range(len(system.origin_mechanisms)), system.origin_mechanisms):
             predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].defaults.variable
-        self.parameters.predicted_input._set(predicted_input)
+        self.parameters.predicted_input._set(predicted_input, context)
 
     def _instantiate_attributes_after_function(self, context=None):
         """Validate cost function"""
@@ -1130,9 +1130,9 @@ class EVCControlMechanism(ControlMechanism):
     def _execute(
         self,
         variable=None,
-        execution_id=None,
+        context=None,
         runtime_params=None,
-        context=None
+
     ):
         """Determine `control_allocation <EVCControlMechanism.control_allocation>` for next run of System
 
@@ -1146,7 +1146,7 @@ class EVCControlMechanism(ControlMechanism):
         """
 
         if context.source != ContextFlags.PROPERTY:
-            self._update_predicted_input(execution_id=execution_id)
+            self._update_predicted_input(context=context)
         # self.system._cache_state()
 
         # CONSTRUCT SEARCH SPACE
@@ -1158,7 +1158,7 @@ class EVCControlMechanism(ControlMechanism):
 
 
         for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.parameters.allocation_samples._get(execution_id)())
+            control_signal_sample_lists.append(control_signal.parameters.allocation_samples._get(context)())
 
         # Construct control_signal_search_space:  set of all permutations of ControlSignal allocations
         #                                     (one sample from the allocationSample of each ControlSignal)
@@ -1166,7 +1166,7 @@ class EVCControlMechanism(ControlMechanism):
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
         self.parameters.control_signal_search_space._set(
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals),
-            execution_id,
+            context,
         )
 
         # EXECUTE SEARCH
@@ -1178,16 +1178,16 @@ class EVCControlMechanism(ControlMechanism):
         control_allocation = super(ControlMechanism, self)._execute(
             controller=self,
             variable=variable,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
 
         # IMPLEMENTATION NOTE:
         # self.system._restore_system_state()
         return control_allocation
 
-    def _update_predicted_input(self, execution_id=None):
+    def _update_predicted_input(self, context=None):
         """Assign values of prediction mechanisms to predicted_input
 
         Assign value of each predictionMechanism.value to corresponding item of self.predictedIinput
@@ -1207,17 +1207,17 @@ class EVCControlMechanism(ControlMechanism):
         for origin_mech in self.system.origin_mechanisms:
             # Get origin Mechanism for each process
             # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN Mechanism
-            self.parameters.predicted_input._get(execution_id)[origin_mech] = self.origin_prediction_mechanisms[origin_mech].parameters.value._get(execution_id)
+            self.parameters.predicted_input._get(context)[origin_mech] = self.origin_prediction_mechanisms[origin_mech].parameters.value._get(context)
             # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
 
     def evaluate(
         self,
         inputs,
         allocation_vector,
-        execution_id=None,
+        context=None,
         runtime_params=None,
         reinitialize_values=None,
-        context=None
+
     ):
         """
         Run simulation of `System` for which the EVCControlMechanism is the `controller <System.controller>`.
@@ -1241,22 +1241,21 @@ class EVCControlMechanism(ControlMechanism):
 
         """
 
-        if self.parameters.value._get(execution_id) is None:
+        if self.parameters.value._get(context) is None:
             # Initialize value if it is None
-            self.parameters.value._set(np.empty(len(self.control_signals)), execution_id)
+            self.parameters.value._set(np.empty(len(self.control_signals)), context)
 
         # Implement the current control_allocation over ControlSignals (OutputStates),
         #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states
         for i in range(len(self.control_signals)):
             # MODIFIED 6/6/19 OLD:
-            self.parameters.value._get(execution_id)[i] = np.atleast_1d(allocation_vector[i])
+            self.parameters.value._get(context)[i] = np.atleast_1d(allocation_vector[i])
             # # MODIFIED 6/6/19 NEW: [JDC]
             # self._apply_control_allocation(control_allocation=allocation_vector,
             #                                runtime_params=runtime_params,
-            #                                context=context,
-            #                                execution_id=execution_id)
+            #                                context=context)
             # MODIFIED 6/6/19 END
-        self._update_output_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+        self._update_output_states(context=context, runtime_params=runtime_params)
 
         # RUN SIMULATION
 
@@ -1267,10 +1266,10 @@ class EVCControlMechanism(ControlMechanism):
         context.execution_phase = ContextFlags.SIMULATION
         self.system.run(
             inputs=inputs,
-            execution_id=execution_id,
+            context=context,
             reinitialize_values=reinitialize_values,
             animate=False,
-            context=context
+
         )
         context.execution_phase = ContextFlags.CONTROL
 
@@ -1280,7 +1279,7 @@ class EVCControlMechanism(ControlMechanism):
         # Get outcomes for current control_allocation
         #    = the values of the monitored output states (self.input_states)
         # self.objective_mechanism.execute(context=EVC_SIMULATION)
-        monitored_states = self._update_input_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+        monitored_states = self._update_input_states(context=context, runtime_params=runtime_params)
 
         # # MODIFIED 9/18/18 OLD:
         # for i in range(len(self.control_signals)):
@@ -1290,11 +1289,11 @@ class EVCControlMechanism(ControlMechanism):
         #     if self.control_signal_costs[i].cost_options is not None:
         #         self.control_signal_costs[i] = self.control_signals[i].cost
         # MODIFIED 9/18/18 NEWER:
-        control_signal_costs = self.parameters.control_signal_costs._get(execution_id)
+        control_signal_costs = self.parameters.control_signal_costs._get(context)
         for i, c in enumerate(self.control_signals):
-            if c.parameters.cost_options._get(execution_id) is not None:
-                control_signal_costs[i] = c.parameters.cost._get(execution_id)
-        self.parameters.control_signal_costs._set(control_signal_costs, execution_id)
+            if c.parameters.cost_options._get(context) is not None:
+                control_signal_costs[i] = c.parameters.cost._get(context)
+        self.parameters.control_signal_costs._set(control_signal_costs, context)
         # MODIFIED 9/18/18 END
 
         return monitored_states

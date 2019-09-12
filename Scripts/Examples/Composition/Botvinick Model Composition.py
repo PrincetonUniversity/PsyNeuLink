@@ -162,10 +162,10 @@ def run(bin_execute):
         comp.run(inputs=stim[0], num_trials=ntrials0, bin_execute=bin_execute)
         comp.run(inputs=stim[1], num_trials=ntrials, bin_execute=bin_execute)
         # reinitialize after condition was run
-        colors_hidden_layer.reinitialize([[0, 0, 0]], execution_context=comp)
-        words_hidden_layer.reinitialize([[0, 0, 0]], execution_context=comp)
-        response_layer.reinitialize([[0, 0]], execution_context=comp)
-        task_layer.reinitialize([[0, 0]], execution_context=comp)
+        colors_hidden_layer.reinitialize([[0, 0, 0]], context=comp)
+        words_hidden_layer.reinitialize([[0, 0, 0]], context=comp)
+        response_layer.reinitialize([[0, 0]], context=comp)
+        task_layer.reinitialize([[0, 0]], context=comp)
         # Comp results include concatenation of both the above runs
         results.append(comp.results.copy())
         comp.reinitialize()

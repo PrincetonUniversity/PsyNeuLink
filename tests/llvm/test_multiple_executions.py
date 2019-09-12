@@ -113,7 +113,7 @@ def test_nested_composition_execution(benchmark, executions, mode):
     if executions > 1:
         var = [var for _ in range(executions)]
     if mode == 'Python':
-        f = lambda x : [outer_comp.execute(x[i], execution_id=i) for i in range(executions)]
+        f = lambda x : [outer_comp.execute(x[i], context=i) for i in range(executions)]
         res = f(var) if executions > 1 else outer_comp.execute(var)
         benchmark(f if executions > 1 else outer_comp.execute, var)
     elif mode == 'LLVM':
@@ -165,7 +165,7 @@ def test_nested_composition_run(benchmark, executions, mode):
     if executions > 1:
         var = [var for _ in range(executions)]
     if mode == 'Python':
-        f = lambda x : [outer_comp.run(x[i], execution_id=i) for i in range(executions)]
+        f = lambda x : [outer_comp.run(x[i], context=i) for i in range(executions)]
         res = f(var) if executions > 1 else outer_comp.run(var)
         benchmark(f if executions > 1 else outer_comp.run, var)
     elif mode == 'LLVM':
@@ -217,7 +217,7 @@ def test_nested_composition_run_trials_inputs(benchmark, executions, mode):
         def f(v, num_trials, res=False):
             results = []
             for i in range(executions):
-                outer_comp.run(v[i], execution_id=i, num_trials=num_trials)
+                outer_comp.run(v[i], context=i, num_trials=num_trials)
                 if res: # copy the results immediately, otherwise it's empty
                     results.append(outer_comp.results.copy())
             return results

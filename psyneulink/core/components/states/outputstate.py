@@ -602,7 +602,7 @@ from psyneulink.core.globals.keywords import \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, \
     output_state_spec_to_parameter_name
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, ParameterError
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -669,7 +669,7 @@ standard_output_states = [{NAME: RESULT},
                           ]
 
 
-def _parse_output_state_variable(variable, owner, execution_id=None, output_state_name=None):
+def _parse_output_state_variable(variable, owner, context=None, output_state_name=None):
     """Return variable for OutputState based on VARIABLE entry of owner's params dict
 
     The format of the VARIABLE entry determines the format returned:
@@ -690,9 +690,17 @@ def _parse_output_state_variable(variable, owner, execution_id=None, output_stat
                 owner_param_name = spec[0]
 
             try:
-                return getattr(owner.parameters, owner_param_name)._get(execution_id)[spec[1]]
+                # context is None during initialization, and we don't want to
+                # incur the cost of .get during execution
+                if context is None:
+                    return getattr(owner.parameters, owner_param_name).get(context)[spec[1]]
+                else:
+                    return getattr(owner.parameters, owner_param_name)._get(context)[spec[1]]
             except TypeError:
-                if getattr(owner.parameters, owner_param_name)._get(execution_id) is None:
+                if context is None:
+                    if getattr(owner.parameters, owner_param_name).get(context) is None:
+                        return None
+                elif getattr(owner.parameters, owner_param_name)._get(context) is None:
                     return None
                 else:
                     # raise OutputStateError("Can't parse variable ({}) for {} of {}".
@@ -713,10 +721,18 @@ def _parse_output_state_variable(variable, owner, execution_id=None, output_stat
                 owner_param_name = spec
 
             try:
-                return getattr(owner.parameters, owner_param_name)._get(execution_id)
+                # context is None during initialization, and we don't want to
+                # incur the cost of .get during execution
+                if context is None:
+                    return getattr(owner.parameters, owner_param_name).get(context)
+                else:
+                    return getattr(owner.parameters, owner_param_name)._get(context)
             except AttributeError:
                 try:
-                    return getattr(owner.function.parameters, owner_param_name)._get(execution_id)
+                    if context is None:
+                        return getattr(owner.function.parameters, owner_param_name).get(context)
+                    else:
+                        return getattr(owner.function.parameters, owner_param_name)._get(context)
                 except AttributeError:
                     raise OutputStateError(
                         "Can't parse variable ({}) for {} of {}".format(
@@ -742,8 +758,8 @@ def _parse_output_state_variable(variable, owner, execution_id=None, output_stat
     return fct_variable
 
 
-def _output_state_variable_getter(owning_component=None, execution_id=None, output_state_name=None):
-    return _parse_output_state_variable(owning_component._variable_spec, owning_component.owner, execution_id, output_state_name)
+def _output_state_variable_getter(owning_component=None, context=None, output_state_name=None):
+    return _parse_output_state_variable(owning_component._variable_spec, owning_component.owner, context, output_state_name)
 
 
 class OutputStateError(Exception):
@@ -1246,19 +1262,18 @@ class OutputState(State_Base):
 
         return state_spec, params_dict
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, context=None, runtime_params=None):
         value = super()._execute(
             variable=variable,
-            execution_id=execution_id,
-            runtime_params=runtime_params,
             context=context,
+            runtime_params=runtime_params,
         )
         return np.atleast_1d(value)
 
-    def _get_fallback_variable(self, execution_id=None, context=None):
+    def _get_fallback_variable(self, context=None):
         # fall back to specified item(s) of owner's value
         try:
-            return self.parameters.variable._get(execution_id)
+            return self.parameters.variable._get(context)
         except ComponentError:
             # KDM 8/2/19: double check the relevance of this branch
             return None
@@ -1344,12 +1359,12 @@ class OutputState(State_Base):
     def label(self):
         return self.get_label()
 
-    def get_label(self, execution_context=None):
+    def get_label(self, context=None):
         try:
             label_dictionary = self.owner.output_labels_dict
         except AttributeError:
             label_dictionary = {}
-        return self._get_value_label(label_dictionary, self.owner.output_states, execution_context=execution_context)
+        return self._get_value_label(label_dictionary, self.owner.output_states, context=context)
 
 def _instantiate_output_states(owner, output_states=None, context=None):
     """Call State._instantiate_state_list() to instantiate ContentAddressableList of OutputState(s)
@@ -1505,7 +1520,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     for state in owner._output_states:
         # Assign True for owner's primary OutputState and the value has not already been set in OutputState constructor
         if state.require_projection_in_composition is None and owner.output_state == state:
-            state.parameters.require_projection_in_composition._set(True)
+            state.parameters.require_projection_in_composition._set(True, context)
 
     return state_list
 

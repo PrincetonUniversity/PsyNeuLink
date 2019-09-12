@@ -276,6 +276,7 @@ import warnings
 
 from toposort import toposort, toposort_flatten
 
+from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never
 from psyneulink.core.scheduling.time import Clock, TimeScale
 
@@ -614,9 +615,6 @@ class Scheduler(object):
                 self.clocks[execution_id] = Clock()
 
     def _reset_counts_total(self, time_scale, execution_id=None):
-        if execution_id is None:
-            execution_id = self.default_execution_id
-
         for ts in TimeScale:
             # only reset the values underneath the current scope
             # this works because the enum is set so that higher granularities of time have lower values
@@ -625,9 +623,6 @@ class Scheduler(object):
                     self.counts_total[execution_id][ts][c] = 0
 
     def _reset_counts_useable(self, execution_id=None):
-        if execution_id is None:
-            execution_id = self.default_execution_id
-
         self.counts_useable[execution_id] = {
             node: {n: 0 for n in self.nodes} for node in self.nodes
         }
@@ -733,7 +728,7 @@ class Scheduler(object):
     # Run methods
     ################################################################################
 
-    def run(self, termination_conds=None, execution_id=None, base_execution_id=None, skip_trial_time_increment=False):
+    def run(self, termination_conds=None, context=None, base_context=Context(execution_id=None), skip_trial_time_increment=False):
         """
         run is a python generator, that when iterated over provides the next `TIME_STEP` of
         executions at each iteration
@@ -747,26 +742,26 @@ class Scheduler(object):
         else:
             termination_conds = self.update_termination_conditions(Scheduler._parse_termination_conditions(termination_conds))
 
-        if execution_id is None:
-            execution_id = self.default_execution_id
+        if context is None:
+            context = Context(execution_id=self.default_execution_id)
 
-        self._init_counts(execution_id, base_execution_id)
-        self._reset_counts_useable(execution_id)
-        self._reset_counts_total(TimeScale.TRIAL, execution_id)
+        self._init_counts(context.execution_id, base_context.execution_id)
+        self._reset_counts_useable(context.execution_id)
+        self._reset_counts_total(TimeScale.TRIAL, context.execution_id)
 
         while (
-            not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_context=execution_id)
-            and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_context=execution_id)
+            not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, context=context)
+            and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, context=context)
         ):
-            self._reset_counts_total(TimeScale.PASS, execution_id)
+            self._reset_counts_total(TimeScale.PASS, context.execution_id)
 
             execution_list_has_changed = False
             cur_index_consideration_queue = 0
 
             while (
                 cur_index_consideration_queue < len(self.consideration_queue)
-                and not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_context=execution_id)
-                and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_context=execution_id)
+                and not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, context=context)
+                and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, context=context)
             ):
                 # all nodes to be added during this time step
                 cur_time_step_exec = set()
@@ -786,50 +781,50 @@ class Scheduler(object):
                         # only add each node once during a single time step, this also serves
                         # to prevent infinitely cascading adds
                         if current_node not in cur_time_step_exec:
-                            if self.conditions.conditions[current_node].is_satisfied(scheduler=self, execution_context=execution_id):
+                            if self.conditions.conditions[current_node].is_satisfied(scheduler=self, context=context):
                                 cur_time_step_exec.add(current_node)
                                 execution_list_has_changed = True
                                 cur_consideration_set_has_changed = True
 
                                 for ts in TimeScale:
-                                    self.counts_total[execution_id][ts][current_node] += 1
+                                    self.counts_total[context.execution_id][ts][current_node] += 1
                                 # current_node's node is added to the execution queue, so we now need to
                                 # reset all of the counts useable by current_node's node to 0
-                                for n in self.counts_useable[execution_id]:
-                                    self.counts_useable[execution_id][n][current_node] = 0
+                                for n in self.counts_useable[context.execution_id]:
+                                    self.counts_useable[context.execution_id][n][current_node] = 0
                                 # and increment all of the counts of current_node's node useable by other
                                 # nodes by 1
-                                for n in self.counts_useable[execution_id]:
-                                    self.counts_useable[execution_id][current_node][n] += 1
+                                for n in self.counts_useable[context.execution_id]:
+                                    self.counts_useable[context.execution_id][current_node][n] += 1
                     # do-while condition
                     if not cur_consideration_set_has_changed:
                         break
 
                 # add a new time step at each step in a pass, if the time step would not be empty
                 if len(cur_time_step_exec) >= 1:
-                    self.execution_list[execution_id].append(cur_time_step_exec)
-                    yield self.execution_list[execution_id][-1]
+                    self.execution_list[context.execution_id].append(cur_time_step_exec)
+                    yield self.execution_list[context.execution_id][-1]
 
-                    self.clocks[execution_id]._increment_time(TimeScale.TIME_STEP)
+                    self.get_clock(context)._increment_time(TimeScale.TIME_STEP)
 
                 cur_index_consideration_queue += 1
 
             # if an entire pass occurs with nothing running, add an empty time step
             if not execution_list_has_changed:
-                self.execution_list[execution_id].append(set())
-                yield self.execution_list[execution_id][-1]
+                self.execution_list[context.execution_id].append(set())
+                yield self.execution_list[context.execution_id][-1]
 
-                self.clocks[execution_id]._increment_time(TimeScale.TIME_STEP)
+                self.get_clock(context)._increment_time(TimeScale.TIME_STEP)
 
-            self.clocks[execution_id]._increment_time(TimeScale.PASS)
+            self.get_clock(context)._increment_time(TimeScale.PASS)
 
         if not skip_trial_time_increment:
-            self.clocks[execution_id]._increment_time(TimeScale.TRIAL)
+            self.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-        if termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_context=execution_id):
+        if termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, context=context):
             self.date_last_run_end = datetime.datetime.now()
 
-        return self.execution_list[execution_id]
+        return self.execution_list[context.execution_id]
 
     def _dict_summary(self):
         return {
@@ -851,11 +846,14 @@ class Scheduler(object):
     def clock(self):
         return self.clocks[self.default_execution_id]
 
-    def get_clock(self, execution_context):
+    def get_clock(self, context):
         try:
-            return self.clocks[execution_context.default_execution_id]
+            return self.clocks[context.default_execution_id]
         except AttributeError:
-            return self.clocks[execution_context]
+            try:
+                return self.clocks[context.execution_id]
+            except AttributeError:
+                return self.clocks[context]
         except KeyError:
             raise
 

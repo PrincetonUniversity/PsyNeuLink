@@ -398,16 +398,16 @@ class KohonenLearningMechanism(LearningMechanism):
                                                         format(self.name, variable))
         return variable
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
+    def _parse_function_variable(self, variable, context=None):
         variable = variable.tolist()
-        variable.append(self.matrix.parameters.value._get(execution_id).tolist())
+        variable.append(self.matrix.parameters.value._get(context).tolist())
         return variable
 
     def _execute(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  runtime_params=None,
-                 context=None
+
                  ):
         """Execute KohonenLearningMechanism. function and return learning_signal
 
@@ -421,9 +421,9 @@ class KohonenLearningMechanism(LearningMechanism):
 
         learning_signal = super(LearningMechanism, self)._execute(
             variable=variable,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
 
         if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
@@ -431,18 +431,18 @@ class KohonenLearningMechanism(LearningMechanism):
 
         return [learning_signal]
 
-    def _update_output_states(self, execution_id=None, runtime_params=None, context=None):
+    def _update_output_states(self, context=None, runtime_params=None):
         """Update the weights for the MappingProjection for which this is the KohonenLearningMechanism
 
         Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
         This insures that weights are updated within the same trial in which they have been learned
         """
 
-        super()._update_output_states(execution_id, runtime_params, context)
+        super()._update_output_states(context, runtime_params)
 
         if context.composition is not None:
             context.add_flag(ContextFlags.LEARNING)
-            self.learned_projection.execute(execution_id=execution_id, context=context)
+            self.learned_projection.execute(context=context)
             context.remove_flag(ContextFlags.LEARNING)
 
     @property

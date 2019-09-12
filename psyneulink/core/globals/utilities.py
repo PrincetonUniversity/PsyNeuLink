@@ -1306,14 +1306,14 @@ class ContentAddressableList(UserList):
         """
         return [np.ndarray.tolist(getattr(item, VALUE)) for item in self.data]
 
-    def get_values_as_lists(self, execution_context=None):
+    def get_values_as_lists(self, context=None):
         """Return list of values of components in the list, each converted to a list.
         Returns
         -------
         values :  list
             list of list values of the `value <Component.value>` attributes of components in the list,
         """
-        return [np.ndarray.tolist(item.parameters.value.get(execution_context)) for item in self.data]
+        return [np.ndarray.tolist(item.parameters.value.get(context)) for item in self.data]
 
 
 def is_value_spec(spec):

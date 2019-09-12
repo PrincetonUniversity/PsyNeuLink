@@ -177,7 +177,7 @@ class TestLog:
         assert T_1.logged_items == {'RESULTS': 'EXECUTION', 'mod_noise': 'EXECUTION'}
         assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
 
-        T_1.log.print_entries(execution_contexts=PS)
+        T_1.log.print_entries(contexts=PS)
 
         # assert T_1.log.print_entries() ==
         # # Log for mech_A:
@@ -772,7 +772,7 @@ class TestLog:
         log_array_T1 = T1.log.nparray(entries=['RESULTS', 'mod_slope', 'value'])
         log_array_T2 = T2.log.nparray(entries=['value', 'mod_slope'])
 
-        execution_context_results = [pnl.Log.execution_id_header, SYS.default_execution_id]
+        context_results = [pnl.Log.context_header, SYS.default_execution_id]
         # Check values
         run_results = [["Run"], [0], [0], [0]]
         trial_results = [["Trial"], [0], [0], [0]]
@@ -783,7 +783,7 @@ class TestLog:
         value_results = ["value", [[0.5]], [[0.75]], [[0.875]]]
 
         for i in range(2):
-            assert log_array_T1[0][i] == execution_context_results[i]
+            assert log_array_T1[0][i] == context_results[i]
 
         assert log_array_T1[1][0] == pnl.Log.data_header
         data_array = log_array_T1[1][1]
@@ -806,7 +806,7 @@ class TestLog:
         slope_results = ["mod_slope", [6], [6], [6]]
 
         for i in range(2):
-            assert log_array_T1[0][i] == execution_context_results[i]
+            assert log_array_T1[0][i] == context_results[i]
 
         assert log_array_T2[1][0] == pnl.Log.data_header
         data_array = log_array_T2[1][1]
@@ -869,10 +869,10 @@ class TestLog:
         X.add_linear_processing_pathway([A, C])
         Y.add_linear_processing_pathway([B, C])
 
-        # running with manual execution_ids for consistent output
-        # because output is sorted by execution_id
-        X.run(inputs={A: 1}, execution_id='comp X')
-        Y.run(inputs={B: 2}, execution_id='comp Y')
+        # running with manual contexts for consistent output
+        # because output is sorted by context
+        X.run(inputs={A: 1}, context='comp X')
+        Y.run(inputs={B: 2}, context='comp Y')
 
         expected_str = "'Execution Context', 'Data'\n" \
             + "'comp X', 'Run', 'Trial', 'Pass', 'Time_step', 'value'\n" \
@@ -979,8 +979,8 @@ class TestClearLog:
     @pytest.mark.parametrize(
         'insertion_eids, deletion_eids, log_is_empty',
         [
-            (['execution_id'], 'execution_id', True),     # fails if string handling not correct due to str being Iterable
-            (['execution_id'], ['execution_id'], True),
+            (['context'], 'context', True),     # fails if string handling not correct due to str being Iterable
+            (['context'], ['context'], True),
         ]
     )
     def test_clear_log_arguments(self, insertion_eids, deletion_eids, log_is_empty):
@@ -991,7 +991,7 @@ class TestClearLog:
         t.parameters.value.log_condition = True
 
         for eid in insertion_eids:
-            c.run({t: 0}, execution_id=eid)
+            c.run({t: 0}, context=eid)
 
         t.parameters.value.clear_log(deletion_eids)
 
@@ -1092,5 +1092,5 @@ class TestFiltering:
 
         # get each row, excluding header
         for row in full_csv.split('\n')[1:]:
-            # if present in a row, execution_id will be in the first cell
+            # if present in a row, context will be in the first cell
             assert pnl.EID_SIMULATION not in row.replace("'", '').split(',')[0]

@@ -165,9 +165,9 @@ for i in range(3): # testing for three subjects, 200 trials per subject
         print("OUTCOME = ", lvoc.objective_mechanism.output_states[pnl.OUTCOME].value)
         print("WEIGHTS = ", lvoc.agent_rep.parameters.regression_weights.get(i)) 
         print("LVOC VALUE = ", lvoc.value)
-    # duration = timeit.timeit(c.run(inputs=input_dict, execution_id=i), number=1) #number=2
+    # duration = timeit.timeit(c.run(inputs=input_dict, context=i), number=1) #number=2
     c.run(inputs=input_dict,
-          execution_id=i,
+          context=i,
           call_after_trial=print_weights) #number=2, num_trials
     # duration = time.time() - start_time
     # print('PREDICTION WEIGHTS T2', lvoc.agent_rep.parameters.regression_weights.get(i))
@@ -187,8 +187,8 @@ for i in range(3): # testing for three subjects, 200 trials per subject
     print('--------------------')
     print('ControlSignal variables: ', [sig.parameters.variable.get(i) for sig in lvoc.control_signals])
     print('ControlSignal values: ', [sig.parameters.value.get(i) for sig in lvoc.control_signals])
-    # print('features: ', lvoc.get_feature_values(execution_id=c))
-    print('lvoc: ', lvoc.evaluation_function([sig.parameters.variable.get(i) for sig in lvoc.control_signals], execution_id=i))
+    # print('features: ', lvoc.get_feature_values(context=c))
+    print('lvoc: ', lvoc.evaluation_function([sig.parameters.variable.get(i) for sig in lvoc.control_signals], context=i))
     # print('time: ', duration)
     print('--------------------')
 
@@ -228,7 +228,7 @@ print(lvoc.log.csv())
 # print('--------------------')
 # print('ControlSignal variables: ', [sig.parameters.variable.get(c) for sig in lvoc.control_signals])
 # print('ControlSignal values: ', [sig.parameters.value.get(c) for sig in lvoc.control_signals])
-# # print('features: ', lvoc.get_feature_values(execution_id=c))
-# print('lvoc: ', lvoc.evaluation_function([sig.parameters.variable.get(c) for sig in lvoc.control_signals], execution_id=c))
+# # print('features: ', lvoc.get_feature_values(context=c))
+# print('lvoc: ', lvoc.evaluation_function([sig.parameters.variable.get(c) for sig in lvoc.control_signals], context=c))
 # print('time: ', duration)
 # print('--------------------')

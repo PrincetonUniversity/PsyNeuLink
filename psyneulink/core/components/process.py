@@ -470,7 +470,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Pro
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state, _instantiate_state_list
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SINGLETON, TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg, kwSeparator
 from psyneulink.core.globals.parameters import Defaults, Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -846,7 +846,7 @@ class Process(Process_Base):
 
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
-        '_execution_id': None,
+        '_context': None,
         PATHWAY: None,
         'input':[],
         'process_input_states': [],
@@ -1809,7 +1809,7 @@ class Process(Process_Base):
 
         mechanism._receivesProcessInput = True
 
-    def _assign_input_values(self, input, execution_id=None, context=None):
+    def _assign_input_values(self, input, context=None):
         """Validate input, assign each item (1D array) in input to corresponding process_input_state
 
         Returns converted version of input
@@ -1852,7 +1852,7 @@ class Process(Process_Base):
 
         # Assign items in input to value of each process_input_state
         for i in range(len(self.process_input_states)):
-            self.process_input_states[i].parameters.value._set(input[i], execution_id)
+            self.process_input_states[i].parameters.value._set(input[i], context)
 
         return input
 
@@ -2149,14 +2149,14 @@ class Process(Process_Base):
 
 
 
-    def initialize(self, execution_context=None):
+    def initialize(self, context=None):
         """Assign the values specified for each Mechanism in the process' `initial_values` attribute.  This usually
         occurs at the beginning of one or a series of executions invoked by a call to the Process` `execute
         <Process.execute>` or `run <Process.run>` methods.
         """
         # FIX:  INITIALIZE PROCESS INPUTS??
         for mech, value in self.initial_values.items():
-            mech.initialize(value, execution_context)
+            mech.initialize(value, context)
 
     # correct here? happens in code but maybe should be COMMAND_LINE
     @handle_external_context(source=ContextFlags.COMPOSITION)
@@ -2164,12 +2164,12 @@ class Process(Process_Base):
         self,
         input=None,
         target=None,
-        execution_id=None,
-        base_execution_id=None,
+        context=None,
+        base_context=Context(execution_id=None),
         runtime_params=None,
         termination_processing=None,
         termination_learning=None,
-        context=None
+
     ):
         """Execute the Mechanisms specified in the process` `pathway` attribute.
 
@@ -2229,14 +2229,13 @@ class Process(Process_Base):
         """
         from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
-        if execution_id is None:
-            execution_id = self.default_execution_id
+        if context.execution_id is None:
+            context.execution_id = self.default_execution_id
 
         context.composition = self
-        context.execution_id = execution_id
 
-        # initialize from base context but don't overwrite any values already set for this execution_id
-        self._initialize_from_context(execution_id, base_execution_id, override=False)
+        # initialize from base context but don't overwrite any values already set for this context
+        self._initialize_from_context(context, base_context, override=False)
 
         # Report output if reporting preference is on and this is not an initialization run
         report_output = self.prefs.reportOutputPref and self.initialization_status == ContextFlags.INITIALIZED
@@ -2244,12 +2243,12 @@ class Process(Process_Base):
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
 
-        variable = self._assign_input_values(input=input, execution_id=execution_id, context=context)
+        variable = self._assign_input_values(input=input, context=context)
 
-        self._check_args(variable, runtime_params)
+        self._check_args(variable, runtime_params, context=context)
 
         # Use Process self.input as input to first Mechanism in Pathway
-        self.parameters.input._set(variable, execution_id)
+        self.parameters.input._set(variable, context)
 
         # Generate header and report input
         if report_output:
@@ -2265,7 +2264,7 @@ class Process(Process_Base):
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             context.source = ContextFlags.PROCESS
             context.execution_phase = ContextFlags.PROCESSING
-            mechanism.execute(execution_id=execution_id, context=context)
+            mechanism.execute(context=context)
             context.execution_phase = ContextFlags.IDLE
 
             if report_output:
@@ -2279,16 +2278,16 @@ class Process(Process_Base):
 
         # Execute LearningMechanisms
         if self._learning_enabled:
-            self._execute_learning(execution_id=execution_id, target=target, context=context)
+            self._execute_learning(context=context, target=target)
 
         if report_output:
-            self._report_process_completion(separator=True, execution_context=execution_id)
+            self._report_process_completion(separator=True, context=context)
 
         # FIX:  WHICH SHOULD THIS BE?
-        return self.output_state.parameters.value._get(execution_id)
+        return self.output_state.parameters.value._get(context)
         # return self.output
 
-    def _execute_learning(self, execution_id=None, target=None, context=None):
+    def _execute_learning(self, context=None, target=None):
         """Update each LearningProjection for mechanisms in _mechs of process
 
         # Begin with Projection(s) to last Mechanism in _mechs, and work backwards
@@ -2318,7 +2317,7 @@ class Process(Process_Base):
         # Assign items of self.target to target_input_states
         #   (ProcessInputStates that project to corresponding target_nodes for the Process)
         for i, target_input_state in zip(range(len(self.target_input_states)), self.target_input_states):
-            target_input_state.parameters.value._set(target[i], execution_id)
+            target_input_state.parameters.value._set(target[i], context)
 
         # # Zero any input from projections to target(s) from any other processes
         for target_mech in self.target_mechanisms:
@@ -2331,7 +2330,7 @@ class Process(Process_Base):
         # THEN, execute ComparatorMechanism and LearningMechanism
         context.add_flag(ContextFlags.LEARNING)
         for mechanism in self._learning_mechs:
-            mechanism.execute(execution_id=execution_id, context=context)
+            mechanism.execute(context=context)
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
@@ -2369,7 +2368,7 @@ class Process(Process_Base):
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state._update(params=params, context=context)
-                            parameter_state._update(execution_id=execution_id, context=context)
+                            parameter_state._update(context=context)
 
                     # Not all Projection subclasses instantiate ParameterStates
                     except AttributeError as e:
@@ -2523,11 +2522,11 @@ class Process(Process_Base):
         #              re.sub('[\[,\],\n]','',
         #                     str(mechanism.outputState.value))))
 
-    def _report_process_completion(self, execution_context=None, separator=False):
+    def _report_process_completion(self, context=None, separator=False):
 
         print("\n\'{}' completed:\n- output: {}".
               format(append_type_to_name(self),
-                     re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.parameters.value.get(execution_context)]))))
+                     re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.parameters.value.get(context)]))))
 
         if self.learning:
             from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import MSE
@@ -2535,7 +2534,7 @@ class Process(Process_Base):
                 if not MSE in mech.output_states:
                     continue
                 print("\n- MSE: {:0.3}".
-                      format(float(mech.output_states[MSE].parameters.value.get(execution_context))))
+                      format(float(mech.output_states[MSE].parameters.value.get(context))))
 
         elif separator:
             print("\n\n****************************************\n")
@@ -2698,7 +2697,7 @@ class ProcessInputState(OutputState):
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
-        self.parameters.value._set(variable)
+        self.parameters.value._set(variable, Context())
 
         # self.index = PRIMARY
         # self.assign = None

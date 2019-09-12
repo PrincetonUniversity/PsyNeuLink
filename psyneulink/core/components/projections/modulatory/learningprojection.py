@@ -214,12 +214,12 @@ class LearningProjectionError(Exception):
         return repr(self.error_value)
 
 
-def _learning_signal_getter(owning_component=None, execution_id=None):
-    return owning_component.sender.parameters.value._get(execution_id)
+def _learning_signal_getter(owning_component=None, context=None):
+    return owning_component.sender.parameters.value._get(context)
 
 
-def _learning_signal_setter(value, owning_component=None, execution_id=None):
-    owning_component.sender.parameters.value._set(value, execution_id)
+def _learning_signal_setter(value, owning_component=None, context=None):
+    owning_component.sender.parameters.value._set(value, context)
     return value
 
 
@@ -690,7 +690,7 @@ class LearningProjection(ModulatoryProjection_Base):
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = self
 
-    def _execute(self, variable, execution_id=None, runtime_params=None, context=None):
+    def _execute(self, variable, context=None, runtime_params=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
@@ -703,8 +703,8 @@ class LearningProjection(ModulatoryProjection_Base):
         if variable is not None:
             learning_signal = variable
         else:
-            learning_signal = self.sender.parameters.value._get(execution_id)
-        matrix = self.receiver.parameters.value._get(execution_id)
+            learning_signal = self.sender.parameters.value._get(context)
+        matrix = self.receiver.parameters.value._get(context)
         # If learning_signal is lower dimensional than matrix being trained
         #    and the latter is a diagonal matrix (square, with values only along the main diagonal)
         #    and the learning_signal is the same as the matrix,
@@ -734,12 +734,12 @@ class LearningProjection(ModulatoryProjection_Base):
         #                       which undermines formatting of it (as learning_signal) above
         value = super(ShellClass, self)._execute(
             variable=learning_signal,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
 
-        learning_rate = self.parameters.learning_rate._get(execution_id)
+        learning_rate = self.parameters.learning_rate._get(context)
         if learning_rate is not None:
             value *= learning_rate
 

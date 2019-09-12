@@ -821,7 +821,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         assert True
 
     # # MODIFIED 6/8/19 NEW: [JDC]
-    # def _parse_function_variable(self, variable, execution_id=None, context=None):
+    # def _parse_function_variable(self, variable, context=None, context=None):
     #     # CRASHES IN x_or TEST AND LLVM TESTS:
     #     if self.function.variableEncodingDim < self.variableEncodingDim:
     #         return np.squeeze(variable)

@@ -801,7 +801,7 @@ class TestSimplifedNestedCompositionSyntax:
         outer1.add_projection(sender=inner1, receiver=C2)
         eid = "eid"
         outer1.run(inputs={inner1: [[1.]]},
-                   execution_id=eid)
+                   context=eid)
 
         assert np.allclose(A1.parameters.value.get(eid), [[2.0]])
         assert np.allclose(B1.parameters.value.get(eid), [[6.0]])

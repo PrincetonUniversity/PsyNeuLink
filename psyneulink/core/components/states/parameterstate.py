@@ -812,13 +812,13 @@ class ParameterState(State_Base):
         """Return parameter variable (since ParameterState's function never changes the form of its variable"""
         return variable
 
-    def _get_fallback_variable(self, execution_id=None, context=None):
+    def _get_fallback_variable(self, context=None):
         """
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs.
         """
 
         # FIX 3/6/19: source does not yet seem to have been assigned to owner.function
-        return getattr(self.source.parameters, self.name)._get(execution_id)
+        return getattr(self.source.parameters, self.name)._get(context)
 
     @property
     def pathway_projections(self):
