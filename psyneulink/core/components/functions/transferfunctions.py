@@ -62,7 +62,7 @@ from psyneulink.core.globals.keywords import \
     VARIANCE, VARIABLE, X_0, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
 
@@ -2319,7 +2319,7 @@ class SoftMax(TransferFunction):
     def _instantiate_function(self, function, function_params=None, context=None):
 
         self.one_hot_function = None
-        output_type = self.get_current_function_param(OUTPUT_TYPE)
+        output_type = self.get_current_function_param(OUTPUT_TYPE, context)
         bounds = None
 
         if not output_type is ALL:
@@ -2350,7 +2350,7 @@ class SoftMax(TransferFunction):
         builder.store(new_index, max_ind_ptr)
 
     def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
-        assert self.get_current_function_param(OUTPUT_TYPE) == ALL
+        assert self.get_current_function_param(OUTPUT_TYPE, Context()) == ALL
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
@@ -2380,7 +2380,7 @@ class SoftMax(TransferFunction):
                                         max_ind_ptr=max_ind_ptr,
                                         exp_sum_ptr=exp_sum_ptr)
 
-        output_type = self.get_current_function_param(OUTPUT_TYPE)
+        output_type = self.get_current_function_param(OUTPUT_TYPE, Context())
         exp_sum = builder.load(exp_sum_ptr)
         index = builder.load(max_ind_ptr)
         ptro = builder.gep(arg_out, [ctx.int32_ty(0), index])
@@ -2410,7 +2410,7 @@ class SoftMax(TransferFunction):
         return builder
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
-        if self.get_current_function_param(PER_ITEM):
+        if self.get_current_function_param(PER_ITEM, Context()):
             assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
             assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
             for i in range(arg_in.type.pointee.count):

@@ -1177,6 +1177,7 @@ class DDM(ProcessingMechanism):
             self.parameters.value._set(np.array(new_values), context)
             self._update_output_states(context=context)
 
+    @handle_external_context()
     def is_finished(self, context=None):
         # find the single numeric entry in previous_value
         try:

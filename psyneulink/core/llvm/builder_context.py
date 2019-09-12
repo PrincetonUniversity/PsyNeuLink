@@ -277,7 +277,7 @@ class LLVMBuilderContext:
 
     def gen_autodiffcomp_learning_exec(self,composition,simulation=False):
         composition._build_pytorch_representation(composition.default_execution_id)
-        pytorch_model = composition.parameters.pytorch_representation._get(composition.default_execution_id)
+        pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
         cond_gen = ConditionGenerator(self, composition)
         
         name = 'exec_learning_sim_wrap_' if simulation else 'exec_learning_wrap_'
@@ -330,7 +330,7 @@ class LLVMBuilderContext:
         assert composition.controller is None
        
         composition._build_pytorch_representation(composition.default_execution_id)
-        pytorch_model = composition.parameters.pytorch_representation._get(composition.default_execution_id)
+        pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
         cond_gen = ConditionGenerator(self, composition)
         
         name = 'exec_sim_wrap_' if simulation else 'exec_wrap_'

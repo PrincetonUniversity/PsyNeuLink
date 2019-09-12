@@ -2107,7 +2107,7 @@ class BackPropagation(LearningFunction):
         # Derivative of the output activity
         activation_output = self.get_current_function_param(ACTIVATION_OUTPUT, context)
         # FIX: THIS ASSUMES DERIVATIVE CAN BE COMPUTED FROM output OF FUNCTION (AS IT CAN FOR THE Logistic)
-        dA_dW = self.activation_derivative_fct(input=None, output=activation_output)
+        dA_dW = self.activation_derivative_fct(input=None, output=activation_output, context=context)
 
         # Chain rule to get the derivative of the error with respect to the weights
         dE_dW = dE_dA * dA_dW

@@ -1127,7 +1127,7 @@ class Component(object, metaclass=ComponentsMeta):
         #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
 
-        self._validate()
+        self._validate(context=context)
 
         self.initialization_status = ContextFlags.INITIALIZED
         # MODIFIED 12/4/18 NEW [JDC]:
@@ -2333,7 +2333,7 @@ class Component(object, metaclass=ComponentsMeta):
     # Validation methods
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _validate(self):
+    def _validate(self, context=None):
         """
             Eventually should contain all validation methods, occurs at end of Component.__init__
         """
@@ -3307,7 +3307,8 @@ class Component(object, metaclass=ComponentsMeta):
 
     @property
     def function(self):
-        return self.parameters.function._get()
+        # TODO: make sure all functions are stateless
+        return self.parameters.function._get(Context())
 
     @function.setter
     def function(self, value):

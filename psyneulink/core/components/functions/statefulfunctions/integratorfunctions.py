@@ -1814,7 +1814,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
         self.parameters.previous_short_term_avg.set(short, context)
         self.parameters.previous_long_term_avg.set(long, context)
-        value = self._combine_terms(short, long)
+        value = self._combine_terms(short, long, context)
 
         self.parameters.value.set(value, context, override=True)
         return value

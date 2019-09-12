@@ -1378,7 +1378,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             # Otherwise, prepare for start of plus phase on next execution
             else:
                 # Store activity from last execution in plus phase
-                self.parameters.minus_phase_activity._set(self.parameters.current_activity._get(), context)
+                self.parameters.minus_phase_activity._set(self.parameters.current_activity._get(context), context)
                 # Use initial_value attribute to initialize, for the minus phase,
                 #    both the integrator_function's previous_value
                 #    and the Mechanism's current activity (which is returned as its input)

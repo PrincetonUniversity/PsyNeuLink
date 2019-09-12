@@ -8,6 +8,7 @@
 
 # ********************************************* Binary Execution Wrappers **************************************************************
 
+from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.utilities import NodeRole
 
 import copy
@@ -129,19 +130,21 @@ class CUDAExecution:
 
 class FuncExecution(CUDAExecution):
 
-    def __init__(self, component, contexts=[None]):
+    def __init__(self, component, execution_ids=[None]):
         super().__init__()
         self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component)
-        self._execution_ids = contexts
+        self._execution_ids = [
+            Context(execution_id=eid) for eid in execution_ids
+        ]
         self._component = component
 
         par_struct_ty, ctx_struct_ty, vi_ty, vo_ty = self._bin_func.byref_arg_types
 
-        if len(contexts) > 1:
+        if len(execution_ids) > 1:
             self._bin_multirun = self._bin_func.get_multi_run()
-            self._ct_len = ctypes.c_int(len(contexts))
-            vo_ty = vo_ty * len(contexts)
-            vi_ty = vi_ty * len(contexts)
+            self._ct_len = ctypes.c_int(len(execution_ids))
+            vo_ty = vo_ty * len(execution_ids)
+            vi_ty = vi_ty * len(execution_ids)
 
             self.__param_struct = None
             self.__state_struct = None
@@ -215,10 +218,12 @@ class MechExecution(FuncExecution):
 
 class CompExecution(CUDAExecution):
 
-    def __init__(self, composition, contexts=[None]):
+    def __init__(self, composition, execution_ids=[None]):
         super().__init__(buffers=['state_struct', 'param_struct', 'data_struct', 'conditions'])
         self._composition = composition
-        self._execution_ids = contexts
+        self._execution_ids = [
+            Context(execution_id=eid) for eid in execution_ids
+        ]
         self.__bin_exec_func = None
         self.__bin_exec_multi_func = None
         self.__bin_func = None
@@ -228,12 +233,12 @@ class CompExecution(CUDAExecution):
         self.__frozen_vals = None
 
         # TODO: Consolidate these
-        if len(contexts) > 1:
+        if len(execution_ids) > 1:
             self.__state_struct = None
             self.__param_struct = None
             self.__data_struct = None
             self.__conds = None
-            self._ct_len = ctypes.c_int(len(contexts))
+            self._ct_len = ctypes.c_int(len(execution_ids))
 
     @property
     def _bin_func(self):

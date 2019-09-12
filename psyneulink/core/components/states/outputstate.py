@@ -602,7 +602,7 @@ from psyneulink.core.globals.keywords import \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, \
     output_state_spec_to_parameter_name
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, ParameterError
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -690,9 +690,17 @@ def _parse_output_state_variable(variable, owner, context=None, output_state_nam
                 owner_param_name = spec[0]
 
             try:
-                return getattr(owner.parameters, owner_param_name)._get(context)[spec[1]]
+                # context is None during initialization, and we don't want to
+                # incur the cost of .get during execution
+                if context is None:
+                    return getattr(owner.parameters, owner_param_name).get(context)[spec[1]]
+                else:
+                    return getattr(owner.parameters, owner_param_name)._get(context)[spec[1]]
             except TypeError:
-                if getattr(owner.parameters, owner_param_name)._get(context) is None:
+                if context is None:
+                    if getattr(owner.parameters, owner_param_name).get(context) is None:
+                        return None
+                elif getattr(owner.parameters, owner_param_name)._get(context) is None:
                     return None
                 else:
                     # raise OutputStateError("Can't parse variable ({}) for {} of {}".
@@ -713,10 +721,18 @@ def _parse_output_state_variable(variable, owner, context=None, output_state_nam
                 owner_param_name = spec
 
             try:
-                return getattr(owner.parameters, owner_param_name)._get(context)
+                # context is None during initialization, and we don't want to
+                # incur the cost of .get during execution
+                if context is None:
+                    return getattr(owner.parameters, owner_param_name).get(context)
+                else:
+                    return getattr(owner.parameters, owner_param_name)._get(context)
             except AttributeError:
                 try:
-                    return getattr(owner.function.parameters, owner_param_name)._get(context)
+                    if context is None:
+                        return getattr(owner.function.parameters, owner_param_name).get(context)
+                    else:
+                        return getattr(owner.function.parameters, owner_param_name)._get(context)
                 except AttributeError:
                     raise OutputStateError(
                         "Can't parse variable ({}) for {} of {}".format(

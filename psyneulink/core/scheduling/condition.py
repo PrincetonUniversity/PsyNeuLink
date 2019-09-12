@@ -484,7 +484,7 @@ class Condition(object):
             self.func,
             *self.args,
             *args,
-            context=execution_id,
+            context=context,
             execution_id=execution_id,
             **kwargs_to_pass
         )
@@ -1474,9 +1474,9 @@ class WhenFinished(_DependencyValidation, Condition):
 
     """
     def __init__(self, dependency):
-        def func(dependency, execution_id=None):
+        def func(dependency, context=None):
             try:
-                return dependency.is_finished(execution_id)
+                return dependency.is_finished(context)
             except AttributeError as e:
                 raise ConditionError(f'WhenFinished: Unsupported dependency type: {type(dependency)}; ({e}).')
 
@@ -1506,12 +1506,12 @@ class WhenFinishedAny(_DependencyValidation, Condition):
 
     """
     def __init__(self, *dependencies):
-        def func(*dependencies, scheduler=None, execution_id=None):
+        def func(*dependencies, scheduler=None, context=None):
             if len(dependencies) == 0:
                 dependencies = scheduler.nodes
             for d in dependencies:
                 try:
-                    if d.is_finished(execution_id):
+                    if d.is_finished(context):
                         return True
                 except AttributeError as e:
                     raise ConditionError(f'WhenFinishedAny: Unsupported dependency type: {type(d)}; ({e}).')

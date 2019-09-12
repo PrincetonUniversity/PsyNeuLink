@@ -992,7 +992,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return pnlvm.ir.LiteralStructType([intensity_cost_struct, num_estimates])
 
     def _get_evaluate_param_initializer(self, context):
-        num_estimates = self.parameters.num_estimates._get(context) or 0
+        num_estimates = self.parameters.num_estimates.get(context) or 0
         # FIXME: The intensity cost function is not setup with the right execution id
         intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
         return (intensity_cost, num_estimates)

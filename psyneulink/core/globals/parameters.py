@@ -767,7 +767,7 @@ class Parameter(types.SimpleNamespace):
             return None
 
     @property
-    def _validate(self):
+    def _validate(self, context=None):
         return self._owner._validate
 
     @property
@@ -804,23 +804,26 @@ class Parameter(types.SimpleNamespace):
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `getter` if it exists
         """
-        if not self.stateful:
-            context = None
-
         return self._get(context, **kwargs)
 
-    @handle_external_context()
     def _get(self, context=None, **kwargs):
         if not self.stateful:
             execution_id = None
         else:
-            execution_id = context.execution_id
+            try:
+                execution_id = context.execution_id
+            except AttributeError as e:
+                raise ParameterError(
+                    '_get must pass in a Context object as the context '
+                    'argument. To get parameter values using only an '
+                    'execution id, use get.'
+                ) from e
 
         if self.getter is not None:
             kwargs = {**self._default_getter_kwargs, **kwargs}
             value = call_with_pruned_args(self.getter, context=context, **kwargs)
             if self.stateful:
-                self._set_value(value, context)
+                self._set_value(value, execution_id=execution_id, context=context)
             return value
         else:
             try:
@@ -908,12 +911,10 @@ class Parameter(types.SimpleNamespace):
             }
             value = call_with_pruned_args(self.setter, value, context=context, **kwargs)
 
-        self._set_value(value, context, skip_history=skip_history, skip_log=skip_log)
+        self._set_value(value, context=context, skip_history=skip_history, skip_log=skip_log)
 
-    def _set_value(self, value, context=None, skip_history=False, skip_log=False):
-        if not self.stateful:
-            execution_id = None
-        else:
+    def _set_value(self, value, execution_id=NotImplemented, context=None, skip_history=False, skip_log=False):
+        if execution_id is NotImplemented:
             execution_id = context.execution_id
 
         # store history

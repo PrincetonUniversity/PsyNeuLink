@@ -40,7 +40,7 @@ from psyneulink.core.globals.keywords import \
     BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, ContentAddressableMemory_FUNCTION, \
     MIN_INDICATOR, NOISE, OVERWRITE, RATE, RANDOM, OLDEST, NEWEST
 from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
@@ -752,14 +752,14 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         distance_state = ctx.get_state_struct_type(self.distance_function)
         selection_state = ctx.get_state_struct_type(self.selection_function)
         # Get random state
-        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state"))
+        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state", Context()))
         # Construct a ring buffer
         keys_struct = pnlvm.ir.ArrayType(
             ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0]),
-            self.get_current_function_param("max_entries"))
+            self.get_current_function_param("max_entries", Context()))
         vals_struct = pnlvm.ir.ArrayType(
             ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[1]),
-            self.get_current_function_param("max_entries"))
+            self.get_current_function_param("max_entries", Context()))
         ring_buffer_struct = pnlvm.ir.LiteralStructType([
             keys_struct, vals_struct, ctx.int32_ty, ctx.int32_ty])
         my_state = pnlvm.ir.LiteralStructType([random_state_struct, ring_buffer_struct])
@@ -967,7 +967,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                 raise FunctionError("{} arg of {} ({}) must be a float in the interval [0,1]".
                                     format(repr(STORAGE_PROB), self.__class___.__name__, storage_prob))
 
-    def _validate(self):
+    def _validate(self, context=None):
         """Validate distance_function, selection_function and memory store"""
         distance_function = self.distance_function
         test_var = [self.defaults.variable[KEYS], self.defaults.variable[VALS]]
@@ -993,7 +993,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         selection_function = self.selection_function
         test_var = np.asfarray([distance_result if i==0
                                 else np.zeros_like(distance_result)
-                                for i in range(self.get_current_function_param('max_entries'))])
+                                for i in range(self.get_current_function_param('max_entries', context))])
         if isinstance(selection_function, type):
             selection_function = selection_function(default_variable=test_var)
             fct_string = 'Function type'
@@ -1178,6 +1178,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                 f"must be same as others in the dict ({self.parameters.key_size._get(context)})")
 
     @tc.typecheck
+    @handle_external_context()
     def get_memory(self, query_key:tc.any(list, np.ndarray), context=None):
         """get_memory(query_key, context=None)
 
@@ -1304,6 +1305,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         return storage_succeeded
 
     @tc.typecheck
+    @handle_external_context()
     def add_to_memory(self, memories:tc.any(list, np.ndarray), context=None):
         """Add one or more key-value pairs into `memory <ContentAddressableMememory.memory>`
 
@@ -1322,6 +1324,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             self._store_memory(memory, context)
 
     @tc.typecheck
+    @handle_external_context()
     def delete_from_memory(self, memories:tc.any(list, np.ndarray), key_only:bool= True, context=None):
         """Delete one or more key-value pairs from `memory <ContentAddressableMememory.memory>`
 

@@ -1230,7 +1230,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                  owner=self,
                                                  variable=(OWNER_VALUE,0),
                                                  params=params,
-                                                 reference_value=self.parameters.learning_signal._get(),
+                                                 reference_value=self.parameters.learning_signal._get(context),
                                                  modulation=self.modulation,
                                                  # state_spec=self.learning_signal)
                                                  state_spec=learning_signal,

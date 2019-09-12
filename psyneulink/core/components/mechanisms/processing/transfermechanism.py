@@ -369,7 +369,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, \
     MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
@@ -1403,7 +1403,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # KDM 12/13/18: for some reason on devel f8b1e2cbf this was returning None on several tests, but when
         # refactoring function_object -> function using __call__ on Function_Base, it now returned a tuple in those cases.
         # Seems not to cause any test failures however..
-        clip = self.get_current_mechanism_param("clip")
+        clip = self.get_current_mechanism_param("clip", Context())
         if clip is not None:
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -1529,7 +1529,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         else:
             return self._get_instantaneous_function_input(variable, noise)
 
-    def _report_mechanism_execution(self, input, params, output):
+    def _report_mechanism_execution(self, input, params, output, context=None):
         """Override super to report previous_input rather than input, and selected params
         """
         # KAM Changed 8/29/17 print_input = self.previous_input --> print_input = input
@@ -1540,7 +1540,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Suppress reporting of range (not currently used)
         del print_params[CLIP]
 
-        super()._report_mechanism_execution(input_val=print_input, params=print_params)
+        super()._report_mechanism_execution(input_val=print_input, params=print_params, context=context)
 
     def delta(self, value=NotImplemented, context=None):
         if value is NotImplemented:

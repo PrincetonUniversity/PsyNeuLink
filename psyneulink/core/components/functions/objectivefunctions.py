@@ -333,7 +333,7 @@ class Stability(ObjectiveFunction):
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.states.parameterstate import ParameterState
 
-        matrix = self.parameters.matrix._get()
+        matrix = self.parameters.matrix._get(context)
 
         if isinstance(matrix, MappingProjection):
             matrix = matrix._parameter_states[MATRIX]
@@ -342,7 +342,7 @@ class Stability(ObjectiveFunction):
         else:
             matrix = get_matrix(matrix, size, size)
 
-        self.parameters.matrix._set(matrix)
+        self.parameters.matrix._set(matrix, context)
 
         self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
 
@@ -527,7 +527,7 @@ class Energy(Stability):
 
     matrix : list, np.ndarray, np.matrix, or matrix keyword
         weight matrix from each element of `variable <Energy.variablity>` to each other;  if a matrix other
-        than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from 
+        than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from
         the energy calculation.
 
     transfer_fct : function or method
@@ -548,7 +548,7 @@ class Energy(Stability):
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
-    
+
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -635,7 +635,7 @@ class Entropy(Stability):
 
     matrix : list, np.ndarray, np.matrix, or matrix keyword
         weight matrix from each element of `variable <Entropy.variablity>` to each other;  if a matrix other
-        than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from 
+        than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from
         the entropy calculation.
 
     transfer_fct : function or method

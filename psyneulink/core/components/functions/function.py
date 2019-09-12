@@ -861,7 +861,7 @@ class Function_Base(Function):
         return [sp.name for sp in self._get_compilation_state()]
 
     def _get_state_values(self, context=None):
-        return tuple(sp._get(context) for sp in self._get_compilation_state())
+        return tuple(sp.get(context) for sp in self._get_compilation_state())
 
     def _get_state_initializer(self, context):
         stateful = self._get_state_values(context)
@@ -880,7 +880,7 @@ class Function_Base(Function):
             pass
         def _is_compilation_param(p):
             if p.name not in black_list and not isinstance(p, ParameterAlias):
-                val = p._get(context)
+                val = p.get(context)
                 # Check if the value is string (like integration_method)
                 return not isinstance(val, str)
             return False
@@ -893,7 +893,7 @@ class Function_Base(Function):
     def _get_param_values(self, context=None):
         param_init = []
         for p in self._get_compilation_params(context):
-            param = p._get(context)
+            param = p.get(context)
             try:
                 # Existence of parameter state changes the shape to array
                 # the base value should remain the same though

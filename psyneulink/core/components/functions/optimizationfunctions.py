@@ -32,7 +32,7 @@ from numbers import Number
 from typing import Iterator
 
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
@@ -1430,7 +1430,7 @@ class GridSearch(OptimizationFunction):
         except AttributeError:
             obj_func_state = ctx.get_state_struct_type(self.objective_function)
         # Get random state
-        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state"))
+        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state", Context()))
         return pnlvm.ir.LiteralStructType([obj_func_state, random_state_struct])
 
     def _get_state_initializer(self, context):

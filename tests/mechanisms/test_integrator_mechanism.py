@@ -16,6 +16,7 @@ from psyneulink.core.components.mechanisms.processing.integratormechanism import
     IntegratorMechanism, IntegratorMechanismError
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
+from psyneulink.core.globals.context import Context
 from psyneulink.core.scheduling.condition import AtTrial
 from psyneulink.core.scheduling.condition import Never
 
@@ -84,15 +85,16 @@ class TestReinitialize:
 
         assert np.allclose([[0.3]], I.function.previous_short_term_avg)
         assert np.allclose([[0.7]], I.function.previous_long_term_avg)
+        context = Context()
         print(I.value)
-        print(I.function._combine_terms(0.3, 0.7))
-        assert np.allclose(I.function._combine_terms(0.3, 0.7), I.value)
+        print(I.function._combine_terms(0.3, 0.7, context))
+        assert np.allclose(I.function._combine_terms(0.3, 0.7, context), I.value)
 
         I.reinitialize()
 
         assert np.allclose([[0.0]], I.function.previous_short_term_avg)
         assert np.allclose([[0.0]], I.function.previous_long_term_avg)
-        assert np.allclose(I.function._combine_terms(0.0, 0.0), I.value)
+        assert np.allclose(I.function._combine_terms(0.0, 0.0, context), I.value)
 
     def test_Simple_valid(self):
         I = IntegratorMechanism(

@@ -1323,7 +1323,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     # single flag to check whether to get matrix from auto and hetero?
     @property
     def matrix(self):
-        return self.parameters.matrix._get()
+        return self.parameters.matrix._get(self.most_recent_context)
 
     @matrix.setter
     def matrix(self, val): # simplified version of standard setter (in Component.py)
@@ -1333,7 +1333,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if hasattr(self, "recurrent_projection"):
             self.recurrent_projection.parameter_states["matrix"].function.previous_value = val
 
-        self.parameters.matrix._set(val)
+        self.parameters.matrix._set(val, self.most_recent_context)
 
         if hasattr(self, '_parameter_states') and 'matrix' in self._parameter_states:
             param_state = self._parameter_states['matrix']
@@ -1343,11 +1343,11 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @property
     def auto(self):
-        return self.parameters.auto._get()
+        return self.parameters.auto._get(self.most_recent_context)
 
     @auto.setter
     def auto(self, val):
-        self.parameters.auto._set(val)
+        self.parameters.auto._set(val, self.most_recent_context)
 
         if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_states:
             self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix
@@ -1355,11 +1355,11 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @property
     def hetero(self):
-        return self.parameters.hetero._get()
+        return self.parameters.hetero._get(self.most_recent_context)
 
     @hetero.setter
     def hetero(self, val):
-        self.parameters.hetero._set(val)
+        self.parameters.hetero._set(val, self.most_recent_context)
 
         if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_states:
             self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix_param

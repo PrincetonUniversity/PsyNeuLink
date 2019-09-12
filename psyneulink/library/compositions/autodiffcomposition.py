@@ -545,7 +545,7 @@ class AutodiffComposition(Composition):
                                         self.param_init_from_pnl,
                                         self.execution_sets,
                                         self.device,
-                                        context,
+                                        context=context,
                                         composition = self,
                                         )
             self.parameters.pytorch_representation._set(model, context)
@@ -1076,9 +1076,10 @@ class AutodiffComposition(Composition):
                                                .format(self.name))
 
     # gives user weights and biases of the model (from the pytorch representation)
-    def get_parameters(self, context=NotImplemented):
-        if context is NotImplemented:
-            context = self.default_execution_id
+    @handle_external_context(execution_id=NotImplemented)
+    def get_parameters(self, context=None):
+        if context.execution_id is NotImplemented:
+            context.execution_id = self.default_execution_id
 
         pytorch_representation = self.parameters.pytorch_representation._get(context)
 
@@ -1101,7 +1102,7 @@ class AutodiffComposition(Composition):
                                 else pnlvm.ir.LiteralStructType([]) for p in self.projections)
 
         self._build_pytorch_representation(self.default_execution_id)
-        model = self.parameters.pytorch_representation._get(
+        model = self.parameters.pytorch_representation.get(
             self.default_execution_id)
         pytorch_params = model._get_param_struct_type(ctx)
 
@@ -1141,7 +1142,7 @@ class AutodiffComposition(Composition):
         proj_params = (tuple(p._get_param_initializer(context)) if (p.sender in self.input_CIM.input_states or p.receiver in self.output_CIM.input_states)
                        else tuple() for p in self.projections)
         self._build_pytorch_representation(self.default_execution_id)
-        model = self.parameters.pytorch_representation._get(self.default_execution_id)
+        model = self.parameters.pytorch_representation.get(self.default_execution_id)
         pytorch_params = model._get_param_initializer()
         learning_params = (0, 0, 0, (), 0, ())
         param_args = (tuple(mech_params), tuple(proj_params),

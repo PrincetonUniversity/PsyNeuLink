@@ -44,7 +44,7 @@ from psyneulink.core.globals.keywords import \
     LINEAR_COMBINATION_FUNCTION, OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, \
     REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, kwPreferenceSetName
 from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d, parameter_spec
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, is_pref_set, PreferenceEntry, PreferenceLevel
@@ -1411,7 +1411,7 @@ class LinearCombination(
         offset = ctx.float_ty(-0.0) if isinstance(offset_type, pnlvm.ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
 
         # assume operation does not change dynamically
-        operation = self.get_current_function_param(OPERATION)
+        operation = self.get_current_function_param(OPERATION, context=Context())
         if operation is SUM:
             val = ctx.float_ty(-0.0)
         elif operation is PRODUCT:

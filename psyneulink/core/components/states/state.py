@@ -1513,7 +1513,7 @@ class State_Base(State):
                 # ModualatoryProjection:
                 #    - check that projection's value is compatible with value of the function param being modulated
                 elif isinstance(projection, ModulatoryProjection_Base):
-                    function_param_value = _get_modulated_param(self, projection).function_param_val
+                    function_param_value = _get_modulated_param(self, projection, context).function_param_val
                     # Match the projection's value with the value of the function parameter
                     mod_proj_spec_value = type_match(projection.defaults.value, type(function_param_value))
                     if (function_param_value is not None
@@ -1848,7 +1848,7 @@ class State_Base(State):
                     # ModualatoryProjection:
                     #    - check that projection's value is compatible with value of the function param being modulated
                     elif isinstance(projection, ModulatoryProjection_Base):
-                        function_param_value = _get_modulated_param(receiver, projection).function_param_val
+                        function_param_value = _get_modulated_param(receiver, projection, context).function_param_val
                         # Match the projection's value with the value of the function parameter
                         # should be defaults.value?
                         mod_proj_spec_value = type_match(projection.value, type(function_param_value))
