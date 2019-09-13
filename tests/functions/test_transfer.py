@@ -136,10 +136,11 @@ def test_transfer_with_costs_function():
     assert np.allclose(f.intensity_cost, 148.413159102576603)
     assert np.allclose(f.adjustment_cost, 2)
     assert np.allclose(f.duration_cost, 5)
-    # assert np.allclose(np.float(f.combined_costs), 155.413159102576603)
+    assert np.allclose(np.float(f.combined_costs), 155.413159102576603)
     result = f(1)
     assert np.allclose(result, 1)
     assert np.allclose(f.intensity_cost, 2.718281828459045)
     assert np.allclose(f.adjustment_cost, 4)
     assert np.allclose(f.duration_cost, 6)
+    assert np.allclose(np.float(f.combined_costs), 12.718281828459045)
     assert True

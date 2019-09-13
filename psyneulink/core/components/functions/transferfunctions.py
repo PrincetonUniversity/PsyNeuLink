@@ -3377,18 +3377,18 @@ def _combine_costs_fct_add_param_setter(value, owning_component=None, execution_
 
 class TransferWithCosts(TransferFunction):
     """
-    TransferWithCosts(                          \
-        default_variable=None,                  \
-        size=None,                              \
-        transfer_fct=Line                       \
-        enabled_cost_functions=None,            \
-        intensity_fct=Exponential               \
-        adjustment_fct=Linear                   \
-        duration_fct=SimpleIntegrator           \
-        combine_costs_fct=Reduce(operation=SUM) \
-        params=None,                            \
-        owner=None,                             \
-        prefs=None                              \
+    TransferWithCosts(                      \
+        default_variable=None,              \
+        size=None,                          \
+        transfer_fct=Line                   \
+        enabled_cost_functions=None,        \
+        intensity_fct=Exponential           \
+        adjustment_fct=Linear               \
+        duration_fct=SimpleIntegrator       \
+        combine_costs_fct=LinearCombination \
+        params=None,                        \
+        owner=None,                         \
+        prefs=None                          \
         )
 
     .. _TransferWithCosts:
@@ -3462,16 +3462,16 @@ class TransferWithCosts(TransferFunction):
         specifies the costs to execute when `function <TransferWithCosts.function>` is called, and
         include in the computation of `combined_cost <TransferWithCosts.combined_cost>`.
 
-    intensity_cost_fct : Optional[TransferFunction] : default Exponential
+    intensity_cost_fct : Optional[`TransferFunction`] : default `Exponential`
         specifies the function used to compute the `intensity_cost <TransferWithCosts.intensity_cost>.
 
-    adjustment_cost_fct : Optional[TransferFunction] : default Linear
+    adjustment_cost_fct : Optional[`TransferFunction`] : default `Linear`
         specifies the function used to compute the `adjustment_cost <TransferWithCosts.adjustment_cost>.
 
-    duration_cost_fct : IntegratorFunction : default IntegratorFunction
+    duration_cost_fct : `IntegratorFunction` : default `IntegratorFunction`
         specifies the function used to compute the `duration_cost <TransferWithCosts.duration_cost>.
 
-    combine_costs_fct : function : default `Reduce(operation=SUM) <Function.Reduce>`
+    combine_costs_fct : function : default `LinearCombination`
         specifies the function used to compute `combined_cost <TransferWithCosts.combined_cost>.
 
     params : Dict[param keyword: param value] : default None
@@ -3520,7 +3520,7 @@ class TransferWithCosts(TransferFunction):
         cost computed by `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` for current `variable 
         <TransferWithCosts.variable>`.
 
-    intensity_cost_fct : TransferFunction : default default Exponential
+    intensity_cost_fct : TransferFunction
         calculates `intensity_cost` from the current value of `variable <TransferWithCosts.variable>`. It can be any
         `TransferFunction`, or any other function that takes and returns a scalar value. The default is
         `Exponential`.
@@ -3537,7 +3537,7 @@ class TransferWithCosts(TransferFunction):
         cost of change in `intensity <TransferWithCosts.intensity>` computed by `adjustment_cost_fct 
         <TransferWithCosts.adjustment_cost_fct>` for current `variable <TransferWithCosts.variable>`.
 
-    adjustment_cost_fct : TransferFunction : default Linear
+    adjustment_cost_fct : TransferFunction
         calculates `adjustment_cost <TransferWithCosts.adjustment_cost>` based on the change in `intensity
         <TransferWithCosts.intensity>` from its previous value.  It can be any `TransferFunction`, or any other
         function that takes and returns a scalar value.
@@ -3554,7 +3554,7 @@ class TransferWithCosts(TransferFunction):
         integral of `intensity <intensity <TransferWithCosts.intensity>,  computed by `duration_cost_fct
         <TransferWithCosts.duration_cost_fct>`.
 
-    duration_cost_fct : IntegratorFunction : default Linear
+    duration_cost_fct : IntegratorFunction
         calculates an integral of `intensity <TransferWithCosts.intensity>`.  It can be any `IntegratorFunction`,
         or any other function that takes a list or array of two values and returns a scalar value.
 
@@ -3571,7 +3571,7 @@ class TransferWithCosts(TransferFunction):
         computed by `combined_costs_fct <TransferWithCosts.combined_costs_fct>` for current `variable 
         <TransferWithCosts.variable>`. 
 
-    combine_costs_fct : function : default Reduce(operation=SUM)
+    combine_costs_fct : function
         combines the results of all `cost functions <TransferWithCostss_Cost_Functions>` that are enabled, and assigns
         the result to `cost <TransferWithCosts.cost>`. It can be any function that takes an array and returns a scalar
         value.
@@ -3599,7 +3599,7 @@ class TransferWithCosts(TransferFunction):
         determines the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
 
-    from psyneulink.core.components.functions.combinationfunctions import Reduce, SUM
+    from psyneulink.core.components.functions.combinationfunctions import LinearCombination
     from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 
     componentName = TRANSFER_WITH_COSTS_FUNCTION
@@ -3649,7 +3649,7 @@ class TransferWithCosts(TransferFunction):
                 combine_costs_fct
                     see `combine_costs_fct < TransferWithCosts.combine_costs_fct>`
 
-                    :default value: `Reduce`
+                    :default value: `LinearCombination`
                     :type: `Function`
 
                 combine_costs_fct_mult_param
@@ -3746,8 +3746,8 @@ class TransferWithCosts(TransferFunction):
         variable = Parameter(np.array([0]),
                              history_min_length=1)
 
-        intensity = Parameter(np.array([0]),
-                             history_min_length=1)
+        intensity = Parameter(np.zeros_like(variable.default_value),
+                              history_min_length=1)
 
         # Create primary functions' modulation params for TransferWithCosts
         transfer_fct = Parameter(Linear, stateful=False)
@@ -3781,7 +3781,7 @@ class TransferWithCosts(TransferFunction):
         # # MODIFIED 8/30/19 OLD:
         # intensity_cost = None
         # MODIFIED 8/30/19 NEW: [JDC]
-        intensity_cost = 0
+        intensity_cost = np.zeros_like(intensity.default_value)
         # MODIFIED 8/30/19 END
 
         adjustment_cost_fct = Parameter(Linear, stateful=False)
@@ -3796,7 +3796,7 @@ class TransferWithCosts(TransferFunction):
                                                   aliases=ADJUSTMENT_COST_FCT_ADDITIVE_PARAM,
                                                   getter=_adjustment_cost_fct_add_param_getter,
                                                   setter=_adjustment_cost_fct_add_param_setter)
-        adjustment_cost = 0
+        adjustment_cost = np.zeros_like(intensity.default_value)
 
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
         duration_cost_fct = Parameter(SimpleIntegrator, stateful=False)
@@ -3811,10 +3811,10 @@ class TransferWithCosts(TransferFunction):
                                                 aliases=DURATION_COST_FCT_ADDITIVE_PARAM,
                                                 getter=_duration_cost_fct_add_param_getter,
                                                 setter=_duration_cost_fct_add_param_setter)
-        duration_cost = 0
+        duration_cost  = np.zeros_like(intensity.default_value)
 
-        from psyneulink.core.components.functions.combinationfunctions import Reduce, SUM
-        combine_costs_fct = Parameter(Reduce(operation=SUM), stateful=False)
+        from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+        combine_costs_fct = Parameter(LinearCombination, stateful=False)
         _validate_combine_costs_fct = get_validator_by_function(is_function_type)
         combine_costs_fct_mult_param=Parameter(modulable=True,
                                                modulation_combination_function=PRODUCT,
@@ -3837,7 +3837,7 @@ class TransferWithCosts(TransferFunction):
                  intensity_cost_fct:(is_function_type)=Exponential,
                  adjustment_cost_fct:tc.optional(is_function_type)=Linear,
                  duration_cost_fct:tc.optional(is_function_type)=SimpleIntegrator,
-                 combine_costs_fct:tc.optional(is_function_type)=Reduce(operation=SUM),
+                 combine_costs_fct:tc.optional(is_function_type)=LinearCombination,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -4042,9 +4042,9 @@ class TransferWithCosts(TransferFunction):
         self.combine_costs_fct_add_param = \
             self.get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, execution_id)
         # Execute combine_costs function
-        from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+        # FIX: DELETE
+        # from psyneulink.core.components.functions.combinationfunctions import LinearCombination
         # f = LinearCombination()
-        # x = f([intensity_cost, adjustment_cost, duration_cost])
         combined_costs = self.combine_costs_fct([intensity_cost, adjustment_cost, duration_cost],
                                                 execution_id=execution_id)
         self.parameters.combined_costs._set(combined_costs, execution_id)
