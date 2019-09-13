@@ -143,4 +143,3 @@ def test_transfer_with_costs_function():
     assert np.allclose(f.adjustment_cost, 4)
     assert np.allclose(f.duration_cost, 6)
     assert np.allclose(np.float(f.combined_costs), 12.718281828459045)
-    assert True
