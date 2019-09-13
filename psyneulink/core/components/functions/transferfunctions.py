@@ -3619,7 +3619,7 @@ class TransferWithCosts(TransferFunction):
                 adjustment_cost
                     see `adjustment_cost <TransferWithCosts.adjustment_cost>`
 
-                    :default value: 0
+                    :default value: None
                     :type: int
 
                 adjustment_cost_fct
@@ -3673,7 +3673,7 @@ class TransferWithCosts(TransferFunction):
                 duration_cost
                     see `duration_cost <TransferWithCosts.duration_cost>`
 
-                    :default value: 0
+                    :default value: None
                     :type: int
 
                 duration_cost_fct
@@ -3778,10 +3778,10 @@ class TransferWithCosts(TransferFunction):
                                                  aliases=INTENSITY_COST_FCT_ADDITIVE_PARAM,
                                                  getter=_intensity_cost_fct_add_param_getter,
                                                  setter=_intensity_cost_fct_add_param_setter)
-        # # MODIFIED 8/30/19 OLD:
-        # intensity_cost = None
-        # MODIFIED 8/30/19 NEW: [JDC]
-        intensity_cost = np.zeros_like(intensity.default_value)
+        # MODIFIED 8/30/19 OLD:
+        intensity_cost = None
+        # # MODIFIED 9/13/19 NEW: [JDC]
+        # intensity_cost = np.zeros_like(intensity.default_value)
         # MODIFIED 8/30/19 END
 
         adjustment_cost_fct = Parameter(Linear, stateful=False)
@@ -3796,7 +3796,11 @@ class TransferWithCosts(TransferFunction):
                                                   aliases=ADJUSTMENT_COST_FCT_ADDITIVE_PARAM,
                                                   getter=_adjustment_cost_fct_add_param_getter,
                                                   setter=_adjustment_cost_fct_add_param_setter)
-        adjustment_cost = np.zeros_like(intensity.default_value)
+        # # MODIFIED 8/30/19 OLD:
+        # adjustment_cost = np.zeros_like(intensity.default_value)
+        # # MODIFIED 9/13/19 NEW: [JDC]
+        adjustment_cost = None
+        # MODIFIED 8/30/19 END
 
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
         duration_cost_fct = Parameter(SimpleIntegrator, stateful=False)
@@ -3811,7 +3815,11 @@ class TransferWithCosts(TransferFunction):
                                                 aliases=DURATION_COST_FCT_ADDITIVE_PARAM,
                                                 getter=_duration_cost_fct_add_param_getter,
                                                 setter=_duration_cost_fct_add_param_setter)
-        duration_cost  = np.zeros_like(intensity.default_value)
+        # # MODIFIED 8/30/19 OLD:
+        # duration_cost  = np.zeros_like(intensity.default_value)
+        # MODIFIED 9/13/19 NEW: [JDC]
+        duration_cost = None
+        # MODIFIED 8/30/19 END
 
         from psyneulink.core.components.functions.combinationfunctions import LinearCombination
         combine_costs_fct = Parameter(LinearCombination, stateful=False)
@@ -3826,7 +3834,11 @@ class TransferWithCosts(TransferFunction):
                                               aliases=COMBINE_COSTS_FCT_ADDITIVE_PARAM,
                                               getter=_combine_costs_fct_add_param_getter,
                                               setter=_combine_costs_fct_add_param_setter)
-        combined_costs = 0
+        # # MODIFIED 8/30/19 OLD:
+        # combined_costs = 0
+        # MODIFIED 9/13/19 NEW: [JDC]
+        combined_costs = None
+        # MODIFIED 8/30/19 END
 
     @tc.typecheck
     def __init__(self,
@@ -3977,23 +3989,12 @@ class TransferWithCosts(TransferFunction):
         intensity = self.parameters.transfer_fct._get(execution_id)(variable,
                                                                     execution_id=execution_id)
 
-        # Compute intensity change
-        try:
-            intensity_change = np.abs(intensity - self.parameters.intensity._get(execution_id))
-        except TypeError:
-            intensity_change = [0]
-        # Store current intensity
-        self.parameters.intensity._set(intensity, execution_id)
-
         # THEN, DEAL WITH COSTS
-
-        intensity_cost = self.parameters.intensity_cost._get(execution_id)
-        adjustment_cost = self.parameters.adjustment_cost._get(execution_id)
-        duration_cost = self.parameters.duration_cost._get(execution_id)
-        # combined_costs = self.parameters.combined_costs._get(execution_id)
+        # Note: only compute costs that are enabled;  others are left as None, or with their value when last enabled.
 
         # Get costs for each cost function that is enabled in enabled_cost_functions
         enabled_cost_functions = self.parameters.enabled_cost_functions._get(execution_id)
+        enabled_costs = [] # Used to aggregate costs that are enabled and submit to combine_costs_fct
         if enabled_cost_functions:
 
             # For each cost function that is enabled:
@@ -4011,9 +4012,15 @@ class TransferWithCosts(TransferFunction):
                 # Execute intensity_cost function
                 intensity_cost = self.intensity_cost_fct(intensity, execution_id=execution_id)
                 self.parameters.intensity_cost._set(intensity_cost, execution_id)
+                enabled_costs.append(intensity_cost)
 
             # Compute adjustment_cost
             if enabled_cost_functions & CostFunctions.ADJUSTMENT:
+                # Compute intensity change
+                try:
+                    intensity_change = np.abs(intensity - self.parameters.intensity._get(execution_id))
+                except TypeError:
+                    intensity_change = np.zeros_like(self.parameters_intensity._get(execution_id))
                 # Assign modulatory param values to adjustment_cost_function
                 self.adjustment_cost_fct_mult_param = \
                     self.get_current_function_param(ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM, execution_id)
@@ -4022,6 +4029,7 @@ class TransferWithCosts(TransferFunction):
                 # Execute adjustment_cost function
                 adjustment_cost = self.adjustment_cost_fct(intensity_change, execution_id=execution_id)
                 self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
+                enabled_costs.append(adjustment_cost)
 
             # Compute duration_cost
             if enabled_cost_functions & CostFunctions.DURATION:
@@ -4033,6 +4041,7 @@ class TransferWithCosts(TransferFunction):
                 # Execute duration_cost function
                 duration_cost = self.duration_cost_fct(intensity, execution_id=execution_id)
                 self.parameters.duration_cost._set(duration_cost, execution_id)
+                enabled_costs.append(duration_cost)
 
             # Alwasy execute combined_costs_fct if *any* costs are enabled
 
@@ -4042,12 +4051,12 @@ class TransferWithCosts(TransferFunction):
             self.combine_costs_fct_add_param = \
                 self.get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, execution_id)
             # Execute combine_costs function
-            # FIX: DELETE
-            # from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-            # f = LinearCombination()
-            combined_costs = self.combine_costs_fct([intensity_cost, adjustment_cost, duration_cost],
+            combined_costs = self.combine_costs_fct(enabled_costs,
                                                     execution_id=execution_id)
             self.parameters.combined_costs._set(combined_costs, execution_id)
+
+        # Store current intensity
+        self.parameters.intensity._set(intensity, execution_id)
 
         return intensity
 
