@@ -12,7 +12,10 @@ from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 
 class TestControlMechanisms:
 
-    def test_modulation_of_control_signal_cost_function(self):
+    def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):
+        # tests multiplicative modulation of default intensity_cost_function (Exponential) of
+        #    a ControlMechanism's default function (TransferWithCosts);
+        #    intensity_cost should = e ^ (allocation (3) * value of ctl_mech_B (also 3)) = e^9
         mech = pnl.ProcessingMechanism()
         ctl_mech_A = pnl.ControlMechanism(monitor_for_control=mech,
                                       control_signals=pnl.ControlSignal(modulates=(pnl.INTERCEPT,mech),
@@ -22,10 +25,34 @@ class TestControlMechanisms:
                                                               modulates=ctl_mech_A.control_signals[0],
                                                               modulation=pnl.INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
         comp = pnl.Composition()
-        comp.add_linear_processing_pathway(pathway=[mech, ctl_mech_A, ctl_mech_B])
+        comp.add_linear_processing_pathway(pathway=[mech,
+                                                    ctl_mech_A,
+                                                    ctl_mech_B
+                                                    ])
 
-        comp.run(inputs={mech:[2]}, num_trials=2)
-        assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 54.598150033144239)
+        comp.run(inputs={mech:[3]}, num_trials=2)
+        assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 8103.083927575384008)
+
+    def test_modulation_of_control_signal_intensity_cost_function_ADDITIVE(self):
+        # tests additive modulation of default intensity_cost_function (Exponential) of
+        #    a ControlMechanism's default function (TransferWithCosts)
+        #    intensity_cost should = e ^ (allocation (3) + value of ctl_mech_B (also 3)) = e^6
+        mech = pnl.ProcessingMechanism()
+        ctl_mech_A = pnl.ControlMechanism(monitor_for_control=mech,
+                                      control_signals=pnl.ControlSignal(modulates=(pnl.INTERCEPT,mech),
+                                                                        cost_options=pnl.CostFunctions.INTENSITY))
+        ctl_mech_B = pnl.ControlMechanism(monitor_for_control=mech,
+                                          control_signals=pnl.ControlSignal(
+                                                              modulates=ctl_mech_A.control_signals[0],
+                                                              modulation=pnl.INTENSITY_COST_FCT_ADDITIVE_PARAM))
+        comp = pnl.Composition()
+        comp.add_linear_processing_pathway(pathway=[mech,
+                                                    ctl_mech_A,
+                                                    ctl_mech_B
+                                                    ])
+
+        comp.run(inputs={mech:[3]}, num_trials=2)
+        assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 403.428793492735123)
 
     def test_lvoc(self):
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
