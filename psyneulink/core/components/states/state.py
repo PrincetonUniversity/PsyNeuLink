@@ -2267,7 +2267,6 @@ class State_Base(State):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.function],
             self.efferents,
         ))
 

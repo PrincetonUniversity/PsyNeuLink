@@ -570,10 +570,3 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     @abc.abstractmethod
     def _function(self, *args, **kwargs):
         raise FunctionError("StatefulFunction is not meant to be called explicitly")
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            [self.noise] if isinstance(self.noise, DistributionFunction) else []
-        ))
