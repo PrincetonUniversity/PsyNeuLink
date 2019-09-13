@@ -3979,8 +3979,7 @@ class TransferWithCosts(TransferFunction):
 
         # Compute intensity change
         try:
-            # intensity_change = intensity - self.parameters.intensity.get_previous(execution_id)
-            intensity_change = intensity - self.parameters.intensity._get(execution_id)
+            intensity_change = np.abs(intensity - self.parameters.intensity._get(execution_id))
         except TypeError:
             intensity_change = [0]
         # Store current intensity
@@ -4002,7 +4001,7 @@ class TransferWithCosts(TransferFunction):
             #   - if TransferWithControl is owned by a Mechanism, get value from ParameterState for param
             #   - otherwise, get from TransferWithControl parameter ModulationParam (which is also subject to modulation)
 
-            # Compute intensity cost
+            # Compute intensity_cost
             if enabled_cost_functions & CostFunctions.INTENSITY:
                 # Assign modulatory param values to intensity_cost_function
                 self.intensity_cost_fct_mult_param = \
@@ -4013,7 +4012,7 @@ class TransferWithCosts(TransferFunction):
                 intensity_cost = self.intensity_cost_fct(intensity, execution_id=execution_id)
                 self.parameters.intensity_cost._set(intensity_cost, execution_id)
 
-            # Compute adjustment cost
+            # Compute adjustment_cost
             if enabled_cost_functions & CostFunctions.ADJUSTMENT:
                 # Assign modulatory param values to adjustment_cost_function
                 self.adjustment_cost_fct_mult_param = \
@@ -4024,7 +4023,7 @@ class TransferWithCosts(TransferFunction):
                 adjustment_cost = self.adjustment_cost_fct(intensity_change, execution_id=execution_id)
                 self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
 
-            # Compute duration cost
+            # Compute duration_cost
             if enabled_cost_functions & CostFunctions.DURATION:
                 # Assign modulatory param values to duration_cost_function
                 self.duration_cost_fct_mult_param = \
@@ -4032,11 +4031,10 @@ class TransferWithCosts(TransferFunction):
                 self.duration_cost_fct_add_param = \
                     self.get_current_function_param(DURATION_COST_FCT_ADDITIVE_PARAM, execution_id)
                 # Execute duration_cost function
-                duration_cost = self.duration_cost_fct(self.parameters.combined_costs._get(execution_id),
-                                                       execution_id=execution_id)
+                duration_cost = self.duration_cost_fct(intensity, execution_id=execution_id)
                 self.parameters.duration_cost._set(duration_cost, execution_id)
 
-        # Always execute combined costs
+        # Always execute combined_costs_fct
 
         # Assign modulatory param values to combine_costs_function
         self.combine_costs_fct_mult_param = \
@@ -4044,6 +4042,9 @@ class TransferWithCosts(TransferFunction):
         self.combine_costs_fct_add_param = \
             self.get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, execution_id)
         # Execute combine_costs function
+        from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+        # f = LinearCombination()
+        # x = f([intensity_cost, adjustment_cost, duration_cost])
         combined_costs = self.combine_costs_fct([intensity_cost, adjustment_cost, duration_cost],
                                                 execution_id=execution_id)
         self.parameters.combined_costs._set(combined_costs, execution_id)
