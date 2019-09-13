@@ -264,7 +264,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             self.prediction_terms = [PV.F,PV.C,PV.COST]
 
     # def initialize(self, owner):
-    def initialize(self, features_array, control_signals):
+    def initialize(self, features_array, control_signals, context):
         """Assign owner and instantiate `prediction_vector <RegressorCFA.prediction_vector>`
 
         Must be called before RegressorCFA's methods can be used.
@@ -278,6 +278,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         if isinstance(self.update_weights, type):
             self.update_weights = \
                 self.update_weights(default_variable=update_weights_default_variable)
+            self._update_parameter_components(context)
         else:
             self.update_weights.reinitialize({DEFAULT_VARIABLE: update_weights_default_variable})
 
@@ -358,11 +359,6 @@ class RegressionCFA(CompositionFunctionApproximator):
 
         return predicted_outcome
 
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            [self.update_weights]
-        ))
 
     class PredictionVector():
         """Maintain a `vector <PredictionVector.vector>` of terms for a regression model specified by a list of

@@ -1221,18 +1221,3 @@ class ControlSignal(ModulatorySignal):
     @cost.setter
     def cost(self, value):
         self._cost = value
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            [
-                f for f in [
-                    self.intensity_cost_function,
-                    self.adjustment_cost_function,
-                    self.duration_cost_function,
-                    self.combine_costs_function
-                ]
-                if isinstance(f, Function)
-            ]
-        ))

@@ -481,6 +481,7 @@ def _integrator_mode_setter(value, owning_component=None, context=None):
                     owning_component.reinitialize(owning_component.parameters.value._get(context), context=context)
                 elif owning_component.on_resume_integrator_mode == REINITIALIZE:
                     owning_component.reinitialize(context=context)
+            owning_component._parameter_components.add(owning_component.integrator_function)
         owning_component.parameters.has_initializers._set(True, context)
     elif value is False:
         owning_component.parameters.has_initializers._set(False, context)
@@ -932,7 +933,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
                  noise=0.0,
                  clip=None,
-                 convergence_function:tc.any(is_function_type)=Distance(metric=DIFFERENCE),
+                 convergence_function=None,
                  convergence_criterion:float=0.01,
                  max_passes:tc.optional(int)=1000,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
@@ -1564,10 +1565,3 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Otherwise just return True
         else:
             return None
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            [self.integrator_function] if isinstance(self.integrator_function, IntegratorFunction) else [],
-        ))

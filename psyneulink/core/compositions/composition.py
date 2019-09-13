@@ -7597,8 +7597,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.nodes,
             self.projections,
             [self.input_CIM, self.output_CIM, self.parameter_CIM],
-            self.input_CIM.efferents,
-            self.output_CIM.afferents,
             [self.controller] if self.controller is not None else []
         ))
 
