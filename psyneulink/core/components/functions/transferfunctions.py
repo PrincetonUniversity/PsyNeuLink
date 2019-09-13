@@ -3394,8 +3394,8 @@ class TransferWithCosts(TransferFunction):
     .. _TransferWithCosts:
 
     `function <TransferWithCosts.function>` returns value of `variable <Exponential.variable>` transformed by
-    `transfer_fct <TransferWithCosts.transfer_fct>`, after calling the cost functions and assigning their results
-    to the corresponding parameters, as described below
+    `transfer_fct <TransferWithCosts.transfer_fct>`, after calling any cost functions that are enable and assigning
+    the result(s) to the corresponding parameter(s), as described below
 
     .. _TransferWithCosts_Cost_Functions:
 
@@ -3410,11 +3410,17 @@ class TransferWithCosts(TransferFunction):
     * `duration_cost_fct <TransferWithCosts.duration_cost_fct>` -> `duration_cost <TransferWithCosts.duration_cost>`;
 
     Which functions are called is determined by the settings in `enabled_cost_functions
-    <TransferWithCosts.enabled_cost_functions>`.
+    <TransferWithCosts.enabled_cost_functions>`, which can be initialized in the constructor using the
+    **enabled_cost_functions** argument, and modified using the `toggle_cost_function
+    <TransferWithCosts.toggle_cost_function>` method.  The value of any cost for which its function has
+    *never* been enabled is None;  otherwise, it is the value assigned when it was last enabled and executed
+    (see `duration_cost_fct <TransferWithCosts.duration_cost_fct> for additional details concerning that function).
 
-    The `combine_costs_fct <TransferWithCosts.combine_costs_fct>` function is always executed, and combines the results
-    of the functions enabled in `enabled_cost_functions <TransferWithCosts.enabled_cost_functions>`, and stores the
-    result in the `combined_costs <TransferWithCosts.combined_costs>` attribute.
+    If any cost functions are enabled, then the `combine_costs_fct <TransferWithCosts.combine_costs_fct>` function
+    is executed, which sums the results of those that are enabled (Hadamard style, if the costs are arrays), and
+    stores the result in the `combined_costs <TransferWithCosts.combined_costs>` attribute.  Its value is None if no
+    cost functions have ever been enabled;  otherwise it is the value assigned the last time one or more cost functions
+    were enabled.
 
     .. _TransferWithCosts_Modulation_of_Cost_Params:
 
@@ -3514,16 +3520,18 @@ class TransferWithCosts(TransferFunction):
     enabled_cost_functions : CostFunctions or None
         boolean combination of currently enabled CostFunctions;  determines which `cost functions
         <TransferWithCosts_Cost_Functions>` are calculated when `function <TransferWithCosts.function>` is called, and
-        are included in the computation of `combined_cost <TransferWithCosts.combined_cost>`.
+        are included in the computation of `combined_cost <TransferWithCosts.combined_cost>` (see
+        `TransferWithCosts_Cost_Functions` for additional details).
 
-    intensity_cost : float
-        cost computed by `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` for current `variable 
-        <TransferWithCosts.variable>`.
+    intensity_cost : float or None
+        cost computed by `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` for current `intensity
+        <TransferWithCosts.intensity>`.  Value is None if `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`
+        has not been enabled (see `TransferWithCosts_Cost_Functions` for additional details).
 
     intensity_cost_fct : TransferFunction
-        calculates `intensity_cost` from the current value of `variable <TransferWithCosts.variable>`. It can be any
-        `TransferFunction`, or any other function that takes and returns a scalar value. The default is
-        `Exponential`.
+        calculates `intensity_cost` from the current value of `intensity <TransferWithCosts.intensity>`.
+        It can be any `TransferFunction`, or any other function that takes and returns a scalar value.
+        The default is `Exponential`.
 
     intensity_cost_fct_mult_param : value
         references value of the `multiplicative_param <Function_Modulatory_Params>` of `intensity_cost_fct
@@ -3533,14 +3541,16 @@ class TransferWithCosts(TransferFunction):
         references value of the `additive_param <Function_Modulatory_Params>` of `intensity_cost_fct
         <TransferWithCosts.intensity_cost_fct>`.
 
-    adjustment_cost : float
-        cost of change in `intensity <TransferWithCosts.intensity>` computed by `adjustment_cost_fct 
-        <TransferWithCosts.adjustment_cost_fct>` for current `variable <TransferWithCosts.variable>`.
+    adjustment_cost : float or None
+        cost of change in `intensity <TransferWithCosts.intensity>` from the last time `function
+        <TransferWithCosts.function>` was executed.  Value is None if `adjustment_cost_fct
+        <TransferWithCosts.adjustment_cost_fct>` has not been enabled (see `TransferWithCosts_Cost_Functions` for
+        additional details).
 
     adjustment_cost_fct : TransferFunction
         calculates `adjustment_cost <TransferWithCosts.adjustment_cost>` based on the change in `intensity
-        <TransferWithCosts.intensity>` from its previous value.  It can be any `TransferFunction`, or any other
-        function that takes and returns a scalar value.
+        <TransferWithCosts.intensity>` from its value the last time `function <TransferWithCosts.function>` was
+        executed. It can be any `TransferFunction`, or any other function that takes and returns a scalar value.
 
     adjustment_cost_fct_mult_param : value
         references value of the `multiplicative_param <Function_Modulatory_Params>` of `adjustment_cost_fct
@@ -3550,9 +3560,12 @@ class TransferWithCosts(TransferFunction):
         references value of the `additive_param <Function_Modulatory_Params>` of `adjustment_cost_fct
         <TransferWithCosts.adjustment_cost_fct>`.
 
-    duration_cost : float
-        integral of `intensity <intensity <TransferWithCosts.intensity>,  computed by `duration_cost_fct
-        <TransferWithCosts.duration_cost_fct>`.
+    duration_cost : float or None
+        integral of `intensity <intensity <TransferWithCosts.intensity>`,  computed by `duration_cost_fct
+        <TransferWithCosts.duration_cost_fct>`.  Value is None if `duration_cost_fct
+        <TransferWithCosts.duration_cost_fct>` has not been enabled; othewise, the integral of
+        `intensity <intensity <TransferWithCosts.intensity>` is only for those executions of `function
+        <TransferWithCosts.function>` in which `function <TransferWithCosts.duration_cost_fct>` was enabled.
 
     duration_cost_fct : IntegratorFunction
         calculates an integral of `intensity <TransferWithCosts.intensity>`.  It can be any `IntegratorFunction`,
@@ -3566,10 +3579,11 @@ class TransferWithCosts(TransferFunction):
         references value of the `additive_param <Function_Modulatory_Params>` of `duration_cost_fct
         <TransferWithCosts.duration_cost_fct>`.
 
-    combined_costs : float
+    combined_costs : float or None
         combined result of all `cost functions <TransferWithCostss_Cost_Functions>` that are enabled;
-        computed by `combined_costs_fct <TransferWithCosts.combined_costs_fct>` for current `variable 
-        <TransferWithCosts.variable>`. 
+        computed by `combined_costs_fct <TransferWithCosts.combined_costs_fct>` for current `intensity
+        <TransferWithCosts.intensity>`.  Value is None if no costs have been enabled (see
+        `TransferWithCosts_Cost_Functions` for additional details).
 
     combine_costs_fct : function
         combines the results of all `cost functions <TransferWithCostss_Cost_Functions>` that are enabled, and assigns
@@ -3766,6 +3780,7 @@ class TransferWithCosts(TransferFunction):
 
         # Create versions of cost functions' modulation params for TransferWithCosts
         
+        intensity_cost = None
         intensity_cost_fct = Parameter(Exponential, stateful=False)
         _validate_intensity_cost_fct = get_validator_by_function(is_function_type)
         intensity_cost_fct_mult_param = Parameter(modulable=True,
@@ -3778,12 +3793,8 @@ class TransferWithCosts(TransferFunction):
                                                  aliases=INTENSITY_COST_FCT_ADDITIVE_PARAM,
                                                  getter=_intensity_cost_fct_add_param_getter,
                                                  setter=_intensity_cost_fct_add_param_setter)
-        # MODIFIED 8/30/19 OLD:
-        intensity_cost = None
-        # # MODIFIED 9/13/19 NEW: [JDC]
-        # intensity_cost = np.zeros_like(intensity.default_value)
-        # MODIFIED 8/30/19 END
 
+        adjustment_cost = None
         adjustment_cost_fct = Parameter(Linear, stateful=False)
         _validate_adjustment_cost_fct = get_validator_by_function(is_function_type)
         adjustment_cost_fct_mult_param = Parameter(modulable=True,
@@ -3796,12 +3807,8 @@ class TransferWithCosts(TransferFunction):
                                                   aliases=ADJUSTMENT_COST_FCT_ADDITIVE_PARAM,
                                                   getter=_adjustment_cost_fct_add_param_getter,
                                                   setter=_adjustment_cost_fct_add_param_setter)
-        # # MODIFIED 8/30/19 OLD:
-        # adjustment_cost = np.zeros_like(intensity.default_value)
-        # # MODIFIED 9/13/19 NEW: [JDC]
-        adjustment_cost = None
-        # MODIFIED 8/30/19 END
 
+        duration_cost = None
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
         duration_cost_fct = Parameter(SimpleIntegrator, stateful=False)
         _validate_duration_cost_fct = get_validator_by_function(is_function_type)
@@ -3815,12 +3822,8 @@ class TransferWithCosts(TransferFunction):
                                                 aliases=DURATION_COST_FCT_ADDITIVE_PARAM,
                                                 getter=_duration_cost_fct_add_param_getter,
                                                 setter=_duration_cost_fct_add_param_setter)
-        # # MODIFIED 8/30/19 OLD:
-        # duration_cost  = np.zeros_like(intensity.default_value)
-        # MODIFIED 9/13/19 NEW: [JDC]
-        duration_cost = None
-        # MODIFIED 8/30/19 END
 
+        combined_costs = None
         from psyneulink.core.components.functions.combinationfunctions import LinearCombination
         combine_costs_fct = Parameter(LinearCombination, stateful=False)
         _validate_combine_costs_fct = get_validator_by_function(is_function_type)
@@ -3834,11 +3837,6 @@ class TransferWithCosts(TransferFunction):
                                               aliases=COMBINE_COSTS_FCT_ADDITIVE_PARAM,
                                               getter=_combine_costs_fct_add_param_getter,
                                               setter=_combine_costs_fct_add_param_setter)
-        # # MODIFIED 8/30/19 OLD:
-        # combined_costs = 0
-        # MODIFIED 9/13/19 NEW: [JDC]
-        combined_costs = None
-        # MODIFIED 8/30/19 END
 
     @tc.typecheck
     def __init__(self,
@@ -3957,11 +3955,6 @@ class TransferWithCosts(TransferFunction):
                  params=None,
                  context=None):
         """
-
-        COMMENT:
-        IMPLEMENTATION NOTE:
-            Uses get_current_Get parameters for cost functions f
-        COMMENT
 
         Arguments
         ---------
