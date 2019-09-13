@@ -116,6 +116,10 @@ def test_ptx_cuda(func, variable, params, fail, expected, benchmark):
 
 def test_transfer_with_costs_function():
     from psyneulink.core.components.functions.transferfunctions import TransferWithCosts, CostFunctions
+    f = TransferWithCosts()
+    result = f(1)
+    assert np.allclose(result, 1)
+    f.toggle_cost_function(CostFunctions.INTENSITY)
     f = TransferWithCosts(enabled_cost_functions=CostFunctions.INTENSITY)
     result = f(2)
     assert np.allclose(result, 2)

@@ -4034,20 +4034,20 @@ class TransferWithCosts(TransferFunction):
                 duration_cost = self.duration_cost_fct(intensity, execution_id=execution_id)
                 self.parameters.duration_cost._set(duration_cost, execution_id)
 
-        # Always execute combined_costs_fct
+            # Alwasy execute combined_costs_fct if *any* costs are enabled
 
-        # Assign modulatory param values to combine_costs_function
-        self.combine_costs_fct_mult_param = \
-            self.get_current_function_param(COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM, execution_id)
-        self.combine_costs_fct_add_param = \
-            self.get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, execution_id)
-        # Execute combine_costs function
-        # FIX: DELETE
-        # from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-        # f = LinearCombination()
-        combined_costs = self.combine_costs_fct([intensity_cost, adjustment_cost, duration_cost],
-                                                execution_id=execution_id)
-        self.parameters.combined_costs._set(combined_costs, execution_id)
+            # Assign modulatory param values to combine_costs_function
+            self.combine_costs_fct_mult_param = \
+                self.get_current_function_param(COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM, execution_id)
+            self.combine_costs_fct_add_param = \
+                self.get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, execution_id)
+            # Execute combine_costs function
+            # FIX: DELETE
+            # from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+            # f = LinearCombination()
+            combined_costs = self.combine_costs_fct([intensity_cost, adjustment_cost, duration_cost],
+                                                    execution_id=execution_id)
+            self.parameters.combined_costs._set(combined_costs, execution_id)
 
         return intensity
 
@@ -4156,7 +4156,10 @@ class TransferWithCosts(TransferFunction):
             if not self.paramsCurrent[cost_function_name]:
                 raise FunctionError("Unable to toggle {} ON as function assignment is \'None\'".
                                          format(cost_function_name))
-            enabled_cost_functions |= cost_function
+            if not enabled_cost_functions:
+                enabled_cost_functions = cost_function
+            else:
+                enabled_cost_functions |= cost_function
         else:
             enabled_cost_functions &= ~cost_function
 
