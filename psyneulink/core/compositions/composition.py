@@ -1112,7 +1112,7 @@ from psyneulink.core.components.projections.modulatory.learningprojection import
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.state import State
-from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.inputstate import InputState, SHADOW_INPUTS
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
@@ -2521,7 +2521,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If this node is shadowing another node, then add it to that node's entry in the Composition's "shadows" dict
         # If the node it's shadowing is a nested node, add it to the entry for the composition it's nested in.
         for input_state in node.input_states:
-            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+            if hasattr(input_state, SHADOW_INPUTS) and input_state.shadow_inputs is not None:
                 owner = input_state.shadow_inputs.owner
                 if owner in nested_nodes:
                     owner = nested_nodes[owner]
@@ -4122,8 +4122,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"Specification of {repr(CONTROLLER)} arg for {self.name} "
                                    f"must be a {repr(ModulatoryMechanism.__name__)} ")
 
+        controller.composition = self
         self.controller = controller
-        self.controller.composition = self
 
         if self.controller.objective_mechanism:
             self.add_node(self.controller.objective_mechanism)
@@ -4134,10 +4134,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
         self._update_shadows_dict(controller)
 
-        # Skip first (OUTCOME) input_state
+        # INSTANTIATE SHADOW_INPUT PROJECTIONS
+        # Skip controller's first (OUTCOME) input_state (that receives the Projection from its objective_mechanism
         input_cims=[self.input_CIM] + [comp.input_CIM for comp in self._get_nested_compositions()]
+        # For the rest of the controller's input_states if they are marked as receiving SHADOW_INPUTS,
+        #    instantiate the shadowing Projection to them from the sender to the shadowed InputState
         for input_state in controller.input_states[1:]:
-            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+            if hasattr(input_state, SHADOW_INPUTS) and input_state.shadow_inputs is not None:
                 for proj in input_state.shadow_inputs.path_afferents:
                     sender = proj.sender
                     if sender.owner not in input_cims:
@@ -4163,7 +4166,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         nested_nodes = dict(self._get_nested_nodes())
         for j in range(len(self.controller.input_states) - 1):
             input_state = self.controller.input_states[j + 1]
-            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+            if hasattr(input_state, SHADOW_INPUTS) and input_state.shadow_inputs is not None:
                 owner = input_state.shadow_inputs.owner
                 if not owner in nested_nodes:
                     inputs[input_state.shadow_inputs.owner] = predicted_input[j]
