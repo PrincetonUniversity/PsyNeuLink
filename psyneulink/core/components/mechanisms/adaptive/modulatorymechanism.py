@@ -673,11 +673,19 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
     Attributes
     ----------
 
+    COMMENT:
     system : System_Base
         The `System` for which the ModulatoryMechanism is a `controller <System>`.  Note that this is distinct from
         a Mechanism's `systems <Mechanism_Base.systems>` attribute, which lists all of the Systems to which a
         `Mechanism` belongs -- a ModulatoryMechanism can belong to but not be the `controller of a Composition
         <ModulatoryMechanism_Composition_Controller>`.
+    COMMENT
+
+    composition : Composition
+        The `Composition` for which the ModulatoryMechanism is a `controller <Composition.controller>`
+        (see `<`ModulatoryMechanism_Composition_Controller` for additional details).  Note that a ModulatoryMechanism
+        can belong to but not be the `controller <Composition.controller>` of a Composition;  if the ModulatoryMechanism
+        is *not* a `controller <Composition.controller>` of a Composition, this attribute does not exist.
 
     objective_mechanism : ObjectiveMechanism
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ModulatoryMechanism's
@@ -718,7 +726,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         See documentation for **default_allocation** argument of ModulatorySignal constructor for additional details.
 
     modulatory_signals : ContentAddressableList[ModulatorySignal]
-        list of the ModulatoryMechanisms `ControlSignals <ControlSignals>` and `GatingSignals <GatingSignals>`.
+        list of the ModulatoryMechanism's `ControlSignals <ControlSignals>` and `GatingSignals <GatingSignals>`.
         COMMENT:
         TBI FOR COMPOSITION
         including any inherited from a `system <ModulatoryMechanism.system>` for which it is a `controller
@@ -1074,6 +1082,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                 f"it must be an {OutputState.__name__} or a {Mechanism.__name__}.")
                 # If ModulatoryMechanism has been assigned to a System, check that
                 #    all the items in the list used to specify objective_mechanism are in the same System
+                # FIX: TBI FOR COMPOSITION
                 if self.system:
                     if not isinstance(spec, (list, ContentAddressableList)):
                         spec = [spec]
