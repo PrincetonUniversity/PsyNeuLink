@@ -1969,12 +1969,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             sender=proj.sender.owner,
                                             receiver=node)
 
-        # Add ControlProjections to any parameter_states specified for control in node's constructor
+        # Add ControlSignals to controller and ControlProjections
+        #     to any parameter_states specified for control in node's constructor
         # FIX: 9/14/19 - HANDLE THIS USING AUX_COMPONENTS IN MECHANISM CONSTRUCTOR?
         if self.controller:
-            for parameter_state in node.parameter_states:
-                for mod_afferent in parameter_state.mod_afferents:
-                    XXX
+            for ctl_sig_specs in node._get_deferred_init_control_specs().values():
+                # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_state
+                #               CALLED FROM _instantiate_control_signal
+                #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
+                # Don't add any that are already on the ModulatoryMechanism
+
+                # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
+                for ctl_sig_spec in ctl_sig_specs:
+                    self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+                                                           context=Context(source=ContextFlags.COMPOSITION))
+                    self.controller._activate_projections_for_compositions(self)
+
 
     def add_nodes(self, nodes, required_roles=None):
         """
@@ -4242,12 +4252,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if node.controller:
                     control_signal_specs.append(node._get_control_signals_for_composition)
             elif isinstance(node, Mechanism):
-                for parameter_state in node._parameter_states:
-                    for projection in parameter_state.mod_afferents:
-                        if projection.initialization_status == ContextFlags.DEFERRED_INIT:
-                            proj_control_signal_specs = projection.control_signal_params or {}
-                            proj_control_signal_specs.update({PROJECTIONS: [projection]})
-                            control_signal_specs.append(proj_control_signal_specs)
+                # for parameter_state in node._parameter_states:
+                #     for proj in parameter_state.mod_afferents:
+                #         if proj.initialization_status == ContextFlags.DEFERRED_INIT:
+                #             proj_control_signal_specs = proj.control_signal_params or {}
+                #             proj_control_signal_specs.update({PROJECTIONS: [proj]})
+                #             control_signal_specs.append(proj_control_signal_specs)
+                control_signal_specs.append(node._get_deferred_init_control_specs())
         return control_signal_specs
 
     def _build_predicted_inputs_dict(self, predicted_input):

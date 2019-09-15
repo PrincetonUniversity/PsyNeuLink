@@ -949,19 +949,19 @@ from psyneulink.core.components.functions.function import FunctionOutputType, AD
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.core.components.states.inputstate import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import REMOVE_STATES, _parse_state_spec
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    CONTROL_SIGNAL, CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
+    CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
     INPUT_LABELS_DICT, INPUT_STATE, INPUT_STATES, INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, \
+    OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, \
+    PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, PROJECTIONS, \
     REFERENCE_VALUE, TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
-from psyneulink.core.globals.parameters import Parameter, parse_context
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
@@ -2457,6 +2457,14 @@ class Mechanism_Base(Mechanism):
         for state in self._parameter_states:
             state._update(context=context, params=runtime_params)
         self._update_attribs_dicts(context=context)
+
+    def _get_deferred_init_control_specs(self):
+        for parameter_state in self._parameter_states:
+            for proj in parameter_state.mod_afferents:
+                if proj.initialization_status == ContextFlags.DEFERRED_INIT:
+                    proj_control_signal_specs = proj.control_signal_params or {}
+                    proj_control_signal_specs.update({PROJECTIONS: [proj]})
+                    return proj_control_signal_specs
 
     def _update_attribs_dicts(self, context):
         from psyneulink.core.globals.keywords import NOISE
