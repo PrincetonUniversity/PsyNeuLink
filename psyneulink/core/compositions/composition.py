@@ -1973,18 +1973,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     to any parameter_states specified for control in node's constructor
         # FIX: 9/14/19 - HANDLE THIS USING AUX_COMPONENTS IN MECHANISM CONSTRUCTOR?
         if self.controller:
-            for ctl_sig_specs in node._get_deferred_init_control_specs().values():
-                # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_state
-                #               CALLED FROM _instantiate_control_signal
-                #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
-                # Don't add any that are already on the ModulatoryMechanism
-
-                # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-                for ctl_sig_spec in ctl_sig_specs:
-                    self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
-                                                           context=Context(source=ContextFlags.COMPOSITION))
-                    self.controller._activate_projections_for_compositions(self)
-
+            deferred_init_control_specs = node._get_deferred_init_control_specs()
+            # _get_deferred_init_control_specs returns a dict, in which the value of each entry is a control_spec
+            if deferred_init_control_specs:
+                for ctl_sig_specs in deferred_init_control_specs.values():
+                    # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
+                    for ctl_sig_spec in ctl_sig_specs:
+                        self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+                                                               context=Context(source=ContextFlags.COMPOSITION))
+                        self.controller._activate_projections_for_compositions(self)
 
     def add_nodes(self, nodes, required_roles=None):
         """

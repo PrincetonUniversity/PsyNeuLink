@@ -232,9 +232,7 @@ class TestControlMechanisms:
                                                    function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
-                                                   allocation_samples=pnl.SampleSpec(start=1.0,
-                                                                                     stop=5.0,
-                                                                                     num=5))])
+                                                   allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
         icomp.add_controller(
             pnl.OptimizationControlMechanism(
@@ -252,9 +250,7 @@ class TestControlMechanisms:
                                                    function=pnl.Linear,
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
-                                                   allocation_samples=pnl.SampleSpec(start=1.0,
-                                                                                     stop=5.0,
-                                                                                     num=5))])
+                                                   allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
         results = ocomp.run([5])
         assert np.allclose(results, [[50]])
