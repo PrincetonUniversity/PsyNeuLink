@@ -1372,7 +1372,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         modulatory_signal.owner = self
 
-        # FIX: 9/14/19 - CLEAN UP WARNINGS BELOW
         # Check that modulatory_signal is not a duplicate of one already instantiated for the ModulatoryMechanism
         # (viz., if control of parameter was specified both in constructor for Mechanism and in ModulatoryMechanism)
         for existing_mod_sig in [ms for ms in self._modulatory_signals if isinstance(ms, ModulatorySignal)]:

@@ -1624,7 +1624,7 @@ class State_Base(State):
 
 
         # IMPLEMENTATION NOTE:  THE FOLLOWING IS WRITTEN AS A LOOP IN PREP FOR GENERALINZING METHOD
-        #                       TO HANDLE PROJECTION LIST (AS PER _instantiate_projection_to_state())
+        #                       TO HANDLE PROJECTION LIST (AS PER _instantiate_projections_to_state())
 
         # If projection_spec and/or receiver is not in a list, wrap it in one for consistency of treatment below
         # (since specification can be a list, so easier to treat any as a list)
