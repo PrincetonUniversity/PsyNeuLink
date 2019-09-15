@@ -1372,6 +1372,13 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         modulatory_signal.owner = self
 
+        # # Check that it is not a duplicate of one already on the ModulatoryMechanism
+        # # (viz., if control of parameter was specified both in constructor for Mechanism and in ModulatoryMechanism)
+        # for existing_mod_sig in self._modulatory_signals:
+        #     # Return if *all* projections from modulatory_signal are identical to ones in an existing modulatory_signal
+        #     if all(p )   XXX
+        #     # Return if *any* projections from modulatory_signal are identical to ones in an existing modulatory_signal
+
         if isinstance(modulatory_signal, ControlSignal):
             # Update control_signal_costs to accommodate instantiated Projection
             control_signal_costs = self.parameters.control_signal_costs._get(context)
