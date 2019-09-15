@@ -1375,6 +1375,12 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # Check that modulatory_signal is not a duplicate of one already instantiated for the ModulatoryMechanism
         # (viz., if control of parameter was specified both in constructor for Mechanism and in ModulatoryMechanism)
         for existing_mod_sig in [ms for ms in self._modulatory_signals if isinstance(ms, ModulatorySignal)]:
+
+            # OK if modulatory_signal is one already assigned to ModulatoryMechanism but in deferred_init status
+            #    and initalized in call to _instantiate_state above
+            if modulatory_signal == existing_mod_sig:
+                continue
+
             # Return if *all* projections from modulatory_signal are identical to ones in an existing modulatory_signal
             if all(
                     any(new_p.receiver == existing_p.receiver
@@ -1383,6 +1389,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                     warnings.warn(f"Specification of {modulatory_signal.name} for {self.name} "
                                   f"is redundant with existing one ({existing_mod_sig.name}) so it has been ignored.")
                 return
+
             # Return if *any* projections from modulatory_signal are identical to ones in an existing modulatory_signal
             if any(
                     any(new_p.receiver == existing_p.receiver

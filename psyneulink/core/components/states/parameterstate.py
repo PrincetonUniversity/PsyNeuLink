@@ -642,7 +642,7 @@ class ParameterState(State_Base):
         self._instantiate_projections_to_state(projections=projections, context=context)
 
     def _check_for_duplicate_projections(self, projection):
-        '''Check if projection is redundant with one in mode_afferents of ParameterState
+        '''Check if projection is redundant with one in mod_afferents of ParameterState
 
         Check for any instantiated projection in mod_afferents with the same sender as projection
         or one in deferred_init status with sender specification that is the same type as projection.
@@ -678,15 +678,17 @@ class ParameterState(State_Base):
         # return False
 
         # MODIFIED 9/14/19 NEW: OUTER
-
+        # FIX: 9/14/19 - RESTORE WARNING
         duplicate = next(iter([proj for proj in self.mod_afferents
                                if ((proj.sender == projection.sender and proj != projection)
                                    or (proj.initialization_status == ContextFlags.DEFERRED_INIT
                                        and proj.init_args[SENDER] == type(projection.sender)))]), None)
-        if duplicate:
-            return duplicate
-        return False
-
+        if duplicate and self.verbosePref or self.owner.verbosePref:
+            from psyneulink.core.components.projections.projection import Projection
+            warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
+                          f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
+                          f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
+        return duplicate
         # MODIFIED 9/14/19 END OUTER
 
 
