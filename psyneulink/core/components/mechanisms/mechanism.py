@@ -3334,8 +3334,14 @@ class Mechanism_Base(Mechanism):
                 index = self.input_states.index(state)
                 delete_state_projections(state.path_afferents)
                 del self.input_states[index]
+                # If state is subclass of OutputState:
+                #    check if regsistry has category for that class, and if so, use that
+                category = INPUT_STATE
+                class_name = state.__class__.__name__
+                if class_name != INPUT_STATE and class_name in self._stateRegistry:
+                    category = class_name
                 remove_instance_from_registry(registry=self._stateRegistry,
-                                              category=INPUT_STATE,
+                                              category=category,
                                               component=state)
                 old_variable = self.defaults.variable
                 old_variable = np.delete(old_variable,index,0)
@@ -3359,8 +3365,14 @@ class Mechanism_Base(Mechanism):
                 delete_state_projections(state.efferents)
                 del self.output_values[index]
                 del self.output_states[state]
+                # If state is subclass of OutputState:
+                #    check if regsistry has category for that class, and if so, use that
+                category = OUTPUT_STATE
+                class_name = state.__class__.__name__
+                if class_name != OUTPUT_STATE and class_name in self._stateRegistry:
+                    category = class_name
                 remove_instance_from_registry(registry=self._stateRegistry,
-                                              category=OUTPUT_STATE,
+                                              category=category,
                                               component=state)
 
         self.defaults.variable = self.input_values

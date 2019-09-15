@@ -1346,10 +1346,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         try:
             modulatory_signal = _instantiate_state(state_type=ControlSignal,
                                                    owner=self,
-                                                   # variable=self.parameters.control_allocation.default_value,
                                                    variable=self.default_allocation or
                                                             self.parameters.control_allocation.default_value,
-                                                   # reference_value=ControlSignal.defaults.allocation,
                                                    reference_value=self.parameters.control_allocation.default_value,
                                                    modulation=self.modulation,
                                                    state_spec=mod_spec,
@@ -1385,6 +1383,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         # UPDATE output_states AND modulatory_projections -------------------------------------------------------------
 
+        # FIX: 9/14/19 - THIS SHOULD BE IMPLEMENTED
         # TBI: For modulatory mechanisms that accumulate, starting output must be equal to the initial "previous value"
         # so that modulation that occurs BEFORE the control mechanism executes is computed appropriately
         # if (isinstance(self.function, IntegratorFunction)):
