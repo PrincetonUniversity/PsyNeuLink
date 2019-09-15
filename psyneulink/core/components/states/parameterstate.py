@@ -685,7 +685,6 @@ class ParameterState(State_Base):
                                        and proj.init_args[SENDER] == type(projection.sender)))]), None)
         if duplicate:
             return duplicate
-
         return False
 
         # MODIFIED 9/14/19 END OUTER
