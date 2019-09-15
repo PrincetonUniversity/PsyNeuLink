@@ -675,9 +675,9 @@ class ParameterState(State_Base):
         # Check for any projection with the same sender as one already in mod_afferents
         #    (can be instantiated or in deferred_init)
         duplicate = next(iter([proj for proj in self.mod_afferents
-                               if ((proj.initialization_status == ContextFlags.DEFERRED_INIT
-                                    and proj.init_args[SENDER] == type(projection.sender))
-                                   or proj.sender == projection.sender and proj != projection)]), None)
+                               if ((proj.sender == projection.sender and proj != projection)
+                                   or (proj.initialization_status == ContextFlags.DEFERRED_INIT
+                                       and proj.init_args[SENDER] == type(projection.sender)))]), None)
         if duplicate:
             return duplicate
 
