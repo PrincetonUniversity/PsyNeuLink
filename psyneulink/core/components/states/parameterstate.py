@@ -860,10 +860,11 @@ class ParameterState(State_Base):
 
             f_mod = builder.load(f_mod_ptr)
 
+            # Get name of the modulated parameter
             if afferent.sender.modulation is ModulationParam.MULTIPLICATIVE:
-                name = self.function.multiplicative_param
+                name = self.function.parameters.multiplicative_param.source.name
             elif afferent.sender.modulation is ModulationParam.ADDITIVE:
-                name = self.function.additive_param
+                name = self.function.parameters.additive_param.source.name
             elif afferent.sender.modulation is ModulationParam.DISABLE:
                 name = None
             elif afferent.sender.modulation is ModulationParam.OVERRIDE:
