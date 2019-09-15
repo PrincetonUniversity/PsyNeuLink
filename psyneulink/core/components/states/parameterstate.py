@@ -642,13 +642,39 @@ class ParameterState(State_Base):
         self._instantiate_projections_to_state(projections=projections, context=context)
 
     def _check_for_duplicate_projections(self, projection):
-        # # MODIFIED 9/14/19 OLD:
-        # if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
-        # MODIFIED 9/14/19 NEW:
+        # # MODIFIED 9/14/19 OLD: OUTER
+        #
+        # # # MODIFIED 9/14/19 OLD:
+        # # if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+        # # MODIFIED 9/14/19 NEW:
+        # # Check that projection's sender is not the same as any already instantiated projection to mod_afferents;
+        # # If so, warn and return True
+        # if any(proj.sender == projection.sender and proj != projection for proj in self.mod_afferents):
+        # # MODIFIED 9/14/19 END
+        #
+        # # FIX: 9/14/19 - SHOULD WARNING SAY THAT DUPLICATE WILL BE IGNORED?  DOESN'T THAT DEPEND ON CALLER?
+        #     from psyneulink.core.components.projections.projection import Projection
+        #     warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
+        #                   f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
+        #                   f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
+        #     return True
+        #
+        # # MODIFIED 9/14/19 NEW:
+        # # Check that projection's sender is not the same as any already deferred projection to mod_afferents
+        # deferred_init_proj = next(iter([p for p in self.mod_afferents
+        #                                 if (p.initialization_status == ContextFlags.DEFERRED_INIT
+        #                                     and p.init_args[SENDER] == type(projection.sender))]), None)
+        # if deferred_init_proj:
+        #     return deferred_init_proj
+        # # MODIFIED 9/14/19 END
+        #
+        # return False
+
+        # MODIFIED 9/14/19 NEW: OUTER
+
         # Check that projection's sender is not the same as any already instantiated projection to mod_afferents;
         # If so, warn and return True
         if any(proj.sender == projection.sender and proj != projection for proj in self.mod_afferents):
-        # MODIFIED 9/14/19 END
 
         # FIX: 9/14/19 - SHOULD WARNING SAY THAT DUPLICATE WILL BE IGNORED?  DOESN'T THAT DEPEND ON CALLER?
             from psyneulink.core.components.projections.projection import Projection
@@ -657,16 +683,18 @@ class ParameterState(State_Base):
                           f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
             return True
 
-        # MODIFIED 9/14/19 NEW:
         # Check that projection's sender is not the same as any already deferred projection to mod_afferents
         deferred_init_proj = next(iter([p for p in self.mod_afferents
                                         if (p.initialization_status == ContextFlags.DEFERRED_INIT
                                             and p.init_args[SENDER] == type(projection.sender))]), None)
         if deferred_init_proj:
             return deferred_init_proj
-        # MODIFIED 9/14/19 END:
 
         return False
+
+
+        # MODIFIED 9/14/19 END OUTER
+
 
     @tc.typecheck
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
