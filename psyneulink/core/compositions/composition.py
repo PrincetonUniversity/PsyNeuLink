@@ -1865,6 +1865,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except AttributeError:
             pass
 
+        # Add node to Composition's graph
         if node not in [vertex.component for vertex in
                         self.graph.vertices]:  # Only add if it doesn't already exist in graph
             node.is_processing = True
@@ -1882,6 +1883,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
+        # Implement any components specified in node's aux_components attribute
         if hasattr(node, "aux_components"):
 
             projections = []
@@ -1950,12 +1952,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         receiver=proj_spec[0].receiver,
                                         feedback=proj_spec[1])
 
+        # Implement required_roles
         if required_roles:
             if not isinstance(required_roles, list):
                 required_roles = [required_roles]
             for required_role in required_roles:
                 self.add_required_node_role(node, required_role)
 
+        # Add projections to node from sender of any shadowed InputStates
         for input_state in node.input_states:
             if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
                 for proj in input_state.shadow_inputs.path_afferents:
@@ -1964,6 +1968,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_state),
                                             sender=proj.sender.owner,
                                             receiver=node)
+
+        # Add ControlProjections to any parameter_states specified for control in node's constructor
+        # FIX: 9/14/19 - HANDLE THIS USING AUX_COMPONENTS IN MECHANISM CONSTRUCTOR?
+        if self.controller:
+            for parameter_state in node.parameter_states:
+                for mod_afferent in parameter_state.mod_afferents:
+                    XXX
 
     def add_nodes(self, nodes, required_roles=None):
         """
@@ -4193,8 +4204,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if (len(controller.control_signals)==1
                 and controller.control_signals[0].name=='ControlSignal-0'
                 and not controller.control_signals[0].efferents):
-            # FIX: 9/14/19 - delete from registry as well, so ControlSignal names restart at "ControlSignal-0"
-            # del controller.control_signals[0]
             controller.remove_states(controller.control_signals[0])
 
         # Add any ControlSignals specified for Composition
