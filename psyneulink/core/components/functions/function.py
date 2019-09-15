@@ -897,9 +897,9 @@ class Function_Base(Function):
             try:
                 # Existence of parameter state changes the shape to array
                 # the base value should remain the same though
-                self.owner.parameter_states[p.name]
-                param = [param]
-            except (AttributeError, TypeError):
+                if p.name in self.owner.parameter_states:
+                    param = [param]
+            except AttributeError:
                 pass
             if not np.isscalar(param) and param is not None:
                 if p.name == 'matrix': # Flatten matrix
