@@ -422,7 +422,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGatingAllocation
 from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTEXT, \
     CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, EID_SIMULATION, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
-    MODULATORY_SIGNAL, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, \
+    MODULATORY_PROJECTION, MODULATORY_SIGNAL, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -1372,12 +1372,26 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         modulatory_signal.owner = self
 
-        # # Check that it is not a duplicate of one already on the ModulatoryMechanism
-        # # (viz., if control of parameter was specified both in constructor for Mechanism and in ModulatoryMechanism)
-        # for existing_mod_sig in self._modulatory_signals:
-        #     # Return if *all* projections from modulatory_signal are identical to ones in an existing modulatory_signal
-        #     if all(p )   XXX
-        #     # Return if *any* projections from modulatory_signal are identical to ones in an existing modulatory_signal
+        # FIX: 9/14/19 - CLEAN UP WARNINGS BELOW
+        # Check that modulatory_signal is not a duplicate of one already instantiated for the ModulatoryMechanism
+        # (viz., if control of parameter was specified both in constructor for Mechanism and in ModulatoryMechanism)
+        for existing_mod_sig in [ms for ms in self._modulatory_signals if isinstance(ms, ModulatorySignal)]:
+            # Return if *all* projections from modulatory_signal are identical to ones in an existing modulatory_signal
+            if all(
+                    any(new_p.receiver == existing_p.receiver
+                       for existing_p in existing_mod_sig.efferents) for new_p in modulatory_signal.efferents):
+                if self.verbosePref:
+                    warnings.warn(f"Specification of {modulatory_signal.name} for {self.name} "
+                                  f"is redundant with existing one ({existing_mod_sig.name}) so it has been ignored.")
+                return
+            # Return if *any* projections from modulatory_signal are identical to ones in an existing modulatory_signal
+            if any(
+                    any(new_p.receiver == existing_p.receiver
+                        for existing_p in existing_mod_sig.efferents) for new_p in modulatory_signal.efferents):
+                # warnings.warn(f"{modulatory_signal.__class__.__name__} ({modulatory_signal.name}) has ")
+                warnings.warn(f"Specification of {modulatory_signal.name} for {self.name} "
+                              f"has one or more {MODULATORY_PROJECTION}s redundant with ones already on "
+                              f"an existing {ModulatorySignal.__name__} ({existing_mod_sig.name}).")
 
         if isinstance(modulatory_signal, ControlSignal):
             # Update control_signal_costs to accommodate instantiated Projection
