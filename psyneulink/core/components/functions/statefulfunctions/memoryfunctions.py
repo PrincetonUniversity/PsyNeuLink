@@ -765,23 +765,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         my_state = pnlvm.ir.LiteralStructType([random_state_struct, ring_buffer_struct])
         return pnlvm.ir.LiteralStructType([distance_state, selection_state, my_state])
 
-    def _get_param_struct_type(self, ctx):
-        distance_params = ctx.get_param_struct_type(self.distance_function)
-        selection_params = ctx.get_param_struct_type(self.selection_function)
-
-        my_param_struct = self._get_param_values()
-        my_params = ctx.convert_python_struct_to_llvm_ir(my_param_struct)
-        elements = [e for e in my_params.elements]
-        elements.append(distance_params)
-        elements.append(selection_params)
-        return pnlvm.ir.LiteralStructType(elements)
-
-    def _get_param_initializer(self, context):
-        distance_init = self.distance_function._get_param_initializer(context)
-        selection_init = self.selection_function._get_param_initializer(context)
-        my_init = super()._get_param_initializer(context)
-        return (*my_init, distance_init, selection_init)
-
     def _get_state_initializer(self, context):
         distance_init = self.distance_function._get_state_initializer(context)
         selection_init = self.selection_function._get_state_initializer(context)
@@ -789,6 +772,14 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         memory = self.get_previous_value(context)
         my_init = pnlvm._tupleize([random_state, [memory[0], memory[1], 0, 0]])
         return (distance_init, selection_init, my_init)
+
+    def _get_param_ids(self):
+        return super()._get_param_ids() + ["distance_function", "selection_function"]
+
+    def _get_param_values(self, context=None):
+        my_params = super()._get_param_values(context)
+        return (*my_params, self.distance_function._get_param_values(context),
+                            self.selection_function._get_param_values(context))
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         my_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -838,13 +829,12 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             passed = builder.fcmp_ordered('<', rand, retr_prob)
             builder.store(passed, retr_ptr)
 
-        param_count = len(list(self._get_compilation_params()))
         # Retrieve
         retr = builder.load(retr_ptr)
         with builder.if_then(retr, likely=True):
             # Determine distances
             distance_f = ctx.get_llvm_function(self.distance_function)
-            distance_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(param_count)])
+            distance_params = ctx.get_param_ptr(self, builder, params, "distance_function")
             distance_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
             distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
             builder.store(builder.load(var_key_ptr),
@@ -860,7 +850,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                     distance_arg_in, distance_arg_out])
 
             selection_f = ctx.get_llvm_function(self.selection_function)
-            selection_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(param_count + 1)])
+            selection_params = ctx.get_param_ptr(self, builder, params, "selection_function")
             selection_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
             selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
             builder.call(selection_f, [selection_params, selection_state,
