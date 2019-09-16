@@ -334,10 +334,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         # Apply rate and/or noise, if they are specified, to all stored items
         if len(previous_value):
-            if any(np.atleast_1d(rate) != 1.0):
-                previous_value = previous_value * rate
-            if any(np.atleast_1d(noise) != 0.0):
-                previous_value = previous_value + noise
+            previous_value = previous_value * rate + noise
 
         previous_value = deque(previous_value, maxlen=self.parameters.history._get(context))
 
