@@ -1,5 +1,5 @@
 toposort==1.4
-numpy<1.16
+numpy<1.17
 pillow
 typecheck-decorator==1.2
 llvmlite
