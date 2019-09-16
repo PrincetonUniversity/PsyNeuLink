@@ -328,7 +328,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if self.is_initializing:
             return variable
 
-        previous_value = np.array(self.get_previous_value(context))
+        previous_value = self.get_previous_value(context)
 
         # Apply rate and/or noise, if they are specified, to all stored items
         if len(previous_value):
