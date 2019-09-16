@@ -872,7 +872,7 @@ class Function_Base(Function):
 
     def _get_compilation_params(self, context=None):
         # Filter out known unused/invalid params
-        black_list = {'variable', 'value', 'context', 'initializer'}
+        black_list = {'variable', 'value', 'initializer'}
         try:
             # Don't list stateful params, the are included in context
             black_list.update(self.stateful_attributes)
@@ -897,9 +897,9 @@ class Function_Base(Function):
             try:
                 # Existence of parameter state changes the shape to array
                 # the base value should remain the same though
-                self.owner.parameter_states[p.name]
-                param = [param]
-            except (AttributeError, TypeError):
+                if p.name in self.owner.parameter_states:
+                    param = [param]
+            except AttributeError:
                 pass
             if not np.isscalar(param) and param is not None:
                 if p.name == 'matrix': # Flatten matrix
