@@ -4238,6 +4238,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
             controller._instantiate_control_signal(control_signal=ctl_sig_spec,
                                                    context=Context(source=ContextFlags.COMPOSITION))
+            # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITON:
+            #                ?DON'T ASSIGN ControlProjection?
+            #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
+            #                ?PUT IT IN aux_components FOR NODE?
+            #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
             controller._activate_projections_for_compositions(self)
 
     def _get_control_signals_for_composition(self):
