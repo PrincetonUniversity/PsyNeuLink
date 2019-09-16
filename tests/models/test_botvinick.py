@@ -30,9 +30,8 @@ import psyneulink.core.components.functions.transferfunctions
                                   pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                   pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                   pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-
 def test_botvinick_model(benchmark, mode, reps):
-    benchmark.group = "Botvinick (scale " + str(reps/100) + ")";
+    benchmark.group = "Botvinick (scale " + str(reps/100) + ")"
 
     # SET UP MECHANISMS ----------------------------------------------------------------------------------------------------
     # Linear input layer
@@ -192,8 +191,8 @@ def test_botvinick_model(benchmark, mode, reps):
         for i, stim in enumerate(Stimulus):
             # RUN the COMPOSITION to initialize --------------------------------
             exec_id = "exec_" + str(i)
-            comp.run(inputs=stim[0], num_trials=ntrials0, bin_execute=bin_execute, execution_id=exec_id)
-            comp.run(inputs=stim[1], num_trials=ntrials, bin_execute=bin_execute, execution_id=exec_id)
+            comp.run(inputs=stim[0], num_trials=ntrials0, bin_execute=bin_execute, context=exec_id)
+            comp.run(inputs=stim[1], num_trials=ntrials, bin_execute=bin_execute, context=exec_id)
 
             # Comp results include concatenation of both the above runs
             results.append(comp.results)

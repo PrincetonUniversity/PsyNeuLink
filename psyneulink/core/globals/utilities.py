@@ -109,7 +109,8 @@ from psyneulink.core.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUS
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
     'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes', 'flatten_list',
-    'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
+    'get_modulationOperation_name', 'get_value_from_array', 'is_component',
+    'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
@@ -1313,14 +1314,14 @@ class ContentAddressableList(UserList):
         """
         return [np.ndarray.tolist(getattr(item, VALUE)) for item in self.data]
 
-    def get_values_as_lists(self, execution_context=None):
+    def get_values_as_lists(self, context=None):
         """Return list of values of components in the list, each converted to a list.
         Returns
         -------
         values :  list
             list of list values of the `value <Component.value>` attributes of components in the list,
         """
-        return [np.ndarray.tolist(item.parameters.value.get(execution_context)) for item in self.data]
+        return [np.ndarray.tolist(item.parameters.value.get(context)) for item in self.data]
 
 
 def is_value_spec(spec):
@@ -1629,7 +1630,7 @@ class NodeRole(Enum):
     INTERNAL
         A Node that is neither `ORIGIN` nor `TERMINAL`
 
-    OBJECTIVE
+    CONTROLLER_OBJECTIVE
         A Node that is the ObjectiveMechanism of a controller.
 
     FEEDBACK_SENDER
@@ -1638,7 +1639,7 @@ class NodeRole(Enum):
 
     FEEDBACK_RECEIVER
         A Node with one or more incoming projections marked as "feedback". This means that the Node is at the start of a
-         pathway which would otherwise form a cycle.
+        pathway which would otherwise form a cycle.
 
     CYCLE
         A Node that belongs to a cycle.
@@ -1654,7 +1655,7 @@ class NodeRole(Enum):
     TERMINAL = 2
     OUTPUT = 3
     INTERNAL = 4
-    OBJECTIVE = 5
+    CONTROLLER_OBJECTIVE = 5
     FEEDBACK_SENDER = 6
     FEEDBACK_RECEIVER = 7
     CYCLE = 8
@@ -1670,4 +1671,3 @@ def unproxy_weakproxy(proxy):
             True
     """
     return proxy.__repr__.__self__
-

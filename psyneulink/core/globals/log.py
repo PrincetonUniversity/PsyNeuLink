@@ -389,7 +389,7 @@ from collections import OrderedDict, namedtuple
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.globals.context import ContextFlags, _get_time
+from psyneulink.core.globals.context import ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.keywords import ALL, CONTEXT, EID_SIMULATION, FUNCTION_PARAMETER_PREFIX, MODULATED_PARAMETER_PREFIX, TIME, VALUE
 from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, is_component
@@ -430,8 +430,10 @@ class LogCondition(enum.IntFlag):
     """Set at the end of a `TRIAL`."""
     RUN = ContextFlags.SIMULATION<<2
     """Set at the end of a `RUN`."""
-    ALL_ASSIGNMENTS = \
+    ALL_ASSIGNMENTS = (
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
+        | SIMULATION | TRIAL | RUN
+    )
     """Specifies all contexts."""
 
     @classmethod
@@ -680,7 +682,7 @@ class Log:
         of a Component, and the value is its currently assigned `LogCondition`.
 
     """
-    execution_id_header = 'Execution Context'
+    context_header = 'Execution Context'
     data_header = 'Data'
 
     def __init__(self, owner, entries=None):
@@ -838,8 +840,8 @@ class Log:
         value,
         time=None,
         condition:tc.optional(LogCondition)=None,
-        context:tc.optional(tc.enum(ContextFlags.COMMAND_LINE))=None,
-        execution_id=None
+        context=None,
+
     ):
         """Add LogEntry to an entry in the Log
 
@@ -873,16 +875,14 @@ class Log:
             self.entries[self.owner.name] = value
 
         else:
-            condition = condition or context
+            condition = condition or context.execution_phase
             if not condition:
                 # IMPLEMENTATION NOTE:  Functions not supported for logging at this time.
                 if isinstance(self.owner, Function):
                     return
-                elif self.owner.parameters.context._get(execution_id).flags:
-                    condition = self.owner.parameters.context._get(execution_id).flags
                 else:
                     raise LogError("PROGRAM ERROR: No condition or context specified in call to _log_value for "
-                                   "{} and it has not context.flags".format(self.owner.name))
+                                   "{}".format(self.owner.name))
 
             condition_string = ContextFlags._get_context_string(condition)
 
@@ -893,12 +893,10 @@ class Log:
                 time = time or _get_time(self.owner, condition)
                 self.entries[self.owner.name] = LogEntry(time, condition_string, value)
 
-        if not condition & ContextFlags.COMMAND_LINE:
-            self.owner.prev_context = self.owner.context
-
     @tc.typecheck
-    def log_values(self, entries, execution_context=None):
-        from psyneulink.core.globals.parameters import parse_execution_context
+    @handle_external_context()
+    def log_values(self, entries, context=None):
+        from psyneulink.core.globals.parameters import parse_context
         """Log the value of one or more Components programmatically.
 
         This can be used to "manually" enter the `value <Component.value>` of any of a Component's `loggable_items
@@ -922,11 +920,11 @@ class Log:
         # Validate the Component field of each LogEntry
         for entry in entries:
             param = self._get_parameter_from_item_string(entry)
-            execution_id = parse_execution_context(execution_context)
-            param._log_value(param._get(execution_id), execution_id, ContextFlags.COMMAND_LINE)
+            context = parse_context(context)
+            param._log_value(param._get(context), context)
 
-    def get_logged_entries(self, entries=ALL, execution_contexts=NotImplemented, exclude_sims=False):
-        from psyneulink.core.globals.parameters import parse_execution_context
+    def get_logged_entries(self, entries=ALL, contexts=NotImplemented, exclude_sims=False):
+        from psyneulink.core.globals.parameters import parse_context
         if entries is ALL:
             entries = self.all_items
 
@@ -940,13 +938,13 @@ class Log:
                 pass
 
             log = self._get_parameter_from_item_string(item).log
-            if execution_contexts is NotImplemented:
+            if contexts is NotImplemented:
                 eids = log.keys()
-            elif not isinstance(execution_contexts, list):
-                eids = [execution_contexts]
+            elif not isinstance(contexts, list):
+                eids = [contexts]
             else:
-                eids = execution_contexts
-            eids = [parse_execution_context(eid) for eid in eids]
+                eids = contexts
+            eids = [parse_context(eid) for eid in eids]
 
             for eid in eids:
                 if (
@@ -960,7 +958,7 @@ class Log:
 
         return logged_entries
 
-    def clear_entries(self, entries=ALL, delete_entry=True, confirm=False, execution_contexts=NotImplemented):
+    def clear_entries(self, entries=ALL, delete_entry=True, confirm=False, contexts=NotImplemented):
         """Clear one or more entries either by deleting the entry or just removing its data.
 
         Arguments
@@ -1004,7 +1002,7 @@ class Log:
             for entry in entries:
                 if delete_entry:
                     # Delete the entire entry from the log to which it belongs
-                    self._get_parameter_from_item_string(entry).clear_log(execution_contexts)
+                    self._get_parameter_from_item_string(entry).clear_log(contexts)
                 else:
                     # Delete the data for the entry but leave the entry itself in the log to which it belongs
                     raise LogError('delete_entry=False currently unimplemented')
@@ -1015,7 +1013,7 @@ class Log:
                       entries:tc.optional(tc.any(str, list, is_component))=ALL,
                       width:int=120,
                       display:tc.any(tc.enum(TIME, CONTEXT, VALUE, ALL), list)=ALL,
-                      execution_contexts=NotImplemented,
+                      contexts=NotImplemented,
                       exclude_sims=False,
                       # long_context=False
                       ):
@@ -1102,7 +1100,7 @@ class Log:
         if option_flags & options.CONTEXT:
             c_width = 0
             for entry in entries:
-                logged_entries = self.get_logged_entries(execution_contexts=execution_contexts, exclude_sims=exclude_sims)[entry]
+                logged_entries = self.get_logged_entries(contexts=contexts, exclude_sims=exclude_sims)[entry]
                 for eid in logged_entries:
                     for datum in logged_entries[eid]:
                         c_width = max(c_width, len(datum.context))
@@ -1147,7 +1145,7 @@ class Log:
         # for entry_name in self.logged_entries:
         for entry_name in entry_names_sorted:
             try:
-                datum = self.get_logged_entries(execution_contexts=execution_contexts, exclude_sims=exclude_sims)[entry_name]
+                datum = self.get_logged_entries(contexts=contexts, exclude_sims=exclude_sims)[entry_name]
             except KeyError:
                 warnings.warn("{0} is not an entry in the Log for {1}".
                       format(entry_name, self.owner.name))
@@ -1156,7 +1154,7 @@ class Log:
                 multiple_eids = len(datum)>1
                 for eid in datum:
                     if multiple_eids:
-                        print(f'execution_context: {eid}:')
+                        print(f'context: {eid}:')
                     for i, item in enumerate(datum[eid]):
 
                         time, context, value = item
@@ -1191,7 +1189,7 @@ class Log:
                 entries=None,
                 header:bool=True,
                 owner_name:bool=False,
-                execution_contexts=NotImplemented,
+                contexts=NotImplemented,
                 exclude_sims=False,
                 ):
         """
@@ -1271,16 +1269,16 @@ class Log:
 
         header = 1 if header is True else 0
 
-        execution_ids = self._parse_execution_contexts_arg(execution_contexts, entries)
+        contexts = self._parse_contexts_arg(contexts, entries)
 
         if exclude_sims:
-            execution_ids = [eid for eid in execution_ids if EID_SIMULATION not in str(eid)]
+            contexts = [eid for eid in contexts if EID_SIMULATION not in str(eid)]
 
-        npa = [[self.execution_id_header]] if header else [[]]
+        npa = [[self.context_header]] if header else [[]]
 
         npa.append([self.data_header] if header else [])
 
-        for eid in sorted(execution_ids):
+        for eid in sorted(contexts):
             time_values = self._parse_entries_for_time_values(entries, execution_id=eid)
             npa[0].append(eid)
 
@@ -1323,7 +1321,7 @@ class Log:
 
         return npa
 
-    def nparray_dictionary(self, entries=None, execution_contexts=NotImplemented, exclude_sims=False):
+    def nparray_dictionary(self, entries=None, contexts=NotImplemented, exclude_sims=False):
         """
         nparray_dictionary(                 \
             entries=None,        \
@@ -1392,12 +1390,12 @@ class Log:
         if not entries:
             return log_dict
 
-        execution_ids = self._parse_execution_contexts_arg(execution_contexts, entries)
+        contexts = self._parse_contexts_arg(contexts, entries)
 
         if exclude_sims:
-            execution_ids = [eid for eid in execution_ids if EID_SIMULATION not in str(eid)]
+            contexts = [eid for eid in contexts if EID_SIMULATION not in str(eid)]
 
-        for eid in execution_ids:
+        for eid in contexts:
             time_values = self._parse_entries_for_time_values(entries, execution_id=eid)
             log_dict[eid] = OrderedDict()
 
@@ -1425,7 +1423,7 @@ class Log:
         return log_dict
 
     @tc.typecheck
-    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'", execution_contexts=NotImplemented, exclude_sims=False):
+    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'", contexts=NotImplemented, exclude_sims=False):
         """
         csv(                           \
             entries=None,              \
@@ -1495,10 +1493,10 @@ class Log:
         entries = self._validate_entries_arg(entries, logged=True)
 
         for i in range(1, len(npaT)):
-            # for each execution_id
-            execution_id = npaT[i][0]
+            # for each context
+            context = npaT[i][0]
 
-            if exclude_sims and EID_SIMULATION in execution_id:
+            if exclude_sims and EID_SIMULATION in context:
                 continue
 
             data = np.array(npaT[i][1], dtype=object).T
@@ -1509,7 +1507,7 @@ class Log:
                 quotes = '\''
 
             # Headers
-            next_eid_entry_data = "'{0}'".format(execution_id)
+            next_eid_entry_data = "'{0}'".format(context)
             next_eid_entry_data += ", \'" + "\', \'".join(i[0] if isinstance(i, list) else i for i in data[0]) + "\'"
             next_eid_entry_data += '\n'
 
@@ -1551,25 +1549,25 @@ class Log:
                           format(repr(entry), self.owner.name))
         return entries
 
-    def _parse_execution_contexts_arg(self, execution_contexts, entries):
-        from psyneulink.core.globals.parameters import parse_execution_context
+    def _parse_contexts_arg(self, contexts, entries):
+        from psyneulink.core.globals.parameters import parse_context
         if entries is None:
             entries = []
 
-        if execution_contexts is NotImplemented:
-            all_execution_contexts = set()
+        if contexts is NotImplemented:
+            all_contexts = set()
             for entry in entries:
                 log = self._get_parameter_from_item_string(entry).log
                 for eid in log.keys():
                     # allow adding string to set using tuple
-                    all_execution_contexts.add((eid,))
-            execution_contexts = [eid[0] for eid in all_execution_contexts]
-        elif not isinstance(execution_contexts, list):
-            execution_contexts = [execution_contexts]
+                    all_contexts.add((eid,))
+            contexts = [eid[0] for eid in all_contexts]
+        elif not isinstance(contexts, list):
+            contexts = [contexts]
 
-        execution_ids = [parse_execution_context(eid) for eid in execution_contexts]
+        contexts = [parse_context(eid) for eid in contexts]
 
-        return execution_ids
+        return contexts
 
     def _alias_owner_name(self, name):
         """Alias name of owner Component to VALUE in loggable_items and logged_items
@@ -1623,7 +1621,7 @@ class Log:
             #         self.logged_entries[entry][i] = LogEntry(temp_list[0], temp_list[1], temp_list[2])
 
             time_values.extend([item.time
-                                for item in self.get_logged_entries(execution_contexts=[execution_id])[entry][execution_id]
+                                for item in self.get_logged_entries(contexts=[execution_id])[entry][execution_id]
                                 if all(i is not None for i in item.time)])
 
         # Insure that all time values are assigned, get rid of duplicates, and sort
@@ -1754,7 +1752,7 @@ class CompositionLog(Log):
             return param
 
 
-def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL, LogCondition.RUN), context, execution_id=None):
+def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL, LogCondition.RUN), context):
     # FIX: ALSO CHECK TIME FOR scheduler_learning, AND CHECK DATE FOR BOTH, AND USE WHICHEVER IS LATEST
     # FIX:  BUT WHAT IF THIS PARTICULAR COMPONENT WAS RUN IN THE LAST TIME_STEP??
     for mech in composition.mechanisms:
@@ -1767,7 +1765,7 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
                 #                  curr_condition,
                 #                  component.value)
                 # component.log._log_value(value=value, context=context)
-                component.log._log_value(value=component.parameters.value._get(execution_id), condition=curr_condition.name)
+                component.log._log_value(value=component.parameters.value._get(context), condition=curr_condition)
 
         for proj in mech.afferents:
             for component in proj.log.loggable_components:
@@ -1778,7 +1776,7 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
                     #                  context,
                     #                  component.value)
                     # component.log._log_value(value, context)
-                    component.log._log_value(value=component.parameters.value._get(execution_id), condition=curr_condition.name)
+                    component.log._log_value(value=component.parameters.value._get(context), condition=curr_condition)
 
     # FIX: IMPLEMENT ONCE projections IS ADDED AS ATTRIBUTE OF Composition
     # for proj in composition.projections:

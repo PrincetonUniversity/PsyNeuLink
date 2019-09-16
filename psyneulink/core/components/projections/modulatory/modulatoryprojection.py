@@ -25,15 +25,15 @@ that modulate different types of Components and their States:
     `function <ParameterState.function>` in modulating the value of the MappingProjection's
     `matrix <MappingProjection.matrix>` parameter.
 ..
-* `GatingProjection`
-    takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to a `GatingMechanism`, and conveys it
-    to the `InputState` or `OutputState` of a `ProcessingMechanism <ProcessingMechanism>` for use by the State's
-    `function <State_Base.function>` in modulating its `value <State_Base.value>`.
-..
 * `ControlProjection`
     takes the `value of a <ControlSignal.value>` of a `ControlSignal` belonging to a `ControlMechanism`,
     and conveys it to the `ParameterState` for the parameter of a `Mechanism <Mechanism>` or its
     `function <Mechanism_Base.function>`, for use in modulating the value of the parameter.
+..
+* `GatingProjection`
+    takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to a `GatingMechanism`, and conveys it
+    to the `InputState` or `OutputState` of a `ProcessingMechanism <ProcessingMechanism>` for use by the State's
+    `function <State_Base.function>` in modulating its `value <State_Base.value>`.
 
 .. _Projection_Creation:
 
@@ -202,53 +202,24 @@ class ModulatoryProjection_Base(Projection_Base):
     """
     componentCategory = MODULATORY_PROJECTION
 
-    def __init__(self,
-                 receiver,
-                 sender=None,
-                 weight=None,
-                 exponent=None,
-                 function=None,
-                 params=None,
-                 name=None,
-                 prefs=None,
-                 context=None,
-                 **kwargs):
-
-        if context != ContextFlags.CONSTRUCTOR:
-            raise ModulatoryProjectionError(f"Direct call to abstract class {self.__name__} is not allowed; "
-                                            f"use projection() or one of the following subclasses: "
-                                            f"ControlProjection, GatingProjection, or LearingProjection.")
-
-        super().__init__(receiver=receiver,
-                         sender=sender,
-                         params=params,
-                         weight=weight,
-                         exponent=exponent,
-                         function=function,
-                         name=name,
-                         prefs=prefs,
-                         context=context,
-                         **kwargs)
-
     def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
 
         template = "{} for {}[{}]"
 
-        if self.context.initialization_status &  (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
+        if self.initialization_status &  (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
             # If the name is not a default name for the class, return
             if not self.className + '-' in self.name:
                 return self.name
             self.name = template.format(self.className, self.receiver.owner.name, self.receiver.name)
 
-        elif self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        elif self.initialization_status == ContextFlags.DEFERRED_INIT:
             projection_name = template.format(self.className, state.owner.name, state.name)
             # self.init_args[NAME] = self.init_args[NAME] or projection_name
             self.name = self.init_args[NAME] or projection_name
 
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
-                                            format(self, ContextFlags._get_context_string(self.context.flags,
-                                                                                          INITIALIZATION_STATUS)))
+                                            format(self, self.initialization_status))
 
     def _delete_projection(projection):
         """Delete Projection and its entry in receiver and sender lists"""

@@ -240,7 +240,7 @@ def main():
         observation = ddqn_agent.env.reset()
         new_episode()
         while True:
-            execution_id = 'TEST'
+            context = 'TEST'
             if PNL_COMPILE:
                 BIN_EXECUTE = 'LLVM'
             else:
@@ -267,7 +267,7 @@ def main():
                                                  prey_percept:[observation[prey_coord_slice]],
                                                  trial_type_input_mech:[trialType],
                                                  reward_input_mech:[reward]},
-                                         execution_id=execution_id,
+                                         context=context,
                                          bin_execute=BIN_EXECUTE,
                                          animate={'show_controller':True,
                                                   'show_cim':True}
@@ -278,13 +278,13 @@ def main():
 
                 print(f'\nOCM:'
                       f'\n\tControlSignals:'
-                      f'\n\t\tPlayer:\t\t{ocm.control_signals[0].parameters.value.get(execution_id)}'
-                      f'\n\t\tPredator\t{ocm.control_signals[1].parameters.value.get(execution_id)}'
-                      f'\n\t\tPrey:\t\t{ocm.control_signals[2].parameters.value.get(execution_id)}'
+                      f'\n\t\tPlayer:\t\t{ocm.control_signals[0].parameters.value.get(context)}'
+                      f'\n\t\tPredator\t{ocm.control_signals[1].parameters.value.get(context)}'
+                      f'\n\t\tPrey:\t\t{ocm.control_signals[2].parameters.value.get(context)}'
                       f'\n\n\tControlSignal Costs:'
-                      f'\n\t\tPlayer:\t\t{ocm.control_signals[0].parameters.cost.get(execution_id)}'
-                      f'\n\t\tPredator:\t{ocm.control_signals[1].parameters.cost.get(execution_id)}'
-                      f'\n\t\tPrey:\t\t{ocm.control_signals[2].parameters.cost.get(execution_id)}')
+                      f'\n\t\tPlayer:\t\t{ocm.control_signals[0].parameters.cost.get(context)}'
+                      f'\n\t\tPredator:\t{ocm.control_signals[1].parameters.cost.get(context)}'
+                      f'\n\t\tPrey:\t\t{ocm.control_signals[2].parameters.cost.get(context)}')
 
             if VERBOSE >= ACTION_REPORTING:
                 print(f'OUTER LOOP RUN RESULTS:{run_results}')
@@ -294,14 +294,14 @@ def main():
                 if agent_comp.controller_mode is BEFORE:
                     print_controller()
                 print(f'\nObservations:'
-                      f'\n\tPlayer:\n\t\tveridical: {player_percept.parameters.variable.get(execution_id)}'
-                      f'\n\t\tperceived: {player_percept.parameters.value.get(execution_id)}'
-                      f'\n\tPredator:\n\t\tveridical: {predator_percept.parameters.variable.get(execution_id)}'
-                      f'\n\t\tperceived: {predator_percept.parameters.value.get(execution_id)}'
-                      f'\n\tPrey:\n\t\tveridical: {prey_percept.parameters.variable.get(execution_id)}'
-                      f'\n\t\tperceived: {prey_percept.parameters.value.get(execution_id)}'
+                      f'\n\tPlayer:\n\t\tveridical: {player_percept.parameters.variable.get(context)}'
+                      f'\n\t\tperceived: {player_percept.parameters.value.get(context)}'
+                      f'\n\tPredator:\n\t\tveridical: {predator_percept.parameters.variable.get(context)}'
+                      f'\n\t\tperceived: {predator_percept.parameters.value.get(context)}'
+                      f'\n\tPrey:\n\t\tveridical: {prey_percept.parameters.variable.get(context)}'
+                      f'\n\t\tperceived: {prey_percept.parameters.value.get(context)}'
                       f'\n\nActions:\n\tAgent: {agent_action}\n\tOptimal: {optimal_action}'
-                      f'\n\nOutcome:\n\t{ocm.objective_mechanism.parameters.value.get(execution_id)}'
+                      f'\n\nOutcome:\n\t{ocm.objective_mechanism.parameters.value.get(context)}'
                       )
                 if agent_comp.controller_mode is AFTER:
                     print_controller()

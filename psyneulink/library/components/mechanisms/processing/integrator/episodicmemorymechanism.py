@@ -196,9 +196,6 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         # Template for memory_store entries
         default_variable = [np.zeros(content_size)]
 
@@ -219,16 +216,15 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          **kwargs
                          )
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, context=None, runtime_params=None):
 
         value =  super()._execute(variable=variable,
-                                           execution_id=execution_id,
+                                           context=context,
                                            runtime_params=runtime_params,
-                                           context=context)
+                                           )
         # Only return content if assoc has not been specified (in which case second element of value should be empty)
         if len(value[1]) == 0:
             return np.delete(value,1)
@@ -249,7 +245,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
         return super()._instantiate_output_states(context=context)
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
+    def _parse_function_variable(self, variable, context=None):
 
         # If assoc has not been specified, add empty list to call to function (which expects two items in its variable)
         if len(variable) != 2:

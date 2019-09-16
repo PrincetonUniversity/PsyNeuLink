@@ -487,7 +487,7 @@ from psyneulink.core.components.functions.combinationfunctions import Combinatio
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     COMBINE, COMMAND_LINE, CONTEXT, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
     LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
@@ -780,6 +780,7 @@ class InputState(State_Base):
                                })
     #endregion
 
+    @handle_external_context()
     @tc.typecheck
     def __init__(self,
                  owner=None,
@@ -795,16 +796,8 @@ class InputState(State_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
+                 context=None,
                  **kwargs):
-
-        context = kwargs.pop(CONTEXT, None)
-        if context is None:
-            context = ContextFlags.COMMAND_LINE
-            self.context.source = ContextFlags.COMMAND_LINE
-            self.context.string = COMMAND_LINE
-        else:
-            context = ContextFlags.CONSTRUCTOR
-            self.context.source = ContextFlags.CONSTRUCTOR
 
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
@@ -834,7 +827,7 @@ class InputState(State_Base):
             self.init_args['projections'] = projections
 
             # Flag for deferred initialization
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
+            self.initialization_status = ContextFlags.DEFERRED_INIT
             return
 
         self.reference_value = reference_value
@@ -978,8 +971,8 @@ class InputState(State_Base):
             return True
         return False
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
-        variable = super()._parse_function_variable(variable, execution_id, context)
+    def _parse_function_variable(self, variable, context=None):
+        variable = super()._parse_function_variable(variable, context)
         try:
             if self._use_1d_variable and variable.ndim > 1:
                 return np.array(variable[0])
@@ -987,7 +980,7 @@ class InputState(State_Base):
             pass
         return variable
 
-    def _get_fallback_variable(self, execution_id=None):
+    def _get_fallback_variable(self, context=None):
         """
             Call self.function with self._path_proj_values
 
@@ -995,12 +988,10 @@ class InputState(State_Base):
             return None so that it is ignored in execute method (i.e., not combined with base_value)
         """
         # Check for Projections that are active in the Composition being run
-        current_active_composition = self.parameters.context._get(execution_id).composition
-
         path_proj_values = [
-            proj.parameters.value._get(execution_id)
+            proj.parameters.value._get(context)
             for proj in self.path_afferents
-            if self.afferents_info[proj].is_active_in_composition(current_active_composition)
+            if self.afferents_info[proj].is_active_in_composition(context.composition)
         ]
 
         if len(path_proj_values) > 0:
@@ -1125,10 +1116,8 @@ class InputState(State_Base):
                         try:
                             sender_dim = np.array(projection_spec.state.value).ndim
                         except AttributeError as e:
-                            # KDM 10/23/18: if DEFERRED_INIT is set, it will be set on the non-stateful .context
-                            # attr so these should be ok
                             if (isinstance(projection_spec.state, type) or
-                                     projection_spec.state.context.initialization_status==ContextFlags.DEFERRED_INIT):
+                                     projection_spec.state.initialization_status == ContextFlags.DEFERRED_INIT):
                                 continue
                             else:
                                 raise StateError("PROGRAM ERROR: indeterminate value for {} "
@@ -1145,7 +1134,7 @@ class InputState(State_Base):
                             else:
                                 matrix = None
                         elif isinstance(projection, Projection):
-                            if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                            if projection.initialization_status == ContextFlags.DEFERRED_INIT:
                                 continue
                             # possible needs to be projection.defaults.matrix?
                             matrix = projection.matrix
@@ -1308,12 +1297,12 @@ class InputState(State_Base):
     def label(self):
         return self.get_label()
 
-    def get_label(self, execution_context=None):
+    def get_label(self, context=None):
         try:
             label_dictionary = self.owner.input_labels_dict
         except AttributeError:
             label_dictionary = {}
-        return self._get_value_label(label_dictionary, self.owner.input_states, execution_context=execution_context)
+        return self._get_value_label(label_dictionary, self.owner.input_states, context=context)
 
     @property
     def position_in_mechanism(self):
@@ -1330,7 +1319,7 @@ class InputState(State_Base):
 
         InputState variable must be embedded in a list so that LinearCombination (its default function)
         returns a variable that is >=2d intact (rather than as arrays to be combined);
-        this is normally done in State.update() (and in State._instantiate-function), but that
+        this is normally done in state._update() (and in State._instantiate-function), but that
         can't be called by _parse_state_spec since the InputState itself may not yet have been instantiated.
 
         """
@@ -1392,12 +1381,11 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          state_param_identifier=INPUT_STATE,
                                          reference_value=reference_value if reference_value is not None
                                                                          else owner.defaults.variable,
-                                         # reference_value=reference_value,
                                          reference_value_name=VALUE,
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
-    if context & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
+    if context.source & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list
@@ -1406,7 +1394,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     for state in owner._input_states:
         # Assign True for owner's primary InputState and the value has not already been set in InputState constructor
         if state.require_projection_in_composition is None and owner.input_state == state:
-            state.parameters.require_projection_in_composition._set(True)
+            state.parameters.require_projection_in_composition._set(True, context)
 
     # Check that number of input_states and their variables are consistent with owner.defaults.variable,
     #    and adjust the latter if not

@@ -248,7 +248,7 @@ class LeabraFunction(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         if not isinstance(variable, (list, np.ndarray, numbers.Number)):
@@ -275,19 +275,19 @@ class LeabraFunction(Function_Base):
                               format(request_set[NETWORK], type(request_set[NETWORK])))
         super()._validate_params(request_set, target_set, context)
 
-    def function(self,
+    def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
-        network = self.parameters.network._get(execution_id)
+                 ):
+        network = self.parameters.network._get(context)
         # HACK: otherwise the INITIALIZING function executions impact the state of the leabra network
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             output_size = len(network.layers[-1].units)
             return np.zeros(output_size)
 
         try:
-            training_flag = self.owner.parameters.training_flag._get(execution_id)
+            training_flag = self.owner.parameters.training_flag._get(context)
         except AttributeError:
             training_flag = False
 
@@ -311,22 +311,22 @@ class LeabraFunction(Function_Base):
             return train_leabra_network(network, input_pattern=variable[0], output_pattern=variable[1])
 
 
-def _network_getter(owning_component=None, execution_id=None):
+def _network_getter(owning_component=None, context=None):
     try:
-        return owning_component.function.parameters.network._get(execution_id)
+        return owning_component.function.parameters.network._get(context)
     except AttributeError:
         return None
 
 
-def _network_setter(value, owning_component=None, execution_id=None):
-    owning_component.function.parameters.network._set(value, execution_id)
+def _network_setter(value, owning_component=None, context=None):
+    owning_component.function.parameters.network._set(value, context)
     return value
 
 
-def _training_flag_setter(value, self=None, owning_component=None, execution_id=None):
-    if value is not self._get(execution_id):
+def _training_flag_setter(value, self=None, owning_component=None, context=None):
+    if value is not self._get(context):
         try:
-            set_training(owning_component.parameters.network._get(execution_id), value)
+            set_training(owning_component.parameters.network._get(context), value)
         except AttributeError:
             return None
 
@@ -602,27 +602,27 @@ class LeabraMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _execute(
         self,
         variable=None,
-        execution_id=None,
+        context=None,
         runtime_params=None,
         time_scale=TimeScale.TRIAL,
-        context=None
+
     ):
 
         if runtime_params:
             if "training_flag" in runtime_params.keys():
-                self.parameters.training_flag._set(runtime_params["training_flag"], execution_id)
+                self.parameters.training_flag._set(runtime_params["training_flag"], context)
                 del runtime_params["training_flag"]
 
         return super()._execute(
             variable=variable,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
 
 

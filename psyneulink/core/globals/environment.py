@@ -24,7 +24,7 @@ directly, using its :keyword:`run` method is easier because it:
     * allows multiple rounds of execution to be run in sequence, whereas the :keyword:`execute` method of a Component
       runs only a single execution of the object;
     ..
-    * uses simpler formats for specifying `inputs <Run_Inputs>` and `targets <Run_Targets>`;
+    * uses simpler formats for specifying `inputs <Composition_Run_Inputs>` and `targets <Run_Targets>`;
     ..
     * automatically aggregates results across executions and stores them in the results attribute of the object.
 
@@ -59,7 +59,7 @@ looking for values after a run, it's important to know the execution context you
         [[array([5.])]]
         >>> d.run({t: 10})
         [[array([10.])]]
-        >>> c.run({t: 20}, execution_id='custom execution id')
+        >>> c.run({t: 20}, context='custom execution id')
         [[array([20.])]]
 
         # context None
@@ -92,23 +92,9 @@ and recursively for all of the Component's `_dependent_components <Component._de
 other Components to function properly (beyond "standard" things like Component.function, \
 or Mechanism.input_states, as these are added in the proper classes' _dependent_components)
     - the intent is that with ``_dependent_components`` set properly, calling \
-    ``obj._initialize_from_context(new_execution_id, base_execution_id)`` should be sufficient to run obj \
-    under **new_execution_id**
+    ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
+    under **new_context**
     - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
-
-Debugging Tips
-^^^^^^^^^^^^^^
-If you receive an error like below, while checking for a context value for example,
-
-::
-
-    self.parameters.context._get(execution_id).execution_phase == ContextStatus.PROCESSING
-    AttributeError: 'NoneType' object has no attribute 'execution_phase'
-
-this means that there was no context value found for execution_id, and can be indicative that execution_id
-was not initialized to the values of another execution context, which normally happens during execution.
-See `Execution Contexts initialization <Run_Execution_Contexts_Init>`.
-
 
 .. _Run_Timing:
 
@@ -116,13 +102,13 @@ See `Execution Contexts initialization <Run_Execution_Contexts_Init>`.
 ========
 
 When :keyword:`run` is called by a Component, it calls that Component's :keyword:`execute` method once for each
-`input <Run_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a `TRIAL` of
+`input <Composition_Run_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a `TRIAL` of
 execution.  For each `TRIAL`, the Component makes repeated `calls to its Scheduler <Scheduler_Execution>`,
 executing the Components it specifies in each `TIME_STEP`, until every Component has been executed at least once or
 another `termination condition <Scheduler_Termination_Conditions>` is met.  The `Scheduler` can be used in combination
 with `Condition` specifications for individual Components to execute different Components at different time scales.
 
-.. _Run_Inputs:
+.. _Composition_Run_Inputs:
 
 *Inputs*
 ========
@@ -161,13 +147,13 @@ an origin mechanism are usually specified by a list of 2d lists/arrays, though `
         >>> s.run(inputs=input_dictionary)
 
 COMMENT:
-    .. _Run_Inputs_Fig:
+    .. _Composition_Run_Inputs_Fig:
 
     .. figure:: _static/input_spec_variables.svg
        :alt: Example input specifications with variable
 COMMENT
 
-.. _Run_Inputs_Fig_States:
+.. _Composition_Run_Inputs_Fig_States:
 
 .. figure:: _static/input_spec_states.svg
    :alt: Example input specifications with input states
@@ -634,7 +620,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, System_Base
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import INPUT_LABELS_DICT, MECHANISM, OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.utilities import call_with_pruned_args
@@ -652,6 +638,7 @@ class RunError(Exception):
          return repr(obj.error_value)
 
 @tc.typecheck
+@handle_external_context()
 def run(obj,
         inputs=None,
         num_trials:tc.optional(int)=None,
@@ -666,8 +653,8 @@ def run(obj,
         termination_processing=None,
         termination_learning=None,
         runtime_params=None,
-        execution_id=None,
-        context=ContextFlags.COMMAND_LINE):
+        context=None,
+        ):
     """run(                      \
     inputs,                      \
     num_trials=None,             \
@@ -711,7 +698,7 @@ def run(obj,
    ---------
 
     inputs : List[input] or ndarray(input) : default default_variable for a single `TRIAL`
-        the input for each `TRIAL` in a sequence (see `Run_Inputs` for detailed description of formatting
+        the input for each `TRIAL` in a sequence (see `Composition_Run_Inputs` for detailed description of formatting
         requirements and options).
 
     num_trials : int : default None
@@ -862,14 +849,9 @@ def run(obj,
                 if isinstance(projection, LearningProjection):
                     projection.function_obj.learning_rate = obj.learning_rate
 
-    # Class-specific validation:
-    if not obj.parameters.context._get(execution_id).flags:
-        obj.parameters.context._get(execution_id).initialization_status = ContextFlags.VALIDATING
-        obj.parameters.context._get(execution_id).string = RUN + "validating " + obj.name
-
     # INITIALIZATION
     if initialize:
-        obj.initialize(execution_context=execution_id)
+        obj.initialize(context=context)
 
     # SET UP TIMING
     if object_type == MECHANISM:
@@ -883,20 +865,20 @@ def run(obj,
     for execution in range(num_trials):
 
         if call_before_trial:
-            call_with_pruned_args(call_before_trial, execution_context=execution_id)
+            call_with_pruned_args(call_before_trial, context=context)
 
         for time_step in range(time_steps):
 
             result = None
 
             if call_before_time_step:
-                call_with_pruned_args(call_before_time_step, execution_context=execution_id)
+                call_with_pruned_args(call_before_time_step, context=context)
 
             # Reinitialize any mechanisms that has a 'reinitialize_when' condition and it is satisfied
             for mechanism in obj.mechanisms:
-                if hasattr(mechanism, "reinitialize_when") and mechanism.parameters.has_initializers._get(execution_id):
-                    if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing, execution_context=execution_id):
-                        mechanism.reinitialize(None, execution_context=execution_id)
+                if hasattr(mechanism, "reinitialize_when") and mechanism.parameters.has_initializers._get(context):
+                    if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing, context=context):
+                        mechanism.reinitialize(None, context=context)
 
             input_num = execution%num_inputs_sets
 
@@ -920,25 +902,24 @@ def run(obj,
                         obj.target = execution_targets
                         obj.current_targets = execution_targets
 
-            # if context == ContextFlags.COMMAND_LINE and not obj.context.execution_phase == ContextFlags.SIMULATION:
-            if context == ContextFlags.COMMAND_LINE or not obj.parameters.context._get(execution_id).execution_phase == ContextFlags.SIMULATION:
-                obj._assign_context_values(execution_id, execution_phase=ContextFlags.PROCESSING, composition=obj, propagate=True)
-                obj.parameters.context._get(execution_id).string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
+            if context.source == ContextFlags.COMMAND_LINE or ContextFlags.SIMULATION not in context.execution_phase:
+                context.execution_phase = ContextFlags.PROCESSING
+                context.composition = obj
 
             result = obj.execute(
                 input=execution_inputs,
                 target=execution_targets,
-                execution_id=execution_id,
+                context=context,
                 termination_processing=termination_processing,
                 termination_learning=termination_learning,
                 runtime_params=runtime_params,
-                context=context
+
             )
 
             if call_after_time_step:
-                call_with_pruned_args(call_after_time_step, execution_context=execution_id)
+                call_with_pruned_args(call_after_time_step, context=context)
 
-        if obj.parameters.context._get(execution_id).execution_phase != ContextFlags.SIMULATION:
+        if ContextFlags.SIMULATION not in context.execution_phase:
             if isinstance(result, Iterable):
                 result_copy = result.copy()
             else:
@@ -946,14 +927,13 @@ def run(obj,
             obj.results.append(result_copy)
 
         if call_after_trial:
-            call_with_pruned_args(call_after_trial, execution_context=execution_id)
+            call_with_pruned_args(call_after_trial, context=context)
 
         from psyneulink.core.globals.log import _log_trials_and_runs, ContextFlags
         _log_trials_and_runs(
             composition=obj,
             curr_condition=LogCondition.TRIAL,
             context=context,
-            execution_id=execution_id,
         )
 
     try:
@@ -962,10 +942,10 @@ def run(obj,
 
         for sched in [obj.scheduler_processing, obj.scheduler_learning]:
             try:
-                sched.get_clock(execution_id)._increment_time(TimeScale.RUN)
+                sched.get_clock(context)._increment_time(TimeScale.RUN)
             except KeyError:
                 # learning scheduler may not have been execute, so may not have
-                # created a Clock for execution_id
+                # created a Clock for context
                 pass
 
     except AttributeError:
@@ -984,15 +964,13 @@ def run(obj,
     _log_trials_and_runs(
         composition=obj,
         curr_condition=LogCondition.RUN,
-        context=context,
-        execution_id=execution_id
+        context=context
     )
 
     return obj.results
 
 
 @tc.typecheck
-
 def _input_matches_external_input_state_values(input, value_to_compare):
     # input states are uniform
     if np.shape(np.atleast_2d(input)) == np.shape(value_to_compare):

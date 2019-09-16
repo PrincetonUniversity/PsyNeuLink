@@ -521,7 +521,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
@@ -631,23 +631,23 @@ class LearningMechanismError(Exception):
         return repr(self.error_value)
 
 
-def _learning_signal_getter(owning_component=None, execution_id=None):
+def _learning_signal_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.value._get(execution_id)[0]
+        return owning_component.parameters.value._get(context)[0]
     except (TypeError, IndexError):
         return None
 
 
-def _error_signal_getter(owning_component=None, execution_id=None):
+def _error_signal_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.value._get(execution_id)[1]
+        return owning_component.parameters.value._get(context)[1]
     except (TypeError, IndexError):
         return None
 
-def _learning_mechanism_learning_rate_setter(value, owning_component=None, execution_id=None):
+def _learning_mechanism_learning_rate_setter(value, owning_component=None, context=None):
     if hasattr(owning_component, "function") and owning_component.function:
         if hasattr(owning_component.function.parameters, "learning_rate"):
-            owning_component.function.parameters.learning_rate._set(value, execution_id)
+            owning_component.function.parameters.learning_rate._set(value, context)
     return value
 
 class LearningMechanism(AdaptiveMechanism_Base):
@@ -995,9 +995,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  prefs:is_pref_set=None,
                  **kwargs
                  ):
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         # IMPLEMENTATION NOTE:
         #    assign to private attribute as self.error_sources is used as a property
         #    private attribute is used for validation and in _instantiate_attribute_before_function;
@@ -1022,7 +1019,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # delete self.init_args[ERROR_SOURCES]
 
         # # Flag for deferred initialization
-        # self.parameters.context._get(execution_id).initialization_status = ContextFlags.DEFERRED_INIT
+        # self.initialization_status = ContextFlags.DEFERRED_INIT
         # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         self._learning_rate = learning_rate
@@ -1034,7 +1031,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          **kwargs)
 
     def _check_type_and_timing(self):
@@ -1051,7 +1047,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                          format(self.__class__.__name__, LearningMechanism.__name__,
                                                 repr(LEARNING_TIMING)))
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
+    def _parse_function_variable(self, variable, context=None):
         function_variable = np.zeros_like(
             variable[np.array([ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL_INDEX])]
         )
@@ -1234,7 +1230,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                  owner=self,
                                                  variable=(OWNER_VALUE,0),
                                                  params=params,
-                                                 reference_value=self.parameters.learning_signal._get(),
+                                                 reference_value=self.parameters.learning_signal._get(context),
                                                  modulation=self.modulation,
                                                  # state_spec=self.learning_signal)
                                                  state_spec=learning_signal,
@@ -1258,11 +1254,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         #    since it is used by the execute method
         self._error_signal_input_states = self.error_signal_input_states
 
+    @handle_external_context()
     def add_states(self, error_sources, context=None):
         """Add error_source and error_matrix for each InputState added"""
-
-        if context is None:
-            context = ContextFlags.COMMAND_LINE
 
         states = super().add_states(states=error_sources)
         instantiated_input_states = []
@@ -1287,9 +1281,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _execute(
         self,
         variable=None,
-        execution_id=None,
+        context=None,
         runtime_params=None,
-        context=None
+
     ):
         """Execute LearningMechanism function and return learning_signal
 
@@ -1334,7 +1328,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterState):
-                error_matrices[i] = error_matrices[i].parameters.value._get(execution_id)
+                error_matrices[i] = error_matrices[i].parameters.value._get(context)
 
         summed_learning_signal = 0
         summed_error_signal = 0
@@ -1346,23 +1340,23 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                           error_signal_input])
             learning_signal, error_signal = super()._execute(variable=function_variable,
             # MODIFIED CROSS_PATHWAYS 7/22/19 END
-                                                             execution_id=execution_id,
+                                                             context=context,
                                                              error_matrix=error_matrix,
                                                              runtime_params=runtime_params,
-                                                             context=context)
+                                                             )
             # Sum learning_signals and error_signals
             summed_learning_signal += learning_signal
             summed_error_signal += error_signal
 
         if (self.reportOutputPref and
-                self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING):
+                self.initialization_status != ContextFlags.INITIALIZING):
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
 
         # Durning initialization return zeros so that the first "real" trial for Backprop does not start
         # with the error computed during initialization
         if (self.in_composition and
                 isinstance(self.function, BackPropagation) and
-                self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
+                self.initialization_status == ContextFlags.INITIALIZING):
             return [0*summed_learning_signal, 0*summed_error_signal]
 
         return [summed_learning_signal, summed_error_signal]

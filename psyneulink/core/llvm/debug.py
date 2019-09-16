@@ -20,6 +20,7 @@ Increased debug output:
  * "stat" -- prints code generation and compilation statistics at the end
  * "cuda_data" -- print data upload/download statistic (to GPU VRAM)
  * "comp_node_debug" -- print intermediate results after execution composition node wrapper.
+ * "print_values" -- Enabled printfs in llvm code (from ctx printf helper)
 
 Compilation modifiers:
  * "alloca_data" -- use alloca'd storage for composition data (exposes data flow)
@@ -32,6 +33,7 @@ Compilation modifiers:
  * "const_state" -- hardcode base context values into generate code,
                  instead of laoding them from the context argument
  * "force_runs" -- set number of runs to be fixed ('1' if no other value is specified)
+ * "no_ref_pass" -- Don't pass arguments to llvm functions by reference
 
 Compiled code dump:
  * "llvm" -- dumps LLVM IR into a file (named after the dumped module).
@@ -44,10 +46,12 @@ import os
 
 debug_env = dict()
 
+
 def _update():
     """Update debug_env variable with the latest state of PNL_LLVM_DEBUG env var."""
     global debug_env
     debug_env.clear()
     debug_env.update({x.partition('=')[0:3:2] for x in str(os.environ.get("PNL_LLVM_DEBUG")).split(';')})
+
 
 _update()

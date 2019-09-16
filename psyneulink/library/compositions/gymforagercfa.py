@@ -124,18 +124,18 @@ class GymForagerCFA(CompositionFunctionApproximator):
         else:
             self.update_weights.reinitialize({DEFAULT_VARIABLE: update_weights_default_variable})
 
-    def adapt(self, feature_values, control_allocation, net_outcome, execution_id=None):
+    def adapt(self, feature_values, control_allocation, net_outcome, context=None):
         """Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
         **net_outcome** from **feature_values** and **control_allocation**.
         """
-        prediction_vector = self.parameters.prediction_vector._get(execution_id)
-        previous_state = self.parameters.previous_state._get(execution_id)
+        prediction_vector = self.parameters.prediction_vector._get(context)
+        previous_state = self.parameters.previous_state._get(context)
 
         if previous_state is not None:
             # Update regression_weights
-            regression_weights = self.update_weights([previous_state, net_outcome], execution_id=execution_id)
+            regression_weights = self.update_weights([previous_state, net_outcome], context=context)
             # Update vector with current feature_values and control_allocation and store for next trial
-            prediction_vector.update_vector(control_allocation, feature_values, execution_id)
+            prediction_vector.update_vector(control_allocation, feature_values, context)
             previous_state = prediction_vector.vector
         else:
             # Initialize vector and control_signals on first trial
@@ -143,10 +143,10 @@ class GymForagerCFA(CompositionFunctionApproximator):
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
             # prediction_vector.reference_variable = control_allocation
             previous_state = np.full_like(prediction_vector.vector, 0)
-            regression_weights = self.update_weights([previous_state, 0], execution_id=execution_id)
+            regression_weights = self.update_weights([previous_state, 0], context=context)
 
         self._set_multiple_parameter_values(
-            execution_id,
+            context,
             previous_state=previous_state,
             prediction_vector=prediction_vector,
             regression_weights=regression_weights,
@@ -154,7 +154,7 @@ class GymForagerCFA(CompositionFunctionApproximator):
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
     # def evaluate(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
-    def evaluate(self, feature_values, control_allocation, num_estimates, context, execution_id=None):
+    def evaluate(self, feature_values, control_allocation, num_estimates, context):
         """Update prediction_vector <RegressorCFA.prediction_vector>`,
         then multiply by regression_weights.
 
@@ -168,17 +168,17 @@ class GymForagerCFA(CompositionFunctionApproximator):
         """
         predicted_outcome=0
 
-        prediction_vector = self.parameters.prediction_vector._get(execution_id)
+        prediction_vector = self.parameters.prediction_vector._get(context)
 
         count = num_estimates if num_estimates else 1
         for i in range(count):
             terms = self.prediction_terms
-            vector = prediction_vector.compute_terms(control_allocation, execution_id=execution_id)
+            vector = prediction_vector.compute_terms(control_allocation, context=context)
             # FIX: THIS SHOULD GET A SAMPLE RATHER THAN JUST USE THE ONE RETURNED FROM ADAPT METHOD
             #      OR SHOULD MULTIPLE SAMPLES BE DRAWN AND AVERAGED AT END OF ADAPT METHOD?
             #      I.E., AVERAGE WEIGHTS AND THEN OPTIMIZE OR OTPIMZE FOR EACH SAMPLE OF WEIGHTS AND THEN AVERAGE?
 
-            weights = self.parameters.regression_weights._get(execution_id)
+            weights = self.parameters.regression_weights._get(context)
             net_outcome = 0
 
             for term_label, term_value in vector.items():

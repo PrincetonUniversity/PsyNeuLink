@@ -138,7 +138,7 @@ from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates
 from psyneulink.core.components.states.state import _parse_state_spec
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_STATES, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
@@ -399,12 +399,12 @@ class ComparatorMechanism(ObjectiveMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         # context=ContextFlags.CONSTRUCTOR,
+
                          **kwargs
                          )
 
         # Require Projection to TARGET InputState (already required for SAMPLE as primary InputState)
-        self.input_states[1].parameters.require_projection_in_composition._set(True)
+        self.input_states[1].parameters.require_projection_in_composition._set(True, Context())
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """If sample and target values are specified, validate that they are compatible

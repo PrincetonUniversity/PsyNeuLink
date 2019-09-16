@@ -183,7 +183,7 @@ from psyneulink.core.components.shellclasses import ShellClass
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, FUNCTION, FUNCTION_PARAMS, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
     MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE, ONLINE, AFTER
@@ -214,12 +214,12 @@ class LearningProjectionError(Exception):
         return repr(self.error_value)
 
 
-def _learning_signal_getter(owning_component=None, execution_id=None):
-    return owning_component.sender.parameters.value._get(execution_id)
+def _learning_signal_getter(owning_component=None, context=None):
+    return owning_component.sender.parameters.value._get(context)
 
 
-def _learning_signal_setter(value, owning_component=None, execution_id=None):
-    owning_component.sender.parameters.value._set(value, execution_id)
+def _learning_signal_setter(value, owning_component=None, context=None):
+    owning_component.sender.parameters.value._set(value, context)
     return value
 
 
@@ -522,9 +522,6 @@ class LearningProjection(ModulatoryProjection_Base):
         #     error function and learning function specifications from the specification of a LearningProjection (used
         #     to implement learning for a MappingProjection, e.g., in a tuple) to the LearningMechanism responsible
         #     for implementing the function; and for specifying the default LearningProjection for a Process.
-
-        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
-
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(error_function=error_function,
                                                   learning_function=learning_function,
@@ -539,7 +536,7 @@ class LearningProjection(ModulatoryProjection_Base):
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
+            self.initialization_status = ContextFlags.DEFERRED_INIT
 
         super().__init__(sender=sender,
                          receiver=receiver,
@@ -548,7 +545,6 @@ class LearningProjection(ModulatoryProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -562,7 +558,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.initialization_status == ContextFlags.INITIALIZING:
             # VALIDATE SENDER
             sender = self.sender
             if isinstance(sender, LearningMechanism):
@@ -617,8 +613,10 @@ class LearningProjection(ModulatoryProjection_Base):
         if not isinstance(self.sender, (OutputState, LearningMechanism)):
             from psyneulink.core.components.mechanisms.adaptive.learning.learningauxiliary \
                 import _instantiate_learning_components
+            context.source = ContextFlags.METHOD
             _instantiate_learning_components(learning_projection=self,
-                                             context=ContextFlags.METHOD)
+                                             # TODO: do we need this argument?
+                                             context=context)
 
         if isinstance(self.sender, OutputState) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
@@ -692,21 +690,21 @@ class LearningProjection(ModulatoryProjection_Base):
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = self
 
-    def _execute(self, variable, execution_id=None, runtime_params=None, context=None):
+    def _execute(self, variable, context=None, runtime_params=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
         runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized
-        if self.parameters.context._get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
-            return self.parameters.context._get(execution_id).initialization_status
+        if self.initialization_status == ContextFlags.DEFERRED_INIT:
+            return self.initialization_status
 
         if variable is not None:
             learning_signal = variable
         else:
-            learning_signal = self.sender.parameters.value._get(execution_id)
-        matrix = self.receiver.parameters.value._get(execution_id)
+            learning_signal = self.sender.parameters.value._get(context)
+        matrix = self.receiver.parameters.value._get(context)
         # If learning_signal is lower dimensional than matrix being trained
         #    and the latter is a diagonal matrix (square, with values only along the main diagonal)
         #    and the learning_signal is the same as the matrix,
@@ -736,16 +734,16 @@ class LearningProjection(ModulatoryProjection_Base):
         #                       which undermines formatting of it (as learning_signal) above
         value = super(ShellClass, self)._execute(
             variable=learning_signal,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
 
-        learning_rate = self.parameters.learning_rate._get(execution_id)
+        learning_rate = self.parameters.learning_rate._get(context)
         if learning_rate is not None:
             value *= learning_rate
 
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(value)))
 
         return value

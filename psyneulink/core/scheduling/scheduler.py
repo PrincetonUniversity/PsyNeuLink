@@ -274,8 +274,9 @@ import logging
 import uuid
 import warnings
 
-from toposort import toposort
+from toposort import toposort, toposort_flatten
 
+from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never
 from psyneulink.core.scheduling.time import Clock, TimeScale
 
@@ -358,7 +359,7 @@ class Scheduler(object):
             TimeScale.RUN: Never(),
             TimeScale.TRIAL: AllHaveRun(),
         },
-        execution_id=None,
+        default_execution_id=None,
         **kwargs
     ):
         """
@@ -385,13 +386,13 @@ class Scheduler(object):
         if composition is not None:
             self.nodes = [vert.component for vert in composition.graph_processing.vertices]
             self._init_consideration_queue_from_graph(composition.graph_processing)
-            if execution_id is None:
-                execution_id = composition.default_execution_id
+            if default_execution_id is None:
+                default_execution_id = composition.default_execution_id
         elif system is not None:
             self.nodes = [m for m in system.execution_list]
             self._init_consideration_queue_from_system(system)
-            if execution_id is None:
-                execution_id = system.default_execution_id
+            if default_execution_id is None:
+                default_execution_id = system.default_execution_id
         elif graph is not None:
             try:
                 self.nodes = [vert.component for vert in graph.vertices]
@@ -406,7 +407,7 @@ class Scheduler(object):
             raise SchedulerError('Must instantiate a Scheduler with either a Composition (kwarg composition) '
                                  'or a graph dependency dict (kwarg graph)')
 
-        self.default_execution_id = execution_id
+        self.default_execution_id = default_execution_id
         self.execution_list = {self.default_execution_id: []}
         self.clocks = {self.default_execution_id: Clock()}
         self.counts_total = {}
@@ -447,28 +448,32 @@ class Scheduler(object):
             return self._dfs_for_cycles(dependencies, next_node, loop_start_set, visited, loop)
 
     def _call_toposort(self, graph):
+        """
+        execution_depenencies stored in self.depdency_sets
+        :return:
+        """
 
-        dependencies = {}                   # stores  a modified version of the graph in which cycles are "flattened"
+        execution_dependencies = {}         # stores  a modified version of the graph in which cycles are "flattened"
         removed_dependencies = {}           # stores dependencies that were removed in order to flatten cycles
         flattened_cycles = {}               # flattened_cycles[node] = [all cycles to which node belongs]
-        visual_graph = collections.OrderedDict()
+        structural_dependencies = collections.OrderedDict()
         self.cycle_nodes = set()
         # Loop through the existing composition graph, considering "forward" projections only
         # If a cycle is found, "flatten" it by bringing all nodes into the same execution set
         for vert in graph.vertices:
 
-            if vert.component not in dependencies:
-                dependencies[vert.component] = set()
-                visual_graph[vert.component] = set()
+            if vert.component not in execution_dependencies:
+                execution_dependencies[vert.component] = set()
+                structural_dependencies[vert.component] = set()
 
             # use "get_forward_children_from_component" to ignore any projections that were marked as "feedback"
             # "feedback" projections, we've already determined, happen after all forward projections, but when "forward"
             # projections cause cycles, we need to execute them all at once
             for child in graph.get_forward_children_from_component(vert.component):
-                if child.component not in dependencies:
-                    dependencies[child.component] = set()
-                    visual_graph[child.component] = set()
-                dependencies[child.component].add(vert.component)
+                if child.component not in execution_dependencies:
+                    execution_dependencies[child.component] = set()
+                    structural_dependencies[child.component] = set()
+                execution_dependencies[child.component].add(vert.component)
 
                 # loop_start_set contains the current starting point and any cycles it is already connected to
                 # if the new dependency introduces any paths that lead back to a node in loop_start_set, then
@@ -480,7 +485,7 @@ class Scheduler(object):
                     loop_start_set.add(node)
 
                 # if the new dependency created a cycle, return that cycle
-                cycle = self._dfs_for_cycles(dependencies, vert.component, loop_start_set, None, [child.component])
+                cycle = self._dfs_for_cycles(execution_dependencies, vert.component, loop_start_set, None, [child.component])
 
                 if cycle:
                     # loop over all nodes in the cycle in order to:
@@ -494,14 +499,14 @@ class Scheduler(object):
                         if node_a not in flattened_cycles:
                             flattened_cycles[node_a] = []
                         flattened_cycles[node_a].append(cycle)
-                        dependencies[node_a].remove(node_b)
+                        execution_dependencies[node_a].remove(node_b)
                         if node_a not in removed_dependencies:
                             removed_dependencies[node_a] = set()
                         removed_dependencies[node_a].add(node_b)
 
                         if i != 0:
-                            for dependency in dependencies[cycle[0]]:
-                                dependencies[cycle[i]].add(dependency)
+                            for dependency in execution_dependencies[cycle[0]]:
+                                execution_dependencies[cycle[i]].add(dependency)
                 else:
                     # necessary for the case where you want to add a projection that terminates at a node in a loop
                     # AFTER the loop has already been created.
@@ -509,14 +514,15 @@ class Scheduler(object):
                     # NEW: new_node --> A <--> B <--> C -- > D
                     # (otherwise, the order in which a user adds components to a composition would affect the graph)
                     for cycle_node in connected_cycles:
-                        dependencies[cycle_node].add(vert.component)
-                visual_graph[child.component].add(vert.component)
+                        execution_dependencies[cycle_node].add(vert.component)
+                structural_dependencies[child.component].add(vert.component)
             for child in graph.get_backward_children_from_component(vert.component):
-                if child.component not in dependencies:
-                    visual_graph[child.component] = set()
-                visual_graph[child.component].add(vert.component)
-            self.dependency_sets = dependencies
-        return list(toposort(dependencies)), removed_dependencies, visual_graph
+                if child.component not in execution_dependencies:
+                    structural_dependencies[child.component] = set()
+                structural_dependencies[child.component].add(vert.component)
+            self.dependency_dict = execution_dependencies
+
+        return list(toposort(execution_dependencies)), removed_dependencies, structural_dependencies
 
     def _get_all_connected_cycles(self, connected_cycles, original_key, visited_keys, flattened_cycles):
         if original_key in flattened_cycles:
@@ -530,7 +536,7 @@ class Scheduler(object):
                     self._get_all_connected_cycles(connected_cycles, cycle_node, visited_keys, flattened_cycles)
 
     def _init_consideration_queue_from_graph(self, graph):
-        self.consideration_queue, self.removed_dependencies, self.visual_graph = self._call_toposort(graph)
+        self.consideration_queue, self.removed_dependencies, self.structural_dependencies = self._call_toposort(graph)
 
     def _init_counts(self, execution_id=None, base_execution_id=None):
         """
@@ -609,9 +615,6 @@ class Scheduler(object):
                 self.clocks[execution_id] = Clock()
 
     def _reset_counts_total(self, time_scale, execution_id=None):
-        if execution_id is None:
-            execution_id = self.default_execution_id
-
         for ts in TimeScale:
             # only reset the values underneath the current scope
             # this works because the enum is set so that higher granularities of time have lower values
@@ -620,9 +623,6 @@ class Scheduler(object):
                     self.counts_total[execution_id][ts][c] = 0
 
     def _reset_counts_useable(self, execution_id=None):
-        if execution_id is None:
-            execution_id = self.default_execution_id
-
         self.counts_useable[execution_id] = {
             node: {n: 0 for n in self.nodes} for node in self.nodes
         }
@@ -728,7 +728,7 @@ class Scheduler(object):
     # Run methods
     ################################################################################
 
-    def run(self, termination_conds=None, execution_id=None, base_execution_id=None, skip_trial_time_increment=False):
+    def run(self, termination_conds=None, context=None, base_context=Context(execution_id=None), skip_trial_time_increment=False):
         """
         run is a python generator, that when iterated over provides the next `TIME_STEP` of
         executions at each iteration
@@ -742,26 +742,26 @@ class Scheduler(object):
         else:
             termination_conds = self.update_termination_conditions(Scheduler._parse_termination_conditions(termination_conds))
 
-        if execution_id is None:
-            execution_id = self.default_execution_id
+        if context is None:
+            context = Context(execution_id=self.default_execution_id)
 
-        self._init_counts(execution_id, base_execution_id)
-        self._reset_counts_useable(execution_id)
-        self._reset_counts_total(TimeScale.TRIAL, execution_id)
+        self._init_counts(context.execution_id, base_context.execution_id)
+        self._reset_counts_useable(context.execution_id)
+        self._reset_counts_total(TimeScale.TRIAL, context.execution_id)
 
         while (
-            not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_context=execution_id)
-            and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_context=execution_id)
+            not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, context=context)
+            and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, context=context)
         ):
-            self._reset_counts_total(TimeScale.PASS, execution_id)
+            self._reset_counts_total(TimeScale.PASS, context.execution_id)
 
             execution_list_has_changed = False
             cur_index_consideration_queue = 0
 
             while (
                 cur_index_consideration_queue < len(self.consideration_queue)
-                and not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, execution_context=execution_id)
-                and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_context=execution_id)
+                and not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, context=context)
+                and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, context=context)
             ):
                 # all nodes to be added during this time step
                 cur_time_step_exec = set()
@@ -781,50 +781,50 @@ class Scheduler(object):
                         # only add each node once during a single time step, this also serves
                         # to prevent infinitely cascading adds
                         if current_node not in cur_time_step_exec:
-                            if self.conditions.conditions[current_node].is_satisfied(scheduler=self, execution_context=execution_id):
+                            if self.conditions.conditions[current_node].is_satisfied(scheduler=self, context=context):
                                 cur_time_step_exec.add(current_node)
                                 execution_list_has_changed = True
                                 cur_consideration_set_has_changed = True
 
                                 for ts in TimeScale:
-                                    self.counts_total[execution_id][ts][current_node] += 1
+                                    self.counts_total[context.execution_id][ts][current_node] += 1
                                 # current_node's node is added to the execution queue, so we now need to
                                 # reset all of the counts useable by current_node's node to 0
-                                for n in self.counts_useable[execution_id]:
-                                    self.counts_useable[execution_id][n][current_node] = 0
+                                for n in self.counts_useable[context.execution_id]:
+                                    self.counts_useable[context.execution_id][n][current_node] = 0
                                 # and increment all of the counts of current_node's node useable by other
                                 # nodes by 1
-                                for n in self.counts_useable[execution_id]:
-                                    self.counts_useable[execution_id][current_node][n] += 1
+                                for n in self.counts_useable[context.execution_id]:
+                                    self.counts_useable[context.execution_id][current_node][n] += 1
                     # do-while condition
                     if not cur_consideration_set_has_changed:
                         break
 
                 # add a new time step at each step in a pass, if the time step would not be empty
                 if len(cur_time_step_exec) >= 1:
-                    self.execution_list[execution_id].append(cur_time_step_exec)
-                    yield self.execution_list[execution_id][-1]
+                    self.execution_list[context.execution_id].append(cur_time_step_exec)
+                    yield self.execution_list[context.execution_id][-1]
 
-                    self.clocks[execution_id]._increment_time(TimeScale.TIME_STEP)
+                    self.get_clock(context)._increment_time(TimeScale.TIME_STEP)
 
                 cur_index_consideration_queue += 1
 
             # if an entire pass occurs with nothing running, add an empty time step
             if not execution_list_has_changed:
-                self.execution_list[execution_id].append(set())
-                yield self.execution_list[execution_id][-1]
+                self.execution_list[context.execution_id].append(set())
+                yield self.execution_list[context.execution_id][-1]
 
-                self.clocks[execution_id]._increment_time(TimeScale.TIME_STEP)
+                self.get_clock(context)._increment_time(TimeScale.TIME_STEP)
 
-            self.clocks[execution_id]._increment_time(TimeScale.PASS)
+            self.get_clock(context)._increment_time(TimeScale.PASS)
 
         if not skip_trial_time_increment:
-            self.clocks[execution_id]._increment_time(TimeScale.TRIAL)
+            self.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-        if termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, execution_context=execution_id):
+        if termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, context=context):
             self.date_last_run_end = datetime.datetime.now()
 
-        return self.execution_list[execution_id]
+        return self.execution_list[context.execution_id]
 
     def _dict_summary(self):
         return {
@@ -846,11 +846,14 @@ class Scheduler(object):
     def clock(self):
         return self.clocks[self.default_execution_id]
 
-    def get_clock(self, execution_context):
+    def get_clock(self, context):
         try:
-            return self.clocks[execution_context.default_execution_id]
+            return self.clocks[context.default_execution_id]
         except AttributeError:
-            return self.clocks[execution_context]
+            try:
+                return self.clocks[context.execution_id]
+            except AttributeError:
+                return self.clocks[context]
         except KeyError:
             raise
 

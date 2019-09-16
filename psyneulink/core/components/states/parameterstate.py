@@ -112,7 +112,7 @@ The specification of the initial value of a parameter can take any of the follow
     * **Value** -- this must be a valid value for the parameter. It creates a default ParameterState,
       assigns the parameter's default value as the ParameterState's `value <ParameterState.value>`,
       and assigns the parameter's name as the name of the ParameterState.
-    ..
+
     * **ParameterState reference** -- this must refer to an existing **ParameterState** object; its name must be the
       name of a parameter of the owner or of the owner's `function <Component.function>`, and its value must be a valid
       one for the parameter.
@@ -120,7 +120,7 @@ The specification of the initial value of a parameter can take any of the follow
       .. note::
           This capability is provided for generality and potential
           future use, but its current use is not advised.
-    ..
+
     .. _ParameterState_Modulatory_Specification:
 
     * **Modulatory specification** -- this can be an existing `ControlSignal` or `ControlProjection`,
@@ -133,7 +133,7 @@ The specification of the initial value of a parameter can take any of the follow
       ModulatoryProjection already exist, their value(s) must be valid one(s) for the parameter.  Note that only
       Control and Learning Modulatory components can be assigned to a ParameterState (Gating components cannot be
       used -- they can only be assigned to `InputStates <InputState>` and `OutputStates <OutputState>`).
-    ..
+
     .. _ParameterState_Tuple_Specification:
 
     * **2-item tuple:** *(<value>, <Modulatory specification>)* -- this creates a default ParameterState, uses the value
@@ -560,9 +560,7 @@ class ParameterState(State_Base):
 
         # If context is not COMPONENT or CONSTRUCTOR, raise exception
         context = kwargs.pop(CONTEXT, None)
-        if context == ContextFlags.COMPONENT:
-            context = ContextFlags.CONSTRUCTOR
-        if not context == ContextFlags.CONSTRUCTOR:
+        if context is None:
             raise ParameterStateError(f"Contructor for {self.__class__.__name__} cannot be called directly"
                                       f"(context: {context}")
 
@@ -768,7 +766,7 @@ class ParameterState(State_Base):
                                                                      ControlProjection.__name__,
                                                                      LearningProjection.__name__,
                                                                      mod_projection, state_dict[NAME], owner.name))
-                                elif mod_projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                                elif mod_projection.initialization_status == ContextFlags.DEFERRED_INIT:
                                     continue
                                 mod_proj_value = mod_projection.defaults.value
                             else:
@@ -814,13 +812,13 @@ class ParameterState(State_Base):
         """Return parameter variable (since ParameterState's function never changes the form of its variable"""
         return variable
 
-    def _get_fallback_variable(self, execution_id=None):
+    def _get_fallback_variable(self, context=None):
         """
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs.
         """
 
         # FIX 3/6/19: source does not yet seem to have been assigned to owner.function
-        return getattr(self.source.parameters, self.name)._get(execution_id)
+        return getattr(self.source.parameters, self.name)._get(context)
 
     @property
     def pathway_projections(self):
@@ -862,10 +860,11 @@ class ParameterState(State_Base):
 
             f_mod = builder.load(f_mod_ptr)
 
+            # Get name of the modulated parameter
             if afferent.sender.modulation is ModulationParam.MULTIPLICATIVE:
-                name = self.function.multiplicative_param
+                name = self.function.parameters.multiplicative_param.source.name
             elif afferent.sender.modulation is ModulationParam.ADDITIVE:
-                name = self.function.additive_param
+                name = self.function.parameters.additive_param.source.name
             elif afferent.sender.modulation is ModulationParam.DISABLE:
                 name = None
             elif afferent.sender.modulation is ModulationParam.OVERRIDE:

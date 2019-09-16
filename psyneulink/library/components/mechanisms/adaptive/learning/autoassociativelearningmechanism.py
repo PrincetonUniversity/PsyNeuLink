@@ -344,7 +344,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # self.init_args['name'] = name
 
         # # Flag for deferred initialization
-        # self.context.initialization_status = ContextFlags.DEFERRED_INIT
+        # self.initialization_status = ContextFlags.DEFERRED_INIT
         # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         # self._learning_rate = learning_rate
@@ -360,9 +360,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          **kwargs
                          )
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
+    def _parse_function_variable(self, variable, context=None):
         return variable
-    
+
     def _instantiate_attributes_after_function(self, context=None):
         super(AutoAssociativeLearningMechanism, self)._instantiate_attributes_after_function(context=context)
         # KAM 2/27/19 added the line below to set the learning rate of the hebbian learning function to the learning
@@ -397,9 +397,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     def _execute(
         self,
         variable=None,
-        execution_id=None,
+        context=None,
         runtime_params=None,
-        context=None
+
     ):
         """Execute AutoAssociativeLearningMechanism. function and return learning_signal
 
@@ -412,47 +412,36 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         #                       which are not relevant to an autoassociative projection
         learning_signal = super(LearningMechanism, self)._execute(
             variable=variable,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
 
-        if self.parameters.context._get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
-            print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal._get(execution_id)))
-
-        # # TEST PRINT
-        # if not self.context.initialization_status == ContextFlags.INITIALIZING:
-        #     if self.context.composition:
-        #         time = self.context.composition.scheduler_processing.clock.simple_time
-        #     else:
-        #         time = self.current_execution_time
-        #     print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]\nTRIAL:  {}  TIME-STEP: {}".
-        #         format(self.context.flags_string,
-        #                time.trial,
-        #                # self.pass_,
-        #                time.time_step))
-        #     print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
+        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+            print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal._get(context)))
 
         value = np.array([learning_signal])
 
-        self.parameters.value._set(value, execution_id)
+        self.parameters.value._set(value, context)
 
         return value
 
-    def _update_output_states(self, execution_id=None, runtime_params=None, context=None):
+    def _update_output_states(self, context=None, runtime_params=None):
         """Update the weights for the AutoAssociativeProjection for which this is the AutoAssociativeLearningMechanism
 
         Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
         This insures that weights are updated within the same trial in which they have been learned
         """
 
-        super()._update_output_states(execution_id, runtime_params, context)
+        super()._update_output_states(context, runtime_params)
 
         from psyneulink.core.components.process import Process
-        if self.parameters.learning_enabled._get(execution_id) and self.parameters.context._get(execution_id).composition and not isinstance(self.parameters.context._get(execution_id).composition, Process):
+        if self.parameters.learning_enabled._get(context) and context.composition and not isinstance(context.composition, Process):
             learned_projection = self.activity_source.recurrent_projection
-            learned_projection.execute(execution_id=execution_id, context=ContextFlags.LEARNING)
-            learned_projection.parameters.context._get(execution_id).execution_phase = ContextFlags.IDLE
+            old_exec_phase = context.execution_phase
+            context.execution_phase = ContextFlags.LEARNING
+            learned_projection.execute(context=context)
+            context.execution_phase = old_exec_phase
 
     @property
     def activity_source(self):

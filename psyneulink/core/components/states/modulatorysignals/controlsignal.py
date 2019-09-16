@@ -20,7 +20,7 @@ that is assigned as the `value <ControlProjection.ControlProjection.value>` of i
 ControlProjection conveys its value to the `ParameterState` for the parameter it controls, which uses that value to
 `modulate <ModulatorySignal_Modulation>` the `value <ParameterState.value>` of the parameter.  A ControlSignal also
 calculates a `cost`, based on its `intensity` and/or its time course, that may be used by the ControlMechanism to
-adapt the ControlSignal's `allocation <ControlSignal.allocation>` in the future.
+adapt the ControlSignal's `allocation <ControlSignal.allocation>` in subsequent executions.
 
 .. _ControlSignal_Creation:
 
@@ -29,10 +29,12 @@ Creating a ControlSignal
 
 A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is `specified for
 control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specified in the **control_signals** argument
-of the constructor for a `ControlMechanism <ControlMechanism>` or a `System <System_Control_Specification>`.  Although
-a ControlSignal can be created on its own using its constructor (or any of the other ways for `creating an OutputState
-<OutputStates_Creation>`), this is usually not necessary nor is it advisable, as a ControlSignal has dedicated
-components and requirements for configuration that must be met for it to function properly.
+of the constructor for a `ControlMechanism <ControlMechanism>`, as well as in the `specification of the parameter
+<ParameterState_Specification>` that the ControlSignal is intended to modulate (also see `Modualory Specificadtion
+<ParameterState_Modulatory_Specification>`.  Although a ControlSignal can also be  created on its own using its
+constructor (or any of the other ways for `creating an OutputState <OutputStates_Creation>`), this is usually not
+necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for configuration that
+must be met for it to function properly.
 
 .. _ControlSignal_Specification:
 
@@ -153,7 +155,7 @@ its value from the previous `TRIAL` is assigned to the `last_intensity` attribut
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A ControlSignal has a `cost <ControlSignal.cost>` attribute that may be used by the ControlMechanism to which it
-belongs to determine its future `allocation <ControlSignal.allocation>`.  The value of the `cost <ControlSignal.cost>`
+belongs to determine its `allocation <ControlSignal.allocation>`.  The value of the `cost <ControlSignal.cost>`
 is computed from the ControlSignal's `intensity` using one or more of three cost functions, each of which
 computes a different component of the cost, and a function that combines them, as listed below:
 
@@ -223,8 +225,8 @@ Examples
 *Modulate the parameter of a Mechanism's function*.  The following example assigns a
 ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a `TransferMechanism`::
 
-    >>> import psyneulink as pnl
-    >>> my_mech = pnl.TransferMechanism(function=pnl.Logistic(bias=(1.0, pnl.ControlSignal)))
+    >>> from psyneulink import *
+    >>> my_mech = TransferMechanism(function=Logistic(bias=(1.0, ControlSignal)))
 
 Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
 with a ControlProjection that projects to the TransferMechanism's `ParameterState` for the `bias <Logistic.bias>`
@@ -236,62 +238,57 @@ gain parameter.
 *Specify attributes of a ControlSignal*.  Ordinarily, ControlSignals modify the *MULTIPLICATIVE_PARAM* of a
 ParameterState's `function <ParameterState.function>` to modulate the parameter's value.
 In the example below, this is changed by specifying the `modulation <ControlSignal.modulation>` attribute of a
-`ControlSignal` for the `Logistic` Function of a `TransferMechanism`.  It is changed so that the value of the
+`ControlSignal` for the `Logistic` Function of the `TransferMechanism`.  It is changed so that the value of the
 ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
 function::
 
-    >>> my_mech = pnl.TransferMechanism(function=pnl.Logistic(gain=(1.0,
-    ...                                                             pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
+    >>> my_mech = TransferMechanism(function=Logistic(gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
 
-Note that the `ModulationParam` specified for the `ControlSignal` pertains to the function of a *ParameterState*
-for the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter), and *not* the Logistic function
-itself -- that is, in this example, the value of the ControlSignal is added to the *gain parameter* of the Logistic
-function, *not* its `variable <Logistic.variable>`).  If the value of the ControlSignal's **modulation** argument
-had been ``ModulationParam.OVERRIDE``, then the ControlSignal's value would have been used as (i.e., replaced) the
-value of the *Logistic* Function's `gain <Logistic.gain>` parameter, rather than added to it.
+Note that the `ModulationParam` specified for the `ControlSignal` refers to how the parameter of the *Logistic*
+Function (in this case, its `gain <Logistic.gain>` parameter) is modified, and not directly to input Logistic function;
+that is, in this example, the value of the ControlSignal is added to the *gain parameter* of the Logistic
+function, *not* its `variable <Logistic.variable>`.  If the value of the ControlSignal's **modulation** argument
+had been ``ModulationParam.OVERRIDE``, then the ControlSignal's value would have been used as (i.e., it would have
+replaced) the value of the *Logistic* Function's `gain <Logistic.gain>` parameter, rather than added to it.
 
 COMMENT:
     MOVE THIS EXAMPLE TO EVCControlMechanism
 
-*Modulate the parameters of several Mechanisms by an EVCControlMechanism*.  This shows::
+*Modulate the parameters of several Mechanisms by an OptimizationControlMechanism*.  This shows::
 
-    My_Mech_A = TransferMechanism(function=Logistic)
-    My_Mech_B = TransferMechanism(function=Linear,
+    my_mech_A = TransferMechanism(function=Logistic)
+    my_mech_B = TransferMechanism(function=Linear,
                                  output_states=[RESULT, OUTPUT_MEAN])
 
-    Process_A = Process(pathway=[My_Mech_A])
-    Process_B = Process(pathway=[My_Mech_B])
-    My_System = System(processes=[Process_A, Process_B])
-
-    My_EVC_Mechanism = EVCControlMechanism(system=My_System,
-                                    monitor_for_control=[My_Mech_A.output_states[RESULT],
-                                                         My_Mech_B.output_states[OUTPUT_MEAN]],
-                                    control_signals=[(GAIN, My_Mech_A),
-                                                     {NAME: INTERCEPT,
-                                                      MECHANISM: My_Mech_B,
-                                                      MODULATION:ModulationParam.ADDITIVE}],
-                                    name='My EVC Mechanism')
-COMMENT
+    my_ocm = OptimizationControlMechanism(monitor_for_control=[my_mech_A.output_states[RESULT],
+                                                               my_mech_B.output_states[OUTPUT_MEAN]],
+                                          control_signals=[(GAIN, my_mech_A),
+                                                           {NAME: INTERCEPT,
+                                                            MECHANISM: my_mech_B,
+                                                            MODULATION:ModulationParam.ADDITIVE}],
+                                          name='my_ocm')
 
 *Modulate the parameters of several Mechanisms in a System*.  The following example assigns ControlSignals to modulate
-the `gain <Logistic.gain>` parameter of the `Logistic` function for ``My_Mech_A`` and the `intercept
-<Logistic.intercept>` parameter of the `Linear` function for ``My_Mech_B``::
+the `gain <Logistic.gain>` parameter of the `Logistic` function for ``my_mech_A`` and the `intercept
+<Logistic.intercept>` parameter of the `Linear` function for ``my_mech_B``::
 
-    >>> my_mech_a = pnl.TransferMechanism(function=pnl.Logistic)
-    >>> my_mech_b = pnl.TransferMechanism(function=pnl.Linear,
-    ...                                   output_states=[pnl.RESULT, pnl.OUTPUT_MEAN])
+    >>> my_mech_A = TransferMechanism(function=Logistic)
+    >>> my_mech_B = TransferMechanism(function=Linear,
+    ...                                   output_states=[RESULT, OUTPUT_MEAN])
 
-    >>> process_a = pnl.Process(pathway=[my_mech_a])
-    >>> process_b = pnl.Process(pathway=[my_mech_b])
+    >>> process_a = Process(pathway=[my_mech_A])
+    >>> process_b = Process(pathway=[my_mech_B])
 
-    >>> my_system = pnl.System(processes=[process_a, process_b],
-    ...                        monitor_for_control=[my_mech_a.output_states[pnl.RESULTS],
-    ...                                             my_mech_b.output_states[pnl.OUTPUT_MEAN]],
-    ...                        control_signals=[(pnl.GAIN, my_mech_a),
-    ...                                         {pnl.NAME: pnl.INTERCEPT,
-    ...                                          pnl.MECHANISM: my_mech_b,
-    ...                                          pnl.MODULATION: pnl.ModulationParam.ADDITIVE}],
+    >>> my_system = System(processes=[process_a, process_b],
+    ...                        monitor_for_control=[my_mech_A.output_states[RESULTS],
+    ...                                             my_mech_B.output_states[OUTPUT_MEAN]],
+    ...                        control_signals=[(GAIN, my_mech_A),
+    ...                                         {NAME: INTERCEPT,
+    ...                                          MECHANISM: my_mech_B,
+    ...                                          MODULATION: ModulationParam.ADDITIVE}],
     ...                        name='My Test System')
+
+COMMENT
 
 
 Class Reference
@@ -300,6 +297,7 @@ Class Reference
 """
 
 import inspect
+import itertools
 import warnings
 
 from enum import IntEnum
@@ -733,10 +731,10 @@ class ControlSignal(ModulatorySignal):
         duration_cost = 0
         cost = None
 
-        intensity_cost_function = Exponential
-        adjustment_cost_function = Linear
-        duration_cost_function = SimpleIntegrator
-        combine_costs_function = Reduce(operation=SUM)
+        intensity_cost_function = Parameter(Exponential, stateful=False, loggable=False)
+        adjustment_cost_function = Parameter(Linear, stateful=False, loggable=False)
+        duration_cost_function = Parameter(SimpleIntegrator, stateful=False, loggable=False)
+        combine_costs_function = Parameter(Reduce(operation=SUM), stateful=False, loggable=False)
         modulation = None
 
         _validate_cost_options = get_validator_by_type_only([ControlSignalCosts, list])
@@ -958,15 +956,15 @@ class ControlSignal(ModulatorySignal):
 
         if isinstance(a, (range, np.ndarray)):
             a = list(a)
-        self.parameters.allocation_samples._set(SampleIterator(specification=a))
+        self.parameters.allocation_samples._set(SampleIterator(specification=a), context)
 
     def _instantiate_cost_attributes(self, context=None):
         if self.cost_options:
             # Default cost params
-            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
-                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
+            if self.initialization_status != ContextFlags.DEFERRED_INIT:
+                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation, context=context)
             else:
-                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
+                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation, context=context)
             self.defaults.intensity_cost = self.intensity_cost
             self.adjustment_cost = 0
             self.duration_cost = 0
@@ -997,15 +995,12 @@ class ControlSignal(ModulatorySignal):
                                          format(cost_function, cost_function_name))
 
             self.paramsCurrent[cost_function_name] = cost_function
-            # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-            # MODIFIED 11/9/18 OLD:[JDC]
             self.intensity_change = [0]
-            # MODIFIED 11/9/18 END
 
     def _initialize_cost_attributes(self, context=None):
         if self.cost_options:
             # Default cost params
-            if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
+            if self.initialization_status != ContextFlags.DEFERRED_INIT:
                 self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
             else:
                 self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
@@ -1051,22 +1046,22 @@ class ControlSignal(ModulatorySignal):
 
         return state_spec, params_dict
 
-    def update(self, execution_id=None, params=None, context=None):
+    def _update(self, context=None, params=None):
         """Update value (intensity) and costs
         """
-        super().update(execution_id=execution_id, params=params, context=context)
+        super()._update(context=context, params=params)
 
-        if self.parameters.cost_options._get(execution_id):
-            intensity = self.parameters.value._get(execution_id)
-            self.parameters.cost._set(self.compute_costs(intensity, execution_id), execution_id)
+        if self.parameters.cost_options._get(context):
+            intensity = self.parameters.value._get(context)
+            self.parameters.cost._set(self.compute_costs(intensity, context), context)
 
-    def compute_costs(self, intensity, execution_id=None):
+    def compute_costs(self, intensity, context=None):
         """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
 
-        cost_options = self.parameters.cost_options._get(execution_id)
+        cost_options = self.parameters.cost_options._get(context)
 
         try:
-            intensity_change = intensity - self.parameters.intensity.get_previous(execution_id)
+            intensity_change = intensity - self.parameters.intensity.get_previous(context)
         except TypeError:
             intensity_change = [0]
 
@@ -1074,28 +1069,31 @@ class ControlSignal(ModulatorySignal):
         intensity_cost = adjustment_cost = duration_cost = 0
 
         if ControlSignalCosts.INTENSITY & cost_options:
-            intensity_cost = self.intensity_cost_function(intensity)
-            self.parameters.intensity_cost._set(intensity_cost, execution_id)
+            intensity_cost = self.intensity_cost_function(intensity, context=context)
+            self.parameters.intensity_cost._set(intensity_cost, context)
 
         if ControlSignalCosts.ADJUSTMENT & cost_options:
-            adjustment_cost = self.adjustment_cost_function(intensity_change)
-            self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
+            adjustment_cost = self.adjustment_cost_function(intensity_change, context=context)
+            self.parameters.adjustment_cost._set(adjustment_cost, context)
 
         if ControlSignalCosts.DURATION & cost_options:
-            duration_cost = self.duration_cost_function(self.parameters.cost._get(execution_id))
-            self.parameters.duration_cost._set(duration_cost, execution_id)
+            duration_cost = self.duration_cost_function(self.parameters.cost._get(context), context=context)
+            self.parameters.duration_cost._set(duration_cost, context)
 
         return max(
             0.0,
-            self.combine_costs_function([
-                intensity_cost,
-                adjustment_cost,
-                duration_cost
-            ])
+            self.combine_costs_function(
+                [
+                    intensity_cost,
+                    adjustment_cost,
+                    duration_cost
+                ],
+                context=context
+            )
         )
 
     @tc.typecheck
-    def assign_costs(self, costs: tc.any(ControlSignalCosts, list), execution_context=None):
+    def assign_costs(self, costs: tc.any(ControlSignalCosts, list), context=None):
         """assign_costs(costs)
         Assigns specified costs; all others are disabled.
 
@@ -1111,11 +1109,11 @@ class ControlSignal(ModulatorySignal):
         """
         if isinstance(costs, ControlSignalCosts):
             costs = [costs]
-        self.parameters.cost_options.set(ControlSignalCosts.NONE, execution_context)
-        return self.enable_costs(costs, execution_context)
+        self.parameters.cost_options.set(ControlSignalCosts.NONE, context)
+        return self.enable_costs(costs, context)
 
     @tc.typecheck
-    def enable_costs(self, costs: tc.any(ControlSignalCosts, list), execution_context=None):
+    def enable_costs(self, costs: tc.any(ControlSignalCosts, list), context=None):
         """enable_costs(costs)
         Enables specified costs; settings for all other costs are left intact.
 
@@ -1131,15 +1129,15 @@ class ControlSignal(ModulatorySignal):
         """
         if isinstance(costs, ControlSignalCosts):
             options = [costs]
-        cost_options = self.parameters.cost_options.get(execution_context)
+        cost_options = self.parameters.cost_options.get(context)
         for cost in costs:
             cost_options |= cost
 
-        self.parameters.cost_options.set(cost_options, execution_context)
+        self.parameters.cost_options.set(cost_options, context)
         return cost_options
 
     @tc.typecheck
-    def disable_costs(self, costs: tc.any(ControlSignalCosts, list), execution_context=None):
+    def disable_costs(self, costs: tc.any(ControlSignalCosts, list), context=None):
         """disable_costs(costs)
         Disables specified costs; settings for all other costs are left intact.
 
@@ -1155,16 +1153,16 @@ class ControlSignal(ModulatorySignal):
         """
         if isinstance(costs, ControlSignalCosts):
             options = [costs]
-        cost_options = self.parameters.cost_options.get(execution_context)
+        cost_options = self.parameters.cost_options.get(context)
         for cost in costs:
             cost_options &= ~cost
 
-        self.parameters.cost_options.set(cost_options, execution_context)
+        self.parameters.cost_options.set(cost_options, context)
         return cost_options
 
-    def get_cost_options(self, execution_context=None):
+    def get_cost_options(self, context=None):
         options = []
-        cost_options = self.parameters.cost_options.get(execution_context)
+        cost_options = self.parameters.cost_options.get(context)
         if cost_options & ControlSignalCosts.INTENSITY:
             options.append(INTENSITY_COST)
         if cost_options & ControlSignalCosts.ADJUSTMENT:
@@ -1173,7 +1171,7 @@ class ControlSignal(ModulatorySignal):
             options.append(DURATION_COST)
         return options
 
-    def toggle_cost_function(self, cost_function_name, assignment=ON, execution_context=None):
+    def toggle_cost_function(self, cost_function_name, assignment=ON, context=None):
         """Enables/disables use of a cost function.
 
         ``cost_function_name`` should be a keyword (list under :ref:`Structure <ControlProjection_Structure>`).
@@ -1189,7 +1187,7 @@ class ControlSignal(ModulatorySignal):
         else:
             raise ControlSignalError("toggle_cost_function: unrecognized cost function: {}".format(cost_function_name))
 
-        cost_options = self.parameters.cost_options.get(execution_context)
+        cost_options = self.parameters.cost_options.get(context)
         if assignment:
             if not self.paramsCurrent[cost_function_name]:
                 raise ControlSignalError("Unable to toggle {} ON as function assignment is \'None\'".
@@ -1198,16 +1196,16 @@ class ControlSignal(ModulatorySignal):
         else:
             cost_options &= ~cost_option
 
-        self.parameters.cost_options.set(cost_options, execution_context)
+        self.parameters.cost_options.set(cost_options, context)
         return cost_options
 
-    def get_costs(self, execution_context=None):
+    def get_costs(self, context=None):
         """Return three-element list with the values of ``intensity_cost``, ``adjustment_cost`` and ``duration_cost``
         """
         return [
-            self.parameters.intensity_cost.get(execution_context),
-            self.parameters.adjustment_cost.get(execution_context),
-            self.parameters.duration_cost.get(execution_context)
+            self.parameters.intensity_cost.get(context),
+            self.parameters.adjustment_cost.get(context),
+            self.parameters.duration_cost.get(context)
         ]
 
     @property
@@ -1223,3 +1221,18 @@ class ControlSignal(ModulatorySignal):
     @cost.setter
     def cost(self, value):
         self._cost = value
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [
+                f for f in [
+                    self.intensity_cost_function,
+                    self.adjustment_cost_function,
+                    self.duration_cost_function,
+                    self.combine_costs_function
+                ]
+                if isinstance(f, Function)
+            ]
+        ))

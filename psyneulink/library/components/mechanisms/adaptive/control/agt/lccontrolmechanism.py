@@ -38,15 +38,21 @@ Mechanisms that it controls.
 *ObjectiveMechanism and Monitored OutputStates*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Like all ControlMechanisms, when an LCControlMechanism is created it automatically creates an `ObjectiveMechanism`,
-from which it receives its input. The ObjectiveMechanism receives its input from any `OutputStates <OutputState>`
-specified in **monitor_for_control** argument of the constructor for LCControlMechanism (or of a `System` for which
-it is assigned as a `controller <System.controller>`; see `ControlMechanism_ObjectiveMechanism`). By default,
-the ObjectiveMechanism is assigned a `CombineMeans` Function  as its `function <ObjectiveMechanism.function>` (see
-`LCControlMechanism_ObjectiveMechanism`).  The ObjectiveMechanism can be customized using the
-**objective_mechanism** argument of the LCControlMechanism's constructor; however, the `value <OutputState.value>`
-of its *OUTCOME* `OutputState` must be a scalar value (that is used as the input to the LCControlMechanism's
-`function <LCControlMechanism.function>` to drive its `phasic response <LCControlMechanism_Modes_Of_Operation>`.
+Like any ControlMechanisms, when an LCControlMechanism is created it may `automatically create
+<`ControlMechanism_ObjectiveMechanism`> an `ObjectiveMechanism` from which it receives its input. The
+ObjectiveMechanism receives its input from any `OutputStates <OutputState>` specified in **monitor_for_control**
+argument of the constructor for LCControlMechanism
+COMMENT:
+TBI FOR COMPOSITION
+(or of a `System` for which
+it is assigned as a `controller <System.controller>`; see `ControlMechanism_ObjectiveMechanism`).
+COMMENT
+By default, the ObjectiveMechanism of an LCControlMechanism is assigned a `CombineMeans` Function  as its `function
+<ObjectiveMechanism.function>` (see `LCControlMechanism_ObjectiveMechanism`).  The ObjectiveMechanism can be
+customized using the **objective_mechanism** argument of the LCControlMechanism's constructor; however, the `value
+<OutputState.value>` of its *OUTCOME* `OutputState` must be a scalar value (that is used as the input to the
+LCControlMechanism's `function <LCControlMechanism.function>` to drive its `phasic response
+<LCControlMechanism_Modes_Of_Operation>`.
 
 .. _LCControlMechanism_Modulated_Mechanisms:
 
@@ -88,14 +94,15 @@ of the LCControlMechanism's `ObjectiveMechanism`.  That value is used as the inp
 ObjectiveMechanism
 ^^^^^^^^^^^^^^^^^^
 
-The ObjectiveMechanism for an LCControlMechanism receives its inputs from the `OutputState(s) <OutputState>` specified
-the **monitor_for_control** argument of the LCControlMechanism constructor, or the **montiored_output_states** argument
+If an ObjectiveMechanism is `automatically created <LCControlMechanism_ObjectiveMechanism_Creation> for an
+LCControlMechanism, it receives its inputs from the `OutputState(s) <OutputState>` specified the
+**monitor_for_control** argument of the LCControlMechanism constructor, or the **montiored_output_states** argument
 of the LCControlMechanism's `ObjectiveMechanism <ControlMechanism_ObjectiveMechanism>`.  By default, the
 ObjectiveMechanism is assigned a `CombineMeans` Function with a default `operation <LinearCombination.operation>` of
 *SUM*; this takes the mean of each array that the ObjectiveMechanism receives from the `value <OutputState.value>` of
 each of the OutputStates that it monitors, and returns the sum of these means.  The `value <OutputState.value>` of
 each OutputState can be weighted (multiplicatively and/or exponentially), by specifying this in the
-**monitor_for_control** argument of the LCControlMechanism (see `ControlMechanism_ObjectiveMechanism` for details).
+**monitor_for_control** argument of the LCControlMechanism (see `ControlMechanism_Monitor_for_Control` for details).
 As with any ControlMechanism, its ObjectiveMechanism can be explicitly specified to customize its `function
 <ObjectiveMechanism.function>` or any of its other parameters, by specifyihng it in the **objective_mechanism**
 argument of the LCControlMechanism's constructor.
@@ -278,7 +285,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.shellclasses import Mechanism, System_Base
 from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import ALL, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT_EXECUTE_METHOD_ONLY, PROJECTIONS
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -838,22 +845,22 @@ class LCControlMechanism(ControlMechanism):
     def _execute(
         self,
         variable=None,
-        execution_id=None,
+        context=None,
         runtime_params=None,
-        context=None
+
     ):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value
         """
         # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
         output_values = super(ControlMechanism, self)._execute(
             variable=variable,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
 
-        gain_t = self.parameters.scaling_factor_gain._get(execution_id) * output_values[1] \
-                 + self.parameters.base_level_gain._get(execution_id)
+        gain_t = self.parameters.scaling_factor_gain._get(context) * output_values[1] \
+                 + self.parameters.base_level_gain._get(context)
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 
@@ -884,14 +891,14 @@ class LCControlMechanism(ControlMechanism):
         vi = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
         vo = builder.gep(new_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        with pnlvm.helpers.array_ptr_loop(builder, vi, "LC_gain") as (builder, index):
-            in_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
-            val = builder.load(in_ptr);
-            val = builder.fmul(val, scaling_factor)
-            val = builder.fadd(val, base_factor)
+        with pnlvm.helpers.array_ptr_loop(builder, vi, "LC_gain") as (b1, index):
+            in_ptr = b1.gep(vi, [ctx.int32_ty(0), index])
+            val = b1.load(in_ptr)
+            val = b1.fmul(val, scaling_factor)
+            val = b1.fadd(val, base_factor)
 
-            out_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
-            builder.store(val, out_ptr)
+            out_ptr = b1.gep(vo, [ctx.int32_ty(0), index])
+            b1.store(val, out_ptr)
 
         # copy the main function return value
         for i, _ in enumerate(mf_out.type.pointee.elements):
@@ -910,7 +917,7 @@ class LCControlMechanism(ControlMechanism):
         super()._add_system(system, role)
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
             # Call with ContextFlags.COMPONENT so that OutputStates are replaced rather than added
-            self._instantiate_output_states(context=ContextFlags.COMPONENT)
+            self._instantiate_output_states(context=Context(source=ContextFlags.COMPONENT))
 
     @tc.typecheck
     def add_modulated_mechanisms(self, mechanisms:list):

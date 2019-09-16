@@ -209,7 +209,7 @@ from psyneulink.core.components.component import component_keywords
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL, VARIABLE, PROJECTIONS
+from psyneulink.core.globals.keywords import MAYBE, MECHANISM, MODULATION, MODULATORY_SIGNAL, VARIABLE, PROJECTIONS
 from psyneulink.core.globals.defaults import defaultModulatoryAllocation
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -429,8 +429,8 @@ class ModulatorySignal(OutputState):
                 modulates = kwargs.pop(PROJECTIONS, modulates)
 
         # Deferred initialization
-        # if self.context.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
-        if self.context.initialization_status & ContextFlags.DEFERRED_INIT:
+        # if self.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
+        if self.initialization_status & ContextFlags.DEFERRED_INIT:
             # If init was deferred, it may have been because owner was not yet known (see OutputState.__init__),
             #   and so modulation hasn't had a chance to be assigned to the owner's value
             #   (i.e., if it was not specified in the constructor), so do it now;
@@ -456,7 +456,7 @@ class ModulatorySignal(OutputState):
                          prefs=prefs,
                          **kwargs)
 
-        if self.context.initialization_status == ContextFlags.INITIALIZED:
+        if self.initialization_status == ContextFlags.INITIALIZED:
             self._assign_default_state_name()
 
     def _instantiate_attributes_after_function(self, context=None):
@@ -475,10 +475,14 @@ class ModulatorySignal(OutputState):
         Call _instantiate_projection_from_state to assign ModulatoryProjections to .efferents
 
         """
-       # # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+       # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         for receiver_spec in projections:
             projection = self._instantiate_projection_from_state(projection_spec=type(self),
                                                                  receiver=receiver_spec,
+                                                                 # MODIFIED 8/12/19 NEW: [JDC] - MODIFIED FEEDBACK
+                                                                 # feedback=True,
+                                                                 feedback=MAYBE,
+                                                                 # MODIFIED 8/12/19 END
                                                                  context=context)
             projection._assign_default_projection_name(state=self)
 

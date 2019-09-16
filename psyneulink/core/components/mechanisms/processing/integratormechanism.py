@@ -233,13 +233,13 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  context=ContextFlags.CONSTRUCTOR,
+
                                                   **kwargs)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 
-    # def _parse_function_variable(self, variable, execution_id=None, context=None):
-    #     super()._parse_function_variable(variable, execution_id, context)
+    # def _parse_function_variable(self, variable, context=None, context=None):
+    #     super()._parse_function_variable(variable, context, context)
 
     def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
         """If any parameters with len>1 have been specified for the Mechanism's function, and Mechanism's

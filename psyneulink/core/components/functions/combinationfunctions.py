@@ -44,7 +44,7 @@ from psyneulink.core.globals.keywords import \
     LINEAR_COMBINATION_FUNCTION, OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, \
     REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, kwPreferenceSetName
 from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d, parameter_spec
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, is_pref_set, PreferenceEntry, PreferenceLevel
@@ -81,10 +81,10 @@ class CombinationFunction(Function_Base):
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
-                 params,
-                 owner,
-                 prefs,
-                 context):
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 context=None):
 
         if not hasattr(self, MULTIPLICATIVE_PARAM):
             raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
@@ -236,7 +236,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         """Insure that list or array is 1d and that all elements are numeric
@@ -273,9 +273,9 @@ class Concatenate(CombinationFunction):  # -------------------------------------
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """Use numpy hstack to concatenate items in outer dimension (axis 0) of variable.
 
         Arguments
@@ -297,8 +297,8 @@ class Concatenate(CombinationFunction):  # -------------------------------------
             in an array that is one dimension less than `variable <Concatenate.variable>`.
 
         """
-        scale = self.get_current_function_param(SCALE, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
+        scale = self.get_current_function_param(SCALE, context)
+        offset = self.get_current_function_param(OFFSET, context)
 
         result = np.hstack(variable) * scale + offset
 
@@ -462,7 +462,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
         if default_variable is not None:
@@ -549,9 +549,9 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """Rearrange items in outer dimension (axis 0) of variable according to `arrangement <Rearrange.arrangement>`.
 
         Arguments
@@ -573,9 +573,9 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         """
         variable = np.atleast_2d(variable)
 
-        scale = self.get_current_function_param(SCALE, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
-        arrangement = self.parameters.arrangement.get(execution_id)
+        scale = self.get_current_function_param(SCALE, context)
+        offset = self.get_current_function_param(OFFSET, context)
+        arrangement = self.parameters.arrangement.get(context)
 
         if arrangement is None:
             result = np.hstack(variable) * scale + offset
@@ -776,7 +776,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         """Insure that list or array is 1d and that all elements are numeric
@@ -809,7 +809,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_1d(target_set[WEIGHTS])
-            if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
                 if len(target_set[WEIGHTS]) != len(self.defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of elements in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.defaults.variable)))
@@ -817,7 +817,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
             target_set[EXPONENTS] = np.atleast_1d(target_set[EXPONENTS])
-            if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
                 if len(target_set[EXPONENTS]) != len(self.defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of elements in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.defaults.variable)))
@@ -834,9 +834,9 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -859,11 +859,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
 
         """
-        weights = self.get_current_function_param(WEIGHTS, execution_id)
-        exponents = self.get_current_function_param(EXPONENTS, execution_id)
-        operation = self.get_current_function_param(OPERATION, execution_id)
-        scale = self.get_current_function_param(SCALE, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
+        weights = self.get_current_function_param(WEIGHTS, context)
+        exponents = self.get_current_function_param(EXPONENTS, context)
+        operation = self.get_current_function_param(OPERATION, context)
+        scale = self.get_current_function_param(SCALE, context)
+        offset = self.get_current_function_param(OFFSET, context)
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
@@ -871,7 +871,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            if self.is_initializing:
                 with np.errstate(divide='raise'):
                     try:
                         variable = variable ** exponents
@@ -893,7 +893,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
-                                format(self.get_current_function_param(OPERATION, execution_id)))
+                                format(self.get_current_function_param(OPERATION, context)))
 
         return self.convert_output_type(result)
 
@@ -1155,7 +1155,7 @@ class LinearCombination(
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
@@ -1207,14 +1207,14 @@ class LinearCombination(
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
-            if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
                 if np.array(target_set[WEIGHTS]).shape != self.defaults.variable.shape:
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.defaults.variable)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if np.array(target_set[EXPONENTS]).shape != self.defaults.variable.shape:
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.defaults.variable)))
@@ -1230,7 +1230,7 @@ class LinearCombination(
                                     format(SCALE, self.name, scale))
             scale_is_a_scalar = isinstance(scale, numbers.Number) or (len(scale) == 1) and isinstance(scale[0],
                                                                                                       numbers.Number)
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if not scale_is_a_scalar:
                     err_msg = "Scale is using Hadamard modulation but its shape and/or size (scale shape: {}, size:{})" \
                               " do not match the variable being modulated (variable shape: {}, size: {})". \
@@ -1253,7 +1253,7 @@ class LinearCombination(
                                     format(OFFSET, self.name, offset))
             offset_is_a_scalar = isinstance(offset, numbers.Number) or (len(offset) == 1) and isinstance(offset[0],
                                                                                                          numbers.Number)
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if not offset_is_a_scalar:
                     err_msg = "Offset is using Hadamard modulation but its shape and/or size (offset shape: {}, size:{})" \
                               " do not match the variable being modulated (variable shape: {}, size: {})". \
@@ -1273,9 +1273,9 @@ class LinearCombination(
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -1297,16 +1297,16 @@ class LinearCombination(
             the result of linearly combining the arrays in `variable <LinearCombination.variable>`.
 
         """
-        weights = self.get_current_function_param(WEIGHTS, execution_id)
-        exponents = self.get_current_function_param(EXPONENTS, execution_id)
-        # if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZED:
+        weights = self.get_current_function_param(WEIGHTS, context)
+        exponents = self.get_current_function_param(EXPONENTS, context)
+        # if self.initialization_status == ContextFlags.INITIALIZED:
         #     if weights is not None and weights.shape != variable.shape:
         #         weights = weights.reshape(variable.shape)
         #     if exponents is not None and exponents.shape != variable.shape:
         #         exponents = exponents.reshape(variable.shape)
-        operation = self.get_current_function_param(OPERATION, execution_id)
-        scale = self.get_current_function_param(SCALE, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
+        operation = self.get_current_function_param(OPERATION, context)
+        scale = self.get_current_function_param(SCALE, context)
+        offset = self.get_current_function_param(OFFSET, context)
 
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
@@ -1330,7 +1330,7 @@ class LinearCombination(
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            if self.is_initializing:
                 with np.errstate(divide='raise'):
                     try:
                         variable = variable ** exponents
@@ -1411,7 +1411,7 @@ class LinearCombination(
         offset = ctx.float_ty(-0.0) if isinstance(offset_type, pnlvm.ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
 
         # assume operation does not change dynamically
-        operation = self.get_current_function_param(OPERATION)
+        operation = self.get_current_function_param(OPERATION, context=Context())
         if operation is SUM:
             val = ctx.float_ty(-0.0)
         elif operation is PRODUCT:
@@ -1757,7 +1757,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
@@ -1791,14 +1791,14 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if len(target_set[WEIGHTS]) != len(self.defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.defaults.variable.shape)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if len(target_set[EXPONENTS]) != len(self.defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.defaults.variable.shape)))
@@ -1812,7 +1812,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(SCALE, self.name, scale))
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if (isinstance(scale, np.ndarray) and
                         (scale.size != self.defaults.variable.size or
                                  scale.shape != self.defaults.variable.shape)):
@@ -1831,7 +1831,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(OFFSET, self.name, offset))
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if (isinstance(offset, np.ndarray) and
                         (offset.size != self.defaults.variable.size or
                                  offset.shape != self.defaults.variable.shape)):
@@ -1849,9 +1849,9 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -1873,11 +1873,11 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             the result of taking the means of each array in `variable <CombineMeans.variable>` and combining them.
 
         """
-        exponents = self.get_current_function_param(EXPONENTS, execution_id)
-        weights = self.get_current_function_param(WEIGHTS, execution_id)
-        operation = self.get_current_function_param(OPERATION, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
-        scale = self.get_current_function_param(SCALE, execution_id)
+        exponents = self.get_current_function_param(EXPONENTS, context)
+        weights = self.get_current_function_param(WEIGHTS, context)
+        operation = self.get_current_function_param(OPERATION, context)
+        offset = self.get_current_function_param(OFFSET, context)
+        scale = self.get_current_function_param(SCALE, context)
 
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
@@ -1904,7 +1904,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         if exponents is not None:
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
-            if (self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING and
+            if (self.is_initializing and
                     any(not any(i) and j < 0 for i, j in zip(variable, exponents))):
                 means = np.ones_like(means)
             else:
@@ -1924,7 +1924,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         else:
             raise FunctionError("Unrecognized operator ({0}) for CombineMeans function".
-                                format(self.get_current_function_param(OPERATION, execution_id)))
+                                format(self.get_current_function_param(OPERATION, context)))
 
         return self.convert_output_type(result)
 
@@ -2013,7 +2013,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         self.gamma = gamma
 
@@ -2083,7 +2083,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-            if self.context.execution_phase & (ContextFlags.EXECUTING):
+            if context.execution_phase & (ContextFlags.EXECUTING):
                 if len(target_set[WEIGHTS]) != len(
                         self.defaults.variable):
                     raise FunctionError("Number of weights {} is not equal to "
@@ -2093,9 +2093,9 @@ class PredictionErrorDeltaFunction(CombinationFunction):
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -2117,7 +2117,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         delta values : 1d np.array
 
         """
-        gamma = self.get_current_function_param(GAMMA, execution_id)
+        gamma = self.get_current_function_param(GAMMA, context)
         sample = variable[0]
         reward = variable[1]
         delta = np.zeros(sample.shape)

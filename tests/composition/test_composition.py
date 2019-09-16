@@ -604,7 +604,8 @@ class TestExecutionOrder:
 
         comp = Composition()
         comp.add_linear_processing_pathway([A, B, MappingProjection(matrix=2.0), C, MappingProjection(matrix=3.0), D, E])
-        comp.add_linear_processing_pathway([D, MappingProjection(matrix=4.0), B], feedback=True)
+        # comp.add_linear_processing_pathway([D, MappingProjection(matrix=4.0), B], feedback=True)
+        comp.add_linear_processing_pathway([D, (MappingProjection(matrix=4.0), True), B])
 
         comp.run(inputs={A: 1.0})
 
@@ -1052,39 +1053,43 @@ class TestExecutionOrder:
                                       ])
     def test_3_mechanisms_2_origins_1_multi_control_1_terminal(self, benchmark, mode):
         #
-        #   B--A
+        #   A--LC
         #  /    \
-        # C------D
+        # B------C
         #  \     |
-        #   -----+-> E
+        #   -----+-> D
         #
-        # C: 4 x 5 = 20
-        # B: 20 x 1 = 20
-        # A: f(20)[0] = 0.50838675
-        # D: 20 x 5 x 0.50838675 = 50.83865743
-        # E: (20 + 50.83865743) x 5 = 354.19328716
+        # B: 4 x 5 = 20
+        # A: 20 x 1 = 20
+        # LC: f(20)[0] = 0.50838675
+        # C: 20 x 5 x 0.50838675 = 50.83865743
+        # D: (20 + 50.83865743) x 5 = 354.19328716
 
         comp = Composition()
+        B = TransferMechanism(name="B", function=Linear(slope=5.0))
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        A = ObjectiveMechanism(function=Linear,
+                               monitor=[B],
+                               name="A")
+        LC = LCControlMechanism(name="LC",
+                               modulated_mechanisms=C,
+                               objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
-        B = ObjectiveMechanism(function=Linear,
-                               monitor=[C],
-                               name="B")
-        A = LCControlMechanism(name="A",
-                               modulated_mechanisms=D,
-                               objective_mechanism=B)
-        E = TransferMechanism(name="E", function=Linear(slope=5.0))
-        comp.add_linear_processing_pathway([C, D, E])
-        comp.add_linear_processing_pathway([C, E])
-        comp.add_node(B)
+        comp.add_linear_processing_pathway([B, C, D])
+        comp.add_linear_processing_pathway([B, D])
         comp.add_node(A)
+        comp.add_node(LC)
 
 
-        inputs_dict = {C: [4.0]}
-        sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        inputs_dict = {B: [4.0]}
+        # sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict,
+                          # scheduler_processing=sched,
+                          bin_execute=mode)
         assert np.allclose(output, 354.19328716)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        benchmark(comp.run, inputs=inputs_dict,
+                  # scheduler_processing=sched,
+                  bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1098,35 +1103,34 @@ class TestExecutionOrder:
                                       ])
     def test_3_mechanisms_2_origins_1_additive_control_1_terminal(self, benchmark, mode):
         #
-        #   B--A
+        #   A--LC
         #  /    \
-        # C------D
+        # B------C
         #  \     |
-        #   -----+-> E
+        #   -----+-> D
         #
-        # C: 4 x 5 = 20
-        # B: 20 x 1 = 20
-        # A: f(20)[0] = 0.50838675
-        # D: 20 x 5 + 0.50838675 = 100.50838675
-        # E: (20 + 100.50838675) x 5 = 650.83865743
+        # B: 4 x 5 = 20
+        # A: 20 x 1 = 20
+        # LC: f(20)[0] = 0.50838675
+        # C: 20 x 5 + 0.50838675 = 100.50838675
+        # D: (20 + 100.50838675) x 5 = 650.83865743
 
         comp = Composition()
+        B = TransferMechanism(name="B", function=Linear(slope=5.0))
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        A = ObjectiveMechanism(function=Linear,
+                               monitor=[B],
+                               name="A")
+        LC = LCControlMechanism(name="LC", modulation=ModulationParam.ADDITIVE,
+                               modulated_mechanisms=C,
+                               objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
-        B = ObjectiveMechanism(function=Linear,
-                               monitor=[C],
-                               name="B")
-        A = LCControlMechanism(name="A", modulation=ModulationParam.ADDITIVE,
-                               modulated_mechanisms=D,
-                               objective_mechanism=B)
-        E = TransferMechanism(name="E", function=Linear(slope=5.0))
-        comp.add_linear_processing_pathway([C, D, E])
-        comp.add_linear_processing_pathway([C, E])
-        comp.add_node(B)
+        comp.add_linear_processing_pathway([B, C, D])
+        comp.add_linear_processing_pathway([B, D])
         comp.add_node(A)
+        comp.add_node(LC)
 
-
-        inputs_dict = {C: [4.0]}
+        inputs_dict = {B: [4.0]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, 650.83865743)
@@ -1144,39 +1148,43 @@ class TestExecutionOrder:
                                       ])
     def test_3_mechanisms_2_origins_1_override_control_1_terminal(self, benchmark, mode):
         #
-        #   B--A
+        #   A--LC
         #  /    \
-        # C------D
+        # B------C
         #  \     |
-        #   -----+-> E
+        #   -----+-> D
         #
-        # C: 4 x 5 = 20
-        # B: 20 x 1 = 20
-        # A: f(20)[0] = 0.50838675
-        # D: 20 x 0.50838675 = 10.167735
-        # E: (20 + 10.167735) x 5 = 150.83865743
+        # B: 4 x 5 = 20
+        # A: 20 x 1 = 20
+        # LC: f(20)[0] = 0.50838675
+        # C: 20 x 0.50838675 = 10.167735
+        # D: (20 + 10.167735) x 5 = 150.83865743
 
         comp = Composition()
+        B = TransferMechanism(name="B", function=Linear(slope=5.0))
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        A = ObjectiveMechanism(function=Linear,
+                               monitor=[B],
+                               name="A")
+        LC = LCControlMechanism(name="LC", modulation=ModulationParam.OVERRIDE,
+                               modulated_mechanisms=C,
+                               objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
-        B = ObjectiveMechanism(function=Linear,
-                               monitor=[C],
-                               name="B")
-        A = LCControlMechanism(name="A", modulation=ModulationParam.OVERRIDE,
-                               modulated_mechanisms=D,
-                               objective_mechanism=B)
-        E = TransferMechanism(name="E", function=Linear(slope=5.0))
-        comp.add_linear_processing_pathway([C, D, E])
-        comp.add_linear_processing_pathway([C, E])
-        comp.add_node(B)
+        comp.add_linear_processing_pathway([B, C, D])
+        comp.add_linear_processing_pathway([B, D])
         comp.add_node(A)
+        comp.add_node(LC)
 
 
-        inputs_dict = {C: [4.0]}
-        sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        inputs_dict = {B: [4.0]}
+        # sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict,
+                          # scheduler_processing=sched,
+                          bin_execute=mode)
         assert np.allclose(output, 150.83865743)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        benchmark(comp.run, inputs=inputs_dict,
+                  # scheduler_processing=sched,
+                  bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1190,35 +1198,35 @@ class TestExecutionOrder:
                                       ])
     def test_3_mechanisms_2_origins_1_disable_control_1_terminal(self, benchmark, mode):
         #
-        #   B--A
+        #   A--LC
         #  /    \
-        # C------D
+        # B------C
         #  \     |
-        #   -----+-> E
+        #   -----+-> D
         #
-        # C: 4 x 5 = 20
-        # B: 20 x 1 = 20
-        # A: f(20)[0] = 0.50838675
-        # D: 20 x 5 = 100
-        # E: (20 + 100) x 5 = 600
+        # B: 4 x 5 = 20
+        # A: 20 x 1 = 20
+        # LC: f(20)[0] = 0.50838675
+        # C: 20 x 5 = 100
+        # D: (20 + 100) x 5 = 600
 
         comp = Composition()
+        B = TransferMechanism(name="B", function=Linear(slope=5.0))
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        A = ObjectiveMechanism(function=Linear,
+                               monitor=[B],
+                               name="A")
+        LC = LCControlMechanism(name="LC", modulation=ModulationParam.DISABLE,
+                               modulated_mechanisms=C,
+                               objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
-        B = ObjectiveMechanism(function=Linear,
-                               monitor=[C],
-                               name="B")
-        A = LCControlMechanism(name="A", modulation=ModulationParam.DISABLE,
-                               modulated_mechanisms=D,
-                               objective_mechanism=B)
-        E = TransferMechanism(name="E", function=Linear(slope=5.0))
-        comp.add_linear_processing_pathway([C, D, E])
-        comp.add_linear_processing_pathway([C, E])
-        comp.add_node(B)
+        comp.add_linear_processing_pathway([B, C, D])
+        comp.add_linear_processing_pathway([B, D])
         comp.add_node(A)
+        comp.add_node(LC)
 
 
-        inputs_dict = {C: [4.0]}
+        inputs_dict = {B: [4.0]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, 600)
@@ -1546,11 +1554,7 @@ class TestRun:
         comp.add_projection(P, A, B)
         inputs_dict = {A: [5, 4]}
         sched = Scheduler(composition=comp)
-        output = comp.run(
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
-        )
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, [[225, 225, 225]])
 
     @pytest.mark.projection
@@ -1572,10 +1576,7 @@ class TestRun:
         comp.add_projection(P, A, B)
         inputs_dict = {A: [5, 4, 3]}
         sched = Scheduler(composition=comp)
-        output = comp.run(
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode
         )
         assert np.allclose(output, [[300, 300]])
 
@@ -1824,11 +1825,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: 3}
         sched = Scheduler(composition=comp)
-        output = comp.execute(
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
-        )
+        output = comp.execute(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose([75], output)
 
     @pytest.mark.composition
@@ -1852,11 +1849,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
-        output = benchmark(comp.execute,
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
-        )
+        output = benchmark(comp.execute, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(89., output)
 
     @pytest.mark.composition
@@ -1880,11 +1873,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
-        output = comp.execute(
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
-        )
+        output = comp.execute(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(32., output)
 
     def test_LPP_end_with_projection(self):
@@ -2031,7 +2020,7 @@ class TestRun:
                                       ])
     @pytest.mark.parametrize("vector_length", [2**x for x in range(1)])
     def test_run_composition_vector(self, benchmark, mode, vector_length):
-        var = [1.0 for x in range(vector_length)];
+        var = [1.0 for x in range(vector_length)]
         comp = Composition()
         A = IntegratorMechanism(default_variable=var, function=Linear(slope=5.0))
         B = TransferMechanism(default_variable=var, function=Linear(slope=5.0))
@@ -2391,7 +2380,7 @@ class TestRun:
 
         benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
-    def test_run_termination_condition_custom_execution_id(self):
+    def test_run_termination_condition_custom_context(self):
         D = pnl.DDM(function=pnl.DriftDiffusionIntegrator)
         comp = pnl.Composition()
 
@@ -2400,7 +2389,7 @@ class TestRun:
         comp.run(
             inputs={D: 0},
             termination_processing={pnl.TimeScale.RUN: pnl.WhenFinished(D)},
-            execution_id='custom'
+            context='custom'
         )
 
 
@@ -4760,7 +4749,6 @@ class TestShadowInputs:
         assert B.value == [[1.0]]
         assert C.value == [[1.0]]
 
-        # comp.show_graph()
         input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert A in input_nodes

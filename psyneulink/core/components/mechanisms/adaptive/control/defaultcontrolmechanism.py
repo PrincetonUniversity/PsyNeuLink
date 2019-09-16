@@ -122,7 +122,7 @@ class DefaultControlMechanism(ControlMechanism):
                 params=params,
                 name=name,
                 prefs=prefs,
-                context=ContextFlags.CONSTRUCTOR,
+
                 **kwargs)
 
     def _instantiate_input_states(self, context=None):

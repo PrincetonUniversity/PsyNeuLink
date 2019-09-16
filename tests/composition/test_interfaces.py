@@ -719,8 +719,12 @@ class TestSimplifedNestedCompositionSyntax:
         outer = Composition(name="outer")
         outer.add_nodes([inner1, inner2])
         outer.add_projection(sender=inner1, receiver=A2)
-        outer.show_graph(show_node_structure=True,
-                         show_nested=True)
+
+        # CRASHING WITH:
+        # subprocess.CalledProcessError: Command '['dot', '-Tpdf', '-O', 'outer']' returned non-zero exit status 1.
+        # outer.show_graph(show_node_structure=True,
+        #                  show_nested=True)
+
         # comp1:  input = 5.0   |  mechA: 2.0*5.0 = 10.0    |  mechB: 3.0*10.0 = 30.0    |  output = 30.0
         # comp2:  input = 30.0  |  mechA2: 2.0*30.0 = 60.0  |  mechB2: 3.0*60.0 = 180.0  |  output = 180.0
         # comp3:  input = 5.0   |  output = 180.0
@@ -797,7 +801,7 @@ class TestSimplifedNestedCompositionSyntax:
         outer1.add_projection(sender=inner1, receiver=C2)
         eid = "eid"
         outer1.run(inputs={inner1: [[1.]]},
-                   execution_id=eid)
+                   context=eid)
 
         assert np.allclose(A1.parameters.value.get(eid), [[2.0]])
         assert np.allclose(B1.parameters.value.get(eid), [[6.0]])

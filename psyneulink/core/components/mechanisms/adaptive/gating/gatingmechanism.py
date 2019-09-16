@@ -130,11 +130,16 @@ Execution
 ---------
 
 A GatingMechanism executes in the same way as a `ProcessingMechanism <ProcessingMechanism>`, based on its place in the
-System's `graph <System.graph>`.  Because `GatingProjections <GatingProjection>` are likely to introduce cycles
-(recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally not be
-applied in the first `TRIAL` (see `initialization <System_Execution_Input_And_Initialization>` for a description of
-how to configure the initialization of feedback loops in a System; also see `Scheduler` for a description of detailed
-ways in which a GatingMechanism and its dependents can be scheduled to execute).
+Composition's `graph <Composition.graph>`.  Because `GatingProjections <GatingProjection>` are likely to introduce
+cycles (recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally
+not be applied in the first `TRIAL` (see
+COMMENT:
+`Composition_Initial_Values_and_Feedback` and
+COMMENT
+**feedback** argument for the `add_projection <Composition.add_projection>`
+method of `Composition` for a description of how to configure the initialization of feedback loops in a Composition;
+also see `Scheduler` for a description of detailed ways in which a GatingMechanism and its dependents can be scheduled
+to execute).
 
 When executed, a GatingMechanism  uses its input to determine the value of its `gating_allocation
 <GatingMechanism.gating_allocation>`, each item of which is used by a corresponding `GatingSignal` to determine its
@@ -206,14 +211,14 @@ class GatingMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-def _gating_allocation_getter(owning_component=None, execution_id=None):
+def _gating_allocation_getter(owning_component=None, context=None):
     return owning_component.modulatory_allocation
 
-def _gating_allocation_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.modulatory_allocation._set(np.array(value), execution_id)
+def _gating_allocation_setter(value, owning_component=None, context=None):
+    owning_component.parameters.modulatory_allocation._set(np.array(value), context)
     return value
 
-def _control_allocation_getter(owning_component=None, execution_id=None):
+def _control_allocation_getter(owning_component=None, context=None):
     from psyneulink.core.components.mechanisms.adaptive.control import ControlMechanism
     from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
     raise GatingMechanismError(f"'control_allocation' attribute is not implemented on {owning_component.__name__};  "
@@ -221,7 +226,7 @@ def _control_allocation_getter(owning_component=None, execution_id=None):
                                 f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
                                 f"{GatingSignal.__name__}s are needed.")
 
-def _control_allocation_setter(value, owning_component=None, execution_id=None, **kwargs):
+def _control_allocation_setter(value, owning_component=None, context=None, **kwargs):
     from psyneulink.core.components.mechanisms.adaptive.control import ControlMechanism
     from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
     raise GatingMechanismError(f"'control_allocation' attribute is not implemented on {owning_component.__name__};  "
@@ -442,7 +447,7 @@ class GatingMechanism(ModulatoryMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR,
+
                          **kwargs)
 
     def _instantiate_output_states(self, context=None):
@@ -475,7 +480,7 @@ class GatingMechanism(ModulatoryMechanism):
         if GATING_PROJECTIONS in self.paramsCurrent:
             if self.paramsCurrent[GATING_PROJECTIONS]:
                 for key, projection in self.paramsCurrent[GATING_PROJECTIONS].items():
-                    self._instantiate_gating_projection(projection, context=ContextFlags.METHOD)
+                    self._instantiate_gating_projection(projection, context=context)
 
     def _assign_as_gating_mechanism(self, context=None):
 
@@ -487,7 +492,7 @@ class GatingMechanism(ModulatoryMechanism):
             for state in mech._input_states + mech._output_states:
                 for projection in state.mod_afferents:
                     # If projection was deferred for init, initialize it now and instantiate for self
-                    if (projection.context.initialization_status == ContextFlags.DEFERRED_INIT
+                    if (projection.initialization_status == ContextFlags.DEFERRED_INIT
                         and projection.init_args['sender'] is None):
                         # FIX 5/23/17: MODIFY THIS WHEN (param, GatingProjection) tuple
                         # FIX:         IS REPLACED WITH (param, GatingSignal) tuple

@@ -200,7 +200,7 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -285,12 +285,12 @@ class RECURRENT_OUTPUT():
     #     setattr(DDM_OUTPUT.__class__, item, item)
 
 
-def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, execution_id=None):
+def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, context=None):
     from psyneulink.library.components.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
 
     try:
-        a = get_auto_matrix(owning_component.parameters.auto._get(execution_id), owning_component.recurrent_size)
-        c = get_hetero_matrix(owning_component.parameters.hetero._get(execution_id), owning_component.recurrent_size)
+        a = get_auto_matrix(owning_component.parameters.auto._get(context), owning_component.recurrent_size)
+        c = get_hetero_matrix(owning_component.parameters.hetero._get(context), owning_component.recurrent_size)
         return a + c
     except TypeError:
         return None
@@ -306,13 +306,13 @@ def _get_auto_hetero_from_matrix(matrix):
     return auto, hetero
 
 
-def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, execution_id=None):
+def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, context=None):
     # KDM 8/3/18: This was attributed to a hack in how auto/hetero were implemented, but this behavior matches
     # the existing behavior. Unsure if this is actually correct though
     # KDM 8/7/18: removing the below because it has bad side effects for _instantiate_from_context, and it's not clear
     # that it's the correct behavior. Similar reason for removing/not implementing auto/hetero setters
     # if hasattr(owning_component, "recurrent_projection"):
-    #     owning_component.recurrent_projection.parameter_states["matrix"].function.parameters.previous_value._set(value, execution_id)
+    #     owning_component.recurrent_projection.parameter_states["matrix"].function.parameters.previous_value._set(value, base_execution_id)
 
     try:
         value = get_matrix(value, owning_component.recurrent_size, owning_component.recurrent_size)
@@ -321,15 +321,15 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, ex
 
     if value is not None:
         auto, hetero = _get_auto_hetero_from_matrix(value)
-        owning_component.parameters.auto._set(auto, execution_id)
-        owning_component.parameters.hetero._set(hetero, execution_id)
+        owning_component.parameters.auto._set(auto, context)
+        owning_component.parameters.hetero._set(hetero, context)
 
     return value
 
 
-def _recurrent_transfer_mechanism_learning_rate_setter(value, owning_component=None, execution_id=None):
+def _recurrent_transfer_mechanism_learning_rate_setter(value, owning_component=None, context=None):
     if hasattr(owning_component, "learning_mechanism") and owning_component.learning_mechanism:
-        owning_component.learning_mechanism.parameters.learning_rate._set(value, execution_id)
+        owning_component.learning_mechanism.parameters.learning_rate._set(value, context)
     return value
 
 
@@ -1025,7 +1025,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_size
         except AttributeError:
             self.recurrent_size = len(variable[0])
-        super()._instantiate_defaults(variable,request_set,assign_missing,target_set,default_set,context)
+        super()._instantiate_defaults(variable,request_set,assign_missing,target_set,default_set, context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of auto, hetero, matrix.
@@ -1127,7 +1127,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         hetero were None in the initialization call.
         :param function:
         """
-        self.parameters.previous_value._set(None)
+        self.parameters.previous_value._set(None, context)
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -1155,7 +1155,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             matrix = hetero.copy()
             np.fill_diagonal(matrix, diag)
 
-        self.parameters.matrix._set(matrix)
+        self.parameters.matrix._set(matrix, context)
 
         # 9/23/17 JDC: DOESN'T matrix arg default to something?
         # If no matrix was specified, then both AUTO and HETERO must be specified
@@ -1305,25 +1305,25 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 del self.output_states[ENTROPY]
 
-    def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
+    def _update_parameter_states(self, context=None, runtime_params=None):
         for state in self._parameter_states:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
             # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param states are updated in the
             # projection's _update_parameter_states, and accordingly are not updated here
             if state.name != AUTO and state.name != HETERO:
-                state.update(execution_id=execution_id, params=runtime_params, context=context)
+                state._update(context=context, params=runtime_params)
 
-    def _update_previous_value(self, execution_id=None):
-        value = self.parameters.value._get(execution_id)
+    def _update_previous_value(self, context=None):
+        value = self.parameters.value._get(context)
         if value is None:
             value = self.defaults.value
-        self.parameters.previous_value._set(value, execution_id)
+        self.parameters.previous_value._set(value, context)
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
     @property
     def matrix(self):
-        return self.parameters.matrix._get()
+        return self.parameters.matrix._get(self.most_recent_context)
 
     @matrix.setter
     def matrix(self, val): # simplified version of standard setter (in Component.py)
@@ -1333,7 +1333,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if hasattr(self, "recurrent_projection"):
             self.recurrent_projection.parameter_states["matrix"].function.previous_value = val
 
-        self.parameters.matrix._set(val)
+        self.parameters.matrix._set(val, self.most_recent_context)
 
         if hasattr(self, '_parameter_states') and 'matrix' in self._parameter_states:
             param_state = self._parameter_states['matrix']
@@ -1343,11 +1343,11 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @property
     def auto(self):
-        return self.parameters.auto._get()
+        return self.parameters.auto._get(self.most_recent_context)
 
     @auto.setter
     def auto(self, val):
-        self.parameters.auto._set(val)
+        self.parameters.auto._set(val, self.most_recent_context)
 
         if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_states:
             self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix
@@ -1355,11 +1355,11 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @property
     def hetero(self):
-        return self.parameters.hetero._get()
+        return self.parameters.hetero._get(self.most_recent_context)
 
     @hetero.setter
     def hetero(self, val):
-        self.parameters.hetero._set(val)
+        self.parameters.hetero._set(val, self.most_recent_context)
 
         if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_states:
             self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix_param
@@ -1460,6 +1460,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         self.aux_components.append((lproj, True))
         return learning_mechanism
 
+    @handle_external_context()
     def configure_learning(self,
                            learning_function:tc.optional(tc.any(is_function_type))=None,
                            learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
@@ -1496,9 +1497,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             elif self.learning_condition is UPDATE:
                 self.learning_condition = None
 
-        context = context or ContextFlags.COMMAND_LINE
-        self.context.source = self.context.source or ContextFlags.COMMAND_LINE
-
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self._learning_signal_source,
                                                                        learning_function=self.learning_function,
                                                                        learning_rate=self.learning_rate,
@@ -1510,21 +1508,21 @@ class RecurrentTransferMechanism(TransferMechanism):
         if self.learning_mechanism is None:
             self.learning_enabled = False
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, context=None, runtime_params=None):
 
-        # if self.context.initialization_status != ContextFlags.INITIALIZING:
+        # if not self.is_initializing
         #     self.parameters.previous_value._set(self.value)
-        # self._output = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
+        # self._output = super()._execute(variable=variable, runtime_params=runtime_params, context=context)
         # return self._output
-        return super()._execute(variable, execution_id, runtime_params, context)
+        return super()._execute(variable, context, runtime_params)
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
+    def _parse_function_variable(self, variable, context=None):
         if self.has_recurrent_input_state:
-            variable = self.combination_function.execute(variable=variable, execution_id=execution_id)
+            variable = self.combination_function.execute(variable=variable, context=context)
 
-        return super()._parse_function_variable(variable, execution_id=execution_id, context=context)
+        return super()._parse_function_variable(variable, context=context)
 
-    def _get_variable_from_input(self, input, execution_id=None):
+    def _get_variable_from_input(self, input, context=None):
         if self.has_recurrent_input_state:
             input = np.atleast_2d(input)
             input_len = len(input[0])
@@ -1534,12 +1532,13 @@ class RecurrentTransferMechanism(TransferMechanism):
                 z = np.zeros((1, input_len))
                 input = np.concatenate((input, z))
 
-        return super()._get_variable_from_input(input, execution_id)
+        return super()._get_variable_from_input(input, context)
 
-    def reinitialize(self, *args, execution_context=NotImplemented):
-        if self.parameters.integrator_mode.get(execution_context):
-            super().reinitialize(*args, execution_context=execution_context)
-        self.parameters.previous_value.set(None, execution_context, override=True)
+    @handle_external_context(execution_id=NotImplemented)
+    def reinitialize(self, *args, context=None):
+        if self.parameters.integrator_mode.get(context):
+            super().reinitialize(*args, context=context)
+        self.parameters.previous_value.set(None, context, override=True)
 
     @property
     def _learning_signal_source(self):
@@ -1582,14 +1581,14 @@ class RecurrentTransferMechanism(TransferMechanism):
         return_t = ctx.get_output_struct_type(self)
         return pnlvm.ir.LiteralStructType([transfer_t, projection_t, return_t])
 
-    def _get_param_initializer(self, execution_id):
-        transfer_params = super()._get_param_initializer(execution_id)
-        projection_params = self.recurrent_projection._get_param_initializer(execution_id)
+    def _get_param_initializer(self, context):
+        transfer_params = super()._get_param_initializer(context)
+        projection_params = self.recurrent_projection._get_param_initializer(context)
         return tuple([transfer_params, projection_params])
 
-    def _get_state_initializer(self, execution_id):
-        transfer_init = super()._get_state_initializer(execution_id)
-        projection_init = self.recurrent_projection._get_state_initializer(execution_id)
+    def _get_state_initializer(self, context):
+        transfer_init = super()._get_state_initializer(context)
+        projection_init = self.recurrent_projection._get_state_initializer(context)
 
         # Initialize to output state defaults. That is what the recurrent
         # projection finds.

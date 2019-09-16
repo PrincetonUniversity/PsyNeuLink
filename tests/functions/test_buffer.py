@@ -1,6 +1,7 @@
 import numpy as np
-
+import pytest
 from collections import deque
+
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -15,55 +16,68 @@ class TestBuffer():
         val = B.execute(1.0)
         assert np.allclose(deque(np.atleast_1d(1.0)), val)
 
-    def test_buffer_standalone_rate_float(self):
+    @pytest.mark.benchmark(group="BufferFunction")
+    def test_buffer_standalone_rate_float(self, benchmark):
         B = Buffer(history=3, rate = 0.1)
         B.execute([1,2,3])
         B.execute([4,5,6])
         B.execute([7,8,9])
         val = B.execute([10,11,12])
         assert np.allclose(deque(np.atleast_1d([ 0.04,  0.05,  0.06], [ 0.7,  0.8,  0.9], [10, 11, 12])), val)
+        benchmark(B.execute, [1, 2, 3])
 
-    def test_buffer_standalone_rate_list(self):
+    @pytest.mark.benchmark(group="BufferFunction")
+    def test_buffer_standalone_rate_list(self, benchmark):
         B = Buffer(history=3, rate = [0.1, 0.5, 0.9])
         B.execute([1,2,3])
         B.execute([4,5,6])
         B.execute([7,8,9])
         val = B.execute([10,11,12])
         assert np.allclose(deque(np.atleast_1d([ 0.04, 1.25, 4.86], [ 0.7,  4. , 8.1], [10, 11, 12])), val)
+        benchmark(B.execute, [1, 2, 3])
 
-    def test_buffer_standalone_rate_ndarray(self):
+    @pytest.mark.benchmark(group="BufferFunction")
+    def test_buffer_standalone_rate_ndarray(self, benchmark):
         B = Buffer(history=3, rate = np.array([0.1, 0.5, 0.9]))
         B.execute([1,2,3])
         B.execute([4,5,6])
         B.execute([7,8,9])
         val = B.execute([10,11,12])
         assert np.allclose(deque(np.atleast_1d([ 0.04, 1.25, 4.86], [ 0.7,  4. , 8.1], [10, 11, 12])), val)
+        benchmark(B.execute, [1, 2, 3])
 
-    def test_buffer_standalone_noise_float(self):
+    @pytest.mark.benchmark(group="BufferFunction")
+    def test_buffer_standalone_noise_float(self, benchmark):
         B = Buffer(history=3, rate = 1.0, noise=10.0)
         B.execute([1,2,3])
         B.execute([4,5,6])
         B.execute([7,8,9])
         val = B.execute([10,11,12])
         assert np.allclose(deque(np.atleast_1d([ 24.,  25.,  26.], [ 17.,  18.,  19.], [10, 11, 12])), val)
+        benchmark(B.execute, [1, 2, 3])
 
-    def test_buffer_standalone_noise_list(self):
+    @pytest.mark.benchmark(group="BufferFunction")
+    def test_buffer_standalone_noise_list(self, benchmark):
         B = Buffer(history=3, rate = 1.0, noise=[10.0, 20.0, 30.0])
         B.execute([1,2,3])
         B.execute([4,5,6])
         B.execute([7,8,9])
         val = B.execute([10,11,12])
         assert np.allclose(deque(np.atleast_1d([ 24., 45., 66.], [ 17., 28., 39.], [10, 11, 12])), val)
+        benchmark(B.execute, [1, 2, 3])
 
-    def test_buffer_standalone_noise_ndarray(self):
+    @pytest.mark.benchmark(group="BufferFunction")
+    def test_buffer_standalone_noise_ndarray(self, benchmark):
         B = Buffer(history=3, rate = 1.0, noise=[10.0, 20.0, 30.0])
         B.execute([1,2,3])
         B.execute([4,5,6])
         B.execute([7,8,9])
         val = B.execute([10,11,12])
         assert np.allclose(deque(np.atleast_1d([ 24., 45., 66.], [ 17., 28., 39.], [10, 11, 12])), val)
+        benchmark(B.execute, [1, 2, 3])
 
-    def test_buffer_standalone_noise_function(self):
+    @pytest.mark.benchmark(group="BufferFunction")
+    def test_buffer_standalone_noise_function(self, benchmark):
         np.random.seed(22)
         B = Buffer(history=3, rate = 1.0, noise=NormalDist(standard_deviation=0.1))
         B.execute([1,2,3])
@@ -73,8 +87,10 @@ class TestBuffer():
         assert np.allclose(deque(np.atleast_1d([[ 3.8925223, 5.03957263, 6.00262384],
                                                 [ 7.00288551, 7.97692328, 9.05877522],
                                                 [10, 11, 12]])), val)
+        benchmark(B.execute, [1, 2, 3])
 
-    def test_buffer_standalone_noise_function_in_array(self):
+    @pytest.mark.benchmark(group="BufferFunction")
+    def test_buffer_standalone_noise_function_in_array(self, benchmark):
         B = Buffer(history=3, noise=[10, NormalDist(standard_deviation=0.1), 20])
         np.random.seed(22)
         B.execute([1,2,3])
@@ -85,16 +101,20 @@ class TestBuffer():
         for i in range(len(val)):
             for j in range(len(val[i])):
                 assert np.allclose(expected_val[i][j], val[i][j])
+        benchmark(B.execute, [1, 2, 3])
 
-    def test_buffer_initializer_len_3(self):
+    @pytest.mark.benchmark(group="BufferFunction")
+    def test_buffer_initializer_len_3(self, benchmark):
         B = Buffer(default_variable=[[0.0], [1.0], [2.0]],
                    initializer=[[0.0], [1.0], [2.0]],
                    history=3)
         assert np.allclose(B.execute(3.0), deque([[1.0], [2.0], np.array([3.])]))
         assert np.allclose(B.execute(4.0), deque([[2.0], np.array([3.]), np.array([4.])]))
         assert np.allclose(B.execute(5.0), deque([np.array([3.]), np.array([4.]), np.array([5.])]))
+        benchmark(B.execute, 5.0)
 
-    def test_buffer_as_function_of_processing_mech(self):
+    @pytest.mark.benchmark(group="BufferFunction")
+    def test_buffer_as_function_of_processing_mech(self, benchmark):
 
         P = ProcessingMechanism(function=Buffer(default_variable=[[0.0]],
                                                 initializer=[0.0],
@@ -102,6 +122,7 @@ class TestBuffer():
         val = P.execute(1.0)
 
         assert np.allclose(val, [[0., 1.]])
+        benchmark(P.execute, 5.0)
         # fails due to value and variable problems when Buffer is the function of a mechanism
         # P = ProcessingMechanism(function=Buffer(default_variable=[[0.0], [1.0], [2.0]],
         #                                         initializer=[[0.0], [1.0], [2.0]],

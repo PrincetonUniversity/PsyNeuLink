@@ -16,26 +16,26 @@ from contextlib import contextmanager
 def for_loop(builder, start, stop, inc, id):
     # Initialize index variable
     assert start.type is stop.type
-    index_var = builder.alloca(stop.type)
+    index_var = builder.alloca(stop.type, name=id + "_index_var_loc")
     builder.store(start, index_var)
 
     # basic blocks
-    cond_block = builder.append_basic_block(id + "-cond")
+    cond_block = builder.append_basic_block(id + "-cond-bb")
     out_block = None
 
     # Loop condition
     builder.branch(cond_block)
     with builder.goto_block(cond_block):
-        tmp = builder.load(index_var)
-        cond = builder.icmp_signed("<", tmp, stop)
+        tmp = builder.load(index_var, name=id + "_cond_index_var")
+        cond = builder.icmp_signed("<", tmp, stop, name=id + "_loop_cond")
 
         # Loop body
         with builder.if_then(cond, likely=True):
-            index = builder.load(index_var)
+            index = builder.load(index_var, name=id + "_loop_index_var")
 
             yield (builder, index)
 
-            index = builder.add(index, inc)
+            index = builder.add(index, inc, name=id + "_index_var_inc")
             builder.store(index, index_var)
             builder.branch(cond_block)
 
@@ -43,7 +43,7 @@ def for_loop(builder, start, stop, inc, id):
 
     builder.position_at_end(out_block)
 
-
+# Helper that builds a for loop starting at 0, stopping at stop, and incremented by 1
 def for_loop_zero_inc(builder, stop, id):
     start = stop.type(0)
     inc = stop.type(1)
@@ -102,16 +102,16 @@ def all_close(builder, arr1, arr2, rtol=1e-05, atol=1e-08):
     assert arr1.type == arr2.type
     all_ptr = builder.alloca(ir.IntType(1))
     builder.store(all_ptr.type.pointee(1), all_ptr)
-    with array_ptr_loop(builder, arr1, "all_close") as (builder, idx):
-        val1_ptr = builder.gep(arr1, [idx.type(0), idx])
-        val2_ptr = builder.gep(arr1, [idx.type(0), idx])
-        val1 = builder.load(val1_ptr)
-        val2 = builder.load(val2_ptr)
-        res_close = is_close(builder, val1, val2, rtol, atol)
+    with array_ptr_loop(builder, arr1, "all_close") as (b1, idx):
+        val1_ptr = b1.gep(arr1, [idx.type(0), idx])
+        val2_ptr = b1.gep(arr1, [idx.type(0), idx])
+        val1 = b1.load(val1_ptr)
+        val2 = b1.load(val2_ptr)
+        res_close = is_close(b1, val1, val2, rtol, atol)
 
-        all_val = builder.load(all_ptr)
-        all_val = builder.and_(all_val, res_close)
-        builder.store(all_val, all_ptr)
+        all_val = b1.load(all_ptr)
+        all_val = b1.and_(all_val, res_close)
+        b1.store(all_val, all_ptr)
 
     return builder.load(all_ptr)
 
