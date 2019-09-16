@@ -4247,7 +4247,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Composition):
                 # Get control signal specifications for nested composition if it does not have its own controller
                 if node.controller:
-                    control_signal_specs.append(node._get_control_signals_for_composition)
+                    control_signal_specs.append(node._get_control_signals_for_composition())
             elif isinstance(node, Mechanism):
                 # for parameter_state in node._parameter_states:
                 #     for proj in parameter_state.mod_afferents:
@@ -4255,7 +4255,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #             proj_control_signal_specs = proj.control_signal_params or {}
                 #             proj_control_signal_specs.update({PROJECTIONS: [proj]})
                 #             control_signal_specs.append(proj_control_signal_specs)
-                control_signal_specs.append(node._get_deferred_init_control_specs())
+                # FIX: 9/14/19 - None GETS APPENDED (ALSO FIX IN add_node)
+                ctl_sig_spec = node._get_deferred_init_control_specs()
+                if ctl_sig_spec:
+                    control_signal_specs.append(ctl_sig_spec)
         return control_signal_specs
 
     def _build_predicted_inputs_dict(self, predicted_input):
