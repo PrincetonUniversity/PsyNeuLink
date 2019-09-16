@@ -746,24 +746,30 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             self.parameters.val_size._set(len(self.previous_value[VALS][0]), Context())
 
         self.has_initializers = True
-        self.stateful_attributes = ["previous_value", "random_state"]
+        self.stateful_attributes = ["random_state", "previous_value"]
+
+    def _get_state_ids(self):
+        return super()._get_state_ids() + ["distance_function", "selection_function"]
 
     def _get_state_struct_type(self, ctx):
-        distance_state = ctx.get_state_struct_type(self.distance_function)
-        selection_state = ctx.get_state_struct_type(self.selection_function)
+        # FIXME: We need explicit override because the ring buffer structure
+        #        is not easily derived from "previous_value" 2d array.
+        distance_state_struct = ctx.get_state_struct_type(self.distance_function)
+        selection_state_struct = ctx.get_state_struct_type(self.selection_function)
         # Get random state
         random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state", Context()))
         # Construct a ring buffer
-        keys_struct = pnlvm.ir.ArrayType(
-            ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0]),
-            self.get_current_function_param("max_entries", Context()))
-        vals_struct = pnlvm.ir.ArrayType(
-            ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[1]),
-            self.get_current_function_param("max_entries", Context()))
-        ring_buffer_struct = pnlvm.ir.LiteralStructType([
-            keys_struct, vals_struct, ctx.int32_ty, ctx.int32_ty])
-        my_state = pnlvm.ir.LiteralStructType([random_state_struct, ring_buffer_struct])
-        return pnlvm.ir.LiteralStructType([distance_state, selection_state, my_state])
+        max_entries = self.get_current_function_param("max_entries", Context())
+        key_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0])
+        keys_struct = pnlvm.ir.ArrayType(key_type, max_entries)
+        val_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0])
+        vals_struct = pnlvm.ir.ArrayType(val_type, max_entries)
+        ring_buffer_struct = pnlvm.ir.LiteralStructType((
+            keys_struct, vals_struct, ctx.int32_ty, ctx.int32_ty))
+        return pnlvm.ir.LiteralStructType((random_state_struct,
+                                           ring_buffer_struct,
+                                           distance_state_struct,
+                                           selection_state_struct))
 
     def _get_state_initializer(self, context):
         distance_init = self.distance_function._get_state_initializer(context)
@@ -771,7 +777,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         random_state = self.get_current_function_param("random_state", context).get_state()[1:]
         memory = self.get_previous_value(context)
         my_init = pnlvm._tupleize([random_state, [memory[0], memory[1], 0, 0]])
-        return (distance_init, selection_init, my_init)
+        return (*my_init, distance_init, selection_init)
 
     def _get_param_ids(self):
         return super()._get_param_ids() + ["distance_function", "selection_function"]
@@ -782,13 +788,12 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                             self.selection_function._get_param_values(context))
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
-        my_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
         # PRNG
-        rand_struct = builder.gep(my_state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        rand_struct = ctx.get_state_ptr(self, builder, state, "random_state")
         uniform_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
 
         # Ring buffer
-        buffer_ptr = builder.gep(my_state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        buffer_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
         keys_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
         vals_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
         count_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -835,7 +840,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             # Determine distances
             distance_f = ctx.get_llvm_function(self.distance_function)
             distance_params = ctx.get_param_ptr(self, builder, params, "distance_function")
-            distance_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            distance_state = ctx.get_state_ptr(self, builder, state, "distance_function")
             distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
             builder.store(builder.load(var_key_ptr),
                           builder.gep(distance_arg_in, [ctx.int32_ty(0),
@@ -851,7 +856,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
             selection_f = ctx.get_llvm_function(self.selection_function)
             selection_params = ctx.get_param_ptr(self, builder, params, "selection_function")
-            selection_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            selection_state = ctx.get_state_ptr(self, builder, state, "selection_function")
             selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
             builder.call(selection_f, [selection_params, selection_state,
                                        selection_arg_in, selection_arg_out])
