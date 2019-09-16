@@ -354,17 +354,12 @@ class Stability(ObjectiveFunction):
         elif self.metric in DISTANCE_METRICS._set():
             self._metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
 
-    def _get_param_struct_type(self, ctx):
-        my_params = ctx.get_param_struct_type(super())
-        metric_params = ctx.get_param_struct_type(self._metric_fct)
-        transfer_params = ctx.get_param_struct_type(self.transfer_fct) if self.transfer_fct is not None else pnlvm.ir.LiteralStructType([])
-        return pnlvm.ir.LiteralStructType([my_params, metric_params, transfer_params])
+    def _get_param_ids(self):
+        return super()._get_param_ids() + ["metric_fct"]
 
-    def _get_param_initializer(self, context):
-        my_params = super()._get_param_initializer(context)
-        metric_params = self._metric_fct._get_param_initializer(context)
-        transfer_params = self.transfer_fct._get_param_initializer(context) if self.transfer_fct is not None else tuple()
-        return (my_params, metric_params, transfer_params)
+    def _get_param_values(self, context=None):
+        my_params = super()._get_param_values(context)
+        return (*my_params, self._metric_fct._get_param_values(context))
 
     def _get_state_struct_type(self, ctx):
         my_state = ctx.get_state_struct_type(super())
@@ -381,8 +376,7 @@ class Stability(ObjectiveFunction):
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
-        my_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        matrix = ctx.get_param_ptr(self, builder, my_params, MATRIX)
+        matrix = ctx.get_param_ptr(self, builder, params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -399,18 +393,18 @@ class Stability(ObjectiveFunction):
         metric_in = builder.alloca(metric_fun.args[2].type.pointee)
 
         # Transfer Function if configured
-        trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
         if self.transfer_fct is not None:
             #FIXME: implement this
             assert False, "Support for transfer functions is not implemented"
         else:
+            trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             builder.store(builder.load(dot_out), trans_out)
 
         # Copy original variable
         builder.store(builder.load(arg_in), builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
 
         # Distance Function
-        metric_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        metric_params = ctx.get_param_ptr(self, builder, params, "metric_fct")
         metric_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
         metric_out = arg_out
         builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
