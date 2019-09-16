@@ -1655,11 +1655,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.shadows = {}
 
-        self.enable_controller = enable_controller
-        self.controller = controller
-        self.controller_mode = controller_mode
-        self.controller_condition = controller_condition
-        self.controller_condition.owner = self.controller
+        # self.enable_controller = enable_controller
+        # self.controller = controller
+        # self.controller_mode = controller_mode
+        # self.controller_condition = controller_condition
+        # self.controller_condition.owner = self.controller
 
         self.default_execution_id = self.name
         self.execution_ids = {self.default_execution_id}
@@ -1697,6 +1697,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
+
+        if controller:
+            self.add_controller(controller)
+        else:
+            self.enable_controller = enable_controller
+            self.controller = controller
+        self.controller_mode = controller_mode
+        self.controller_condition = controller_condition
+        self.controller_condition.owner = self.controller
 
         self.initialization_status = ContextFlags.INITIALIZED
 
