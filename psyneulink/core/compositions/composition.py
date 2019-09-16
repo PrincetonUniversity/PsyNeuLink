@@ -1698,11 +1698,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
 
+        self.controller = None
         if controller:
             self.add_controller(controller)
         else:
             self.enable_controller = enable_controller
-            self.controller = controller
         self.controller_mode = controller_mode
         self.controller_condition = controller_condition
         self.controller_condition.owner = self.controller
@@ -4236,7 +4236,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         controller._remove_default_modulatory_signal(type=CONTROL_SIGNAL)
         # MODIFIED 9/15/19 END
 
-        # Add any ControlSignals specified for Composition
+        # Add any ControlSignals specified for ParameterStates of nodes already in the Composition
         control_signal_specs = self._get_control_signals_for_composition()
         for ctl_sig_spec in control_signal_specs:
             # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_state
