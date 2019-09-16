@@ -1434,7 +1434,8 @@ class GridSearch(OptimizationFunction):
         except AttributeError:
             obj_func_state = ctx.get_state_struct_type(self.objective_function)
         # Get random state
-        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state", Context()))
+        random_state_struct = ctx.convert_python_struct_to_llvm_ir(
+            self.parameters.random_state.get())
         return pnlvm.ir.LiteralStructType([obj_func_state, random_state_struct])
 
     def _get_state_initializer(self, context):
@@ -1445,7 +1446,7 @@ class GridSearch(OptimizationFunction):
             obj_func_state_init = ocm._get_evaluate_state_initializer(context)
         except AttributeError:
             obj_func_state_init = self.objective_function._get_state_initializer(context)
-        random_state = self.get_current_function_param("random_state", context).get_state()[1:]
+        random_state = self.parameters.random_state.get(context).get_state()[1:]
         return (obj_func_state_init, pnlvm._tupleize(random_state))
 
     def _get_output_struct_type(self, ctx):
