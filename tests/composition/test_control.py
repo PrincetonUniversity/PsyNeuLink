@@ -9,6 +9,86 @@ from psyneulink.core.components.functions.optimizationfunctions import Optimizat
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 
+class TestControlSpecification:
+    # These test the coordination of adding a node with a control specification to a Composition
+    #    with adding a controller that may also specify control of that node.
+    # Principles:
+    #    1) there should be no redundant ControlSignals or ControlProjections created;
+    #    2) specification of control in controller supercedes any conflicting specification on a node;
+    #    3) order of addition to the composition does not matter (i.e., Principle 2 always applies)
+
+    # FIX: OUTSTANDING ISSUES -
+    #      When control is specified in a controller for a Mechanism that is not yet a node in the Composition
+    #          it neverhtless gets activated (in call to controller._activate_projections_for_compositions;
+    #          instead, it should either be put in deferred_init or added to node's aux_components attribute
+
+    def test_add_node_with_control_specified_then_add_controller(self):
+        # First add Mechanism with control specification to Composition,
+        #    then add controller with NO control specification to Composition
+        # ControlProjection specified on Mechanism should initially be in deferred_init,
+        #    but then initialized and added to controller when the Mechanism is added.
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+        ctl_mech = pnl.ControlMechanism()
+        comp = pnl.Composition()
+        comp.add_node(ddm)
+        comp.add_controller(ctl_mech)
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert np.allclose(comp.controller.control_signals[0].allocation_samples(),
+                           [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
+
+    def test_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
+        # First create Composition with controller that has NO control specification,
+        #    then add Mechanism with control specification to Composition;
+        # ControlProjection specified on Mechanism should initially be in deferred_init,
+        #    but then initialized and added to controller when the Mechanism is added.
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+        ctl_mech = pnl.ControlMechanism()
+        comp = pnl.Composition(controller=ctl_mech)
+        comp.add_node(ddm)
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert np.allclose(comp.controller.control_signals[0].allocation_samples(),
+                           [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
+
+    def test_redundant_control_spec_add_node_with_control_specified_then_controller_in_comp_constructor(self):
+        # First add Mechanism with control specification to Composition,
+        #    then add controller WITH redundant control specification to Composition
+        # Control specification on controller should replace one on Mechanism
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+        comp = pnl.Composition()
+        comp.add_node(ddm)
+        comp.add_controller(pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].allocation_samples is None
+
+    def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
+        # First create Composition with controller that has HAS control specification,
+        #    then add Mechanism with control specification to Composition;
+        # Control specification on controller should supercede one on Mechanism (which should be ignored)
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+        comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
+        comp.add_node(ddm)
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].allocation_samples is None
 
 class TestControlMechanisms:
 
