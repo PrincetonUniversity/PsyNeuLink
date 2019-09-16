@@ -27,15 +27,16 @@ class TestModulatoryMechanism:
         m = ProcessingMechanism(function=Logistic)
         c = ModulatoryMechanism(
                 modulatory_signals=[
-                    ControlSignal(name="CS1", projections=(GAIN,m)),
-                    GatingSignal(name="GS", projections=m),
-                    ControlSignal(name="CS2", projections=(BIAS,m)),
+                    ControlSignal(name="CS1", modulates=(GAIN, m)),
+                    GatingSignal(name="GS", modulates=m),
+                    ControlSignal(name="CS2", modulates=(BIAS, m)),
                 ]
         )
         assert  c.output_states.names == ['CS1', 'GS', 'CS2']
         assert m.parameter_states['gain'].mod_afferents[0].sender.owner == c
         assert m.parameter_states['bias'].mod_afferents[0].sender.owner == c
         assert m.input_state.mod_afferents[0].sender.owner == c
+
 
     def test_control_modulation_in_composition(self):
         Tx = TransferMechanism(name='Tx')
@@ -45,7 +46,7 @@ class TestModulatoryMechanism:
                 default_variable=[1],
                 monitor_for_modulation=Ty,
                 modulatory_signals=ControlSignal(modulation=OVERRIDE,
-                                                  projections=(SLOPE,Tz)))
+                                                 modulates=(SLOPE, Tz)))
 
         comp = Composition(enable_controller=True)
         comp.add_linear_processing_pathway(pathway=[Tx,Tz])

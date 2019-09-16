@@ -18,7 +18,7 @@ ancestor_child_data = [
 param_alias_data = [
     (pnl.Linear, 'slope', 'multiplicative_param'),
     (pnl.Linear, 'intercept', 'additive_param'),
-    (pnl.ControlMechanism, 'value', 'control_allocation'),
+    (pnl.ControlMechanism, 'value', 'modulatory_allocation'),
 ]
 
 
@@ -77,6 +77,7 @@ def test_aliases(obj, param_name, alias_name):
     assert unproxy_weakproxy(obj.parameters._owner) is obj
     assert unproxy_weakproxy(getattr(obj.parameters, alias_name)._owner._owner) is obj
     assert getattr(obj.defaults, param_name) == getattr(obj.defaults, alias_name)
+    # if hasattr(getattr(obj.parameters, alias_name), 'source'):
     assert unproxy_weakproxy(getattr(obj.parameters, alias_name).source) is getattr(obj.parameters, param_name)
 
 
@@ -138,7 +139,7 @@ def test_delta_fail():
     with pytest.raises(TypeError) as error:
         t.parameters.value.get_delta()
 
-    assert "Parameter 'value' value mismatch between current" in str(error)
+    assert "Parameter 'value' value mismatch between current" in str(error.value)
 
 
 def test_validation():

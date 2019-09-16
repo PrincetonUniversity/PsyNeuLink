@@ -62,6 +62,12 @@ class TestParameterStates:
         assert A.mod_noise == 0.5
         assert B.mod_noise == 0.6
 
+    def test_direct_call_to_constructor_error(self):
+        from psyneulink.core.components.states.parameterstate import ParameterState, ParameterStateError
+        with pytest.raises(ParameterStateError) as error_text:
+            ParameterState(owner='SOMETHING')
+        assert "Contructor for ParameterState cannot be called directly(context: None" in str(error_text.value)
+
 class TestConfigurableParameters:
     def test_configurable_params(self):
         old_value = 0.2

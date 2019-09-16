@@ -31,7 +31,7 @@ Context and Logging
 -------------------
 
 The `flags <Context.flags>` attribute is used by `Log` to identify conditions for logging (see).  Accordingly, the
-`LogCondition`\(s) used to specify such conditions in the `set_log_conditions <Log.set_log_conditions>` method of Log
+`LogCondition`\\(s) used to specify such conditions in the `set_log_conditions <Log.set_log_conditions>` method of Log
 are a subset of (and are aliased to) the flags in `ContextFlags`.
 
 .. _Context_Additional_Attributes:
@@ -452,7 +452,7 @@ class Context():
 
     @initialization_status.setter
     def initialization_status(self, flag):
-        """Check that a flag is one and only one status flag """
+        """Check that a flag is one and only one status flag"""
         flag &= ContextFlags.INITIALIZATION_MASK
         if flag in INITIALIZATION_STATUS_FLAGS:
             self.flags &= ContextFlags.UNINITIALIZED
@@ -478,7 +478,7 @@ class Context():
 
     @execution_phase.setter
     def execution_phase(self, flag):
-        """Check that a flag is one and only one execution_phase flag """
+        """Check that a flag is one and only one execution_phase flag"""
         if flag in EXECUTION_PHASE_FLAGS:
             # self.flags |= flag
             self.flags &= ContextFlags.IDLE
@@ -501,7 +501,7 @@ class Context():
 
     @source.setter
     def source(self, flag):
-        """Check that a flag is one and only one source flag """
+        """Check that a flag is one and only one source flag"""
         if flag in SOURCE_FLAGS:
             self.flags &= ContextFlags.NONE
             self.flags |= flag
@@ -569,7 +569,6 @@ def _get_context(context:tc.any(ContextFlags, str)):
 
 
 def _get_time(component, context_flags, execution_id=None):
-
     """Get time from Scheduler of System in which Component is being executed.
 
     Returns tuple with (run, trial, time_step) if being executed during Processing or Learning
@@ -614,27 +613,47 @@ def _get_time(component, context_flags, execution_id=None):
         else:
             context_flags = ContextFlags.UNSET
 
-    system = ref_mech.parameters.context.get(execution_id).composition
+    system = ref_mech.parameters.context._get(execution_id).composition
 
     if system and hasattr(system, 'scheduler_processing'):
         execution_flags = context_flags & ContextFlags.EXECUTION_PHASE_MASK
+        # # MODIFIED 7/15/19 OLD:
+        # try:
+        #     if execution_flags == ContextFlags.PROCESSING or not execution_flags:
+        #         t = system.scheduler_processing.clocks[execution_id].time
+        #         t = time(t.run, t.trial, t.pass_, t.time_step)
+        #     elif execution_flags == ContextFlags.CONTROL:
+        #         t = system.scheduler_processing.clocks[execution_id].time
+        #         t = time(t.run, t.trial, t.pass_, t.time_step)
+        #     elif execution_flags == ContextFlags.LEARNING:
+        #         if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
+        #             t = system.scheduler_learning.clocks[execution_id].time
+        #             t = time(t.run, t.trial, t.pass_, t.time_step)
+        #         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        #         # Add autoassociative learning mechanism + related projections to composition as processing components
+        #         else:
+        #             t = None
+        #     else:
+        #         t = None
+        # MODIFIED 7/15/19 NEW:  ACCOMODATE LEARNING IN COMPOSITION DONE WITH scheduler_processing
         try:
-            if execution_flags == ContextFlags.PROCESSING or not execution_flags:
+            if execution_flags in {ContextFlags.PROCESSING, ContextFlags.LEARNING} or not execution_flags:
                 t = system.scheduler_processing.clocks[execution_id].time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
             elif execution_flags == ContextFlags.CONTROL:
                 t = system.scheduler_processing.clocks[execution_id].time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
-            elif execution_flags == ContextFlags.LEARNING:
-                if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
-                    t = system.scheduler_learning.clocks[execution_id].time
-                    t = time(t.run, t.trial, t.pass_, t.time_step)
-                # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-                # Add autoassociative learning mechanism + related projections to composition as processing components
-                else:
-                    t = None
+            # elif execution_flags == ContextFlags.LEARNING:
+            #     if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
+            #         t = system.scheduler_learning.clocks[execution_id].time
+            #         t = time(t.run, t.trial, t.pass_, t.time_step)
+            #     # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+            #     # Add autoassociative learning mechanism + related projections to composition as processing components
+            #     else:
+            #         t = None
             else:
                 t = None
+        # MODIFIED 7/15/19 END:
         except KeyError:
             t = None
 

@@ -7,4 +7,5 @@ Subclasses of `Core` `Composition` that implement specialized operations.
    :maxdepth: 1
 
    AutodiffComposition
+   CompositionFunctionApproximator
 

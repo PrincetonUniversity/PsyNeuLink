@@ -205,7 +205,7 @@ should project to the InputState. Each of these is described below:
           the value must be an integer or float, and is assigned as the value of the InputState's `weight
           <InputState.weight>` attribute (see `weight and exponent <InputState_Weights_And_Exponents>`);
           this takes precedence over any specification in the **weight** argument of the InputState's constructor.
-      |
+
       * *EXPONENT*:<number>
           the value must be an integer or float, and is assigned as the value of the InputState's `exponent
           <InputState.exponent>` attribute (see `weight and exponent <InputState_Weights_And_Exponents>`);
@@ -257,10 +257,10 @@ should project to the InputState. Each of these is described below:
           `OutputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
           (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
-        |
+
         * **2-item tuple:** *(<value, State specification, or list of State specs>, <Projection specification>)* --
           this is a contracted form of the 4-item tuple described below;
-        |
+
         * **4-item tuple:** *(<value, State spec, or list of State specs>, weight, exponent, Projection specification)*
           -- this allows the specification of State(s) that should project to the InputState, together with a
           specification of the InputState's `weight <InputState.weight>` and/or `exponent <InputState.exponent>`
@@ -269,23 +269,23 @@ should project to the InputState. Each of these is described below:
           (e.g., using the matrix of the Projection specification) and/or attributes of the Projection(s) to it. Each
           tuple must have at least the following first three items (in the order listed), and can include the fourth:
 
-            |
+
             * **value, State specification, or list of State specifications** -- specifies either the `variable
               <InputState.variable>` of the InputState, or one or more States that should project to it.  The State
               specification(s) can be a (State name, Mechanism) tuple (see above), and/or include Mechanisms (in which
               case their `primary OutputState <OutputStatePrimary>` is used.  All of the State specifications must be
               consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
               <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included;
-            |
+
             * **weight** -- must be an integer or a float; multiplies the `value <InputState.value>` of the InputState
               before it is combined with others by the Mechanism's `function <Mechanism.function>` (see
               ObjectiveMechanism for `examples <ObjectiveMechanism_Weights_and_Exponents_Example>`);
-            |
+
             * **exponent** -- must be an integer or float; exponentiates the `value <InputState.value>` of the
               InputState before it is combined with others by the ObjectiveMechanism's `function
               <ObjectiveMechanism.function>` (see ObjectiveMechanism for `examples
               <ObjectiveMechanism_Weights_and_Exponents_Example>`);
-            |
+
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
               must be compatible with the State specification(s) in the 1st item; if there is more than one State
               specified, and the Projection specification is used, all of the States
@@ -301,18 +301,16 @@ should project to the InputState. Each of these is described below:
       * *InputState or [InputState, ...]* -- each InputState must belong to an existing Mechanism; creates a new
         InputState for each one specified, along with Projections to it that parallel those of the one specified
         (see below).
-      |
+
       * *{SHADOW_INPUTS: <InputState or Mechanism or [<InputState or Mechanism>,...]>}* -- any InputStates specified
         must belong to an existing Mechanism;  creates a new InputState for each one specified, and for each of the
         InputStates belonging to any Mechanisms specified, along with Projections to them that parallel those of the
         one(s) specified (see below).
-      |
-      For each InputState specified, and all of the InputStates belonging to any Mechanisms specified using the formats
-      above, a new InputState is created along with Projections to it that parallel those received by the
-      corresponding InputState --  that is, that have the same `senders <Projection.sender>` as those that project to
-      the specified InputState, but that project to the one being created.  Thus, for each InputState specified,
-      a new one is created that receives exactly the same inputs; that is, "shadows" it.
 
+      For each InputState specified, and all of the InputStates belonging to any Mechanisms specified, a new InputState
+      is created along with Projections to it that parallel those received by the corresponding InputState in the
+      list.  In other words, for each InputState specified, a new one is created that receives exactly the same inputs
+      from the same `senders  <Projection_Base.sender>` as the ones specified.
 
 .. _InputState_Compatability_and_Constraints:
 
@@ -354,11 +352,11 @@ starting with constraints that are given the highest precedence:
 
     * **More than one Component is specified with the same :ref:`value` format** -- that format is used to determine
       the format of the InputState's `variable <InputState.variable>`.
-    |
+
     * **More than one Component is specified with different :ref:`value` formats** -- the InputState's `variable
       <InputState.variable>` is determined by item of the default `variable <Mechanism_Base.variable>` for
       the class of its owner Mechanism.
-    |
+
     * **A single Component is specified** -- its :ref:`value` is used to determine the format of the InputState's
       `variable <InputState.variable>`;  if the Component is a(n):
 
@@ -368,10 +366,10 @@ starting with constraints that are given the highest precedence:
           <InputState.variable>` and the Projection's `value <Projection_Base.value>` (since the Projection's
           `sender <Projection_Base.sender>` is unspecified, its `initialization is deferred
           <Projection_Deferred_Initialization>`.
-        |
+
         * **Existing MappingProjection** -- then its `value <Projection_Base.value>` determines the
           InputState's `variable <InputState.variable>`.
-        |
+
         * `Matrix specification <Mapping_Matrix_Specification>` -- its receiver dimensionality determines the format
           of the InputState's `variable <InputState.variable>`. For a standard 2d "weight" matrix (i.e., one that maps
           a 1d array from its `sender <Projection_Base.sender>` to a 1d array of its `receiver
@@ -380,14 +378,14 @@ starting with constraints that are given the highest precedence:
           dimensionality of the receiver (used for the InputState's `variable <InputState.variable>`) is the
           dimensionality of the matrix minus the dimensionality of the sender's `value <OutputState.value>`
           (see `matrix dimensionality <Mapping_Matrix_Dimensionality>`).
-      |
+
       * **OutputState or ProcessingMechanism** -- the `value <OutputState.value>` of the OutputState (if it is a
         Mechanism, then its `primary OutputState <OutputState_Primary>`) determines the format of the InputState's
         `variable <InputState.variable>`, and a MappingProjection is created from the OutputState to the InputState
         using an `IDENTITY_MATRIX`.  If the InputState's `variable <InputState.variable>` is constrained (as in some
         of the cases above), then a `FULL_CONNECTIVITY_MATRIX` is used which maps the shape of the OutputState's `value
         <OutputState.value>` to that of the InputState's `variable <InputState.variable>`.
-      |
+
       * **GatingProjection, GatingSignal or GatingMechanism** -- any of these can be used to specify an InputState;
         their `value` does not need to be compatible with the InputState's `variable <InputState.variable>`, however
         it does have to be compatible with the `modulatory parameter <Function_Modulatory_Params>` of the InputState's
@@ -491,15 +489,14 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
+    COMBINE, COMMAND_LINE, CONTEXT, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
     LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
     PARAMS, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
     SENDER, SIZE, STATE_TYPE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import \
-    append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityType
+from psyneulink.core.globals.utilities import append_type_to_name, is_numeric, iscompatible, kwCompatibilityLength
 
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords', 'SHADOW_INPUTS',
@@ -587,7 +584,7 @@ class InputState(State_Base):
         `mod_afferents <InputState.mod_afferents>` attributes, respectively (see
         `InputState_Compatability_and_Constraints` for additional details).  If **projections** but neither
         **variable** nor **size** are specified, then the `value <Projection.value>` of the Projection(s) or their
-        `senders <Projection.sender>` specified in **projections** argument are used to determine the InputState's
+        `senders <Projection_Base.sender>` specified in **projections** argument are used to determine the InputState's
         `variable <InputState.variable>`.
 
     weight : number : default 1
@@ -634,7 +631,7 @@ class InputState(State_Base):
         each of which must match the format (number and types of elements) of the InputState's
         `variable <InputState.variable>`.  If neither the **variable** or **size** argument is specified, and
         **projections** is specified, then `variable <InputState.variable>` is assigned the `value
-        <Projection.value>` of the Projection(s) or its `sender <Projection.sender>`.
+        <Projection.value>` of the Projection(s) or its `sender <Projection_Base.sender>`.
 
     function : Function
         If it is a `CombinationFunction`, it combines the `values <Projection_Base.value>` of the `PathwayProjections
@@ -711,6 +708,7 @@ class InputState(State_Base):
     connectsWithAttribute = [OUTPUT_STATES]
     projectionSocket = SENDER
     modulators = [GATING_SIGNAL]
+    canReceive = modulators + [MAPPING_PROJECTION]
 
 
     classPreferenceLevel = PreferenceLevel.TYPE
@@ -797,8 +795,9 @@ class InputState(State_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 **kwargs):
 
+        context = kwargs.pop(CONTEXT, None)
         if context is None:
             context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE
@@ -846,11 +845,11 @@ class InputState(State_Base):
                                          variable=variable,
                                          size=size,
                                          projections=projections,
+                                         function=function,
                                          params=params,
                                          name=name,
                                          prefs=prefs,
                                          context=context,
-                                         function=function,
                                          )
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
@@ -968,52 +967,46 @@ class InputState(State_Base):
         """
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        """Call self.function with self._path_proj_values
-
-        If variable is None there are no active PathwayProjections in the Composition being run,
-        return None so that it is ignored in execute method (i.e., not combined with base_value)
-        """
-
-        # Variable was passed in so use that
-        if variable is not None:
-            return super()._execute(variable,
-                                    execution_id=execution_id,
-                                    runtime_params=runtime_params,
-                                    context=context)
-
-        # Get variable from Projections
-        else:
-            path_proj_values = []
-            # Check for Projections that are active in the Composition being run
-            for proj in self.path_afferents:
-                if self.afferents_info[proj].is_active_in_composition(self.parameters.context.get(
-                        execution_id).composition):
-                    path_proj_values.append(proj.parameters.value.get(execution_id))
-            # If there are any active PathwayProjections
-            if len(path_proj_values) > 0:
-                # Combine Projection values
-                variable = np.asarray(path_proj_values)
-                combined_values = super()._execute(variable=variable,
-                                                   execution_id=execution_id,
-                                                   runtime_params=runtime_params,
-                                                   context=context)
-                return combined_values
-
-            # There were no active Projections
-            else:
-                # mark combined_values as none, so that (after being assigned to value)
-                #    it is ignored in execute method (i.e., not combined with base_value)
-                return None
+    def _check_for_duplicate_projections(self, projection):
+        # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_STATE
+        assert True
+        if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+            from psyneulink.core.components.projections.projection import Projection
+            warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
+                          f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
+                          f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
+            return True
+        return False
 
     def _parse_function_variable(self, variable, execution_id=None, context=None):
         variable = super()._parse_function_variable(variable, execution_id, context)
         try:
-            if self._use_1d_variable:
+            if self._use_1d_variable and variable.ndim > 1:
                 return np.array(variable[0])
-        except:
+        except AttributeError:
             pass
         return variable
+
+    def _get_fallback_variable(self, execution_id=None):
+        """
+            Call self.function with self._path_proj_values
+
+            If variable is None there are no active PathwayProjections in the Composition being run,
+            return None so that it is ignored in execute method (i.e., not combined with base_value)
+        """
+        # Check for Projections that are active in the Composition being run
+        current_active_composition = self.parameters.context._get(execution_id).composition
+
+        path_proj_values = [
+            proj.parameters.value._get(execution_id)
+            for proj in self.path_afferents
+            if self.afferents_info[proj].is_active_in_composition(current_active_composition)
+        ]
+
+        if len(path_proj_values) > 0:
+            return np.asarray(path_proj_values)
+        else:
+            return None
 
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
@@ -1246,10 +1239,10 @@ class InputState(State_Base):
         return state_spec, params_dict
 
     def _parse_self_state_type_spec(self, owner, input_state, context=None):
-        '''Return InputState specification dictionary with projections that shadow inputs to input_state
+        """Return InputState specification dictionary with projections that shadow inputs to input_state
 
         Called by _parse_state_spec if InputState specified for a Mechanism belongs to a different Mechanism
-        '''
+        """
 
         if not isinstance(input_state, InputState):
             raise InputStateError("PROGRAM ERROR: "
@@ -1267,7 +1260,7 @@ class InputState(State_Base):
 
     @staticmethod
     def _state_spec_allows_override_variable(spec):
-        '''
+        """
         Returns
         -------
             True - if **spec** outlines a spec for creating an InputState whose variable can be
@@ -1275,19 +1268,19 @@ class InputState(State_Base):
             False - otherwise
 
             ex: specifying an InputState with a Mechanism allows overriding
-        '''
+        """
         from psyneulink.core.components.mechanisms.mechanism import Mechanism
 
         if isinstance(spec, Mechanism):
             return True
-        if isinstance(spec, collections.Iterable):
+        if isinstance(spec, collections.abc.Iterable):
             # generally 2-4 tuple spec, but allows list spec
             for item in spec:
                 if isinstance(item, Mechanism):
                     return True
                 # handles tuple spec where first item of tuple is itself a (name, Mechanism) tuple
                 elif (
-                    isinstance(item, collections.Iterable)
+                    isinstance(item, collections.abc.Iterable)
                     and len(item) >= 2
                     and isinstance(item[1], Mechanism)
                 ):
@@ -1413,7 +1406,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     for state in owner._input_states:
         # Assign True for owner's primary InputState and the value has not already been set in InputState constructor
         if state.require_projection_in_composition is None and owner.input_state == state:
-            state.parameters.require_projection_in_composition.set(True, override=True)
+            state.parameters.require_projection_in_composition._set(True)
 
     # Check that number of input_states and their variables are consistent with owner.defaults.variable,
     #    and adjust the latter if not
@@ -1443,7 +1436,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     return state_list
 
 def _parse_shadow_inputs(owner, input_states):
-    '''Parses any {SHADOW_INPUTS:[InputState or Mechaism,...]} items in input_states into InputState specif. dict.'''
+    """Parses any {SHADOW_INPUTS:[InputState or Mechaism,...]} items in input_states into InputState specif. dict."""
 
     input_states_to_shadow_specs=[]
     for spec_idx, spec in enumerate(input_states):

@@ -19,7 +19,7 @@ an optimal `control_allocation <ControlMechanism.control_allocation>` for a give
 <OptimizationControlMechanism_State>`. The `OptimizationFunction` uses the OptimizationControlMechanism's
 `evaluation_function` <OptimizationControlMechanism.evalutate_function>` to evaluate `control_allocation
 <ControlMechanism.control_allocation>` samples, and then implements the one that yields the best predicted result.
-The result returned by the `evaluation_function` <OptimizationControlMechanism.evalutate_function>` is ordinally
+The result returned by the `evaluation_function` <OptimizationControlMechanism.evalutate_function>` is ordinarily
 the `net_outcome <ControlMechanism.net_outcome>` computed by the OptimizationControlMechanism for the `Composition`
 (or part of one) that it controls, and its `ObjectiveFunction` seeks to maximize this, which corresponds to
 maximizing the Expected Value of Control, as described below.
@@ -105,10 +105,13 @@ Creating an OptimizationControlMechanism
 An OptimizationControlMechanism is created in the same was as any `ControlMechanism <ControlMechanism>`.
 The following arguments of its constructor are specific to the OptimizationControlMechanism:
 
-* **features** -- takes the place of the standard **input_states** argument in the constructor for a
-  Mechanism`, and specifies the values used by the OptimizationControlMechanism, together with a `control_allocation
-  <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  Features can be
-  specified using any of the following, singly or combined in a list:
+* **features** -- takes the place of the standard **input_states** argument in the constructor for a Mechanism`,
+  and specifies the values used by the OptimizationControlMechanism, together with a `control_allocation
+  <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  For
+  `model-based optimzation <OptimizationControlMechanism_Model_Based>` these are also used as the inputs to the
+  Compositoin (i.e., `agent_rep <OptimizationControlMechanism.agent_rep>`) when it's `evaluate <Composition.evaluate>`
+  method is called (see `OptimizationControlMechanism_Features` below).  Features can be specified using any of the
+  following, singly or combined in a list:
 
   * *InputState specification* -- this can be any form of `InputState specification <InputState_Specification>`
     that resolves to an OutputState from which the InputState receives a Projection;  the `value
@@ -132,9 +135,9 @@ The following arguments of its constructor are specific to the OptimizationContr
   <ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>` (see `below
   <OptimizationControlMechanism_Agent_Rep>` for additional details). If it is not specified, the
   `Composition` to which the OptimizationControlMechanism belongs is assigned, and the OptimizationControlMechanism
-  is assigned as that Composition's `controller <Composition.controller>`, implementing `model-based
+  is assigned as that Composition's `controller <Composition.controller>`, implementing fully `model-based
   <OptimizationControlMechanism_Model_Based>` optimization.  If that Composition already has a `controller
-  <Composition.controller>` specified, the OptimizationControlMechanism is disable. If another Composition is
+  <Composition.controller>` specified, the OptimizationControlMechanism is disabled. If another Composition is
   specified, it must conform to the specifications for an `agent_rep <OptimizationControlMechanism.agent_rep>` as
   described `below <OptimizationControlMechanism_Agent_Rep>`.
 
@@ -389,11 +392,13 @@ import numbers
 import numpy as np
 import typecheck as tc
 
-from collections import Iterable, namedtuple
-from typing import NamedTuple
+from collections.abc import Iterable
+from collections import namedtuple
 
-from psyneulink.core.components.functions.function import Function_Base, ModulationParam, _is_modulation_param, is_function_type
-from psyneulink.core.components.functions.optimizationfunctions import OBJECTIVE_FUNCTION, SEARCH_SPACE
+from psyneulink.core.components.functions.function import \
+    Function_Base, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.optimizationfunctions import \
+    OBJECTIVE_FUNCTION, SEARCH_SPACE, OptimizationFunction
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -405,12 +410,16 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_STATES, PARAMS, VARIABLE
+from psyneulink.core.globals.keywords import \
+    DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, \
+    PARAMETER_STATES, PARAMS, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
 from psyneulink.core.globals.sampleiterator import SampleIterator
+
+from psyneulink.core import llvm as pnlvm
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
@@ -437,7 +446,7 @@ class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(            \
     objective_mechanism=None,                   \
     monitor_for_control=None,                   \
-    objective_mechanism=True,                   \
+    objective_mechanism=None,                   \
     origin_objective_mechanism=False            \
     terminal_objective_mechanism=False          \
     features=None,                              \
@@ -462,12 +471,11 @@ class OptimizationControlMechanism(ControlMechanism):
     Arguments
     ---------
 
-    objective_mechanism : ObjectiveMechanism or List[OutputState specification] or bool
-        specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, a list of the
-        `OutputState <OutputState>`\\s it should monitor, or True/False to enable/disable automatice creation
-         of objective mechanism. If a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>`
-         is used, a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states**
-         argument. The default is True, which causes automatic creation.
+    objective_mechanism : ObjectiveMechanism or List[OutputState specification]
+        specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
+        `OutputState <OutputState>`\\s it should monitor; if a list of `OutputState specifications
+        <ObjectiveMechanism_Monitor>` is used, a default ObjectiveMechanism is created and the list
+        is passed to its **monitored_output_states** argument.
 
     features : Mechanism, OutputState, Projection, dict, or list containing any of these
         specifies Components, the values of which are assigned to `feature_values
@@ -481,12 +489,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
     agent_rep : Composition  : default Composition to which the OptimizationControlMechanism belongs
         specifies the `Composition` used by the `evalution_function <OptimizationControlMechanism.evaluation_function>`
-        to predictd the `net_outcome <ControlMechanism.net_outcome>` for a given `state
+        to predict the `net_outcome <ControlMechanism.net_outcome>` for a given `state
         <OptimizationControlMechanism_State>`.  If a Composition other than the default is assigned,
         it must be suitably configured (see `above <OptimizationControlMechanism_Agent_Rep>` for additional details).
         If the default is used, the OptimizationControlMechanism is assigned as the Composition's `controller
         <Composition.controller>` unless one has already been assigned, in which case the
-        OptimizationControlMechanismit is disabled.
+        OptimizationControlMechanism is disabled.
 
     search_function : function or method
         specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
@@ -510,6 +518,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.function>`, unless that is specified in a constructor for `function
         <OptimizationControlMechanism.function>`.  Each item must have the same shape as `control_allocation
         <ControlMechanism.control_allocation>`.
+
     function : OptimizationFunction, function or method
         specifies the function used to optimize the `control_allocation <ControlMechanism.control_allocation>`;
         must take as its sole argument an array with the same shape as `control_allocation
@@ -721,7 +730,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  search_statefulness=None,
                  params=None,
                  **kwargs):
-        '''Abstract class that implements OptimizationControlMechanism'''
+        """Implement OptimizationControlMechanism"""
 
         self.agent_rep = agent_rep
         self.search_function = search_function
@@ -741,28 +750,30 @@ class OptimizationControlMechanism(ControlMechanism):
                          **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        '''Insure that specification of ObjectiveMechanism has projections to it'''
+        """Insure that specification of ObjectiveMechanism has projections to it"""
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
+        if self.function is None:
+            raise OptimizationControlMechanismError(f"The {repr(FUNCTION)} arg of an {self.__class__.__name__} must "
+                                                    f"be specified and be an {OptimizationFunction.__name__}")
+
         from psyneulink.core.compositions.composition import Composition
         if self.agent_rep is None:
-            raise OptimizationControlMechanismError("The {} arg of an {} must be specified and be a {}".
-                                                    format(repr(AGENT_REP), self.__class__.__name__,
-                                                           Composition.__name__))
+            raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} must "
+                                                    f"be specified and be a {Composition.__name__}")
 
         elif not (isinstance(self.agent_rep, Composition)
                   or (isinstance(self.agent_rep, type) and issubclass(self.agent_rep, Composition))):
-            raise OptimizationControlMechanismError("The {} arg of an {} must be either a {}".
-                                                    format(repr(AGENT_REP),self.__class__.__name__,
-                                                           Composition.__name__))
+            raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} "
+                                                    f"must be either a {Composition.__name__} or a sublcass of one")
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_states for Projections from features and objective_mechanism.
 
         Inserts InputState specification for Projection from ObjectiveMechanism as first item in list of
         InputState specifications generated in _parse_feature_specs from the **features** and
-        **feature_function** arguments of the ModelFreeOptimizationControlMechanism constructor.
+        **feature_function** arguments of the OptimizationControlMechanism constructor.
         """
 
         # Specify *OUTCOME* InputState;  receives Projection from *OUTCOME* OutputState of objective_mechanism
@@ -771,10 +782,6 @@ class OptimizationControlMechanism(ControlMechanism):
         # If any features were specified (assigned to self.input_states in __init__):
         if self.input_states:
             self.input_states = _parse_shadow_inputs(self, self.input_states)
-            # for i, state in enumerate(self.input_states):
-            #     self.input_states[i] = _parse_state_spec(state_type=InputState,
-            #                                              owner=self,
-            #                                              state_spec=state)
             self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
             # Insert primary InputState for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
@@ -782,49 +789,44 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             self.input_states = [outcome_input_state]
 
-        # super()._instantiate_input_states(context=context)
-        #
-        # # GO THROUGH AND REASSIGN AS FEATURE INPUT STATE AND ASSIGN FUNCTION
-        # self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
-
         # Configure default_variable to comport with full set of input_states
         self.defaults.variable, _ = self._handle_arg_input_states(self.input_states)
 
-        # self.input_states = self._parse_feature_specs(self.input_states, self.feature_function)
         super()._instantiate_input_states(context=context)
 
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
             if len(state.path_afferents) > 1:
-                raise OptimizationControlMechanismError("Invalid {} on {}. {} should receive exactly one"
-                                                        " projection, but it receives {} projections."
-                                                        .format(InputState.__name__, self.name, state.name,
-                                                                len(state.path_afferents)))
+                raise OptimizationControlMechanismError(f"Invalid {InputState.__name__} on {self.name}. "
+                                                        f"{state.name} should receive exactly one projection, "
+                                                        f"but it receives {len(state.path_afferents)} projections.")
 
-        # KAM Removed the exception below 11/6/2018 because it was rejecting valid
-        # monitored_output_state spec on ObjectiveMechanism
-
-        # if (OBJECTIVE_MECHANISM in request_set and
-        #         isinstance(request_set[OBJECTIVE_MECHANISM], ObjectiveMechanism)
-        #         and not request_set[OBJECTIVE_MECHANISM].path_afferents):
-        #     raise OptimizationControlMechanismError("{} specified for {} ({}) must be assigned one or more {}".
-        #                                             format(ObjectiveMechanism.__name__, self.name,
-        #                                                    request_set[OBJECTIVE_MECHANISM],
-        #                                                    repr(MONITORED_OUTPUT_STATES)))
-
-    def _instantiate_control_signal(self, control_signal, context=None):
-        '''Implement ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals
+    def _instantiate_output_states(self, context=None):
+        """Assign ControlSignalCosts.DEFAULTS as default for cost_option of ControlSignals.
         OptimizationControlMechanism requires use of at least one of the cost options
-        '''
-        control_signal = super()._instantiate_control_signal(control_signal, context)
+        """
+        super()._instantiate_output_states(context)
 
-        if control_signal.cost_options is None:
-            control_signal.cost_options = ControlSignalCosts.DEFAULTS
-            control_signal._instantiate_cost_attributes()
-        return control_signal
+        for control_signal in self.control_signals:
+            if control_signal.cost_options is None:
+                control_signal.cost_options = ControlSignalCosts.DEFAULTS
+                control_signal._instantiate_cost_attributes()
+
+    def _instantiate_modulatory_signals(self, context):
+        """Size control_allocation and assign modulatory_signals
+        Set size of control_allocadtion equal to number of modulatory_signals.
+        Assign each modulatory_signal sequentially to corresponding item of control_allocation.
+        """
+        from psyneulink.core.globals.keywords import OWNER_VALUE
+        for i, spec in enumerate(self.modulatory_signals):
+            modulatory_signal = self._instantiate_modulatory_signal(spec, context=context)
+            modulatory_signal._variable_spec = (OWNER_VALUE, i)
+            self._modulatory_signals[i] = modulatory_signal
+        self.defaults.value = np.tile(modulatory_signal.parameters.variable.default_value, (i+1, 1))
+        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value))
 
     def _instantiate_attributes_after_function(self, context=None):
-        '''Instantiate OptimizationControlMechanism's OptimizatonFunction attributes'''
+        """Instantiate OptimizationControlMechanism's OptimizatonFunction attributes"""
 
         super()._instantiate_attributes_after_function(context=context)
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
@@ -835,12 +837,6 @@ class OptimizationControlMechanism(ControlMechanism):
                                     SEARCH_SPACE: self.control_allocation_search_space
                                     })
 
-        # test_local_search_space = self._get_control_allocation_grid_space
-
-        # self.search_function = self.function.search_function
-        # self.search_termination_function = self.function.search_termination_function
-        # self.search_space = self.function.search_space
-
         if isinstance(self.agent_rep, type):
             self.agent_rep = self.agent_rep()
 
@@ -849,7 +845,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self._initialize_composition_function_approximator()
 
     def _update_input_states(self, execution_id=None, runtime_params=None, context=None):
-        """ Update value for each InputState in self.input_states:
+        """Update value for each InputState in self.input_states:
 
         Call execute method for all (MappingProjection) Projections in InputState.path_afferents
         Aggregate results (using InputState execute method)
@@ -858,34 +854,33 @@ class OptimizationControlMechanism(ControlMechanism):
         # "Outcome"
         outcome_input_state = self.input_state
         outcome_input_state.update(execution_id=execution_id, params=runtime_params, context=context)
-        state_values = [np.atleast_2d(outcome_input_state.parameters.value.get(execution_id))]
+        state_values = [np.atleast_2d(outcome_input_state.parameters.value._get(execution_id))]
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
             state.update(execution_id=execution_id, params=runtime_params, context=context)
-            state_values.append(state.parameters.value.get(execution_id))
-
+            state_values.append(state.parameters.value._get(execution_id))
         return np.array(state_values)
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        '''Find control_allocation that optimizes result of `agent_rep.evaluate`  .'''
+        """Find control_allocation that optimizes result of `agent_rep.evaluate`  ."""
 
-        if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING):
-            return defaultControlAllocation
+        if (self.parameters.context._get(execution_id).initialization_status == ContextFlags.INITIALIZING):
+            return [defaultControlAllocation]
 
         # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
-        self.parameters.feature_values.set(_parse_feature_values_from_variable(variable), execution_id)
+        self.parameters.feature_values._set(_parse_feature_values_from_variable(variable), execution_id)
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
-        control_allocation = self.parameters.control_allocation.get(execution_id)
+        control_allocation = self.parameters.control_allocation._get(execution_id)
         if control_allocation is None:
             control_allocation = [c.defaults.variable for c in self.control_signals]
-            self.parameters.control_allocation.set(control_allocation, execution_id=None, override=True)
+            self.parameters.control_allocation._set(control_allocation, execution_id=None)
 
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         if hasattr(self.agent_rep, "adapt"):
             # KAM 4/11/19 switched from a try/except to hasattr because in the case where we don't
             # have an adapt method, we also don't need to call the net_outcome getter
-            net_outcome = self.parameters.net_outcome.get(execution_id)
+            net_outcome = self.parameters.net_outcome._get(execution_id)
 
             self.agent_rep.adapt(_parse_feature_values_from_variable(variable),
                                  control_allocation,
@@ -894,9 +889,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # freeze the values of current execution_id, because they can be changed in between simulations,
         # and the simulations must start from the exact spot
-        self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id), base_execution_context=execution_id, override=True)
+        self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id),
+                                                base_execution_context=execution_id,
+                                                override=True)
 
-        # Get control_allocation that optmizes net_outcome using OptimizationControlMechanism's function
+        # Get control_allocation that optimizes net_outcome using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         optimal_control_allocation, optimal_net_outcome, saved_samples, saved_values = \
                                                 super(ControlMechanism,self)._execute(variable=control_allocation,
@@ -926,19 +923,20 @@ class OptimizationControlMechanism(ControlMechanism):
             sim_execution_id += f'-{control_allocation}'
 
         try:
-            self.parameters.simulation_ids.get(base_execution_id).append(sim_execution_id)
+            self.parameters.simulation_ids._get(base_execution_id).append(sim_execution_id)
         except AttributeError:
-            self.parameters.simulation_ids.set([sim_execution_id], base_execution_id)
+            self.parameters.simulation_ids._set([sim_execution_id], base_execution_id)
 
         self.agent_rep._initialize_from_context(sim_execution_id, self._get_frozen_execution_id(base_execution_id), override=False)
 
         return sim_execution_id
 
-    def evaluation_function(self, control_allocation,
-                            execution_id=None,
-                            return_results=False,
-                            delete_context=False):
-        '''Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
+    def _tear_down_simulation(self, sim_execution_id=None):
+        if not self.agent_rep.parameters.retain_old_simulation_data._get():
+            self.agent_rep._delete_contexts(sim_execution_id, check_simulation_storage=True)
+
+    def evaluation_function(self, control_allocation, execution_id=None, return_results=False):
+        """Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
         <ControlMechanism.control_allocation>`.
 
@@ -951,57 +949,296 @@ class OptimizationControlMechanism(ControlMechanism):
         for the current `feature_values <OptimizationControlMechanism.feature_values>`
         and specified `control_allocation <ControlMechanism.control_allocation>`.
 
-        '''
+        """
         # agent_rep is a Composition (since runs_simuluations = True)
         if self.agent_rep.runs_simulations:
             # KDM 5/20/19: crudely using default here because it is a stateless parameter
             # and there is a bug in setting parameter values on init, see TODO note above
             # call to self._instantiate_defaults around component.py:1115
-#            if self.defaults.search_statefulness:
-#                new_execution_id = self._set_up_simulation(execution_id, control_allocation)
-#            else:
-            new_execution_id = execution_id
+            if self.defaults.search_statefulness:
+                new_execution_id = self._set_up_simulation(execution_id, control_allocation)
+            else:
+                new_execution_id = execution_id
 
-            if not return_results:
-                outcome = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
+            result = self.agent_rep.evaluate(self.parameters.feature_values._get(execution_id),
                                              control_allocation,
-                                             self.parameters.num_estimates.get(execution_id),
+                                             self.parameters.num_estimates._get(execution_id),
                                              base_execution_id=execution_id,
                                              execution_id=new_execution_id,
-                                             context=self.function.parameters.context.get(execution_id),
-                                             execution_mode=self.parameters.comp_execution_mode.get(execution_id),
-                                             delete_context=delete_context)
+                                             context=self.function.parameters.context._get(execution_id),
+                                             execution_mode=self.parameters.comp_execution_mode._get(execution_id),
+                                             return_results=return_results)
 
-                return outcome
+            if self.defaults.search_statefulness:
+                self._tear_down_simulation(new_execution_id)
+
+            # If results of the simulation shoudld be returned then, do so. Agent Rep Evaluate will
+            # return a tuple in this case where the first element is the outcome as usual and the
+            # results of composision run are the second element.
+            if return_results:
+                return result[0], result[1]
             else:
-                outcome, results = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
-                                                  control_allocation,
-                                                  self.parameters.num_estimates.get(execution_id),
-                                                  base_execution_id=execution_id,
-                                                  execution_id=new_execution_id,
-                                                  context=self.function.parameters.context.get(execution_id),
-                                                  execution_mode=self.parameters.comp_execution_mode.get(execution_id),
-                                                  return_results=True,
-                                                  delete_context=delete_context)
-                return outcome, results
+                return result
+
+        # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
-            outcome = self.agent_rep.evaluate(self.parameters.feature_values.get(execution_id),
+            result = self.agent_rep.evaluate(self.parameters.feature_values._get(execution_id),
                                              control_allocation,
-                                             self.parameters.num_estimates.get(execution_id),
+                                             self.parameters.num_estimates._get(execution_id),
                                              execution_id=execution_id,
-                                             context=self.function.parameters.context.get(execution_id),
-                                             delete_context=delete_context)
+                                             context=self.function.parameters.context._get(execution_id)
+            )
 
-            return outcome
+        return result
+
+    def _get_evaluate_param_struct_type(self, ctx):
+        num_estimates = ctx.int32_ty
+        intensity_cost = [ctx.get_param_struct_type(os.intensity_cost_function) for os in self.output_states]
+        intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
+        return pnlvm.ir.LiteralStructType([intensity_cost_struct, num_estimates])
+
+    def _get_evaluate_param_initializer(self, execution_id):
+        num_estimates = self.parameters.num_estimates._get(execution_id) or 0
+        # FIXME: The intensity cost function is not setup with the right execution id
+        intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
+        return (intensity_cost, num_estimates)
+
+    def _get_evaluate_state_struct_type(self, ctx):
+        intensity_cost = [ctx.get_state_struct_type(os.intensity_cost_function) for os in self.output_states]
+        intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
+        return pnlvm.ir.LiteralStructType([intensity_cost_struct])
+
+    def _get_evaluate_state_initializer(self, execution_id):
+        intensity_cost = tuple((os.intensity_cost_function._get_state_initializer(execution_id) for os in self.output_states))
+        return (intensity_cost,)
+
+    def _get_evaluate_input_struct_type(self, ctx):
+        # We construct input from optimization function input
+        return ctx.get_input_struct_type(self.function)
+
+    def _get_evaluate_output_struct_type(self, ctx):
+        # Returns a scalar that is the predicted net_outcome
+        return ctx.float_ty
+
+    def _get_evaluate_alloc_struct_type(self, ctx):
+        return pnlvm.ir.ArrayType(ctx.float_ty,
+                                  len(self.control_allocation_search_space))
+
+    def _gen_llvm_net_outcome_function(self, ctx):
+        args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
+                self._get_evaluate_state_struct_type(ctx).as_pointer(),
+                self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
+                ctx.float_ty.as_pointer(),
+                ctx.float_ty.as_pointer()]
+
+        builder = ctx.create_llvm_function(args, self, str(self) + "_net_outcome")
+        llvm_func = builder.function
+        for p in llvm_func.args:
+            p.attributes.add('nonnull')
+        params, state, allocation_sample, objective_ptr, arg_out = llvm_func.args
+
+        # calculate cost function
+        total_cost = builder.alloca(ctx.float_ty)
+        builder.store(ctx.float_ty(-0.0), total_cost)
+        for i, os in enumerate(self.output_states):
+            # FIXME: Add support for other cost types
+            assert os.cost_options == ControlSignalCosts.INTENSITY
+
+            func = ctx.get_llvm_function(os.intensity_cost_function)
+            func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            func_out = builder.alloca(func.args[3].type.pointee)
+            func_in = builder.alloca(func.args[2].type.pointee)
+
+            # copy allocation_sample, the input is 1-element array
+            data_in = builder.gep(allocation_sample, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            data_out = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(builder.load(data_in), data_out)
+            builder.call(func, [func_params, func_state, func_in, func_out])
+
+            # extract cost result
+            res_in = builder.gep(func_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            cost = builder.load(res_in)
+            # simplified version of combination fmax(cost, 0)
+            ltz = builder.fcmp_ordered("<", cost, cost.type(0))
+            cost = builder.select(ltz, ctx.float_ty(0), cost)
+
+            # combine is not a PNL function
+            assert self.combine_costs is np.sum
+            val = builder.load(total_cost)
+            val = builder.fadd(val, cost)
+            builder.store(val, total_cost)
+
+        # compute net outcome
+        objective = builder.load(objective_ptr)
+        net_outcome = builder.fsub(objective, builder.load(total_cost))
+        builder.store(net_outcome, arg_out)
+
+        builder.ret_void()
+        return llvm_func
+
+    def _gen_llvm_evaluate_function(self):
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
+                    self._get_evaluate_state_struct_type(ctx).as_pointer(),
+                    self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
+                    self._get_evaluate_output_struct_type(ctx).as_pointer(),
+                    self._get_evaluate_input_struct_type(ctx).as_pointer(),
+                    ctx.get_param_struct_type(self.agent_rep).as_pointer(),
+                    ctx.get_state_struct_type(self.agent_rep).as_pointer(),
+                    ctx.get_data_struct_type(self.agent_rep).as_pointer()]
+
+            builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
+            llvm_func = builder.function
+            for p in llvm_func.args:
+                p.attributes.add('nonnull')
+
+            params, state, allocation_sample, arg_out, arg_in, comp_params, base_comp_state, base_comp_data = llvm_func.args
+
+            sim_f = ctx.get_llvm_function(self.agent_rep._llvm_sim_run.name)
+
+            # Create a simulation copy of composition state
+            comp_state = builder.alloca(base_comp_state.type.pointee, name="state_copy")
+            builder.store(builder.load(base_comp_state), comp_state)
+
+            # Create a simulation copy of composition data
+            comp_data = builder.alloca(base_comp_data.type.pointee, name="data_copy")
+            builder.store(builder.load(base_comp_data), comp_data)
+
+            # Apply allocation sample to simulation data
+            assert len(self.output_states) == len(allocation_sample.type.pointee)
+            idx = self.agent_rep._get_node_index(self)
+            ocm_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                              ctx.int32_ty(idx)])
+            for i, _ in enumerate(self.output_states):
+                idx = ctx.int32_ty(i)
+                sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), idx])
+                sample_dst = builder.gep(ocm_out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
+                builder.store(builder.load(sample_ptr), sample_dst)
+
+            # Construct input
+            num_features = len(arg_in.type.pointee) - 1
+            comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
+
+            for i in range(num_features):
+                src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
+                # Destination is a struct of 2d arrays
+                dst = builder.gep(comp_input, [ctx.int32_ty(0), ctx.int32_ty(i), ctx.int32_ty(0)])
+                builder.store(builder.load(src), dst)
 
 
-    tc.typecheck
+            # Determine simulation counts
+            num_estimates_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            num_estimates = builder.load(num_estimates_ptr, "num_estimates")
+
+            # if num_estimates is 0, run 1 trial
+            param_is_zero = builder.icmp_unsigned("==", num_estimates,
+                                                        ctx.int32_ty(0))
+            num_sims = builder.select(param_is_zero, ctx.int32_ty(1),
+                                      num_estimates, "corrected_estimates")
+
+            num_runs = builder.alloca(ctx.int32_ty, name="num_runs")
+            builder.store(num_sims, num_runs)
+
+            # We only provide one input
+            num_inputs = builder.alloca(ctx.int32_ty, name="num_inputs")
+            builder.store(num_inputs.type.pointee(1), num_inputs)
+
+            # Simulations don't store output
+            comp_output = sim_f.args[4].type(None)
+            builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
+                                 comp_output, num_runs, num_inputs])
+
+            # Extract objective mech value
+            idx = self.agent_rep._get_node_index(self.objective_mechanism)
+            # Mechanisms' results are store in the first substructure
+            objective_os_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(0),
+                                                       ctx.int32_ty(idx)])
+            # Objective mech output shape should be 1 single element 2d array
+            objective_val_ptr = builder.gep(objective_os_ptr,
+                                            [ctx.int32_ty(0), ctx.int32_ty(0),
+                                             ctx.int32_ty(0)], "obj_val_ptr")
+
+            net_outcome_f = self._gen_llvm_net_outcome_function(ctx);
+            builder.call(net_outcome_f, [params, state, allocation_sample,
+                                         objective_val_ptr, arg_out]);
+
+            builder.ret_void()
+
+        return llvm_func
+
+    def _gen_llvm_function(self):
+        from psyneulink.core.compositions.composition import Composition
+        is_comp = isinstance(self.agent_rep, Composition)
+        if is_comp:
+            ctx = pnlvm.LLVMBuilderContext.get_global()
+            extra_args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
+                          ctx.get_state_struct_type(self.agent_rep).as_pointer(),
+                          ctx.get_data_struct_type(self.agent_rep).as_pointer()]
+        else:
+            extra_args = []
+
+        f = super()._gen_llvm_function(extra_args)
+        if is_comp:
+            for a in f.args[-len(extra_args):]:
+                a.attributes.add('nonnull')
+
+        return f
+
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
+        from psyneulink.core.compositions.composition import Composition
+        is_comp = isinstance(self.agent_rep, Composition)
+
+        fun = ctx.get_llvm_function(function)
+        fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
+        fun_out = builder.alloca(fun.args[3].type.pointee)
+
+        args = [params, context, fun_in, fun_out]
+        if is_comp:
+            args += builder.function.args[-3:]
+        builder.call(fun, args)
+
+        return fun_out, builder
+
+    def _gen_llvm_output_state_parse_variable(self, ctx, builder, params, context, value, state):
+        i = self.output_states.index(state)
+        os_input = builder.alloca(pnlvm.ir.ArrayType(ctx.float_ty, 1))
+        val_ptr = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+        dest_ptr = builder.gep(os_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        builder.store(builder.load(val_ptr), dest_ptr)
+        return os_input
+
+    def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
+        """Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
+        specified `control_allocation <ControlMechanism.control_allocation>`.
+
+        Called by `evaluate <Composition.evaluate>` method of `Composition` when it is assigned as `agent_rep
+        <OptimizationControlMechanism.agent_rep>`.
+        """
+
+        value = [np.atleast_1d(a) for a in control_allocation]
+        self.parameters.value._set(value, execution_id)
+        self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
+                                   context=ContextFlags.COMPOSITION)
+
+    # @property
+    # def feature_values(self):
+    #     if hasattr(self.agent_rep, 'model_based_optimizer') and self.agent_rep.model_based_optimizer is self:
+    #         return self.agent_rep._get_predicted_input()
+    #     else:
+    #         return np.array(np.array(self.variable[1:]).tolist())
+
+    # FIX: THE FOLLOWING SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
+    # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values
+
+    @tc.typecheck
     def add_features(self, features):
-        '''Add InputStates and Projections to ModelFreeOptimizationControlMechanism for features used to
+        """Add InputStates and Projections to OptimizationControlMechanism for features used to
         predict `net_outcome <ControlMechanism.net_outcome>`
 
         **features** argument can use any of the forms of specification allowed for InputState(s)
-        '''
+        """
 
         if features:
             features = self._parse_feature_specs(features=features,
@@ -1026,7 +1263,11 @@ class OptimizationControlMechanism(ControlMechanism):
             spec = _parse_state_spec(owner=self, state_type=InputState, state_spec=spec)    # returns InputState dict
             spec[PARAMS][INTERNAL_ONLY] = True
             if feature_function:
-                spec.update({FUNCTION: feature_function})
+                if isinstance(feature_function, Function):
+                    feat_fct = copy.deepcopy(feature_function)
+                else:
+                    feat_fct = feature_function
+                spec.update({FUNCTION: feat_fct})
             spec = [spec]   # so that extend works below
 
             parsed_features.extend(spec)
@@ -1035,7 +1276,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @property
     def control_allocation_search_space(self):
-        '''Return list of SampleIterators for allocation_samples of control_signals'''
+        """Return list of SampleIterators for allocation_samples of control_signals"""
         return [c.allocation_samples for c in self.control_signals]
 
     # ******************************************************************************************************************
@@ -1043,7 +1284,7 @@ class OptimizationControlMechanism(ControlMechanism):
     # ******************************************************************************************************************
 
     def _initialize_composition_function_approximator(self):
-        '''Initialize CompositionFunctionApproximator'''
+        """Initialize CompositionFunctionApproximator"""
 
         # CompositionFunctionApproximator needs to have access to control_signals to:
         # - to construct control_allocation_search_space from their allocation_samples attributes
@@ -1059,6 +1300,7 @@ class OptimizationControlMechanism(ControlMechanism):
             super()._dependent_components,
             [self._objective_mechanism] if self.objective_mechanism else [],
             [self.agent_rep] if isinstance(self.agent_rep, CompositionFunctionApproximator) else [],
+            [self.feature_function] if isinstance(self.feature_function, Function_Base) else [],
             [self.search_function] if isinstance(self.search_function, Function_Base) else [],
             [self.search_termination_function] if isinstance(self.search_termination_function, Function_Base) else [],
         ))

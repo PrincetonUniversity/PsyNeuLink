@@ -8,11 +8,11 @@
 #
 # ********************************************  Keywords ***************************************************************
 
-'''
+"""
 This module provides the string keywords used throughout psyneulink
 
 https://princetonuniversity.github.io/PsyNeuLink/Keywords.html
-'''
+"""
 
 # **********************************************************************************************************************
 # ******************************************    CLASSES    *************************************************************
@@ -25,27 +25,26 @@ https://princetonuniversity.github.io/PsyNeuLink/Keywords.html
 
 __all__ = [
     'ACCUMULATOR_INTEGRATOR', 'ACCUMULATOR_INTEGRATOR_FUNCTION',
-    'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM', 'AFTER',
-    'ALL', 'ALLOCATION_SAMPLES', 'ANGLE', 'ARGUMENT_THERAPY_FUNCTION', 'ASSERT', 'ASSIGN', 'ASSIGN_VALUE',
-    'AUTO','AUTO_ASSIGN_MATRIX', 'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
-    'BACKPROPAGATION_FUNCTION', 'BEFORE', 'BETA', 'BIAS', 'BOLD', 'BUFFER_FUNCTION', 'CHANGED', 'CLAMP_INPUT',
+    'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM', 'AFTER', 'ALL', 'ALLOCATION_SAMPLES', 'ANGLE',
+    'ARGUMENT_THERAPY_FUNCTION', 'ARRANGEMENT', 'ASSERT', 'ASSIGN', 'ASSIGN_VALUE', 'AUTO','AUTO_ASSIGN_MATRIX',
+    'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
+    'BACKPROPAGATION_FUNCTION', 'BEFORE', 'BETA', 'BIAS', 'BOLD', 'BOUNDS', 'BUFFER_FUNCTION', 'CHANGED', 'CLAMP_INPUT',
     'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION', 'COMBINE_OUTCOME_AND_COST_FUNCTION',
     'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT', 'COMPONENT_INIT',
     'COMPOSITION', 'COMPOSITION_INTERFACE_MECHANISM',
-    'CONDITION', 'CONSTANT', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM',
-    'CONTROL_PROJECTION', 'CONTROL_PROJECTION_PARAMS', 'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL',
-    'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION',
-    'COSINE', 'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY',
+    'CONCATENATE_FUNCTION', 'CONDITION', 'CONDITIONS', 'CONSTANT', 'ContentAddressableMemory_FUNCTION',
+    'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM', 'CONTROL_PROJECTION', 'CONTROL_PROJECTION_PARAMS',
+    'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL', 'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS',
+    'CONTROLLER', 'CORRELATION', 'COSINE', 'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY',
     'CURRENT_EXECUTION_COUNT', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
     'DDM_MECHANISM', 'DECAY', 'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_MATRIX',
     'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SYSTEM',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION',
     'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION', 'DIST_FUNCTION_TYPE', 'DIST_MEAN',
-    'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE',
-    'DIVISION', 'ContentAddressableMemory_FUNCTION', 'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION',
-    'EID_SIMULATION', 'EID_FROZEN',
-    'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY', 'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN',
-    'EVC_MECHANISM', 'EVC_SIMULATION', 'EXAMPLE_FUNCTION_TYPE',
+    'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE', 'DIVISION',
+    'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION', 'DUAL_ADAPTIVE_INTEGRATOR_FUNCTION',
+    'EID_SIMULATION', 'EID_FROZEN', 'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY', 'ERROR_DERIVATIVE_FUNCTION',
+    'EUCLIDEAN', 'EVC_MECHANISM', 'EVC_SIMULATION', 'EXAMPLE_FUNCTION_TYPE',
     'EXECUTING', 'EXECUTION', 'EXECUTION_COUNT', 'EXECUTION_ID', 'EXECUTION_PHASE', 'EXECUTION_TIME',
     'EXPONENTIAL', 'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
     'FITZHUGHNAGUMO_INTEGRATOR_FUNCTION', 'FINAL', 'FLAGS', 'FULL', 'FULL_CONNECTIVITY_MATRIX',
@@ -75,19 +74,20 @@ __all__ = [
     'kwProcessExecute', 'kwProgressBarChar', 'kwProjectionComponentCategory', 'kwProjectionReceiver', 'kwProjections',
     'kwReceiverArg', 'kwSeparator', 'kwStateComponentCategory',
     'kwSystemComponentCategory', 'kwThreshold',
-    'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK',
-    'LEARNING', 'LEARNED_PARAM', 'LEARNED_PROJECTION', 'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM',
-    'LEARNING_PROJECTION', 'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
+    'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNING', 'LEARNED_PARAM',
+    'LEARNED_PROJECTION', 'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION',
+    'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
     'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION', 'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES',
     'LOGISTIC_FUNCTION', 'LOW', 'LVOC_CONTROL_MECHANISM', 'L0', 'L1',
     'MAKE_DEFAULT_GATING_MECHANISM', 'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS','MatrixKeywords',
     'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_ABS_DIFF', 'MAX_INDICATOR', 'MAX_VAL', 'MECHANISM', 'METRIC', 'NodeRoles',
-    'MECHANISM_VALUE', 'MIN_VAL', 'MODULATION', 'MODULATORY_PROJECTION', 'MODULATORY_SIGNAL', 'MODULATORY_MECHANISM',
+    'MECHANISM_VALUE', 'MIN_VAL', 'MODE',
+    'MODULATES','MODULATION', 'MODULATORY_PROJECTION', 'MODULATORY_SIGNAL', 'MODULATORY_SIGNALS', 'MODULATORY_MECHANISM',
     'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MONITOR_FOR_MODULATION', 'MUTUAL_ENTROPY',
     'NAME', 'NEWEST', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY',
     'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
-    'OFF', 'OFFSET', 'OLDEST', 'ON', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'ORIGIN',
+    'OFF', 'OFFSET', 'OLDEST', 'ON', 'ONLINE', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'ORIGIN',
     'ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION', 'OUTCOME',
     'OUTPUT', 'OUTCOME_FUNCTION', 'OUTPUT_LABELS_DICT', 'OUTPUT_MEAN',
     'OUTPUT_MEDIAN', 'OUTPUT_STD_DEV', 'OUTPUT_STATE', 'OUTPUT_STATE_PARAMS', 'output_state_spec_to_parameter_name',
@@ -98,16 +98,17 @@ __all__ = [
     'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PREVIOUS_VALUE', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
     'PROCESS', 'PROCESSING', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING_MECHANISM', 'PRODUCT',
     'PROJECTION', 'PROJECTION_DIRECTION', 'PROJECTION_PARAMS', 'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS',
-    'QUOTIENT', 'RANDOM', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'RECEIVER', 'RECURRENT_TRANSFER_MECHANISM',
-    'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'REINITIALIZE', 'RELU_FUNCTION', 'REST', 'RESULT', 'RESULTS', 'ROLES',
-    'RL_FUNCTION', 'RUN', 'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER',
+    'QUOTIENT', 'RANDOM', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'REARRANGE_FUNCTION', 'RECEIVER',
+    'RECURRENT_TRANSFER_MECHANISM', 'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'REINITIALIZE', 'REINITIALIZE_WHEN',
+    'RELU_FUNCTION', 'REST', 'RESULT', 'RESULTS', 'ROLES', 'RL_FUNCTION', 'RUN',
+    'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER',
     'SEPARATOR_BAR', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP',
     'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION', 'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES',
-    'STATE', 'STATE_CONTEXT', 'STATE_NAME', 'STATE_PARAMS', 'STATE_PREFS',
-    'STATE_TYPE', 'STATE_VALUE', 'STATES', 'SUBTRACTION', 'SUM', 'SYSTEM', 'SYSTEM_DEFAULT_CONTROLLER',
-    'SYSTEM_INIT', 'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM',
-    'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRIAL', 'TRIALS_DIM', 'UNCHANGED', 'UNIFORM_DIST_FUNCTION',
-    'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS', 'DUAL_ADAPTIVE_INTEGRATOR_FUNCTION',
+    'STATE', 'STATE_CONTEXT', 'STATE_NAME', 'STATE_PARAMS', 'STATE_PREFS', 'STATE_TYPE', 'STATE_VALUE', 'STATES',
+    'SUBTRACTION', 'SUM', 'SYSTEM', 'SYSTEM_DEFAULT_CONTROLLER', 'SYSTEM_INIT',
+    'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE',
+    'TIME_STEPS_DIM', 'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRIAL', 'TRIALS_DIM',
+    'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS',
     'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE',
     'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0'
 ]
@@ -152,7 +153,7 @@ class NodeRoles:
         have only one `TERMINAL` Mechanism, but a System may have many.  Note that the `TERMINAL`
         Mechanism of a process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
         as it may send projections to other processes in the System (see `example
-        <LearningProjection_Target_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
+        <LearningProjection_Output_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
         its :keyword:`terminalMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For
         additional details about `TERMINAL` Mechanisms in Processes, see `Process_Mechanisms` and
         `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
@@ -220,6 +221,7 @@ class MatrixKeywords:
         # self.MATRIX = MATRIX
         self.IDENTITY_MATRIX = IDENTITY_MATRIX
         self.HOLLOW_MATRIX = HOLLOW_MATRIX
+        self.INVERSE_HOLLOW_MATRIX = INVERSE_HOLLOW_MATRIX
         self.FULL_CONNECTIVITY_MATRIX = FULL_CONNECTIVITY_MATRIX
         self.RANDOM_CONNECTIVITY_MATRIX = RANDOM_CONNECTIVITY_MATRIX
         self.AUTO_ASSIGN_MATRIX = AUTO_ASSIGN_MATRIX
@@ -238,6 +240,7 @@ class MatrixKeywords:
 MATRIX = "matrix"
 IDENTITY_MATRIX = "IdentityMatrix"
 HOLLOW_MATRIX = "HollowMatrix"
+INVERSE_HOLLOW_MATRIX = "InverseHollowMatrix"
 FULL_CONNECTIVITY_MATRIX = "FullConnectivityMatrix"
 RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
 AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
@@ -394,6 +397,7 @@ COUNT = 'COUNT'
 BOLD = 'bold'
 BEFORE = 'before'
 AFTER = 'after'
+ONLINE = 'online'
 INPUT = 'input'
 OUTPUT = 'output'
 RANDOM =  'random'
@@ -596,6 +600,8 @@ PROCESSING_MECHANISM = "ProcessingMechanism"
 ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"
 USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
 REDUCE_FUNCTION = "Reduce Function"
+CONCATENATE_FUNCTION = "Concatenate Function"
+REARRANGE_FUNCTION = 'Rearrange Function'
 LINEAR_COMBINATION_FUNCTION = "LinearCombination Function"
 PREDICTION_ERROR_DELTA_FUNCTION = "PredictionErrorDelta Function"
 COMBINE_MEANS_FUNCTION = "CombineMeans Function"
@@ -651,7 +657,7 @@ DISTANCE_FUNCTION = 'Distance Function'
 
 #endregion
 
-#region ----------------------------------------------    SYSTEM   ----------------------------------------------------
+#region ---------------------------------------    SYSTEM / COMPOSITION   ----------------------------------------------
 
 SYSTEM = "System"
 SCHEDULER = "scheduler"
@@ -664,6 +670,7 @@ RUN = 'run'
 TRIAL = 'trial'
 
 ROLES = 'roles'
+CONDITIONS = 'conditions'
 VALUES = 'values'
 FUNCTIONS = 'functions'
 
@@ -787,6 +794,7 @@ LEARNED_PARAM = 'learned_param'
 LEARNED_PROJECTION = 'learned_projection'
 
 # ControlMechanism / EVCControlMechanism / ObjectiveMechanism
+SIMULATIONS = 'simulations'
 OBJECTIVE_MECHANISM = "objective_mechanism"
 OUTCOME = 'OUTCOME'
 MONITOR_FOR_CONTROL = "monitor_for_control"
@@ -795,10 +803,13 @@ PREDICTION_MECHANISMS = "prediction_mechanisms"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
+
+MODULATORY_SIGNALS = 'modulatory_signals'
 CONTROL_SIGNALS = 'control_signals'
 CONTROL_SIGNAL_SPECS = 'CONTROL_SIGNAL_SPECS'
 CONTROLLED_PARAMS = 'CONTROLLED_PARAMS'
 CONTROL_PROJECTIONS = 'ControlProjections'
+GATING_SIGNALS = 'gating_signals'
 OUTCOME_FUNCTION = 'outcome_function'
 COST_FUNCTION = 'cost_function'
 COMBINE_OUTCOME_AND_COST_FUNCTION = 'combine_outcome_and_cost_function'
@@ -833,6 +844,7 @@ STATE = "State"
 STATE_TYPE = "state_type"
 # These are used as keys in State specification dictionaries
 STATES = "STATES"
+MODULATES = "modulates"
 PROJECTIONS = "projections"  # Used to specify projection list to State DEPRECATED;  REPLACED BY CONNECTIONS
 CONNECTIONS = 'CONNECTIONS'
 STATE_NAME = "StateName"
@@ -895,29 +907,23 @@ HETERO = 'hetero'
 #region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
 
-FUNCTION_OUTPUT_TYPE = 'output_type'
+# General ------------------------------------------------
 
-COMBINE = 'combine'
-SUM = 'sum'
-DIFFERENCE = DIFFERENCE # Defined above for DISTANCE_METRICS
-PRODUCT = 'product'
-QUOTIENT = 'quotient'
-SUBTRACTION = 'subtraction'
-DIVISION = 'division'
-SCALAR = 'scalar'
-VECTOR = 'vector'
-
+FUNCTION_PARAMETER_PREFIX = 'func_'
 CUSTOM_FUNCTION = 'custom_function'
+FUNCTION_OUTPUT_TYPE = 'output_type'
+OUTPUT_TYPE = 'output'
+OVERWRITE = 'overwrite'
+REINITIALIZE = "reinitialize"
+REINITIALIZE_WHEN = "reinitialize_when"
 
-GAIN = 'gain'
-BIAS = 'bias'
-X_0 = "x_0"
-LEAK = 'leak'
-SLOPE = 'slope'
-INTERCEPT = 'intercept'
-RATE = 'rate'
-SCALE = 'scale'
-NOISE = 'noise'
+LOW = 'low'
+HIGH = 'high'
+BOUNDS = 'bounds'
+MODE = 'mode'
+REST = "rest"
+
+# Function-specific ---------------------------------------
 
 STATEFUL_FUNCTION = 'stateful_function'
 INTEGRATOR_FUNCTION = 'integrator_function'
@@ -929,11 +935,35 @@ TIME_STEP_SIZE = 'time_step_size'
 DECAY = 'decay'
 INTEGRATOR_MODE_VALUE = "integrator_mode_value"
 INSTANTANEOUS_MODE_VALUE = "instantaenous_mode_value"
-REINITIALIZE = "reinitialize"
-REST = "rest"
+LINEAR = 'linear'
+CONSTANT = 'constant'
+SIMPLE = 'scaled'
+ADAPTIVE = 'adaptive'
+DIFFUSION = 'diffusion'
+EXPONENTIAL = 'exponential'
+GAUSSIAN = 'gaussian'
+SINUSOID = 'sinusoid'
 
-LOW = 'low'
-HIGH = 'high'
+COMBINE = 'combine'
+SUM = 'sum'
+DIFFERENCE = DIFFERENCE # Defined above for DISTANCE_METRICS
+PRODUCT = 'product'
+QUOTIENT = 'quotient'
+SUBTRACTION = 'subtraction'
+DIVISION = 'division'
+SCALAR = 'scalar'
+VECTOR = 'vector'
+ARRANGEMENT = 'arrangement'
+
+GAIN = 'gain'
+BIAS = 'bias'
+X_0 = "x_0"
+LEAK = 'leak'
+SLOPE = 'slope'
+INTERCEPT = 'intercept'
+RATE = 'rate'
+SCALE = 'scale'
+NOISE = 'noise'
 
 BETA = 'beta'
 
@@ -943,7 +973,6 @@ STANDARD_DEVIATION = 'standard_deviation'
 VARIANCE = 'variance'
 DIST_MEAN = 'mean'
 
-OUTPUT_TYPE = 'output'
 MAX_VAL = 'MAX_VAL'
 MAX_ABS_VAL = 'MAX_ABS_VAL'
 MAX_INDICATOR = 'MAX_INDICATOR'
@@ -964,21 +993,9 @@ WEIGHTS = "weights"
 EXPONENTS = "exponents"
 OPERATION = "operation"
 OFFSET = "offset"
-LINEAR = 'linear'
-CONSTANT = 'constant'
-SIMPLE = 'scaled'
-ADAPTIVE = 'adaptive'
-DIFFUSION = 'diffusion'
-EXPONENTIAL = 'exponential'
-GAUSSIAN = 'gaussian'
-SINUSOID = 'sinusoid'
 
 REWARD = 'reward'
 NETWORK = 'network'
 
-OVERWRITE = 'overwrite'
-
 GAMMA = 'gamma'
-
-FUNCTION_PARAMETER_PREFIX = 'func_'
 #endregion

@@ -21,7 +21,9 @@ import psyneulink.core.components.functions.transferfunctions
 
 @pytest.mark.model
 @pytest.mark.benchmark
-@pytest.mark.parametrize("reps", [1, 10, 100])
+@pytest.mark.parametrize("reps", [1,
+                                  pytest.param(10, marks=pytest.mark.stress),
+                                  pytest.param(100, marks=pytest.mark.stress)])
 @pytest.mark.parametrize("mode", ['Python',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.param('LLVMExec', marks=pytest.mark.llvm),
@@ -30,30 +32,26 @@ import psyneulink.core.components.functions.transferfunctions
                                   pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 
 def test_botvinick_model(benchmark, mode, reps):
-    if reps > 1 and not pytest.config.getoption("--stress"):
-        pytest.skip("not stressed")
-
     benchmark.group = "Botvinick (scale " + str(reps/100) + ")";
 
     # SET UP MECHANISMS ----------------------------------------------------------------------------------------------------
     # Linear input layer
     # colors: ('red', 'green'), words: ('RED','GREEN')
     colors_input_layer = pnl.TransferMechanism(size=3,
-                                               function=psyneulink.core.components.functions.transferfunctions.Linear,
+                                               function=psyneulink.core.components.Linear,
                                                name='COLORS_INPUT')
 
     words_input_layer = pnl.TransferMechanism(size=3,
-                                              function=psyneulink.core.components.functions.transferfunctions.Linear,
+                                              function=psyneulink.core.components.Linear,
                                               name='WORDS_INPUT')
 
     task_input_layer = pnl.TransferMechanism(size=2,
-                                             function=psyneulink.core.components.functions.transferfunctions.Linear,
+                                             function=psyneulink.core.components.Linear,
                                              name='TASK_INPUT')
 
     #   Task layer, tasks: ('name the color', 'read the word')
     task_layer = pnl.RecurrentTransferMechanism(size=2,
-                                                function=psyneulink.core.components.functions.transferfunctions
-                                                .Logistic(),
+                                                function=psyneulink.core.components.Logistic,
                                                 hetero=-2,
                                                 integrator_mode=True,
                                                 integration_rate=0.01,
@@ -62,14 +60,14 @@ def test_botvinick_model(benchmark, mode, reps):
     # Hidden layer
     # colors: ('red','green', 'neutral') words: ('RED','GREEN', 'NEUTRAL')
     colors_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
-                                                         function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=4.0),  # bias 4.0 is -4.0 in the paper see Docs for description
+                                                         function=psyneulink.core.components.Logistic(x_0=4.0),  # bias 4.0 is -4.0 in the paper see Docs for description
                                                          integrator_mode=True,
                                                          hetero=-2,
                                                          integration_rate=0.01,  # cohen-huston text says 0.01
                                                          name='COLORS_HIDDEN')
 
     words_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
-                                                        function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=4.0),
+                                                        function=psyneulink.core.components.Logistic(x_0=4.0),
                                                         integrator_mode=True,
                                                         hetero=-2,
                                                         integration_rate=0.01,
@@ -77,15 +75,14 @@ def test_botvinick_model(benchmark, mode, reps):
 
     #   Response layer, responses: ('red', 'green')
     response_layer = pnl.RecurrentTransferMechanism(size=2,
-                                                    function=psyneulink.core.components.functions.transferfunctions.Logistic(),
+                                                    function=psyneulink.core.components.Logistic,
                                                     hetero=-2.0,
                                                     integrator_mode=True,
                                                     integration_rate=0.01,
                                                     output_states = [pnl.RECURRENT_OUTPUT.RESULT,
                                                                      {pnl.NAME: 'DECISION_ENERGY',
                                                                       pnl.VARIABLE: (pnl.OWNER_VALUE,0),
-                                                                      pnl.FUNCTION: psyneulink.core.components
-                                                    .functions.objectivefunctions.Stability(
+                                                                      pnl.FUNCTION: psyneulink.core.components.Stability(
                                                                           default_variable = np.array([0.0, 0.0]),
                                                                           metric = pnl.ENERGY,
                                                                           matrix = np.array([[0.0, -4.0],
@@ -189,29 +186,25 @@ def test_botvinick_model(benchmark, mode, reps):
     # should be 500 and 1000
     ntrials0 = 5 * reps
     ntrials = 10 * reps
-    comp._analyze_graph()
 
     def run(bin_execute):
         results = []
-        for stim in Stimulus:
-        # RUN the SYSTEM to initialize ----------------------------------------------------------------------------------------
-            comp.run(inputs=stim[0], num_trials=ntrials0, bin_execute=bin_execute)
-            comp.run(inputs=stim[1], num_trials=ntrials, bin_execute=bin_execute)
-            # reinitialize after condition was run
-            colors_hidden_layer.reinitialize([[0, 0, 0]], execution_context=comp)
-            words_hidden_layer.reinitialize([[0, 0, 0]], execution_context=comp)
-            response_layer.reinitialize([[0, 0]], execution_context=comp)
-            task_layer.reinitialize([[0, 0]], execution_context=comp)
+        for i, stim in enumerate(Stimulus):
+            # RUN the COMPOSITION to initialize --------------------------------
+            exec_id = "exec_" + str(i)
+            comp.run(inputs=stim[0], num_trials=ntrials0, bin_execute=bin_execute, execution_id=exec_id)
+            comp.run(inputs=stim[1], num_trials=ntrials, bin_execute=bin_execute, execution_id=exec_id)
+
             # Comp results include concatenation of both the above runs
-            results.append(comp.results.copy())
-            comp.reinitialize()
-            comp.results = []
+            results.append(comp.results)
 
         return results
 
-    res = benchmark(run, mode)
+    res = run(mode)
     if reps == 1:
         res2d = [x[0] for r in res for x in r]
+        # NOTE: The formatting below provides visual split between
+        #       initialization and runs. Please do not change it.
         assert np.allclose(res2d, [[0.4976852381289525, 0.4976852381289525],
                                    [0.4954107346393883, 0.4954107346393883],
                                    [0.493176053709877,  0.493176053709877],
@@ -257,18 +250,14 @@ def test_botvinick_model(benchmark, mode, reps):
 [0.47295220059350046, 0.47292157830414155],
 [0.471134223287054, 0.47109543997470166],
 [0.4693517518439444, 0.4693037307956372]])
-        # FIXME: for some reason numpy adds another layer of array
-        if mode == 'Python':
-            res1d = [x[1][0] for r in res for x in r]
-        else:
-            res1d = [x[1] for r in res for x in r]
+        res1d = [x[1] for r in res for x in r]
         assert np.allclose(res1d, [[0.9907623850058885], [0.9817271839837536], [0.9728904798113899], [0.9642484126952278], [0.9557971810438632],
 [0.9475371212778005], [0.9394646472005338], [0.9315762316131724], [0.9238684065412114], [0.9163377633447616],
 [0.9089809527216751], [0.901794684612485],  [0.8947757280155361], [0.8879209107202126], [0.8812271189656683],
-[0.9907623850058885], [0.9817271839837536], [0.9728904798113899], [0.9642484126952278], [0.9557971810438632],
+                                   [0.9907623850058885], [0.9817271839837536], [0.9728904798113899], [0.9642484126952278], [0.9557971810438632],
 [0.9475371212816769], [0.9394646472360609], [0.9315762317580137], [0.9238684069513318], [0.9163377642853222],
 [0.9089809546004746], [0.9017946880160064], [0.894775733747658],  [0.8879209198436373], [0.8812271328461213],
-[0.9907623850058885], [0.9817271839837536], [0.9728904798113899], [0.9642484126952278], [0.9557971810438632],
+                                   [0.9907623850058885], [0.9817271839837536], [0.9728904798113899], [0.9642484126952278], [0.9557971810438632],
 [0.9475345468215851], [0.9394568532220963], [0.9315605030724186], [0.9238419591260757], [0.9162977442377989],
 [0.9089244414290619], [0.9017186938531998], [0.8946772046683807], [0.8877967368262162], [0.8810741127833248]])
     if reps == 10:
@@ -298,3 +287,4 @@ def test_botvinick_model(benchmark, mode, reps):
         assert np.allclose(res[2][ntrials0 - 1][1], [0.94524311])
         assert np.allclose(res[2][-1][1], [0.89963791])
 
+    benchmark(run, mode)

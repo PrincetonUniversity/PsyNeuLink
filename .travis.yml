@@ -15,45 +15,49 @@ branches:
 install:
   - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then pip install coveralls; fi
   - pip install git+https://github.com/benureau/leabra.git@master
+  # Travis bundles pytest 4.3.1 in Linux Xenial, new pytest-xdist
+  # requires pytest>=4.4.0, and the dependencies are broken
+  - pip install -U pytest
   - pip install -e .[dev]
 
 os: linux
 
 dist: xenial
 
-env: PYTHONWARNINGS="ignore::DeprecationWarning"
+env:
+  global:
+    - PYTHONWARNINGS="ignore::DeprecationWarning"
 
 # Cache installed python packages
 cache:
   pip
+
+addons:
+  apt:
+    packages:
+      - graphviz
 
 matrix:
   include:
   - os: osx
     python: 3.6
     language: minimal
-    env:
-        - PYTHON=3.6.8
+    env: PYTHON=3.6.8
     # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
-          - $HOME/Library/Caches
+          - $HOME/Library/Caches/Homebrew
+          - $HOME/Library/Caches/pip
 
   - os: osx
     python: 3.7
     language: minimal
-    env:
-        - PYTHON=3.7.2
-        - PYTHONWARNINGS="ignore::DeprecationWarning"
+    env: PYTHON=3.7.4
     # Cache installed python virtual env and homebrew downloads
     cache:
         directories:
-          - $HOME/Library/Caches
-
-addons:
-  apt:
-    packages:
-      - graphviz
+          - $HOME/Library/Caches/Homebrew
+          - $HOME/Library/Caches/pip
 
 before_install: |
   if [ "$TRAVIS_OS_NAME" == "osx" ]; then
@@ -66,21 +70,12 @@ before_install: |
 
     echo "Deploying new python venv"
     python3 -m pip --version
-
-    # This sidesteps TLSv1.1 issue when using pip
-    curl https://bootstrap.pypa.io/get-pip.py | python3
     python3 -m pip  install virtualenv
     python3 -m venv $HOME/venv
     source $HOME/venv/bin/activate
+
     python --version
-    # virtualenv installs default pip even if we updated it above.
-    # update it again.
-    curl https://bootstrap.pypa.io/get-pip.py | python
-
-    # setuptools also face the same TLS deprecation issue.
-    # Update them explicitly
-    python -m pip install -U setuptools setuptools-git setuptools-scm
-
+ 
     HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
   fi
   if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then
@@ -91,7 +86,7 @@ before_install: |
 
 
 script:
-  - python -m pytest -p no:logging $PYTEST_COV tests/
+  - python -m pytest -n auto --strict-markers -p no:logging $PYTEST_COV
 
 after_script:
   - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then coveralls; fi

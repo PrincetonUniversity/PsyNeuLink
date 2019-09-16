@@ -8,17 +8,17 @@
 #
 #
 # *******************************************   SAMPLER CLASSES ********************************************************
-'''
+"""
 
 * `SampleSpec`
 * `SampleIterator`
 
-'''
+"""
 
 import numpy as np
 
 import typecheck as tc
-from collections import Iterator
+from collections.abc import Iterator
 from inspect import isclass
 from decimal import Decimal, getcontext
 from numbers import Number
@@ -32,7 +32,7 @@ SAMPLE_SPEC_PRECISION = 16
 
 
 def _validate_function(source, function):
-    '''Ensure function specification is appropriate for SampleIterator'''
+    """Ensure function specification is appropriate for SampleIterator"""
     source_name = source.__class__.__name__
     try:
         result = function()
@@ -53,18 +53,19 @@ class SampleIteratorError(Exception):
 
 
 class SampleSpec():
-    '''
-    SampleSpec(    \
-    start=None,    \
-    stop=None,     \
-    step=None,     \
-    num=None,      \
-    function=None  \
-    precision=None \
+    """
+    SampleSpec(      \
+    start=None,      \
+    stop=None,       \
+    step=None,       \
+    num=None,        \
+    function=None    \
+    precision=None   \
+    custom_spec=None \
     )
 
-    Specify the information needed to create a SampleIterator that will either (a) generate discrete values in a range
-    or (b) call a function can generate continous values within the range.
+    Specify the information needed to create a SampleIterator that will either (1) generate discrete values in a range;
+    (2) call a function can generate continous values within the range; (3) pass a custom spec to SampleIterator
 
     (1) Generate values in a range by explicitly specifying a finite regular sequence of values, using an appropriate
         combination of the **start**, **stop**, **step** and/or **num**arguments.
@@ -92,6 +93,11 @@ class SampleSpec():
         * if **num** is not specified, the **function** is called once on each iteration, and iteration may continue
           indefintely.
 
+    (3) Specify a custom_spec, that is passed to SampleIterator unmodified.
+
+        * this is useful if the receiver of the SampleIterator uses a custom format or external functions to generate
+          samples;  the format must, of course, be one expected by the receiver.
+
     .. note::
         * Some OptimizationFunctions may require that their SampleIterators have a "num" attribute.
         * The Python decimal module is used to implement **precision** for rounding.
@@ -101,43 +107,47 @@ class SampleSpec():
     ---------
 
     start : int or float
-        First sample in the sequence
+        first sample in the sequence.
 
     stop : int or float
-        Maximum value of last sample in the sequence
+        maximum value of last sample in the sequence.
 
     step : int or float
-        Space between samples in sequence
+        space between samples in sequence.
 
     num :  int
-        Number of samples
+        number of samples.
 
     function : function or function class
-        Function to be called on each iteration. Must return one sample each time it is called.
+        function to be called on each iteration. Must return one sample each time it is called.
 
     precision : int default 16
-        Number of decimal places used for rounding in floating point operations.
+        number of decimal places used for rounding in floating point operations.
 
+    custom_spec : anything
 
     Attributes
     ----------
 
     start : float
-        First sample in the sequence
+        first sample in the sequence.
 
     stop : float
-        Maximum value of last sample in the sequence
+        maximum value of last sample in the sequence.
 
     step : float
-        Space between samples in sequence
+        space between samples in sequence.
 
     num :  int
-        Number of samples
+        number of samples.
 
     function : function
         Function to be called on each iteration. Must return one sample.
 
-    '''
+    custom_spec : anything
+        specification in a format recognized by receiver of SampleIterator.
+
+    """
 
     @tc.typecheck
     def __init__(self,
@@ -146,8 +156,17 @@ class SampleSpec():
                  step:tc.optional(tc.any(int, float))=None,
                  num:tc.optional(int)=None,
                  function:tc.optional(callable)=None,
-                 precision:tc.optional(int)=None
+                 precision:tc.optional(int)=None,
+                 custom_spec = None
                  ):
+
+        self.custom_spec = custom_spec
+
+        if self.custom_spec:
+            # Assumes receiver of SampleIterator will get this and know what to do with it,
+            #   therefore no other attributes are needed and, to avoid confusion, they should not be available;
+            #   so just assign and return.
+            return
 
         self._precision = precision or SAMPLE_SPEC_PRECISION
         # Save global precision for later restoration
@@ -198,7 +217,12 @@ class SampleSpec():
         getcontext().prec = _global_precision
 
 
-allowable_specs = (list, np.array, range, np.arange, callable, SampleSpec)
+allowable_specs = (tuple, list, np.array, range, np.arange, callable, SampleSpec)
+def is_sample_spec(spec):
+    if spec is None or type(spec) in allowable_specs:
+        return True
+    return False
+
 
 class SampleIterator(Iterator):
     """
@@ -241,8 +265,7 @@ class SampleIterator(Iterator):
     @tc.typecheck
     def __init__(self,
                  specification:tc.any(*allowable_specs)):
-                 # specification:tc.any(list, np.array, range, callable, SampleSpec)):
-        '''
+        """
 
         Arguments
         ---------
@@ -268,16 +291,21 @@ class SampleIterator(Iterator):
         current_step : int
             number of current iteration
 
+        specification :  list, np.array, range, np.arange, callable, SampleSpec
+            original argument provided in constructor;
+            useful for passing application-specific forms of specification directly to receiver of SampleIterator.
+
         Returns
         -------
 
         List(self) : list
-        '''
+        """
 
         # FIX: DEAL WITH head?? OR SIMPLY USE CURRENT_STEP?
         # FIX Are nparrays allowed? Below assumes one list dimension. How to handle nested arrays/lists?
+        self.specification = specification
 
-        if isinstance(specification, range):
+        if isinstance(specification, (tuple, range)):
             specification = list(specification)
 
         elif callable(specification):
@@ -298,6 +326,12 @@ class SampleIterator(Iterator):
                 return self.generator[self.current_step]
 
         elif isinstance(specification, SampleSpec):
+
+            if specification.custom_spec:
+                # Assumes receiver of SampleIterator will get this and know what to do with it,
+                #   therefore no other attributes are needed and, to avoid confusion, they should not be available;
+                #   so just return.
+                return
 
             if specification.function is None:
                 self.start = specification.start
@@ -334,7 +368,6 @@ class SampleIterator(Iterator):
                 assert False, 'PROGRAM ERROR: {} item of {} passed to specification arg of {} ' \
                               'is not an iterator or a function_type'.\
                               format(repr('function'), SampleSpec.__name__, self.__class__.__name__)
-
 
         else:
             assert False, 'PROGRAM ERROR: {} argument of {} must be one of the following: {}'.\
@@ -382,10 +415,10 @@ class SampleIterator(Iterator):
         return list(self)
 
     def reset(self, head=None):
-        '''Reset iterator to a specified item
+        """Reset iterator to a specified item
         If called with None, resets to first item (if `generator <SampleIterators.generator>` is a list or
         deterministic function.
-        '''
+        """
 
         self.current_step = 0
         self.head = head or self.start

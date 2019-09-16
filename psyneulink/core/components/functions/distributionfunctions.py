@@ -8,7 +8,7 @@
 #
 #
 # ****************************************   DISTRIBUTION FUNCTIONS   **************************************************
-'''
+"""
 
 * `NormalDist`
 * `UniformToNormalDist`
@@ -22,7 +22,7 @@ Overview
 
 Functions that return one or more samples from a distribution.
 
-'''
+"""
 from enum import IntEnum
 
 import numpy as np
@@ -168,14 +168,11 @@ class NormalDist(DistributionFunction):
                 raise FunctionError("The standard_deviation parameter ({}) of {} must be greater than zero.".
                                     format(target_set[STANDARD_DEVIATION], self.name))
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
                  context=None):
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         mean = self.get_current_function_param(DIST_MEAN, execution_id)
         standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, execution_id)
 
@@ -318,7 +315,7 @@ class UniformToNormalDist(DistributionFunction):
                          context=ContextFlags.CONSTRUCTOR)
 
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -328,9 +325,6 @@ class UniformToNormalDist(DistributionFunction):
             from scipy.special import erfinv
         except:
             raise FunctionError("The UniformToNormalDist function requires the SciPy package.")
-
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         mean = self.get_current_function_param(DIST_MEAN, execution_id)
         standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, execution_id)
@@ -436,13 +430,11 @@ class ExponentialDist(DistributionFunction):
                          context=ContextFlags.CONSTRUCTOR)
 
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
                  context=None):
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         beta = self.get_current_function_param(BETA, execution_id)
         result = np.random.exponential(beta)
@@ -556,13 +548,11 @@ class UniformDist(DistributionFunction):
                          context=ContextFlags.CONSTRUCTOR)
 
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
                  context=None):
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         low = self.get_current_function_param(LOW, execution_id)
         high = self.get_current_function_param(HIGH, execution_id)
@@ -684,13 +674,11 @@ class GammaDist(DistributionFunction):
                          context=ContextFlags.CONSTRUCTOR)
 
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
                  context=None):
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         scale = self.get_current_function_param(SCALE, execution_id)
         dist_shape = self.get_current_function_param(DIST_SHAPE, execution_id)
@@ -811,13 +799,11 @@ class WaldDist(DistributionFunction):
                          context=ContextFlags.CONSTRUCTOR)
 
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
                  context=None):
-        # Validate variable and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         scale = self.get_current_function_param(SCALE, execution_id)
         mean = self.get_current_function_param(DIST_MEAN, execution_id)
@@ -838,8 +824,8 @@ NON_DECISION_TIME = 't0'
 
 
 def _DriftDiffusionAnalytical_bias_getter(owning_component=None, execution_id=None):
-    starting_point = owning_component.parameters.starting_point.get(execution_id)
-    threshold = owning_component.parameters.threshold.get(execution_id)
+    starting_point = owning_component.parameters.starting_point._get(execution_id)
+    threshold = owning_component.parameters.threshold._get(execution_id)
     try:
         return (starting_point + threshold) / (2 * threshold)
     except TypeError:
@@ -1058,9 +1044,9 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     @property
     def shenhav_et_al_compat_mode(self):
         """
-        Get the whether the function is set to Shenhav et al. compatibility mode. This mode allows
+        Get whether the function is set to Shenhav et al. compatibility mode. This mode allows
         the analytic computations of mean error rate and reaction time to match exactly the
-        computations made in the MATLAB DDM code (Matlab/ddmSimFRG.m). These compatibility chages
+        computations made in the MATLAB DDM code (Matlab/ddmSimFRG.m). These compatibility changes
         should only effect edges cases that involve the following cases:
 
             - Floating point overflows and underflows are ignored when computing mean RT and mean ER
@@ -1078,7 +1064,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     @shenhav_et_al_compat_mode.setter
     def shenhav_et_al_compat_mode(self, value):
         """
-        Set the whether the function is set to Shenhav et al. compatibility mode. This mode allows
+        Set whether the function is set to Shenhav et al. compatibility mode. This mode allows
         the analytic computations of mean error rate and reaction time to match exactly the
         computations made in the MATLAB DDM code (Matlab/ddmSimFRG.m). These compatibility chages
         should only effect edges cases that involve the following cases:
@@ -1096,7 +1082,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         """
         self._shenhav_et_al_compat_mode = value
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1122,8 +1108,6 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         Decision variable, mean ER, mean RT : (float, float, float)
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         attentional_drift_rate = float(self.get_current_function_param(DRIFT_RATE, execution_id))
         stimulus_drift_rate = float(variable)
@@ -1228,7 +1212,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     def _compute_conditional_rt_moments(drift_rate, noise, threshold, starting_point, t0):
         """
         This is a helper function for computing the conditional decison time moments for the DDM.
-        It is based completely off of Matlab\DDMFunctions\ddm_metrics_cond_Mat.m.
+        It is based completely off of Matlab\\DDMFunctions\\ddm_metrics_cond_Mat.m.
 
         :param drift_rate: The drift rate of the DDM
         :param noise: The diffusion rate.

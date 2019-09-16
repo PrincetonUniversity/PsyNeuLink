@@ -126,7 +126,7 @@ Class Reference
 
 """
 
-from collections import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -368,8 +368,12 @@ class ComparatorMechanism(ObjectiveMechanism):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 **input_states # IMPLEMENTATION NOTE: this is for backward compatibility
+                 **kwargs
                  ):
+
+        input_states = kwargs.pop(INPUT_STATES, {})
+        if input_states:
+            input_states = {INPUT_STATES: input_states}
 
         input_states = self._merge_legacy_constructor_args(sample, target, default_variable, input_states)
 
@@ -389,17 +393,18 @@ class ComparatorMechanism(ObjectiveMechanism):
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
 
-        super().__init__(# monitor=[sample, target],
-                         monitor=input_states,
+        super().__init__(monitor=input_states,
                          function=function,
                          output_states=output_states.copy(), # prevent default from getting overwritten by later assign
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         # context=ContextFlags.CONSTRUCTOR,
+                         **kwargs
+                         )
 
         # Require Projection to TARGET InputState (already required for SAMPLE as primary InputState)
-        self.input_states[1].parameters.require_projection_in_composition.set(True, override=True)
+        self.input_states[1].parameters.require_projection_in_composition._set(True)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """If sample and target values are specified, validate that they are compatible

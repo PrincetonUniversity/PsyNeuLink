@@ -239,8 +239,8 @@ from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
-    COMMAND_LINE, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, \
-    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER
+    CONTEXT, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, \
+    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -265,7 +265,9 @@ class GatingSignal(ModulatorySignal):
     """
     GatingSignal(                                   \
         owner,                                      \
+        default_allocation=defaultGatingAllocation, \
         index=PRIMARY                               \
+        variable=defaultGatingAllocation            \
         function=Linear(),                          \
         modulation=ModulationParam.MULTIPLICATIVE,  \
         projections=None,                           \
@@ -307,6 +309,10 @@ class GatingSignal(ModulatorySignal):
     owner : GatingMechanism
         specifies the `GatingMechanism` to which to assign the GatingSignal.
 
+    default_allocation : scalar, list or np.ndarray : defaultGatingAllocation
+        specifies the template and default value used for `allocation <GatingSignal.allocation>`;  must match the
+        shape of each item specified in `allocation_samples <GatingSignal.allocation_samples>`.
+
     index : int : default PRIMARY
         specifies the item of the owner GatingMechanism's `gating_allocation <GatingMechanism.gating_allocation>` used as the
         GatingSignal's `value <GatingSignal.value>`.
@@ -320,7 +326,7 @@ class GatingSignal(ModulatorySignal):
         `value <State_Base.value>` of the State(s) to which the GatingSignal's
         `GatingProjection(s) <GatingProjection>` project.
 
-    projections : list of Projection specifications
+    modulates : list of Projection specifications
         specifies the `GatingProjection(s) <GatingProjection>` to be assigned to the GatingSignal, and that will be
         listed in its `efferents <GatingSignal.efferents>` attribute (see `GatingSignal_Projections` for additional
         details).
@@ -344,8 +350,12 @@ class GatingSignal(ModulatorySignal):
     owner : GatingMechanism
         the `GatingMechanism` to which the GatingSignal belongs.
 
-    variable : number, list or np.ndarray
-        used by `function <GatingSignal.function>` to compute the GatingSignal's `value <GatingSignal.value>`.
+    variable : scalar, list or np.ndarray
+        same as `allocation <GatingSignal.allocation>`.
+
+    allocation : float : default: defaultGatingAllocation
+        value assigned by the GatingSignal's `owner <GatingSignal.owner>`, and used by the GatingSignal's `function
+        <GatingSignal.function>` to determine its `GatingSignal.intensity`.
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         provides the GatingSignal's `value <GatingMechanism.value>`; the default is an identity function that
@@ -437,11 +447,11 @@ class GatingSignal(ModulatorySignal):
                     see `allocation_samples <ControlSignal.allocation_samples>`
 
         """
-        variable = Parameter(np.array(defaultGatingAllocation),
+        variable = Parameter(np.array([defaultGatingAllocation]),
                              aliases='allocation',
                              getter=_output_state_variable_getter)
-        value = Parameter(np.array(defaultGatingAllocation), read_only=True, aliases=['intensity'])
-        allocation_samples = Parameter(np.arange(0.1, 1.01, 0.3), modulable=True)
+        value = Parameter(np.array([defaultGatingAllocation]), read_only=True, aliases=['intensity'])
+        allocation_samples = Parameter(None, modulable=True)
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -454,27 +464,18 @@ class GatingSignal(ModulatorySignal):
     def __init__(self,
                  owner=None,
                  reference_value=None,
-                 variable=None,
+                 default_allocation=defaultGatingAllocation,
                  size=None,
                  index=None,
                  assign=None,
                  function=Linear(),
                  modulation:tc.optional(_is_modulation_param)=None,
-                 projections=None,
+                 modulates=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 **kwargs):
 
-        if context is None:
-            context = ContextFlags.COMMAND_LINE
-            self.context.source = ContextFlags.COMMAND_LINE
-        else:
-            context = ContextFlags.CONSTRUCTOR
-            self.context.source = ContextFlags.CONSTRUCTOR
-
-        # Note: assign is not currently used by GatingSignal;
-        #       it is included here for consistency with OutputState and possible use by subclasses.
         if index is None and owner is not None:
             allocation = owner.gating_allocation
             if len(allocation)==1:
@@ -494,18 +495,17 @@ class GatingSignal(ModulatorySignal):
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(owner=owner,
                          reference_value=reference_value,
-                         variable=variable,
+                         default_allocation=default_allocation,
                          size=size,
                          modulation=modulation,
                          index=index,
                          assign=assign,
-                         projections=projections,
+                         modulates=modulates,
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
                          function=function,
-                         )
+                         **kwargs)
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
             """Get connections specified in a ParameterState specification tuple

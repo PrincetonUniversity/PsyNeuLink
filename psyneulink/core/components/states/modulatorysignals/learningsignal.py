@@ -177,7 +177,9 @@ from psyneulink.core.components.states.modulatorysignals.modulatorysignal import
 from psyneulink.core.components.states.outputstate import PRIMARY
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import COMMAND_LINE, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER
+from psyneulink.core.globals.keywords import \
+    CONTEXT, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_STATE_PARAMS, \
+    PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -261,7 +263,7 @@ class LearningSignal(ModulatorySignal):
         parameters for the LearningSignal and/or a custom function and its parameters. Values specified for
         parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    projections : list of Projection specifications
+    modulates : list of Projection specifications
         specifies the `LearningProjection(s) <GatingProjection>` to be assigned to the LearningSignal, and that will be
         listed in its `efferents <LearningSignal.efferents>` attribute (see `LearningSignal_Projections` for additional
         details).
@@ -387,18 +389,11 @@ class LearningSignal(ModulatorySignal):
                  function=Linear(),
                  learning_rate: tc.optional(parameter_spec) = None,
                  modulation:tc.optional(_is_modulation_param)=None,
-                 projections=None,
+                 modulates=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
-
-        if context is None:
-            context = ContextFlags.COMMAND_LINE
-            self.context.source = ContextFlags.COMMAND_LINE
-        else:
-            context = ContextFlags.CONSTRUCTOR
-            self.context.source = ContextFlags.CONSTRUCTOR
+                 **kwargs):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
@@ -418,13 +413,12 @@ class LearningSignal(ModulatorySignal):
                          modulation=modulation,
                          index=index,
                          assign=None,
-                         projections=projections,
+                         function=function,
+                         modulates=modulates,
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context,
-                         function=function,
-                         )
+                         **kwargs)
 
     def _get_primary_state(self, projection):
         return projection.parameter_state

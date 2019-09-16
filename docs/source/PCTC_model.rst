@@ -121,4 +121,4 @@ The activations of all units are updated on each time step until one of the resp
 which is set to 0.7. The `log` function is used to record the output values of the two hidden layers, the task layer,
 and the response layer. These values are used to produce the plot of the Figure.
 
-Script: :download:`Download Kalanthroff_PCTC_2018.py <../../Scripts/Models/Kalanthroff_PCTC_2018.py>`
+Script: :download:`Download Kalanthroff_PCTC_2018.py <../../psyneulink/library/models/Kalanthroff_PCTC_2018.py>`

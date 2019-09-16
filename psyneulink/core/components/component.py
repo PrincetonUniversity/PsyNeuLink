@@ -99,7 +99,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
         my_component = SomeComponent(function=SomeFunction)
 
       This will create a default instance of the specified subclass, using default values for its parameters.
-    |
+
     * **Function** - this can be either an existing `Function <Function>` object or the constructor for one, as in the
       following examples::
 
@@ -163,9 +163,11 @@ user once the component is constructed, with the one exception of `prefs <Compon
 * **reinitialize_when** - the `reinitialize_when <Component.reinitialize_when>` attribute contains a `Condition`. When
   this condition is satisfied, the Component calls its `reinitialize <Component.reinitialize>` method. The
   `reinitialize <Component.reinitialize>` method is executed without arguments, meaning that the relevant function's
-  `initializer<IntegratorFunction.initializer>` attribute (or equivalent -- initialization attributes vary among functions) is
-  used for reinitialization. Keep in mind that the `reinitialize <Component.reinitialize>` method and `reinitialize_when
-  <Component.reinitialize_when>` attribute only exist on stateful Mechanisms.
+  `initializer<IntegratorFunction.initializer>` attribute (or equivalent -- initialization attributes vary among
+  functions) is used for reinitialization. Keep in mind that the `reinitialize <Component.reinitialize>` method and
+  `reinitialize_when <Component.reinitialize_when>` attribute only exist for Mechanisms that have `stateful
+  <Parameter.stateful>` Parameters, or that have a `function <Mechanism.function>` with `stateful <Parameter.stateful>`
+  Parameters.
 
   .. note::
 
@@ -407,7 +409,8 @@ import types
 import warnings
 
 from abc import ABCMeta
-from collections import Iterable, OrderedDict, UserDict
+from collections.abc import Iterable
+from collections import OrderedDict, UserDict
 from enum import Enum, IntEnum
 
 import numpy as np
@@ -415,7 +418,11 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context, ContextFlags, _get_time
-from psyneulink.core.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+from psyneulink.core.globals.keywords import \
+    COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, \
+    FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, \
+    LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, \
+    PARAMS, PARAMS_CURRENT, PREFS_ARG, REINITIALIZE_WHEN, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
@@ -617,7 +624,7 @@ def make_parameter_property(name):
             # would refer to class parameters before an instance of Parameters is created for self
             return getattr(self, backing_field)
         else:
-            return getattr(self.parameters, name).get(self.most_recent_execution_context)
+            return getattr(self.parameters, name)._get(self.most_recent_execution_id)
 
     def setter(self, value):
         if not _parameters_belongs_to_obj(self):
@@ -625,7 +632,7 @@ def make_parameter_property(name):
             setattr(self, backing_field, value)
         else:
             # stack level 3 instead of normal 2 to properly show source when setting using dot notation
-            getattr(self.parameters, name).set(value, self.most_recent_execution_context, _ro_warning_stacklevel=3)
+            getattr(self.parameters, name)._set(value, self.most_recent_execution_id, _ro_warning_stacklevel=3)
 
     return property(getter).setter(setter)
 
@@ -638,7 +645,7 @@ def _has_initializers_setter(value, owning_component=None, execution_id=None):
         # only update owner's attribute if setting to True, because there may be
         # other children that have initializers
         try:
-            owning_component.owner.parameters.has_initializers.set(value, execution_id)
+            owning_component.owner.parameters.has_initializers._set(value, execution_id)
         except AttributeError:
             # no owner
             pass
@@ -761,7 +768,6 @@ class Component(object, metaclass=ComponentsMeta):
         if self.prev_context == context:
             return
 
-
     Class methods:
         - _handle_size(size, variable)
         - _validate_variable(variable)
@@ -850,6 +856,8 @@ class Component(object, metaclass=ComponentsMeta):
     componentCategory = None
     componentType = None
 
+    standard_constructor_args = [REINITIALIZE_WHEN]
+
     class Parameters(ParametersBase):
         """
             The `Parameters` that are associated with all `Components`
@@ -923,13 +931,11 @@ class Component(object, metaclass=ComponentsMeta):
 
     _deepcopy_shared_keys = frozenset([
         'init_args',
-        '_Component__llvm_function',
-        '_Component__llvm_bin_function',
     ])
 
     class _CompilationData(ParametersBase):
         parameter_struct = None
-        context_struct = None
+        state_struct = None
 
     def __init__(self,
                  default_variable,
@@ -937,7 +943,8 @@ class Component(object, metaclass=ComponentsMeta):
                  size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
                  function=None,
                  name=None,
-                 prefs=None):
+                 prefs=None,
+                 **kwargs):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
 
         Initialization arguments:
@@ -948,61 +955,29 @@ class Component(object, metaclass=ComponentsMeta):
 
         """
 
-        # # MODIFIED 8/14/16 NEW:
-        # # PROBLEM: variable has different name for different classes;  need to standardize name across classes
-        # try:
-        #     if self.initialization_status is ContextFlags.DEFERRED_INITIALIZATION:
-        #         defer_init = True
-        # except AttributeError:
-        #     pass
-        # else:
-        #     if defer_init:
-        #         self.init_args = locals().copy()
-        #         del self.init_args['self']
-        #         # del self.init_args['__class__']
-        #         return
-        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
+        illegal_args = [arg for arg in kwargs.keys() if arg not in self.standard_constructor_args]
+        if illegal_args:
+            plural = ''
+            if len(illegal_args)>1:
+                plural = 's'
+            raise ComponentError(f"Unrecognized argument{plural} in constructor for {self.name} "
+                                 f"(type: {self.__class__.__name__}): {repr(', '.join(illegal_args))}")
 
         context = ContextFlags.COMPONENT
 
-        # assign defaults based on pass in params and class defaults
-        defaults = self.class_defaults.values(show_all=True).copy()
         try:
             function_params = param_defaults[FUNCTION_PARAMS]
         except KeyError:
             function_params = None
 
-        if param_defaults is not None:
-            # Exclude any function_params from the items to set on this Component
-            # because these should just be pointers to the parameters of the same
-            # name on this Component's function
-            # Exclude any pass parameters whose value is None (assume this means "use the normal default")
-            d = {
-                k: v for (k, v) in param_defaults.items()
-                if (
-                    k not in defaults
-                    or (
-                        (function_params is None or k not in function_params)
-                        and v is not None
-                    )
-                )
-            }
-            for p in d:
-                try:
-                    getattr(self.parameters, p)._user_specified = True
-                except AttributeError:
-                    pass
-            defaults.update(d)
+        self._initialize_parameters(**param_defaults)
 
         v = self._handle_default_variable(default_variable, size)
         if v is None:
-            default_variable = defaults[VARIABLE]
+            default_variable = self.defaults.variable
         else:
             default_variable = v
-            defaults[VARIABLE] = default_variable
-
-        self.defaults = Defaults(owner=self, **defaults)
-        self._initialize_parameters()
+            self.defaults.variable = default_variable
 
         self._assign_context_values(
             None,
@@ -1011,7 +986,7 @@ class Component(object, metaclass=ComponentsMeta):
             execution_phase=None,
         )
 
-        context_param_value = self.parameters.context.get()
+        context_param_value = self.parameters.context._get()
         if not context_param_value.source:
             context_param_value.source = ContextFlags.COMPONENT
         context_param_value.string = "{}: {} {}".format(COMPONENT_INIT, INITIALIZING, self.name)
@@ -1020,7 +995,11 @@ class Component(object, metaclass=ComponentsMeta):
         self.paramInstanceDefaults = {}
 
         self.has_initializers = False
-        self.reinitialize_when = Never()
+
+        if kwargs and REINITIALIZE_WHEN in kwargs:
+            self.reinitialize_when = kwargs[REINITIALIZE_WHEN]
+        else:
+            self.reinitialize_when = Never()
 
         self._role = None
 
@@ -1166,54 +1145,24 @@ class Component(object, metaclass=ComponentsMeta):
             self.function.context.initialization_status = ContextFlags.INITIALIZED
         # MODIFIED 12/4/18 END
 
-        self.__llvm_function = None
-        self.__llvm_bin_function = None
         self._compilation_data = self._CompilationData(owner=self)
 
-    @property
-    def _llvm_function(self):
-        if self.__llvm_function is None:
-            self.__llvm_function = self._gen_llvm_function()
-            self.__llvm_bin_function = None
-        return self.__llvm_function
+    def _gen_llvm_function(self, extra_args=[]):
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            args = [ctx.get_param_struct_type(self).as_pointer(),
+                    ctx.get_state_struct_type(self).as_pointer(),
+                    ctx.get_input_struct_type(self).as_pointer(),
+                    ctx.get_output_struct_type(self).as_pointer()]
+            builder = ctx.create_llvm_function(args + extra_args, self)
+            llvm_func = builder.function
 
-    @property
-    def _llvmBinFunction(self):
-        if self.__llvm_bin_function is None:
-            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self._llvm_function.name)
-        return self.__llvm_bin_function
-
-    def _gen_llvm_function(self):
-        llvm_func = None
-        with pnlvm.LLVMBuilderContext() as ctx:
-            func_ty = pnlvm.ir.FunctionType(pnlvm.ir.VoidType(),
-                (ctx.get_param_struct_type(self).as_pointer(),
-                 ctx.get_context_struct_type(self).as_pointer(),
-                 ctx.get_input_struct_type(self).as_pointer(),
-                 ctx.get_output_struct_type(self).as_pointer()))
-
-            func_name = ctx.get_unique_name(str(self))
-            llvm_func = pnlvm.ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
-            params, context, arg_in, arg_out = llvm_func.args
-            for p in params, context, arg_in, arg_out:
-                p.attributes.add('nonnull')
-                p.attributes.add('noalias')
-
-            metadata = ctx.get_debug_location(llvm_func, self)
-            if metadata is not None:
-                scope = dict(metadata.operands)["scope"]
-                llvm_func.set_metadata("dbg", scope)
-
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = pnlvm.ir.IRBuilder(block)
-            builder.debug_metadata = metadata
-
+            params, context, arg_in, arg_out = llvm_func.args[:len(args)]
+            if len(extra_args) == 0:
+                for p in params, context, arg_in, arg_out:
+                    p.attributes.add('noalias')
 
             builder = self._gen_llvm_function_body(ctx, builder, params, context, arg_in, arg_out)
-
             builder.ret_void()
 
         return llvm_func
@@ -1225,8 +1174,6 @@ class Component(object, metaclass=ComponentsMeta):
     def __deepcopy__(self, memo):
         fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
         newone = fun(self, memo)
-        newone.__dict__['_Component__llvm_function'] = None
-        newone.__dict__['_Component__llvm_bin_function'] = None
 
         if newone.parameters is not newone.class_parameters:
             # may be in DEFERRED INIT, so parameters/defaults belongs to class
@@ -1240,7 +1187,7 @@ class Component(object, metaclass=ComponentsMeta):
     # ------------------------------------------------------------------------------------------------------------------
 
     def _handle_default_variable(self, default_variable=None, size=None):
-        '''
+        """
             Finds whether default_variable can be determined using **default_variable** and **size**
             arguments.
 
@@ -1248,7 +1195,7 @@ class Component(object, metaclass=ComponentsMeta):
             -------
                 a default variable if possible
                 None otherwise
-        '''
+        """
         if self._default_variable_handled:
             return default_variable
 
@@ -1273,7 +1220,7 @@ class Component(object, metaclass=ComponentsMeta):
     # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
     # through an override, when Composition is done. For now, only State.py overwrites _handle_size().
     def _handle_size(self, size, variable):
-        """ If variable is None, _handle_size tries to infer variable based on the **size** argument to the
+        """If variable is None, _handle_size tries to infer variable based on the **size** argument to the
             __init__() function. This method is overwritten in subclasses like Mechanism and State.
             If self is a Mechanism, it converts variable to a 2D array, (for a Mechanism, variable[i] represents
             the input from the i-th input state). If self is a State, variable is a 1D array and size is a length-1 1D
@@ -1796,11 +1743,11 @@ class Component(object, metaclass=ComponentsMeta):
                 setattr(self, arg_name, arg_value)
 
     def _set_parameter_value(self, param, val, execution_id=None):
-        getattr(self.parameters, param).set(val, execution_id, override=True)
+        getattr(self.parameters, param)._set(val, execution_id)
         if hasattr(self, "parameter_states"):
             if param in self.parameter_states:
                 new_state_value = self.parameter_states[param].execute(execution_id=execution_id, context=ContextFlags.EXECUTING)
-                self.parameter_states[param].parameters.value.set(new_state_value, execution_id, override=True)
+                self.parameter_states[param].parameters.value._set(new_state_value, execution_id)
         elif hasattr(self, "owner"):
             if hasattr(self.owner, "parameter_states"):
                 if param in self.owner.parameter_states:
@@ -1808,7 +1755,7 @@ class Component(object, metaclass=ComponentsMeta):
                         execution_id=execution_id,
                         context=ContextFlags.EXECUTING
                     )
-                    self.owner.parameter_states[param].parameters.value.set(new_state_value, execution_id, override=True)
+                    self.owner.parameter_states[param].parameters.value._set(new_state_value, execution_id)
 
     def _check_args(self, variable=None, execution_id=None, params=None, target_set=None, context=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params.
@@ -1848,10 +1795,10 @@ class Component(object, metaclass=ComponentsMeta):
         # IMPLEMENTATION NOTE:  context is used here just for reporting;  it is not tested in any of the methods called
         if self.prefs.paramValidationPref and variable is not None:
             try:
-                self.parameters.context.get(execution_id).add_to_string(FUNCTION_CHECK_ARGS)
+                self.parameters.context._get(execution_id).add_to_string(FUNCTION_CHECK_ARGS)
             except AttributeError:
                 self._assign_context_values(execution_id)
-                self.parameters.context.get(execution_id).add_to_string(FUNCTION_CHECK_ARGS)
+                self.parameters.context._get(execution_id).add_to_string(FUNCTION_CHECK_ARGS)
 
             variable = self._validate_variable(variable, context=context)
 
@@ -1886,12 +1833,12 @@ class Component(object, metaclass=ComponentsMeta):
                         continue
                     if execution_id not in self._runtime_params_reset:
                         self._runtime_params_reset[execution_id] = {}
-                    self._runtime_params_reset[execution_id][param_name] = getattr(self.parameters, param_name).get(execution_id)
+                    self._runtime_params_reset[execution_id][param_name] = getattr(self.parameters, param_name)._get(execution_id)
                     self._set_parameter_value(param_name, runtime_params[param_name], execution_id)
         elif runtime_params:    # not None
             raise ComponentError("Invalid specification of runtime parameters for {}".format(self.name))
 
-        self.parameters.variable.set(variable, execution_context=execution_id, override=True)
+        self.parameters.variable._set(variable, execution_id=execution_id)
         return variable
 
     def _instantiate_defaults(self,
@@ -1952,6 +1899,7 @@ class Component(object, metaclass=ComponentsMeta):
                 raise ComponentError("default parameter set must be a dictionary")
 
 
+        # FIX: 6/3/19 [JDC] SHOULD DEAL WITH THIS AND SHAPE BELOW
         # # GET VARIABLE FROM PARAM DICT IF SPECIFIED
         # #    (give precedence to that over variable arg specification)
         # if VARIABLE in request_set and request_set[VARIABLE] is not None:
@@ -2143,20 +2091,53 @@ class Component(object, metaclass=ComponentsMeta):
                                       target_set=target_set,
                                       context=context)
 
-    def _initialize_parameters(self):
+    def _initialize_parameters(self, **param_defaults):
+        self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
+
+        # assign defaults based on pass in params and class defaults
+        defaults = self.class_defaults.values(show_all=True).copy()
+        try:
+            function_params = param_defaults[FUNCTION_PARAMS]
+        except KeyError:
+            function_params = None
+
+        if param_defaults is not None:
+            # Exclude any function_params from the items to set on this Component
+            # because these should just be pointers to the parameters of the same
+            # name on this Component's function
+            # Exclude any pass parameters whose value is None (assume this means "use the normal default")
+            d = {
+                k: v for (k, v) in param_defaults.items()
+                if (
+                    k not in defaults
+                    or (
+                        (function_params is None or k not in function_params)
+                        and v is not None
+                    )
+                )
+            }
+            for p in d:
+                try:
+                    getattr(self.parameters, p)._user_specified = True
+                except AttributeError:
+                    pass
+            defaults.update(d)
+
+        self.defaults = Defaults(owner=self, **defaults)
+
         for p in self.parameters:
             # set default to None context to ensure it exists
-            if p.getter is None and p.get() is None:
+            if p.getter is None and p._get() is None:
                 try:
                     attr_name = '_{0}'.format(p.name)
                     attr_value = getattr(self, attr_name)
                     if attr_value is None:
                         attr_value = p.default_value
 
-                    p.set(attr_value, override=True, skip_history=True)
+                    p._set(attr_value, skip_history=True)
                     delattr(self, attr_name)
                 except AttributeError:
-                    p.set(p.default_value, override=True, skip_history=True)
+                    p._set(p.default_value, skip_history=True)
 
     def assign_params(self, request_set=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
@@ -2322,22 +2303,22 @@ class Component(object, metaclass=ComponentsMeta):
                 for execution_context in execution_contexts:
                     param.delete(execution_context)
 
-    def _assign_context_values(self, execution_id, base_execution_id=None, propagate=True, **kwargs):
-        context_param = self.parameters.context.get(execution_id)
+    def _assign_context_values(self, execution_id, base_execution_id=None, propagate=False, **kwargs):
+        context_param = self.parameters.context._get(execution_id)
         if context_param is None:
             self.parameters.context._initialize_from_context(execution_id, base_execution_id)
-            context_param = self.parameters.context.get(execution_id)
+            context_param = self.parameters.context._get(execution_id)
 
             if context_param is None:
                 context_param = Context(owner=self)
-                self.parameters.context.set(context_param, execution_id)
+                self.parameters.context._set(context_param, execution_id)
 
         for context_item, value in kwargs.items():
             setattr(context_param, context_item, value)
 
         if propagate:
             for comp in self._dependent_components:
-                comp._assign_context_values(execution_id, base_execution_id, **kwargs)
+                comp._assign_context_values(execution_id, base_execution_id, propagate=propagate, **kwargs)
 
     def _set_all_parameter_properties_recursively(self, **kwargs):
         # sets a property of all parameters for this component and all its dependent components
@@ -2353,13 +2334,13 @@ class Component(object, metaclass=ComponentsMeta):
         for comp in self._dependent_components:
             comp._set_all_parameter_properties_recursively(**kwargs)
 
-    def _set_multiple_parameter_values(self, execution_id, override=False, **kwargs):
+    def _set_multiple_parameter_values(self, execution_id, **kwargs):
         """
             Unnecessary, but can simplify multiple parameter assignments at once
             For every kwarg k, v pair, will attempt to set self.parameters.<k> to v for execution_id
         """
         for (k, v) in kwargs.items():
-            getattr(self.parameters, k).set(v, execution_id, _ro_warning_stacklevel=3, override=override)
+            getattr(self.parameters, k)._set(v, execution_id, _ro_warning_stacklevel=3)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
@@ -2408,9 +2389,9 @@ class Component(object, metaclass=ComponentsMeta):
     # ------------------------------------------------------------------------------------------------------------------
 
     def _validate(self):
-        '''
+        """
             Eventually should contain all validation methods, occurs at end of Component.__init__
-        '''
+        """
         # 4/18/18 kmantel: below is a draft of what such a method should look like
         # it's beyond the scope of the current changes however
 
@@ -2450,8 +2431,8 @@ class Component(object, metaclass=ComponentsMeta):
         """
 
         if inspect.isclass(variable):
-            raise ComponentError("Assignment of class ({}) as a variable (for {}) is not allowed".
-                                 format(variable.__name__, self.name))
+            raise ComponentError(f"Assignment of class ({variable.__name__}) "
+                                 f"as a variable (for {self.name}) is not allowed.")
 
         # If variable is not specified, then:
         #    - assign to (??now np-converted version of) self.class_defaults.variable
@@ -2480,8 +2461,8 @@ class Component(object, metaclass=ComponentsMeta):
         # If self.class_defaults.variable is locked, then check that variable matches it
         if self.variableClassDefault_locked:
             if not variable.dtype is self.class_defaults.variable.dtype:
-                message = "Variable for {0} (in {1}) must be a {2}".\
-                    format(self.componentName, context, self.class_defaults.variable.__class__.__name__)
+                message = f"Variable for {self.componentName} (in {context}) " \
+                    f"must be a {self.class_defaults.variable.__class__.__name__}."
                 raise ComponentError(message)
 
         return variable
@@ -2516,19 +2497,14 @@ class Component(object, metaclass=ComponentsMeta):
                 # these are always allowable since they are attribs of every Component
                 if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES, FUNCTION_PARAMS}:
                     continue
-                # function is a class, so function_params has not yet been implemented
-                # self._function = request_set[FUNCTION]
-                # if param_name is FUNCTION_PARAMS and (self.function is None or is_instance_or_subclass(self.function, Function) or inspect.isfunction(self.function)):
-                #     continue
-                raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
+                raise ComponentError(f"{param_name} is not a valid parameter for {self.__class__.__name__}.")
 
             # The value of the param is None in paramClassDefaults: suppress type checking
             # IMPLEMENTATION NOTE: this can be used for params with multiple possible types,
             #                      until type lists are implemented (see below)
             if self.paramClassDefaults[param_name] is None or self.paramClassDefaults[param_name] is NotImplemented:
                 if self.prefs.verbosePref:
-                    warnings.warn("{0} is specified as None for {1} which suppresses type checking".
-                                  format(param_name, self.name))
+                    warnings.warn(f"{param_name} is specified as None for {self.name} which suppresses type checking.")
                 if target_set is not None:
                     target_set[param_name] = param_value
                 continue
@@ -2647,7 +2623,7 @@ class Component(object, metaclass=ComponentsMeta):
 
                 elif target_set is not None:
                     # Copy any iterables so that deletions can be made to assignments belonging to the instance
-                    from collections import Iterable
+                    from collections.abc import Iterable
                     if not isinstance(param_value, Iterable) or isinstance(param_value, str):
                         target_set[param_name] = param_value
                     else:
@@ -2719,9 +2695,7 @@ class Component(object, metaclass=ComponentsMeta):
 
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
         if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-                # MODIFIED 6/16/18 NEW:
-                not isinstance(param_spec[1], dict) and
-                # MODIFIED 6/16/18 END
+                not isinstance(param_spec[1], (dict, list, np.ndarray)) and
                 (param_spec[1] in ALLOWABLE_TUPLE_SPEC_KEYWORDS or
                  isinstance(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES) or
                  (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES)))
@@ -2822,7 +2796,6 @@ class Component(object, metaclass=ComponentsMeta):
             - value is value[0] returned by self.execute
 
         """
-        from psyneulink.core.components.functions.function import Function_Base, FunctionRegistry
         from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
         from psyneulink.core.components.shellclasses import Function
 
@@ -2858,35 +2831,29 @@ class Component(object, metaclass=ComponentsMeta):
         # Specification is an already implemented Function
         elif isinstance(function, Function):
             if not iscompatible(function_variable, function.defaults.variable):
+                owner_str = ''
+                if hasattr(self, 'owner') and self.owner is not None:
+                    owner_str = f' of {repr(self.owner.name)}'
                 if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
-                    raise ComponentError(
-                            'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
-                            ' of the component {3} to which it is being assigned.  Make sure variable for {1} is 2d'.
-                            format(function.defaults.variable, function, function_variable, self)
-                    )
+                    raise ComponentError(f'Variable format ({function.defaults.variable}) of {function.name} '
+                                         f'is not compatible with the variable format ({function_variable}) '
+                                         f'of {repr(self.name)}{owner_str} to which it is being assigned.')
+                                         # f'Make sure variable for {function.name} is 2d.')
                 elif function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
                     function_increased_dim = np.asarray([function.defaults.variable])
                     if not iscompatible(function_variable, function_increased_dim):
-                        raise ComponentError(
-                            'Variable format ({0}) of {1} is not compatible with the variable format ({2})'
-                            ' of the component {3} to which it is being assigned.  Make sure variable for {1} is 2d'.
-                                format(
-                                function.defaults.variable,
-                                function,
-                                function_variable,
-                                self
-                            )
-                        )
+                        raise ComponentError(f'Variable format ({function.defaults.variable}) of {function.name} '
+                                             f'is not compatible with the variable format ({function_variable})'
+                                             f' of {repr(self.name)}{owner_str} to which it is being assigned.')
+                                             # f'Make sure variable for {function.name} is 2d.')
 
             # class default functions should always be copied, otherwise anything this component
             # does with its function will propagate to anything else that wants to use
             # the default
-            if function.owner is None and function is not self.class_defaults.function:
+            if function.owner is None and not function.is_pnl_inherent:
                 self.function = function
             else:
-                self.function = copy.deepcopy(function)
-                # ensure copy does not have identical name
-                register_category(self.function, Function_Base, self.function.name, FunctionRegistry)
+                self.function = self._clone_function(function)
 
             # setting init status because many mechanisms change execution or validation behavior
             # during initialization
@@ -2924,7 +2891,7 @@ class Component(object, metaclass=ComponentsMeta):
             self.function = function(default_variable=function_variable, **kwargs)
 
         else:
-            raise ComponentError('Unsupported function type: {0}, function={1}'.format(type(function), function))
+            raise ComponentError(f'Unsupported function type: {type(function)}, function={function}.')
 
         self.function.owner = self
 
@@ -2953,9 +2920,9 @@ class Component(object, metaclass=ComponentsMeta):
             except TypeError:
                 value = self.execute(context=context)
         if value is None:
-            raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
+            raise ComponentError(f"PROGRAM ERROR: Execute method for {self.name} must return a value.")
 
-        self.parameters.value.set(value, override=True, skip_history=True)
+        self.parameters.value._set(value, skip_history=True)
         try:
             # Could be mutable, so assign copy
             self.defaults.value = value.copy()
@@ -2966,40 +2933,52 @@ class Component(object, metaclass=ComponentsMeta):
     def initialize(self, execution_context=None):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
-    def reinitialize(self, *args, execution_context=None):
+    def reinitialize(self, *args, execution_context=NotImplemented):
         """
             If the component's execute method involves execution of an `IntegratorFunction` Function, this method
             effectively begins the function's accumulation over again at the specified value, and may update related
-            values on the component, depending on the component type.
+            values on the component, depending on the component type.  Otherwise, it simply reassigns the Component's
+            value based on its default_variable.
         """
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
         if isinstance(self.function, IntegratorFunction):
+            if execution_context is NotImplemented:
+                execution_context = self.most_recent_execution_id
             new_value = self.function.reinitialize(*args, execution_context=execution_context)
             self.parameters.value.set(np.atleast_2d(new_value), execution_context, override=True)
         else:
-            raise ComponentError(
-                "Reinitializing {} is not allowed because this Component is not stateful. "
-                "(It does not have an accumulator to reinitialize).".format(self.name)
-            )
+            raise ComponentError(f"Reinitializing {self.name} is not allowed because this Component is not stateful. "
+                                 "(It does not have an accumulator to reinitialize).")
 
     def execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+        if execution_id is None:
+            try:
+                owner = self.owner
+                owner_parameters = self.owner.parameters.context._get(self.most_recent_execution_id)
+                if owner is not None and owner_parameters is None:
+                    execution_id = owner.most_recent_execution_id
+                else:
+                    raise AttributeError
+            except AttributeError:
+                execution_id = self.most_recent_execution_id
+
         # initialize context for this execution_id if not done already
-        if execution_id is not None:
-            self._assign_context_values(execution_id)
+        if self.parameters.context._get(execution_id) is None:
+            self._assign_context_values(execution_id, propagate=True)
 
         value = self._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
-        self.parameters.value.set(value, execution_context=execution_id, override=True)
+        self.parameters.value._set(value, execution_id=execution_id)
         return value
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None, **kwargs):
         from psyneulink.core.components.functions.function import Function
 
-        self.parameters.variable.set(variable, execution_context=execution_id, override=True)
+        self.parameters.variable._set(variable, execution_id=execution_id)
 
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
         else:
-            if self.parameters.context.get(execution_id).initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
+            if self.parameters.context._get(execution_id).initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
                 self._increment_execution_count()
             self._update_current_execution_time(context=context, execution_id=execution_id)
 
@@ -3013,7 +2992,7 @@ class Component(object, metaclass=ComponentsMeta):
         if function is not None:
             self.function._assign_context_values(
                 execution_id,
-                flags=self.parameters.context.get(execution_id).flags,
+                flags=self.parameters.context._get(execution_id).flags,
             )
         else:
             try:
@@ -3022,8 +3001,7 @@ class Component(object, metaclass=ComponentsMeta):
                 owner = None
 
             if owner is not None:
-                flags = owner.parameters.context.get(execution_id).flags
-
+                flags = owner.parameters.context._get(execution_id).flags
                 self._assign_context_values(
                     execution_id,
                     flags=flags,
@@ -3037,19 +3015,19 @@ class Component(object, metaclass=ComponentsMeta):
         function_variable = self._parse_function_variable(variable, execution_id=execution_id, context=context)
         value = self.function(variable=function_variable, execution_id=execution_id, params=runtime_params, context=context, **kwargs)
         try:
-            self.function.parameters.value.set(value, execution_id, override=True)
+            self.function.parameters.value._set(value, execution_id)
         except AttributeError:
             pass
 
         # reset the Function to IDLE
         if function is not None and isinstance(self.function, Function):
-            function_context = self.function.parameters.context.get(execution_id)
+            function_context = self.function.parameters.context._get(execution_id)
         else:
-            function_context = self.parameters.context.get(execution_id)
+            function_context = self.parameters.context._get(execution_id)
 
         function_context.execution_phase = ContextFlags.IDLE
 
-        self.most_recent_execution_context = execution_id
+        self.most_recent_execution_id = execution_id
         return value
 
     def _parse_param_state_sources(self):
@@ -3060,10 +3038,18 @@ class Component(object, metaclass=ComponentsMeta):
         except AttributeError:
             pass
 
+    def _clone_function(self, function):
+        from psyneulink.core.components.functions.function import Function_Base, FunctionRegistry
+        fct = copy.deepcopy(function)
+        # ensure copy does not have identical name
+        register_category(fct, Function_Base, fct.name, FunctionRegistry)
+        return fct
+
     @property
     def current_execution_count(self):
         """Maintains a simple count of executions over the life of the Component,
-        Incremented in the Component's execute method by call to self._increment_execution_count"""
+        Incremented in the Component's execute method by call to self._increment_execution_count
+        """
         try:
             return self._current_execution_count
         except:
@@ -3117,8 +3103,7 @@ class Component(object, metaclass=ComponentsMeta):
     @name.setter
     def name(self, value):
         if not isinstance(value, str):
-            raise ComponentError("Name assigned to {} ({}) must be a string constant".
-                                 format(self.__class__.__name__, value))
+            raise ComponentError(f"Name assigned to {self.__class__.__name__} ({value}) must be a string constant.")
 
         self._name = value
 
@@ -3255,7 +3240,7 @@ class Component(object, metaclass=ComponentsMeta):
                 # ensure parameters is not class_parameters
                 raise ValueError
 
-            return self.parameters.context.get(self.most_recent_execution_context)
+            return self.parameters.context._get(self.most_recent_execution_id)
         except (AttributeError, ValueError):
             try:
                 return self._context
@@ -3267,7 +3252,7 @@ class Component(object, metaclass=ComponentsMeta):
     def context(self, context):
         if isinstance(context, Context):
             try:
-                self.parameters.context.set(context, self.most_recent_execution_context)
+                self.parameters.context._set(context, self.most_recent_execution_id)
             except AttributeError:
                 self._context = context
         else:
@@ -3331,7 +3316,7 @@ class Component(object, metaclass=ComponentsMeta):
 
         for p in self.parameters:
             if p.user and p.name not in parameter_black_list:
-                val = p.get(self.most_recent_execution_context)
+                val = p._get(self.most_recent_execution_id)
 
                 if isinstance(val, np.ndarray):
                     val = f'numpy.array({val})'
@@ -3412,12 +3397,12 @@ class Component(object, metaclass=ComponentsMeta):
 
     @property
     def function(self):
-        return self.parameters.function.get()
+        return self.parameters.function._get()
 
     @function.setter
     def function(self, value):
         # TODO: currently no validation, should replicate from _instantiate_function
-        self.parameters.function.set(value)
+        self.parameters.function._set(value)
         self._parse_param_state_sources()
 
     @property
@@ -3473,19 +3458,19 @@ class Component(object, metaclass=ComponentsMeta):
         return []
 
     @property
-    def most_recent_execution_context(self):
+    def most_recent_execution_id(self):
         """
             used to set a default behavior for attributes that correspond to parameters
         """
         try:
-            return self._most_recent_execution_context
+            return self._most_recent_execution_id
         except AttributeError:
-            self._most_recent_execution_context = None
-            return self._most_recent_execution_context
+            self._most_recent_execution_id = None
+            return self._most_recent_execution_id
 
-    @most_recent_execution_context.setter
-    def most_recent_execution_context(self, value):
-        self._most_recent_execution_context = value
+    @most_recent_execution_id.setter
+    def most_recent_execution_id(self, value):
+        self._most_recent_execution_id = value
 
 
 COMPONENT_BASE_CLASS = Component

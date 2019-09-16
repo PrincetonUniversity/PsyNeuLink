@@ -487,11 +487,21 @@ class UserDefinedFunction(Function_Base):
         # create transient Parameters objects for custom function params
         # done here because they need to be present before _instantiate_value which calls self.function
         for param_name in self.cust_fct_params:
-            setattr(self.parameters, param_name, Parameter(self.cust_fct_params[param_name], modulable=True))
+            p = Parameter(self.cust_fct_params[param_name], modulable=True)
+            setattr(self.parameters, param_name, p)
 
-        self._initialize_parameters()
+            try:
+                attr_name = '_{0}'.format(p.name)
+                attr_value = getattr(self, attr_name)
+                if attr_value is None:
+                    attr_value = p.default_value
 
-    def function(self, variable, execution_id=None, **kwargs):
+                p._set(attr_value, skip_history=True)
+                delattr(self, attr_name)
+            except AttributeError:
+                p._set(p.default_value, skip_history=True)
+
+    def _function(self, variable, execution_id=None, **kwargs):
 
         # Update value of parms in cust_fct_params
         for param in self.cust_fct_params:

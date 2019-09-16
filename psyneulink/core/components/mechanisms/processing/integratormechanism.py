@@ -67,14 +67,18 @@ Class Reference
 ---------------
 
 """
-from collections import Iterable
+from collections.abc import Iterable
 
 import typecheck as tc
+import numpy as np
 
+from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import INTEGRATOR_MECHANISM, RESULTS, kwPreferenceSetName
+from psyneulink.core.globals.keywords import \
+    DEFAULT_VARIABLE, INTEGRATOR_MECHANISM, RESULTS, VARIABLE, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -212,7 +216,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
 
@@ -228,10 +233,60 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  context=ContextFlags.CONSTRUCTOR)
+                                                  context=ContextFlags.CONSTRUCTOR,
+                                                  **kwargs)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 
+    # def _parse_function_variable(self, variable, execution_id=None, context=None):
+    #     super()._parse_function_variable(variable, execution_id, context)
 
+    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
+        """If any parameters with len>1 have been specified for the Mechanism's function, and Mechanism's
+        default_variable has not been specified, reshape Mechanism's variable to match function's,
+        but make sure function's has the same outer dimensionality as the Mechanism's
+        """
 
+        # Get variable for Mechanism
+        user_specified = False
+        if default_variable is not None:
+            variable = np.atleast_1d(default_variable)
+            user_specified = True
+        else:
+            variable = self.parameters.variable.default_value
+            user_specified = self.parameters.variable._user_specified
 
+        # Only bother if an instantiated function was specified for the Mechanism
+        if isinstance(function, Function):
+            function_variable = function.parameters.variable.default_value
+            function_variable_len = function_variable.shape[-1]
+            variable_len = variable.shape[-1]
+
+            # Raise error if:
+            # - the length of both Mechanism and function variable are greater than 1 and they don't match, or
+            # - the Mechanism's variable length is 1 and the function's is > 1 (in which case would like to assign
+            #   shape of function's variable to that of Mechanism) but Mechanism's variable is user-specified.
+            if ((variable_len>1 and function_variable_len>1 and variable_len!=function_variable_len) or
+                (function_variable_len>1 and variable_len==1 and user_specified)):
+                raise IntegratorMechanismError(f"Shape of {repr(VARIABLE)} for function specified for {self.name} "
+                                               f"({function.name}: {function.variable.shape}) does not match "
+                                               f"the shape of the {repr(DEFAULT_VARIABLE)} specified for the "
+                                               f"{repr(Mechanism.__name__)}.")
+
+            # If length of Mechanism's variable is 1 but the function's is longer,
+            #     reshape Mechanism's inner dimension to match function
+            elif variable_len==1 and function_variable_len>1:
+                variable_shape = list(variable.shape)
+                variable_shape[-1] = function_variable.shape[-1]
+                # self.parameters.variable.default_value = np.zeros(tuple(variable_shape))
+                variable = np.zeros(tuple(variable_shape))
+
+            # IMPLEMENTATON NOTE:
+            #    Don't worry about case in which length of function's variable is 1 and Mechanism's is > 1
+            #    as the reshaping of the function's variable will be taken care of in _instantiate_function
+
+        return super()._handle_default_variable(default_variable=variable,
+                                                size=size,
+                                                input_states=input_states,
+                                                function=function,
+                                                params=params)

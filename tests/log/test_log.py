@@ -5,7 +5,7 @@ import pytest
 from collections import OrderedDict
 
 import psyneulink.core.components.functions.transferfunctions
-
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 
 class TestLog:
 
@@ -1029,7 +1029,7 @@ class TestFiltering:
             name='Decision'
         )
 
-        comp = pnl.Composition(name="evc")
+        comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
         comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
@@ -1050,15 +1050,15 @@ class TestFiltering:
                 ),
                 function=pnl.GridSearch(),
                 control_signals=[
-                    ("drift_rate", Decision),
-                    ("threshold", Decision)
+                    {PROJECTIONS: ("drift_rate", Decision),
+                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                    {PROJECTIONS: ("threshold", Decision),
+                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}
                 ]
             )
         )
 
         comp.enable_controller = True
-
-        comp._analyze_graph()
 
         stim_list_dict = {
             Input: [0.5, 0.123],
@@ -1067,7 +1067,7 @@ class TestFiltering:
 
         Input.parameters.value.log_condition = True
 
-        comp.run(inputs=stim_list_dict, retain_old_simulation_data=True)
+        comp.run(inputs=stim_list_dict)
 
         return Input
 

@@ -28,13 +28,13 @@ Creating a MappingProjection
 
 A MappingProjection can be created in any of the ways that can be used to create a `Projection <Projection_Creation>`
 (see `Projection_Sender` and `Projection_Receiver` for specifying its `sender <MappingProjection.sender>` and
-`receiver <MappingProjection.receiver>` attributes, respectively), or by `specifying it by its matrix parameter
-<Mapping_Matrix_Specification>`.
+`receiver <MappingProjection.receiver>` attributes, respectively), or simply by `specifying it by its matrix parameter
+<Mapping_Matrix_Specification>` wherever a `Projection can be specified <Projection_Specification>`.
 
 MappingProjections are also generated automatically in the following circumstances, using a value for its `matrix
 <MappingProjection.matrix>` parameter appropriate to the circumstance:
 
-  * by a `Process`, when two adjacent `Mechanisms <Mechanism>` in its `pathway <Process.pathway>` do not already
+  * by a `Composition`, when two adjacent `Mechanisms <Mechanism>` in its `pathway <Process.pathway>` do not already
     have a Projection assigned between them (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>`
     specification, which determines the appropriate matrix by context);
   ..
@@ -56,6 +56,11 @@ MappingProjections are also generated automatically in the following circumstanc
 
 *Specifying the Matrix Parameter*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a MappingProjection is created automatically, its `matrix <MappingProjection.matrix>` attribute is generally
+assigned using `AUTO_ASSIGN_MATRIX`, which determines its size by context: an `IDENTITY_MATRIX` is used if the
+`sender <MappingProjection.sender>` and `receiver <MappingProjection.receiver>` are of equal length; otherwise a
+`FULL_CONNECTIVITY_MATRIX` (all 1's) is used.
 
 When a MappingProjection is created explicitly, the **matrix** argument of its constructor can be used to specify
 its `matrix <MappingProjection.matrix>` parameter.  This is used by the MappingProjection's `function
@@ -153,7 +158,7 @@ Structure
 ---------
 
 In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjection.receiver>`, and `function
-<MappingProjection.function>`, a MappingProjection has two characteristic attributes:
+<MappingProjection.function>`, a MappingProjection has the following characteristic attributes:
 
 .. _Mapping_Matrix:
 
@@ -165,7 +170,7 @@ In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjec
   .. _Mapping_Matrix_Dimensionality
 
   * **Matrix Dimensionality** -- this must match the dimensionality of the MappingProjection's `sender
-    <MappingProjection.sender>` and `receiver <MappingProjection.reciever>.`  For a standard 2d "weight" matrix (i.e.,
+    <MappingProjection.sender>` and `receiver <MappingProjection.receiver>`.  For a standard 2d "weight" matrix (i.e.,
     one that maps a 1d array from its `sender <MappingProjection.sender>` to a 1d array of its `receiver
     <MappingProjection.receiver>`), the dimensionality of the sender is the number of rows and of the receiver
     the number of columns.  More generally, the sender dimensionality is the number of outer dimensions (i.e.,
@@ -268,7 +273,10 @@ from psyneulink.core.components.functions.transferfunctions import LinearMatrix,
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, SYSTEM_INPUT_STATE, VALUE
+from psyneulink.core.globals.keywords import \
+    AUTO_ASSIGN_MATRIX, CONTEXT, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, \
+    HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, \
+    OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, SYSTEM_INPUT_STATE, VALUE
 from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -373,6 +381,11 @@ class MappingProjection(PathwayProjection_Base):
        specifies the value by which to exponentiate the MappingProjection's `value <MappingProjection.value>`
        before combining it with others (see `exponent <MappingProjection.exponent>` for additional details).
 
+    function : function : default LinearMatrix
+       specifies function used to transform `variable <MappingProjection.variable>` into `value
+       <MappingProjection.value>`;  must be a `TransferFunction` that takes an input of the same shape as
+       `variable <MappingProjection.variable>`.
+
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
         value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputState.variable>`
@@ -395,6 +408,9 @@ class MappingProjection(PathwayProjection_Base):
 
     componentType : MAPPING_PROJECTION
 
+    variable : ndarray
+        input to MappingProjection, received from `value <OutputState.varlue>` of `sender <MappingProjection.sender>`.
+
     sender : OutputState
         the `OutputState` of the `Mechanism <Mechanism>` that is the source of the Projection's input
 
@@ -409,12 +425,16 @@ class MappingProjection(PathwayProjection_Base):
         identifies the `LearningProjection` assigned to the MappingProjection's `MATRIX` `ParameterState
         <ParameterState>`.
 
+    function : function
+       determines function used to transform `variable <MappingProjection.variable>` into `value
+       <MappingProjection.value>`.
+
     learning_mechanism : LearningMechanism
         source of the `learning signal <LearningSignal>` that determines the changes to the `matrix
         <MappingProjection.matrix>` when `learning <LearningMechanism>` is used.
 
     value : ndarray
-        output of MappingProjection, transmitted to `variable <InputState.variable>` of its `receiver
+        output of MappingProjection, sent to `variable <InputState.variable>` of `receiver
         <MappingProjection.receiver>`.
 
     weight : number
@@ -506,7 +526,10 @@ class MappingProjection(PathwayProjection_Base):
                  function=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
+
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         # Assign args to params and functionParams dicts
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
@@ -534,7 +557,13 @@ class MappingProjection(PathwayProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         context=context,
+                         **kwargs)
+
+        try:
+            self._parameter_states[MATRIX].function.reinitialize()
+        except AttributeError:
+            pass
 
     def _instantiate_parameter_states(self, function=None, context=None):
 
@@ -547,12 +576,17 @@ class MappingProjection(PathwayProjection_Base):
         matrix = get_matrix(self._parameter_states[MATRIX].value)
         initial_rate = matrix * 0.0
 
-        self._parameter_states[MATRIX].function = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
-                                                                               default_variable=matrix,
-                                                                               initializer=matrix,
-                                                                               # rate=initial_rate
-                                                                               )
-
+        # KDM 7/11/19: instead of simply setting the function, we need to reinstantiate to ensure
+        # new defaults get set properly
+        self._parameter_states[MATRIX]._instantiate_function(
+            function=AccumulatorIntegrator(
+                owner=self._parameter_states[MATRIX],
+                default_variable=matrix,
+                initializer=matrix,
+                # rate=initial_rate
+            )
+        )
+        self._parameter_states[MATRIX]._instantiate_value(context)
 
         # # Assign ParameterState the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
         # self._parameter_states[MATRIX].log = self.log
@@ -655,45 +689,19 @@ class MappingProjection(PathwayProjection_Base):
 
     def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
-        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-        self.parameters.context.get(execution_id).string = context
-
-
-        if hasattr(self.context, "composition") and hasattr(self.context.composition, "has_learning") and self.context.composition.has_learning:
-            self.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
-            self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-            self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        self.parameters.context._get(execution_id).execution_phase = \
+            self.receiver.owner.parameters.context._get(execution_id).execution_phase
+        self.parameters.context._get(execution_id).string = context
 
         self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
-        return super()._execute(
-            variable=variable,
-            execution_id=execution_id,
-            runtime_params=runtime_params,
-            context=context
-        )
 
-    @property
-    def matrix(self):
-        return self.function.matrix
+        value = super()._execute(
+                variable=variable,
+                execution_id=execution_id,
+                runtime_params=runtime_params,
+                context=context)
 
-    @matrix.setter
-    def matrix(self, matrix):
-        if not (isinstance(matrix, np.matrix) or
-                    (isinstance(matrix,np.ndarray) and matrix.ndim == 2) or
-                    (isinstance(matrix,list) and np.array(matrix).ndim == 2)):
-            raise MappingError("Matrix parameter for {} ({}) MappingProjection must be "
-                               "an np.matrix, a 2d np.array, or a correspondingly configured list".
-                               format(self.name, matrix))
-
-        matrix = np.array(matrix)
-
-        # FIX: Hack to prevent recursion in calls to setter and assign_params
-        self.function.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-
-        self.function.matrix = matrix
-
-        if hasattr(self, "_parameter_states"):
-            self.parameter_states["matrix"].function.previous_value = matrix
+        return value
 
     @property
     def _matrix_spec(self):
@@ -720,8 +728,7 @@ class MappingProjection(PathwayProjection_Base):
                 (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {LEARNING, LEARNING_PROJECTION}
                  or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection) or
                      (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
-                          issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection)))
-            ):
+                          issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], LearningProjection)))):
             self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX,
                                                             (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]))
 

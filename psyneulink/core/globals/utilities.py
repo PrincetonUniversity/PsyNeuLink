@@ -84,6 +84,8 @@ CONTENTS
 * `make_readonly_property`
 * `get_class_attributes`
 * `insert_list`
+* `flatten_list`
+* `convert_to_list`
 * `get_global_seed`
 * `set_global_seed`
 
@@ -105,8 +107,8 @@ import numpy as np
 from psyneulink.core.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
 
 __all__ = [
-    'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes',
+    'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
+    'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes', 'flatten_list',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
@@ -314,16 +316,16 @@ def is_distance_metric(s):
 
 
 def is_iterable(x):
-    '''
+    """
     Returns
     -------
         True - if **x** can be iterated on
         False - otherwise
-    '''
+    """
     if isinstance(x, np.ndarray) and x.ndim == 0:
         return False
     else:
-        return isinstance(x, collections.Iterable)
+        return isinstance(x, collections.abc.Iterable)
 
 
 kwCompatibilityType = "type"
@@ -569,21 +571,21 @@ def scalar_distance(measure, value, scale=1, offset=0):
 
 from itertools import chain, combinations
 def powerset(iterable):
-    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    """powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"""
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
 import typecheck as tc
 @tc.typecheck
 def tensor_power(items, levels:tc.optional(range)=None, flat=False):
-    '''return tensor product for all members of powerset of items
+    """return tensor product for all members of powerset of items
 
     levels specifies a range of set levels to return;  1=first order terms, 2=2nd order terms, etc.
     if None, all terms will be returned
 
     if flat=False, returns list of 1d arrays with tensor product for each member of the powerset
     if flat=True, returns 1d array of values
-    '''
+    """
 
     ps = list(powerset(items))
     max_levels = max([len(s) for s in ps])
@@ -627,7 +629,7 @@ def get_args(frame):
     return dict((key, value) for key, value in values.items() if key in args)
 
 
-from collections import Mapping
+from collections.abc import Mapping
 def recursive_update(d, u, non_destructive=False):
     """Recursively update entries of dictionary d with dictionary u
     From: https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
@@ -733,7 +735,7 @@ def multi_getattr(obj, attr, default = None):
 
 # based off the answer here https://stackoverflow.com/a/15774013/3131666
 def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
-    '''
+    """
         Arguments
         ---------
             shared_keys
@@ -746,7 +748,7 @@ def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
         Returns
         -------
             a __deepcopy__ function
-    '''
+    """
     try:
         shared_types = tuple(shared_types)
     except TypeError:
@@ -828,6 +830,22 @@ def copy_dict_or_list_with_shared(obj, shared_types=None):
 
 
 def get_alias_property_getter(name, attr=None):
+    """
+        Arguments
+        ---------
+            name : str
+
+            attr : str : default None
+
+        Returns
+        -------
+            a property getter method that
+
+            if **attr** is None, returns the **name** attribute of an object
+
+            if **attr** is not None, returns the **name** attribute of the
+            **attr** attribute of an object
+    """
     if attr is not None:
         def getter(obj):
             return getattr(getattr(obj, attr), name)
@@ -839,6 +857,22 @@ def get_alias_property_getter(name, attr=None):
 
 
 def get_alias_property_setter(name, attr=None):
+    """
+        Arguments
+        ---------
+            name : str
+
+            attr : str : default None
+
+        Returns
+        -------
+            a property setter method that
+
+            if **attr** is None, sets the **name** attribute of an object
+
+            if **attr** is not None, sets the **name** attribute of the
+            **attr** attribute of an object
+    """
     if attr is not None:
         def setter(obj, value):
             setattr(getattr(obj, attr), name, value)
@@ -907,14 +941,14 @@ def convert_to_np_array(value, dimension):
 
 
 def object_has_single_value(obj):
-    '''
+    """
         Returns
         -------
             True : if **obj** contains only one value, in any dimension
             False : otherwise
 
             **obj** will be cast to a numpy array if it is not already one
-    '''
+    """
     if not isinstance(obj, np.ndarray):
         obj = np.asarray(obj)
 
@@ -939,11 +973,7 @@ def type_match(value, value_type):
     if value_type is None:
         return None
     if value_type is type(None):
-        # # MODIFIED 6/9/17 OLD:
-        # raise UtilitiesError("PROGRAM ERROR: template provided to type_match for {} is \'None\'".format(value))
-        # MODIFIED 6/9/17 NEW:
         return value
-        # MODIFIED 6/9/17 END
     raise UtilitiesError("Type of {} not recognized".format(value_type))
 
 def get_value_from_array(array):
@@ -1375,7 +1405,7 @@ def get_class_attributes(cls):
 
 
 def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
-    '''
+    """
         Recursively converts all items in **arr** to numpy arrays, optionally casting
         items of type/dtype **cast_from** to type/dtype **cast_to**
 
@@ -1387,7 +1417,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
         Returns
         -------
         a numpy array containing the converted **arr**
-    '''
+    """
     if isinstance(arr, np.ndarray) and arr.ndim == 0:
         if cast_from is not None and isinstance(arr.item(0), cast_from):
             return np.asarray(arr, dtype=cast_to)
@@ -1397,7 +1427,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
     if cast_from is not None and isinstance(arr, cast_from):
         return np.asarray(arr, dtype=cast_to)
 
-    if not isinstance(arr, collections.Iterable) or isinstance(arr, str):
+    if not isinstance(arr, collections.abc.Iterable) or isinstance(arr, str):
         return np.array(arr)
 
     if isinstance(arr, np.matrix):
@@ -1427,6 +1457,17 @@ def insert_list(list1, position, list2):
     """Insert list2 into list1 at position"""
     return list1[:position] + list2 + list1[position:]
 
+def convert_to_list(l):
+    if isinstance(l, list):
+        return l
+    elif isinstance(l, set):
+        return list(l)
+    else:
+        return [l]
+
+def flatten_list(l):
+    return [item for sublist in l for item in sublist]
+
 _seed = int(time.monotonic())
 def get_global_seed(offset=1):
     global _seed
@@ -1439,11 +1480,11 @@ def set_global_seed(new_seed):
 
 
 def safe_len(arr, fallback=1):
-    '''
+    """
     Returns
     -------
         len(**arr**) if possible, otherwise **fallback**
-    '''
+    """
     try:
         return len(arr)
     except TypeError:
@@ -1481,9 +1522,33 @@ def _get_arg_from_stack(arg_name:str):
     return arg_val
 
 
+_unused_args_sig_cache = weakref.WeakKeyDictionary()
+
+
 def prune_unused_args(func, args=None, kwargs=None):
+    """
+        Arguments
+        ---------
+            func : function
+
+            args : *args
+
+            kwargs : **kwargs
+
+
+        Returns
+        -------
+            a tuple such that the first item is the intersection of **args** and the
+            positional arguments of **func**, and the second item is the intersection
+            of **kwargs** and the keyword arguments of **func**
+
+    """
     # use the func signature to filter out arguments that aren't compatible
-    sig = inspect.signature(func)
+    try:
+        sig = _unused_args_sig_cache[func]
+    except KeyError:
+        sig = inspect.signature(func)
+        _unused_args_sig_cache[func] = sig
 
     has_args_param = False
     has_kwargs_param = False
@@ -1533,6 +1598,10 @@ def prune_unused_args(func, args=None, kwargs=None):
 
 
 def call_with_pruned_args(func, *args, **kwargs):
+    """
+        Calls **func** with only the **args** and **kwargs** that
+        exist in its signature
+    """
     args, kwargs = prune_unused_args(func, args, kwargs)
     return func(*args, **kwargs)
 
@@ -1574,6 +1643,11 @@ class NodeRole(Enum):
     CYCLE
         A Node that belongs to a cycle.
 
+    LEARNING
+        A Node that is only executed when learning is enabled.
+
+    TARGET
+        A Node that receives the target for a learning sequence
     """
     ORIGIN = 0
     INPUT = 1
@@ -1584,6 +1658,8 @@ class NodeRole(Enum):
     FEEDBACK_SENDER = 6
     FEEDBACK_RECEIVER = 7
     CYCLE = 8
+    LEARNING = 9
+    TARGET = 10
 
 def unproxy_weakproxy(proxy):
     """

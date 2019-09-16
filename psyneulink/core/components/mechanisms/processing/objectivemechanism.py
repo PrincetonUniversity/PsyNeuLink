@@ -149,8 +149,8 @@ the items in its `variable <ObjectiveMechanism.variable>`. However, by assigning
 <InputState.weight>` and/or 'exponent <InputState.exponent>` attributes of the corresponding InputStates,
 it can be configured to calculate differences, ratios,  etc. (see `example
 <ObjectiveMechanism_Weights_and_Exponents_Example>` below).  The `function <ObjectiveMechanism.function>`  can also
-be replaced with any `CombinationFunction`, or any python function that takes an ndarray as its input (with a number of
-items in axis 0 equal to the number of the ObjectiveMechanism's InputStates), and generates a 1d array as its result.
+be replaced with any `CombinationFunction`, or any python function that takes an 2d array as its input (with a number
+of items in axis 0 equal to the number of the ObjectiveMechanism's InputStates), and generates a 1d array as its result.
 If it implements :keyword:`weight` and/or :keyword:`exponent` attributes, those are assigned from `weight
 <InputState.weight>` and `exponent <InputState.exponent>` attributes of its `input_states
 <ObjectiveMechanism.input_states>` (also listed in the `monitor_weights_and_exponents
@@ -331,12 +331,14 @@ Class Reference
 ---------------
 
 """
+
 import itertools
 import warnings
-
-from collections import Iterable, namedtuple
-
 import typecheck as tc
+import numpy as np
+
+from collections.abc import Iterable
+from collections import namedtuple
 
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -346,13 +348,13 @@ from psyneulink.core.components.states.inputstate import InputState, INPUT_STATE
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, \
-    OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
+    CONTEXT, CONTROL, EXPONENT, EXPONENTS, FUNCTION, LEARNING, MATRIX, NAME, \
+    OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
     kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList
+from psyneulink.core.globals.utilities import ContentAddressableList, type_match
 
 __all__ = [
     'DEFAULT_MONITORED_STATE_WEIGHT', 'DEFAULT_MONITORED_STATE_EXPONENT', 'DEFAULT_MONITORED_STATE_MATRIX',
@@ -594,7 +596,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  **kwargs):
 
         # For backward compatibility
-
         if MONITORED_OUTPUT_STATES in kwargs:
             if monitor:
                 raise ObjectiveMechanismError(f'Can\'t specifiy both {repr(MONITOR)} ({monitor}) '
@@ -602,7 +603,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                               f' args of {self.name} specified; pick one!')
             warnings.warn(f'Use of {repr(MONITORED_OUTPUT_STATES)} as arg of {self.__class__.__name__} is deprecated;  '
                           f'use {repr(MONITOR)} instead')
-            monitor = kwargs[MONITORED_OUTPUT_STATES]
+            monitor = kwargs.pop(MONITORED_OUTPUT_STATES)
+
+        context = kwargs.pop(CONTEXT, ContextFlags.CONSTRUCTOR)
 
         monitor = monitor or None # deal with possibility of empty list
         input_states = monitor
@@ -631,7 +634,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         context=context,
+                         **kwargs)
 
         # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
         #    the controller for a System;  it is set by the ControlMechanism when it creates the ObjectiveMechanism
@@ -680,11 +684,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                              reference_value=reference_value,
                                                              context=context)
         self._name_input_states(input_states)
-
-        for state in input_states:
-            for proj in state.path_afferents:
-                self.aux_components.append(proj)
-
         return input_states
 
     def _name_input_states(self, input_states):
@@ -807,6 +806,17 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 self.function.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
         assert True
 
+    # # MODIFIED 6/8/19 NEW: [JDC]
+    # def _parse_function_variable(self, variable, execution_id=None, context=None):
+    #     # CRASHES IN x_or TEST AND LLVM TESTS:
+    #     if self.function.variableEncodingDim < self.variableEncodingDim:
+    #         return np.squeeze(variable)
+    #     # if self.function.variableEncodingDim > self.variableEncodingDim:
+    #     #     return np.expand_dims(variable,0)
+    #     return variable
+    #
+    #     # assert False
+    # # MODIFIED 6/8/19 END
 
     @property
     def monitor(self):

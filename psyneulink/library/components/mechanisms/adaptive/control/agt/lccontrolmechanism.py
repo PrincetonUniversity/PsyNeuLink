@@ -250,10 +250,10 @@ An LCControlMechanism executes within a `Composition` at a point specified in th
 is the `controller <System>` for a `Composition`, after all of the other Mechanisms in the Composition have `executed
 <Composition_Execution>` in a `TRIAL`. It's `function <LCControlMechanism.function>` takes the `value
 <InputState.value>` of the LCControlMechanism's `primary InputState <InputState_Primary>` as its input, and generates a
-response -- under the influence of its `mode <FitzHughNagumoIntegrator.mode>` parameter -- that is assigned as the `allocation
-<LCControlSignal.allocation>` of its `ControlSignals <ControlSignal>`.  The latter are used by its `ControlProjections
-<ControlProjection>` to modulate the response -- in the next `TRIAL` of execution --  of the Mechanisms the
-LCControlMechanism controls.
+response -- under the influence of its `mode <FitzHughNagumoIntegrator.mode>` parameter -- that is assigned as the
+`allocation <LCControlSignal.allocation>` of its `ControlSignals <ControlSignal>`.  The latter are used by its
+`ControlProjections <ControlProjection>` to modulate the response -- in the next `TRIAL` of execution --  of the
+Mechanisms the LCControlMechanism controls.
 
 .. note::
    A `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
@@ -302,34 +302,34 @@ class LCControlMechanismError(Exception):
 
 class LCControlMechanism(ControlMechanism):
     """
-    LCControlMechanism(                     \
-        system=None,                        \
-        objective_mechanism=None,           \
-        modulated_mechanisms=None,          \
-        initial_w_FitzHughNagumo=0.0,                  \
-        initial_v_FitzHughNagumo=0.0,                  \
-        time_step_size_FitzHughNagumo=0.05,            \
-        t_0_FitzHughNagumo=0.0,                        \
-        a_v_FitzHughNagumo=-1/3,                       \
-        b_v_FitzHughNagumo=0.0,                        \
-        c_v_FitzHughNagumo=1.0,                        \
-        d_v_FitzHughNagumo=0.0,                        \
-        e_v_FitzHughNagumo=-1.0,                       \
-        f_v_FitzHughNagumo=1.0,                        \
-        threshold_FitzHughNagumo=-1.0                  \
-        time_constant_v_FitzHughNagumo=1.0,            \
-        a_w_FitzHughNagumo=1.0,                        \
-        b_w_FitzHughNagumo=-0.8,                       \
-        c_w_FitzHughNagumo=0.7,                        \
-        mode_FitzHughNagumo=1.0,                       \
-        uncorrelated_activity_FitzHughNagumo=0.0       \
-        time_constant_w_FitzHughNagumo = 12.5,         \
-        integration_method="RK4"        \
-        base_level_gain=0.5,                \
-        scaling_factor_gain=3.0,            \
-        modulation=None,                    \
-        params=None,                        \
-        name=None,                          \
+    LCControlMechanism(                           \
+        system=None,                              \
+        objective_mechanism=None,                 \
+        modulated_mechanisms=None,                \
+        initial_w_FitzHughNagumo=0.0,             \
+        initial_v_FitzHughNagumo=0.0,             \
+        time_step_size_FitzHughNagumo=0.05,       \
+        t_0_FitzHughNagumo=0.0,                   \
+        a_v_FitzHughNagumo=-1/3,                  \
+        b_v_FitzHughNagumo=0.0,                   \
+        c_v_FitzHughNagumo=1.0,                   \
+        d_v_FitzHughNagumo=0.0,                   \
+        e_v_FitzHughNagumo=-1.0,                  \
+        f_v_FitzHughNagumo=1.0,                   \
+        threshold_FitzHughNagumo=-1.0             \
+        time_constant_v_FitzHughNagumo=1.0,       \
+        a_w_FitzHughNagumo=1.0,                   \
+        b_w_FitzHughNagumo=-0.8,                  \
+        c_w_FitzHughNagumo=0.7,                   \
+        mode_FitzHughNagumo=1.0,                  \
+        uncorrelated_activity_FitzHughNagumo=0.0  \
+        time_constant_w_FitzHughNagumo = 12.5,    \
+        integration_method="RK4"                  \
+        base_level_gain=0.5,                      \
+        scaling_factor_gain=3.0,                  \
+        modulation=None,                          \
+        params=None,                              \
+        name=None,                                \
         prefs=None)
 
     Subclass of `ControlMechanism <AdaptiveMechanism>` that modulates the `multiplicative_param
@@ -683,12 +683,12 @@ class LCControlMechanism(ControlMechanism):
 
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION:FitzHughNagumoIntegrator,
-                               CONTROL_SIGNALS: None,
                                CONTROL_PROJECTIONS: None,
                                })
 
     @tc.typecheck
     def __init__(self,
+                 default_variable=None,
                  system:tc.optional(System_Base)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
@@ -718,9 +718,8 @@ class LCControlMechanism(ControlMechanism):
                  scaling_factor_gain=3.0,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None,
-                 default_variable=None):
+                 prefs:is_pref_set=None
+                 ):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
@@ -806,14 +805,8 @@ class LCControlMechanism(ControlMechanism):
 
         # *ALL* is specified for modulated_mechanisms:
         # assign all Processing Mechanisms in LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
+        # FIX: IMPLEMENT FOR COMPOSITION
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
-            # if not (hasattr(self, 'systems') or hasattr(self, 'processes')):
-                # raise LCControlMechanismError("The keyword {} was specified for the {} argument of the constructor "
-                #                               "for {}, but it does not belong to any Systems or Processes".
-                #                               format(repr(ALL), repr(MODULATED_MECHANISMS), self.name))
-                # defer instantiation of OutputStates until LCControlMechanism is in a System
-                # return
-            # if hasattr(self, 'systems'):
             if self.systems:
                 for system in self.systems:
                     self.modulated_mechanisms = []
@@ -823,15 +816,6 @@ class LCControlMechanism(ControlMechanism):
                                 not (isinstance(mech, ObjectiveMechanism) and mech._role is CONTROL) and
                                 hasattr(mech.function, MULTIPLICATIVE_PARAM)):
                             self.modulated_mechanisms.append(mech)
-            # # elif hasattr(self, 'processes'):
-            # elif self.processes:
-            #     for process in self.processes:
-            #         self.modulated_mechanisms = []
-            #         for mech in process.mechanisms:
-            #             if (mech not in self.modulated_mechanisms and
-            #                     isinstance(mech, ProcessingMechanism_Base) and
-            #                     hasattr(mech.function, MULTIPLICATIVE_PARAM)):
-            #                 self.modulated_mechanisms.append(mech)
             else:
                 # If LCControlMechanism is not in a Process or System, defer implementing OutputStates until it is
                 return
@@ -847,7 +831,8 @@ class LCControlMechanism(ControlMechanism):
             ctl_sig_projs = []
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))
-            self._control_signals = [{PROJECTIONS: ctl_sig_projs}]
+            self.control_signals = [{PROJECTIONS: ctl_sig_projs}]
+
         super()._instantiate_output_states(context=context)
 
     def _execute(
@@ -867,15 +852,10 @@ class LCControlMechanism(ControlMechanism):
             context=context
         )
 
-        gain_t = self.parameters.scaling_factor_gain.get(execution_id) * output_values[1] + self.parameters.base_level_gain.get(execution_id)
+        gain_t = self.parameters.scaling_factor_gain._get(execution_id) * output_values[1] \
+                 + self.parameters.base_level_gain._get(execution_id)
 
         return gain_t, output_values[0], output_values[1], output_values[2]
-
-    # @tc.typecheck
-    # def _add_process(self, process, role:str):
-    #     super()._add_process(process, role)
-    #     if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
-    #         self._instantiate_output_states(context=ContextFlags.METHOD)
 
     def _get_mech_params_type(self, ctx):
         return ctx.convert_python_struct_to_llvm_ir((self.scaling_factor_gain, self.base_level_gain))
@@ -890,7 +870,7 @@ class LCControlMechanism(ControlMechanism):
         elements_ty = pnlvm.ir.LiteralStructType(elements)
 
         # allocate new output type
-        new_out = builder.alloca(elements_ty, 1)
+        new_out = builder.alloca(elements_ty)
 
         # Load mechanism parameters
         params, _, _, _ = builder.function.args
@@ -904,7 +884,6 @@ class LCControlMechanism(ControlMechanism):
         vi = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
         vo = builder.gep(new_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        index = None
         with pnlvm.helpers.array_ptr_loop(builder, vi, "LC_gain") as (builder, index):
             in_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
             val = builder.load(in_ptr);

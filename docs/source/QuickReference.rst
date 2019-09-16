@@ -1,17 +1,18 @@
 Quick Reference
 ===============
 
-* `Conventions`
-* `Repository_Organization`
-* `PsyNeuLink_Objects`
-    * `Quick_Reference_Overview`
-    * `Quick_Reference_Components`
-    * `Quick_Reference_Compositions`
-* `Quick_Reference_Scheduling`
-* `Quick_Reference_Logging`
-* `Quick_Reference_Graphic_Displays`
-* `Quick_Reference_Preferences`
-
+Sections
+--------
+    * `Conventions`
+    * `Repository_Organization`
+    * `PsyNeuLink_Objects`
+        * `Quick_Reference_Overview`
+        * `Quick_Reference_Components`
+        * `Quick_Reference_Compositions`
+    * `Quick_Reference_Scheduling`
+    * `Quick_Reference_Logging`
+    * `Quick_Reference_Graphic_Displays`
+    * `Quick_Reference_Preferences`
 
 .. _Conventions:
 

@@ -306,7 +306,8 @@ class TestDistributionFunctions:
                 integrator_mode=True
             )
 
-        assert "The standard_deviation parameter" in str(error_text) and "must be greater than zero" in str(error_text)
+        assert "The standard_deviation parameter" in str(error_text.value)
+        assert "must be greater than zero" in str(error_text.value)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -348,7 +349,7 @@ class TestDistributionFunctions:
                     noise=UniformToNormalDist(),
                     integration_rate=1.0
                 )
-            assert "The UniformToNormalDist function requires the SciPy package." in str(error_text)
+            assert "The UniformToNormalDist function requires the SciPy package." in str(error_text.value)
 
 
     @pytest.mark.mechanism
@@ -784,6 +785,7 @@ class TestTransferMechanismIntegratorFunctionParams:
         )
         if mode == 'Python':
             EX = T.execute
+            assert True
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T)
             EX = e.execute
@@ -844,6 +846,47 @@ class TestTransferMechanismIntegratorFunctionParams:
             "The format of the initial_value parameter" in str(error_text.value)
             and "must match its variable" in str(error_text.value)
         )
+
+    def test_transfer_mech_array_assignment_matches_size_integrator_fct_param_def(self):
+
+        T = TransferMechanism(
+                name='T',
+                default_variable=[0 for i in range(VECTOR_SIZE)],
+                integrator_mode=True,
+                integrator_function=AdaptiveIntegrator(rate=[.1 + i/10 for i in range(VECTOR_SIZE)])
+        )
+        result1 = T.execute([range(VECTOR_SIZE)])
+        result2 = T.execute([range(VECTOR_SIZE)])
+        assert np.allclose(result1, [[0., 0.2, 0.6, 1.2]])
+        assert np.allclose(result2, [[0., 0.36, 1.02, 1.92]])
+
+    def test_transfer_mech_array_assignment_wrong_size_integrator_fct_default_variable(self):
+
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    integrator_function=AdaptiveIntegrator(default_variable=[0 for i in range(VECTOR_SIZE+1)])
+            )
+        error_msg_a = 'The length (5) of the \'variable\' or one of the parameters specified for '
+        error_msg_b = 'the integrator_function of T doesn\'t match the size (4) of the '
+        error_msg_c = 'innermost dimension (axis 0) of its \'variable\' (i.e., the length of its items .'
+        assert (error_msg in str(error_text.value) for error_msg in {error_msg_a, error_msg_b, error_msg_c})
+
+    def test_transfer_mech_array_assignment_wrong_size_integrator_fct_param(self):
+
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(
+                    name='T',
+                    default_variable=[0 for i in range(VECTOR_SIZE)],
+                    integrator_mode=True,
+                    integrator_function=AdaptiveIntegrator(rate=[0 for i in range(VECTOR_SIZE+1)])
+            )
+        error_msg_a = 'The length (5) of the \'variable\' or one of the parameters specified for '
+        error_msg_b = 'the integrator_function of T doesn\'t match the size (4) of the '
+        error_msg_c = 'innermost dimension (axis 0) of its \'variable\' (i.e., the length of its items .'
+        assert (error_msg in str(error_text.value) for error_msg in {error_msg_a, error_msg_b, error_msg_c})
 
     # FIX: CAN'T RUN THIS YET:  CRASHES W/O ERROR MESSAGE SINCE DEFAULT_VARIABLE OF FCT DOESN'T MATCH ITS INITIALIZER
     # # def test_transfer_mech_array_assignments_wrong_size_fct_initlzr(self, benchmark, mode):
@@ -1773,8 +1816,8 @@ class TestIntegratorMode:
             T_not_integrator = TransferMechanism()
             T_not_integrator.execute(1.0)
             T_not_integrator.reinitialize(0.0)
-        assert "not allowed because this Mechanism is not stateful." in str(err_txt) \
-               and "try setting the integrator_mode argument to True." in str(err_txt)
+        assert "not allowed because this Mechanism is not stateful." in str(err_txt.value)
+        assert "try setting the integrator_mode argument to True." in str(err_txt.value)
 
     def test_switch_mode(self):
         T = TransferMechanism(integrator_mode=True,

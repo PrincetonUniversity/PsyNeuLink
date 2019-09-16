@@ -1,5 +1,6 @@
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.scheduling.time import TimeScale
 
 try:
     import torch
@@ -47,12 +48,12 @@ class PytorchModelCreator(torch.nn.Module):
                 afferents = {}  # dict for keeping track of afferent nodes and their connecting weights
 
                 if param_init_from_pnl:
-                    if component.parameters.value.get(execution_id) is None:
-                        value = torch.tensor(component.parameters.value.get(None)[0])
+                    if component.parameters.value._get(execution_id) is None:
+                        value = torch.tensor(component.parameters.value._get(None)[0])
                     else:
-                        value = torch.tensor(component.parameters.value.get(execution_id)[0])
+                        value = torch.tensor(component.parameters.value._get(execution_id)[0])
                 else:
-                    input_length = len(component.input_states[0].parameters.value.get(None))
+                    input_length = len(component.input_states[0].parameters.value._get(None))
                     value = torch.zeros(input_length, device=self.device).double()
 
                 # if `node` is not an origin node (origin nodes don't have biases or afferent connections)
@@ -60,7 +61,7 @@ class PytorchModelCreator(torch.nn.Module):
 
                     # if not copying parameters from psyneulink, set up pytorch biases for node
                     if not param_init_from_pnl:
-                        input_length = len(component.input_states[0].parameters.value.get(None))
+                        input_length = len(component.input_states[0].parameters.value._get(None))
                         biases = nn.Parameter(torch.zeros(input_length, device=self.device).double())
                         self.params.append(biases)
                         self.mechanisms_to_pytorch_biases[component] = biases
@@ -74,9 +75,9 @@ class PytorchModelCreator(torch.nn.Module):
                         input_node = processing_graph.comp_to_vertex[input_component]
 
                         # CW 12/3/18: Check this logic later
-                        proj_matrix = mapping_proj.parameters.matrix.get(execution_id)
+                        proj_matrix = mapping_proj.parameters.matrix._get(execution_id)
                         if proj_matrix is None:
-                            proj_matrix = mapping_proj.parameters.matrix.get(None)
+                            proj_matrix = mapping_proj.parameters.matrix._get(None)
 
                         # set up pytorch weights that correspond to projection. If copying params from psyneulink,
                         # copy weight values from projection. Otherwise, use random values.
@@ -98,7 +99,7 @@ class PytorchModelCreator(torch.nn.Module):
         self.copy_weights_to_psyneulink(execution_id)
 
     # performs forward computation for the model
-    def forward(self, inputs, execution_id=None, do_logging=True):
+    def forward(self, inputs, execution_id=None, do_logging=True, scheduler=None):
 
         outputs = {}  # dict for storing values of terminal (output) nodes
 
@@ -141,6 +142,9 @@ class PytorchModelCreator(torch.nn.Module):
                 if i == len(self.execution_sets) - 1:
                     outputs[component] = value
 
+            if scheduler is not None:
+                scheduler.get_clock(execution_id)._increment_time(TimeScale.TIME_STEP)
+
         self.copy_outputs_to_psyneulink(outputs, execution_id)
         if do_logging:
             self.log_weights(execution_id)
@@ -158,13 +162,13 @@ class PytorchModelCreator(torch.nn.Module):
 
     def copy_weights_to_psyneulink(self, execution_id=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
-            projection.parameters.matrix.set(weights.detach().numpy(), execution_id)
+            projection.parameters.matrix._set(weights.detach().numpy(), execution_id)
 
     def copy_outputs_to_psyneulink(self, outputs, execution_id=None):
         for component, value in outputs.items():
             detached_value = value.detach().numpy()
-            component.parameters.value.set(detached_value, execution_id, override=True, skip_history=True, skip_log=True)
-            component.output_state.parameters.value.set(detached_value, execution_id, override=True, skip_history=True, skip_log=True)
+            component.parameters.value._set(detached_value, execution_id, skip_history=True, skip_log=True)
+            component.output_state.parameters.value._set(detached_value, execution_id, skip_history=True, skip_log=True)
 
     def log_weights(self, execution_id=None):
         for projection, weights in self.projections_to_pytorch_weights.items():

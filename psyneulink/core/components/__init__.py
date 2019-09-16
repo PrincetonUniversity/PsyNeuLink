@@ -7,11 +7,11 @@
 #
 #
 # ***********************************************  Init ****************************************************************
-'''
+"""
 This module provides core psyneulink mechanisms, projections, functions, and states
 
 https://princetonuniversity.github.io/PsyNeuLink/Component.html
-'''
+"""
 
 #
 # __all__ = ['INPUT_STATES',

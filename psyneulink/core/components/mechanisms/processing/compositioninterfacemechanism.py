@@ -48,17 +48,16 @@ Class Reference
 
 import typecheck as tc
 
-from collections import Iterable
+from collections.abc import Iterable
 
-from psyneulink.core.components.functions.interfacefunctions import Identity
+from psyneulink.core.components.functions.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.components.states.outputstate import StandardOutputStates, standard_output_states
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, NAME, OWNER_VALUE, PRIMARY, RESULT, RESULTS, VARIABLE, kwPreferenceSetName
+from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 

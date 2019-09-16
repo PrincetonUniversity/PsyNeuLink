@@ -99,6 +99,8 @@ def test_moving_average():
             objective_mechanism=False,
             control_signals=[t1_control_signal, t2_control_signal]))
 
+    comp.disable_all_history()
+
     # Lets setup some input to the mechanism, not that it uses it for anything.
     stim_list_dict = {ma_mech: [0]}
 

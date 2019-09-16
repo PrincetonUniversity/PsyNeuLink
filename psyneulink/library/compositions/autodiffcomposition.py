@@ -237,11 +237,12 @@ from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.scheduling.time import TimeScale
 
-import numpy as np
 import copy
+import numpy as np
 
-from collections import Iterable
+from collections.abc import Iterable
 from toposort import toposort
 
 import logging
@@ -496,21 +497,21 @@ class AutodiffComposition(Composition):
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.execution_sets is None:
             self.execution_sets = list(self.scheduler.run())
-        if self.parameters.pytorch_representation.get(execution_id) is None:
+        if self.parameters.pytorch_representation._get(execution_id) is None:
             model = PytorchModelCreator(self.graph_processing,
                                         self.param_init_from_pnl,
                                         self.execution_sets,
                                         self.device,
                                         execution_id)
-            self.parameters.pytorch_representation.set(model, execution_id)
+            self.parameters.pytorch_representation._set(model, execution_id)
 
         # Set up optimizer function
-        old_opt = self.parameters.optimizer.get(execution_id)
+        old_opt = self.parameters.optimizer._get(execution_id)
         if old_opt is not None:
             logger.warning("Overwriting optimizer for AutodiffComposition {}! Old optimizer: {}".format(
                 self, old_opt))
         opt = self._make_optimizer(self.optimizer_type, self.learning_rate, self.weight_decay, execution_id)
-        self.parameters.optimizer.set(opt, execution_id)
+        self.parameters.optimizer._set(opt, execution_id)
 
         # Set up loss function
         if self.loss is not None:
@@ -525,7 +526,7 @@ class AutodiffComposition(Composition):
             raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
                                            "Currently, Stochastic Gradient Descent and Adam are the only available "
                                            "optimizers (specified as 'sgd' or 'adam').")
-        params = self.parameters.pytorch_representation.get(execution_id).parameters()
+        params = self.parameters.pytorch_representation._get(execution_id).parameters()
         if optimizer_type == 'sgd':
             return optim.SGD(params, lr=learning_rate, weight_decay=weight_decay)
         else:
@@ -571,11 +572,11 @@ class AutodiffComposition(Composition):
         return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
 
     # performs forward computation for one input
-    def autodiff_processing(self, inputs, execution_id=None, do_logging=False):
-        pytorch_representation = self.parameters.pytorch_representation.get(execution_id)
+    def autodiff_processing(self, inputs, execution_id=None, do_logging=False, scheduler=None):
+        pytorch_representation = self.parameters.pytorch_representation._get(execution_id)
         # run the model on inputs - switch autograd off for this (we don't need it)
         with torch.no_grad():
-            tensor_outputs = pytorch_representation.forward(inputs, execution_id=execution_id, do_logging=do_logging)
+            tensor_outputs = pytorch_representation.forward(inputs, execution_id=execution_id, do_logging=do_logging, scheduler=scheduler)
 
         # get outputs back into numpy
         outputs = []
@@ -585,7 +586,7 @@ class AutodiffComposition(Composition):
         return outputs
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
-    def autodiff_training(self, inputs, targets, epochs, execution_id=None, do_logging=False):
+    def autodiff_training(self, inputs, targets, epochs, execution_id=None, do_logging=False, scheduler=None):
 
         # FIX CW 11/1/18: this value of num_inputs assumes all inputs have same length, and that the length of
         # the input for an origin component equals the number of desired trials. We could clean this up
@@ -593,11 +594,11 @@ class AutodiffComposition(Composition):
         first_input_value = list(inputs.values())[0]
         num_inputs = len(first_input_value)
 
-        patience = self.parameters.patience.get(execution_id)
+        patience = self.parameters.patience._get(execution_id)
 
         if patience is not None:
             # set up object for early stopping
-            early_stopper = EarlyStopping(patience=patience, min_delta=self.parameters.min_delta.get(execution_id))
+            early_stopper = EarlyStopping(patience=patience, min_delta=self.parameters.min_delta._get(execution_id))
 
         # if training over trial sets in random order, set up array for mapping random order back to original order
         if self.randomize:
@@ -624,8 +625,8 @@ class AutodiffComposition(Composition):
             # reset temporary list to keep track of most recent outputs
             outputs = []
 
-            self.parameters.pytorch_representation.get(execution_id).detach_all()
-            # self.parameters.pytorch_representation.get(execution_id).reset_all()
+            self.parameters.pytorch_representation._get(execution_id).detach_all()
+            # self.parameters.pytorch_representation._get(execution_id).reset_all()
 
             # iterate over inputs, targets
             for t in range(num_inputs):
@@ -644,10 +645,11 @@ class AutodiffComposition(Composition):
                     curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
 
                 # do forward computation on current inputs
-                curr_tensor_outputs = self.parameters.pytorch_representation.get(execution_id).forward(
+                curr_tensor_outputs = self.parameters.pytorch_representation._get(execution_id).forward(
                     curr_tensor_inputs,
                     execution_id,
-                    do_logging
+                    do_logging,
+                    scheduler=scheduler
                 )
 
                 # compute total loss across output neurons for current trial
@@ -660,7 +662,7 @@ class AutodiffComposition(Composition):
                 # save average loss across all output neurons on current trial
                 curr_losses[t] = (curr_loss[0].item())/out_size
 
-                optimizer = self.parameters.optimizer.get(execution_id)
+                optimizer = self.parameters.optimizer._get(execution_id)
 
                 # backpropagate to compute gradients and perform learning update for parameters
                 optimizer.zero_grad()
@@ -669,6 +671,7 @@ class AutodiffComposition(Composition):
                     curr_loss.backward(retain_graph=False)
                 else:
                     curr_loss.backward(retain_graph=True)
+                self.parameters.pytorch_representation._get(execution_id).copy_weights_to_psyneulink(execution_id)
                 optimizer.step()
 
                 # save outputs of model if this is final epoch
@@ -681,12 +684,14 @@ class AutodiffComposition(Composition):
                 #     curr_output_list.append(curr_tensor_outputs[component].detach().numpy().copy())
                 outputs.append(curr_output_list)
 
+                scheduler.get_clock(execution_id)._increment_time(TimeScale.TRIAL)
+
             # save average loss on the current epoch
             average_loss = np.mean(curr_losses)
-            self.parameters.losses.get(execution_id).append(average_loss)
+            self.parameters.losses._get(execution_id).append(average_loss)
 
             # update early stopper with most recent average loss
-            if self.parameters.patience.get(execution_id) is not None:
+            if self.parameters.patience._get(execution_id) is not None:
                 should_stop = early_stopper.step(average_loss)
                 if should_stop:
                     logger.warning('Stopped training early after {} epochs'.format(epoch))
@@ -726,6 +731,13 @@ class AutodiffComposition(Composition):
                 context=None
                 ):
         execution_id = self._assign_execution_ids(execution_id)
+        self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
+
+        if scheduler_processing is None:
+            scheduler_processing = self.scheduler_processing
+
+        scheduler_processing._init_clock(execution_id, base_execution_id)
+
         if self.learning_enabled:
             # TBI: How are we supposed to use base_execution_id and statefulness here?
             # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
@@ -741,11 +753,11 @@ class AutodiffComposition(Composition):
             if "epochs" in inputs:
                 autodiff_epochs = inputs["epochs"]
 
-            output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id, do_logging)
-            ctx = self.output_CIM.parameters.context.get(execution_id)
+            output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, execution_id, do_logging, scheduler_processing)
+            ctx = self.output_CIM.parameters.context._get(execution_id)
             # new_ctx = copy.deepcopy(ctx)
             # new_ctx.execution_phase = ContextFlags.PROCESSING
-            # self.output_CIM.parameters.context.set(new_ctx, execution_id=execution_id)
+            # self.output_CIM.parameters.context._set(new_ctx, execution_id=execution_id)
             if ctx is not None:  # HACK: CW 12/18/18 for some reason context isn't set correctly
                 ctx.execution_phase = ContextFlags.PROCESSING
             # note that output[-1] might not be the truly most recent value
@@ -794,12 +806,19 @@ class AutodiffComposition(Composition):
         context=None):
         # TBI: Handle trials, timesteps, etc
         execution_id = self._assign_execution_ids(execution_id)
+        self._assign_context_values(execution_id=execution_id, composition=self, propagate=True)
+
+        if scheduler_processing is None:
+            scheduler_processing = self.scheduler_processing
+
+        scheduler_processing._init_clock(execution_id)
+
         if self.learning_enabled:
 
             self._analyze_graph()
 
-            if self.refresh_losses or (self.parameters.losses.get(execution_id) is None):
-                self.parameters.losses.set([], execution_id)
+            if self.refresh_losses or (self.parameters.losses._get(execution_id) is None):
+                self.parameters.losses._set([], execution_id)
             adjusted_stimuli = self._adjust_stimulus_dict(inputs)
             if num_trials is None:
                 num_trials = len(adjusted_stimuli)
@@ -813,10 +832,9 @@ class AutodiffComposition(Composition):
                     do_logging=do_logging,
                 )
                 results.append(trial_output)
-            return results
 
         else:
-            return super(AutodiffComposition, self).run(inputs=inputs,
+            results = super(AutodiffComposition, self).run(inputs=inputs,
                                                     scheduler_processing=scheduler_processing,
                                                     termination_processing=termination_processing,
                                                     execution_id=execution_id,
@@ -833,6 +851,9 @@ class AutodiffComposition(Composition):
                                                     reinitialize_values=reinitialize_values,
                                                     runtime_params=runtime_params,
                                                     context=context)
+
+        scheduler_processing.get_clock(execution_id)._increment_time(TimeScale.RUN)
+        return results
 
     # validates properties of the autodiff composition, and arguments to run, when run is called
     def _validate_params(self, targets, epochs):
@@ -903,7 +924,7 @@ class AutodiffComposition(Composition):
         if execution_id is NotImplemented:
             execution_id = self.default_execution_id
 
-        pytorch_representation = self.parameters.pytorch_representation.get(execution_id)
+        pytorch_representation = self.parameters.pytorch_representation._get(execution_id)
 
         if pytorch_representation is None:
             raise AutodiffCompositionError("{0} has not been run yet so parameters have not been created "

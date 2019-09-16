@@ -317,18 +317,16 @@ def _get_modulated_param(owner, mod_proj, execution_context=None):
     """
 
     from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+    from psyneulink.core.globals.parameters import parse_execution_context
 
     if not isinstance(mod_proj, ModulatoryProjection_Base):
         raise FunctionError('mod_proj ({0}) is not a ModulatoryProjection_Base'.format(mod_proj))
 
-    # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
-    function_mod_meta_param_obj = mod_proj.sender.modulation
+    execution_id = parse_execution_context(execution_context)
 
-    # # MODIFIED 6/27/18 OLD
-    # # Get the actual parameter of owner.function to be modulated
-    # function_param_name = owner.function.params[function_mod_meta_param_obj.value.attrib_name]
-    # # Get the function parameter's value
-    # function_param_value = owner.function.params[function_param_name]
+    # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
+    function_mod_meta_param_obj = mod_proj.sender.parameters.modulation._get(execution_id)
+
     # # MODIFIED 6/27/18 NEW:
     if function_mod_meta_param_obj in {OVERRIDE, DISABLE}:
         # function_param_name = function_mod_meta_param_obj
@@ -674,6 +672,28 @@ class Function_Base(Function):
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
 
+    def function(self,
+                 variable=None,
+                 execution_id=None,
+                 params=None,
+                 target_set=None,
+                 context=None,
+                 **kwargs):
+        # Validate variable and assign to variable, and validate params
+        variable = self._check_args(variable=variable,
+                                    execution_id=execution_id,
+                                    params=params,
+                                    target_set=target_set,
+                                    context=context)
+        value = self._function(variable=variable,
+                               execution_id=execution_id,
+                               params=params,
+                               context=context,
+                               **kwargs)
+        self.most_recent_execution_id=execution_id
+        self.parameters.value._set(value, execution_context=execution_id)
+        return value
+
     def _parse_arg_generic(self, arg_val):
         if isinstance(arg_val, list):
             return np.asarray(arg_val)
@@ -682,30 +702,31 @@ class Function_Base(Function):
 
     def _validate_parameter_spec(self, param, param_name, numeric_only=True):
         """Validates function param
-        Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()'s"""
+        Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()'s
+        """
         if not parameter_spec(param, numeric_only):
             owner_name = 'of ' + self.owner_name if self.owner else ""
             raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
                                 format(param, param_name, self.__class__.__name__, owner_name))
 
-    def get_current_function_param(self, param_name, execution_context=None):
+    def get_current_function_param(self, param_name, execution_id=None):
         if param_name == "variable":
             raise FunctionError("The method 'get_current_function_param' is intended for retrieving the current value "
                                 "of a function parameter. 'variable' is not a function parameter. If looking for {}'s "
                                 "default variable, try {}.defaults.variable.".format(self.name, self.name))
         try:
-            return self.owner._parameter_states[param_name].parameters.value.get(execution_context)
+            return self.owner._parameter_states[param_name].parameters.value._get(execution_id)
         except (AttributeError, TypeError):
             try:
-                return getattr(self.parameters, param_name).get(execution_context)
+                return getattr(self.parameters, param_name)._get(execution_id)
             except AttributeError:
                 raise FunctionError("{0} has no parameter '{1}'".format(self, param_name))
 
-    def get_previous_value(self, execution_context=None):
+    def get_previous_value(self, execution_id=None):
         # temporary method until previous values are integrated for all parameters
-        value = self.parameters.previous_value.get(execution_context)
+        value = self.parameters.previous_value._get(execution_id)
         if value is None:
-            value = self.parameters.previous_value.get()
+            value = self.parameters.previous_value._get()
 
         return value
 
@@ -718,7 +739,15 @@ class Function_Base(Function):
 
         value = np.asarray(value)
 
-        # region Type conversion (specified by output_type):
+        # Type conversion (specified by output_type):
+
+        # MODIFIED 6/21/19 NEW: [JDC]
+        # Convert to same format as variable
+        if isinstance(output_type, (list, np.ndarray)):
+            shape = np.array(output_type).shape
+            return np.array(value).reshape(shape)
+        # MODIFIED 6/21/19 END
+
         # Convert to 2D array, irrespective of value type:
         if output_type is FunctionOutputType.NP_2D_ARRAY:
             # KDM 8/10/18: mimicking the conversion that Mechanism does to its values, because
@@ -743,8 +772,8 @@ class Function_Base(Function):
                 if len(value) == 1:
                     value = value[0]
                 else:
-                    raise FunctionError("Can't convert value ({0}: 2D np.ndarray object with more than one array)"
-                                        " to 1D array".format(value))
+                    raise FunctionError(f"Can't convert value ({value}: 2D np.ndarray object with more than one array)"
+                                        " to 1D array.")
             elif value.ndim == 1:
                 value = value
             elif value.ndim == 0:
@@ -813,19 +842,29 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
-    def _get_context_initializer(self, execution_id):
+    def _get_compilation_state(self):
         try:
-            stateful = (getattr(self.parameters, sa).get(execution_id) for sa in self.stateful_attributes)
-            # Skip first element of random state (id string)
-            lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
-
-            return pnlvm._tupleize(lists)
+            stateful = self.stateful_attributes
         except AttributeError:
-            return tuple([])
+            return ()
+        return (getattr(self.parameters, sa) for sa in stateful)
+
+    def _get_state_ids(self):
+        return [sp.name for sp in self._get_compilation_state()]
+
+    def _get_state_values(self, execution_id=None):
+        return tuple(sp._get(execution_id) for sp in self._get_compilation_state())
+
+    def _get_state_initializer(self, execution_id):
+        stateful = self._get_state_values(execution_id)
+        # Skip first element of random state (id string)
+        lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
+
+        return pnlvm._tupleize(lists)
 
     def _get_compilation_params(self, execution_id=None):
         # Filter out known unused/invalid params
-        black_list = {'function', 'variable', 'value', 'context', 'initializer'}
+        black_list = {'variable', 'value', 'context', 'initializer'}
         try:
             # Don't list stateful params, the are included in context
             black_list.update(self.stateful_attributes)
@@ -833,7 +872,7 @@ class Function_Base(Function):
             pass
         def _is_compilation_param(p):
             if p.name not in black_list and not isinstance(p, ParameterAlias):
-                val = p.get(execution_id)
+                val = p._get(execution_id)
                 # Check if the value is string (like integration_method)
                 return not isinstance(val, str)
             return False
@@ -846,7 +885,7 @@ class Function_Base(Function):
     def _get_param_values(self, execution_id=None):
         param_init = []
         for p in self._get_compilation_params(execution_id):
-            param = p.get(execution_id)
+            param = p._get(execution_id)
             try:
                 # Existence of parameter state changes the shape to array
                 # the base value should remain the same though
@@ -865,6 +904,12 @@ class Function_Base(Function):
 
     def _get_param_initializer(self, execution_id):
         return pnlvm._tupleize(self._get_param_values(execution_id))
+
+    def _is_identity(self, execution_id=None):
+        # should return True in subclasses if the parameters for execution_id are such that
+        # the Function's output will be the same as its input
+        # Used to bypass execute when unnecessary
+        return False
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
@@ -1053,7 +1098,7 @@ class ArgumentTherapy(Function_Base):
 
         super()._validate_params(request_set, target_set, context)
 
-    def function(self,
+    def _function(self,
                  variable=None,
                  execution_id=None,
                  params=None,
@@ -1079,8 +1124,6 @@ class ArgumentTherapy(Function_Base):
         therapeutic response : boolean
 
         """
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
         # Compute the function
         statement = variable
         propensity = self.get_current_function_param(PROPENSITY, execution_id)

@@ -61,7 +61,7 @@ class GymForagerCFAError(Exception):
 
 
 class GymForagerCFA(CompositionFunctionApproximator):
-    '''Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
+    """Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
     <CompositionFunctionApproximator.evaluate>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
     for a `Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, from a set of `feature_values
     <OptimizationControlMechanism.feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
@@ -84,13 +84,13 @@ class GymForagerCFA(CompositionFunctionApproximator):
     predict the `net_outcome <ControlMechanism.net_outcome>` from the
     `prediction_vector <RegressorCFA.prediction_vector>`.
 
-    '''
+    """
 
     def __init__(self,
                  name=None,
                  update_weights=BayesGLM,
                  prediction_terms:tc.optional(list)=None):
-        '''
+        """
 
         Arguments
         ---------
@@ -99,7 +99,7 @@ class GymForagerCFA(CompositionFunctionApproximator):
         Attributes
         ----------
 
-        '''
+        """
 
         self.update_weights = update_weights
         self._instantiate_prediction_terms(prediction_terms)
@@ -108,10 +108,10 @@ class GymForagerCFA(CompositionFunctionApproximator):
 
 
     def initialize(self, features_array, control_signals):
-        '''Assign owner and instantiate `prediction_vector <RegressorCFA.prediction_vector>`
+        """Assign owner and instantiate `prediction_vector <RegressorCFA.prediction_vector>`
 
         Must be called before RegressorCFA's methods can be used.
-        '''
+        """
 
         prediction_terms = self.prediction_terms
         self.prediction_vector = self.PredictionVector(features_array, control_signals, prediction_terms)
@@ -125,10 +125,11 @@ class GymForagerCFA(CompositionFunctionApproximator):
             self.update_weights.reinitialize({DEFAULT_VARIABLE: update_weights_default_variable})
 
     def adapt(self, feature_values, control_allocation, net_outcome, execution_id=None):
-        '''Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
-        **net_outcome** from **feature_values** and **control_allocation**.'''
-        prediction_vector = self.parameters.prediction_vector.get(execution_id)
-        previous_state = self.parameters.previous_state.get(execution_id)
+        """Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
+        **net_outcome** from **feature_values** and **control_allocation**.
+        """
+        prediction_vector = self.parameters.prediction_vector._get(execution_id)
+        previous_state = self.parameters.previous_state._get(execution_id)
 
         if previous_state is not None:
             # Update regression_weights
@@ -149,13 +150,12 @@ class GymForagerCFA(CompositionFunctionApproximator):
             previous_state=previous_state,
             prediction_vector=prediction_vector,
             regression_weights=regression_weights,
-            override=True
         )
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
     # def evaluate(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
     def evaluate(self, feature_values, control_allocation, num_estimates, context, execution_id=None):
-        '''Update prediction_vector <RegressorCFA.prediction_vector>`,
+        """Update prediction_vector <RegressorCFA.prediction_vector>`,
         then multiply by regression_weights.
 
         Uses the current values of `regression_weights <RegressorCFA.regression_weights>` together with
@@ -165,10 +165,10 @@ class GymForagerCFA(CompositionFunctionApproximator):
         .. note::
             If this method is assigned as the `objective_funtion of a `GradientOptimization` `Function`,
             it is differentiated using `autograd <https://github.com/HIPS/autograd>`_\\.grad().
-        '''
+        """
         predicted_outcome=0
 
-        prediction_vector = self.parameters.prediction_vector.get(execution_id)
+        prediction_vector = self.parameters.prediction_vector._get(execution_id)
 
         count = num_estimates if num_estimates else 1
         for i in range(count):
@@ -178,7 +178,7 @@ class GymForagerCFA(CompositionFunctionApproximator):
             #      OR SHOULD MULTIPLE SAMPLES BE DRAWN AND AVERAGED AT END OF ADAPT METHOD?
             #      I.E., AVERAGE WEIGHTS AND THEN OPTIMIZE OR OTPIMZE FOR EACH SAMPLE OF WEIGHTS AND THEN AVERAGE?
 
-            weights = self.parameters.regression_weights.get(execution_id)
+            weights = self.parameters.regression_weights._get(execution_id)
             net_outcome = 0
 
             for term_label, term_value in vector.items():

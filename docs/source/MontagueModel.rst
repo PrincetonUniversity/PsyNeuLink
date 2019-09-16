@@ -66,4 +66,4 @@ The model can be visualized as shown below.
 
 
 
-Script: :download:`Download MontagueModel.py <../../Scripts/Models/MontagueDayanSejnowski96.py>`
+Script: :download:`Download MontagueModel.py <../../psyneulink/library/models/MontagueDayanSejnowski96.py>`

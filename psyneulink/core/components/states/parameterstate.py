@@ -351,6 +351,7 @@ Class Reference
 """
 
 import inspect
+import warnings
 
 import numpy as np
 import typecheck as tc
@@ -362,7 +363,10 @@ from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
+from psyneulink.core.globals.keywords import \
+    CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
+    LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
+    PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities \
@@ -528,6 +532,7 @@ class ParameterState(State_Base):
     connectsWithAttribute = [CONTROL_SIGNALS, LEARNING_SIGNALS]
     projectionSocket = SENDER
     modulators = [CONTROL_SIGNAL, LEARNING_SIGNAL]
+    canReceive = modulators
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -551,7 +556,15 @@ class ParameterState(State_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 **kwargs):
+
+        # If context is not COMPONENT or CONSTRUCTOR, raise exception
+        context = kwargs.pop(CONTEXT, None)
+        if context == ContextFlags.COMPONENT:
+            context = ContextFlags.CONSTRUCTOR
+        if not context == ContextFlags.CONSTRUCTOR:
+            raise ParameterStateError(f"Contructor for {self.__class__.__name__} cannot be called directly"
+                                      f"(context: {context}")
 
         # FIX: UPDATED TO INCLUDE LEARNING [CHANGE THIS TO INTEGRATOR FUNCTION??]
         # # Reassign default for MATRIX param of MappingProjection
@@ -574,8 +587,7 @@ class ParameterState(State_Base):
                                              params=params,
                                              name=name,
                                              prefs=prefs,
-                                             context=ContextFlags.CONSTRUCTOR)
-                                             # context=context)
+                                             context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that ParameterState (as identified by its name) is for a valid parameter of the owner
@@ -631,6 +643,15 @@ class ParameterState(State_Base):
 
         self._instantiate_projections_to_state(projections=projections, context=context)
 
+    def _check_for_duplicate_projections(self, projection):
+        if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+            from psyneulink.core.components.projections.projection import Projection
+            warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
+                          f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
+                          f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
+            return True
+        return False
+
     @tc.typecheck
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get connections specified in a ParameterState specification tuple
@@ -652,32 +673,6 @@ class ParameterState(State_Base):
 
         elif isinstance(state_specific_spec, tuple):
 
-            # # MODIFIED 11/25/17 OLD:
-            # tuple_spec = state_specific_spec
-            # state_spec = tuple_spec[0]
-            #
-            # # Get connection (afferent Projection(s)) specification from tuple
-            # PROJECTIONS_INDEX = len(tuple_spec)-1
-            # # Get projection_spec and parse
-            # try:
-            #     projections_spec = tuple_spec[PROJECTIONS_INDEX]
-            # except IndexError:
-            #     projections_spec = None
-            #
-            # if projections_spec:
-            #     try:
-            #         params_dict[PROJECTIONS] = _parse_connection_specs(self,
-            #                                                            owner=owner,
-            #                                                            connections=projections_spec)
-            #     except ParameterStateError:
-            #         raise ParameterStateError("Item {} of tuple specification in {} specification dictionary "
-            #                               "for {} ({}) is not a recognized specification".
-            #                               format(PROJECTIONS_INDEX,
-            #                                      ParameterState.__name__,
-            #                                      owner.name,
-            #                                      projections_spec))
-
-            # MODIFIED 11/25/17 NEW:
             tuple_spec = state_specific_spec
 
             # GET STATE_SPEC (PARAM VALUE) AND ASSIGN PROJECTIONS_SPEC **********************************************
@@ -807,7 +802,6 @@ class ParameterState(State_Base):
                                                  Mechanism.__name__,
                                                  ModulatorySignal.__name__,
                                                  Projection.__name__))
-            # MODIFIED 11/25/17 END
 
         elif state_specific_spec is not None:
             raise ParameterStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
@@ -820,25 +814,13 @@ class ParameterState(State_Base):
         """Return parameter variable (since ParameterState's function never changes the form of its variable"""
         return variable
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        """Call self.function with current parameter value as the variable
-
+    def _get_fallback_variable(self, execution_id=None):
+        """
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs.
-        Update its value in call to state's function.
         """
 
-        if variable is not None:
-            return super()._execute(variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
-        else:
-            # variable = getattr(self.owner.function.parameters, self.name).get(execution_id)
-            # FIX 3/6/19: source does not yet seem to have been assigned to owner.function
-            variable = getattr(self.source.parameters, self.name).get(execution_id)
-            return super()._execute(
-                variable=variable,
-                execution_id=execution_id,
-                runtime_params=runtime_params,
-                context=context
-            )
+        # FIX 3/6/19: source does not yet seem to have been assigned to owner.function
+        return getattr(self.source.parameters, self.name)._get(execution_id)
 
     @property
     def pathway_projections(self):
@@ -865,7 +847,7 @@ class ParameterState(State_Base):
 
 
         # Create a local copy of the function parameters
-        f_params = builder.alloca(state_f.args[0].type.pointee, 1)
+        f_params = builder.alloca(state_f.args[0].type.pointee)
         builder.store(builder.load(params), f_params)
 
         # FIXME: is this always true, by design?
@@ -1046,7 +1028,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
     #    - they have the same name as another parameter of the component (raise exception for this)
     if param_name is FUNCTION_PARAMS:
         for function_param_name in param_value.keys():
-            if hasattr(function.parameters, function_param_name) and not getattr(function.parameters, function_param_name).modulable:
+            if (hasattr(function.parameters, function_param_name) and
+                    not getattr(function.parameters, function_param_name).modulable):
                 # skip non modulable function parameters
                 continue
 
