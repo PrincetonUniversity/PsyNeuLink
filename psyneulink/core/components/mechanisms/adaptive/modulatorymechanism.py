@@ -420,8 +420,9 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGatingAllocation
-from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, CONTEXT, \
-    CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, EID_SIMULATION, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
+from psyneulink.core.globals.keywords import \
+    AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
+    EID_SIMULATION, GATING_SIGNAL, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
     MODULATORY_PROJECTION, MODULATORY_SIGNAL, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
@@ -1376,13 +1377,13 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # (viz., if control of parameter was specified both in constructor for Mechanism and in ModulatoryMechanism)
         for existing_mod_sig in [ms for ms in self._modulatory_signals if isinstance(ms, ModulatorySignal)]:
 
-            # OK if modulatory_signal is one already assigned to ModulatoryMechanism but in deferred_init status
-            #    and initalized in call to _instantiate_state above
+            # OK if modulatory_signal is one already assigned to ModulatoryMechanism (i.e., let it get processed below);
+            # this can happen if it was in deferred_init status and initalized in call to _instantiate_state above.
             if modulatory_signal == existing_mod_sig:
                 continue
 
-            # Return if *all* projections from modulatory_signal are identical to ones in an existing modulatory_signal
             # # MODIFIED 9/14/19 NEW:
+            # # Return if *all* projections from modulatory_signal are identical to ones in an existing modulatory_signal
             # if all(
             #         any(new_p.receiver == existing_p.receiver
             #            for existing_p in existing_mod_sig.efferents) for new_p in modulatory_signal.efferents):
@@ -1391,8 +1392,11 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             #                       f"is redundant with existing one ({existing_mod_sig.name}) so it has been ignored.")
             #     return
             # MODIFIED 9/14/19 NEWER: [JDC]
+            # Return if *all* projections from modulatory_signal are identical to ones in an existing modulatory_signal
             for proj in modulatory_signal.efferents:
                 if proj not in existing_mod_sig.efferents:
+                    # A Projection in modulatory_signal is not in this existing one: it is different,
+                    #    so break and move on to next existing_mod_sig
                     break
                 return
             # MODIFIED 9/14/19 END
@@ -1615,6 +1619,24 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             system._controller = self
 
         self._activate_projections_for_compositions(system)
+
+    def _remove_default_modulatory_signal(self, type:tc.enum(MODULATORY_SIGNAL, CONTROL_SIGNAL, GATING_SIGNAL)):
+        if type == MODULATORY_SIGNAL:
+            mod_sig_attribute = self.modulatory_signals
+        elif type == CONTROL_SIGNAL:
+            mod_sig_attribute = self.control_signals
+        elif type == GATING_SIGNAL:
+            mod_sig_attribute = self.gating_signals
+        else:
+            assert False, \
+                f"PROGRAM ERROR:  bad 'type' arg ({type})passed to " \
+                    f"{ModulatoryMechanism.__name__}._remove_default_modulatory_signal" \
+                    f"(should have been caught by typecheck"
+
+        if (len(mod_sig_attribute)==1
+                and mod_sig_attribute[0].name==type+'-0'
+                and not mod_sig_attribute[0].efferents):
+            self.remove_states(mod_sig_attribute[0])
 
     def _activate_projections_for_compositions(self, compositions=None):
         dependent_projections = set()

@@ -1118,7 +1118,8 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONTROL, CONTROLLER, CONDITIONS, \
+    AFTER, ALL, BEFORE, BOLD, BOTH, \
+    COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CONDITIONS, \
     FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
     ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
@@ -1983,11 +1984,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #                                                    context=Context(source=ContextFlags.COMPOSITION))
             #             self.controller._activate_projections_for_compositions(self)
             # MODIFIED 9/15/19 NEWER:
-            for ctl_sig_spec in deferred_init_control_specs:
-                # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-                self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
-                                                       context=Context(source=ContextFlags.COMPOSITION))
-                self.controller._activate_projections_for_compositions(self)
+            if deferred_init_control_specs:
+                self.controller._remove_default_modulatory_signal(type=CONTROL_SIGNAL)
+                for ctl_sig_spec in deferred_init_control_specs:
+                    # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
+                    self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+                                                           context=Context(source=ContextFlags.COMPOSITION))
+                    self.controller._activate_projections_for_compositions(self)
             # MODIFIED 9/15/19 END
 
     def add_nodes(self, nodes, required_roles=None):
@@ -4215,10 +4218,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
 
         # Get rid of default ControlSignal if it has no ControlProjections
-        if (len(controller.control_signals)==1
-                and controller.control_signals[0].name=='ControlSignal-0'
-                and not controller.control_signals[0].efferents):
-            controller.remove_states(controller.control_signals[0])
+        # # MODIFIED 9/15/19 NEW:
+        # if (len(controller.control_signals)==1
+        #         and controller.control_signals[0].name=='ControlSignal-0'
+        #         and not controller.control_signals[0].efferents):
+        #     controller.remove_states(controller.control_signals[0])
+        # MODIFIED 9/15/19 NEWER:
+        controller._remove_default_modulatory_signal(type=CONTROL_SIGNAL)
+        # MODIFIED 9/15/19 END
 
         # Add any ControlSignals specified for Composition
         control_signal_specs = self._get_control_signals_for_composition()
