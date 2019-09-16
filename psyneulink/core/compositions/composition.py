@@ -1973,15 +1973,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     to any parameter_states specified for control in node's constructor
         # FIX: 9/14/19 - HANDLE THIS USING AUX_COMPONENTS IN MECHANISM CONSTRUCTOR?
         if self.controller:
-            deferred_init_control_specs = node._get_deferred_init_control_specs()
-            # _get_deferred_init_control_specs returns a dict, in which the value of each entry is a control_spec
-            if deferred_init_control_specs:
-                for ctl_sig_specs in deferred_init_control_specs.values():
-                    # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-                    for ctl_sig_spec in ctl_sig_specs:
-                        self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
-                                                               context=Context(source=ContextFlags.COMPOSITION))
-                        self.controller._activate_projections_for_compositions(self)
+            deferred_init_control_specs = node._get_parameter_state_deferred_init_control_specs()
+            # # MODIFIED 9/15/19 NEW:
+            # if deferred_init_control_specs:
+            #     for ctl_sig_specs in deferred_init_control_specs.values():
+            #         # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
+            #         for ctl_sig_spec in ctl_sig_specs:
+            #             self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+            #                                                    context=Context(source=ContextFlags.COMPOSITION))
+            #             self.controller._activate_projections_for_compositions(self)
+            # MODIFIED 9/15/19 NEWER:
+            for ctl_sig_spec in deferred_init_control_specs:
+                # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
+                self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+                                                       context=Context(source=ContextFlags.COMPOSITION))
+                self.controller._activate_projections_for_compositions(self)
+            # MODIFIED 9/15/19 END
 
     def add_nodes(self, nodes, required_roles=None):
         """
@@ -4256,9 +4263,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #             proj_control_signal_specs.update({PROJECTIONS: [proj]})
                 #             control_signal_specs.append(proj_control_signal_specs)
                 # FIX: 9/14/19 - None GETS APPENDED (ALSO FIX IN add_node)
-                ctl_sig_spec = node._get_deferred_init_control_specs()
-                if ctl_sig_spec:
-                    control_signal_specs.append(ctl_sig_spec)
+                # # MODIFIED 9/15/19 NEW:
+                # ctl_sig_spec = node._get_parameter_state_deferred_init_control_specs()
+                # if ctl_sig_spec:
+                #     control_signal_specs.append(ctl_sig_spec)
+                # MODIFIED 9/15/19 NEWER:
+                control_signal_specs.extend(node._get_parameter_state_deferred_init_control_specs())
+                # MODIFIED 9/15/19 END
         return control_signal_specs
 
     def _build_predicted_inputs_dict(self, predicted_input):

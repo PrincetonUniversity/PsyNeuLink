@@ -2458,13 +2458,27 @@ class Mechanism_Base(Mechanism):
             state._update(context=context, params=runtime_params)
         self._update_attribs_dicts(context=context)
 
-    def _get_deferred_init_control_specs(self):
+    def _get_parameter_state_deferred_init_control_specs(self):
+        # FIX: 9/14/19 - THIS ASSUMES THAT ONLY CONTROLPROJECTIONS RELEVANT TO COMPOSITION ARE in DEFERRED INIT;
+        #                BUT WHAT IF NODE SPECIFIED CONTROL BY AN EXISTING CONTROLMECHANISM NOT IN A COMPOSITION
+        #                THAT WAS THEN ADDED;  COMPOSITION WOULD STILL NEED TO KNOW ABOUT IT TO ACTIVATE THE CTLPROJ
+        # # MODIFIED 9/15/19 NEW:
+        # for parameter_state in self._parameter_states:
+        #     for proj in parameter_state.mod_afferents:
+        #         if proj.initialization_status == ContextFlags.DEFERRED_INIT:
+        #             proj_control_signal_specs = proj.control_signal_params or {}
+        #             proj_control_signal_specs.update({PROJECTIONS: [proj]})
+        #             return proj_control_signal_specs
+        # MODIFIED 9/15/19 NEWER:
+        ctl_specs = []
         for parameter_state in self._parameter_states:
             for proj in parameter_state.mod_afferents:
                 if proj.initialization_status == ContextFlags.DEFERRED_INIT:
                     proj_control_signal_specs = proj.control_signal_params or {}
                     proj_control_signal_specs.update({PROJECTIONS: [proj]})
-                    return proj_control_signal_specs
+                    ctl_specs.append(proj_control_signal_specs)
+        return ctl_specs
+        # MODIFIED 9/15/19 END
 
     def _update_attribs_dicts(self, context):
         from psyneulink.core.globals.keywords import NOISE
