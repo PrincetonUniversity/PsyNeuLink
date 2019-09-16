@@ -36,7 +36,7 @@ def test_control_mechanism_assignment():
     # Test direct assignment
     S.controller = C1
     assert len(C1.monitored_output_states)==2
-    assert len(S.control_signals)==2
+    assert len(S.control_signals)==3
     assert S.controller.name == 'C-1'
 
 
@@ -47,7 +47,7 @@ def test_control_mechanism_assignment():
     # Test use of assign_as_controller method
     C2.assign_as_controller(S)
     assert len(C2.monitored_output_states)==3
-    assert len(S.control_signals)==3
+    assert len(S.control_signals)==4
     assert S.controller.name == 'C-2'
 
 
