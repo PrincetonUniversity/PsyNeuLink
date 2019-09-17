@@ -49,30 +49,37 @@ matrix:
           - $HOME/Library/Caches/Homebrew
           - $HOME/Library/Caches/pip
 
-before_install: |
-  if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    FILE=python-$PYTHON-macosx10.9.pkg
-    if [ ! -f $HOME/Library/Caches/$FILE ]; then
-      curl -#  https://www.python.org/ftp/python/$PYTHON/$FILE -o $HOME/Library/Caches/$FILE
-    fi
-    sudo installer -pkg $HOME/Library/Caches/$FILE -target /
-    python3 --version
-
-    echo "Deploying new python venv"
-    python3 -m pip --version
-    python3 -m pip  install virtualenv
-    python3 -m venv $HOME/venv
-    source $HOME/venv/bin/activate
-
-    python --version
+before_install:
+  - |
+    # OSX Python is not directly supported on travis
+    # Install it manually from python.org
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      # homebrew plugin is not working correctly
+      # https://travis-ci.community/t/xcode-8-3-homebrew-outdated-error/3798
+      HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
  
-    HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
-  fi
-  if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then
-        export PYTEST_COV="--cov=psyneulink"
-  else
-        export PYTEST_COV=""
-  fi
+      FILE=python-$PYTHON-macosx10.9.pkg
+      if [ ! -f $HOME/Library/Caches/$FILE ]; then
+        curl -#  https://www.python.org/ftp/python/$PYTHON/$FILE -o $HOME/Library/Caches/$FILE
+      fi
+      sudo installer -pkg $HOME/Library/Caches/$FILE -target /
+      python3 --version
+      python3 -m pip --version
+
+      # Deploy new virtualenv to match travis setup
+      echo "Deploying new python venv"
+      python3 -m pip  install virtualenv
+      python3 -m venv $HOME/venv
+      source $HOME/venv/bin/activate
+    fi
+  - python --version
+  - pip --version
+  - |
+    if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then
+          export PYTEST_COV="--cov=psyneulink"
+    else
+          export PYTEST_COV=""
+    fi
 
 install:
   # Downgrade numpy early if needed.
