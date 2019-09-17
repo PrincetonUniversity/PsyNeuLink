@@ -193,6 +193,12 @@ class Stability(ObjectiveFunction):
                     :default value: `ENERGY`
                     :type: str
 
+                metric_fct
+                    see `metric_fct <Stability.metric_fct>`
+
+                    :default value: None
+                    :type:
+
                 transfer_fct
                     see `transfer_fct <Stability.transfer_fct>`
 
@@ -202,7 +208,8 @@ class Stability(ObjectiveFunction):
         """
         matrix = HOLLOW_MATRIX
         metric = Parameter(ENERGY, stateful=False)
-        transfer_fct = None
+        metric_fct = Parameter(None, stateful=False, loggable=False)
+        transfer_fct = Parameter(None, stateful=False, loggable=False)
         normalize = False
 
     @tc.typecheck
@@ -350,23 +357,23 @@ class Stability(ObjectiveFunction):
                             self.defaults.variable]
 
         if self.metric is ENTROPY:
-            self._metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.normalize)
+            self.metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.normalize)
         elif self.metric in DISTANCE_METRICS._set():
-            self._metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
+            self.metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
 
     def _get_param_ids(self):
         return super()._get_param_ids() + ["metric_fct"]
 
     def _get_param_values(self, context=None):
         my_params = super()._get_param_values(context)
-        return (*my_params, self._metric_fct._get_param_values(context))
+        return (*my_params, self.metric_fct._get_param_values(context))
 
     def _get_state_ids(self):
         return super()._get_state_ids() + ["metric_fct"]
 
     def _get_state_values(self, context=None):
         my_values = super()._get_state_values(context)
-        return (*my_values, self._metric_fct._get_state_values(context))
+        return (*my_values, self.metric_fct._get_state_values(context))
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Dot product
@@ -384,7 +391,7 @@ class Stability(ObjectiveFunction):
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
 
         # Prepare metric function
-        metric_fun = ctx.get_llvm_function(self._metric_fct)
+        metric_fun = ctx.get_llvm_function(self.metric_fct)
         metric_in = builder.alloca(metric_fun.args[2].type.pointee)
 
         # Transfer Function if configured
@@ -438,7 +445,7 @@ class Stability(ObjectiveFunction):
         if self.transfer_fct is not None:
             transformed = self.transfer_fct(transformed)
 
-        result = self._metric_fct(variable=[current, transformed], context=context)
+        result = self.metric_fct(variable=[current, transformed], context=context)
 
         return self.convert_output_type(result)
 
@@ -446,7 +453,7 @@ class Stability(ObjectiveFunction):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self._metric_fct] if self._metric_fct is not None else [],
+            [self.metric_fct] if self.metric_fct is not None else [],
             [self.transfer_fct] if self.transfer_fct is not None else [],
         ))
 
