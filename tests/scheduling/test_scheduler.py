@@ -11,6 +11,7 @@ from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.system import System
 from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import VALUE
 from psyneulink.core.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, \
     EveryNCalls, EveryNPasses, JustRan, WhenFinished
@@ -107,7 +108,7 @@ class TestScheduler:
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
             scheduler_processing=sched,
             termination_processing=termination_conds,
-            execution_id=eid,
+            context=eid,
         )
         output = sched.execution_list[eid]
 
@@ -121,7 +122,7 @@ class TestScheduler:
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
             scheduler_processing=sched,
             termination_processing=termination_conds,
-            execution_id=eid,
+            context=eid,
         )
         output = sched.execution_list[eid]
 
@@ -136,7 +137,7 @@ class TestScheduler:
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
             scheduler_processing=sched,
             termination_processing=termination_conds,
-            execution_id=eid2,
+            context=eid2,
         )
         output = sched.execution_list[eid2]
 
@@ -1088,7 +1089,7 @@ class TestTermination:
 
         # reset the RUN because schedulers run TRIALs
         sched.clock._increment_time(TimeScale.RUN)
-        sched._reset_counts_total(TimeScale.RUN)
+        sched._reset_counts_total(TimeScale.RUN, execution_id=sched.default_execution_id)
 
         output = list(sched.run())
 

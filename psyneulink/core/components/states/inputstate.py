@@ -961,18 +961,39 @@ class InputState(State_Base):
         self._instantiate_projections_to_state(projections=projections, context=context)
 
     def _check_for_duplicate_projections(self, projection):
+        '''Check if projection is redundant with one in path_afferents of InputState
+
+        Check for any instantiated projection in path_afferents with the same sender as projection
+        or one in deferred_init status with sender specification that is the same type as projection.
+
+        Returns redundant Projection if found, otherwise False.
+        '''
+        # # MODIFIED 9/14/19 OLD:
+        # # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_STATE
+        # if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+        #     from psyneulink.core.components.projections.projection import Projection
+        #     warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
+        #                   f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
+        #                   f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
+        #     return True
+        # return False
+        # MODIFIED 9/14/19 NEW:
         # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_STATE
-        assert True
-        if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+        # FIX: 9/14/19 - RESTORE WARNING
+        duplicate = next(iter([proj for proj in self.path_afferents
+                               if ((proj.sender == projection.sender and proj != projection)
+                                   or (proj.initialization_status == ContextFlags.DEFERRED_INIT
+                                       and proj.init_args[SENDER] == type(projection.sender)))]), None)
+        if duplicate and self.verbosePref or self.owner.verbosePref:
             from psyneulink.core.components.projections.projection import Projection
             warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
                           f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
                           f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
-            return True
-        return False
+        return duplicate
+        # MODIFIED 9/14/19 END:
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
-        variable = super()._parse_function_variable(variable, execution_id, context)
+    def _parse_function_variable(self, variable, context=None):
+        variable = super()._parse_function_variable(variable, context)
         try:
             if self._use_1d_variable and variable.ndim > 1:
                 return np.array(variable[0])
@@ -980,7 +1001,7 @@ class InputState(State_Base):
             pass
         return variable
 
-    def _get_fallback_variable(self, execution_id=None, context=None):
+    def _get_fallback_variable(self, context=None):
         """
             Call self.function with self._path_proj_values
 
@@ -989,7 +1010,7 @@ class InputState(State_Base):
         """
         # Check for Projections that are active in the Composition being run
         path_proj_values = [
-            proj.parameters.value._get(execution_id)
+            proj.parameters.value._get(context)
             for proj in self.path_afferents
             if self.afferents_info[proj].is_active_in_composition(context.composition)
         ]
@@ -1297,12 +1318,12 @@ class InputState(State_Base):
     def label(self):
         return self.get_label()
 
-    def get_label(self, execution_context=None):
+    def get_label(self, context=None):
         try:
             label_dictionary = self.owner.input_labels_dict
         except AttributeError:
             label_dictionary = {}
-        return self._get_value_label(label_dictionary, self.owner.input_states, execution_context=execution_context)
+        return self._get_value_label(label_dictionary, self.owner.input_states, context=context)
 
     @property
     def position_in_mechanism(self):
@@ -1394,7 +1415,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     for state in owner._input_states:
         # Assign True for owner's primary InputState and the value has not already been set in InputState constructor
         if state.require_projection_in_composition is None and owner.input_state == state:
-            state.parameters.require_projection_in_composition._set(True)
+            state.parameters.require_projection_in_composition._set(True, context)
 
     # Check that number of input_states and their variables are consistent with owner.defaults.variable,
     #    and adjust the latter if not

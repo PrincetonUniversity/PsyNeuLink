@@ -849,22 +849,22 @@ class LCControlMechanism(ControlMechanism):
     def _execute(
         self,
         variable=None,
-        execution_id=None,
+        context=None,
         runtime_params=None,
-        context=None
+
     ):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value
         """
         # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
         output_values = super(ControlMechanism, self)._execute(
             variable=variable,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
 
-        gain_t = self.parameters.scaling_factor_gain._get(execution_id) * output_values[1] \
-                 + self.parameters.base_level_gain._get(execution_id)
+        gain_t = self.parameters.scaling_factor_gain._get(context) * output_values[1] \
+                 + self.parameters.base_level_gain._get(context)
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 

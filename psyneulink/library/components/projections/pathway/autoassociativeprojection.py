@@ -111,30 +111,30 @@ class AutoAssociativeError(Exception):
         self.error_value = error_value
 
 
-def _matrix_getter(owning_component=None, execution_id=None):
-    return owning_component.owner_mech.parameters.matrix._get(execution_id)
+def _matrix_getter(owning_component=None, context=None):
+    return owning_component.owner_mech.parameters.matrix._get(context)
 
 
-def _matrix_setter(value, owning_component=None, execution_id=None):
-    owning_component.owner_mech.parameters.matrix._set(value, execution_id)
+def _matrix_setter(value, owning_component=None, context=None):
+    owning_component.owner_mech.parameters.matrix._set(value, context)
     return value
 
 
-def _auto_getter(owning_component=None, execution_id=None):
-    return owning_component.owner_mech.parameters.auto._get(execution_id)
+def _auto_getter(owning_component=None, context=None):
+    return owning_component.owner_mech.parameters.auto._get(context)
 
 
-def _auto_setter(value, owning_component=None, execution_id=None):
-    owning_component.owner_mech.parameters.auto._set(value, execution_id)
+def _auto_setter(value, owning_component=None, context=None):
+    owning_component.owner_mech.parameters.auto._set(value, context)
     return value
 
 
-def _hetero_getter(owning_component=None, execution_id=None):
-    return owning_component.owner_mech.parameters.hetero._get(execution_id)
+def _hetero_getter(owning_component=None, context=None):
+    return owning_component.owner_mech.parameters.hetero._get(context)
 
 
-def _hetero_setter(value, owning_component=None, execution_id=None):
-    owning_component.owner_mech.parameters.hetero._set(value, execution_id)
+def _hetero_setter(value, owning_component=None, context=None):
+    owning_component.owner_mech.parameters.hetero._set(value, context)
     return value
 
 
@@ -341,10 +341,8 @@ class AutoAssociativeProjection(MappingProjection):
     #                                        " the sender is {}".
     #                                        format(self.__class__.__name__, self.name, self.sender))
     #     if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
-    #         owner_mech._parameter_states[AUTO].update(execution_id=execution_id, params=runtime_params, time_scale=time_scale,
-    #                                                   context=context + INITIALIZING)
-    #         owner_mech._parameter_states[HETERO].update(execution_id=execution_id, params=runtime_params, time_scale=time_scale,
-    #                                                     context=context + INITIALIZING)
+    #         owner_mech._parameter_states[AUTO].update(context=context, params=runtime_params, time_scale=time_scale)
+    #         owner_mech._parameter_states[HETERO].update(context=context, params=runtime_params, time_scale=time_scale)
     #
 
     # END OF COMMENTED OUT BY KAM 1/9/2018
@@ -374,8 +372,8 @@ class AutoAssociativeProjection(MappingProjection):
     #                                    format(self.__class__.__name__, self.name, self.sender))
     #
     #     if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
-    #         owner_mech._parameter_states[AUTO].update(execution_id=execution_id, params=runtime_params, context=context + INITIALIZING)
-    #         owner_mech._parameter_states[HETERO].update(execution_id=execution_id, params=runtime_params, context=context + INITIALIZING)
+    #         owner_mech._parameter_states[AUTO].update(context=context, params=runtime_params)
+    #         owner_mech._parameter_states[HETERO].update(context=context, params=runtime_params)
     #     else:
     #         raise AutoAssociativeError("Auto or Hetero ParameterState not found in {0} \"{1}\"; here are names of the "
     #                                    "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,

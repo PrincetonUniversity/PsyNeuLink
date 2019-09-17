@@ -1513,7 +1513,7 @@ class State_Base(State):
                 # ModualatoryProjection:
                 #    - check that projection's value is compatible with value of the function param being modulated
                 elif isinstance(projection, ModulatoryProjection_Base):
-                    mod_spec, mod_param_name, mod_param_value = self._get_modulated_param(projection)
+                    mod_spec, mod_param_name, mod_param_value = self._get_modulated_param(projection, context)
                     # Match the projection's value with the value of the function parameter
                     mod_proj_spec_value = type_match(projection.defaults.value, type(mod_param_value))
                     if (mod_param_value is not None
@@ -1624,7 +1624,7 @@ class State_Base(State):
 
 
         # IMPLEMENTATION NOTE:  THE FOLLOWING IS WRITTEN AS A LOOP IN PREP FOR GENERALINZING METHOD
-        #                       TO HANDLE PROJECTION LIST (AS PER _instantiate_projection_to_state())
+        #                       TO HANDLE PROJECTION LIST (AS PER _instantiate_projections_to_state())
 
         # If projection_spec and/or receiver is not in a list, wrap it in one for consistency of treatment below
         # (since specification can be a list, so easier to treat any as a list)
@@ -1801,7 +1801,7 @@ class State_Base(State):
                 if isinstance(receiver, State) and receiver.initialization_status == ContextFlags.INITIALIZED:
                     projection._deferred_init(context=context)
 
-            # VALIDATE (if initialized or being initialized (INITIALIZA))
+            # VALIDATE (if initialized or being initialized)
 
             if projection.initialization_status & (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
 
@@ -1849,7 +1849,8 @@ class State_Base(State):
                     #    - check that projection's value is compatible with value of the function param being modulated
                     elif isinstance(projection, ModulatoryProjection_Base):
                         mod_spec, mod_param_name, mod_param_value = self._get_modulated_param(projection,
-                                                                                              receiver=receiver)
+                                                                                              receiver=receiver,
+                                                                                              context)
                         # Match the projection's value with the value of the function parameter
                         # should be defaults.value?
                         mod_proj_spec_value = type_match(projection.value, type(mod_param_value))
@@ -1867,6 +1868,8 @@ class State_Base(State):
                 continue
 
             # FIX: MODIFIED FEEDBACK - CHECK THAT THAT THIS IS STILL NEEDED (RE: ASSIGNMENT IN ModulatorySignal)
+            # FIX: 9/14/19 - NOTE:  IT *IS* NEEDED FOR CONTROLPROJECTIONS
+            #                       SPECIFIED FOR PARAMETER IN CONSTRUCTOR OF A MECHANISM
             if isinstance(projection, ModulatoryProjection_Base):
                 self.owner.aux_components.append((projection, feedback))
             return projection
@@ -1895,7 +1898,7 @@ class State_Base(State):
         raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_specs method".
                          format(self.__class__.__name__))
 
-    def _update(self, execution_id=None, params=None, context=None):
+    def _update(self, context=None, params=None):
         """Update each projection, combine them, and assign return result
 
         Call _update for each projection in self.path_afferents (passing specified params)
@@ -1950,9 +1953,6 @@ class State_Base(State):
 
         for projection in self.all_afferents:
 
-            # Only update if sender has also executed in this round
-            #     (i.e., has same execution_id as owner)
-            # Get sender's execution id
             if hasattr(projection, 'sender'):
                 sender = projection.sender
             else:
@@ -1994,26 +1994,26 @@ class State_Base(State):
                 # masked mapping projections apply a mask separate from their function - consider replacing it
                 # with a masked linear matrix and removing this special class?
                 and not isinstance(projection, MaskedMappingProjection)
-                and projection.function._is_identity(execution_id)
+                and projection.function._is_identity(context)
                 # has no parameter states with afferents (these can modulate parameters and make it non-identity)
                 and len(list(itertools.chain.from_iterable([p.all_afferents for p in projection.parameter_states]))) == 0
                 # matrix parameter state may be a non identity Accumulator integrator
-                and all(pstate.function._is_identity(execution_id) for pstate in projection.parameter_states)
+                and all(pstate.function._is_identity(context) for pstate in projection.parameter_states)
             ):
-                projection_variable = projection.sender.parameters.value._get(execution_id)
+                projection_variable = projection.sender.parameters.value._get(context)
                 # KDM 8/14/19: this fallback seems to always happen on the first execution
                 # of the Projection's function (LinearMatrix). Unsure if this is intended or not
                 if projection_variable is None:
                     projection_variable = projection.function.defaults.value
 
-                projection.parameters.variable._set(projection_variable, execution_id)
+                projection.parameters.variable._set(projection_variable, context)
 
                 projection_value = projection._parse_function_variable(projection_variable)
-                projection.parameters.value._set(projection_value, execution_id)
+                projection.parameters.value._set(projection_value, context)
 
                 # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
                 # should these be manually set despite it not actually being executed?
-                # explicitly getting/setting based on execution_context will be more clear
+                # explicitly getting/setting based on ECONTEXT_COMMENT will be more clear
                 projection.most_recent_context = context
                 projection.function.most_recent_context = context
                 for pstate in projection.parameter_states:
@@ -2021,10 +2021,10 @@ class State_Base(State):
                     pstate.function.most_recent_context = context
 
             else:
-                projection_value = projection.execute(variable=projection.sender.parameters.value._get(execution_id),
-                                                      execution_id=execution_id,
+                projection_value = projection.execute(variable=projection.sender.parameters.value._get(context),
+                                                      context=context,
                                                       runtime_params=projection_params,
-                                                      context=context)
+                                                      )
 
             # If this is initialization run and projection initialization has been deferred, pass
             try:
@@ -2045,7 +2045,7 @@ class State_Base(State):
                 # Get the meta_param to be modulated from modulation attribute of the  projection's ModulatorySignal
                 #    and get the function parameter to be modulated to type_match the projection value below
                 mod_spec, mod_param_name, mod_param_value = self._get_modulated_param(projection,
-                                                                                      execution_context=execution_id)
+                                                                                      execution_context=context)
                 # If meta_param is DISABLE, ignore the ModulatoryProjection
                 if mod_spec is DISABLE:
                     continue
@@ -2060,7 +2060,7 @@ class State_Base(State):
                         continue
                     # Otherwise, for efficiency, assign first OVERRIDE value encountered and return
                     else:
-                        self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), execution_id)
+                        self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), context)
                         return
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
@@ -2075,7 +2075,7 @@ class State_Base(State):
         # Handle ModulatoryProjection OVERRIDE
         #    if there is one and it wasn't been handled above (i.e., if paramValidation is set)
         if modulatory_override:
-            self.parameters.value._set(type_match(modulatory_override[1], type(self.defaults.value)), execution_id)
+            self.parameters.value._set(type_match(modulatory_override[1], type(self.defaults.value)), context)
             return
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
@@ -2091,7 +2091,7 @@ class State_Base(State):
 
             # FIX: SHOULD THIS REALLY BE GETTING SET HERE??
             # Set modulatory parameter's value
-            param._set(mod_val, execution_id)
+            param._set(mod_val, context)
 
             if not FUNCTION_PARAMS in self.stateParams:
                 self.stateParams[FUNCTION_PARAMS] = {mod_param_name: mod_val}
@@ -2112,23 +2112,23 @@ class State_Base(State):
 
         if (
             len(self.all_afferents) == 0
-            and self.function._is_identity(execution_id)
+            and self.function._is_identity(context)
             and function_params is None
         ):
-            variable = self._parse_function_variable(self._get_fallback_variable(execution_id, context))
-            self.parameters.variable._set(variable, execution_id)
+            variable = self._parse_function_variable(self._get_fallback_variable(context))
+            self.parameters.variable._set(variable, context)
             # below conversion really should not be happening ultimately, but it is
             # in _validate_variable. Should be removed eventually
             variable = convert_to_np_array(variable, 1)
-            self.parameters.value._set(variable, execution_id, context)
+            self.parameters.value._set(variable, context)
             self.most_recent_context = context
             self.function.most_recent_context = context
         else:
-            self.execute(execution_id=execution_id, runtime_params=function_params, context=context)
+            self.execute(context=context, runtime_params=function_params)
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:
-            variable = self._get_fallback_variable(execution_id, context)
+            variable = self._get_fallback_variable(context)
 
             # if the fallback is also None
             # return None, so that this state is ignored
@@ -2138,9 +2138,9 @@ class State_Base(State):
 
         return super()._execute(
             variable,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
 
     def _get_modulated_param(self, mod_proj, receiver=None, execution_context=None):
@@ -2194,13 +2194,13 @@ class State_Base(State):
                           f'for {mod_param_name} {Parameter.__name__} of {self.name}'
 
     @abc.abstractmethod
-    def _get_fallback_variable(self, execution_id=None, context=None):
+    def _get_fallback_variable(self, context=None):
         """
             Return a variable to be used for self.execute when the variable passed in is None
         """
         pass
 
-    def _get_value_label(self, labels_dict, all_states, execution_context=None):
+    def _get_value_label(self, labels_dict, all_states, context=None):
         subdicts = False
         if labels_dict != {}:
             if isinstance(list(labels_dict.values())[0], dict):
@@ -2210,26 +2210,26 @@ class State_Base(State):
             # label dict only applies to index 0 state
             if all_states.index(self) == 0:
                 for label in labels_dict:
-                    if np.allclose(labels_dict[label], self.parameters.value.get(execution_context)):
+                    if np.allclose(labels_dict[label], self.parameters.value.get(context)):
                         return label
             # if this isn't the index 0 state OR a label was not found then just return the original value
-            return self.parameters.value.get(execution_context)
+            return self.parameters.value.get(context)
 
         for state in labels_dict:
             if state is self:
-                return self.find_label_value_match(state, labels_dict, execution_context)
+                return self.find_label_value_match(state, labels_dict, context)
             elif state == self.name:
-                return self.find_label_value_match(self.name, labels_dict, execution_context)
+                return self.find_label_value_match(self.name, labels_dict, context)
             elif state == all_states.index(self):
-                return self.find_label_value_match(all_states.index(self), labels_dict, execution_context)
+                return self.find_label_value_match(all_states.index(self), labels_dict, context)
 
-        return self.parameters.value.get(execution_context)
+        return self.parameters.value.get(context)
 
-    def find_label_value_match(self, key, labels_dict, execution_context=None):
+    def find_label_value_match(self, key, labels_dict, context=None):
         for label in labels_dict[key]:
-            if np.allclose(labels_dict[key][label], self.parameters.value.get(execution_context)):
+            if np.allclose(labels_dict[key][label], self.parameters.value.get(context)):
                 return label
-        return self.parameters.value.get(execution_context)
+        return self.parameters.value.get(context)
 
     @property
     def owner(self):
@@ -2293,11 +2293,11 @@ class State_Base(State):
     def _get_state_struct_type(self, ctx):
         return ctx.get_state_struct_type(self.function)
 
-    def _get_param_initializer(self, execution_id):
-        return self.function._get_param_initializer(execution_id)
+    def _get_param_initializer(self, context):
+        return self.function._get_param_initializer(context)
 
-    def _get_state_initializer(self, execution_id):
-        return self.function._get_state_initializer(execution_id)
+    def _get_state_initializer(self, context):
+        return self.function._get_state_initializer(context)
 
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):

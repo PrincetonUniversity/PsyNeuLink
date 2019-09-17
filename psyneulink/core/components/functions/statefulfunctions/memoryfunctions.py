@@ -40,7 +40,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, ContentAddressableMemory_FUNCTION, \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM
 from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
@@ -241,11 +241,11 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         self.has_initializers = True
 
-    def _initialize_previous_value(self, initializer, execution_context=None):
+    def _initialize_previous_value(self, initializer, context=None):
         initializer = initializer or []
-        previous_value = deque(initializer, maxlen=self.parameters.history.get(execution_context))
+        previous_value = deque(initializer, maxlen=self.parameters.history.get(context))
 
-        self.parameters.previous_value.set(previous_value, execution_context, override=True)
+        self.parameters.previous_value.set(previous_value, context, override=True)
 
         return previous_value
 
@@ -253,8 +253,8 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         self.has_initializers = True
 
-    @handle_external_context()
-    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
+    @handle_external_context(execution_id=NotImplemented)
+    def reinitialize(self, *args, context=None):
         """
 
         Clears the `previous_value <Buffer.previous_value>` deque.
@@ -266,12 +266,12 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         `value <Buffer.value>` takes on the same value as  `previous_value <Buffer.previous_value>`.
 
         """
-        if execution_context is NotImplemented:
-            execution_context = self.most_recent_context.execution_id
+        if context.execution_id is NotImplemented:
+            context.execution_id = self.most_recent_context.execution_id
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
-            reinitialization_value = self.get_current_function_param("initializer", execution_context)
+            reinitialization_value = self.get_current_function_param("initializer", context)
 
         elif len(args) == 1:
             reinitialization_value = args[0]
@@ -285,20 +285,20 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                                                                      self.name))
 
         if reinitialization_value is None or reinitialization_value == []:
-            self.get_previous_value(execution_context).clear()
-            value = deque([], maxlen=self.parameters.history.get(execution_context))
+            self.get_previous_value(context).clear()
+            value = deque([], maxlen=self.parameters.history.get(context))
 
         else:
-            value = self._initialize_previous_value(reinitialization_value, execution_context=execution_context)
+            value = self._initialize_previous_value(reinitialization_value, context=context)
 
-        self.parameters.value.set(value, execution_context, override=True)
+        self.parameters.value.set(value, context, override=True)
         return value
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -318,30 +318,27 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         updated value of deque : deque
 
         """
-        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
+        rate = np.array(self.get_current_function_param(RATE, context)).astype(float)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
+        noise = self._try_execute_param(self.get_current_function_param(NOISE, context), variable)
 
         # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
         # Just return current input (for validation).
         if self.is_initializing:
             return variable
 
-        previous_value = np.array(self.get_previous_value(execution_id))
+        previous_value = np.array(self.get_previous_value(context))
 
         # Apply rate and/or noise, if they are specified, to all stored items
         if len(previous_value):
-            if any(np.atleast_1d(rate) != 1.0):
-                previous_value = previous_value * rate
-            if any(np.atleast_1d(noise) != 0.0):
-                previous_value = previous_value + noise
+            previous_value = previous_value * rate + noise
 
-        previous_value = deque(previous_value, maxlen=self.parameters.history._get(execution_id))
+        previous_value = deque(previous_value, maxlen=self.parameters.history._get(context))
 
         previous_value.append(variable)
 
-        self.parameters.previous_value._set(previous_value, execution_id)
+        self.parameters.previous_value._set(previous_value, context)
         return self.convert_output_type(previous_value)
 
 
@@ -738,8 +735,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             )
 
         if self.previous_value.size != 0:
-            self.parameters.key_size._set(len(self.previous_value[KEYS][0]))
-            self.parameters.val_size._set(len(self.previous_value[VALS][0]))
+            self.parameters.key_size._set(len(self.previous_value[KEYS][0]), Context())
+            self.parameters.val_size._set(len(self.previous_value[VALS][0]), Context())
 
         self.has_initializers = True
         self.stateful_attributes = ["previous_value", "random_state"]
@@ -748,14 +745,14 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         distance_state = ctx.get_state_struct_type(self.distance_function)
         selection_state = ctx.get_state_struct_type(self.selection_function)
         # Get random state
-        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state"))
+        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state", Context()))
         # Construct a ring buffer
         keys_struct = pnlvm.ir.ArrayType(
             ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0]),
-            self.get_current_function_param("max_entries"))
+            self.get_current_function_param("max_entries", Context()))
         vals_struct = pnlvm.ir.ArrayType(
             ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[1]),
-            self.get_current_function_param("max_entries"))
+            self.get_current_function_param("max_entries", Context()))
         ring_buffer_struct = pnlvm.ir.LiteralStructType([
             keys_struct, vals_struct, ctx.int32_ty, ctx.int32_ty])
         my_state = pnlvm.ir.LiteralStructType([random_state_struct, ring_buffer_struct])
@@ -772,17 +769,17 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         elements.append(selection_params)
         return pnlvm.ir.LiteralStructType(elements)
 
-    def _get_param_initializer(self, execution_id):
-        distance_init = self.distance_function._get_param_initializer(execution_id)
-        selection_init = self.selection_function._get_param_initializer(execution_id)
-        my_init = super()._get_param_initializer(execution_id)
+    def _get_param_initializer(self, context):
+        distance_init = self.distance_function._get_param_initializer(context)
+        selection_init = self.selection_function._get_param_initializer(context)
+        my_init = super()._get_param_initializer(context)
         return (*my_init, distance_init, selection_init)
 
-    def _get_state_initializer(self, execution_id):
-        distance_init = self.distance_function._get_state_initializer(execution_id)
-        selection_init = self.selection_function._get_state_initializer(execution_id)
-        random_state = self.get_current_function_param("random_state", execution_id).get_state()[1:]
-        memory = self.get_previous_value(execution_id)
+    def _get_state_initializer(self, context):
+        distance_init = self.distance_function._get_state_initializer(context)
+        selection_init = self.selection_function._get_state_initializer(context)
+        random_state = self.get_current_function_param("random_state", context).get_state()[1:]
+        memory = self.get_previous_value(context)
         my_init = pnlvm._tupleize([random_state, [memory[0], memory[1], 0, 0]])
         return (distance_init, selection_init, my_init)
 
@@ -963,7 +960,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                 raise FunctionError("{} arg of {} ({}) must be a float in the interval [0,1]".
                                     format(repr(STORAGE_PROB), self.__class___.__name__, storage_prob))
 
-    def _validate(self):
+    def _validate(self, context=None):
         """Validate distance_function, selection_function and memory store"""
         distance_function = self.distance_function
         test_var = [self.defaults.variable[KEYS], self.defaults.variable[VALS]]
@@ -972,10 +969,10 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             fct_msg = 'Function type'
         else:
             distance_function.defaults.variable = test_var
-            distance_function._instantiate_value()
+            distance_function._instantiate_value(context)
             fct_msg = 'Function'
         try:
-            distance_result = distance_function(test_var)
+            distance_result = distance_function(test_var, context=context)
             if not np.isscalar(distance_result):
                 raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
                                     format(repr(DISTANCE_FUNCTION), self.__name__.__class__, distance_result))
@@ -989,16 +986,16 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         selection_function = self.selection_function
         test_var = np.asfarray([distance_result if i==0
                                 else np.zeros_like(distance_result)
-                                for i in range(self.get_current_function_param('max_entries'))])
+                                for i in range(self.get_current_function_param('max_entries', context))])
         if isinstance(selection_function, type):
-            selection_function = selection_function(default_variable=test_var)
+            selection_function = selection_function(default_variable=test_var, context=context)
             fct_string = 'Function type'
         else:
             selection_function.defaults.variable = test_var
-            selection_function._instantiate_value()
+            selection_function._instantiate_value(context)
             fct_string = 'Function'
         try:
-            result = np.asarray(selection_function(test_var))
+            result = np.asarray(selection_function(test_var, context=context))
         except e:
             raise FunctionError(f'{fct_string} specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
                                 f'({selection_function}) must accept a 1d array as its argument')
@@ -1006,7 +1003,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
                                 f'({result}) must return an array of the same length it receives')
 
-    def _initialize_previous_value(self, initializer, execution_context=None):
+    def _initialize_previous_value(self, initializer, context=None):
         """Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
 
         - Validate, if initializer is specified, it is a 3d array
@@ -1021,11 +1018,11 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             return previous_value
         else:
             # Set key_size and val_size if this is the first entry
-            self.parameters.previous_value.set(previous_value, execution_context, override=True)
-            self.parameters.key_size.set(len(initializer[0][KEYS]), execution_context)
-            self.parameters.val_size.set(len(initializer[0][VALS]), execution_context)
+            self.parameters.previous_value.set(previous_value, context, override=True)
+            self.parameters.key_size.set(len(initializer[0][KEYS]), context)
+            self.parameters.val_size.set(len(initializer[0][VALS]), context)
             for entry in initializer:
-                if not self._store_memory(np.array(entry), execution_context):
+                if not self._store_memory(np.array(entry), context):
                     warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
                                   f"that has the same key as a previous one, while 'duplicate_keys'==False; "
                                   f"that entry has been skipped")
@@ -1036,13 +1033,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         self.has_initializers = True
 
         if isinstance(self.distance_function, type):
-            self.distance_function = self.distance_function()
+            self.distance_function = self.distance_function(context=context)
 
         if isinstance(self.selection_function, type):
-            self.selection_function = self.selection_function()
+            self.selection_function = self.selection_function(context=context)
 
-    @handle_external_context()
-    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
+    @handle_external_context(execution_id=NotImplemented)
+    def reinitialize(self, *args, context=None):
         """
         reinitialize(<new_dictionary> default={})
 
@@ -1056,12 +1053,12 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         `value <ContentAddressableMemory.value>` takes on the same value as
         `previous_value <ContentAddressableMemory.previous_value>`.
         """
-        if execution_context is NotImplemented:
-            execution_context = self.most_recent_context.execution_id
+        if context.execution_id is NotImplemented:
+            context.execution_id = self.most_recent_context.execution_id
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
-            reinitialization_value = self.get_current_function_param("initializer", execution_context)
+            reinitialization_value = self.get_current_function_param("initializer", context)
 
         elif len(args) == 1:
             reinitialization_value = args[0]
@@ -1074,20 +1071,20 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                 "reinitialize previous_value".format(args, self.name))
 
         if reinitialization_value == []:
-            self.get_previous_value(execution_context).clear()
+            self.get_previous_value(context).clear()
             value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
 
         else:
-            value = self._initialize_previous_value(reinitialization_value, execution_context=execution_context)
+            value = self._initialize_previous_value(reinitialization_value, context=context)
 
-        self.parameters.value.set(value, execution_context, override=True)
+        self.parameters.value.set(value, context, override=True)
         return value
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
         Return entry in `memory <ContentAddressableMemory.memory>` that key of which best matches first item of
         `variable <ContentAddressableMemory.variable>` (query key), then add `variable
@@ -1116,14 +1113,14 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # if len(variable)==2:
         val = variable[VALS]
 
-        retrieval_prob = np.array(self.get_current_function_param(RETRIEVAL_PROB, execution_id)).astype(float)
-        storage_prob = np.array(self.get_current_function_param(STORAGE_PROB, execution_id)).astype(float)
+        retrieval_prob = np.array(self.get_current_function_param(RETRIEVAL_PROB, context)).astype(float)
+        storage_prob = np.array(self.get_current_function_param(STORAGE_PROB, context)).astype(float)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, execution_id), variable)
+        noise = self._try_execute_param(self.get_current_function_param(NOISE, context), variable)
 
         # get random state
-        random_state = self.get_current_function_param('random_state', execution_id)
+        random_state = self.get_current_function_param('random_state', context)
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # and return current value (variable[1]) for validation.
@@ -1131,23 +1128,23 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             return variable
 
         # Set key_size and val_size if this is the first entry
-        if len(self.get_previous_value(execution_id)[KEYS]) == 0:
-            self.parameters.key_size._set(len(key), execution_id)
-            self.parameters.val_size._set(len(val), execution_id)
+        if len(self.get_previous_value(context)[KEYS]) == 0:
+            self.parameters.key_size._set(len(key), context)
+            self.parameters.val_size._set(len(val), context)
 
         # Retrieve value from current dict with key that best matches key
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
-            memory = self.get_memory(key, execution_id)
+            memory = self.get_memory(key, context)
         else:
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_STATE
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
-            memory = [[0]* self.parameters.key_size._get(execution_id), [0]* self.parameters.val_size._get(execution_id)]
+            memory = [[0]* self.parameters.key_size._get(context), [0]* self.parameters.val_size._get(context)]
         # Store variable to dict:
         if noise:
             key += noise
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
-            self._store_memory(variable, execution_id)
+            self._store_memory(variable, context)
 
         # Return 3d array with keys and vals as lists
         # IMPLEMENTATION NOTE:  if try to create np.ndarray directly, and keys and vals have same length
@@ -1157,25 +1154,26 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         return ret_val
 
     @tc.typecheck
-    def _validate_memory(self, memory:tc.any(list, np.ndarray), execution_id):
+    def _validate_memory(self, memory:tc.any(list, np.ndarray), context):
 
         # memory must be list or 2d array with 2 items
         if len(memory) != 2 and not all(np.array(i).ndim == 1 for i in memory):
             raise FunctionError(f"Attempt to store memory in {self.__class__.__name__} ({memory}) "
                                 f"that is not a 2d array with two items ([[key],[value]])")
 
-        self._validate_key(memory[KEYS], execution_id)
+        self._validate_key(memory[KEYS], context)
 
     @tc.typecheck
-    def _validate_key(self, key:tc.any(list, np.ndarray), execution_id):
+    def _validate_key(self, key:tc.any(list, np.ndarray), context):
         # Length of key must be same as that of existing entries (so it can be matched on retrieval)
-        if len(key) != self.parameters.key_size._get(execution_id):
+        if len(key) != self.parameters.key_size._get(context):
             raise FunctionError(f"Length of 'key' ({key}) to store in {self.__class__.__name__} ({len(key)}) "
-                                f"must be same as others in the dict ({self.parameters.key_size._get(execution_id)})")
+                                f"must be same as others in the dict ({self.parameters.key_size._get(context)})")
 
     @tc.typecheck
-    def get_memory(self, query_key:tc.any(list, np.ndarray), execution_id=None):
-        """get_memory(query_key, execution_id=None)
+    @handle_external_context()
+    def get_memory(self, query_key:tc.any(list, np.ndarray), context=None):
+        """get_memory(query_key, context=None)
 
         Retrieve memory from `memory <ContentAddressableMemory.memory>` based on `distance_function
         <ContentAddressableMemory.distance_function>` and `selection_function
@@ -1195,8 +1193,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
         #           ALSO, SHOULD PROBABILISTIC SUPPRESSION OF RETRIEVAL BE HANDLED HERE OR function (AS IT IS NOW).
 
-        self._validate_key(query_key, execution_id)
-        _memory = self.get_previous_value(execution_id)
+        self._validate_key(query_key, context)
+        _memory = self.get_previous_value(context)
 
         # if no memory, return the zero vector
         if len(_memory[KEYS]) == 0:
@@ -1223,8 +1221,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                             for other in indices_of_selected_items[1:])):
                 warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of ' \
                                   f'{self.owner.name} even though {repr("duplicate_keys")} is False')
-                return [[0]* self.parameters.key_size._get(execution_id),
-                        [0]* self.parameters.val_size._get(execution_id)]
+                return [[0]* self.parameters.key_size._get(context),
+                        [0]* self.parameters.val_size._get(context)]
             if self.equidistant_keys_select == RANDOM:
                 index_of_selected_item = choice(indices_of_selected_items)
             elif self.equidistant_keys_select == OLDEST:
@@ -1241,7 +1239,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         return [list(best_match_key), list(best_match_val)]
 
     @tc.typecheck
-    def _store_memory(self, memory:tc.any(list, np.ndarray), execution_id):
+    def _store_memory(self, memory:tc.any(list, np.ndarray), context):
         """Save an key-value pair to `memory <ContentAddressableMemory.memory>`
 
         Arguments
@@ -1251,12 +1249,12 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             the key must be the same length as key(s) of any existing entries in `dict <ContentAddressableMemory.dict>`.
         """
 
-        self._validate_memory(memory, execution_id)
+        self._validate_memory(memory, context)
 
         key = list(memory[KEYS])
         val = list(memory[VALS])
 
-        d = self.get_previous_value(execution_id)
+        d = self.get_previous_value(context)
 
         matches = [k for k in d[KEYS] if key==list(k)]
 
@@ -1294,13 +1292,14 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         if len(d[KEYS]) > self.max_entries:
             d = np.delete(d, [KEYS], axis=1)
 
-        self.parameters.previous_value._set(d,execution_id)
+        self.parameters.previous_value._set(d,context)
         self._memory = d
 
         return storage_succeeded
 
     @tc.typecheck
-    def add_to_memory(self, memories:tc.any(list, np.ndarray), execution_id=None):
+    @handle_external_context()
+    def add_to_memory(self, memories:tc.any(list, np.ndarray), context=None):
         """Add one or more key-value pairs into `memory <ContentAddressableMememory.memory>`
 
         Arguments
@@ -1312,13 +1311,14 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             The keys must all be the same length and equal to the length as key(s) of any existing entries in `dict
             <ContentAddressableMemory.dict>`.  Items are added to memory in the order listed.
         """
-        memories = self._parse_memories(memories, 'add_to_memory', execution_id)
+        memories = self._parse_memories(memories, 'add_to_memory', context)
 
         for memory in memories:
-            self._store_memory(memory, execution_id)
+            self._store_memory(memory, context)
 
     @tc.typecheck
-    def delete_from_memory(self, memories:tc.any(list, np.ndarray), key_only:bool= True, execution_id=None):
+    @handle_external_context()
+    def delete_from_memory(self, memories:tc.any(list, np.ndarray), key_only:bool= True, context=None):
         """Delete one or more key-value pairs from `memory <ContentAddressableMememory.memory>`
 
         Arguments
@@ -1333,7 +1333,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             delete only memories that have the same key *and* value as those listed in **memories**.
 
         """
-        memories = self._parse_memories(memories, 'add_to_memory', execution_id)
+        memories = self._parse_memories(memories, 'add_to_memory', context)
 
         keys = [list(k) for k in memories[0]]
         vals = [list(k) for k in memories[0]]
@@ -1345,9 +1345,9 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                         memory_keys = np.delete(self._memory[KEYS],j,axis=0)
                         memory_vals = np.delete(self._memory[VALS],j,axis=0)
                         self._memory = np.array([list(memory_keys), list(memory_vals)])
-                        self.parameters.previous_value._set(self._memory, execution_id)
+                        self.parameters.previous_value._set(self._memory, context)
 
-    def _parse_memories(self, memories, method, execution_id=None):
+    def _parse_memories(self, memories, method, context=None):
         """Parse passing of single vs. multiple memories, validate memories, and return ndarray"""
         memories = np.array(memories)
         if not 1 <= memories.ndim <= 3:
@@ -1358,7 +1358,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             memories = np.expand_dims(memories,axis=0)
 
         for memory in memories:
-            self._validate_memory(memory, execution_id)
+            self._validate_memory(memory, context)
 
         return memories
 

@@ -301,6 +301,10 @@ Class Reference
 
 """
 
+import inspect
+import itertools
+import warnings
+
 from enum import IntEnum
 
 import numpy as np
@@ -1025,16 +1029,16 @@ class ControlSignal(ModulatorySignal):
 
         if isinstance(a, (range, np.ndarray)):
             a = list(a)
-        self.parameters.allocation_samples._set(SampleIterator(specification=a))
+        self.parameters.allocation_samples._set(SampleIterator(specification=a), context)
 
     def _instantiate_cost_attributes(self, context=None):
 
         if self.cost_options:
             # Default cost params
             if self.initialization_status != ContextFlags.DEFERRED_INIT:
-                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
+                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation, context=context)
             else:
-                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
+                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation, context=context)
             self.defaults.intensity_cost = self.intensity_cost
             self.adjustment_cost = 0
             self.duration_cost = 0
@@ -1096,21 +1100,36 @@ class ControlSignal(ModulatorySignal):
 
         return state_spec, params_dict
 
-    def _update(self, execution_id=None, params=None, context=None):
+    def _update(self, context=None, params=None):
         """Update value (intensity) and costs
         """
-        super()._update(execution_id=execution_id, params=params, context=context)
+        super()._update(context=context, params=params)
 
-    def compute_costs(self, intensity,
-                      # previous_intensity,
-                      # duration,
-                      execution_id=None):
-        """Compute costs for cost_functions enabled in cost_options using specified values."""
+        if self.parameters.cost_options._get(context):
+            intensity = self.parameters.value._get(context)
+            self.parameters.cost._set(self.compute_costs(intensity, context), context)
 
+    def compute_costs(self, intensity, context=None):
+        """Compute costs based on self.value (`intensity <ControlSignal.intensity>`)."""
         # FIX 8/30/19: NEED TO DEAL WITH DURATION_COST AS STATEFUL:  DON'T WANT TO MESS UP MAIN VALUE
 
-        cost_options = self.parameters.cost_options._get(execution_id)
+        cost_options = self.parameters.cost_options._get(context)
 
+        try:
+            intensity_change = intensity - self.parameters.intensity.get_previous(context)
+        except TypeError:
+            intensity_change = [0]
+
+        # COMPUTE COST(S)
+        intensity_cost = adjustment_cost = duration_cost = 0
+
+        if ControlSignalCosts.INTENSITY & cost_options:
+            intensity_cost = self.intensity_cost_function(intensity, context=context)
+            self.parameters.intensity_cost._set(intensity_cost, context)
+
+        if ControlSignalCosts.ADJUSTMENT & cost_options:
+            adjustment_cost = self.adjustment_cost_function(intensity_change, context=context)
+            self.parameters.adjustment_cost._set(adjustment_cost, context)
         # COMPUTE COST(S)
         # Initialize as backups for cost function that are not enabled
         intensity_cost = adjustment_cost = duration_cost = 0
@@ -1128,10 +1147,11 @@ class ControlSignal(ModulatorySignal):
             self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
 
         if CostFunctions.DURATION & cost_options:
-            duration_cost = self.duration_cost_function(self.parameters.cost._get(execution_id))
-            self.parameters.duration_cost._set(duration_cost, execution_id)
+            duration_cost = self.duration_cost_function(self.parameters.cost._get(context), context=context)
+            self.parameters.duration_cost._set(duration_cost, context)
 
         return max(0.0,
-                   self.combine_costs_function([intensity_cost, adjustment_cost, duration_cost]))
-
-
+                   self.combine_costs_function([intensity_cost,
+                                                adjustment_cost,
+                                                duration_cost],
+                                               context=context))

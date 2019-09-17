@@ -158,12 +158,12 @@ class TestLCAReinitialize:
         #  linear fn: 4.255*1.0 = 4.255
         assert np.allclose(L.integrator_function.parameters.previous_value.get(S), 4.255)
 
-        L.integrator_function.reinitialize(0.9, execution_context=S)
+        L.integrator_function.reinitialize(0.9, context=S)
 
         assert np.allclose(L.integrator_function.parameters.previous_value.get(S), 0.9)
         assert np.allclose(L.parameters.value.get(S), 4.255)
 
-        L.reinitialize(0.5, execution_context=S)
+        L.reinitialize(0.5, context=S)
 
         assert np.allclose(L.integrator_function.parameters.previous_value.get(S), 0.5)
         assert np.allclose(L.parameters.value.get(S), 0.5)

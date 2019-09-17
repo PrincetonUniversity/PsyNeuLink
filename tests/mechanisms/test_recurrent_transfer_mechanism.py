@@ -700,7 +700,7 @@ class TestRecurrentTransferMechanismInProcess:
         # p.run(inputs={T1: [[1, 2, 3, 4]]})
         T1.execute([[1, 2, 3, 4]])
         proj.execute()
-        # removed this assert, because before the changes of most_recent_execution_id -> most_recent_execution_context
+        # removed this assert, because before the changes of most_recent_execution_id -> most_recent_context
         # proj.matrix referred to the 'Process-0' execution_id, even though it was last executed with None
         # assert np.allclose(proj.matrix, np.array([[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]))
 
@@ -1052,12 +1052,12 @@ class TestRecurrentTransferMechanismReinitialize:
         # linear fn: 0.65*1.0 = 0.65
         assert np.allclose(R.integrator_function.parameters.previous_value.get(S), 0.65)
 
-        R.integrator_function.reinitialize(0.9, execution_context=S)
+        R.integrator_function.reinitialize(0.9, context=S)
 
         assert np.allclose(R.integrator_function.parameters.previous_value.get(S), 0.9)
         assert np.allclose(R.parameters.value.get(S), 0.65)
 
-        R.reinitialize(0.5, execution_context=S)
+        R.reinitialize(0.5, context=S)
 
         assert np.allclose(R.integrator_function.parameters.previous_value.get(S), 0.5)
         assert np.allclose(R.parameters.value.get(S), 0.5)
@@ -1151,7 +1151,7 @@ class TestDebugProperties:
         eid = "eid"
         inputs = {R: [[1.0, 1.0, 1.0]]}
         comp.run(inputs=inputs,
-                 execution_id=eid)
+                 context=eid)
 
         print("\n\nAuto Values -----------------------------------")
         print("R.auto = ", R.auto)
@@ -1190,7 +1190,7 @@ class TestDebugProperties:
         eid = "eid"
         inputs = {R: [[1.0, 1.0, 1.0]]}
         comp.run(inputs=inputs,
-                 execution_id=eid)
+                 context=eid)
 
         print("\n\nAuto Values -----------------------------------")
         print("R.auto = ", R.auto)
@@ -1230,7 +1230,7 @@ class TestDebugProperties:
         eid = "eid"
         inputs = {R: [[1.0, 1.0, 1.0]]}
         comp.run(inputs=inputs,
-                 execution_id=eid)
+                 context=eid)
 
         print("\n\nAuto Values -----------------------------------")
         print("R.auto = ", R.auto)
@@ -1272,7 +1272,7 @@ class TestDebugProperties:
         eid = "eid"
         inputs = {R: [[1.0, 1.0, 1.0]]}
         comp.run(inputs=inputs,
-                 execution_id=eid)
+                 context=eid)
 
         print("\n\nAuto Values -----------------------------------")
         print("R.auto = ", R.auto)
@@ -1313,7 +1313,7 @@ class TestDebugProperties:
         eid = "eid"
         inputs = {R: [[1.0, 1.0, 1.0]]}
         comp.run(inputs=inputs,
-                 execution_id=eid)
+                 context=eid)
 
         print("\n\nAuto Values -----------------------------------")
         print("R.auto = ", R.auto)

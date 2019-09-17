@@ -517,33 +517,31 @@ class Function_Base(Function):
     @handle_external_context()
     def function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
                  target_set=None,
-                 context=None,
                  **kwargs):
         # Validate variable and assign to variable, and validate params
         variable = self._check_args(variable=variable,
-                                    execution_id=execution_id,
+                                    context=context,
                                     params=params,
                                     target_set=target_set,
-                                    context=context)
+                                    )
         value = self._function(variable=variable,
-                               execution_id=execution_id,
-                               params=params,
                                context=context,
+                               params=params,
                                **kwargs)
-        self.most_recent_context.execution_id=execution_id
-        self.parameters.value._set(value, execution_context=execution_id)
+        self.most_recent_context = context
+        self.parameters.value._set(value, context=context)
         return value
 
     @abc.abstractmethod
     def _function(
         self,
         variable=None,
-        execution_id=None,
+        context=None,
         params=None,
-        context=None
+
     ):
         pass
 
@@ -562,22 +560,22 @@ class Function_Base(Function):
             raise FunctionError(f"{param} is not a valid specification for "
                                 f"the {param_name} argument of {self.__class__.__name__}{owner_name}.")
 
-    def get_current_function_param(self, param_name, execution_id=None):
+    def get_current_function_param(self, param_name, context=None):
         if param_name == "variable":
             raise FunctionError(f"The method 'get_current_function_param' is intended for retrieving "
                                 f"the current value of a function parameter. 'variable' is not a function parameter. "
                                 f"If looking for {self.name}'s default variable, try {self.name}.defaults.variable.")
         try:
-            return self.owner._parameter_states[param_name].parameters.value._get(execution_id)
+            return self.owner._parameter_states[param_name].parameters.value._get(context)
         except (AttributeError, TypeError):
             try:
-                return getattr(self.parameters, param_name)._get(execution_id)
+                return getattr(self.parameters, param_name)._get(context)
             except AttributeError:
                 raise FunctionError(f"{self} has no parameter '{param_name}'.")
 
-    def get_previous_value(self, execution_id=None):
+    def get_previous_value(self, context=None):
         # temporary method until previous values are integrated for all parameters
-        value = self.parameters.previous_value._get(execution_id)
+        value = self.parameters.previous_value._get(context)
         if value is None:
             value = self.parameters.previous_value._get()
 
@@ -702,19 +700,19 @@ class Function_Base(Function):
     def _get_state_ids(self):
         return [sp.name for sp in self._get_compilation_state()]
 
-    def _get_state_values(self, execution_id=None):
-        return tuple(sp._get(execution_id) for sp in self._get_compilation_state())
+    def _get_state_values(self, context=None):
+        return tuple(sp.get(context) for sp in self._get_compilation_state())
 
-    def _get_state_initializer(self, execution_id):
-        stateful = self._get_state_values(execution_id)
+    def _get_state_initializer(self, context):
+        stateful = self._get_state_values(context)
         # Skip first element of random state (id string)
         lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
 
         return pnlvm._tupleize(lists)
 
-    def _get_compilation_params(self, execution_id=None):
+    def _get_compilation_params(self, context=None):
         # Filter out known unused/invalid params
-        black_list = {'variable', 'value', 'context', 'initializer'}
+        black_list = {'variable', 'value', 'initializer'}
         try:
             # Don't list stateful params, the are included in context
             black_list.update(self.stateful_attributes)
@@ -722,26 +720,26 @@ class Function_Base(Function):
             pass
         def _is_compilation_param(p):
             if p.name not in black_list and not isinstance(p, ParameterAlias):
-                val = p._get(execution_id)
+                val = p.get(context)
                 # Check if the value is string (like integration_method)
                 return not isinstance(val, str)
             return False
 
         return filter(_is_compilation_param, self.parameters)
 
-    def _get_param_ids(self, execution_id=None):
-        return [p.name for p in self._get_compilation_params(execution_id)]
+    def _get_param_ids(self, context=None):
+        return [p.name for p in self._get_compilation_params(context)]
 
-    def _get_param_values(self, execution_id=None):
+    def _get_param_values(self, context=None):
         param_init = []
-        for p in self._get_compilation_params(execution_id):
-            param = p._get(execution_id)
+        for p in self._get_compilation_params(context):
+            param = p.get(context)
             try:
                 # Existence of parameter state changes the shape to array
                 # the base value should remain the same though
-                self.owner.parameter_states[p.name]
-                param = [param]
-            except (AttributeError, TypeError):
+                if p.name in self.owner.parameter_states:
+                    param = [param]
+            except AttributeError:
                 pass
             if not np.isscalar(param) and param is not None:
                 if p.name == 'matrix': # Flatten matrix
@@ -752,11 +750,11 @@ class Function_Base(Function):
 
         return tuple(param_init)
 
-    def _get_param_initializer(self, execution_id):
-        return pnlvm._tupleize(self._get_param_values(execution_id))
+    def _get_param_initializer(self, context):
+        return pnlvm._tupleize(self._get_param_values(context))
 
-    def _is_identity(self, execution_id=None):
-        # should return True in subclasses if the parameters for execution_id are such that
+    def _is_identity(self, context=None):
+        # should return True in subclasses if the parameters for context are such that
         # the Function's output will be the same as its input
         # Used to bypass execute when unnecessary
         return False
@@ -946,9 +944,9 @@ class ArgumentTherapy(Function_Base):
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
         Returns a boolean that is (or tends to be) the same as or opposite the one passed in.
 
@@ -972,8 +970,8 @@ class ArgumentTherapy(Function_Base):
         """
         # Compute the function
         statement = variable
-        propensity = self.get_current_function_param(PROPENSITY, execution_id)
-        pertinacity = self.get_current_function_param(PERTINACITY, execution_id)
+        propensity = self.get_current_function_param(PROPENSITY, context)
+        pertinacity = self.get_current_function_param(PERTINACITY, context)
         whim = randint(-10, 10)
 
         if propensity == self.Manner.OBSEQUIOUS:

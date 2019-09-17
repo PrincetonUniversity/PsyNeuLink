@@ -133,12 +133,12 @@ class ControlProjectionError(Exception):
         return repr(self.error_value)
 
 
-def _control_signal_getter(owning_component=None, execution_id=None):
-    return owning_component.sender.parameters.value._get(execution_id)
+def _control_signal_getter(owning_component=None, context=None):
+    return owning_component.sender.parameters.value._get(context)
 
 
-def _control_signal_setter(value, owning_component=None, execution_id=None):
-    owning_component.sender.parameters.value._set(value, execution_id, override)
+def _control_signal_setter(value, owning_component=None, context=None):
+    owning_component.sender.parameters.value._set(value, context, override)
     return value
 
 

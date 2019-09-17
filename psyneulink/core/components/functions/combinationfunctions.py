@@ -44,7 +44,7 @@ from psyneulink.core.globals.keywords import \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
     kwPreferenceSetName
 from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d, parameter_spec
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, is_pref_set, PreferenceEntry, PreferenceLevel
@@ -260,9 +260,9 @@ class Concatenate(CombinationFunction):  # -------------------------------------
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """Use numpy hstack to concatenate items in outer dimension (axis 0) of variable.
 
         Arguments
@@ -284,8 +284,8 @@ class Concatenate(CombinationFunction):  # -------------------------------------
             in an array that is one dimension less than `variable <Concatenate.variable>`.
 
         """
-        scale = self.get_current_function_param(SCALE, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
+        scale = self.get_current_function_param(SCALE, context)
+        offset = self.get_current_function_param(OFFSET, context)
 
         result = np.hstack(variable) * scale + offset
 
@@ -533,9 +533,9 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """Rearrange items in outer dimension (axis 0) of variable according to `arrangement <Rearrange.arrangement>`.
 
         Arguments
@@ -557,9 +557,9 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         """
         variable = np.atleast_2d(variable)
 
-        scale = self.get_current_function_param(SCALE, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
-        arrangement = self.parameters.arrangement.get(execution_id)
+        scale = self.get_current_function_param(SCALE, context)
+        offset = self.get_current_function_param(OFFSET, context)
+        arrangement = self.parameters.arrangement.get(context)
 
         if arrangement is None:
             result = np.hstack(variable) * scale + offset
@@ -820,9 +820,9 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -845,11 +845,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
 
         """
-        weights = self.get_current_function_param(WEIGHTS, execution_id)
-        exponents = self.get_current_function_param(EXPONENTS, execution_id)
-        operation = self.get_current_function_param(OPERATION, execution_id)
-        scale = self.get_current_function_param(SCALE, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
+        weights = self.get_current_function_param(WEIGHTS, context)
+        exponents = self.get_current_function_param(EXPONENTS, context)
+        operation = self.get_current_function_param(OPERATION, context)
+        scale = self.get_current_function_param(SCALE, context)
+        offset = self.get_current_function_param(OFFSET, context)
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
@@ -879,7 +879,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
-                                format(self.get_current_function_param(OPERATION, execution_id)))
+                                format(self.get_current_function_param(OPERATION, context)))
 
         return self.convert_output_type(result)
 
@@ -1256,9 +1256,9 @@ class LinearCombination(
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -1280,16 +1280,16 @@ class LinearCombination(
             the result of linearly combining the arrays in `variable <LinearCombination.variable>`.
 
         """
-        weights = self.get_current_function_param(WEIGHTS, execution_id)
-        exponents = self.get_current_function_param(EXPONENTS, execution_id)
+        weights = self.get_current_function_param(WEIGHTS, context)
+        exponents = self.get_current_function_param(EXPONENTS, context)
         # if self.initialization_status == ContextFlags.INITIALIZED:
         #     if weights is not None and weights.shape != variable.shape:
         #         weights = weights.reshape(variable.shape)
         #     if exponents is not None and exponents.shape != variable.shape:
         #         exponents = exponents.reshape(variable.shape)
-        operation = self.get_current_function_param(OPERATION, execution_id)
-        scale = self.get_current_function_param(SCALE, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
+        operation = self.get_current_function_param(OPERATION, context)
+        scale = self.get_current_function_param(SCALE, context)
+        offset = self.get_current_function_param(OFFSET, context)
 
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
@@ -1394,7 +1394,7 @@ class LinearCombination(
         offset = ctx.float_ty(-0.0) if isinstance(offset_type, pnlvm.ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
 
         # assume operation does not change dynamically
-        operation = self.get_current_function_param(OPERATION)
+        operation = self.get_current_function_param(OPERATION, context=Context())
         if operation is SUM:
             val = ctx.float_ty(-0.0)
         elif operation is PRODUCT:
@@ -1830,9 +1830,9 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -1854,11 +1854,11 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             the result of taking the means of each array in `variable <CombineMeans.variable>` and combining them.
 
         """
-        exponents = self.get_current_function_param(EXPONENTS, execution_id)
-        weights = self.get_current_function_param(WEIGHTS, execution_id)
-        operation = self.get_current_function_param(OPERATION, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
-        scale = self.get_current_function_param(SCALE, execution_id)
+        exponents = self.get_current_function_param(EXPONENTS, context)
+        weights = self.get_current_function_param(WEIGHTS, context)
+        operation = self.get_current_function_param(OPERATION, context)
+        offset = self.get_current_function_param(OFFSET, context)
+        scale = self.get_current_function_param(SCALE, context)
 
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
@@ -1905,7 +1905,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         else:
             raise FunctionError("Unrecognized operator ({0}) for CombineMeans function".
-                                format(self.get_current_function_param(OPERATION, execution_id)))
+                                format(self.get_current_function_param(OPERATION, context)))
 
         return self.convert_output_type(result)
 
@@ -2072,9 +2072,9 @@ class PredictionErrorDeltaFunction(CombinationFunction):
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -2096,7 +2096,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         delta values : 1d np.array
 
         """
-        gamma = self.get_current_function_param(GAMMA, execution_id)
+        gamma = self.get_current_function_param(GAMMA, context)
         sample = variable[0]
         reward = variable[1]
         delta = np.zeros(sample.shape)

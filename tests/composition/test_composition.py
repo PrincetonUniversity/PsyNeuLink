@@ -2381,7 +2381,7 @@ class TestRun:
 
         benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
-    def test_run_termination_condition_custom_execution_id(self):
+    def test_run_termination_condition_custom_context(self):
         D = pnl.DDM(function=pnl.DriftDiffusionIntegrator)
         comp = pnl.Composition()
 
@@ -2390,7 +2390,7 @@ class TestRun:
         comp.run(
             inputs={D: 0},
             termination_processing={pnl.TimeScale.RUN: pnl.WhenFinished(D)},
-            execution_id='custom'
+            context='custom'
         )
 
 

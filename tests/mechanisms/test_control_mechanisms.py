@@ -48,9 +48,9 @@ class TestLCControlMechanism:
         base_gain_assigned_to_B = []
 
         def report_trial(system):
-            from psyneulink import parse_execution_context
-            execution_id = parse_execution_context(system)
-            gain_created_by_LC_output_state_1.append(LC.output_states[0].parameters.value._get(execution_id))
+            from psyneulink import parse_context
+            context = parse_context(system)
+            gain_created_by_LC_output_state_1.append(LC.output_states[0].parameters.value.get(context))
             mod_gain_assigned_to_A.append([A.get_mod_gain(system)])
             mod_gain_assigned_to_B.append([B.get_mod_gain(system)])
             base_gain_assigned_to_A.append(A.function.gain)
@@ -150,13 +150,13 @@ class TestLCControlMechanism:
         assert result == [[[4.], [4.]], [[4.], [4.]]]
 
     def test_control_signal_default_allocation_specification(self):
-    
+
         m1 = pnl.ProcessingMechanism()
         m2 = pnl.ProcessingMechanism()
         m3 = pnl.ProcessingMechanism()
-    
+
         # default_allocation not specified in constructor of pnl.ControlMechanism,
-        #     so should be set to defaultControlAllocation (=[1]) if not specified in pnl.ControlSignal constructor  
+        #     so should be set to defaultControlAllocation (=[1]) if not specified in pnl.ControlSignal constructor
         c1 = pnl.ControlMechanism(
                 name='C1',
                 default_variable=[10],
@@ -169,8 +169,8 @@ class TestLCControlMechanism:
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c1)
         assert c1.control_signals[0].value == [1]      # defaultControlAllocation assigned (as no default_allocation from pnl.ControlMechanism)
-        assert m1.parameter_states[pnl.SLOPE].value == [1]   
-        assert c1.control_signals[1].value == [2]      # default_allocation from pnl.ControlSignal (converted scalar) 
+        assert m1.parameter_states[pnl.SLOPE].value == [1]
+        assert c1.control_signals[1].value == [2]      # default_allocation from pnl.ControlSignal (converted scalar)
         assert m2.parameter_states[pnl.SLOPE].value == [1]
         assert c1.control_signals[2].value == [3]      # default_allocation from pnl.ControlSignal
         assert m3.parameter_states[pnl.SLOPE].value == [1]
@@ -190,9 +190,9 @@ class TestLCControlMechanism:
         assert m2.parameter_states[pnl.SLOPE].value == [10]
         assert c1.control_signals[2].value == [10]
         assert m3.parameter_states[pnl.SLOPE].value == [10]
-    
+
         # default_allocation *is* specified in constructor of pnl.ControlMechanism,
-        #     so should be used unless specified in pnl.ControlSignal constructor  
+        #     so should be used unless specified in pnl.ControlSignal constructor
         c2 = pnl.ControlMechanism(
                 name='C3',
                 default_variable=[10],

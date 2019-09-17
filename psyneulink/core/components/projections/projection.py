@@ -299,7 +299,7 @@ A sender can be specified as:
     `ModulatorySignal <ModulatorySignal>` of the appropriate type is created and assigned to the Mechanism.
 
 If the `sender <Projection_Base.sender>` is not specified and it can't be determined from the context, or an OutputState
-specification is not associated with a Mechanism that can be determined from context, then the initialization of the
+specification is not associated with a Mechanism that can be determined from , then the initialization of the
 Projection is `deferred <Projection_Deferred_Initialization>`.
 
 .. _Projection_Receiver:
@@ -850,16 +850,6 @@ class Projection_Base(Projection):
         # Assign projection to self.sender's efferents list attribute
         # First make sure that projection is not already in efferents
         if self not in self.sender.efferents:
-            # # MODIFIED 7/22/19 OLD:
-            # self.sender.efferents.append(self)
-            # # MODIFIED 7/22/19 NEW: [JDC]
-            # FIX: THIS CRASHES IF RECEIVER IS NONE;
-            #      CAN BE FIXED BY HAVING _instantiate_projection_from_state HANDLE THAT GRACEFULLY BY
-            #      SIMPLY ADDING PROJECTION TO self.sender.efferents;  THAT SHOULD ALSO TAKE CARE OF
-            #      CHECKING FOR DUPLICATES
-            # sender._instantiate_projection_from_state(projection_spec=self,
-            #                                           context=context)
-            # MODIFIED 7/22/19 NEWER: [JDC]
             # Then make sure there is not already a projection to its receiver
             receiver = self.receiver
             if isinstance(receiver, Composition):
@@ -868,13 +858,28 @@ class Projection_Base(Projection):
                 receiver = receiver.input_state
             assert isinstance(receiver, (State)), \
                 f"Illegal receiver ({receiver}) detected in _instantiate_sender() method for {self.name}"
-            if receiver._check_for_duplicate_projections(self):
-                raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
-                                               f"{receiver.owner.name} that already has an identical "
-                                               f"{Projection.__name__}.")
-            else:
-                self.sender.efferents.append(self)
-            # MODIFIED 7/22/19 END
+            # # MODIFIED 9/14/19 OLD:
+            # if receiver._check_for_duplicate_projections(self):
+            #     raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
+            #                                    f"{receiver.owner.name} that already has an identical "
+            #                                    f"{Projection.__name__}.")
+            # else:
+            #     self.sender.efferents.append(self)
+            # MODIFIED 9/14/19 NEW:
+            dup =  receiver._check_for_duplicate_projections(self)
+            # If duplicate is a deferred_init Projection, delete it and use one currently being instantiated
+            # IMPLEMENTATION NOTE:  this gives precedence to a Projection to a Component specified by its sender
+            #                      (e.g., controller of a Composition for a ControlProjection)
+            #                       over its specification in the constructor for the receiver or its owner
+            if dup:
+                if dup.initialization_status == ContextFlags.DEFERRED_INIT:
+                    del receiver.mod_afferents[receiver.mod_afferents.index(dup)]
+                else:
+                    raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
+                                                   f"{receiver.owner.name} that already has an identical "
+                                                   f"{Projection.__name__}.")
+            self.sender.efferents.append(self)
+            # MODIFIED 9/14/19 END:
         else:
             raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} from {sender.name} of "
                                            f"{sender.owner.name} that already has an identical {Projection.__name__}.")
@@ -928,10 +933,10 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
+    def _update_parameter_states(self, context=None, runtime_params=None):
         for state in self._parameter_states:
             state_name = state.name
-            state._update(execution_id=execution_id, params=runtime_params, context=context)
+            state._update(context=context, params=runtime_params)
 
             # Assign version of ParameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
@@ -939,24 +944,24 @@ class Projection_Base(Projection):
             # set by the statement below. For example, if state_name is 'matrix', the statement below sets
             # params['matrix'] to state.value, calls setattr(state.owner, 'matrix', state.value), which sets the
             # 'matrix' parameter state's variable to ALSO be equal to state.value! If this is unintended, please change.
-            value = state.parameters.value._get(execution_id)
-            getattr(self.parameters, state_name)._set(value, execution_id, context)
+            value = state.parameters.value._get(context)
+            getattr(self.parameters, state_name)._set(value, context)
             # manual setting of previous value to matrix value (happens in above param['matrix'] setting
             if state_name == MATRIX:
-                state.function.parameters.previous_value._set(value, execution_id, context)
+                state.function.parameters.previous_value._set(value, context)
 
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:
-            variable = self.sender.parameters.value._get(execution_id)
+            variable = self.sender.parameters.value._get(context)
 
         value = super()._execute(
             variable=variable,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
         return value
 
@@ -1019,11 +1024,11 @@ class Projection_Base(Projection):
     def _get_state_struct_type(self, ctx):
         return ctx.get_state_struct_type(self.function)
 
-    def _get_param_initializer(self, execution_id):
-        return self.function._get_param_initializer(execution_id)
+    def _get_param_initializer(self, context):
+        return self.function._get_param_initializer(context)
 
-    def _get_state_initializer(self, execution_id):
-        return self.function._get_state_initializer(execution_id)
+    def _get_state_initializer(self, context):
+        return self.function._get_state_initializer(context)
 
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):

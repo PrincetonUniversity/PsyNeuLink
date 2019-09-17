@@ -158,5 +158,5 @@ mySystem.run(num_trials=nTrials,
 
 # Flanker_Rep.log.print_entries()
 # Target_Rep.log.print_entries()
-Decision.log.print_entries(execution_ids=mySystem)
+Decision.log.print_entries(contexts=mySystem)
 

@@ -369,7 +369,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import DIFFERENCE, FUNCTION, INITIALIZER, INSTANTANEOUS_MODE_VALUE, \
     MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NAME, NOISE, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, OWNER_VALUE, PREVIOUS_VALUE, PROB, RATE, REINITIALIZE, RESULT, RESULTS, SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
@@ -470,20 +470,20 @@ class TransferError(Exception):
         return repr(self.error_value)
 
 
-def _integrator_mode_setter(value, owning_component=None, execution_id=None):
+def _integrator_mode_setter(value, owning_component=None, context=None):
     if value is True:
         if (
-            not owning_component.parameters.integrator_mode._get(execution_id)
-            and owning_component.parameters.has_integrated._get(execution_id)
+            not owning_component.parameters.integrator_mode._get(context)
+            and owning_component.parameters.has_integrated._get(context)
         ):
             if owning_component.integrator_function is not None:
                 if owning_component.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
-                    owning_component.reinitialize(owning_component.parameters.value._get(execution_id), execution_context=execution_id)
+                    owning_component.reinitialize(owning_component.parameters.value._get(context), context=context)
                 elif owning_component.on_resume_integrator_mode == REINITIALIZE:
-                    owning_component.reinitialize(execution_context=execution_id)
-        owning_component.parameters.has_initializers._set(True, execution_id)
+                    owning_component.reinitialize(context=context)
+        owning_component.parameters.has_initializers._set(True, context)
     elif value is False:
-        owning_component.parameters.has_initializers._set(False, execution_id)
+        owning_component.parameters.has_initializers._set(False, context)
         if not hasattr(owning_component, "reinitialize_when"):
             owning_component.reinitialize_when = Never()
 
@@ -1151,17 +1151,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_parameter_states(function=function, context=context)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-
-        # if self.integrator_mode:
-        # self.parameters.previous_value._set(None)
-
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         if self.initial_value is None:
             self.initial_value = self.defaults.variable
 
     def _instantiate_integrator_function(self, variable, noise, initializer,  rate,
-                                         execution_id, context=None):
+                                         context):
 
         if isinstance(self.integrator_function, type):
             self.integrator_function = self.integrator_function(default_variable=variable,
@@ -1197,7 +1193,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 if not np.array_equal(mech_noise, fct_noise):
                     # If function's noise was not specified, assign Mechanism's value to it
                     if not fct_specified:
-                        self.integrator_function.parameters.noise._set(mech_noise, execution_id)
+                        self.integrator_function.parameters.noise._set(mech_noise, context)
                     # Otherwise, given precedence to function's value
                     else:
                         if mech_specified:
@@ -1208,7 +1204,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                  repr(INTEGRATOR_FUNCTION),
                                                  self.integrator_function.__class__.__name__))
                         # Assign funciton's noise to Mechanism
-                        self.parameters.noise._set(self.integrator_function.noise, execution_id)
+                        self.parameters.noise._set(self.integrator_function.noise, context)
 
                         # KDM 12/21/18: validating here until a standard scheme is designed, because it's tested for
                         self._validate_params(
@@ -1228,8 +1224,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 if not np.array_equal(mech_init_val, fct_intlzr):
                     # If function's initializer was not specified, assign Mechanism's initial_value to it
                     if not fct_specified:
-                        self.integrator_function.parameters.initializer._set(initializer, execution_id)
-                        self.integrator_function._initialize_previous_value(initializer, execution_id)
+                        self.integrator_function.parameters.initializer._set(initializer, context)
+                        self.integrator_function._initialize_previous_value(initializer, context)
                     # Otherwise, give precedence to function's value
                     else:
                         if mech_specified:
@@ -1240,7 +1236,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                  repr(INTEGRATOR_FUNCTION),
                                                  self.integrator_function.__class__.__name__))
                         # Assign function's initializer to Mechanism
-                        self.parameters.initial_value._set(self.integrator_function.initializer, execution_id)
+                        self.parameters.initial_value._set(self.integrator_function.initializer, context)
 
             if hasattr(self.integrator_function, RATE):
                 fct_rate = np.array(self.integrator_function.rate)
@@ -1251,7 +1247,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 if not np.array_equal(mech_rate, fct_rate):
                     # If function's rate was not specified, assign Mechanism's value to it
                     if not fct_specified:
-                        self.integrator_function.parameters.rate._set(rate, execution_id)
+                        self.integrator_function.parameters.rate._set(rate, context)
                     # Otherwise, warn and then give precedence to function's value
                     else:
                         if mech_specified:
@@ -1261,7 +1257,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                  repr(RATE), self.integrator_function.rate, repr(INTEGRATOR_FUNCTION),
                                                  self.integrator_function.__class__.__name__))
                         # Assign function's rate to Mechanism
-                        self.parameters.integration_rate._set(self.integrator_function.rate, execution_id)
+                        self.parameters.integration_rate._set(self.integrator_function.rate, context)
 
                         # KDM 12/21/18: validating here until a standard scheme is designed, because it's tested for
                         self._validate_params(
@@ -1309,16 +1305,15 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return current_input
 
-    def _get_integrated_function_input(self, function_variable, initial_value, noise, context, execution_id=None, **kwargs):
+    def _get_integrated_function_input(self, function_variable, initial_value, noise, context, **kwargs):
 
-        integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE, execution_id)
+        integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE, context)
 
         if self.initialization_status == ContextFlags.INITIALIZING:
             self._instantiate_integrator_function(variable=function_variable,
                                                   noise=noise,
                                                   initializer=initial_value,
                                                   rate=integration_rate,
-                                                  execution_id=execution_id,
                                                   context=context)
             # Update param assignments with ones determined to be relevant (mech vs. fct)
             #    and assigned to integrator_function in _instantiate_integrator_function
@@ -1328,14 +1323,14 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         current_input = self.integrator_function.execute(
             function_variable,
-            execution_id=execution_id,
+            context=context,
             # Should we handle runtime params?
             runtime_params={
                 INITIALIZER: initial_value,
                 NOISE: noise,
                 RATE: integration_rate
             },
-            context=context
+
         )
 
         return current_input
@@ -1363,18 +1358,18 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return pnlvm.ir.LiteralStructType(state_struct_type_list)
 
-    def _get_function_param_initializer(self, execution_id):
-        function_param_list = [self.function._get_param_initializer(execution_id)]
+    def _get_function_param_initializer(self, context):
+        function_param_list = [self.function._get_param_initializer(context)]
         if self.integrator_mode:
             assert self.integrator_function is not None
-            function_param_list.append(self.integrator_function._get_param_initializer(execution_id))
+            function_param_list.append(self.integrator_function._get_param_initializer(context))
         return tuple(function_param_list)
 
-    def _get_function_state_initializer(self, execution_id):
-        context_list = [self.function._get_state_initializer(execution_id)]
+    def _get_function_state_initializer(self, context):
+        context_list = [self.function._get_state_initializer(context)]
         if self.integrator_mode:
             assert self.integrator_function is not None
-            context_list.append(self.integrator_function._get_state_initializer(execution_id))
+            context_list.append(self.integrator_function._get_state_initializer(context))
         return tuple(context_list)
 
     def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
@@ -1404,7 +1399,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # KDM 12/13/18: for some reason on devel f8b1e2cbf this was returning None on several tests, but when
         # refactoring function_object -> function using __call__ on Function_Base, it now returned a tuple in those cases.
         # Seems not to cause any test failures however..
-        clip = self.get_current_mechanism_param("clip")
+        clip = self.get_current_mechanism_param("clip", Context())
         if clip is not None:
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -1430,9 +1425,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _execute(self,
         variable=None,
-        execution_id=None,
+        context=None,
         runtime_params=None,
-        context=None
+
     ):
         """Execute TransferMechanism function and return transform of input
 
@@ -1478,59 +1473,59 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO AN STANDARD OUTPUT_STATE
         # Clip outputs
-        clip = self.get_current_mechanism_param("clip", execution_id)
+        clip = self.get_current_mechanism_param("clip", context)
 
         value = super(Mechanism, self)._execute(variable=variable,
-                                                execution_id=execution_id,
+                                                context=context,
                                                 runtime_params=runtime_params,
-                                                context=context
+
                                                 )
         value = self._clip_result(clip, value)
 
         # Used by update_previous_value, convergence_function and delta
-        # self.parameters.value._set(np.atleast_2d(value), execution_id, skip_history=True, skip_log=True)
+        # self.parameters.value._set(np.atleast_2d(value), context, skip_history=True, skip_log=True)
 
         return value
 
-    @handle_external_context()
-    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
-        super().reinitialize(*args, execution_context=execution_context, context=context)
-        self.parameters.previous_value.set(None, execution_context, override=True)
+    @handle_external_context(execution_id=NotImplemented)
+    def reinitialize(self, *args, context=None):
+        super().reinitialize(*args, context=context)
+        self.parameters.previous_value.set(None, context, override=True)
 
-    def _update_previous_value(self, execution_id=None):
-        if self.parameters.integrator_mode._get(execution_id):
-            value = self.parameters.value._get(execution_id)
+    def _update_previous_value(self, context=None):
+        if self.parameters.integrator_mode._get(context):
+            value = self.parameters.value._get(context)
             if value is None:
                 value = self.defaults.value
-            self.parameters.previous_value._set(value, execution_id)
+            self.parameters.previous_value._set(value, context)
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
+    def _parse_function_variable(self, variable, context=None):
         if context.source is ContextFlags.INSTANTIATE:
 
-            return super(TransferMechanism, self)._parse_function_variable(variable=variable, execution_id=execution_id, context=context)
+            return super(TransferMechanism, self)._parse_function_variable(variable=variable, context=context)
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        integrator_mode = self.parameters.integrator_mode._get(execution_id)
-        noise = self.get_current_mechanism_param(NOISE, execution_id)
+        integrator_mode = self.parameters.integrator_mode._get(context)
+        noise = self.get_current_mechanism_param(NOISE, context)
 
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
         # Update according to time-scale of integration
         if integrator_mode:
-            initial_value = self.get_current_mechanism_param(INITIAL_VALUE, execution_id)
+            initial_value = self.get_current_mechanism_param(INITIAL_VALUE, context)
 
             value = self._get_integrated_function_input(variable,
                                                         initial_value,
                                                         noise,
                                                         context,
-                                                        execution_id=execution_id)
+                                                        )
 
-            self.parameters.integrator_function_value._set(value, execution_id)
+            self.parameters.integrator_function_value._set(value, context)
             return value
 
         else:
             return self._get_instantaneous_function_input(variable, noise)
 
-    def _report_mechanism_execution(self, input, params, output):
+    def _report_mechanism_execution(self, input, params, output, context=None):
         """Override super to report previous_input rather than input, and selected params
         """
         # KAM Changed 8/29/17 print_input = self.previous_input --> print_input = input
@@ -1541,22 +1536,22 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Suppress reporting of range (not currently used)
         del print_params[CLIP]
 
-        super()._report_mechanism_execution(input_val=print_input, params=print_params)
+        super()._report_mechanism_execution(input_val=print_input, params=print_params, context=context)
 
-    def delta(self, value=NotImplemented, execution_id=None):
+    def delta(self, value=NotImplemented, context=None):
         if value is NotImplemented:
-            value = self.parameters.value._get(execution_id)
-        return self.convergence_function([value[0], self.parameters.previous_value._get(execution_id)[0]])
+            value = self.parameters.value._get(context)
+        return self.convergence_function([value[0], self.parameters.previous_value._get(context)[0]])
 
     @handle_external_context()
-    def is_converged(self, value=NotImplemented, execution_id=None, context=None):
+    def is_converged(self, value=NotImplemented, context=None):
         # Check for convergence
         if (
             self.convergence_criterion is not None
-            and self.parameters.previous_value._get(execution_id) is not None
+            and self.parameters.previous_value._get(context) is not None
             and self.initialization_status != ContextFlags.INITIALIZING
         ):
-            if self.delta(value, execution_id) <= self.convergence_criterion:
+            if self.delta(value, context) <= self.convergence_criterion:
                 return True
             elif self.get_current_execution_time(context).pass_ >= self.max_passes:
                 raise TransferError("Maximum number of executions ({}) has occurred before reaching "

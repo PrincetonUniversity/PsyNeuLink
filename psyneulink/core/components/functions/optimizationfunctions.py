@@ -32,7 +32,7 @@ from numbers import Number
 from typing import Iterator
 
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
@@ -424,8 +424,8 @@ class OptimizationFunction(Function_Base):
                                                        repr(SEARCH_TERMINATION_FUNCTION),
                                                        self.__class__.__name__))
 
-    @handle_external_context()
-    def reinitialize(self, *args, execution_id=NotImplemented, context=None):
+    @handle_external_context(execution_id=NotImplemented)
+    def reinitialize(self, *args, context=None):
         """Reinitialize parameters of the OptimizationFunction
 
         Parameters to be reinitialized should be specified in a parameter specification dictionary, in which they key
@@ -437,8 +437,8 @@ class OptimizationFunction(Function_Base):
             * `search_function <OptimizationFunction.search_function>`
             * `search_termination_function <OptimizationFunction.search_termination_function>`
         """
-        if execution_id is NotImplemented:
-            execution_id = self.most_recent_context.execution_id
+        if context.execution_id is NotImplemented:
+            context.execution_id = self.most_recent_context.execution_id
         self._validate_params(request_set=args[0])
 
         if DEFAULT_VARIABLE in args[0]:
@@ -456,15 +456,14 @@ class OptimizationFunction(Function_Base):
             if SEARCH_TERMINATION_FUNCTION in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_TERMINATION_FUNCTION)]
         if SEARCH_SPACE in args[0] and args[0][SEARCH_SPACE] is not None:
-            self.parameters.search_space._set(args[0][SEARCH_SPACE], execution_id)
+            self.parameters.search_space._set(args[0][SEARCH_SPACE], context)
             if SEARCH_SPACE in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_SPACE)]
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
-                 params=None,
                  context=None,
+                 params=None,
                  **kwargs):
         """Find the sample that yields the optimal value of `objective_function
         <OptimizationFunction.objective_function>`.
@@ -489,8 +488,8 @@ class OptimizationFunction(Function_Base):
                           format(self.name, ', '.join(self._unspecified_args)))
             self._unspecified_args = []
 
-        current_sample = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-        current_value = self.owner.objective_mechanism.parameters.value._get(execution_id) if self.owner else 0.
+        current_sample = self._check_args(variable=variable, context=context, params=params)
+        current_value = self.owner.objective_mechanism.parameters.value._get(context) if self.owner else 0.
 
         samples = []
         values = []
@@ -515,7 +514,7 @@ class OptimizationFunction(Function_Base):
         while not call_with_pruned_args(self.search_termination_function,
                                         current_sample,
                                         current_value, iteration,
-                                        execution_id=execution_id):
+                                        context=context):
 
             if _show_progress:
                 increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
@@ -524,12 +523,12 @@ class OptimizationFunction(Function_Base):
                 _progress_bar_count +=1
 
             # Get next sample of sample
-            new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, execution_id=execution_id)
+            new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
             # Compute new value based on new sample
-            new_value = call_with_pruned_args(self.objective_function, new_sample, execution_id=execution_id, context=context)
+            new_value = call_with_pruned_args(self.objective_function, new_sample, context=context)
             self._report_value(new_value)
             iteration += 1
-            max_iterations = self.parameters.max_iterations._get(execution_id)
+            max_iterations = self.parameters.max_iterations._get(context)
             if max_iterations and iteration > max_iterations:
                 warnings.warn("{} failed to converge after {} iterations".format(self.name, max_iterations))
                 break
@@ -537,12 +536,12 @@ class OptimizationFunction(Function_Base):
             current_sample = new_sample
             current_value = new_value
 
-            if self.parameters.save_samples._get(execution_id):
+            if self.parameters.save_samples._get(context):
                 samples.append(new_sample)
-                self.parameters.saved_samples._set(samples, execution_id)
-            if self.parameters.save_values._get(execution_id):
+                self.parameters.saved_samples._set(samples, context)
+            if self.parameters.save_values._get(context):
                 values.append(current_value)
-                self.parameters.saved_values._set(values, execution_id)
+                self.parameters.saved_values._set(values, context)
 
         return new_sample, new_value, samples, values
 
@@ -917,7 +916,7 @@ class GradientOptimization(OptimizationFunction):
                     raise OptimizationFunctionError(f"All items in {repr(SEARCH_SPACE)} arg for {self.name}{owner_str} "
                                                     f"must be or resolve a 2-item list or tuple; this doesn't: {s}.")
 
-    @handle_external_context()
+    @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
         super().reinitialize(*args)
 
@@ -1000,9 +999,8 @@ class GradientOptimization(OptimizationFunction):
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
-                 params=None,
                  context=None,
+                 params=None,
                  **kwargs):
         """Return the sample that yields the optimal value of `objective_function
         <GradientOptimization.objective_function>`, and possibly all samples evaluated and their corresponding values.
@@ -1026,42 +1024,42 @@ class GradientOptimization(OptimizationFunction):
         """
 
         optimal_sample, optimal_value, all_samples, all_values = super()._function(variable=variable,
-                                                                                  execution_id=execution_id,
+                                                                                  context=context,
                                                                                   params=params,
-                                                                                  context=context)
+                                                                                  )
         # # TEST PRINT 5/30/19:
         # print(f'optimal_sample: {optimal_sample}')
         # print(f'optimal_value: {optimal_value}')
 
         return_all_samples = return_all_values = []
-        if self.parameters.save_samples._get(execution_id):
+        if self.parameters.save_samples._get(context):
             return_all_samples = all_samples
-        if self.parameters.save_values._get(execution_id):
+        if self.parameters.save_values._get(context):
             return_all_values = all_values
         # return last_variable
         return optimal_sample, optimal_value, return_all_samples, return_all_values
 
-    def _follow_gradient(self, sample, sample_num, execution_id=None):
+    def _follow_gradient(self, sample, sample_num, context=None):
 
         if self.gradient_function is None:
             return sample
 
         # Index from 1 rather than 0
         # Update step_size
-        step_size = self.parameters.step_size._get(execution_id)
+        step_size = self.parameters.step_size._get(context)
         if sample_num == 0:
             # Start from initial value (sepcified by user in step_size arg)
             step_size = self.parameters.step_size.default_value
-            self.parameters.step_size._set(step_size, execution_id)
+            self.parameters.step_size._set(step_size, context)
         if self.annealing_function:
-            step_size = call_with_pruned_args(self.annealing_function, step_size, sample_num, execution_id=execution_id)
-            self.parameters.step_size._set(step_size, execution_id)
+            step_size = call_with_pruned_args(self.annealing_function, step_size, sample_num, context=context)
+            self.parameters.step_size._set(step_size, context)
 
         # Compute gradients with respect to current sample
-        _gradients = call_with_pruned_args(self.gradient_function, sample, execution_id=execution_id)
+        _gradients = call_with_pruned_args(self.gradient_function, sample, context=context)
 
         # Get new sample based on new gradients
-        new_sample = sample + self.parameters.direction._get(execution_id) * step_size * np.array(_gradients)
+        new_sample = sample + self.parameters.direction._get(context) * step_size * np.array(_gradients)
 
         # Constrain new sample to be within bounds
         if self.bounds:
@@ -1070,14 +1068,14 @@ class GradientOptimization(OptimizationFunction):
 
         return new_sample
 
-    def _convergence_condition(self, variable, value, iteration, execution_id=None):
-        previous_variable = self.parameters.previous_variable._get(execution_id)
-        previous_value = self.parameters.previous_value._get(execution_id)
+    def _convergence_condition(self, variable, value, iteration, context=None):
+        previous_variable = self.parameters.previous_variable._get(context)
+        previous_value = self.parameters.previous_value._get(context)
 
         if iteration is 0:
             # self._convergence_metric = self.convergence_threshold + EPSILON
-            self.parameters.previous_variable._set(variable, execution_id)
-            self.parameters.previous_value._set(value, execution_id)
+            self.parameters.previous_variable._set(variable, context)
+            self.parameters.previous_value._set(value, context)
             return False
 
         # Evaluate for convergence
@@ -1087,10 +1085,10 @@ class GradientOptimization(OptimizationFunction):
             convergence_metric = np.max(np.abs(np.array(variable) -
                                                np.array(previous_variable)))
 
-        self.parameters.previous_variable._set(variable, execution_id)
-        self.parameters.previous_value._set(value, execution_id)
+        self.parameters.previous_variable._set(variable, context)
+        self.parameters.previous_value._set(value, context)
 
-        return convergence_metric <= self.parameters.convergence_threshold._get(execution_id)
+        return convergence_metric <= self.parameters.convergence_threshold._get(context)
 
 
 MAXIMIZE = 'maximize'
@@ -1279,7 +1277,7 @@ class GridSearch(OptimizationFunction):
             seed = get_global_seed()
         random_state = np.random.RandomState(np.asarray([seed]))
 
-        # Assign args to params and functionParams dicts 
+        # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(params=params,
                                                   random_state=random_state)
 
@@ -1319,12 +1317,12 @@ class GridSearch(OptimizationFunction):
             #                                            self.__class__.__name__,
             #                                            ))
 
-    @handle_external_context()
-    def reinitialize(self, *args, execution_id=NotImplemented, context=None):
+    @handle_external_context(execution_id=NotImplemented)
+    def reinitialize(self, *args, context=None):
         """Assign size of `search_space <GridSearch.search_space>"""
-        if execution_id is NotImplemented:
-            execution_id = self.most_recent_context.execution_id
-        super(GridSearch, self).reinitialize(*args, execution_id=execution_id, context=context)
+        if context.execution_id is NotImplemented:
+            context.execution_id = self.most_recent_context.execution_id
+        super(GridSearch, self).reinitialize(*args, context=context)
         sample_iterators = args[0]['search_space']
         owner_str = ''
         if self.owner:
@@ -1385,7 +1383,7 @@ class GridSearch(OptimizationFunction):
             return pnlvm.ir.LiteralStructType((ctx.float_ty, ctx.float_ty, ctx.int32_ty))
         assert False, "Unsupported dimension type: {}".format(d)
 
-    def _get_compilation_params(self, execution_id):
+    def _get_compilation_params(self, context):
         return [self.parameters.objective_function,
                 self.parameters.search_space,
                 self.parameters.random_state]
@@ -1403,7 +1401,7 @@ class GridSearch(OptimizationFunction):
             obj_func_param = ctx.get_param_struct_type(self.objective_function)
         return pnlvm.ir.LiteralStructType([obj_func_param, space, select_randomly])
 
-    def _get_search_dim_init(self, execution_id, d):
+    def _get_search_dim_init(self, context, d):
         if isinstance(d.generator, list):
             return tuple(d.generator)
         if isinstance(d, SampleIterator):
@@ -1411,16 +1409,16 @@ class GridSearch(OptimizationFunction):
 
         assert False, "Unsupported dimension type: {}".format(d)
 
-    def _get_param_initializer(self, execution_id):
-        grid_init = (self._get_search_dim_init(execution_id, d) for d in self.search_space)
+    def _get_param_initializer(self, context):
+        grid_init = (self._get_search_dim_init(context, d) for d in self.search_space)
         select_randomly = 1 if self.select_randomly_from_optimal_values else 0
         try:
             # self.objective_function may be bound method of
             # an OptimizationControlMechanism
             ocm = self.objective_function.__self__
-            obj_func_param_init = ocm._get_evaluate_param_initializer(execution_id)
+            obj_func_param_init = ocm._get_evaluate_param_initializer(context)
         except AttributeError:
-            obj_func_param_init = self.objective_function._get_param_initializer(execution_id)
+            obj_func_param_init = self.objective_function._get_param_initializer(context)
         return (obj_func_param_init, tuple(grid_init), select_randomly)
 
     def _get_state_struct_type(self, ctx):
@@ -1432,18 +1430,18 @@ class GridSearch(OptimizationFunction):
         except AttributeError:
             obj_func_state = ctx.get_state_struct_type(self.objective_function)
         # Get random state
-        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state"))
+        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state", Context()))
         return pnlvm.ir.LiteralStructType([obj_func_state, random_state_struct])
 
-    def _get_state_initializer(self, execution_id):
+    def _get_state_initializer(self, context):
         try:
             # self.objective_function may be bound method of
             # an OptimizationControlMechanism
             ocm = self.objective_function.__self__
-            obj_func_state_init = ocm._get_evaluate_state_initializer(execution_id)
+            obj_func_state_init = ocm._get_evaluate_state_initializer(context)
         except AttributeError:
-            obj_func_state_init = self.objective_function._get_state_initializer(execution_id)
-        random_state = self.get_current_function_param("random_state", execution_id).get_state()[1:]
+            obj_func_state_init = self.objective_function._get_state_initializer(context)
+        random_state = self.get_current_function_param("random_state", context).get_state()[1:]
         return (obj_func_state_init, pnlvm._tupleize(random_state))
 
     def _get_output_struct_type(self, ctx):
@@ -1565,9 +1563,8 @@ class GridSearch(OptimizationFunction):
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
-                 params=None,
                  context=None,
+                 params=None,
                  **kwargs):
         """Return the sample that yields the optimal value of `objective_function <GridSearch.objective_function>`,
         and possibly all samples evaluated and their corresponding values.
@@ -1592,7 +1589,7 @@ class GridSearch(OptimizationFunction):
         self.reset_grid()
         return_all_samples = return_all_values = []
 
-        direction = self.parameters.direction._get(execution_id)
+        direction = self.parameters.direction._get(context)
 
         if MPI_IMPLEMENTATION:
 
@@ -1647,7 +1644,7 @@ class GridSearch(OptimizationFunction):
                     _progress_bar_count +=1
 
                 # Evaluate objective_function for current sample
-                value = self.objective_function(sample, execution_id=execution_id)
+                value = self.objective_function(sample, context=context)
 
                 # Evaluate for optimal value
                 if direction is MAXIMIZE:
@@ -1696,9 +1693,9 @@ class GridSearch(OptimizationFunction):
 
             last_sample, last_value, all_samples, all_values = super()._function(
                 variable=variable,
-                execution_id=execution_id,
+                context=context,
                 params=params,
-                context=context
+
             )
 
             optimal_value_count = 1
@@ -1712,7 +1709,7 @@ class GridSearch(OptimizationFunction):
                     # swap with probability = 1/optimal_value_count in order to achieve
                     # uniformly random selection from identical outcomes
                     probability = 1/optimal_value_count
-                    random_state = self.get_current_function_param("random_state", execution_id)
+                    random_state = self.get_current_function_param("random_state", context)
                     random_value = random_state.rand()
 
                     if random_value < probability:
@@ -1730,7 +1727,7 @@ class GridSearch(OptimizationFunction):
 
         return sample_optimal, value_optimal, return_all_samples, return_all_values
 
-    def _traverse_grid(self, variable, sample_num, execution_id=None):
+    def _traverse_grid(self, variable, sample_num, context=None):
         """Get next sample from grid.
         This is assigned as the `search_function <OptimizationFunction.search_function>` of the `OptimizationFunction`.
         """
@@ -1746,7 +1743,7 @@ class GridSearch(OptimizationFunction):
                        self.owner.current_execution_count, self.num_iterations))
         return sample
 
-    def _grid_complete(self, variable, value, iteration, execution_id=None):
+    def _grid_complete(self, variable, value, iteration, context=None):
         """Return False when search of grid is complete
         This is assigned as the `search_termination_function <OptimizationFunction.search_termination_function>`
         of the `OptimizationFunction`.
@@ -1975,9 +1972,8 @@ class GaussianProcess(OptimizationFunction):
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
-                 params=None,
                  context=None,
+                 params=None,
                  **kwargs):
         """Return the sample that yields the optimal value of `objective_function <GaussianProcess.objective_function>`,
         and possibly all samples evaluated and their corresponding values.
@@ -2010,9 +2006,9 @@ class GaussianProcess(OptimizationFunction):
         else:
             last_sample, last_value, all_samples, all_values = super()._function(
                     variable=variable,
-                    execution_id=execution_id,
+                    context=context,
                     params=params,
-                    context=context
+
             )
 
             return_optimal_value = max(all_values)
@@ -2025,7 +2021,7 @@ class GaussianProcess(OptimizationFunction):
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
     # FRED: THESE ARE THE SHELLS FOR THE METHODS I BELIEVE YOU NEED:
-    def _gaussian_process_sample(self, variable, sample_num, execution_id=None):
+    def _gaussian_process_sample(self, variable, sample_num, context=None):
         """Draw and return sample from search_space."""
         # FRED: YOUR CODE HERE;  THIS IS THE search_function METHOD OF OptimizationControlMechanism (i.e., PARENT)
         # NOTES:
@@ -2036,14 +2032,14 @@ class GaussianProcess(OptimizationFunction):
         #   You have accessible:
         #     variable arg:  the last sample evaluated
         #     sample_num:  number of current iteration in the search/sampling process
-        #     self.search_space:  self.parameters.search_space._get(execution_id), which you can assume will be a
+        #     self.search_space:  self.parameters.search_space._get(context), which you can assume will be a
         #                         list of tuples, each of which contains the sampling bounds for each dimension;
         #                         so its length = length of a sample
         #     (the extra stuff in getting the search space is to support statefulness in parallelization of sims)
         # return self._opt.ask() # [SAMPLE:  VECTOR SAME SHAPE AS VARIABLE]
         return variable
 
-    def _gaussian_process_satisfied(self, variable, value, iteration, execution_id=None):
+    def _gaussian_process_satisfied(self, variable, value, iteration, context=None):
         """Determine whether search should be terminated;  return `True` if so, `False` if not."""
         # FRED: YOUR CODE HERE;    THIS IS THE search_termination_function METHOD OF OptimizationControlMechanism (
         # i.e., PARENT)

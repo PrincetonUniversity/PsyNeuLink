@@ -45,9 +45,9 @@ action_selection.output_state.value = [0, 0, 1]
 # Get reward value for selected action)
 
 
-def reward(execution_context=None):
+def reward(context=None):
     """Return the reward associated with the selected action"""
-    return [reward_values[int(np.nonzero(action_selection.output_state.parameters.value.get(execution_context))[0])]]
+    return [reward_values[int(np.nonzero(action_selection.output_state.parameters.value.get(context))[0])]]
 
 
 def print_header(system):

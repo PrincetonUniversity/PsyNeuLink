@@ -96,7 +96,7 @@ class TestMiscTrainingFunctionality:
 
         # mini version of xor.execute just to build up pytorch representation
         xor._analyze_graph()
-        xor._build_pytorch_representation(execution_id=xor.default_execution_id)
+        xor._build_pytorch_representation(context=xor.default_execution_id)
         # check whether pytorch parameters are identical to projections
         assert np.allclose(hid_map.parameters.matrix.get(None),
                            xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy())

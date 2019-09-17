@@ -66,7 +66,7 @@ class UserDefinedFunction(Function_Base):
     ..
     .. _UDF_Params_Context:
 
-    * It may include **self**, **owner**, **execution_id**, **context** and/or **params** arguments;  none of these are
+    * It may include **self**, **owner**, **context**, and/or **params** arguments;  none of these are
       required, but can be included to gain access to the standard `Function` parameters (such as the history of its
       parameter values), those of the `Component` to which it has been assigned (i.e., its `owner <Function.owner>`,
       and/or receive information about the current conditions of execution.   When the function or method is called,
@@ -391,14 +391,14 @@ class UserDefinedFunction(Function_Base):
 
                 # MODIFIED 3/6/19 NEW: [JDC]
                 # Custom function specified owner as arg
-                if arg_name in {SELF, OWNER, EXECUTION_ID}:
+                if arg_name in {SELF, OWNER, CONTEXT}:
                     # Flag for inclusion in call to function
                     if arg_name is SELF:
                         self.self_arg = True
                     elif arg_name is OWNER:
                         self.owner_arg = True
                     else:
-                        self.execution_id_arg = True
+                        self.context_arg = True
                     # Skip rest, as these don't need to be params
                     continue
                 # MODIFIED 3/6/19 END
@@ -429,7 +429,7 @@ class UserDefinedFunction(Function_Base):
 
         self.self_arg = False
         self.owner_arg = False
-        self.execution_id_arg = False
+        self.context_arg = False
 
         # Get variable and names of other any other args for custom_function and assign to cust_fct_params
         if params is not None and CUSTOM_FUNCTION in params:
@@ -497,12 +497,12 @@ class UserDefinedFunction(Function_Base):
                 if attr_value is None:
                     attr_value = p.default_value
 
-                p._set(attr_value, skip_history=True)
+                p._set(attr_value, context, skip_history=True)
                 delattr(self, attr_name)
             except AttributeError:
-                p._set(p.default_value, skip_history=True)
+                p._set(p.default_value, context, skip_history=True)
 
-    def _function(self, variable, execution_id=None, **kwargs):
+    def _function(self, variable, context=None, **kwargs):
 
         # Update value of parms in cust_fct_params
         for param in self.cust_fct_params:
@@ -512,7 +512,7 @@ class UserDefinedFunction(Function_Base):
                 self.cust_fct_params[param] = kwargs[PARAMS][param]
             else:
                 # Otherwise, get current value from ParameterState (in case it is being modulated by ControlSignal(s)
-                self.cust_fct_params[param] = self.get_current_function_param(param, execution_id)
+                self.cust_fct_params[param] = self.get_current_function_param(param, context)
 
         call_params = self.cust_fct_params.copy()
 
@@ -522,8 +522,8 @@ class UserDefinedFunction(Function_Base):
             call_params[SELF] = self
         if self.owner_arg:
             call_params[OWNER] = self.owner
-        if self.execution_id_arg:
-            call_params[EXECUTION_ID] = execution_id
+        if self.context_arg:
+            call_params[CONTEXT] = context
         # MODIFIED 3/6/19 END
 
         kwargs.update(call_params)

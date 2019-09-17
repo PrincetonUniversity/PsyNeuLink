@@ -365,7 +365,7 @@ from psyneulink.core.components.states.modulatorysignals.controlsignal import Co
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Parameter, parse_execution_context
+from psyneulink.core.globals.parameters import Parameter, parse_context
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value
@@ -1075,9 +1075,9 @@ class DDM(ProcessingMechanism):
     def _execute(
         self,
         variable=None,
-        execution_id=None,
+        context=None,
         runtime_params=None,
-        context=None
+
     ):
         """Execute DDM function (currently only trial-level, analytic solution)
         Execute DDM and estimate outcome or calculate trajectory of decision variable
@@ -1122,7 +1122,7 @@ class DDM(ProcessingMechanism):
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if isinstance(self.function, IntegratorFunction):
 
-            result = super()._execute(variable, execution_id=execution_id, context=context)
+            result = super()._execute(variable, context=context)
 
             if self.initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
@@ -1134,9 +1134,9 @@ class DDM(ProcessingMechanism):
 
             result = super()._execute(
                 variable=variable,
-                execution_id=execution_id,
+                context=context,
                 runtime_params=runtime_params,
-                context=context
+
             )
 
             if isinstance(self.function, DriftDiffusionAnalytical):
@@ -1157,33 +1157,31 @@ class DDM(ProcessingMechanism):
                                format(self.function.name, self.name))
 
             # Convert ER to decision variable:
-            threshold = float(self.function.get_current_function_param(THRESHOLD, execution_id))
+            threshold = float(self.function.get_current_function_param(THRESHOLD, context))
             if random.random() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
             return return_value
 
-    @handle_external_context()
-    def reinitialize(self, *args, execution_context=NotImplemented, context=None):
+    @handle_external_context(execution_id=NotImplemented)
+    def reinitialize(self, *args, context=None):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
-        if execution_context is NotImplemented:
-            execution_id = self.most_recent_context.execution_id
-        else:
-            execution_id = parse_execution_context(execution_context)
+        if context.execution_id is NotImplemented:
+            context.execution_id = self.most_recent_context.execution_id
 
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
         if isinstance(self.function, IntegratorFunction):
-            new_values = self.function.reinitialize(*args, execution_context=execution_id, context=context)
-            self.parameters.value._set(np.array(new_values), execution_id, context=context)
-            self._update_output_states(execution_id=execution_id,
-                                       context=context)
+            new_values = self.function.reinitialize(*args, context=context)
+            self.parameters.value._set(np.array(new_values), context)
+            self._update_output_states(context=context)
 
-    def is_finished(self, execution_context=None):
+    @handle_external_context()
+    def is_finished(self, context=None):
         # find the single numeric entry in previous_value
         try:
-            single_value = self.function.get_previous_value(execution_context)
+            single_value = self.function.get_previous_value(context)
         except AttributeError:
             # Analytical function so it is always finished after it is called
             return True
@@ -1197,14 +1195,14 @@ class DDM(ProcessingMechanism):
                     break
 
         if (
-            abs(single_value) >= self.function.get_current_function_param(THRESHOLD, execution_context)
+            abs(single_value) >= self.function.get_current_function_param(THRESHOLD, context)
             and isinstance(self.function, IntegratorFunction)
         ):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(
                     type(self).__name__,
                     self.name,
-                    self.function.get_current_function_param(THRESHOLD, execution_context)
+                    self.function.get_current_function_param(THRESHOLD, context)
                 )
             )
             return True

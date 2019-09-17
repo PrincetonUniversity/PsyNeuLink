@@ -226,9 +226,9 @@ for i in range(num_subj):
     # start_time = time.time()
     trial_num = 0
 
-    # duration = timeit.timeit(c.run(inputs=input_dict, execution_id=i), number=1) #number=2
+    # duration = timeit.timeit(c.run(inputs=input_dict, context=i), number=1) #number=2
     c.run(inputs=input_dict,
-          execution_id=i,
+          context=i,
           call_before_trial=adjust_reward,
           call_after_trial=print_weights #num_trials
           # duration = time.time() - start_time
@@ -240,7 +240,7 @@ for i in range(num_subj):
     print('ControlSignal variables: ', [sig.parameters.variable.get(i) for sig in lvoc.control_signals])
     print('ControlSignal values: ', [sig.parameters.value.get(i) for sig in lvoc.control_signals])
     # print('features: ', lvoc.feature_values)
-    # print('lvoc: ', lvoc.evaluation_function([sig.parameters.variable.get(i) for sig in lvoc.control_signals], execution_id=i))
+    # print('lvoc: ', lvoc.evaluation_function([sig.parameters.variable.get(i) for sig in lvoc.control_signals], context=i))
     # print('time: ', duration)
     print('--------------------')
 

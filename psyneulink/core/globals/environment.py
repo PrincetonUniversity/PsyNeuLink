@@ -59,7 +59,7 @@ looking for values after a run, it's important to know the execution context you
         [[array([5.])]]
         >>> d.run({t: 10})
         [[array([10.])]]
-        >>> c.run({t: 20}, execution_id='custom execution id')
+        >>> c.run({t: 20}, context='custom execution id')
         [[array([20.])]]
 
         # context None
@@ -92,8 +92,8 @@ and recursively for all of the Component's `_dependent_components <Component._de
 other Components to function properly (beyond "standard" things like Component.function, \
 or Mechanism.input_states, as these are added in the proper classes' _dependent_components)
     - the intent is that with ``_dependent_components`` set properly, calling \
-    ``obj._initialize_from_context(new_execution_id, base_execution_id)`` should be sufficient to run obj \
-    under **new_execution_id**
+    ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
+    under **new_context**
     - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
 
 .. _Run_Timing:
@@ -653,8 +653,8 @@ def run(obj,
         termination_processing=None,
         termination_learning=None,
         runtime_params=None,
-        execution_id=None,
-        context=None):
+        context=None,
+        ):
     """run(                      \
     inputs,                      \
     num_trials=None,             \
@@ -851,7 +851,7 @@ def run(obj,
 
     # INITIALIZATION
     if initialize:
-        obj.initialize(execution_context=execution_id, context=context)
+        obj.initialize(context=context)
 
     # SET UP TIMING
     if object_type == MECHANISM:
@@ -865,20 +865,20 @@ def run(obj,
     for execution in range(num_trials):
 
         if call_before_trial:
-            call_with_pruned_args(call_before_trial, execution_context=execution_id)
+            call_with_pruned_args(call_before_trial, context=context)
 
         for time_step in range(time_steps):
 
             result = None
 
             if call_before_time_step:
-                call_with_pruned_args(call_before_time_step, execution_context=execution_id)
+                call_with_pruned_args(call_before_time_step, context=context)
 
             # Reinitialize any mechanisms that has a 'reinitialize_when' condition and it is satisfied
             for mechanism in obj.mechanisms:
-                if hasattr(mechanism, "reinitialize_when") and mechanism.parameters.has_initializers._get(execution_id):
-                    if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing, execution_context=execution_id):
-                        mechanism.reinitialize(None, execution_context=execution_id, context=context)
+                if hasattr(mechanism, "reinitialize_when") and mechanism.parameters.has_initializers._get(context):
+                    if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing, context=context):
+                        mechanism.reinitialize(None, context=context)
 
             input_num = execution%num_inputs_sets
 
@@ -909,15 +909,15 @@ def run(obj,
             result = obj.execute(
                 input=execution_inputs,
                 target=execution_targets,
-                execution_id=execution_id,
+                context=context,
                 termination_processing=termination_processing,
                 termination_learning=termination_learning,
                 runtime_params=runtime_params,
-                context=context
+
             )
 
             if call_after_time_step:
-                call_with_pruned_args(call_after_time_step, execution_context=execution_id)
+                call_with_pruned_args(call_after_time_step, context=context)
 
         if ContextFlags.SIMULATION not in context.execution_phase:
             if isinstance(result, Iterable):
@@ -927,14 +927,13 @@ def run(obj,
             obj.results.append(result_copy)
 
         if call_after_trial:
-            call_with_pruned_args(call_after_trial, execution_context=execution_id)
+            call_with_pruned_args(call_after_trial, context=context)
 
         from psyneulink.core.globals.log import _log_trials_and_runs, ContextFlags
         _log_trials_and_runs(
             composition=obj,
             curr_condition=LogCondition.TRIAL,
             context=context,
-            execution_id=execution_id,
         )
 
     try:
@@ -943,10 +942,10 @@ def run(obj,
 
         for sched in [obj.scheduler_processing, obj.scheduler_learning]:
             try:
-                sched.get_clock(execution_id)._increment_time(TimeScale.RUN)
+                sched.get_clock(context)._increment_time(TimeScale.RUN)
             except KeyError:
                 # learning scheduler may not have been execute, so may not have
-                # created a Clock for execution_id
+                # created a Clock for context
                 pass
 
     except AttributeError:
@@ -965,8 +964,7 @@ def run(obj,
     _log_trials_and_runs(
         composition=obj,
         curr_condition=LogCondition.RUN,
-        context=context,
-        execution_id=execution_id
+        context=context
     )
 
     return obj.results

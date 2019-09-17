@@ -281,18 +281,18 @@ class RegressionCFA(CompositionFunctionApproximator):
         else:
             self.update_weights.reinitialize({DEFAULT_VARIABLE: update_weights_default_variable})
 
-    def adapt(self, feature_values, control_allocation, net_outcome, execution_id=None):
+    def adapt(self, feature_values, control_allocation, net_outcome, context=None):
         """Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
         **net_outcome** from **feature_values** and **control_allocation**.
         """
-        prediction_vector = self.parameters.prediction_vector._get(execution_id)
-        previous_state = self.parameters.previous_state._get(execution_id)
+        prediction_vector = self.parameters.prediction_vector._get(context)
+        previous_state = self.parameters.previous_state._get(context)
 
         if previous_state is not None:
             # Update regression_weights
-            regression_weights = self.update_weights([previous_state, net_outcome], execution_id=execution_id)
+            regression_weights = self.update_weights([previous_state, net_outcome], context=context)
             # Update vector with current feature_values and control_allocation and store for next trial
-            prediction_vector.update_vector(control_allocation, feature_values, execution_id)
+            prediction_vector.update_vector(control_allocation, feature_values, context)
             previous_state = prediction_vector.vector
         else:
             # Initialize vector and control_signals on first trial
@@ -300,10 +300,10 @@ class RegressionCFA(CompositionFunctionApproximator):
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
             # prediction_vector.reference_variable = control_allocation
             previous_state = np.full_like(prediction_vector.vector, 0)
-            regression_weights = self.update_weights([previous_state, 0], execution_id=execution_id)
+            regression_weights = self.update_weights([previous_state, 0], context=context)
 
         self._set_multiple_parameter_values(
-            execution_id,
+            context,
             previous_state=previous_state,
             prediction_vector=prediction_vector,
             regression_weights=regression_weights,
@@ -311,7 +311,7 @@ class RegressionCFA(CompositionFunctionApproximator):
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
     # def evaluate(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
-    def evaluate(self, feature_values, control_allocation, num_estimates, context, execution_id=None):
+    def evaluate(self, feature_values, control_allocation, num_estimates, context):
         """Update prediction_vector <RegressorCFA.prediction_vector>`,
         then multiply by regression_weights.
 
@@ -328,18 +328,18 @@ class RegressionCFA(CompositionFunctionApproximator):
 
         predicted_outcome=0
 
-        prediction_vector = self.parameters.prediction_vector._get(execution_id)
+        prediction_vector = self.parameters.prediction_vector._get(context)
         num_estimates = num_estimates or 1
 
         for i in range(num_estimates):
 
             # Get values (subvectors) for prediction terms and their corresponding regression weights
             terms = self.prediction_terms
-            term_values_dict = prediction_vector.compute_terms(control_allocation, execution_id=execution_id)
+            term_values_dict = prediction_vector.compute_terms(control_allocation, context=context)
             # FIX: THIS SHOULD GET A SAMPLE RATHER THAN JUST USE THE ONE RETURNED FROM ADAPT METHOD
             #      OR SHOULD MULTIPLE SAMPLES BE DRAWN AND AVERAGED AT END OF ADAPT METHOD?
             #      I.E., AVERAGE WEIGHTS AND THEN OPTIMIZE OR OTPIMZE FOR EACH SAMPLE OF WEIGHTS AND THEN AVERAGE?
-            weights = self.parameters.regression_weights._get(execution_id)
+            weights = self.parameters.regression_weights._get(context)
 
             v = np.array([])
             w = np.array([])
@@ -572,7 +572,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         __deepcopy__ = get_deepcopy_with_shared(shared_keys=_deepcopy_shared_keys)
 
         # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-        def update_vector(self, variable, feature_values=None, execution_id=None):
+        def update_vector(self, variable, feature_values=None, context=None):
             """Update vector with flattened versions of values returned from the `compute_terms
             <PredictionVector.compute_terms>` method of the `prediction_vector
             <RegressorCFA.prediction_vector>`.
@@ -589,14 +589,14 @@ class RegressionCFA(CompositionFunctionApproximator):
             if feature_values is not None:
                 self.terms[PV.F.value] = np.array(feature_values)
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
-            computed_terms = self.compute_terms(np.array(variable), execution_id=execution_id)
+            computed_terms = self.compute_terms(np.array(variable), context=context)
 
             # Assign flattened versions of specified terms to vector
             for k, v in computed_terms.items():
                 if k in self.specified_terms:
                     self.vector[self.idx[k.value]] = v.reshape(-1)
 
-        def compute_terms(self, control_allocation, execution_id=None):
+        def compute_terms(self, control_allocation, context=None):
             """Calculate interaction terms.
 
             Results are returned in a dict; entries are keyed using names of terms listed in the `PV` Enum.
@@ -616,7 +616,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             # Compute value of each control_signal from its variable
             c = [None] * len(control_allocation)
             for i, var in enumerate(control_allocation):
-                c[i] = self.control_signal_functions[i](var, execution_id=execution_id)
+                c[i] = self.control_signal_functions[i](var, context=context)
             computed_terms[PV.C] = c = np.array(c)
 
             # Compute costs for new control_signal values
@@ -626,7 +626,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 costs = [None] * len(c)
                 for i, val in enumerate(c):
                     # MODIFIED 11/9/18 OLD:
-                    costs[i] = -(self._compute_costs[i](val, execution_id=execution_id))
+                    costs[i] = -(self._compute_costs[i](val, context=context))
                     # # MODIFIED 11/9/18 NEW: [JDC]
                     # costs[i] = -(self._compute_costs[i](val, ref_variables[i]))
                     # MODIFIED 11/9/18 END

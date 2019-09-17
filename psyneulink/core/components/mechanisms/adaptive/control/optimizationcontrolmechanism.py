@@ -403,7 +403,7 @@ from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.inputstate import InputState, _parse_shadow_inputs
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import _parse_state_spec
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
@@ -802,7 +802,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for control_signal in self.control_signals:
             if control_signal.cost_options is None:
                 control_signal.cost_options = CostFunctions.DEFAULTS
-                control_signal._instantiate_cost_attributes()
+                control_signal._instantiate_cost_attributes(context)
 
     def _instantiate_modulatory_signals(self, context):
         """Size control_allocation and assign modulatory_signals
@@ -815,7 +815,7 @@ class OptimizationControlMechanism(ControlMechanism):
             modulatory_signal._variable_spec = (OWNER_VALUE, i)
             self._modulatory_signals[i] = modulatory_signal
         self.defaults.value = np.tile(modulatory_signal.parameters.variable.default_value, (i+1, 1))
-        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value))
+        self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate OptimizationControlMechanism's OptimizatonFunction attributes"""
@@ -836,7 +836,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator()
 
-    def _update_input_states(self, execution_id=None, runtime_params=None, context=None):
+    def _update_input_states(self, context=None, runtime_params=None):
         """Update value for each InputState in self.input_states:
 
         Call execute method for all (MappingProjection) Projections in InputState.path_afferents
@@ -845,56 +845,56 @@ class OptimizationControlMechanism(ControlMechanism):
         """
         # "Outcome"
         outcome_input_state = self.input_state
-        outcome_input_state._update(execution_id=execution_id, params=runtime_params, context=context)
-        state_values = [np.atleast_2d(outcome_input_state.parameters.value._get(execution_id))]
+        outcome_input_state._update(context=context, params=runtime_params)
+        state_values = [np.atleast_2d(outcome_input_state.parameters.value._get(context))]
         for i in range(1, len(self.input_states)):
             state = self.input_states[i]
-            state._update(execution_id=execution_id, params=runtime_params, context=context)
-            state_values.append(state.parameters.value._get(execution_id))
+            state._update(context=context, params=runtime_params)
+            state_values.append(state.parameters.value._get(context))
         return np.array(state_values)
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, context=None, runtime_params=None):
         """Find control_allocation that optimizes result of `agent_rep.evaluate`  ."""
 
         if self.is_initializing:
             return [defaultControlAllocation]
 
         # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
-        self.parameters.feature_values._set(_parse_feature_values_from_variable(variable), execution_id)
+        self.parameters.feature_values._set(_parse_feature_values_from_variable(variable), context)
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
-        control_allocation = self.parameters.control_allocation._get(execution_id)
+        control_allocation = self.parameters.control_allocation._get(context)
         if control_allocation is None:
             control_allocation = [c.defaults.variable for c in self.control_signals]
-            self.parameters.control_allocation._set(control_allocation, execution_id=None)
+            self.parameters.control_allocation._set(control_allocation, context=None)
 
         # Give the agent_rep a chance to adapt based on last trial's feature_values and control_allocation
         if hasattr(self.agent_rep, "adapt"):
             # KAM 4/11/19 switched from a try/except to hasattr because in the case where we don't
             # have an adapt method, we also don't need to call the net_outcome getter
-            net_outcome = self.parameters.net_outcome._get(execution_id)
+            net_outcome = self.parameters.net_outcome._get(context)
 
             self.agent_rep.adapt(_parse_feature_values_from_variable(variable),
                                  control_allocation,
                                  net_outcome,
-                                 execution_id=execution_id)
+                                 context=context)
 
-        # freeze the values of current execution_id, because they can be changed in between simulations,
+        # freeze the values of current context, because they can be changed in between simulations,
         # and the simulations must start from the exact spot
-        self.agent_rep._initialize_from_context(self._get_frozen_execution_id(execution_id),
-                                                base_execution_context=execution_id,
+        self.agent_rep._initialize_from_context(self._get_frozen_context(context),
+                                                base_context=context,
                                                 override=True)
 
         # Get control_allocation that optimizes net_outcome using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         optimal_control_allocation, optimal_net_outcome, saved_samples, saved_values = \
                                                 super(ControlMechanism,self)._execute(variable=control_allocation,
-                                                                                      execution_id=execution_id,
+                                                                                      context=context,
                                                                                       runtime_params=runtime_params,
-                                                                                      context=context)
+                                                                                      )
 
         # clean up frozen values after execution
-        self.agent_rep._delete_contexts(self._get_frozen_execution_id(execution_id))
+        self.agent_rep._delete_contexts(self._get_frozen_context(context))
 
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
         if self.function.save_samples:
@@ -905,29 +905,30 @@ class OptimizationControlMechanism(ControlMechanism):
         # Return optimal control_allocation
         return optimal_control_allocation
 
-    def _get_frozen_execution_id(self, execution_id=None):
-        return f'{execution_id}{EID_FROZEN}'
+    def _get_frozen_context(self, context=None):
+        return Context(execution_id=f'{context.execution_id}{EID_FROZEN}')
 
-    def _set_up_simulation(self, base_execution_id=None, control_allocation=None):
-        sim_execution_id = self.get_next_sim_id(base_execution_id)
+    def _set_up_simulation(self, base_context=Context(execution_id=None), control_allocation=None):
+        sim_context = copy.copy(base_context)
+        sim_context.execution_id = self.get_next_sim_id(base_context)
 
         if control_allocation is not None:
-            sim_execution_id += f'-{control_allocation}'
+            sim_context.execution_id += f'-{control_allocation}'
 
         try:
-            self.parameters.simulation_ids._get(base_execution_id).append(sim_execution_id)
+            self.parameters.simulation_ids._get(base_context).append(sim_context.execution_id)
         except AttributeError:
-            self.parameters.simulation_ids._set([sim_execution_id], base_execution_id)
+            self.parameters.simulation_ids._set([sim_context.execution_id], base_context)
 
-        self.agent_rep._initialize_from_context(sim_execution_id, self._get_frozen_execution_id(base_execution_id), override=False)
+        self.agent_rep._initialize_from_context(sim_context, self._get_frozen_context(base_context), override=False)
 
-        return sim_execution_id
+        return sim_context
 
-    def _tear_down_simulation(self, sim_execution_id=None):
+    def _tear_down_simulation(self, sim_context=None):
         if not self.agent_rep.parameters.retain_old_simulation_data._get():
-            self.agent_rep._delete_contexts(sim_execution_id, check_simulation_storage=True)
+            self.agent_rep._delete_contexts(sim_context, check_simulation_storage=True)
 
-    def evaluation_function(self, control_allocation, execution_id=None, context=None):
+    def evaluation_function(self, control_allocation, context=None):
         """Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `feature_values
         <OptimizationControlMechanism.feature_values>` and a specified `control_allocation
         <ControlMechanism.control_allocation>`.
@@ -948,32 +949,29 @@ class OptimizationControlMechanism(ControlMechanism):
             # and there is a bug in setting parameter values on init, see TODO note above
             # call to self._instantiate_defaults around component.py:1115
             if self.defaults.search_statefulness:
-                new_execution_id = self._set_up_simulation(execution_id, control_allocation)
+                new_context = self._set_up_simulation(context, control_allocation)
             else:
-                new_execution_id = execution_id
+                new_context = context
 
             old_composition = context.composition
             context.composition = self.agent_rep
 
-            result = self.agent_rep.evaluate(self.parameters.feature_values._get(execution_id),
+            result = self.agent_rep.evaluate(self.parameters.feature_values._get(context),
                                              control_allocation,
-                                             self.parameters.num_estimates._get(execution_id),
-                                             base_execution_id=execution_id,
-                                             execution_id=new_execution_id,
-                                             context=context,
-                                             execution_mode=self.parameters.comp_execution_mode._get(execution_id)
+                                             self.parameters.num_estimates._get(context),
+                                             base_context=context,
+                                             context=new_context,
+                                             execution_mode=self.parameters.comp_execution_mode._get(context)
             )
             context.composition = old_composition
-            context.execution_id = execution_id
 
             if self.defaults.search_statefulness:
-                self._tear_down_simulation(new_execution_id)
+                self._tear_down_simulation(new_context)
         # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
-            result = self.agent_rep.evaluate(self.parameters.feature_values._get(execution_id),
+            result = self.agent_rep.evaluate(self.parameters.feature_values._get(context),
                                              control_allocation,
-                                             self.parameters.num_estimates._get(execution_id),
-                                             execution_id=execution_id,
+                                             self.parameters.num_estimates._get(context),
                                              context=context
             )
 
@@ -985,8 +983,8 @@ class OptimizationControlMechanism(ControlMechanism):
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
         return pnlvm.ir.LiteralStructType([intensity_cost_struct, num_estimates])
 
-    def _get_evaluate_param_initializer(self, execution_id):
-        num_estimates = self.parameters.num_estimates._get(execution_id) or 0
+    def _get_evaluate_param_initializer(self, context):
+        num_estimates = self.parameters.num_estimates.get(context) or 0
         # FIXME: The intensity cost function is not setup with the right execution id
         intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_states))
         return (intensity_cost, num_estimates)
@@ -996,8 +994,8 @@ class OptimizationControlMechanism(ControlMechanism):
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
         return pnlvm.ir.LiteralStructType([intensity_cost_struct])
 
-    def _get_evaluate_state_initializer(self, execution_id):
-        intensity_cost = tuple((os.intensity_cost_function._get_state_initializer(execution_id) for os in self.output_states))
+    def _get_evaluate_state_initializer(self, context):
+        intensity_cost = tuple((os.intensity_cost_function._get_state_initializer(context) for os in self.output_states))
         return (intensity_cost,)
 
     def _get_evaluate_input_struct_type(self, ctx):
@@ -1197,7 +1195,7 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.store(builder.load(val_ptr), dest_ptr)
         return os_input
 
-    def apply_control_allocation(self, control_allocation, runtime_params, context, execution_id=None):
+    def apply_control_allocation(self, control_allocation, runtime_params, context):
         """Update `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>` based on
         specified `control_allocation <ControlMechanism.control_allocation>`.
 
@@ -1206,9 +1204,9 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         value = [np.atleast_1d(a) for a in control_allocation]
-        self.parameters.value._set(value, execution_id)
-        self._update_output_states(execution_id=execution_id, runtime_params=runtime_params,
-                                   context=context)
+        self.parameters.value._set(value, context)
+        self._update_output_states(context=context, runtime_params=runtime_params,
+                                   )
 
     # @property
     # def feature_values(self):
