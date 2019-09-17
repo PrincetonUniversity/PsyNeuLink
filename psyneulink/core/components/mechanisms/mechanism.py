@@ -962,7 +962,7 @@ from psyneulink.core.globals.keywords import \
     OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, \
     PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, PROJECTIONS, REFERENCE_VALUE, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
-from psyneulink.core.globals.parameters import Parameter, parse_execution_context
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry

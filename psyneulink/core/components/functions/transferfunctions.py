@@ -3951,7 +3951,6 @@ class TransferWithCosts(TransferFunction):
 
     def _function(self,
                  variable=None,
-                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -3974,13 +3973,13 @@ class TransferWithCosts(TransferFunction):
 
         """
 
-        self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
         # FIRST, DEAL WITH CURRENT INTENSITY
 
         # Compute current intensity
-        intensity = self.parameters.transfer_fct._get(execution_id)(variable,
-                                                                    execution_id=execution_id)
+        intensity = self.parameters.transfer_fct._get(context)(variable,
+                                                                    execution_id=context)
 
         # THEN, DEAL WITH COSTS
         # Note: only compute costs that are enabled;  others are left as None, or with their value when last enabled.
