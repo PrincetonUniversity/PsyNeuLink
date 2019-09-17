@@ -71,6 +71,9 @@ before_install:
       python3 -m pip  install virtualenv
       python3 -m venv $HOME/venv
       source $HOME/venv/bin/activate
+
+      # Upgrade pip
+      pip install -U pip
     fi
   - python --version
   - pip --version
