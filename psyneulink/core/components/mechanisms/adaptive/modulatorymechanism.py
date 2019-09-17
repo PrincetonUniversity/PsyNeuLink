@@ -495,7 +495,7 @@ def _modulatory_mechanism_costs_getter(owning_component=None, context=None):
         #          for c in owning_component.control_signals]
         # MODIFIED 8/30/19 NEW: [JDC]
         # FIX 8/30/19: SHOULDN'T THIS JUST GET ControlSignal.cost FOR EACH ONE?
-        costs = [c.compute_costs(c.parameters.value._get(execution_id), execution_id=execution_id)
+        costs = [c.compute_costs(c.parameters.value._get(context), context=context)
                  for c in owning_component.control_signals]
         # MODIFIED 8/30/19 END
         return costs
