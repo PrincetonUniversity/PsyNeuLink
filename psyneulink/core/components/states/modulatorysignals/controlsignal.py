@@ -1047,8 +1047,7 @@ class ControlSignal(ModulatorySignal):
     def _instantiate_cost_functions(self, context=None):
 
         for cost_function_name in costFunctionNames:
-            self.paramsCurrent[cost_function_name] = getattr(self.function,
-                                                             cost_function_name.replace('function','fct'))
+            self.paramsCurrent[cost_function_name.replace('fct','function')] = getattr(self.function,cost_function_name)
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
