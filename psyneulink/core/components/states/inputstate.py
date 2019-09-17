@@ -961,15 +961,36 @@ class InputState(State_Base):
         self._instantiate_projections_to_state(projections=projections, context=context)
 
     def _check_for_duplicate_projections(self, projection):
+        '''Check if projection is redundant with one in path_afferents of InputState
+
+        Check for any instantiated projection in path_afferents with the same sender as projection
+        or one in deferred_init status with sender specification that is the same type as projection.
+
+        Returns redundant Projection if found, otherwise False.
+        '''
+        # # MODIFIED 9/14/19 OLD:
+        # # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_STATE
+        # if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+        #     from psyneulink.core.components.projections.projection import Projection
+        #     warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
+        #                   f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
+        #                   f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
+        #     return True
+        # return False
+        # MODIFIED 9/14/19 NEW:
         # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_STATE
-        assert True
-        if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
+        # FIX: 9/14/19 - RESTORE WARNING
+        duplicate = next(iter([proj for proj in self.path_afferents
+                               if ((proj.sender == projection.sender and proj != projection)
+                                   or (proj.initialization_status == ContextFlags.DEFERRED_INIT
+                                       and proj.init_args[SENDER] == type(projection.sender)))]), None)
+        if duplicate and self.verbosePref or self.owner.verbosePref:
             from psyneulink.core.components.projections.projection import Projection
             warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
                           f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
                           f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
-            return True
-        return False
+        return duplicate
+        # MODIFIED 9/14/19 END:
 
     def _parse_function_variable(self, variable, context=None):
         variable = super()._parse_function_variable(variable, context)

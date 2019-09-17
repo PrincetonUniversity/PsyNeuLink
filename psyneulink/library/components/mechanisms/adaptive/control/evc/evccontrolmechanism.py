@@ -1116,6 +1116,9 @@ class EVCControlMechanism(ControlMechanism):
         """
         control_signal = super()._instantiate_control_signal(control_signal, context)
 
+        if not control_signal:
+            return
+
         if control_signal.cost_options is None:
             control_signal.cost_options = ControlSignalCosts.DEFAULTS
             control_signal._instantiate_cost_attributes()

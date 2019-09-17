@@ -949,19 +949,19 @@ from psyneulink.core.components.functions.function import FunctionOutputType, AD
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.core.components.states.inputstate import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputState
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import REMOVE_STATES, _parse_state_spec
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    CONTROL_SIGNAL, CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
+    CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
     INPUT_LABELS_DICT, INPUT_STATE, INPUT_STATES, INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, \
+    OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, \
+    PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, PROJECTIONS, \
     REFERENCE_VALUE, TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
-from psyneulink.core.globals.parameters import Parameter, parse_context
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
@@ -2458,6 +2458,28 @@ class Mechanism_Base(Mechanism):
             state._update(context=context, params=runtime_params)
         self._update_attribs_dicts(context=context)
 
+    def _get_parameter_state_deferred_init_control_specs(self):
+        # FIX: 9/14/19 - THIS ASSUMES THAT ONLY CONTROLPROJECTIONS RELEVANT TO COMPOSITION ARE in DEFERRED INIT;
+        #                BUT WHAT IF NODE SPECIFIED CONTROL BY AN EXISTING CONTROLMECHANISM NOT IN A COMPOSITION
+        #                THAT WAS THEN ADDED;  COMPOSITION WOULD STILL NEED TO KNOW ABOUT IT TO ACTIVATE THE CTLPROJ
+        # # MODIFIED 9/15/19 NEW:
+        # for parameter_state in self._parameter_states:
+        #     for proj in parameter_state.mod_afferents:
+        #         if proj.initialization_status == ContextFlags.DEFERRED_INIT:
+        #             proj_control_signal_specs = proj.control_signal_params or {}
+        #             proj_control_signal_specs.update({PROJECTIONS: [proj]})
+        #             return proj_control_signal_specs
+        # MODIFIED 9/15/19 NEWER:
+        ctl_specs = []
+        for parameter_state in self._parameter_states:
+            for proj in parameter_state.mod_afferents:
+                if proj.initialization_status == ContextFlags.DEFERRED_INIT:
+                    proj_control_signal_specs = proj.control_signal_params or {}
+                    proj_control_signal_specs.update({PROJECTIONS: [proj]})
+                    ctl_specs.append(proj_control_signal_specs)
+        return ctl_specs
+        # MODIFIED 9/15/19 END
+
     def _update_attribs_dicts(self, context):
         from psyneulink.core.globals.keywords import NOISE
         for state in self._parameter_states:
@@ -3334,8 +3356,14 @@ class Mechanism_Base(Mechanism):
                 index = self.input_states.index(state)
                 delete_state_projections(state.path_afferents)
                 del self.input_states[index]
+                # If state is subclass of OutputState:
+                #    check if regsistry has category for that class, and if so, use that
+                category = INPUT_STATE
+                class_name = state.__class__.__name__
+                if class_name != INPUT_STATE and class_name in self._stateRegistry:
+                    category = class_name
                 remove_instance_from_registry(registry=self._stateRegistry,
-                                              category=INPUT_STATE,
+                                              category=category,
                                               component=state)
                 old_variable = self.defaults.variable
                 old_variable = np.delete(old_variable,index,0)
@@ -3359,8 +3387,14 @@ class Mechanism_Base(Mechanism):
                 delete_state_projections(state.efferents)
                 del self.output_values[index]
                 del self.output_states[state]
+                # If state is subclass of OutputState:
+                #    check if regsistry has category for that class, and if so, use that
+                category = OUTPUT_STATE
+                class_name = state.__class__.__name__
+                if class_name != OUTPUT_STATE and class_name in self._stateRegistry:
+                    category = class_name
                 remove_instance_from_registry(registry=self._stateRegistry,
-                                              category=OUTPUT_STATE,
+                                              category=category,
                                               component=state)
 
         self.defaults.variable = self.input_values

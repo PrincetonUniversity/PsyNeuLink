@@ -1038,6 +1038,8 @@ class ControlMechanism(ModulatoryMechanism):
         # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
             control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
+            if not control_signal:
+                continue
             # FIX: 1/18/18 - CHECK FOR SAME NAME IN _instantiate_control_signal
             # # Don't add any that are already on the ControlMechanism
             if control_signal.name in self.control_signals.names and (self.verbosePref or system.verbosePref):

@@ -92,10 +92,10 @@ num_trials = 5
 stimuli = {color_input:[red]*num_trials,
            word_input:[green]*num_trials,
            task_input:[color]*num_trials}
-Stroop_model.run(inputs=stimuli,
-                 animate={'show_controller':True,
-                          # 'show_cim':True
-                          },
-                 call_after_trial=print_after)
+# Stroop_model.run(inputs=stimuli,
+#                  animate={'show_controller':True,
+#                           # 'show_cim':True
+#                           },
+#                  call_after_trial=print_after)
 
 Stroop_model.log.print_entries(display=[TIME, VALUE])

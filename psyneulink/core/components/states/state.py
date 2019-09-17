@@ -1624,7 +1624,7 @@ class State_Base(State):
 
 
         # IMPLEMENTATION NOTE:  THE FOLLOWING IS WRITTEN AS A LOOP IN PREP FOR GENERALINZING METHOD
-        #                       TO HANDLE PROJECTION LIST (AS PER _instantiate_projection_to_state())
+        #                       TO HANDLE PROJECTION LIST (AS PER _instantiate_projections_to_state())
 
         # If projection_spec and/or receiver is not in a list, wrap it in one for consistency of treatment below
         # (since specification can be a list, so easier to treat any as a list)
@@ -1801,7 +1801,7 @@ class State_Base(State):
                 if isinstance(receiver, State) and receiver.initialization_status == ContextFlags.INITIALIZED:
                     projection._deferred_init(context=context)
 
-            # VALIDATE (if initialized or being initialized (INITIALIZA))
+            # VALIDATE (if initialized or being initialized)
 
             if projection.initialization_status & (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
 
@@ -1866,6 +1866,8 @@ class State_Base(State):
                 continue
 
             # FIX: MODIFIED FEEDBACK - CHECK THAT THAT THIS IS STILL NEEDED (RE: ASSIGNMENT IN ModulatorySignal)
+            # FIX: 9/14/19 - NOTE:  IT *IS* NEEDED FOR CONTROLPROJECTIONS
+            #                       SPECIFIED FOR PARAMETER IN CONSTRUCTOR OF A MECHANISM
             if isinstance(projection, ModulatoryProjection_Base):
                 self.owner.aux_components.append((projection, feedback))
             return projection
