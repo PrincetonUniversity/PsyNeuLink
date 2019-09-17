@@ -1036,9 +1036,9 @@ class ControlSignal(ModulatorySignal):
         if self.cost_options:
             # Default cost params
             if self.initialization_status != ContextFlags.DEFERRED_INIT:
-                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation, context=context)
+                self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
             else:
-                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation, context=context)
+                self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
             self.defaults.intensity_cost = self.intensity_cost
             self.adjustment_cost = 0
             self.duration_cost = 0
@@ -1049,20 +1049,6 @@ class ControlSignal(ModulatorySignal):
         for cost_function_name in costFunctionNames:
             self.paramsCurrent[cost_function_name] = getattr(self.function,
                                                              cost_function_name.replace('function','fct'))
-
-    # MODIFIED 8/30/19 OLD:
-    # def _initialize_cost_attributes(self, context=None):
-    #     if self.cost_options:
-    #         # Default cost params
-    #         if self.initialization_status != ContextFlags.DEFERRED_INIT:
-    #             self.intensity_cost = self.intensity_cost_function(self.defaults.allocation)
-    #         else:
-    #             self.intensity_cost = self.intensity_cost_function(self.class_defaults.allocation)
-    #         self.defaults.intensity_cost = self.intensity_cost
-    #         self.adjustment_cost = 0
-    #         self.duration_cost = 0
-    #         self.cost = self.defaults.cost = self.intensity_cost
-    # MODIFIED 8/30/19 END
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
@@ -1123,11 +1109,11 @@ class ControlSignal(ModulatorySignal):
         # COMPUTE COST(S)
         intensity_cost = adjustment_cost = duration_cost = 0
 
-        if ControlSignalCosts.INTENSITY & cost_options:
+        if CostFunctions.INTENSITY & cost_options:
             intensity_cost = self.intensity_cost_function(intensity, context=context)
             self.parameters.intensity_cost._set(intensity_cost, context)
 
-        if ControlSignalCosts.ADJUSTMENT & cost_options:
+        if CostFunctions.ADJUSTMENT & cost_options:
             adjustment_cost = self.adjustment_cost_function(intensity_change, context=context)
             self.parameters.adjustment_cost._set(adjustment_cost, context)
         # COMPUTE COST(S)
@@ -1136,15 +1122,15 @@ class ControlSignal(ModulatorySignal):
 
         if CostFunctions.INTENSITY & cost_options:
             intensity_cost = self.intensity_cost_function(intensity)
-            self.parameters.intensity_cost._set(intensity_cost, execution_id)
+            self.parameters.intensity_cost._set(intensity_cost, context)
 
         if CostFunctions.ADJUSTMENT & cost_options:
             try:
-                intensity_change = intensity - self.parameters.intensity.get_previous(execution_id)
+                intensity_change = intensity - self.parameters.intensity.get_previous(context)
             except TypeError:
                 intensity_change = [0]
             adjustment_cost = self.adjustment_cost_function(intensity_change)
-            self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
+            self.parameters.adjustment_cost._set(adjustment_cost, context)
 
         if CostFunctions.DURATION & cost_options:
             duration_cost = self.duration_cost_function(self.parameters.cost._get(context), context=context)
