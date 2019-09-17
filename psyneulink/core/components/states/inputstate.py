@@ -961,13 +961,13 @@ class InputState(State_Base):
         self._instantiate_projections_to_state(projections=projections, context=context)
 
     def _check_for_duplicate_projections(self, projection):
-        '''Check if projection is redundant with one in path_afferents of InputState
+        """Check if projection is redundant with one in path_afferents of InputState
 
         Check for any instantiated projection in path_afferents with the same sender as projection
         or one in deferred_init status with sender specification that is the same type as projection.
 
         Returns redundant Projection if found, otherwise False.
-        '''
+        """
         # # MODIFIED 9/14/19 OLD:
         # # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_STATE
         # if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):

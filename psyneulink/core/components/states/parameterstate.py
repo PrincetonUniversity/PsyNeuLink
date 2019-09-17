@@ -642,13 +642,13 @@ class ParameterState(State_Base):
         self._instantiate_projections_to_state(projections=projections, context=context)
 
     def _check_for_duplicate_projections(self, projection):
-        '''Check if projection is redundant with one in mod_afferents of ParameterState
+        """Check if projection is redundant with one in mod_afferents of ParameterState
 
         Check for any instantiated projection in mod_afferents with the same sender as projection
         or one in deferred_init status with sender specification that is the same type as projection.
 
         Returns redundant Projection if found, otherwise False.
-        '''
+        """
         # # MODIFIED 9/14/19 OLD: OUTER
         #
         # # # MODIFIED 9/14/19 OLD:

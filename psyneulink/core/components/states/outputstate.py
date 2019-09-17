@@ -1136,13 +1136,13 @@ class OutputState(State_Base):
                                                     context=context)
 
     def _check_for_duplicate_projections(self, projection):
-        '''Check if projection is redundant with one in efferents of OutputState
+        """Check if projection is redundant with one in efferents of OutputState
 
         Check for any instantiated projection in efferents with the same receiver as projection
         or one in deferred_init status with receiver specification that is the same type as projection.
 
         Returns redundant Projection if found, otherwise False.
-        '''
+        """
         # # MODIFIED 9/14/19 OLD:
         # # FIX: 7/22/19 - CHECK IF RECEIVER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_INPUT_STATE
         # if any(proj.receiver == projection.receiver and proj != projection for proj in self.efferents):

@@ -1639,10 +1639,10 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             self.remove_states(mod_sig_attribute[0])
 
     def _activate_projections_for_compositions(self, composition=None):
-        '''Activate eligible Projections to or from nodes in composition.
+        """Activate eligible Projections to or from nodes in composition.
         If Projection is to or from a node NOT (yet) in the Composition,
         assign it the node's aux_components attribute but do not activate it.
-        '''
+        """
         dependent_projections = set()
 
         if self.objective_mechanism:
