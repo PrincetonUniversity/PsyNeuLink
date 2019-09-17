@@ -672,6 +672,9 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         max_entries = Parameter(1000)
         random_state = Parameter(None, modulable=False, stateful=True)
 
+        distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
+        selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         NOISE: None,
@@ -703,14 +706,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         if initializer is None:
             initializer = []
-
-        # It is necessary to create custom instances. Otherwise python would
-        # share the same default instance for all ContentAddressableMemory objects.
-        distance_function = distance_function or Distance(metric=COSINE)
-        selection_function = selection_function or OneHot(mode=MIN_INDICATOR)
-
-        self.distance_function = distance_function
-        self.selection_function = selection_function
 
         if seed is None:
             seed = get_global_seed()
