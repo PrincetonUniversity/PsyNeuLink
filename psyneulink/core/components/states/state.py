@@ -2044,8 +2044,7 @@ class State_Base(State):
             elif isinstance(projection, ModulatoryProjection_Base):
                 # Get the meta_param to be modulated from modulation attribute of the  projection's ModulatorySignal
                 #    and get the function parameter to be modulated to type_match the projection value below
-                mod_spec, mod_param_name, mod_param_value = self._get_modulated_param(projection,
-                                                                                      execution_context=context)
+                mod_spec, mod_param_name, mod_param_value = self._get_modulated_param(projection, context=context)
                 # If meta_param is DISABLE, ignore the ModulatoryProjection
                 if mod_spec is DISABLE:
                     continue
@@ -2143,11 +2142,10 @@ class State_Base(State):
 
         )
 
-    def _get_modulated_param(self, mod_proj, receiver=None, execution_context=None):
+    def _get_modulated_param(self, mod_proj, receiver=None, context=None):
         """Return modulation specification from ModulatoryProjection, and name and value of param modulated."""
 
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-        from psyneulink.core.globals.parameters import parse_execution_context
 
         receiver = receiver or self
 
@@ -2155,14 +2153,15 @@ class State_Base(State):
             raise StateError(f'Specification of {MODULATORY_PROJECTION} to {receiver.full_name} ({mod_proj}) '
                                 f'is not a {ModulatoryProjection_Base.__name__}')
 
-        execution_id = parse_execution_context(execution_context)
+        # FIX: 9/17/19
+        # execution_id = parse_execution_context(context)
 
         # Get modulation specification from the Projection sender's modulation attribute
-        mod_spec = mod_proj.sender.parameters.modulation._get(execution_id)
+        mod_spec = mod_proj.sender.parameters.modulation._get(context)
 
         if mod_spec in {OVERRIDE, DISABLE}:
             mod_param_name = mod_proj.receiver.name
-            mod_param_value = mod_proj.sender.parameters.value.get(execution_context)
+            mod_param_value = mod_proj.sender.parameters.value.get(context)
         else:
             mod_param = getattr(receiver.function.parameters, mod_spec)
             try:
@@ -2171,7 +2170,7 @@ class State_Base(State):
                 mod_param_name = mod_param.name
 
             # Get the value of the modulated parameter
-            mod_param_value = getattr(receiver.function.parameters, mod_spec).get(execution_context)
+            mod_param_value = getattr(receiver.function.parameters, mod_spec).get(context)
 
         return mod_spec, mod_param_name, mod_param_value
 

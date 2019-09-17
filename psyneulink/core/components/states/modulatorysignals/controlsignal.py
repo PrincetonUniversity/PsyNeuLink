@@ -408,44 +408,44 @@ COST_OPTIONS = 'cost_options'
 #                              combine_costs_fct=combine_costs_function)
 
 
-def _cost_options_getter(owning_component=None, execution_id=None):
+def _cost_options_getter(owning_component=None, context=None):
     try:
-        return getattr(owning_component.function.parameters, ENABLED_COST_FUNCTIONS)._get(execution_id)
+        return getattr(owning_component.function.parameters, ENABLED_COST_FUNCTIONS)._get(context)
     except (TypeError, IndexError):
         return None
 
 
-def _cost_options_setter(value, owning_component=None, execution_id=None):
+def _cost_options_setter(value, owning_component=None, context=None):
     if hasattr(owning_component, "function") and owning_component.function:
         if hasattr(owning_component.function.parameters, ENABLED_COST_FUNCTIONS):
-            getattr(owning_component.function.parameters, ENABLED_COST_FUNCTIONS)._set(value, execution_id)
+            getattr(owning_component.function.parameters, ENABLED_COST_FUNCTIONS)._set(value, context)
     return value
 
 
-def _intensity_cost_getter(owning_component=None, execution_id=None):
+def _intensity_cost_getter(owning_component=None, context=None):
     try:
-        return getattr(owning_component.function.parameters, INTENSITY_COST)._get(execution_id)
+        return getattr(owning_component.function.parameters, INTENSITY_COST)._get(context)
     except (TypeError, IndexError):
         return None
 
 
-def _adjustment_cost_getter(owning_component=None, execution_id=None):
+def _adjustment_cost_getter(owning_component=None, context=None):
     try:
-        return getattr(owning_component.function.parameters, ADJUSTMENT_COST)._get(execution_id)
+        return getattr(owning_component.function.parameters, ADJUSTMENT_COST)._get(context)
     except (TypeError, IndexError):
         return None
 
 
-def _duration_cost_getter(owning_component=None, execution_id=None):
+def _duration_cost_getter(owning_component=None, context=None):
     try:
-        return getattr(owning_component.function.parameters, DURATION_COST)._get(execution_id)
+        return getattr(owning_component.function.parameters, DURATION_COST)._get(context)
     except (TypeError, IndexError):
         return None
 
 
-def _cost_getter(owning_component=None, execution_id=None):
+def _cost_getter(owning_component=None, context=None):
     try:
-        return getattr(owning_component.function.parameters, COMBINED_COSTS)._get(execution_id)
+        return getattr(owning_component.function.parameters, COMBINED_COSTS)._get(context)
     except (TypeError, IndexError):
         return None
 
