@@ -1638,30 +1638,55 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                 and not mod_sig_attribute[0].efferents):
             self.remove_states(mod_sig_attribute[0])
 
-    def _activate_projections_for_compositions(self, compositions=None):
+    def _activate_projections_for_compositions(self, composition=None):
+        '''Activate eligible Projections to or from nodes in composition.
+        If Projection is to or from a node NOT (yet) in the Composition,
+        assign it the node's aux_components attribute but do not activate it.
+        '''
         dependent_projections = set()
 
         if self.objective_mechanism:
+            # Safe to add this, as it is already in the ModulatoryMechanism's aux_components
+            #    and will therefore be added to the Composition along with the ModulatoryMechanism
+            assert self.objective_mechanism in self.aux_components, \
+                f"PROGRAM ERROR:  {OBJECTIVE_MECHANISM} for {self.name} not listed in its 'aux_components' attribute."
             dependent_projections.add(self._objective_projection)
 
             for aff in self._objective_mechanism.afferents:
+                # MODIFIED 9/15/19 OLD:
                 dependent_projections.add(aff)
+                # # MODIFIED 9/15/19 NEW: [JDC]
+                # # NOTE: THIS CAUSES AN ERROR WHEN CONTRROLLER IS ADDED TO COMP SINCE PROJECTION HAS NOT BEEN ACTIVATED
+                # if aff.sender.owner in composition.nodes:
+                #     dependent_projections.add(aff)
+                # else:
+                #     aff.sender.owner.aux_components.append(aff)
+                # MODIFIED 9/15/19 END
 
         for ms in self.modulatory_signals:
             for eff in ms.efferents:
+                # MODIFIED 9/15/19 OLD:
                 dependent_projections.add(eff)
+                # # MODIFIED 9/15/19 NEW: [JDC] - SAME PROBLEM AS ABOVE
+                # if eff.receiver.owner in composition.nodes:
+                #     dependent_projections.add(eff)
+                # else:
+                #     eff.receiver.owner.aux_components.append(eff)
+                # MODIFIED 9/15/19 END
 
+        # FIX: 9/15/19 - HOW IS THIS DIFFERENT THAN objective_mechanism's AFFERENTS ABOVE?
         # assign any deferred init objective mech monitored output state projections to this system
         if self.objective_mechanism:
             for output_state in self.objective_mechanism.monitored_output_states:
                 for eff in output_state.efferents:
                     dependent_projections.add(eff)
 
+        # FIX: 9/15/19 - HOW IS THIS DIFFERENT THAN modulatory_signal's EFFERENTS ABOVE?
         for eff in self.efferents:
             dependent_projections.add(eff)
 
         for proj in dependent_projections:
-            proj._activate_for_compositions(compositions)
+            proj._activate_for_compositions(composition)
 
     def _apply_modulatory_allocation(self, modulatory_allocation, runtime_params, context):
         """Update values to `modulatory_signals <ModulatoryMechanism.modulatory_signals>`
