@@ -3274,104 +3274,104 @@ class CostFunctions(IntEnum):
 
 # Getters and setters for transfer and cost function multiplicative and additive parameters ----------------------------
 
-def _transfer_fct_mult_param_getter(owning_component=None, execution_id=None):
+def _transfer_fct_mult_param_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.transfer_fct.get().parameters.multiplicative_param.get(execution_id)
+        return owning_component.parameters.transfer_fct.get().parameters.multiplicative_param.get(context)
     except (TypeError, IndexError):
         return None
 
-def _transfer_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.transfer_fct.get().parameters.multiplicative_param._set(value, execution_id)
+def _transfer_fct_mult_param_setter(value, owning_component=None, context=None):
+    owning_component.parameters.transfer_fct.get().parameters.multiplicative_param._set(value, context)
     return value
 
-def _transfer_fct_add_param_getter(owning_component=None, execution_id=None):
+def _transfer_fct_add_param_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.transfer_fct.get().parameters.additve_param.get(execution_id)
+        return owning_component.parameters.transfer_fct.get().parameters.additve_param.get(context)
     except (TypeError, IndexError):
         return None
 
-def _transfer_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.transfer_fct.get().parameters.additive_param._set(value, execution_id)
+def _transfer_fct_add_param_setter(value, owning_component=None, context=None):
+    owning_component.parameters.transfer_fct.get().parameters.additive_param._set(value, context)
     return value
 
-def _intensity_cost_fct_mult_param_getter(owning_component=None, execution_id=None):
+def _intensity_cost_fct_mult_param_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param.get(execution_id)
+        return owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param.get(context)
     except (TypeError, IndexError):
         return None
 
-def _intensity_cost_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param._set(value, execution_id)
+def _intensity_cost_fct_mult_param_setter(value, owning_component=None, context=None):
+    owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param._set(value, context)
     return value
 
-def _intensity_cost_fct_add_param_getter(owning_component=None, execution_id=None):
+def _intensity_cost_fct_add_param_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.intensity_cost_fct.get().parameters.additive_param.get(execution_id)
+        return owning_component.parameters.intensity_cost_fct.get().parameters.additive_param.get(context)
     except (TypeError, IndexError):
         return None
 
-def _intensity_cost_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.intensity_cost_fct.get().parameters.additive_param._set(value, execution_id)
+def _intensity_cost_fct_add_param_setter(value, owning_component=None, context=None):
+    owning_component.parameters.intensity_cost_fct.get().parameters.additive_param._set(value, context)
     return value
 
-def _adjustment_cost_fct_mult_param_getter(owning_component=None, execution_id=None):
+def _adjustment_cost_fct_mult_param_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param.get(execution_id)
+        return owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param.get(context)
     except (TypeError, IndexError):
         return None
 
-def _adjustment_cost_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param._set(value, execution_id)
+def _adjustment_cost_fct_mult_param_setter(value, owning_component=None, context=None):
+    owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param._set(value, context)
     return value
 
-def _adjustment_cost_fct_add_param_getter(owning_component=None, execution_id=None):
+def _adjustment_cost_fct_add_param_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param.get(execution_id)
+        return owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param.get(context)
     except (TypeError, IndexError):
         return None
 
-def _adjustment_cost_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param._set(value, execution_id)
+def _adjustment_cost_fct_add_param_setter(value, owning_component=None, context=None):
+    owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param._set(value, context)
     return value
 
-def _duration_cost_fct_mult_param_getter(owning_component=None, execution_id=None):
+def _duration_cost_fct_mult_param_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param.get(execution_id)
+        return owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param.get(context)
     except (TypeError, IndexError):
         return None
 
-def _duration_cost_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param._set(value, execution_id)
+def _duration_cost_fct_mult_param_setter(value, owning_component=None, context=None):
+    owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param._set(value, context)
     return value
 
-def _duration_cost_fct_add_param_getter(owning_component=None, execution_id=None):
+def _duration_cost_fct_add_param_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.duration_cost_fct.get().parameters.additive_param.get(execution_id)
+        return owning_component.parameters.duration_cost_fct.get().parameters.additive_param.get(context)
     except (TypeError, IndexError):
         return None
 
-def _duration_cost_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.duration_cost_fct.get().parameters.additive_param._set(value, execution_id)
+def _duration_cost_fct_add_param_setter(value, owning_component=None, context=None):
+    owning_component.parameters.duration_cost_fct.get().parameters.additive_param._set(value, context)
     return value
 
-def _combine_costs_fct_mult_param_getter(owning_component=None, execution_id=None):
+def _combine_costs_fct_mult_param_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param.get(execution_id)
+        return owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param.get(context)
     except (TypeError, IndexError):
         return None
 
-def _combine_costs_fct_mult_param_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param._set(value, execution_id)
+def _combine_costs_fct_mult_param_setter(value, owning_component=None, context=None):
+    owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param._set(value, context)
     return value
 
-def _combine_costs_fct_add_param_getter(owning_component=None, execution_id=None):
+def _combine_costs_fct_add_param_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.combine_costs_fct.get().parameters.additive_param.get(execution_id)
+        return owning_component.parameters.combine_costs_fct.get().parameters.additive_param.get(context)
     except (TypeError, IndexError):
         return None
 
-def _combine_costs_fct_add_param_setter(value, owning_component=None, execution_id=None):
-    owning_component.parameters.combine_costs_fct.get().parameters.additive_param._set(value, execution_id)
+def _combine_costs_fct_add_param_setter(value, owning_component=None, context=None):
+    owning_component.parameters.combine_costs_fct.get().parameters.additive_param._set(value, context)
     return value
 
 
@@ -3978,14 +3978,13 @@ class TransferWithCosts(TransferFunction):
         # FIRST, DEAL WITH CURRENT INTENSITY
 
         # Compute current intensity
-        intensity = self.parameters.transfer_fct._get(context)(variable,
-                                                                    execution_id=context)
+        intensity = self.parameters.transfer_fct._get(context)(variable, context=context)
 
         # THEN, DEAL WITH COSTS
         # Note: only compute costs that are enabled;  others are left as None, or with their value when last enabled.
 
         # Get costs for each cost function that is enabled in enabled_cost_functions
-        enabled_cost_functions = self.parameters.enabled_cost_functions._get(execution_id)
+        enabled_cost_functions = self.parameters.enabled_cost_functions._get(context)
         enabled_costs = [] # Used to aggregate costs that are enabled and submit to combine_costs_fct
         if enabled_cost_functions:
 
@@ -3998,63 +3997,63 @@ class TransferWithCosts(TransferFunction):
             if enabled_cost_functions & CostFunctions.INTENSITY:
                 # Assign modulatory param values to intensity_cost_function
                 self.intensity_cost_fct_mult_param = \
-                    self.get_current_function_param(INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM, execution_id)
+                    self.get_current_function_param(INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM, context)
                 self.intensity_cost_fct_add_param = \
-                    self.get_current_function_param(INTENSITY_COST_FCT_ADDITIVE_PARAM, execution_id)
+                    self.get_current_function_param(INTENSITY_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute intensity_cost function
-                intensity_cost = self.intensity_cost_fct(intensity, execution_id=execution_id)
-                self.parameters.intensity_cost._set(intensity_cost, execution_id)
+                intensity_cost = self.intensity_cost_fct(intensity, context=context)
+                self.parameters.intensity_cost._set(intensity_cost, context)
                 enabled_costs.append(intensity_cost)
 
             # Compute adjustment_cost
             if enabled_cost_functions & CostFunctions.ADJUSTMENT:
                 # Compute intensity change
                 try:
-                    intensity_change = np.abs(intensity - self.parameters.intensity._get(execution_id))
+                    intensity_change = np.abs(intensity - self.parameters.intensity._get(context))
                 except TypeError:
-                    intensity_change = np.zeros_like(self.parameters_intensity._get(execution_id))
+                    intensity_change = np.zeros_like(self.parameters_intensity._get(context))
                 # Assign modulatory param values to adjustment_cost_function
                 self.adjustment_cost_fct_mult_param = \
-                    self.get_current_function_param(ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM, execution_id)
+                    self.get_current_function_param(ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM, context)
                 self.adjustment_cost_fct_add_param = \
-                    self.get_current_function_param(ADJUSTMENT_COST_FCT_ADDITIVE_PARAM, execution_id)
+                    self.get_current_function_param(ADJUSTMENT_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute adjustment_cost function
-                adjustment_cost = self.adjustment_cost_fct(intensity_change, execution_id=execution_id)
-                self.parameters.adjustment_cost._set(adjustment_cost, execution_id)
+                adjustment_cost = self.adjustment_cost_fct(intensity_change, context=context)
+                self.parameters.adjustment_cost._set(adjustment_cost, context)
                 enabled_costs.append(adjustment_cost)
 
             # Compute duration_cost
             if enabled_cost_functions & CostFunctions.DURATION:
                 # Assign modulatory param values to duration_cost_function
                 self.duration_cost_fct_mult_param = \
-                    self.get_current_function_param(DURATION_COST_FCT_MULTIPLICATIVE_PARAM, execution_id)
+                    self.get_current_function_param(DURATION_COST_FCT_MULTIPLICATIVE_PARAM, context)
                 self.duration_cost_fct_add_param = \
-                    self.get_current_function_param(DURATION_COST_FCT_ADDITIVE_PARAM, execution_id)
+                    self.get_current_function_param(DURATION_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute duration_cost function
-                duration_cost = self.duration_cost_fct(intensity, execution_id=execution_id)
-                self.parameters.duration_cost._set(duration_cost, execution_id)
+                duration_cost = self.duration_cost_fct(intensity, context=context)
+                self.parameters.duration_cost._set(duration_cost, context)
                 enabled_costs.append(duration_cost)
 
             # Alwasy execute combined_costs_fct if *any* costs are enabled
 
             # Assign modulatory param values to combine_costs_function
             self.combine_costs_fct_mult_param = \
-                self.get_current_function_param(COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM, execution_id)
+                self.get_current_function_param(COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM, context)
             self.combine_costs_fct_add_param = \
-                self.get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, execution_id)
+                self.get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, context)
             # Execute combine_costs function
             combined_costs = self.combine_costs_fct(enabled_costs,
-                                                    execution_id=execution_id)
-            self.parameters.combined_costs._set(combined_costs, execution_id)
+                                                    context=context)
+            self.parameters.combined_costs._set(combined_costs, context)
 
         # Store current intensity
-        self.parameters.intensity._set(intensity, execution_id)
+        self.parameters.intensity._set(intensity, context)
 
         return intensity
 
-    def _is_identity(self, execution_id=None):
-        return (self.parameters.transfer_fct.get()._is_identity(execution_id) and
-                self.parameters.enabled_cost_functions.get(execution_id) == CostFunctions.NONE)
+    def _is_identity(self, context=None):
+        return (self.parameters.transfer_fct.get()._is_identity(context) and
+                self.parameters.enabled_cost_functions.get(context) == CostFunctions.NONE)
 
     @tc.typecheck
     def assign_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
