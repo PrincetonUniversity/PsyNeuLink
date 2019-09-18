@@ -4170,8 +4170,9 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                                     format(method, self.name))
 
         # Save state
-        result = builder.load(arg_out)
-        builder.store(result, state)
+        for n, sptr in out.items():
+            dptr = prev["previous_" + n]
+            builder.store(builder.load(sptr), dptr)
         return builder
 
     def __gen_llvm_rk4_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr, previous_w_ptr, previous_time_ptr):
