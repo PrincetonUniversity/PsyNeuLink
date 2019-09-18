@@ -888,7 +888,7 @@ class Function_Base(Function):
             if p.name not in black_list and not isinstance(p, ParameterAlias):
                 val = p.get(context)
                 # Check if the value is string (like integration_method)
-                return not isinstance(val, (str, Function))
+                return not isinstance(val, str)
             return False
 
         return filter(_is_compilation_param, self.parameters)
@@ -910,6 +910,8 @@ class Function_Base(Function):
             if not np.isscalar(param) and param is not None:
                 if p.name == 'matrix': # Flatten matrix
                     param = np.asfarray(param).flatten().tolist()
+                elif isinstance(param, Function):
+                    param = param._get_param_values(context)
                 elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
                     param = np.asfarray(param[0]).tolist()
             param_init.append(param)
