@@ -771,14 +771,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         my_init = pnlvm._tupleize([random_state, [memory[0], memory[1], 0, 0]])
         return (*my_init, distance_init, selection_init)
 
-    def _get_param_ids(self):
-        return super()._get_param_ids() + ["distance_function", "selection_function"]
-
-    def _get_param_values(self, context=None):
-        my_params = super()._get_param_values(context)
-        return (*my_params, self.distance_function._get_param_values(context),
-                            self.selection_function._get_param_values(context))
-
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # PRNG
         rand_struct = ctx.get_state_ptr(self, builder, state, "random_state")
