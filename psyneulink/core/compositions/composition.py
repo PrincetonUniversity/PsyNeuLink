@@ -1595,6 +1595,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :default value: []
                     :type: list
 
+                retain_old_simulation_data
+                    see `retain_old_simulation_data <Composition.retain_old_simulation_data>`
+
+                    :default value: False
+                    :type: bool
+
                 simulation_results
                     see `simulation_results <Composition.simulation_results>`
 

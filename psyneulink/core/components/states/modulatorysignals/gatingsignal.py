@@ -430,21 +430,23 @@ class GatingSignal(ModulatorySignal):
             ----------
 
                 variable
-                    see `variable <ControlSignal.variable>`
+                    see `variable <GatingSignal.variable>`
 
-                    :default value: numpy.array([1.])
+                    :default value: numpy.array([0.5])
                     :type: numpy.ndarray
-
 
                 value
                     see `value <GatingSignal.value>`
 
-                    :default value: numpy.array([0])
+                    :default value: numpy.array([0.5])
                     :type: numpy.ndarray
                     :read only: True
 
                 allocation_samples
-                    see `allocation_samples <ControlSignal.allocation_samples>`
+                    see `allocation_samples <GatingSignal.allocation_samples>`
+
+                    :default value: None
+                    :type:
 
         """
         variable = Parameter(np.array([defaultGatingAllocation]),

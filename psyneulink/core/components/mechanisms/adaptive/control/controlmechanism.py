@@ -871,11 +871,24 @@ class ControlMechanism(ModulatoryMechanism):
             Attributes
             ----------
 
-                control_allocation
-                    see `control_allocation <ControlMechanism.control_allocation>
+                value
+                    see `value <ControlMechanism.value>`
 
-                    :default value: defaultControlAllocation
-                    :type:
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+
+                control_allocation
+                    see `control_allocation <ControlMechanism.control_allocation>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                gating_allocation
+                    see `gating_allocation <ControlMechanism.gating_allocation>`
+
+                    :default value: NotImplemented
+                    :type: <class 'NotImplementedType'>
                     :read only: True
 
         """

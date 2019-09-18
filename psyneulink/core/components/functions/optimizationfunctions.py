@@ -773,12 +773,6 @@ class GradientOptimization(OptimizationFunction):
                     :type: list
                     :read only: True
 
-                gradient_function
-                    see `gradient_function <GradientOptimization.gradient_function>`
-
-                    :default value: None
-                    :type:
-
                 annealing_function
                     see `annealing_function <GradientOptimization.annealing_function>`
 
@@ -802,6 +796,12 @@ class GradientOptimization(OptimizationFunction):
 
                     :default value: `ASCENT`
                     :type: str
+
+                gradient_function
+                    see `gradient_function <GradientOptimization.gradient_function>`
+
+                    :default value: None
+                    :type:
 
                 max_iterations
                     see `max_iterations <GradientOptimization.max_iterations>`
@@ -1223,6 +1223,12 @@ class GridSearch(OptimizationFunction):
 
                 grid
                     see `grid <GridSearch.grid>`
+
+                    :default value: None
+                    :type:
+
+                random_state
+                    see `random_state <GridSearch.random_state>`
 
                     :default value: None
                     :type:

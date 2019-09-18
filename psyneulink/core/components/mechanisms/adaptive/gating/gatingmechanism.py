@@ -402,11 +402,24 @@ class GatingMechanism(ModulatoryMechanism):
             Attributes
             ----------
 
-                gating_allocation
-                    see `gating_allocation <ControlMechanism.gating_allocation>
+                value
+                    see `value <GatingMechanism.value>`
 
-                    :default value: defaultGatingAllocation
-                    :type:
+                    :default value: numpy.array([0.5])
+                    :type: numpy.ndarray
+
+                control_allocation
+                    see `control_allocation <GatingMechanism.control_allocation>`
+
+                    :default value: NotImplemented
+                    :type: <class 'NotImplementedType'>
+                    :read only: True
+
+                gating_allocation
+                    see `gating_allocation <GatingMechanism.gating_allocation>`
+
+                    :default value: numpy.array([0.5])
+                    :type: numpy.ndarray
                     :read only: True
 
         """
