@@ -897,8 +897,7 @@ class Function_Base(Function):
         return [p.name for p in self._get_compilation_params(context)]
 
     def _get_param_values(self, context=None):
-        param_init = []
-        for p in self._get_compilation_params(context):
+        def _get_values(p):
             param = p.get(context)
             try:
                 # Existence of parameter state changes the shape to array
@@ -914,9 +913,9 @@ class Function_Base(Function):
                     param = param._get_param_values(context)
                 elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
                     param = np.asfarray(param[0]).tolist()
-            param_init.append(param)
+            return param
 
-        return tuple(param_init)
+        return tuple(map(_get_values, self._get_compilation_params(context)))
 
     def _get_param_initializer(self, context):
         return pnlvm._tupleize(self._get_param_values(context))
