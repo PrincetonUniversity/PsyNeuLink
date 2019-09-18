@@ -741,7 +741,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         self.stateful_attributes = ["random_state", "previous_value"]
 
     def _get_state_ids(self):
-        return super()._get_state_ids() + ["distance_function", "selection_function"]
+        # Keep the ids in the same order as the structure generated below
+        return self.stateful_attributes + ["distance_function", "selection_function"]
 
     def _get_state_struct_type(self, ctx):
         # FIXME: We need explicit override because the ring buffer structure
