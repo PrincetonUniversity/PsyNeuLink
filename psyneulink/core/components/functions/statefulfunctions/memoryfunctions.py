@@ -782,7 +782,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         vals_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
         count_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(2)])
         wr_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(3)])
-        max_entries = len(vals_ptr.type.pointee)
 
         # Input
         var_key_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -807,6 +806,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         retr_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, retr_prob_ptr)
         retr_rand = builder.fcmp_ordered('<', retr_prob, retr_prob.type(1.0))
 
+        max_entries = len(vals_ptr.type.pointee)
         entries = builder.load(count_ptr)
         entries = pnlvm.helpers.uint_min(builder, entries, max_entries)
         # The call to random function needs to be behind jump to match python
