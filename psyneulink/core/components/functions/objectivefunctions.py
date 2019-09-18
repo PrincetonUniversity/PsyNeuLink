@@ -365,13 +365,6 @@ class Stability(ObjectiveFunction):
         #FIXME: This is a hack to make sure metric-fct param is set
         self.parameters.metric_fct.set(self.metric_fct)
 
-    def _get_param_ids(self):
-        return super()._get_param_ids() + ["metric_fct"]
-
-    def _get_param_values(self, context=None):
-        my_params = super()._get_param_values(context)
-        return (*my_params, self.metric_fct._get_param_values(context))
-
     def _get_state_ids(self):
         return super()._get_state_ids() + ["metric_fct"]
 
