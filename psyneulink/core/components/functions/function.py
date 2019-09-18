@@ -864,16 +864,13 @@ class Function_Base(Function):
         return tuple(sp.get(context) for sp in self._get_compilation_state())
 
     def _get_state_initializer(self, context):
-        stateful = self._get_state_values(context)
         def _convert(x):
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
                 return x.get_state()[1:]
-            elif isinstance(x, np.ndarray):
-                return x.tolist()
             else:
                 return x
-        lists = (_convert(s) for s in stateful)
+        lists = (_convert(s) for s in self._get_state_values(context))
         return pnlvm._tupleize(lists)
 
     def _get_compilation_params(self, context=None):
