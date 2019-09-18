@@ -365,13 +365,6 @@ class Stability(ObjectiveFunction):
         #FIXME: This is a hack to make sure metric-fct param is set
         self.parameters.metric_fct.set(self.metric_fct)
 
-    def _get_state_ids(self):
-        return super()._get_state_ids() + ["metric_fct"]
-
-    def _get_state_values(self, context=None):
-        my_values = super()._get_state_values(context)
-        return (*my_values, self.metric_fct._get_state_values(context))
-
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
