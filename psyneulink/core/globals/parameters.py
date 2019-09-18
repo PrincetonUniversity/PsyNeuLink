@@ -878,7 +878,7 @@ class Parameter(types.SimpleNamespace):
             ) from e
 
     @handle_external_context()
-    def set(self, value, context=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=3, **kwargs):
+    def set(self, value, context=None, override=False, skip_history=False, skip_log=False, **kwargs):
         """
             Sets the value of this `Parameter` in the context of **context**
             If no context is specified, attributes on the associated `Component` will be used
@@ -898,11 +898,11 @@ class Parameter(types.SimpleNamespace):
                     any additional arguments to be passed to this `Parameter`'s `setter` if it exists
         """
         if not override and self.read_only:
-            warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=_ro_warning_stacklevel)
+            raise ParameterError('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to force set.'.format(self.name))
 
-        self._set(value, context, skip_history, skip_log, _ro_warning_stacklevel, **kwargs)
+        self._set(value, context, skip_history, skip_log, **kwargs)
 
-    def _set(self, value, context=None, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
+    def _set(self, value, context=None, skip_history=False, skip_log=False, **kwargs):
         if not self.stateful:
             execution_id = None
         else:
