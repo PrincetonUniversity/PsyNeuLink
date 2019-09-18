@@ -221,7 +221,7 @@ def _gating_allocation_setter(value, owning_component=None, context=None):
 def _control_allocation_getter(owning_component=None, context=None):
     from psyneulink.core.components.mechanisms.adaptive.control import ControlMechanism
     from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-    raise GatingMechanismError(f"'control_allocation' attribute is not implemented on {owning_component.__name__};  "
+    raise GatingMechanismError(f"'control_allocation' attribute is not implemented on {owning_component.name};  "
                                 f"consider using a {ControlMechanism.__name__} instead, "
                                 f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
                                 f"{GatingSignal.__name__}s are needed.")
@@ -229,7 +229,7 @@ def _control_allocation_getter(owning_component=None, context=None):
 def _control_allocation_setter(value, owning_component=None, context=None, **kwargs):
     from psyneulink.core.components.mechanisms.adaptive.control import ControlMechanism
     from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-    raise GatingMechanismError(f"'control_allocation' attribute is not implemented on {owning_component.__name__};  "
+    raise GatingMechanismError(f"'control_allocation' attribute is not implemented on {owning_component.name};  "
                                 f"consider using a {ControlMechanism.__name__} instead, "
                                 f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
                                 f"{GatingSignal.__name__}s are needed.")

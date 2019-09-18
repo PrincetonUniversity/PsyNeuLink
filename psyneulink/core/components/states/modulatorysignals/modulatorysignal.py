@@ -484,7 +484,9 @@ class ModulatorySignal(OutputState):
                                                                  feedback=MAYBE,
                                                                  # MODIFIED 8/12/19 END
                                                                  context=context)
-            projection._assign_default_projection_name(state=self)
+            # Projection might be None if it was duplicate
+            if projection:
+                projection._assign_default_projection_name(state=self)
 
     def _assign_default_state_name(self, context=None):
 

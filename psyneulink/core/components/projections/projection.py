@@ -850,16 +850,6 @@ class Projection_Base(Projection):
         # Assign projection to self.sender's efferents list attribute
         # First make sure that projection is not already in efferents
         if self not in self.sender.efferents:
-            # # MODIFIED 7/22/19 OLD:
-            # self.sender.efferents.append(self)
-            # # MODIFIED 7/22/19 NEW: [JDC]
-            # FIX: THIS CRASHES IF RECEIVER IS NONE;
-            #      CAN BE FIXED BY HAVING _instantiate_projection_from_state HANDLE THAT GRACEFULLY BY
-            #      SIMPLY ADDING PROJECTION TO self.sender.efferents;  THAT SHOULD ALSO TAKE CARE OF
-            #      CHECKING FOR DUPLICATES
-            # sender._instantiate_projection_from_state(projection_spec=self,
-            #                                           context=context)
-            # MODIFIED 7/22/19 NEWER: [JDC]
             # Then make sure there is not already a projection to its receiver
             receiver = self.receiver
             if isinstance(receiver, Composition):
@@ -868,13 +858,28 @@ class Projection_Base(Projection):
                 receiver = receiver.input_state
             assert isinstance(receiver, (State)), \
                 f"Illegal receiver ({receiver}) detected in _instantiate_sender() method for {self.name}"
-            if receiver._check_for_duplicate_projections(self):
-                raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
-                                               f"{receiver.owner.name} that already has an identical "
-                                               f"{Projection.__name__}.")
-            else:
-                self.sender.efferents.append(self)
-            # MODIFIED 7/22/19 END
+            # # MODIFIED 9/14/19 OLD:
+            # if receiver._check_for_duplicate_projections(self):
+            #     raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
+            #                                    f"{receiver.owner.name} that already has an identical "
+            #                                    f"{Projection.__name__}.")
+            # else:
+            #     self.sender.efferents.append(self)
+            # MODIFIED 9/14/19 NEW:
+            dup =  receiver._check_for_duplicate_projections(self)
+            # If duplicate is a deferred_init Projection, delete it and use one currently being instantiated
+            # IMPLEMENTATION NOTE:  this gives precedence to a Projection to a Component specified by its sender
+            #                      (e.g., controller of a Composition for a ControlProjection)
+            #                       over its specification in the constructor for the receiver or its owner
+            if dup:
+                if dup.initialization_status == ContextFlags.DEFERRED_INIT:
+                    del receiver.mod_afferents[receiver.mod_afferents.index(dup)]
+                else:
+                    raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
+                                                   f"{receiver.owner.name} that already has an identical "
+                                                   f"{Projection.__name__}.")
+            self.sender.efferents.append(self)
+            # MODIFIED 9/14/19 END:
         else:
             raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} from {sender.name} of "
                                            f"{sender.owner.name} that already has an identical {Projection.__name__}.")

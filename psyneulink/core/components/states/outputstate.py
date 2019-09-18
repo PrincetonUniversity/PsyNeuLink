@@ -1136,15 +1136,36 @@ class OutputState(State_Base):
                                                     context=context)
 
     def _check_for_duplicate_projections(self, projection):
+        """Check if projection is redundant with one in efferents of OutputState
+
+        Check for any instantiated projection in efferents with the same receiver as projection
+        or one in deferred_init status with receiver specification that is the same type as projection.
+
+        Returns redundant Projection if found, otherwise False.
+        """
+        # # MODIFIED 9/14/19 OLD:
+        # # FIX: 7/22/19 - CHECK IF RECEIVER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_INPUT_STATE
+        # if any(proj.receiver == projection.receiver and proj != projection for proj in self.efferents):
+        #     from psyneulink.core.components.projections.projection import Projection
+        #     warnings.warn(f'{Projection.__name__} from {projection.sender.name} of {projection.sender.owner.name} '
+        #                   f'to {self.name} of {self.owner.name} already exists; will ignore additional '
+        #                   f'one specified ({projection.name}).')
+        #     return True
+        # return False
+        # MODIFIED 9/14/19 NEW:
         # FIX: 7/22/19 - CHECK IF RECEIVER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_INPUT_STATE
-        assert True
-        if any(proj.receiver == projection.receiver and proj != projection for proj in self.efferents):
+        # FIX: 9/14/19 - RESTORE WARNING
+        duplicate = next(iter([proj for proj in self.efferents
+                               if ((proj.receiver == projection.receiver and proj != projection)
+                                   or (proj.initialization_status == ContextFlags.DEFERRED_INIT
+                                       and proj.init_args[RECEIVER] == type(projection.receiver)))]), None)
+        if duplicate and self.verbosePref or self.owner.verbosePref:
             from psyneulink.core.components.projections.projection import Projection
             warnings.warn(f'{Projection.__name__} from {projection.sender.name} of {projection.sender.owner.name} '
                           f'to {self.name} of {self.owner.name} already exists; will ignore additional '
                           f'one specified ({projection.name}).')
-            return True
-        return False
+        return duplicate
+        # MODIFIED 9/14/19 END:
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state

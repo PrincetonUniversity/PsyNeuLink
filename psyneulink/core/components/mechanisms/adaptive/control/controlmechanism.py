@@ -591,7 +591,7 @@ def _control_allocation_setter(value, owning_component=None, context=None):
 def _gating_allocation_getter(owning_component=None, context=None):
     from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
     from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
-    raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.__name__};  "
+    raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.name};  "
                                 f"consider using a {GatingMechanism.__name__} instead, "
                                 f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
                                 f"{GatingSignal.__name__}s are needed.")
@@ -600,7 +600,7 @@ def _gating_allocation_getter(owning_component=None, context=None):
 def _gating_allocation_setter(value, owning_component=None, context=None, **kwargs):
     from psyneulink.core.components.mechanisms.adaptive.gating import GatingMechanism
     from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
-    raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.__name__};  "
+    raise ControlMechanismError(f"'gating_allocation' attribute is not implemented on {owning_component.name};  "
                                 f"consider using a {GatingMechanism.__name__} instead, "
                                 f"or a {ModulatoryMechanism.__name__} if both {ControlSignal.__name__}s and "
                                 f"{GatingSignal.__name__}s are needed.")
@@ -1038,6 +1038,8 @@ class ControlMechanism(ModulatoryMechanism):
         # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
             control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
+            if not control_signal:
+                continue
             # FIX: 1/18/18 - CHECK FOR SAME NAME IN _instantiate_control_signal
             # # Don't add any that are already on the ControlMechanism
             if control_signal.name in self.control_signals.names and (self.verbosePref or system.verbosePref):

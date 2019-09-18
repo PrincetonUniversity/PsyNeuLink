@@ -1084,7 +1084,6 @@ import warnings
 
 import numpy as np
 import typecheck as tc
-import uuid
 
 from PIL import Image
 from os import path, remove
@@ -1111,16 +1110,16 @@ from psyneulink.core.components.projections.modulatory.controlprojection import 
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.components.states.state import State
-from psyneulink.core.components.states.inputstate import InputState
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.states.state import State, _parse_state_spec
+from psyneulink.core.components.states.inputstate import InputState, SHADOW_INPUTS
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, CONTROL, CONTROLLER, CONDITIONS, FUNCTIONS, \
-    HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
+    AFTER, ALL, BEFORE, BOLD, BOTH, \
+    COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CONDITIONS, \
+    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
     ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SIMULATIONS, SOFT_CLAMP, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
@@ -1655,11 +1654,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.shadows = {}
 
-        self.enable_controller = enable_controller
-        self.controller = controller
-        self.controller_mode = controller_mode
-        self.controller_condition = controller_condition
-        self.controller_condition.owner = self.controller
+        # self.enable_controller = enable_controller
+        # self.controller = controller
+        # self.controller_mode = controller_mode
+        # self.controller_condition = controller_condition
+        # self.controller_condition.owner = self.controller
 
         self.default_execution_id = self.name
         self.execution_ids = {self.default_execution_id}
@@ -1697,6 +1696,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
+
+        self.controller = None
+        if controller:
+            self.add_controller(controller)
+        else:
+            self.enable_controller = enable_controller
+        self.controller_mode = controller_mode
+        self.controller_condition = controller_condition
+        self.controller_condition.owner = self.controller
 
         self.initialization_status = ContextFlags.INITIALIZED
 
@@ -1751,10 +1759,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @termination_processing.setter
     def termination_processing(self, termination_conds):
         self.scheduler_processing.termination_conds = termination_conds
-
-    def _get_unique_id(self):
-        return uuid.uuid4()
-
 
     # ******************************************************************************************************************
     #                                              GRAPH
@@ -1866,6 +1870,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except AttributeError:
             pass
 
+        # Add node to Composition's graph
         if node not in [vertex.component for vertex in
                         self.graph.vertices]:  # Only add if it doesn't already exist in graph
             node.is_processing = True
@@ -1883,6 +1888,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
+        # Implement any components specified in node's aux_components attribute
         if hasattr(node, "aux_components"):
 
             projections = []
@@ -1951,12 +1957,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         receiver=proj_spec[0].receiver,
                                         feedback=proj_spec[1])
 
+        # Implement required_roles
         if required_roles:
             if not isinstance(required_roles, list):
                 required_roles = [required_roles]
             for required_role in required_roles:
                 self.add_required_node_role(node, required_role)
 
+        # Add projections to node from sender of any shadowed InputStates
         for input_state in node.input_states:
             if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
                 for proj in input_state.shadow_inputs.path_afferents:
@@ -1965,6 +1973,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_state),
                                             sender=proj.sender.owner,
                                             receiver=node)
+
+        # Add ControlSignals to controller and ControlProjections
+        #     to any parameter_states specified for control in node's constructor
+        # FIX: 9/14/19 - HANDLE THIS USING AUX_COMPONENTS IN MECHANISM CONSTRUCTOR?
+        if self.controller:
+            deferred_init_control_specs = node._get_parameter_state_deferred_init_control_specs()
+            # # MODIFIED 9/15/19 NEW:
+            # if deferred_init_control_specs:
+            #     for ctl_sig_specs in deferred_init_control_specs.values():
+            #         # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
+            #         for ctl_sig_spec in ctl_sig_specs:
+            #             self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+            #                                                    context=Context(source=ContextFlags.COMPOSITION))
+            #             self.controller._activate_projections_for_compositions(self)
+            # MODIFIED 9/15/19 NEWER:
+            if deferred_init_control_specs:
+                self.controller._remove_default_modulatory_signal(type=CONTROL_SIGNAL)
+                for ctl_sig_spec in deferred_init_control_specs:
+                    # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
+                    self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+                                                           context=Context(source=ContextFlags.COMPOSITION))
+                    self.controller._activate_projections_for_compositions(self)
+            # MODIFIED 9/15/19 END
 
     def add_nodes(self, nodes, required_roles=None):
         """
@@ -2521,7 +2552,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If this node is shadowing another node, then add it to that node's entry in the Composition's "shadows" dict
         # If the node it's shadowing is a nested node, add it to the entry for the composition it's nested in.
         for input_state in node.input_states:
-            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+            if hasattr(input_state, SHADOW_INPUTS) and input_state.shadow_inputs is not None:
                 owner = input_state.shadow_inputs.owner
                 if owner in nested_nodes:
                     owner = nested_nodes[owner]
@@ -4122,22 +4153,46 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"Specification of {repr(CONTROLLER)} arg for {self.name} "
                                    f"must be a {repr(ModulatoryMechanism.__name__)} ")
 
+        # VALIDATE AND ADD CONTROLLER
+
+        # Warn for request to assign the ControlMechanism already assigned and ignore
+        if controller is self.controller:
+            warnings.warn(f"{controller.name} has already been assigned as the {CONTROLLER} "
+                          f"for {self.name}; assignment ignored.")
+            return
+
+        # Warn for request to assign ControlMechanism that is already the controller of another Composition
+        if hasattr(controller, COMPOSITION) and controller.composition is not self:
+            warnings.warn(f"{controller} has already been assigned as the {CONTROLLER} "
+                          f"for another {COMPOSITION} ({controller.composition.name}); assignment ignored.")
+            return
+
+        # Warn if current one is being replaced
+        if self.controller and self.prefs.verbosePref:
+            warnings.warn(f"The existing {CONTROLLER} for {self.name} ({self.controller.name}) "
+                          f"is being replaced by {controller.name}.")
+
+        controller.composition = self
         self.controller = controller
-        self.controller.composition = self
 
         if self.controller.objective_mechanism:
             self.add_node(self.controller.objective_mechanism)
 
         self.enable_controller = True
 
+
         controller._activate_projections_for_compositions(self)
         self._analyze_graph()
         self._update_shadows_dict(controller)
 
-        # Skip first (OUTCOME) input_state
+        # INSTANTIATE SHADOW_INPUT PROJECTIONS
+
+        # Skip controller's first (OUTCOME) input_state (that receives the Projection from its objective_mechanism
         input_cims=[self.input_CIM] + [comp.input_CIM for comp in self._get_nested_compositions()]
+        # For the rest of the controller's input_states if they are marked as receiving SHADOW_INPUTS,
+        #    instantiate the shadowing Projection to them from the sender to the shadowed InputState
         for input_state in controller.input_states[1:]:
-            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+            if hasattr(input_state, SHADOW_INPUTS) and input_state.shadow_inputs is not None:
                 for proj in input_state.shadow_inputs.path_afferents:
                     sender = proj.sender
                     if sender.owner not in input_cims:
@@ -4154,6 +4209,85 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for proj in input_state.path_afferents:
                 proj._activate_for_compositions(self)
 
+        # Check whether controller has input, and if not then disable
+        if not (isinstance(self.controller.input_states, ContentAddressableList)
+                and self.controller.input_states):
+            # If controller was enabled, warn that it has been disabled
+            if self.enable_controller:
+                warnings.warn(f"{self.controller.name} for {self.name} has no input_states, "
+                              f"so controller will be disabled.")
+            self.enable_controller = False
+            return
+
+        # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
+
+        # Get rid of default ControlSignal if it has no ControlProjections
+        # # MODIFIED 9/15/19 NEW:
+        # if (len(controller.control_signals)==1
+        #         and controller.control_signals[0].name=='ControlSignal-0'
+        #         and not controller.control_signals[0].efferents):
+        #     controller.remove_states(controller.control_signals[0])
+        # MODIFIED 9/15/19 NEWER:
+        controller._remove_default_modulatory_signal(type=CONTROL_SIGNAL)
+        # MODIFIED 9/15/19 END
+
+        # Add any ControlSignals specified for ParameterStates of nodes already in the Composition
+        control_signal_specs = self._get_control_signals_for_composition()
+        for ctl_sig_spec in control_signal_specs:
+            # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_state
+            #               CALLED FROM _instantiate_control_signal
+            #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
+            # Don't add any that are already on the ModulatoryMechanism
+
+            # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
+            controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+                                                   context=Context(source=ContextFlags.COMPOSITION))
+            # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITON:
+            #                ?DON'T ASSIGN ControlProjection?
+            #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
+            #                ?PUT IT IN aux_components FOR NODE?
+            #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
+            controller._activate_projections_for_compositions(self)
+
+    def _get_control_signals_for_composition(self):
+        """Return list of ControlSignals specified by nodes in the Composition
+
+        Generate list of control signal specifications
+            from ParameterStates of Mechanisms that have been specified for control.
+        The specifications can be:
+            ControlProjections (with deferred_init())
+            # FIX: 9/14/19 - THIS SHOULD ALREADY HAVE BEEN PARSED INTO ControlProjection WITH DEFFERRED_INIT:
+            #                OTHERWISE, NEED TO ADD HANDLING OF IT BELOW
+            ControlSignals (e.g., in a 2-item tuple specification for the parameter);
+            Note:
+                The initialization of the ControlProjection and, if specified, the ControlSignal
+                are completed in the call to controller_instantiate_control_signal() in add_controller.
+        Mechanism can be in the Compositon itself, or in a nested Composition that does not have its own controller.
+        """
+
+        control_signal_specs = []
+        for node in self.nodes:
+            if isinstance(node, Composition):
+                # Get control signal specifications for nested composition if it does not have its own controller
+                if node.controller:
+                    control_signal_specs.append(node._get_control_signals_for_composition())
+            elif isinstance(node, Mechanism):
+                # for parameter_state in node._parameter_states:
+                #     for proj in parameter_state.mod_afferents:
+                #         if proj.initialization_status == ContextFlags.DEFERRED_INIT:
+                #             proj_control_signal_specs = proj.control_signal_params or {}
+                #             proj_control_signal_specs.update({PROJECTIONS: [proj]})
+                #             control_signal_specs.append(proj_control_signal_specs)
+                # FIX: 9/14/19 - None GETS APPENDED (ALSO FIX IN add_node)
+                # # MODIFIED 9/15/19 NEW:
+                # ctl_sig_spec = node._get_parameter_state_deferred_init_control_specs()
+                # if ctl_sig_spec:
+                #     control_signal_specs.append(ctl_sig_spec)
+                # MODIFIED 9/15/19 NEWER:
+                control_signal_specs.extend(node._get_parameter_state_deferred_init_control_specs())
+                # MODIFIED 9/15/19 END
+        return control_signal_specs
+
     def _build_predicted_inputs_dict(self, predicted_input):
         inputs = {}
         # ASSUMPTION: input_states[0] is NOT a feature and input_states[1:] are features
@@ -4163,7 +4297,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         nested_nodes = dict(self._get_nested_nodes())
         for j in range(len(self.controller.input_states) - 1):
             input_state = self.controller.input_states[j + 1]
-            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+            if hasattr(input_state, SHADOW_INPUTS) and input_state.shadow_inputs is not None:
                 owner = input_state.shadow_inputs.owner
                 if not owner in nested_nodes:
                     inputs[input_state.shadow_inputs.owner] = predicted_input[j]
@@ -7035,7 +7169,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             **default_execution_id**
         """
 
-        # Traverse processing graph and assign one uuid to all of its nodes
+        # Traverse processing graph and assign one execution_id to all of its nodes
         if context.execution_id is None:
             context.execution_id = self.default_execution_id
 
