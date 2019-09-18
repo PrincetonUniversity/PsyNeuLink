@@ -4134,7 +4134,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         arg_in = ctx.unwrap_2d_array(builder, arg_in)
         # Load state values
         prev = {}
-        for state_el in self.stateful_attributes:
+        for state_el in self._get_state_ids():
             ptr = ctx.get_state_ptr(self, builder, state, state_el)
             prev[state_el] = ctx.unwrap_2d_array(builder, ptr)
 
