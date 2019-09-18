@@ -854,14 +854,21 @@ class Function_Base(Function):
         try:
             stateful = self.stateful_attributes
         except AttributeError:
-            return ()
+            stateful = []
+
+        # Iterating over self.parameters and checking the two conditions
+        # would be easier. However, some functions (FHNIntegrator)
+        # depend on specific order of elements.
+        stateful += [p.name for p in self.parameters if isinstance(p.get(), Function)]
         return (getattr(self.parameters, sa) for sa in stateful)
 
     def _get_state_ids(self):
         return [sp.name for sp in self._get_compilation_state()]
 
     def _get_state_values(self, context=None):
-        return tuple(sp.get(context) for sp in self._get_compilation_state())
+        def _state_values(x):
+            return x._get_state_values(context) if isinstance(x, Function) else x
+        return tuple(map(_state_values, (sp.get(context) for sp in self._get_compilation_state())))
 
     def _get_state_initializer(self, context):
         def _convert(x):
