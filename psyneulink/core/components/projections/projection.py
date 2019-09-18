@@ -1041,7 +1041,6 @@ class Projection_Base(Projection):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.function],
             self.parameter_states,
         ))
 

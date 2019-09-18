@@ -3670,7 +3670,6 @@ class Mechanism_Base(Mechanism):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.function],
             self.input_states,
             self.output_states,
             self.parameter_states,

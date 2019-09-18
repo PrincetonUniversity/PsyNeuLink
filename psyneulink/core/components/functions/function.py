@@ -146,7 +146,7 @@ from random import randint
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.shellclasses import Function, Mechanism
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
     MODULATORY_PROJECTION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
@@ -734,7 +734,7 @@ class Function_Base(Function):
         # temporary method until previous values are integrated for all parameters
         value = self.parameters.previous_value._get(context)
         if value is None:
-            value = self.parameters.previous_value._get()
+            value = self.parameters.previous_value._get(Context())
 
         return value
 

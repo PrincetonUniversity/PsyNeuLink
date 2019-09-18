@@ -193,10 +193,3 @@ class GymForagerCFA(CompositionFunctionApproximator):
             predicted_outcome+=net_outcome
         predicted_outcome/=count
         return predicted_outcome
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            [self.update_weights]
-        ))
-

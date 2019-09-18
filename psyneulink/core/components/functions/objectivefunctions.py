@@ -439,14 +439,6 @@ class Stability(ObjectiveFunction):
 
         return self.convert_output_type(result)
 
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            [self.metric_fct] if self.metric_fct is not None else [],
-            [self.transfer_fct] if self.transfer_fct is not None else [],
-        ))
-
 
 class Energy(Stability):
     """
