@@ -865,9 +865,15 @@ class Function_Base(Function):
 
     def _get_state_initializer(self, context):
         stateful = self._get_state_values(context)
-        # Skip first element of random state (id string)
-        lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
-
+        def _convert(x):
+            if isinstance(x, np.random.RandomState):
+                # Skip first element of random state (id string)
+                return x.get_state()[1:]
+            elif isinstance(x, np.ndarray):
+                return x.tolist()
+            else:
+                return x
+        lists = (_convert(s) for s in stateful)
         return pnlvm._tupleize(lists)
 
     def _get_compilation_params(self, context=None):
@@ -891,8 +897,7 @@ class Function_Base(Function):
         return [p.name for p in self._get_compilation_params(context)]
 
     def _get_param_values(self, context=None):
-        param_init = []
-        for p in self._get_compilation_params(context):
+        def _get_values(p):
             param = p.get(context)
             try:
                 # Existence of parameter state changes the shape to array
@@ -904,11 +909,13 @@ class Function_Base(Function):
             if not np.isscalar(param) and param is not None:
                 if p.name == 'matrix': # Flatten matrix
                     param = np.asfarray(param).flatten().tolist()
+                elif isinstance(param, Function):
+                    param = param._get_param_values(context)
                 elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
                     param = np.asfarray(param[0]).tolist()
-            param_init.append(param)
+            return param
 
-        return tuple(param_init)
+        return tuple(map(_get_values, self._get_compilation_params(context)))
 
     def _get_param_initializer(self, context):
         return pnlvm._tupleize(self._get_param_values(context))

@@ -4057,7 +4057,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         previous_time = self.get_current_function_param("previous_time", context)
 
         # integration_method is a compile time parameter
-        integration_method = self.get_current_function_param("integration_method", context)
+        integration_method = self.parameters.integration_method.get()
         if integration_method == "RK4":
             approximate_values = self._runge_kutta_4_FitzHughNagumo(
                 variable,
@@ -4158,10 +4158,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                       "previous_w_ptr": prev['previous_w'],
                       "previous_time_ptr": prev['previous_time']}
 
-        # KDM 11/7/18: since we're compiling with this set, I'm assuming it should be
-        # stateless and considered an inherent feature of the function. Changing parameter
-        # to stateful=False accordingly. If it should be stateful, need to pass a context here
-        method = self.get_current_function_param("integration_method")
+        method = self.parameters.integration_method.get()
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, method + "_body") as args:
             if method == "RK4":
