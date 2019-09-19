@@ -7408,6 +7408,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Get location of projection output (in mechanism's input structure
                 rec_state = proj.receiver
                 assert rec_state.owner is node or rec_state.owner is node.input_CIM
+                indices = [0]
                 if proj in rec_state.owner.path_afferents:
                     rec_state_idx = rec_state.owner.input_states.index(rec_state)
 
@@ -7418,19 +7419,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for i in range(projection_idx):
                         if isinstance(rec_state.pathway_projections[i], AutoAssociativeProjection):
                             projection_idx -= 1
+                    indices.extend([rec_state_idx, projection_idx])
                 elif proj in rec_state.owner.mod_afferents:
                     rec_state_idx = rec_state.owner.parameter_states.index(rec_state) + len(rec_state.owner.input_states)
 
                     assert proj in rec_state.mod_afferents
                     projection_idx = rec_state.mod_afferents.index(proj)
+                    indices.extend([rec_state_idx, projection_idx])
                 else:
                     assert False, "Projection neither pathway nor modulatory"
 
-                assert rec_state_idx < len(m_in.type.pointee)
-                assert projection_idx < len(m_in.type.pointee.elements[rec_state_idx])
-                proj_out = builder.gep(m_in, [ctx.int32_ty(0),
-                                              ctx.int32_ty(rec_state_idx),
-                                              ctx.int32_ty(projection_idx)])
+                proj_out = builder.gep(m_in, [ctx.int32_ty(i) for i in indices])
 
                 # Get projection parameters and state
                 proj_idx = self.projections.index(proj)
