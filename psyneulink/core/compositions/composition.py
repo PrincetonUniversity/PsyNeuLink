@@ -7408,7 +7408,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Get location of projection output (in mechanism's input structure
                 rec_state = proj.receiver
                 assert rec_state.owner is node or rec_state.owner is node.input_CIM
-                if rec_state in rec_state.owner.input_states:
+                if proj in rec_state.owner.path_afferents:
                     rec_state_idx = rec_state.owner.input_states.index(rec_state)
 
                     assert proj in rec_state.pathway_projections
@@ -7418,13 +7418,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for i in range(projection_idx):
                         if isinstance(rec_state.pathway_projections[i], AutoAssociativeProjection):
                             projection_idx -= 1
-                elif rec_state in rec_state.owner.parameter_states:
+                elif proj in rec_state.owner.mod_afferents:
                     rec_state_idx = rec_state.owner.parameter_states.index(rec_state) + len(rec_state.owner.input_states)
 
                     assert proj in rec_state.mod_afferents
                     projection_idx = rec_state.mod_afferents.index(proj)
                 else:
-                    assert False, "State neither an input state nor a parameter state"
+                    assert False, "Projection neither pathway nor modulatory"
 
                 assert rec_state_idx < len(m_in.type.pointee)
                 assert projection_idx < len(m_in.type.pointee.elements[rec_state_idx])
