@@ -2595,11 +2595,11 @@ class Mechanism_Base(Mechanism):
         input_type_list = []
         for state in self.input_states:
             input_type_list.append(ctx.get_input_struct_type(state))
-        for state in self.parameter_states:
-            state_input_type_list = []
-            for proj in state.mod_afferents:
-                state_input_type_list.append(ctx.get_output_struct_type(proj))
-            input_type_list.append(pnlvm.ir.LiteralStructType(state_input_type_list))
+        mod_input_type_list = []
+        for proj in self.mod_afferents:
+            mod_input_type_list.append(ctx.get_output_struct_type(proj))
+        if len(mod_input_type_list) > 0:
+            input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
         return pnlvm.ir.LiteralStructType(input_type_list)
 
     def _get_input_param_initializer(self, context):
@@ -2686,7 +2686,7 @@ class Mechanism_Base(Mechanism):
 
         return is_output, builder
 
-    def _gen_llvm_param_states(self, func, f_params_ptr, ctx, builder, params, context, si):
+    def _gen_llvm_param_states(self, func, f_params_ptr, ctx, builder, params, context, mech_in):
         # Allocate a shadow structure to overload user supplied parameters
         f_params = builder.alloca(f_params_ptr.type.pointee)
 
@@ -2723,7 +2723,8 @@ class Mechanism_Base(Mechanism):
 
             # Copy mod_afferent inputs
             for idx, ps_mod in enumerate(state.mod_afferents):
-                mod_in_ptr = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_states) + i), ctx.int32_ty(idx)])
+                mech_mod_afferent_idx = self.mod_afferents.index(ps_mod)
+                mod_in_ptr = builder.gep(mech_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_states)), ctx.int32_ty(mech_mod_afferent_idx)])
                 mod_out_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
                 afferent_val = builder.load(mod_in_ptr)
                 builder.store(afferent_val, mod_out_ptr)

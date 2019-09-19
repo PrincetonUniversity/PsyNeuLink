@@ -7421,11 +7421,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             projection_idx -= 1
                     indices.extend([rec_state_idx, projection_idx])
                 elif proj in rec_state.owner.mod_afferents:
-                    rec_state_idx = rec_state.owner.parameter_states.index(rec_state) + len(rec_state.owner.input_states)
-
-                    assert proj in rec_state.mod_afferents
-                    projection_idx = rec_state.mod_afferents.index(proj)
-                    indices.extend([rec_state_idx, projection_idx])
+                    projection_idx = rec_state.owner.mod_afferents.index(proj)
+                    indices.extend([len(rec_state.owner.input_states), projection_idx])
                 else:
                     assert False, "Projection neither pathway nor modulatory"
 
