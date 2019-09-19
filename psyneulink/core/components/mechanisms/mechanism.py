@@ -2688,6 +2688,40 @@ class Mechanism_Base(Mechanism):
 
         return is_output, builder
 
+
+    def _gen_llvm_states(self, ctx, builder, states, struct_idx,
+                         get_output_ptr, fill_input_data,
+                         mech_params, mech_state, mech_input):
+        for i, state in enumerate(states):
+            s_function = ctx.get_llvm_function(state)
+
+            # Find output location
+            builder, s_output = get_output_ptr(builder, i)
+
+            # Allocate the input structure (data + modulation)
+            s_input = builder.alloca(s_function.args[2].type.pointee)
+
+            # Copy input data to input structure
+            builder = fill_input_data(builder, s_input, i)
+
+            # Copy mod_afferent inputs
+            for idx, s_mod in enumerate(state.mod_afferents):
+                mech_mod_afferent_idx = self.mod_afferents.index(s_mod)
+                mod_in_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
+                                                      ctx.int32_ty(len(self.input_states)),
+                                                      ctx.int32_ty(mech_mod_afferent_idx)])
+                mod_out_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
+                afferent_val = builder.load(mod_in_ptr)
+                builder.store(afferent_val, mod_out_ptr)
+
+            s_idx = ctx.int32_ty(struct_idx)
+            s_params = builder.gep(mech_params, [ctx.int32_ty(0), s_idx, ctx.int32_ty(i)])
+            s_state = builder.gep(mech_state, [ctx.int32_ty(0), s_idx, ctx.int32_ty(i)])
+
+            builder.call(s_function, [s_params, s_state, s_input, s_output])
+
+        return builder
+
     def _gen_llvm_param_states(self, func, f_params_in, ctx, builder,
                                mech_params, mech_state, mech_input):
         # Allocate a shadow structure to overload user supplied parameters
@@ -2696,39 +2730,23 @@ class Mechanism_Base(Mechanism):
         # Few extra copies will be eliminated by the compiler.
         builder.store(builder.load(f_params_in), f_params_out)
 
-        param_states = (p for p in self._parameter_states if p.name in func._get_param_ids())
+        # Filter out param states without corresponding params for this function
+        param_states = [p for p in self._parameter_states if p.name in func._get_param_ids()]
 
-        for i, state in enumerate(param_states):
-            ps_function = ctx.get_llvm_function(state)
+        def _get_output_ptr(b, i):
+            ptr = ctx.get_param_ptr(func, b, f_params_out, param_states[i].name)
+            return b, ptr
 
-            # Find output location
-            ps_output = ctx.get_param_ptr(func, builder, f_params_out, state.name)
+        def _fill_input(b, s_input, i):
+            param_in_ptr = ctx.get_param_ptr(func, b, f_params_in, param_states[i].name)
+            raw_ps_input = b.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            b.store(b.load(param_in_ptr), raw_ps_input)
+            return b
 
-            # Allocate the input structure (data + modulation)
-            ps_input = builder.alloca(ps_function.args[2].type.pointee)
-
-            # Copy input data to input structure
-            param_in_ptr = ctx.get_param_ptr(func, builder, f_params_in, state.name)
-            raw_ps_input = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.store(builder.load(param_in_ptr), raw_ps_input)
-
-            # Copy mod_afferent inputs
-            for idx, ps_mod in enumerate(state.mod_afferents):
-                mech_mod_afferent_idx = self.mod_afferents.index(ps_mod)
-                mod_in_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
-                                                      ctx.int32_ty(len(self.input_states)),
-                                                      ctx.int32_ty(mech_mod_afferent_idx)])
-                mod_out_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
-                afferent_val = builder.load(mod_in_ptr)
-                builder.store(afferent_val, mod_out_ptr)
-
-            # Parameter states are in the 4th block (idx 3).
-            # After input states, main function, and output states.
-            ps_idx = ctx.int32_ty(3)
-            ps_params = builder.gep(mech_params, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
-            ps_state = builder.gep(mech_state, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
-
-            builder.call(ps_function, [ps_params, ps_state, ps_input, ps_output])
+        # Parameter states are in the 4th block (idx 3).
+        # After input states, main function, and output states.
+        builder = self._gen_llvm_states(ctx, builder, param_states, 3, _get_output_ptr,
+                                        _fill_input, mech_params, mech_state, mech_input)
         return f_params_out, builder
 
     def _gen_llvm_output_state_parse_variable(self, ctx, builder,
