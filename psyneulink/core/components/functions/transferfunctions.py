@@ -4166,16 +4166,3 @@ class TransferWithCosts(TransferFunction):
 
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            [
-                self.transfer_fct,
-                self.intensity_cost_fct,
-                self.adjustment_cost_fct,
-                self.duration_cost_fct,
-                self.combine_costs_fct,
-            ],
-        ))
