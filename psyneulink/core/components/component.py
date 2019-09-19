@@ -1143,6 +1143,94 @@ class Component(object, metaclass=ComponentsMeta):
 
         self._update_parameter_components(context)
 
+    def __repr__(self):
+        return '({0} {1})'.format(type(self).__name__, self.name)
+        #return '{1}'.format(type(self).__name__, self.name)
+
+    def __deepcopy__(self, memo):
+        fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
+        newone = fun(self, memo)
+
+        if newone.parameters is not newone.class_parameters:
+            # may be in DEFERRED INIT, so parameters/defaults belongs to class
+            newone.parameters._owner = newone
+            newone.defaults._owner = newone
+
+        return newone
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Compilation support
+    # ------------------------------------------------------------------------------------------------------------------
+    def _get_compilation_state(self):
+        try:
+            stateful = self.stateful_attributes
+        except AttributeError:
+            stateful = []
+
+        return (p for p in self.parameters if p.name in stateful or isinstance(p.get(), Component))
+
+    def _get_state_ids(self):
+        return [sp.name for sp in self._get_compilation_state()]
+
+    def _get_state_values(self, context=None):
+        def _state_values(x):
+            return x._get_state_values(context) if isinstance(x, Component) else x
+        return tuple(map(_state_values, (sp.get(context) for sp in self._get_compilation_state())))
+
+    def _get_state_initializer(self, context):
+        def _convert(x):
+            if isinstance(x, np.random.RandomState):
+                # Skip first element of random state (id string)
+                return x.get_state()[1:]
+            else:
+                return x
+        lists = (_convert(s) for s in self._get_state_values(context))
+        return pnlvm._tupleize(lists)
+
+    def _get_compilation_params(self, context=None):
+        # Filter out known unused/invalid params
+        black_list = {'variable', 'value', 'initializer'}
+        try:
+            # Don't list stateful params, the are included in context
+            black_list.update(self.stateful_attributes)
+        except AttributeError:
+            pass
+        def _is_compilation_param(p):
+            if p.name not in black_list and not isinstance(p, ParameterAlias):
+                val = p.get(context)
+                # Check if the value is string (like integration_method)
+                return not isinstance(val, str)
+            return False
+
+        return filter(_is_compilation_param, self.parameters)
+
+    def _get_param_ids(self, context=None):
+        return [p.name for p in self._get_compilation_params(context)]
+
+    def _get_param_values(self, context=None):
+        def _get_values(p):
+            param = p.get(context)
+            try:
+                # Existence of parameter state changes the shape to array
+                # the base value should remain the same though
+                if p.name in self.owner.parameter_states:
+                    param = [param]
+            except AttributeError:
+                pass
+            if not np.isscalar(param) and param is not None:
+                if p.name == 'matrix': # Flatten matrix
+                    param = np.asfarray(param).flatten().tolist()
+                elif isinstance(param, Component):
+                    param = param._get_param_values(context)
+                elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
+                    param = np.asfarray(param[0]).tolist()
+            return param
+
+        return tuple(map(_get_values, self._get_compilation_params(context)))
+
+    def _get_param_initializer(self, context):
+        return pnlvm._tupleize(self._get_param_values(context))
+
     def _gen_llvm_function(self, extra_args=[]):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_param_struct_type(self).as_pointer(),
@@ -1162,21 +1250,6 @@ class Component(object, metaclass=ComponentsMeta):
             builder.ret_void()
 
         return llvm_func
-
-    def __repr__(self):
-        return '({0} {1})'.format(type(self).__name__, self.name)
-        #return '{1}'.format(type(self).__name__, self.name)
-
-    def __deepcopy__(self, memo):
-        fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
-        newone = fun(self, memo)
-
-        if newone.parameters is not newone.class_parameters:
-            # may be in DEFERRED INIT, so parameters/defaults belongs to class
-            newone.parameters._owner = newone
-            newone.defaults._owner = newone
-
-        return newone
 
     # ------------------------------------------------------------------------------------------------------------------
     # Handlers

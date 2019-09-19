@@ -360,20 +360,10 @@ class Stability(ObjectiveFunction):
             self.metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.normalize)
         elif self.metric in DISTANCE_METRICS._set():
             self.metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
-
-    def _get_param_ids(self):
-        return super()._get_param_ids() + ["metric_fct"]
-
-    def _get_param_values(self, context=None):
-        my_params = super()._get_param_values(context)
-        return (*my_params, self.metric_fct._get_param_values(context))
-
-    def _get_state_ids(self):
-        return super()._get_state_ids() + ["metric_fct"]
-
-    def _get_state_values(self, context=None):
-        my_values = super()._get_state_values(context)
-        return (*my_values, self.metric_fct._get_state_values(context))
+        else:
+            assert False, "Unknown metric"
+        #FIXME: This is a hack to make sure metric-fct param is set
+        self.parameters.metric_fct.set(self.metric_fct)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         # Dot product
