@@ -2661,34 +2661,6 @@ class Mechanism_Base(Mechanism):
 
         return tuple(state_init_list)
 
-    def _gen_llvm_input_states(self, ctx, builder,
-                               mech_params, mech_state, mech_input):
-        # Allocate temporary storage. We rely on the fact that series
-        # of input state results should match the main function input.
-        is_output_list = []
-        for state in self.input_states:
-            is_function = ctx.get_llvm_function(state)
-            is_output_list.append(is_function.args[3].type.pointee)
-
-        # Check if all elements are the same. Function input will be array type if yes.
-        if len(set(is_output_list)) == 1:
-            is_output_type = pnlvm.ir.ArrayType(is_output_list[0], len(is_output_list))
-        else:
-            is_output_type = pnlvm.ir.LiteralStructType(is_output_list)
-
-        is_output = builder.alloca(is_output_type)
-
-        for i, state in enumerate(self.input_states):
-            is_params = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_state = builder.gep(mech_state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_in = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_out = builder.gep(is_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_function = ctx.get_llvm_function(state)
-            builder.call(is_function, [is_params, is_state, is_in, is_out])
-
-        return is_output, builder
-
-
     def _gen_llvm_states(self, ctx, builder, states, struct_idx,
                          get_output_ptr, fill_input_data,
                          mech_params, mech_state, mech_input):
@@ -2723,6 +2695,37 @@ class Mechanism_Base(Mechanism):
             builder.call(s_function, [s_params, s_state, s_input, s_output])
 
         return builder
+
+    def _gen_llvm_input_states(self, ctx, builder,
+                               mech_params, mech_state, mech_input):
+        # Allocate temporary storage. We rely on the fact that series
+        # of input state results should match the main function input.
+        is_output_list = []
+        for state in self.input_states:
+            is_function = ctx.get_llvm_function(state)
+            is_output_list.append(is_function.args[3].type.pointee)
+
+        # Check if all elements are the same. Function input will be array type if yes.
+        if len(set(is_output_list)) == 1:
+            is_output_type = pnlvm.ir.ArrayType(is_output_list[0], len(is_output_list))
+        else:
+            is_output_type = pnlvm.ir.LiteralStructType(is_output_list)
+
+        is_output = builder.alloca(is_output_type)
+        def _get_output_ptr(b, i):
+            ptr = b.gep(is_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            return b, ptr
+
+        def _fill_input(b, s_input, i):
+            is_in = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            b.store(b.load(is_in), s_input)
+            return b
+
+        # Input states are in the 1st block (idx 0).
+        builder = self._gen_llvm_states(ctx, builder, self.input_states, 0, _get_output_ptr,
+                                        _fill_input, mech_params, mech_state, mech_input)
+
+        return is_output, builder
 
     def _gen_llvm_param_states(self, func, f_params_in, ctx, builder,
                                mech_params, mech_state, mech_input):
