@@ -306,10 +306,10 @@ def parse_context(context):
     """
         Arguments
         ---------
-            ECONTEXT_COMMENT
+            context
                 An execution context (context, Composition)
 
-        :return: the context associated with **ECONTEXT_COMMENT**
+        :return: the context associated with **context**
     """
     try:
         return context.default_execution_id
@@ -815,14 +815,14 @@ class Parameter(types.SimpleNamespace):
     @handle_external_context()
     def get(self, context=None, **kwargs):
         """
-            Gets the value of this `Parameter` in the context of **ECONTEXT_COMMENT**
-            If no ECONTEXT_COMMENT is specified, attributes on the associated `Component` will be used
+            Gets the value of this `Parameter` in the context of **context**
+            If no context is specified, attributes on the associated `Component` will be used
 
             Arguments
             ---------
 
-                ECONTEXT_COMMENT : Context, execution_id, Composition
-                    the context for which the value is stored; if a Composition, uses **ECONTEXT_COMMENT**.default_execution_id
+                context : Context, execution_id, Composition
+                    the context for which the value is stored; if a Composition, uses **context**.default_execution_id
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `getter` if it exists
         """
@@ -860,13 +860,13 @@ class Parameter(types.SimpleNamespace):
     @handle_external_context()
     def get_previous(self, context=None, index=1):
         """
-            Gets the value set before the current value of this `Parameter` in the context of **ECONTEXT_COMMENT**
+            Gets the value set before the current value of this `Parameter` in the context of **context**
 
             Arguments
             ---------
 
-                ECONTEXT_COMMENT : Context, execution_id, Composition
-                    the context for which the value is stored; if a Composition, uses **ECONTEXT_COMMENT**.default_execution_id
+                context : Context, execution_id, Composition
+                    the context for which the value is stored; if a Composition, uses **context**.default_execution_id
 
                 index : int : 1
                     how far back to look into the history. A value of 1 means the first previous value
@@ -880,13 +880,13 @@ class Parameter(types.SimpleNamespace):
     @handle_external_context()
     def get_delta(self, context=None):
         """
-            Gets the difference between the current value and previous value of `Parameter` in the context of **ECONTEXT_COMMENT**
+            Gets the difference between the current value and previous value of `Parameter` in the context of **context**
 
             Arguments
             ---------
 
-                ECONTEXT_COMMENT : Context, execution_id, Composition
-                    the context for which the value is stored; if a Composition, uses **ECONTEXT_COMMENT**.default_execution_id
+                context : Context, execution_id, Composition
+                    the context for which the value is stored; if a Composition, uses **context**.default_execution_id
         """
         try:
             return self.get(context) - self.get_previous(context)
@@ -900,16 +900,16 @@ class Parameter(types.SimpleNamespace):
             ) from e
 
     @handle_external_context()
-    def set(self, value, context=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=3, **kwargs):
+    def set(self, value, context=None, override=False, skip_history=False, skip_log=False, **kwargs):
         """
-            Sets the value of this `Parameter` in the context of **ECONTEXT_COMMENT**
-            If no ECONTEXT_COMMENT is specified, attributes on the associated `Component` will be used
+            Sets the value of this `Parameter` in the context of **context**
+            If no context is specified, attributes on the associated `Component` will be used
 
             Arguments
             ---------
 
-                ECONTEXT_COMMENT : Context, execution_id, Composition
-                    the context for which the value is stored; if a Composition, uses **ECONTEXT_COMMENT**.default_execution_id
+                context : Context, execution_id, Composition
+                    the context for which the value is stored; if a Composition, uses **context**.default_execution_id
                 override : False
                     if True, ignores a warning when attempting to set a *read-only* Parameter
                 skip_history : False
@@ -920,11 +920,11 @@ class Parameter(types.SimpleNamespace):
                     any additional arguments to be passed to this `Parameter`'s `setter` if it exists
         """
         if not override and self.read_only:
-            warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=_ro_warning_stacklevel)
+            raise ParameterError('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to force set.'.format(self.name))
 
-        self._set(value, context, skip_history, skip_log, _ro_warning_stacklevel, **kwargs)
+        self._set(value, context, skip_history, skip_log, **kwargs)
 
-    def _set(self, value, context=None, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
+    def _set(self, value, context=None, skip_history=False, skip_log=False, **kwargs):
         if not self.stateful:
             execution_id = None
         else:

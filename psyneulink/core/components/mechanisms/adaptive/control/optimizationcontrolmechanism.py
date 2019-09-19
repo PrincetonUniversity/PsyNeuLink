@@ -834,7 +834,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
-            self._initialize_composition_function_approximator()
+            self._initialize_composition_function_approximator(context)
 
     def _update_input_states(self, context=None, runtime_params=None):
         """Update value for each InputState in self.input_states:
@@ -1269,24 +1269,12 @@ class OptimizationControlMechanism(ControlMechanism):
     # FIX:  THE FOLLOWING IS SPECIFIC TO CompositionFunctionApproximator AS agent_rep
     # ******************************************************************************************************************
 
-    def _initialize_composition_function_approximator(self):
+    def _initialize_composition_function_approximator(self, context):
         """Initialize CompositionFunctionApproximator"""
 
         # CompositionFunctionApproximator needs to have access to control_signals to:
         # - to construct control_allocation_search_space from their allocation_samples attributes
         # - compute their values and costs for samples of control_allocations from control_allocation_search_space
         self.agent_rep.initialize(features_array=np.array(self.defaults.variable[1:]),
-                                  control_signals = self.control_signals)
-
-    @property
-    def _dependent_components(self):
-        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
-
-        return list(itertools.chain(
-            super()._dependent_components,
-            [self.objective_mechanism],
-            [self.agent_rep] if isinstance(self.agent_rep, CompositionFunctionApproximator) else [],
-            [self.feature_function] if isinstance(self.feature_function, Function_Base) else [],
-            [self.search_function] if isinstance(self.search_function, Function_Base) else [],
-            [self.search_termination_function] if isinstance(self.search_termination_function, Function_Base) else [],
-        ))
+                                  control_signals = self.control_signals,
+                                  context=context)

@@ -723,8 +723,8 @@ class ControlSignal(ModulatorySignal):
                 allocation_samples
                     see `allocation_samples <ControlSignal.allocation_samples>`
 
-                    :default value: numpy.array([0.1, 0.4, 0.7, 1. ])
-                    :type: numpy.ndarray
+                    :default value: None
+                    :type:
 
                 combine_costs_function
                     see `combine_costs_function <ControlSignal.combine_costs_function>`

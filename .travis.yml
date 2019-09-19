@@ -96,7 +96,7 @@ install:
 
 
 script:
-  - python -m pytest -n auto --strict-markers -p no:logging $PYTEST_COV
+  - pytest -n auto --strict-markers -p no:logging $PYTEST_COV
 
 after_script:
   - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then coveralls; fi

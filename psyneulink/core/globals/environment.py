@@ -1327,8 +1327,3 @@ def _get_object_type(obj):
         return SYSTEM
     else:
         raise RunError("{} type not supported by Run module".format(obj.__class__.__name__))
-
-
-import uuid
-def _get_unique_id():
-    return uuid.uuid4()

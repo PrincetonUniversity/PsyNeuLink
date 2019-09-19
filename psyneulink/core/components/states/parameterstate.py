@@ -879,7 +879,9 @@ class ParameterState(State_Base):
             input_types.append(ctx.get_output_struct_type(mod))
         return pnlvm.ir.LiteralStructType(input_types)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        mf_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
+        mf_params = ctx.get_param_ptr(self, builder, params, self.parameters.function.name)
         state_f = ctx.get_llvm_function(self.function)
 
         # Extract the original mechanism function's param value
@@ -888,7 +890,7 @@ class ParameterState(State_Base):
 
         # Create a local copy of the function parameters
         f_params = builder.alloca(state_f.args[0].type.pointee)
-        builder.store(builder.load(params), f_params)
+        builder.store(builder.load(mf_params), f_params)
 
         # FIXME: is this always true, by design?
         assert len(self.mod_afferents) <= 1
@@ -922,7 +924,7 @@ class ParameterState(State_Base):
                 builder.store(f_mod, f_mod_param_ptr)
 
 
-        builder.call(state_f, [f_params, context, f_input, arg_out])
+        builder.call(state_f, [f_params, mf_state, f_input, arg_out])
         return builder
 
 def _instantiate_parameter_states(owner, function=None, context=None):

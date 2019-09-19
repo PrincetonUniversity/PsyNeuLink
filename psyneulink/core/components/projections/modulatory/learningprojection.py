@@ -456,6 +456,12 @@ class LearningProjection(ModulatoryProjection_Base):
                     :default value: `Linear`
                     :type: `Function`
 
+                learning_enabled
+                    see `learning_enabled <LearningProjection.learning_enabled>`
+
+                    :default value: None
+                    :type:
+
                 learning_function
                     see `learning_function <LearningProjection.learning_function>`
 
@@ -474,12 +480,6 @@ class LearningProjection(ModulatoryProjection_Base):
                     :default value: None
                     :type:
                     :read only: True
-
-                learning_enabled
-                    see `learning_enabled <LearningProjection.learning_enabled>`
-
-                    :default value: True
-                    :type:
 
         """
         value = Parameter(np.array([0]), read_only=True, aliases=['weight_change_matrix'])

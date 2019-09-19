@@ -1647,10 +1647,4 @@ class RecurrentTransferMechanism(TransferMechanism):
         return list(itertools.chain(
             super()._dependent_components,
             [self.recurrent_projection],
-            [self.combination_function] if (
-                self.combination_function is not None
-                and not isinstance(self.combination_function, MethodType)
-                and self.has_recurrent_input_state
-            )
-            else [],
         ))

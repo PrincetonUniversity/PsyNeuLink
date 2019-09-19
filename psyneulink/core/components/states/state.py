@@ -1041,7 +1041,7 @@ class State_Base(State):
                     :read only: True
         """
         function = Parameter(Linear, stateful=False, loggable=False)
-        require_projection_in_composition = Parameter(None, stateful=False, loggable=False, read_only=True)
+        require_projection_in_composition = Parameter(True, stateful=False, loggable=False, read_only=True)
 
     stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 
@@ -2013,7 +2013,7 @@ class State_Base(State):
 
                 # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
                 # should these be manually set despite it not actually being executed?
-                # explicitly getting/setting based on ECONTEXT_COMMENT will be more clear
+                # explicitly getting/setting based on context will be more clear
                 projection.most_recent_context = context
                 projection.function.most_recent_context = context
                 for pstate in projection.parameter_states:
@@ -2286,26 +2286,23 @@ class State_Base(State):
         # however, some functions still need input shape workarounds.
         return ctx.get_input_struct_type(self.function)
 
-    def _get_param_struct_type(self, ctx):
-        return ctx.get_param_struct_type(self.function)
+    def _get_compilation_params(self, context=None):
+        return [self.parameters.function]
 
-    def _get_state_struct_type(self, ctx):
-        return ctx.get_state_struct_type(self.function)
-
-    def _get_param_initializer(self, context):
-        return self.function._get_param_initializer(context)
-
-    def _get_state_initializer(self, context):
-        return self.function._get_state_initializer(context)
+    def _get_compilation_state(self):
+        return [self.parameters.function]
 
     # Provide invocation wrapper
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        mf_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
+        mf_params = ctx.get_param_ptr(self, builder, params, self.parameters.function.name)
         main_function = ctx.get_llvm_function(self.function)
+
         # OutputState returns 1D array even for scalar functions
         if arg_out.type != main_function.args[3].type:
             assert len(arg_out.type.pointee) == 1
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        builder.call(main_function, [params, context, arg_in, arg_out])
+        builder.call(main_function, [mf_params, mf_state, arg_in, arg_out])
 
         return builder
 
@@ -2324,7 +2321,6 @@ class State_Base(State):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.function],
             self.efferents,
         ))
 
