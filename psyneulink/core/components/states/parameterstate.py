@@ -356,7 +356,6 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, function_type, method_type, parameter_keywords
 from psyneulink.core.components.functions.function import ModulationParam, get_param_value_for_keyword
 from psyneulink.core.components.shellclasses import Mechanism, Projection
@@ -871,13 +870,6 @@ class ParameterState(State_Base):
     def pathway_projections(self, value):
         raise ParameterStateError("PROGRAM ERROR: Attempt to assign {} to {}; {}s cannot accept {}s".
                                   format(PATHWAY_PROJECTION, self.name, PARAMETER_STATE, PATHWAY_PROJECTION))
-
-    def _get_input_struct_type(self, ctx):
-        func_input_type = ctx.get_input_struct_type(self.function)
-        input_types = [func_input_type]
-        for mod in self.mod_afferents:
-            input_types.append(ctx.get_output_struct_type(mod))
-        return pnlvm.ir.LiteralStructType(input_types)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         mf_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)

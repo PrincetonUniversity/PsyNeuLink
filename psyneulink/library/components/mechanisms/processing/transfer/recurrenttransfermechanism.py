@@ -1553,7 +1553,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         # connect only to the first one?
         assert len(self.input_states) == 1
         for state in self.input_states:
-            s_type = ctx.get_input_struct_type(state)
+            # Extract the non-modulation portion of input state input struct
+            s_type = ctx.get_input_struct_type(state).elements[0]
             if isinstance(s_type, pnlvm.ir.ArrayType):
                 # Subtract one incoming mapping projections.
                 # Unless it's the only incoming projection (mechanism is standalone)

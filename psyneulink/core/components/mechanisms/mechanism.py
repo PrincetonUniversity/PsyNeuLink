@@ -2594,7 +2594,8 @@ class Mechanism_Base(Mechanism):
     def _get_input_struct_type(self, ctx):
         input_type_list = []
         for state in self.input_states:
-            input_type_list.append(ctx.get_input_struct_type(state))
+            # Extract the non-modulation portion of input state input struct
+            input_type_list.append(ctx.get_input_struct_type(state).elements[0])
         mod_input_type_list = []
         for proj in self.mod_afferents:
             mod_input_type_list.append(ctx.get_output_struct_type(proj))
@@ -2718,7 +2719,8 @@ class Mechanism_Base(Mechanism):
 
         def _fill_input(b, s_input, i):
             is_in = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            b.store(b.load(is_in), s_input)
+            data_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            b.store(b.load(is_in), data_ptr)
             return b
 
         # Input states are in the 1st block (idx 0).
@@ -2777,7 +2779,8 @@ class Mechanism_Base(Mechanism):
         def _fill_input(b, s_input, i):
             data_ptr = self._gen_llvm_output_state_parse_variable(ctx, b,
                mech_params, mech_state, value, self.output_states[i])
-            b.store(b.load(data_ptr), s_input)
+            input_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            b.store(b.load(data_ptr), input_ptr)
             return b
 
         # Output states are in the 3rd block (idx 2).

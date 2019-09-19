@@ -741,6 +741,7 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.function import Function, ModulationParam, _get_modulated_param, get_param_value_for_keyword
@@ -2227,7 +2228,12 @@ class State_Base(State):
     def _get_input_struct_type(self, ctx):
         # Use function input type. The shape should be the same,
         # however, some functions still need input shape workarounds.
-        return ctx.get_input_struct_type(self.function)
+        func_input_type = ctx.get_input_struct_type(self.function)
+        input_types = [func_input_type]
+        # Add modulation
+        for mod in self.mod_afferents:
+            input_types.append(ctx.get_output_struct_type(mod))
+        return pnlvm.ir.LiteralStructType(input_types)
 
     def _get_compilation_params(self, context=None):
         return [self.parameters.function]
@@ -2239,13 +2245,15 @@ class State_Base(State):
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         mf_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
         mf_params = ctx.get_param_ptr(self, builder, params, self.parameters.function.name)
+        mf_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        # TODO: Implement modulation
         main_function = ctx.get_llvm_function(self.function)
 
         # OutputState returns 1D array even for scalar functions
         if arg_out.type != main_function.args[3].type:
             assert len(arg_out.type.pointee) == 1
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        builder.call(main_function, [mf_params, mf_state, arg_in, arg_out])
+        builder.call(main_function, [mf_params, mf_state, mf_in, arg_out])
 
         return builder
 
