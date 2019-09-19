@@ -2765,17 +2765,22 @@ class Mechanism_Base(Mechanism):
                 #TODO: support more spec options
                 assert False, "Unsupported output state spec: {} ({})".format(os_in_spec, value.type)
 
-    def _gen_llvm_output_states(self, ctx, builder,
-                                mech_params, mech_state, value, so):
-        for i, state in enumerate(self.output_states):
-            os_input = self._gen_llvm_output_state_parse_variable(ctx, builder,
-               mech_params, mech_state, value, state)
-            os_params = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
-            os_state = builder.gep(mech_state, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
-            os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            os_function = ctx.get_llvm_function(state)
-            builder.call(os_function, [os_params, os_state, os_input, os_output])
+    def _gen_llvm_output_states(self, ctx, builder, value,
+                                mech_params, mech_state, mech_in, mech_out):
+        def _get_output_ptr(b, i):
+            ptr = b.gep(mech_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            return b, ptr
 
+        def _fill_input(b, s_input, i):
+            data_ptr = self._gen_llvm_output_state_parse_variable(ctx, b,
+               mech_params, mech_state, value, self.output_states[i])
+            b.store(b.load(data_ptr), s_input)
+            return b
+
+        # Output states are in the 3rd block (idx 2).
+        # After input states, and main function.
+        builder = self._gen_llvm_states(ctx, builder, self.output_states, 2, _get_output_ptr,
+                                        _fill_input, mech_params, mech_state, mech_in)
         return builder
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
@@ -2799,7 +2804,7 @@ class Mechanism_Base(Mechanism):
 
         ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
 
-        builder = self._gen_llvm_output_states(ctx, builder, params, context, ppval, arg_out)
+        builder = self._gen_llvm_output_states(ctx, builder, ppval, params, context, arg_in, arg_out)
         return builder
 
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
