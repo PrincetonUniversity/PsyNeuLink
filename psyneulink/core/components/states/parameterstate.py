@@ -871,54 +871,6 @@ class ParameterState(State_Base):
         raise ParameterStateError("PROGRAM ERROR: Attempt to assign {} to {}; {}s cannot accept {}s".
                                   format(PATHWAY_PROJECTION, self.name, PARAMETER_STATE, PATHWAY_PROJECTION))
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
-        mf_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
-        mf_params = ctx.get_param_ptr(self, builder, params, self.parameters.function.name)
-        state_f = ctx.get_llvm_function(self.function)
-
-        # Extract the original mechanism function's param value
-        f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-
-        # Create a local copy of the function parameters
-        f_params = builder.alloca(state_f.args[0].type.pointee)
-        builder.store(builder.load(mf_params), f_params)
-
-        # FIXME: is this always true, by design?
-        assert len(self.mod_afferents) <= 1
-
-        for idx, afferent in enumerate(self.mod_afferents):
-            # The first input is function input (the old parameter value)
-            # Modulatory projections are ordered after that
-            # FIXME: It's expected to be a single element array,
-            #        so why is the parameter below a scalar?
-            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx + 1), ctx.int32_ty(0)])
-
-            f_mod = builder.load(f_mod_ptr)
-
-            # Get name of the modulated parameter
-            if afferent.sender.modulation is ModulationParam.MULTIPLICATIVE:
-                name = self.function.parameters.multiplicative_param.source.name
-            elif afferent.sender.modulation is ModulationParam.ADDITIVE:
-                name = self.function.parameters.additive_param.source.name
-            elif afferent.sender.modulation is ModulationParam.DISABLE:
-                name = None
-            elif afferent.sender.modulation is ModulationParam.OVERRIDE:
-                # Directly store the value in the output array
-                output_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-                builder.store(f_mod, output_ptr)
-                return builder
-            else:
-                assert False, "Unsupported modulation parameter: {}".format(afferent.sender.modulation)
-
-            if name is not None:
-                f_mod_param_ptr = ctx.get_param_ptr(self.function, builder, f_params, name)
-                builder.store(f_mod, f_mod_param_ptr)
-
-
-        builder.call(state_f, [f_params, mf_state, f_input, arg_out])
-        return builder
-
 def _instantiate_parameter_states(owner, function=None, context=None):
     """Call _instantiate_parameter_state for all params in user_params to instantiate ParameterStates for them
 

@@ -2256,6 +2256,56 @@ class State_Base(State):
         builder.call(main_function, [mf_params, mf_state, mf_in, arg_out])
 
         return builder
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        state_f = ctx.get_llvm_function(self.function)
+
+        # Create a local copy of the function parameters
+        base_params = ctx.get_param_ptr(self, builder, params, self.parameters.function.name)
+        f_params = builder.alloca(state_f.args[0].type.pointee)
+        builder.store(builder.load(base_params), f_params)
+
+        # FIXME: is this always true, by design?
+        assert len(self.mod_afferents) <= 1
+
+        # Apply modulation
+        for idx, afferent in enumerate(self.mod_afferents):
+            # The first input is function data input
+            # Modulatory projections are ordered after that
+            # FIXME: It's expected to be a single element array,
+            #        so why is the parameter below a scalar?
+
+            # Get the modulation value
+            f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx + 1), ctx.int32_ty(0)])
+
+            # Get name of the modulated parameter
+            if afferent.sender.modulation is ModulationParam.MULTIPLICATIVE:
+                name = self.function.parameters.multiplicative_param.source.name
+            elif afferent.sender.modulation is ModulationParam.ADDITIVE:
+                name = self.function.parameters.additive_param.source.name
+            elif afferent.sender.modulation is ModulationParam.DISABLE:
+                name = None
+            elif afferent.sender.modulation is ModulationParam.OVERRIDE:
+                # Directly store the value in the output array
+                output_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                builder.store(builder.load(f_mod_ptr), output_ptr)
+                return builder
+            else:
+                assert False, "Unsupported modulation parameter: {}".format(afferent.sender.modulation)
+
+            # Replace base param with the modulation value
+            if name is not None:
+                f_mod_param_ptr = ctx.get_param_ptr(self.function, builder, f_params, name)
+                builder.store(builder.load(f_mod_ptr), f_mod_param_ptr)
+
+        # OutputState returns 1D array even for scalar functions
+        if arg_out.type != state_f.args[3].type:
+            assert len(arg_out.type.pointee) == 1
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        # Extract the data part of input
+        f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        f_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
+        builder.call(state_f, [f_params, f_state, f_input, arg_out])
+        return builder
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
