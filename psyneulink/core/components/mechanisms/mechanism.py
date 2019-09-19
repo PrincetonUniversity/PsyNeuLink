@@ -2661,7 +2661,8 @@ class Mechanism_Base(Mechanism):
 
         return tuple(state_init_list)
 
-    def _gen_llvm_input_states(self, ctx, builder, params, context, si):
+    def _gen_llvm_input_states(self, ctx, builder,
+                               mech_params, mech_state, mech_input):
         # Allocate temporary storage. We rely on the fact that series
         # of input state results should match the main function input.
         is_output_list = []
@@ -2669,24 +2670,26 @@ class Mechanism_Base(Mechanism):
             is_function = ctx.get_llvm_function(state)
             is_output_list.append(is_function.args[3].type.pointee)
 
-        # Check if all elements are the same
+        # Check if all elements are the same. Function input will be array type if yes.
         if len(set(is_output_list)) == 1:
             is_output_type = pnlvm.ir.ArrayType(is_output_list[0], len(is_output_list))
         else:
             is_output_type = pnlvm.ir.LiteralStructType(is_output_list)
+
         is_output = builder.alloca(is_output_type)
 
         for i, state in enumerate(self.input_states):
-            is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_in = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_params = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_state = builder.gep(mech_state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_in = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
             is_out = builder.gep(is_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
             is_function = ctx.get_llvm_function(state)
-            builder.call(is_function, [is_params, is_context, is_in, is_out])
+            builder.call(is_function, [is_params, is_state, is_in, is_out])
 
         return is_output, builder
 
-    def _gen_llvm_param_states(self, func, f_params_ptr, ctx, builder, params, context, mech_in):
+    def _gen_llvm_param_states(self, func, f_params_ptr, ctx, builder,
+                               mech_params, mech_state, mech_input):
         # Allocate a shadow structure to overload user supplied parameters
         f_params = builder.alloca(f_params_ptr.type.pointee)
 
@@ -2712,8 +2715,8 @@ class Mechanism_Base(Mechanism):
             # Parameter states are in the 4th block (idx 3).
             # After input, function, and output.
             ps_idx = ctx.int32_ty(3)
-            ps_params = builder.gep(params, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
-            ps_context = builder.gep(context, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
+            ps_params = builder.gep(mech_params, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
+            ps_state = builder.gep(mech_state, [ctx.int32_ty(0), ps_idx, ctx.int32_ty(i)])
 
             # Construct the input out of the user value and incoming projection
             ps_input = builder.alloca(ps_function.args[2].type.pointee)
@@ -2724,7 +2727,9 @@ class Mechanism_Base(Mechanism):
             # Copy mod_afferent inputs
             for idx, ps_mod in enumerate(state.mod_afferents):
                 mech_mod_afferent_idx = self.mod_afferents.index(ps_mod)
-                mod_in_ptr = builder.gep(mech_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_states)), ctx.int32_ty(mech_mod_afferent_idx)])
+                mod_in_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
+                                                      ctx.int32_ty(len(self.input_states)),
+                                                      ctx.int32_ty(mech_mod_afferent_idx)])
                 mod_out_ptr = builder.gep(ps_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
                 afferent_val = builder.load(mod_in_ptr)
                 builder.store(afferent_val, mod_out_ptr)
@@ -2732,10 +2737,11 @@ class Mechanism_Base(Mechanism):
             # Parameter states modify corresponding parameter in param struct
             ps_output = param_out_ptr
 
-            builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
+            builder.call(ps_function, [ps_params, ps_state, ps_input, ps_output])
         return f_params, builder
 
-    def _gen_llvm_output_state_parse_variable(self, ctx, builder, params, context, value, state):
+    def _gen_llvm_output_state_parse_variable(self, ctx, builder,
+                                              mech_params, mech_state, value, state):
             os_in_spec = state._variable_spec
             if os_in_spec == OWNER_VALUE:
                 return value
@@ -2748,14 +2754,16 @@ class Mechanism_Base(Mechanism):
                 #TODO: support more spec options
                 assert False, "Unsupported output state spec: {} ({})".format(os_in_spec, value.type)
 
-    def _gen_llvm_output_states(self, ctx, builder, params, context, value, so):
+    def _gen_llvm_output_states(self, ctx, builder,
+                                mech_params, mech_state, value, so):
         for i, state in enumerate(self.output_states):
-            os_input = self._gen_llvm_output_state_parse_variable(ctx, builder, params, context, value, state)
-            os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
-            os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+            os_input = self._gen_llvm_output_state_parse_variable(ctx, builder,
+               mech_params, mech_state, value, state)
+            os_params = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+            os_state = builder.gep(mech_state, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
             os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
             os_function = ctx.get_llvm_function(state)
-            builder.call(os_function, [os_params, os_context, os_input, os_output])
+            builder.call(os_function, [os_params, os_state, os_input, os_output])
 
         return builder
 
