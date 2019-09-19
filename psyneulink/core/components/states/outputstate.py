@@ -1018,7 +1018,7 @@ class OutputState(State_Base):
                 params=params)
 
         # setting here to ensure even deferred init states have this attribute
-        self._variable_spec = None
+        self._variable_spec = variable
 
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
         # if owner is None or reference_value is None:
@@ -1028,7 +1028,7 @@ class OutputState(State_Base):
             # Store args for deferred initialization
             self.init_args = locals().copy()
             del self.init_args['kwargs']
-            # self.init_args['variable'] = variable
+            self.init_args['variable'] = variable
             self.init_args['context'] = context
             self.init_args['name'] = name
             self.init_args['projections'] = projections
@@ -1083,10 +1083,34 @@ class OutputState(State_Base):
         """
         super()._instantiate_attributes_before_function(function=function, context=context)
 
+        # MODIFIED 9/19/19 OLD:
         # If variable has not been assigned, or it is numeric (in which case it can be assumed that
         #    the value was a reference_value generated during initialization/parsing and passed in the constructor
         if self._variable_spec is None or is_numeric(self._variable_spec):
             self._variable_spec = DEFAULT_VARIABLE_SPEC
+
+        # # MODIFIED 9/19/19 NEW: [JDC] MOVED FROM INIT
+        # # FIX: PUT THIS IN DEDICATED OVERRIDE OF COMPONENT VARIABLE-SETTING METHOD??
+        # # If variable has not been assigned, or it is numeric (in which case it can be assumed that
+        # #    the value was a reference_value generated during initialization/parsing and passed in the constructor
+        #
+        # if VARIABLE in self.init_args:
+        #
+        # else:
+        #     if self._variable_spec is None:
+        #         if reference_value is None:
+        #             # variable = owner.defaults.value[0]
+        #             # variable = self.paramClassDefaults[DEFAULT_VARIABLE_SPEC] # Default is 1st item of owner.value
+        #             variable = DEFAULT_VARIABLE_SPEC
+        #         else:
+        #             variable = reference_value
+        #     variable_getter = None
+        #     self._variable_spec = variable
+        #
+        #     if not is_numeric(variable):
+        #         self._variable = variable
+
+        # MODIFIED 9/19/19 END
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -1172,6 +1196,9 @@ class OutputState(State_Base):
 
     def _parse_arg_variable(self, default_variable):
         return _parse_output_state_variable(default_variable, self.owner)
+
+    def _parse_function_variable(self, variable, context=None):
+        return _parse_output_state_variable(variable, self.owner)
 
     @tc.typecheck
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
