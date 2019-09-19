@@ -2704,9 +2704,11 @@ class Mechanism_Base(Mechanism):
             # Copy input data to input structure
             builder = fill_input_data(builder, s_input, i)
 
+            # Avoid recreating combined list in every iteration
+            mod_afferents = self.mod_afferents
             # Copy mod_afferent inputs
             for idx, s_mod in enumerate(state.mod_afferents):
-                mech_mod_afferent_idx = self.mod_afferents.index(s_mod)
+                mech_mod_afferent_idx = mod_afferents.index(s_mod)
                 mod_in_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
                                                       ctx.int32_ty(len(self.input_states)),
                                                       ctx.int32_ty(mech_mod_afferent_idx)])
