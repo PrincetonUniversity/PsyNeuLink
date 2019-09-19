@@ -3582,7 +3582,7 @@ class Mechanism_Base(Mechanism):
             projs.extend(input_state.mod_afferents)
         for parameter_state in self.parameter_states:
             projs.extend(parameter_state.mod_afferents)
-        for output_state in self.input_states:
+        for output_state in self.output_states:
             projs.extend(output_state.mod_afferents)
         return ContentAddressableList(component_type=Projection, list=projs)
 
