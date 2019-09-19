@@ -67,13 +67,17 @@ assigned as the `controller <Composition.controller>` of a `Composition`, that h
 to the Composition: it is used to control all of the parameters that have been `specified for control
 <ControlMechanism_Control_Signals>` in that Composition.  A ControlMechanism can be the `controller
 <Composition.controller>` for only one Composition, and a Composition can have only one `controller
-<Composition.controller>`.  The Composition's `controller <Composition.controller>` is executed either before or after
-all of the other Components in the Composition are executed, including any other ControlMechanisms that belong to it
-(see `Composition_Controller_Execution`).  A ControlMechanism can be assigned as the `controller
-<Composition.controller>` for a Composition by specifying it in the **controller** argument of the Composition's
-constructor, or by using the Composition's `add_controller <Composition.add_controller>` method.  A Composition's
-`controller <Composition.controller>` and its associated Components can be displayed using the Composition's
-`show_graph <Composition.show_graph>` method with its **show_control** argument assigned as `True`.
+<Composition.controller>`.  When a ControlMechanism is assigned as the `controller <Composition.controller>` of a
+Composition (either in the Composition's constructor, or using its `add_controller <Composition.add_controller>`
+method, the ControlMechanism assumes control over all of the parameters that have been `specified for control
+<ControlMechanism_Control_Signals>` for Components in the Composition.  The Composition's `controller
+<Composition.controller>` is executed either before or after all of the other Components in the Composition are
+executed, including any other ControlMechanisms that belong to it (see `Composition_Controller_Execution`).  A
+ControlMechanism can be assigned as the `controller <Composition.controller>` for a Composition by specifying it in
+the **controller** argument of the Composition's constructor, or by using the Composition's `add_controller
+<Composition.add_controller>` method.  A Composition's `controller <Composition.controller>` and its associated
+Components can be displayed using the Composition's `show_graph <Composition.show_graph>` method with its
+**show_control** argument assigned as `True`.
 
 
 .. _ControlMechanism_Creation:
@@ -303,37 +307,34 @@ COMMENT
 *Specifying Parameters to Control*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The parameters controlled by a ControlMechanism are specified in one of two ways:
+This can be specified in either of two ways:
 
-  * in the **control_signals** argument of its constructor; the argument must be a `specification for one more
-    ControlSignals <ControlSignal_Specification>`.
+*On a ControlMechanism itself*
 
-  * in the constructor for the Mechanism to which the parameter belongs, where that `parameter is specified
-    <ParameterState_Specification>`, by including a `ControlProjection` or `ControlSignal` in a `tuple specification
-    <ParameterState_Tuple_Specification>` for the parameter.
+The parameters controlled by a ControlMechanism can be specified in the **control_signals** argument of its constructor;
+the argument must be a `specification for one more ControlSignals <ControlSignal_Specification>`.  The parameter to
+be controlled must belong to a Component in the same `Composition` as the ControlMechanism when it is added to the
+Composition, or an error will occur.
 
-A `ControlSignal` is created for each parameter specified to be controlled by a ControlMechanism.  These are a type of
-`OutputState` that send a `ControlProjection` to the `ParameterState` of the parameter to be controlled. All of the
-ControlSignals for a ControlMechanism are listed in its `control_signals  <ControlMechanism.control_signals>` attribute,
-and all of its ControlProjections are listed in its`control_projections <ControlMechanism.control_projections>`
-attribute. Additional parameters to be controlled can be added to a ControlMechanism by using its `assign_params`
-method to add a `ControlSignal` for each additional parameter.  See `ControlMechanism_Examples`.
+*On a Parameter to be controlled by the `controller <Composition.controller>` of a `Composition`*
 
-COMMENT:
-TBI FOR COMPOSITION
-If the ControlMechanism is created as part of a `System`, the parameters to be controlled by it can be specified in
-one of two ways:
+Control can also be specified for a parameter where the `parameter itself is specified <ParameterState_Specification>`,
+in the constructor for the Component to which it belongs, by including a `ControlProjection`, `ControlSignal` or
+the keyword `CONTROL` in a `tuple specification <ParameterState_Tuple_Specification>` for the parameter.  In this
+case, the specified parameter will be assigned for control by the `controller <controller.Composition>` of any
+`Composition` to which its Component belongs, when the Component is executed in that Composition (see
+`ControlMechanism_Composition_Controller`).  Conversely, when a ControlMechanism is assigned as the `controller
+<Composition.controller>` of a Composition, a `ControlSignal` is created and assigned to the ControlMechanism
+for every parameter of any `Component <Component>` in the Composition that has been `specified for control
+<ParameterState_Modulatory_Specification>`.
 
-  * in the **control_signals** argument of the System's constructor, using one or more `ControlSignal specifications
-    <ControlSignal_Specification>`;
-
-  * where the `parameter is specified <ParameterState_Specification>`, by including a `ControlProjection` or
-    `ControlSignal` in a `tuple specification <ParameterState_Tuple_Specification>` for the parameter.
-
-When a ControlMechanism is created as part of a System, a `ControlSignal` is created and assigned to the
-ControlMechanism for every parameter of any `Component <Component>` in the System that has been specified for control
-using either of the methods above.
-COMMENT
+In general, a `ControlSignal` is created for each parameter specified to be controlled by a ControlMechanism.  These
+are a type of `OutputState` that send a `ControlProjection` to the `ParameterState` of the parameter to be
+controlled. All of the ControlSignals for a ControlMechanism are listed in its `control_signals
+<ControlMechanism.control_signals>` attribute, and all of its ControlProjections are listed in
+its`control_projections <ControlMechanism.control_projections>` attribute. Additional parameters to be controlled can
+be added to a ControlMechanism by using its `assign_params` method to add a `ControlSignal` for each additional
+parameter.  See `ControlMechanism_Examples`.
 
 .. _ControlMechanism_Structure:
 
@@ -785,8 +786,8 @@ class ControlMechanism(ModulatoryMechanism):
 
     control_signals : ContentAddressableList[ControlSignal]
         list of the `ControlSignals <ControlSignals>` for the ControlMechanism, including any inherited from a
-        `system <ControlMechanism.system>` for which it is a `controller <System.controller>` (same as
-        ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
+        `Composition` for which it is a `controller <Composition.controller>` (same as ControlMechanism's
+        `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
         to the `ParameterState` for the parameter it controls
 
     compute_reconfiguration_cost : Function, function or method
