@@ -4057,7 +4057,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         previous_time = self.get_current_function_param("previous_time", context)
 
         # integration_method is a compile time parameter
-        integration_method = self.get_current_function_param("integration_method", context)
+        integration_method = self.parameters.integration_method.get()
         if integration_method == "RK4":
             approximate_values = self._runge_kutta_4_FitzHughNagumo(
                 variable,
@@ -4132,24 +4132,24 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and state) are 2d arrays.
         arg_in = ctx.unwrap_2d_array(builder, arg_in)
-        # Load state values
-        prev = {}
-        for state_el in self.stateful_attributes:
-            ptr = ctx.get_state_ptr(self, builder, state, state_el)
-            prev[state_el] = ctx.unwrap_2d_array(builder, ptr)
+
+        # Get state pointers
+        def _get_state_ptr(x):
+            ptr = ctx.get_state_ptr(self, builder, state, x)
+            return ctx.unwrap_2d_array(builder, ptr)
+        prev = {s: _get_state_ptr(s) for s in self._get_state_ids()}
 
         # Output locations
-        out = {}
-        for idx, out_el in enumerate(('v', 'w', 'time')):
-            val = builder.gep(arg_out, [zero_i32, ctx.int32_ty(idx)])
-            out[out_el] = ctx.unwrap_2d_array(builder, val)
+        def _get_out_ptr(i):
+            ptr = builder.gep(arg_out, [zero_i32, ctx.int32_ty(i)])
+            return ctx.unwrap_2d_array(builder, ptr)
+        out = {l: _get_out_ptr(i) for i, l in enumerate(('v', 'w', 'time'))}
 
         # Load parameters
-        param_vals = {}
-        for p in self._get_param_ids():
-            param_ptr = ctx.get_param_ptr(self, builder, params, p)
-            param_vals[p] = pnlvm.helpers.load_extract_scalar_array_one(
-                                            builder, param_ptr)
+        def _get_param_val(x):
+            ptr = ctx.get_param_ptr(self, builder, params, x)
+            return pnlvm.helpers.load_extract_scalar_array_one(builder, ptr)
+        param_vals = {p: _get_param_val(p) for p in self._get_param_ids()}
 
         inner_args = {"ctx": ctx, "var_ptr": arg_in, "param_vals": param_vals,
                       "out_v": out['v'], "out_w": out['w'],
@@ -4158,10 +4158,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                       "previous_w_ptr": prev['previous_w'],
                       "previous_time_ptr": prev['previous_time']}
 
-        # KDM 11/7/18: since we're compiling with this set, I'm assuming it should be
-        # stateless and considered an inherent feature of the function. Changing parameter
-        # to stateful=False accordingly. If it should be stateful, need to pass a context here
-        method = self.get_current_function_param("integration_method")
+        method = self.parameters.integration_method.get()
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, method + "_body") as args:
             if method == "RK4":
@@ -4173,8 +4170,9 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                                     format(method, self.name))
 
         # Save state
-        result = builder.load(arg_out)
-        builder.store(result, state)
+        for n, sptr in out.items():
+            dptr = prev["previous_" + n]
+            builder.store(builder.load(sptr), dptr)
         return builder
 
     def __gen_llvm_rk4_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr, previous_w_ptr, previous_time_ptr):

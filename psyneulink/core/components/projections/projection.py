@@ -1018,22 +1018,12 @@ class Projection_Base(Projection):
         #    but averts exception when setting paramsCurrent in Component (around line 850)
         pass
 
-    def _get_param_struct_type(self, ctx):
-        return ctx.get_param_struct_type(self.function)
-
-    def _get_state_struct_type(self, ctx):
-        return ctx.get_state_struct_type(self.function)
-
-    def _get_param_initializer(self, context):
-        return self.function._get_param_initializer(context)
-
-    def _get_state_initializer(self, context):
-        return self.function._get_state_initializer(context)
-
     # Provide invocation wrapper
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        mf_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
+        mf_params = ctx.get_param_ptr(self, builder, params, self.parameters.function.name)
         main_function = ctx.get_llvm_function(self.function)
-        builder.call(main_function, [params, context, arg_in, arg_out])
+        builder.call(main_function, [mf_params, mf_state, arg_in, arg_out])
 
         return builder
 
@@ -1041,7 +1031,6 @@ class Projection_Base(Projection):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.function],
             self.parameter_states,
         ))
 

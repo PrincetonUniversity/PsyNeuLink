@@ -146,7 +146,7 @@ from random import randint
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.shellclasses import Function, Mechanism
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
     MODULATORY_PROJECTION, NAME, PARAMETER_STATE_PARAMS, kwComponentCategory, kwPreferenceSetName
@@ -734,7 +734,7 @@ class Function_Base(Function):
         # temporary method until previous values are integrated for all parameters
         value = self.parameters.previous_value._get(context)
         if value is None:
-            value = self.parameters.previous_value._get()
+            value = self.parameters.previous_value._get(Context())
 
         return value
 
@@ -849,69 +849,6 @@ class Function_Base(Function):
             return self.owner.name
         except AttributeError:
             return '<no owner>'
-
-    def _get_compilation_state(self):
-        try:
-            stateful = self.stateful_attributes
-        except AttributeError:
-            return ()
-        return (getattr(self.parameters, sa) for sa in stateful)
-
-    def _get_state_ids(self):
-        return [sp.name for sp in self._get_compilation_state()]
-
-    def _get_state_values(self, context=None):
-        return tuple(sp.get(context) for sp in self._get_compilation_state())
-
-    def _get_state_initializer(self, context):
-        stateful = self._get_state_values(context)
-        # Skip first element of random state (id string)
-        lists = (s.tolist() if not isinstance(s, np.random.RandomState) else s.get_state()[1:] for s in stateful)
-
-        return pnlvm._tupleize(lists)
-
-    def _get_compilation_params(self, context=None):
-        # Filter out known unused/invalid params
-        black_list = {'variable', 'value', 'initializer'}
-        try:
-            # Don't list stateful params, the are included in context
-            black_list.update(self.stateful_attributes)
-        except AttributeError:
-            pass
-        def _is_compilation_param(p):
-            if p.name not in black_list and not isinstance(p, ParameterAlias):
-                val = p.get(context)
-                # Check if the value is string (like integration_method)
-                return not isinstance(val, str)
-            return False
-
-        return filter(_is_compilation_param, self.parameters)
-
-    def _get_param_ids(self, context=None):
-        return [p.name for p in self._get_compilation_params(context)]
-
-    def _get_param_values(self, context=None):
-        param_init = []
-        for p in self._get_compilation_params(context):
-            param = p.get(context)
-            try:
-                # Existence of parameter state changes the shape to array
-                # the base value should remain the same though
-                if p.name in self.owner.parameter_states:
-                    param = [param]
-            except AttributeError:
-                pass
-            if not np.isscalar(param) and param is not None:
-                if p.name == 'matrix': # Flatten matrix
-                    param = np.asfarray(param).flatten().tolist()
-                elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
-                    param = np.asfarray(param[0]).tolist()
-            param_init.append(param)
-
-        return tuple(param_init)
-
-    def _get_param_initializer(self, context):
-        return pnlvm._tupleize(self._get_param_values(context))
 
     def _is_identity(self, context=None):
         # should return True in subclasses if the parameters for context are such that

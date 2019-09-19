@@ -271,7 +271,6 @@ import collections
 import copy
 import datetime
 import logging
-import uuid
 import warnings
 
 from toposort import toposort, toposort_flatten
@@ -543,11 +542,11 @@ class Scheduler(object):
             Attributes
             ----------
 
-                execution_id : uuid.uuid4
+                execution_id
                     the execution_id to initialize counts for
                     default : self.default_execution_id
 
-                base_execution_id : uuid.uuid4
+                base_execution_id
                     if specified, the counts for execution_id will be copied from the counts of base_execution_id
                     default : None
         """
@@ -561,7 +560,7 @@ class Scheduler(object):
 
             if base_execution_id is not None:
                 if base_execution_id not in self.counts_total:
-                    raise SchedulerError('UUID {0} not in {1}.counts_total'.format(base_execution_id, self))
+                    raise SchedulerError('execution_id {0} not in {1}.counts_total'.format(base_execution_id, self))
 
                 self.counts_total[execution_id] = {
                     ts: {n: self.counts_total[base_execution_id][ts][n] for n in self.nodes} for ts in TimeScale
@@ -581,7 +580,7 @@ class Scheduler(object):
 
             if base_execution_id is not None:
                 if base_execution_id not in self.counts_useable:
-                    raise SchedulerError('UUID {0} not in {1}.counts_useable'.format(base_execution_id, self))
+                    raise SchedulerError('execution_id {0} not in {1}.counts_useable'.format(base_execution_id, self))
 
                 self.counts_useable[execution_id] = {
                     node: {n: self.counts_useable[base_execution_id][node][n] for n in self.nodes} for node in self.nodes
@@ -594,7 +593,7 @@ class Scheduler(object):
         if execution_id not in self.execution_list:
             if base_execution_id is not None:
                 if base_execution_id not in self.execution_list:
-                    raise SchedulerError('UUID {0} not in {1}.execution_list'.format(base_execution_id, self))
+                    raise SchedulerError('execution_id {0} not in {1}.execution_list'.format(base_execution_id, self))
 
                 self.execution_list[execution_id] = list(self.execution_list[base_execution_id])
             else:
@@ -608,7 +607,7 @@ class Scheduler(object):
         if execution_id not in self.clocks:
             if base_execution_id is not None:
                 if base_execution_id not in self.clocks:
-                    raise SchedulerError('UUID {0} not in {1}.clocks'.format(base_execution_id, self))
+                    raise SchedulerError('execution_id {0} not in {1}.clocks'.format(base_execution_id, self))
 
                 self.clocks[execution_id] = copy.deepcopy(self.clocks[base_execution_id])
             else:

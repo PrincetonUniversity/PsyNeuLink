@@ -1278,7 +1278,7 @@ class Log:
 
         npa.append([self.data_header] if header else [])
 
-        for eid in sorted(contexts):
+        for eid in sorted(contexts, key=lambda k: str(k)):
             time_values = self._parse_entries_for_time_values(entries, execution_id=eid)
             npa[0].append(eid)
 

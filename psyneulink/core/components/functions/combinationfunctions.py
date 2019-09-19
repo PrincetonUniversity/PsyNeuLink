@@ -423,6 +423,9 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                 arrangement
                     see `arrangement <Rearrange.arrangement>`
 
+                    :default value: None
+                    :type:
+
                 offset
                     see `offset <Rearrange.offset>`
 
@@ -1411,13 +1414,13 @@ class LinearCombination(
         offset = ctx.float_ty(-0.0) if isinstance(offset_type, pnlvm.ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
 
         # assume operation does not change dynamically
-        operation = self.get_current_function_param(OPERATION, context=Context())
+        operation = self.parameters.operation.get()
         if operation is SUM:
             val = ctx.float_ty(-0.0)
         elif operation is PRODUCT:
             val = ctx.float_ty(1.0)
         else:
-            assert False, "Unknown operation: " + operation
+            assert False, "Unknown operation: {}".format(operation)
 
         pow_f = ctx.get_builtin("pow", [ctx.float_ty])
 

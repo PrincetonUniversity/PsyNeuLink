@@ -880,13 +880,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     def monitored_output_states_weights_and_exponents(self, weights_and_exponents_tuples):
         self.monitor_weights_and_exponents = weights_and_exponents_tuples
 
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            self.monitor,
-        ))
-
 
 def _objective_mechanism_role(mech, role):
     if isinstance(mech, ObjectiveMechanism):

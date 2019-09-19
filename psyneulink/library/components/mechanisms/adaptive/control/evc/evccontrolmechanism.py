@@ -817,6 +817,12 @@ class EVCControlMechanism(ControlMechanism):
                     :default value: `ControlSignalGridSearch`
                     :type: `Function`
 
+                modulation
+                    see `modulation <EVCControlMechanism.modulation>`
+
+                    :default value: ModulationParam.MULTIPLICATIVE
+                    :type: `ModulationParam`
+
                 predicted_input
                     see `predicted_input <EVCControlMechanism.predicted_input>`
 
@@ -1352,12 +1358,3 @@ class EVCControlMechanism(ControlMechanism):
             self._combine_outcome_and_cost_function = udf
         else:
             self._combine_outcome_and_cost_function = value
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            [self.value_function],
-            [self.cost_function],
-            [self.combine_outcome_and_cost_function],
-        ))

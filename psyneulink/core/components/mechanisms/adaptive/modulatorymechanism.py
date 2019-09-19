@@ -523,6 +523,17 @@ class DefaultAllocationFunction(Function_Base):
     """
     componentName = 'Default Modulatory Function'
     class Parameters(Function_Base.Parameters):
+        """
+            Attributes
+            ----------
+
+                num_modulatory_signals
+                    see `num_modulatory_signals <DefaultAllocationFunction.num_modulatory_signals>`
+
+                    :default value: 1
+                    :type: int
+
+        """
         num_modulatory_signals = Parameter(1, stateful=False)
 
     @tc.typecheck
@@ -857,49 +868,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                 value
                     see `value <ModulatoryMechanism.value>`
 
-                    :default value: numpy.array([1.])
+                    :default value: numpy.array([[1.]])
                     :type: numpy.ndarray
-
-                outcome
-                    see `outcome <ModulatoryMechanism.outcome>
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
-                control_allocation
-                    see `control_allocation <ModulatoryMechanism.control_allocation>
-
-                    :default value: defaultControlAllocation
-                    :type:
-                    :read only: True
-
-                gating_allocation
-                    see `gating_allocation <ModulatoryMechanism.gating_allocation>
-
-                    :default value: defaultGatingAllocation
-                    :type:
-                    :read only: True
-
-                costs
-                    see `costs <ModulatoryMechanism.costs>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
-                control_signal_costs
-                    see `control_signal_costs <ModulatoryMechanism.control_signal_costs>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
-
-                compute_reconfiguration_cost
-                     see 'compute_reconfiguration_cost <ModulatoryMechanism.compute_reconfiguration_cost>`
-
-                reconfiguration_cost
-                     see 'reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>`
 
                 combine_costs
                     see `combine_costs <ModulatoryMechanism.combine_costs>`
@@ -913,6 +883,46 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                     :default value: lambda outcome, cost: outcome - cost
                     :type: <class 'function'>
 
+                compute_reconfiguration_cost
+                    see `compute_reconfiguration_cost <ModulatoryMechanism.compute_reconfiguration_cost>`
+
+                    :default value: None
+                    :type:
+
+                control_allocation
+                    see `control_allocation <ModulatoryMechanism.control_allocation>`
+
+                    :default value: numpy.array([1.])
+                    :type: numpy.ndarray
+                    :read only: True
+
+                control_signal_costs
+                    see `control_signal_costs <ModulatoryMechanism.control_signal_costs>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                costs
+                    see `costs <ModulatoryMechanism.costs>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                default_allocation
+                    see `default_allocation <ModulatoryMechanism.default_allocation>`
+
+                    :default value: (None,)
+                    :type: <class 'tuple'>
+
+                gating_allocation
+                    see `gating_allocation <ModulatoryMechanism.gating_allocation>`
+
+                    :default value: numpy.array([0.5])
+                    :type: numpy.ndarray
+                    :read only: True
+
                 modulation
                     see `modulation <ModulatoryMechanism.modulation>`
 
@@ -921,6 +931,20 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
                 net_outcome
                     see `net_outcome <ModulatoryMechanism.net_outcome>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                outcome
+                    see `outcome <ModulatoryMechanism.outcome>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                reconfiguration_cost
+                    see `reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>`
 
                     :default value: None
                     :type:

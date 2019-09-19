@@ -1141,6 +1141,96 @@ class Component(object, metaclass=ComponentsMeta):
 
         self._compilation_data = self._CompilationData(owner=self)
 
+        self._update_parameter_components(context)
+
+    def __repr__(self):
+        return '({0} {1})'.format(type(self).__name__, self.name)
+        #return '{1}'.format(type(self).__name__, self.name)
+
+    def __deepcopy__(self, memo):
+        fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
+        newone = fun(self, memo)
+
+        if newone.parameters is not newone.class_parameters:
+            # may be in DEFERRED INIT, so parameters/defaults belongs to class
+            newone.parameters._owner = newone
+            newone.defaults._owner = newone
+
+        return newone
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Compilation support
+    # ------------------------------------------------------------------------------------------------------------------
+    def _get_compilation_state(self):
+        try:
+            stateful = self.stateful_attributes
+        except AttributeError:
+            stateful = []
+
+        return (p for p in self.parameters if p.name in stateful or isinstance(p.get(), Component))
+
+    def _get_state_ids(self):
+        return [sp.name for sp in self._get_compilation_state()]
+
+    def _get_state_values(self, context=None):
+        def _state_values(x):
+            return x._get_state_values(context) if isinstance(x, Component) else x
+        return tuple(map(_state_values, (sp.get(context) for sp in self._get_compilation_state())))
+
+    def _get_state_initializer(self, context):
+        def _convert(x):
+            if isinstance(x, np.random.RandomState):
+                # Skip first element of random state (id string)
+                return x.get_state()[1:]
+            else:
+                return x
+        lists = (_convert(s) for s in self._get_state_values(context))
+        return pnlvm._tupleize(lists)
+
+    def _get_compilation_params(self, context=None):
+        # Filter out known unused/invalid params
+        black_list = {'variable', 'value', 'initializer'}
+        try:
+            # Don't list stateful params, the are included in context
+            black_list.update(self.stateful_attributes)
+        except AttributeError:
+            pass
+        def _is_compilation_param(p):
+            if p.name not in black_list and not isinstance(p, ParameterAlias):
+                val = p.get(context)
+                # Check if the value is string (like integration_method)
+                return not isinstance(val, str)
+            return False
+
+        return filter(_is_compilation_param, self.parameters)
+
+    def _get_param_ids(self, context=None):
+        return [p.name for p in self._get_compilation_params(context)]
+
+    def _get_param_values(self, context=None):
+        def _get_values(p):
+            param = p.get(context)
+            try:
+                # Existence of parameter state changes the shape to array
+                # the base value should remain the same though
+                if p.name in self.owner.parameter_states:
+                    param = [param]
+            except AttributeError:
+                pass
+            if not np.isscalar(param) and param is not None:
+                if p.name == 'matrix': # Flatten matrix
+                    param = np.asfarray(param).flatten().tolist()
+                elif isinstance(param, Component):
+                    param = param._get_param_values(context)
+                elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
+                    param = np.asfarray(param[0]).tolist()
+            return param
+
+        return tuple(map(_get_values, self._get_compilation_params(context)))
+
+    def _get_param_initializer(self, context):
+        return pnlvm._tupleize(self._get_param_values(context))
+
     def _gen_llvm_function(self, extra_args=[]):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_param_struct_type(self).as_pointer(),
@@ -1160,21 +1250,6 @@ class Component(object, metaclass=ComponentsMeta):
             builder.ret_void()
 
         return llvm_func
-
-    def __repr__(self):
-        return '({0} {1})'.format(type(self).__name__, self.name)
-        #return '{1}'.format(type(self).__name__, self.name)
-
-    def __deepcopy__(self, memo):
-        fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
-        newone = fun(self, memo)
-
-        if newone.parameters is not newone.class_parameters:
-            # may be in DEFERRED INIT, so parameters/defaults belongs to class
-            newone.parameters._owner = newone
-            newone.defaults._owner = newone
-
-        return newone
 
     # ------------------------------------------------------------------------------------------------------------------
     # Handlers
@@ -2238,9 +2313,14 @@ class Component(object, metaclass=ComponentsMeta):
             self.params_current = self.paramClassDefaults.copy()
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
 
-    def _initialize_from_context(self, context, base_context=Context(execution_id=None), override=True):
+    def _initialize_from_context(self, context, base_context=Context(execution_id=None), override=True, visited=None):
+        if visited is None:
+            visited = set()
+
         for comp in self._dependent_components:
-            comp._initialize_from_context(context, base_context, override)
+            if comp not in visited:
+                visited.add(comp)
+                comp._initialize_from_context(context, base_context, override, visited=visited)
 
         non_alias_params =  [p for p in self.stateful_parameters if not isinstance(p, ParameterAlias)]
         for param in non_alias_params:
@@ -2256,9 +2336,14 @@ class Component(object, metaclass=ComponentsMeta):
             if param.setter is not None:
                 param._initialize_from_context(context, base_context, override)
 
-    def _delete_contexts(self, *contexts, check_simulation_storage=False):
+    def _delete_contexts(self, *contexts, check_simulation_storage=False, visited=None):
+        if visited is None:
+            visited = set()
+
         for comp in self._dependent_components:
-            comp._delete_contexts(*contexts, check_simulation_storage=check_simulation_storage)
+            if comp not in visited:
+                visited.add(comp)
+                comp._delete_contexts(*contexts, check_simulation_storage=check_simulation_storage, visited=visited)
 
         for param in self.stateful_parameters:
             if not check_simulation_storage or not param.retain_old_simulation_data:
@@ -3362,11 +3447,38 @@ class Component(object, metaclass=ComponentsMeta):
             return self._is_pnl_inherent
 
     @property
+    def _parameter_components(self):
+        """
+            Returns a set of Components that are values of this object's
+            Parameters
+        """
+        try:
+            return self.__parameter_components
+        except AttributeError:
+            self.__parameter_components = set()
+            return self.__parameter_components
+
+    def _update_parameter_components(self, context):
+        # store all Components in Parameters to be used in
+        # _dependent_components for _initialize_from_context
+        for p in self.parameters:
+            try:
+                param_value = p.get(context)
+                if isinstance(param_value, Component):
+                    self._parameter_components.add(param_value)
+            # ControlMechanism and GatingMechanism have Parameters that only
+            # throw these errors
+            except Exception as e:
+                # cannot import the specific exceptions due to circularity
+                if 'attribute is not implemented on' not in str(e):
+                    raise
+
+    @property
     def _dependent_components(self):
         """
             Returns a set of Components that will be executed if this Component is executed
         """
-        return []
+        return list(self._parameter_components)
 
     @property
     def most_recent_context(self):

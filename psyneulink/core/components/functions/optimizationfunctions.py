@@ -773,12 +773,6 @@ class GradientOptimization(OptimizationFunction):
                     :type: list
                     :read only: True
 
-                gradient_function
-                    see `gradient_function <GradientOptimization.gradient_function>`
-
-                    :default value: None
-                    :type:
-
                 annealing_function
                     see `annealing_function <GradientOptimization.annealing_function>`
 
@@ -802,6 +796,12 @@ class GradientOptimization(OptimizationFunction):
 
                     :default value: `ASCENT`
                     :type: str
+
+                gradient_function
+                    see `gradient_function <GradientOptimization.gradient_function>`
+
+                    :default value: None
+                    :type:
 
                 max_iterations
                     see `max_iterations <GradientOptimization.max_iterations>`
@@ -1227,6 +1227,12 @@ class GridSearch(OptimizationFunction):
                     :default value: None
                     :type:
 
+                random_state
+                    see `random_state <GridSearch.random_state>`
+
+                    :default value: None
+                    :type:
+
                 save_samples
                     see `save_samples <GridSearch.save_samples>`
 
@@ -1383,10 +1389,10 @@ class GridSearch(OptimizationFunction):
             return pnlvm.ir.LiteralStructType((ctx.float_ty, ctx.float_ty, ctx.int32_ty))
         assert False, "Unsupported dimension type: {}".format(d)
 
-    def _get_compilation_params(self, context):
-        return [self.parameters.objective_function,
-                self.parameters.search_space,
-                self.parameters.random_state]
+    def _get_param_ids(self):
+        return [self.parameters.objective_function.name,
+                self.parameters.search_space.name,
+                "select_randomly"]
 
     def _get_param_struct_type(self, ctx):
         search_space = [self._get_search_dim(ctx, d) for d in self.search_space]
@@ -1421,6 +1427,10 @@ class GridSearch(OptimizationFunction):
             obj_func_param_init = self.objective_function._get_param_initializer(context)
         return (obj_func_param_init, tuple(grid_init), select_randomly)
 
+    def _get_state_ids(self):
+        return [self.parameters.objective_function.name,
+                self.parameters.random_state.name]
+
     def _get_state_struct_type(self, ctx):
         try:
             # self.objective_function may be bound method of
@@ -1430,7 +1440,8 @@ class GridSearch(OptimizationFunction):
         except AttributeError:
             obj_func_state = ctx.get_state_struct_type(self.objective_function)
         # Get random state
-        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state", Context()))
+        random_state_struct = ctx.convert_python_struct_to_llvm_ir(
+            self.parameters.random_state.get())
         return pnlvm.ir.LiteralStructType([obj_func_state, random_state_struct])
 
     def _get_state_initializer(self, context):
@@ -1441,7 +1452,7 @@ class GridSearch(OptimizationFunction):
             obj_func_state_init = ocm._get_evaluate_state_initializer(context)
         except AttributeError:
             obj_func_state_init = self.objective_function._get_state_initializer(context)
-        random_state = self.get_current_function_param("random_state", context).get_state()[1:]
+        random_state = self.parameters.random_state.get(context).get_state()[1:]
         return (obj_func_state_init, pnlvm._tupleize(random_state))
 
     def _get_output_struct_type(self, ctx):
@@ -1471,12 +1482,16 @@ class GridSearch(OptimizationFunction):
         sample_ptr = builder.alloca(sample_t)
         value_ptr = builder.alloca(value_t)
 
-        obj_param_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        obj_state_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        random_state = ctx.get_state_ptr(self, builder, state,
+                                         self.parameters.random_state.name)
+        obj_state_ptr = ctx.get_state_ptr(self, builder, state,
+                                          self.parameters.objective_function.name)
+        obj_param_ptr = ctx.get_param_ptr(self, builder, params,
+                                          self.parameters.objective_function.name)
+        search_space_ptr = ctx.get_param_ptr(self, builder, params,
+                                             self.parameters.search_space.name)
+        select_random_ptr = ctx.get_param_ptr(self, builder, params, "select_randomly")
 
-        random_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        search_space_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        select_random_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         select_random = builder.trunc(builder.load(select_random_ptr), pnlvm.ir.IntType(1))
 
         opt_count_ptr = builder.alloca(ctx.float_ty)

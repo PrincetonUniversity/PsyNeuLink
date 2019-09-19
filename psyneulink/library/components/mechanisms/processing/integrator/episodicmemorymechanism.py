@@ -182,7 +182,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                 variable
                     see `variable <EpisodicMemoryMechanism.variable>`
 
-                    :default value: [[0], [0]]
+                    :default value: [[0]]
                     :type: list
 
         """

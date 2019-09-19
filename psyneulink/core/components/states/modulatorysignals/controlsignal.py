@@ -669,8 +669,8 @@ class ControlSignal(ModulatorySignal):
                 allocation_samples
                     see `allocation_samples <ControlSignal.allocation_samples>`
 
-                    :default value: numpy.array([0.1, 0.4, 0.7, 1. ])
-                    :type: numpy.ndarray
+                    :default value: None
+                    :type:
 
                 combine_costs_function
                     see `combine_costs_function <ControlSignal.combine_costs_function>`
@@ -1221,18 +1221,3 @@ class ControlSignal(ModulatorySignal):
     @cost.setter
     def cost(self, value):
         self._cost = value
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            [
-                f for f in [
-                    self.intensity_cost_function,
-                    self.adjustment_cost_function,
-                    self.duration_cost_function,
-                    self.combine_costs_function
-                ]
-                if isinstance(f, Function)
-            ]
-        ))
