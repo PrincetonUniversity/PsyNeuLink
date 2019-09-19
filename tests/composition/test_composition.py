@@ -808,7 +808,7 @@ class TestExecutionOrder:
 
         cycle_nodes = [B, C, D, C2]
         for cycle_node in cycle_nodes:
-            cycle_node.output_states[0].parameters.value.set([1.0])
+            cycle_node.output_states[0].parameters.value.set([1.0], override=True)
 
         comp.add_linear_processing_pathway([A, B, MappingProjection(matrix=2.0), C, D, MappingProjection(matrix=5.0), E])
         comp.add_linear_processing_pathway([D, MappingProjection(matrix=3.0), C2, MappingProjection(matrix=4.0), B])

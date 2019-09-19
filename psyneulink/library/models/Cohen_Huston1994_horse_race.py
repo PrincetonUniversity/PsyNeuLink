@@ -169,7 +169,7 @@ Bidirectional_Stroop.show()
 # Bidirectional_Stroop.show_graph(show_dimensions=pnl.ALL)#,show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
 
 # Create threshold function -------------------------------------------------------------------------------------------
-# ECONTEXT_COMMENT is automatically passed into Conditions, and references the execution context in which they are being run,
+# context is automatically passed into Conditions, and references the execution context in which they are being run,
 # which in this case is simply the Bidirectional_Stroop system
 def pass_threshold(response_layer, thresh, context):
     results1 = response_layer.get_output_values(context)[0][0] #red response

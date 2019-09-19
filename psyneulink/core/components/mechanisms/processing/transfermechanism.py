@@ -863,6 +863,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :default value: 0.5
                     :type: float
 
+                integrator_function
+                    see `integrator_function <TransferMechanism.integrator_function>`
+
+                    :default value: `AdaptiveIntegrator`
+                    :type: `Function`
+
                 integrator_function_value
                     see `integrator_function_value <TransferMechanism.integrator_function_value>`
 

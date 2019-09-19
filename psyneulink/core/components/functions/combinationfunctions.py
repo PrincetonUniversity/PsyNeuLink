@@ -423,6 +423,9 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                 arrangement
                     see `arrangement <Rearrange.arrangement>`
 
+                    :default value: None
+                    :type:
+
                 offset
                     see `offset <Rearrange.offset>`
 

@@ -1035,7 +1035,7 @@ class State_Base(State):
                     :read only: True
         """
         function = Parameter(Linear, stateful=False, loggable=False)
-        require_projection_in_composition = Parameter(None, stateful=False, loggable=False, read_only=True)
+        require_projection_in_composition = Parameter(True, stateful=False, loggable=False, read_only=True)
 
     stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 
@@ -2011,7 +2011,7 @@ class State_Base(State):
 
                 # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
                 # should these be manually set despite it not actually being executed?
-                # explicitly getting/setting based on ECONTEXT_COMMENT will be more clear
+                # explicitly getting/setting based on context will be more clear
                 projection.most_recent_context = context
                 projection.function.most_recent_context = context
                 for pstate in projection.parameter_states:

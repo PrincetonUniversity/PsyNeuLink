@@ -599,29 +599,29 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     :default value: [[0], [0]]
                     :type: list
 
-                key_size
-                    see `key_size <ContentAddressableMemory.key_size>`
+                distance_function
+                    see `distance_function <ContentAddressableMemory.distance_function>`
 
-                    :default value: 1
-                    :type: int
-
-                val_size
-                    see `val_size <ContentAddressableMemory.val_size>`
-
-                    :default value: 1
-                    :type: int
+                    :default value: `Distance`(metric=cosine)
+                    :type: `Function`
 
                 duplicate_keys
                     see `duplicate_keys <ContentAddressableMemory.duplicate_keys>`
 
                     :default value: False
-                    :type: bool or string
+                    :type: bool
 
                 equidistant_keys_select
                     see `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`
 
-                    :default value: False
-                    :type: bool
+                    :default value: `RANDOM`
+                    :type: str
+
+                key_size
+                    see `key_size <ContentAddressableMemory.key_size>`
+
+                    :default value: 1
+                    :type: int
 
                 max_entries
                     see `max_entries <ContentAddressableMemory.max_entries>`
@@ -653,11 +653,23 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     :default value: 1.0
                     :type: float
 
+                selection_function
+                    see `selection_function <ContentAddressableMemory.selection_function>`
+
+                    :default value: `OneHot`(mode=MIN_INDICATOR)
+                    :type: `Function`
+
                 storage_prob
                     see `storage_prob <ContentAddressableMemory.storage_prob>`
 
                     :default value: 1.0
                     :type: float
+
+                val_size
+                    see `val_size <ContentAddressableMemory.val_size>`
+
+                    :default value: 1
+                    :type: int
 
         """
         variable = Parameter([[0],[0]])
