@@ -3286,7 +3286,7 @@ def _transfer_fct_mult_param_setter(value, owning_component=None, context=None):
 
 def _transfer_fct_add_param_getter(owning_component=None, context=None):
     try:
-        return owning_component.parameters.transfer_fct.get().parameters.additve_param.get(context)
+        return owning_component.parameters.transfer_fct.get().parameters.additive_param.get(context)
     except (TypeError, IndexError):
         return None
 
