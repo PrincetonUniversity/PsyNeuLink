@@ -83,7 +83,7 @@ class TestContrastiveHebbian:
         )
 
         # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
-        R.output_state.parameters.value.set([0, 0, 0, 0], S)
+        R.output_state.parameters.value.set([0, 0, 0, 0], S, override=True)
         inputs_dict = {R:[0,1,0,1]}
         S.run(num_trials=4,
               inputs=inputs_dict)
@@ -149,7 +149,7 @@ class TestContrastiveHebbian:
             ]
         )
         # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
-        R.output_state.parameters.value.set([0, 0, 0, 0], S)
+        R.output_state.parameters.value.set([0, 0, 0, 0], S, override=True)
         inputs_dict = {R:[0,1,0,1]}
         S.run(num_trials=4,
               inputs=inputs_dict)

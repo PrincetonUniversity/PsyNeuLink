@@ -1084,7 +1084,6 @@ import warnings
 
 import numpy as np
 import typecheck as tc
-import uuid
 
 from PIL import Image
 from os import path, remove
@@ -1597,6 +1596,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :default value: []
                     :type: list
 
+                retain_old_simulation_data
+                    see `retain_old_simulation_data <Composition.retain_old_simulation_data>`
+
+                    :default value: False
+                    :type: bool
+
                 simulation_results
                     see `simulation_results <Composition.simulation_results>`
 
@@ -1761,10 +1766,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @termination_processing.setter
     def termination_processing(self, termination_conds):
         self.scheduler_processing.termination_conds = termination_conds
-
-    def _get_unique_id(self):
-        return uuid.uuid4()
-
 
     # ******************************************************************************************************************
     #                                              GRAPH
@@ -7194,7 +7195,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             **default_execution_id**
         """
 
-        # Traverse processing graph and assign one uuid to all of its nodes
+        # Traverse processing graph and assign one execution_id to all of its nodes
         if context.execution_id is None:
             context.execution_id = self.default_execution_id
 
@@ -7622,8 +7623,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.nodes,
             self.projections,
             [self.input_CIM, self.output_CIM, self.parameter_CIM],
-            self.input_CIM.efferents,
-            self.output_CIM.afferents,
             [self.controller] if self.controller is not None else []
         ))
 

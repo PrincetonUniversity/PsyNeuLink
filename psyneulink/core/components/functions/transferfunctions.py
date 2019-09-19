@@ -273,7 +273,7 @@ class Identity(TransferFunction):  # -------------------------------------------
 
         return variable
 
-    def _get_input_struct_type(self,ctx):
+    def _get_input_struct_type(self, ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
         #       does not udpate its defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -2362,7 +2362,7 @@ class SoftMax(TransferFunction):
         builder.store(new_index, max_ind_ptr)
 
     def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
-        assert self.get_current_function_param(OUTPUT_TYPE, Context()) == ALL
+        assert self.params[OUTPUT_TYPE] == ALL
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
@@ -2392,7 +2392,7 @@ class SoftMax(TransferFunction):
                                         max_ind_ptr=max_ind_ptr,
                                         exp_sum_ptr=exp_sum_ptr)
 
-        output_type = self.get_current_function_param(OUTPUT_TYPE, Context())
+        output_type = self.params[OUTPUT_TYPE]
         exp_sum = builder.load(exp_sum_ptr)
         index = builder.load(max_ind_ptr)
         ptro = builder.gep(arg_out, [ctx.int32_ty(0), index])
@@ -2422,7 +2422,7 @@ class SoftMax(TransferFunction):
         return builder
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
-        if self.get_current_function_param(PER_ITEM, Context()):
+        if self.parameters.per_item.get():
             assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
             assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
             for i in range(arg_in.type.pointee.count):
