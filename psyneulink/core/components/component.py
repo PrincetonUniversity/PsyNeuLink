@@ -631,8 +631,7 @@ def make_parameter_property(name):
             # set to backing field, which is what gets looked for and discarded when creating an object's parameters
             setattr(self, backing_field, value)
         else:
-            # stack level 3 instead of normal 2 to properly show source when setting using dot notation
-            getattr(self.parameters, name)._set(value, self.most_recent_context, _ro_warning_stacklevel=3)
+            getattr(self.parameters, name)._set(value, self.most_recent_context)
 
     return property(getter).setter(setter)
 
@@ -2352,7 +2351,10 @@ class Component(object, metaclass=ComponentsMeta):
                 for context in contexts:
                     param.delete(context)
 
-    def _set_all_parameter_properties_recursively(self, **kwargs):
+    def _set_all_parameter_properties_recursively(self, visited=None, **kwargs):
+        if visited is None:
+            visited = set()
+
         # sets a property of all parameters for this component and all its dependent components
         # used currently for disabling history, but setting logging could use this
         for param_name in self.parameters.names():
@@ -2364,7 +2366,12 @@ class Component(object, metaclass=ComponentsMeta):
                     logger.warning(str(e) + ' Parameter has not been modified.')
 
         for comp in self._dependent_components:
-            comp._set_all_parameter_properties_recursively(**kwargs)
+            if comp not in visited:
+                visited.add(comp)
+                comp._set_all_parameter_properties_recursively(
+                    visited=visited,
+                    **kwargs
+                )
 
     def _set_multiple_parameter_values(self, context, **kwargs):
         """
@@ -2372,7 +2379,7 @@ class Component(object, metaclass=ComponentsMeta):
             For every kwarg k, v pair, will attempt to set self.parameters.<k> to v for context
         """
         for (k, v) in kwargs.items():
-            getattr(self.parameters, k)._set(v, context, _ro_warning_stacklevel=3)
+            getattr(self.parameters, k)._set(v, context)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods

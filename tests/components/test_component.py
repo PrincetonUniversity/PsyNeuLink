@@ -74,3 +74,11 @@ class TestComponent:
         assert T2.input_state.current_execution_count == 3
         assert T2.parameter_states[pnl.SLOPE].current_execution_count == 0
         assert T2.output_state.current_execution_count == 0
+
+    def test__set_all_parameter_properties_recursively(self):
+        A = pnl.ProcessingMechanism(name='A')
+        A._set_all_parameter_properties_recursively(history_max_length=0)
+
+        for c in A._dependent_components:
+            for param in c.parameters:
+                assert param.history_max_length == 0

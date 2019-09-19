@@ -4826,3 +4826,16 @@ class TestNodeRoles:
         comp._analyze_graph()
 
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A, B, C}
+
+
+class TestMisc:
+
+    def test_disable_all_history(self):
+        comp = Composition(name='comp')
+        A = ProcessingMechanism(name='A')
+
+        comp.add_node(A)
+        comp.disable_all_history()
+        comp.run(inputs={A: [2]})
+
+        assert len(A.parameters.value.history[comp.default_execution_id]) == 0
