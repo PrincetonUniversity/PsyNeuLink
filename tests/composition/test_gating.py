@@ -1,7 +1,18 @@
 import numpy as np
+import pytest
 import psyneulink as pnl
 
-def test_gating():
+
+@pytest.mark.composition
+@pytest.mark.benchmark(group="Gating")
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                  pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                  pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                  pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                  ])
+def test_gating(benchmark, mode):
 
     Input_Layer = pnl.TransferMechanism(
         name='Input_Layer',
@@ -35,10 +46,7 @@ def test_gating():
     comp.add_linear_processing_pathway(p_pathway)
     comp.add_node(Gating_Mechanism)
 
-    comp.run(
-        num_trials=4,
-        inputs=stim_list
-    )
+    comp.run(num_trials=4, inputs=stim_list, bin_execute=mode)
 
     expected_results = [
         [np.array([0., 0., 0.])],
@@ -48,8 +56,18 @@ def test_gating():
     ]
 
     np.testing.assert_allclose(comp.results, expected_results)
+    benchmark(comp.run, num_trials=4, inputs=stim_list, bin_execute=mode)
 
-def test_gating_using_ModulatoryMechanism():
+@pytest.mark.composition
+@pytest.mark.benchmark(group="Gating")
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                  pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                  pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                  pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                  ])
+def test_gating_using_ModulatoryMechanism(benchmark, mode):
 
     Input_Layer = pnl.TransferMechanism(
         name='Input_Layer',
@@ -83,10 +101,7 @@ def test_gating_using_ModulatoryMechanism():
     comp.add_linear_processing_pathway(p_pathway)
     comp.add_node(Gating_Mechanism)
 
-    comp.run(
-        num_trials=4,
-        inputs=stim_list,
-    )
+    comp.run(num_trials=4, inputs=stim_list, bin_execute=mode)
 
     expected_results = [
         [np.array([0., 0., 0.])],
@@ -96,3 +111,4 @@ def test_gating_using_ModulatoryMechanism():
     ]
 
     np.testing.assert_allclose(comp.results, expected_results)
+    benchmark(comp.run, num_trials=4, inputs=stim_list, bin_execute=mode)

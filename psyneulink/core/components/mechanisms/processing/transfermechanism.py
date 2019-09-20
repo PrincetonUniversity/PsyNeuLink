@@ -1419,7 +1419,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     val = pnlvm.helpers.fclamp(b1, val, clip[0], clip[1])
                     b1.store(val, ptro)
 
-        builder = self._gen_llvm_output_states(ctx, builder, params, context, mf_out, arg_out)
+        builder = self._gen_llvm_output_states(ctx, builder, mf_out, params, context, arg_in, arg_out)
 
         return builder
 
