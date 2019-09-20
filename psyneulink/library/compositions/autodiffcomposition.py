@@ -644,7 +644,7 @@ class AutodiffComposition(Composition):
         return outputs
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
-    def autodiff_training(self, inputs, targets, epochs, context=None, do_logging=False, scheduler=None,bin_execute=False):
+    def autodiff_training(self, inputs, targets, total_epochs, curr_epoch, context=None, do_logging=False, scheduler=None, bin_execute=False):
 
         # FIX CW 11/1/18: this value of num_inputs assumes all inputs have same length, and that the length of
         # the input for an origin component equals the number of desired trials. We could clean this up
@@ -668,106 +668,103 @@ class AutodiffComposition(Composition):
         for target in targets.values():
             out_size += len(target)
 
-        # iterate over epochs
-        for epoch in range(epochs):
+        # if training in random order, generate random order and set up mapping
+        # from random order back to original order
+        if self.randomize:
+            rand_train_order = np.random.permutation(num_inputs)
+            rand_train_order_reverse[rand_train_order] = np.arange(num_inputs)
 
-            # if training in random order, generate random order and set up mapping
-            # from random order back to original order
+        # set up array to keep track of losses on epoch
+        curr_losses = np.zeros(num_inputs)
+
+        # reset temporary list to keep track of most recent outputs
+        outputs = []
+
+        self.parameters.pytorch_representation._get(context).detach_all()
+        # self.parameters.pytorch_representation._get(context).reset_all()
+
+        # iterate over inputs, targets
+        for t in range(num_inputs):
+
             if self.randomize:
-                rand_train_order = np.random.permutation(num_inputs)
-                rand_train_order_reverse[rand_train_order] = np.arange(num_inputs)
+                input_index = rand_train_order[t]
+            else:
+                input_index = t
+            curr_tensor_inputs = {}
+            curr_tensor_targets = {}
+            for component in inputs.keys():
+                input = inputs[component][input_index]
+                curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
+            for component in targets.keys():
+                target = targets[component][input_index]
+                curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
 
-            # set up array to keep track of losses on epoch
-            curr_losses = np.zeros(num_inputs)
+            # do forward computation on current inputs
+            curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(
+                curr_tensor_inputs,
+                context,
+                do_logging,
+                scheduler=scheduler,
+            )
+            # compute total loss across output neurons for current trial
+            curr_loss = torch.zeros(1, device=self.device).double()
+            for component in curr_tensor_outputs.keys():
+                # possibly add custom loss option, which is a loss function that takes many args
+                # (outputs, targets, weights, and more) and returns a scalar
+                new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
+                curr_loss += new_loss
+            # save average loss across all output neurons on current trial
+            curr_losses[t] = (curr_loss[0].item())/out_size
 
-            # reset temporary list to keep track of most recent outputs
-            outputs = []
+            optimizer = self.parameters.optimizer._get(context)
 
-            self.parameters.pytorch_representation._get(context).detach_all()
-            # self.parameters.pytorch_representation._get(context).reset_all()
+            # backpropagate to compute gradients and perform learning update for parameters
+            optimizer.zero_grad()
+            curr_loss = curr_loss/2
+            printable = {}
+            for component in curr_tensor_outputs.keys():
+                printable[component] = curr_tensor_outputs[component].detach().numpy()
+            np.set_printoptions(precision=3)
+            if self.force_no_retain_graph:
+                curr_loss.backward(retain_graph=False)
+            else:
+                curr_loss.backward(retain_graph=True)
+            self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
+            optimizer.step()
 
-            # iterate over inputs, targets
-            for t in range(num_inputs):
+            # save outputs of model if this is final epoch or if using early stopping
+            curr_output_list = []
+            if patience is not None or curr_epoch == total_epochs - 1:
+                for input_state in self.output_CIM.input_states:
+                    assert(len(input_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
+                    component = input_state.all_afferents[0].sender.owner
+                    curr_output_list.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
+            # for component in curr_tensor_outputs.keys():
+            #     curr_output_list.append(curr_tensor_outputs[component].detach().numpy().copy())
+            outputs.append(curr_output_list)
 
-                if self.randomize:
-                    input_index = rand_train_order[t]
-                else:
-                    input_index = t
-                curr_tensor_inputs = {}
-                curr_tensor_targets = {}
-                for component in inputs.keys():
-                    input = inputs[component][input_index]
-                    curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
-                for component in targets.keys():
-                    target = targets[component][input_index]
-                    curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
+            if curr_epoch == total_epochs - 1 and not do_logging:
+                self.parameters.pytorch_representation._get(context).\
+                    copy_outputs_to_psyneulink(curr_tensor_outputs, context)
 
-                # do forward computation on current inputs
-                curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(
-                    curr_tensor_inputs,
-                    context,
-                    do_logging,
-                    scheduler=scheduler,
-                )
-                # compute total loss across output neurons for current trial
-                curr_loss = torch.zeros(1, device=self.device).double()
-                for component in curr_tensor_outputs.keys():
-                    # possibly add custom loss option, which is a loss function that takes many args
-                    # (outputs, targets, weights, and more) and returns a scalar
-                    new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
-                    curr_loss += new_loss
-                # save average loss across all output neurons on current trial
-                curr_losses[t] = (curr_loss[0].item())/out_size
-
-                optimizer = self.parameters.optimizer._get(context)
-
-                # backpropagate to compute gradients and perform learning update for parameters
-                optimizer.zero_grad()
-                curr_loss = curr_loss/2
-                printable = {}
-                for component in curr_tensor_outputs.keys():
-                    printable[component] = curr_tensor_outputs[component].detach().numpy()
-                np.set_printoptions(precision=3)
-                if self.force_no_retain_graph:
-                    curr_loss.backward(retain_graph=False)
-                else:
-                    curr_loss.backward(retain_graph=True)
-                self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
-                optimizer.step()
-
-                # save outputs of model if this is final epoch or if using early stopping
-                curr_output_list = []
-                if patience is not None or epoch == epochs - 1:
-                    for input_state in self.output_CIM.input_states:
-                        assert(len(input_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
-                        component = input_state.all_afferents[0].sender.owner
-                        curr_output_list.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
-                # for component in curr_tensor_outputs.keys():
-                #     curr_output_list.append(curr_tensor_outputs[component].detach().numpy().copy())
-                outputs.append(curr_output_list)
-
-                if epoch == epochs - 1 and not do_logging:
-                    self.parameters.pytorch_representation._get(context).\
-                        copy_outputs_to_psyneulink(curr_tensor_outputs, context)
-
-                scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+            scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
             # save average loss on the current epoch
             average_loss = np.mean(curr_losses)
             self.parameters.losses._get(context).append(average_loss)
 
-            # update early stopper with most recent average loss
-            if self.parameters.patience._get(context) is not None:
-                should_stop = early_stopper.step(average_loss)
-                if should_stop:
-                    logger.warning('Due to early stopping, stopped training early after {} epochs'.format(epoch))
-                    if self.randomize:
-                        outputs_list = [None] * len(outputs)
-                        for i in range(len(outputs)):
-                            outputs_list[i] = outputs[int(rand_train_order_reverse[i])]
-                        return outputs_list
-                    else:
-                        return outputs
+        # update early stopper with most recent average loss
+        if self.parameters.patience._get(context) is not None:
+            should_stop = early_stopper.step(average_loss)
+            if should_stop:
+                logger.warning('Due to early stopping, stopped training early after {} epochs'.format(curr_epoch))
+                if self.randomize:
+                    outputs_list = [None] * len(outputs)
+                    for i in range(len(outputs)):
+                        outputs_list[i] = outputs[int(rand_train_order_reverse[i])]
+                    return outputs_list
+                else:
+                    return outputs
 
         if self.randomize:  # save outputs in a list in correct order, return them
             outputs_list = [None] * len(outputs)
@@ -848,8 +845,9 @@ class AutodiffComposition(Composition):
             if "epochs" in inputs:
                 autodiff_epochs = inputs["epochs"]
 
-            output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, context, do_logging, scheduler_processing)
-            self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
+            for current_epoch in range(autodiff_epochs):
+                output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, current_epoch, context, do_logging, scheduler_processing)
+                self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
 
             context.add_flag(ContextFlags.PROCESSING)
             # note that output[-1] might not be the truly most recent value
