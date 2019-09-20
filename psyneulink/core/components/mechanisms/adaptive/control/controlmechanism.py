@@ -32,8 +32,7 @@ Overview
 
 A ControlMechanism is a `ModulatoryMechanism <ModulatoryMechanism>` that `modulates the value(s)
 <ModulatorySignal_Modulation>` of one or more `States <State>` of other Mechanisms in the `Composition` to which it
-belongs.  It is distinct from a ModulatoryMechanism in having a set of cost functions and costs that it can compute,
-based on its `control_allocation <ControlMechanism.control_allocation>`.  In general, a ControlMechanism is used to
+belongs.  In general, a ControlMechanism is used to
 modulate the `ParameterState(s) <ParameterState>` of one or more Mechanisms, that determine the value(s) of
 the `function <Mechanism_Base.function>` of those Mechanism(s).  However, a ControlMechanis can also be used to
 modulate the function of an `InputState` or `OutputState`, much like a `GatingMechanism`.  A
