@@ -34,28 +34,34 @@ Sections
 Overview
 --------
 
-A ControlMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that `modulates the value(s)
-<ModulatorySignal_Modulation>` of one or more `ParameterStates <ParameterState>` of other Mechanisms in the
-`Composition` to which it belongs.  It's `function <ControlMechanism.function>` calculates a `control_allocation
-<ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
-<ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputStates that are used to that
-modulate the parameters of other Mechanisms' `function <Mechanism_Base.function>` (see `ControlSignal_Modulation` for a
-more detailed description of how modulation operates).  A ControlMechanism can be configured to monitor the outputs
-of other Mechanisms in order to determine its `control_allocation <ControlMechanism.control_allocation>`, by specifying
-these in the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>` of its constructor,
-or in the **monitor** `argument <ObjectiveMechanism_Monitor>` of an ObjectiveMechanism` assigned to its
+A ControlMechanism is a `ModulatoryMechanism <ModulatoryMechanism>` that `modulates the value(s)
+<ModulatorySignal_Modulation>` of one or more `States <State>` of other Mechanisms in the `Composition` to which it
+belongs.  It is distinct from a ModulatoryMechanism in having cost and net_outcome attributes, and associated
+functions (see `ControlMechanism_Costs_NetOutcome`), that it can compute based on its `control_allocation
+<ControlMechanism.control_allocation>`.
+
+In general, a ControlMechanism is used to modulate the `ParameterState(s) <ParameterState>` of one or more  Mechanisms,
+that determine the value(s) of the parameter(s) of the `function(s) <Mechanism_Base.function>` of those Mechanism(s).
+However, a ControlMechanism can also be used to modulate the function of `InputStates <InputState>` and/or `OutputState
+<OutputStates>`, much like a `GatingMechanism`.  A ControlMechanism's `function <ControlMechanism.function>` calculates
+a `control_allocation <ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
+<ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputStates that are used to modulate
+the parameters of other Mechanisms' `function <Mechanism_Base.function>` (see `ControlSignal_Modulation` for a more
+detailed description of how modulation operates).  A ControlMechanism can be configured to monitor the outputs of other
+Mechanisms in order to determine its `control_allocation <ControlMechanism.control_allocation>`, by specifying these
+in the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>` of its constructor, or in
+the **monitor** `argument <ObjectiveMechanism_Monitor>` of an ObjectiveMechanism` assigned to its
 **objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>` (see `ControlMechanism_Creation`
-below).  A ControlMechanism can also be assigned as the `controller <Composition.controller>` of a `Composition`,  which
-has a special relation to that Composition: it generally executes either before or after all of the other Mechanisms in
-that Composition (see `Composition_Controller_Execution`).  The OutputStates monitored by the ControlMechanism or its
-`objective_mechanism <ControlMechanism.objective_mechanism>`, and the parameters it modulates can be listed using its
-`show <ControlMechanism.show>` method.
+below).  A ControlMechanism can also be assigned as the `controller <Composition.controller>` of a `Composition`,
+which has a special relation to that Composition: it generally executes either before or after all of the other
+Mechanisms in that Composition (see `Composition_Controller_Execution`).  The OutputStates monitored by the
+ControlMechanism or its `objective_mechanism <ControlMechanism.objective_mechanism>`, and the parameters it modulates
+can be listed using its `show <ControlMechanism.show>` method.
 
 Note that a ControlMechanism is a subclass of `ModulatoryMechanism` that is restricted to using only `ControlSignals
-<ControlSignal>` and not GatingSignals.  Accordingly, its constructor has a **control_signals** argument in place of
-a **modulatory_signals** argument, and is restricted to the modulation of `ParameterStates <ParameterState>`.  It also
-lacks any attributes related to gating.  In all other respects it is identical to its parent class,
-ModulatoryMechanism
+<ControlSignal>`.  Accordingly, its constructor has a **control_signals** argument in place of a **modulatory_signals**
+argument.  It also has `cost function, costs, and net_outcome <ControlMechanism_Costs_NetOutcome>` attributes, but lacks
+any attributes related to gating.  In all other respects it is identical to its parent class, ModulatoryMechanism.
 
 .. _ControlMechanism_Composition_Controller:
 
