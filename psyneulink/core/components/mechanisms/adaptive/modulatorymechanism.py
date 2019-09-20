@@ -1666,26 +1666,11 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             dependent_projections.add(self._objective_projection)
 
             for aff in self._objective_mechanism.afferents:
-                # MODIFIED 9/15/19 OLD:
                 dependent_projections.add(aff)
-                # # MODIFIED 9/15/19 NEW: [JDC]
-                # # NOTE: THIS CAUSES AN ERROR WHEN CONTRROLLER IS ADDED TO COMP SINCE PROJECTION HAS NOT BEEN ACTIVATED
-                # if aff.sender.owner in composition.nodes:
-                #     dependent_projections.add(aff)
-                # else:
-                #     aff.sender.owner.aux_components.append(aff)
-                # MODIFIED 9/15/19 END
 
         for ms in self.modulatory_signals:
             for eff in ms.efferents:
-                # MODIFIED 9/15/19 OLD:
                 dependent_projections.add(eff)
-                # # MODIFIED 9/15/19 NEW: [JDC] - SAME PROBLEM AS ABOVE
-                # if eff.receiver.owner in composition.nodes:
-                #     dependent_projections.add(eff)
-                # else:
-                #     eff.receiver.owner.aux_components.append(eff)
-                # MODIFIED 9/15/19 END
 
         # FIX: 9/15/19 - HOW IS THIS DIFFERENT THAN objective_mechanism's AFFERENTS ABOVE?
         # assign any deferred init objective mech monitored output state projections to this system

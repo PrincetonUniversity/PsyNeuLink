@@ -4226,14 +4226,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
 
         # Get rid of default ControlSignal if it has no ControlProjections
-        # # MODIFIED 9/15/19 NEW:
-        # if (len(controller.control_signals)==1
-        #         and controller.control_signals[0].name=='ControlSignal-0'
-        #         and not controller.control_signals[0].efferents):
-        #     controller.remove_states(controller.control_signals[0])
-        # MODIFIED 9/15/19 NEWER:
         controller._remove_default_modulatory_signal(type=CONTROL_SIGNAL)
-        # MODIFIED 9/15/19 END
 
         # Add any ControlSignals specified for ParameterStates of nodes already in the Composition
         control_signal_specs = self._get_control_signals_for_composition()
