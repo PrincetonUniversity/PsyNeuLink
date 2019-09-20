@@ -2161,7 +2161,8 @@ class Component(object, metaclass=ComponentsMeta):
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
 
         # assign defaults based on pass in params and class defaults
-        defaults = self.class_defaults.values(show_all=True).copy()
+        defaults = copy.deepcopy(self.class_defaults.values(show_all=True))
+
         try:
             function_params = param_defaults[FUNCTION_PARAMS]
         except KeyError:
@@ -2885,7 +2886,7 @@ class Component(object, metaclass=ComponentsMeta):
             if function.owner is None and not function.is_pnl_inherent:
                 self.function = function
             else:
-                self.function = self._clone_function(function)
+                self.function = copy.deepcopy(function)
 
             # setting init status because many mechanisms change execution or validation behavior
             # during initialization
@@ -3036,13 +3037,6 @@ class Component(object, metaclass=ComponentsMeta):
                     param_state.source = self.function
         except AttributeError:
             pass
-
-    def _clone_function(self, function):
-        from psyneulink.core.components.functions.function import Function_Base, FunctionRegistry
-        fct = copy.deepcopy(function)
-        # ensure copy does not have identical name
-        register_category(fct, Function_Base, fct.name, FunctionRegistry)
-        return fct
 
     @property
     def current_execution_count(self):
