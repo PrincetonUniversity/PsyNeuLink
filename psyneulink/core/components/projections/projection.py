@@ -858,14 +858,6 @@ class Projection_Base(Projection):
                 receiver = receiver.input_state
             assert isinstance(receiver, (State)), \
                 f"Illegal receiver ({receiver}) detected in _instantiate_sender() method for {self.name}"
-            # # MODIFIED 9/14/19 OLD:
-            # if receiver._check_for_duplicate_projections(self):
-            #     raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
-            #                                    f"{receiver.owner.name} that already has an identical "
-            #                                    f"{Projection.__name__}.")
-            # else:
-            #     self.sender.efferents.append(self)
-            # MODIFIED 9/14/19 NEW:
             dup =  receiver._check_for_duplicate_projections(self)
             # If duplicate is a deferred_init Projection, delete it and use one currently being instantiated
             # IMPLEMENTATION NOTE:  this gives precedence to a Projection to a Component specified by its sender
@@ -879,7 +871,6 @@ class Projection_Base(Projection):
                                                    f"{receiver.owner.name} that already has an identical "
                                                    f"{Projection.__name__}.")
             self.sender.efferents.append(self)
-            # MODIFIED 9/14/19 END:
         else:
             raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} from {sender.name} of "
                                            f"{sender.owner.name} that already has an identical {Projection.__name__}.")

@@ -968,18 +968,8 @@ class InputState(State_Base):
 
         Returns redundant Projection if found, otherwise False.
         """
-        # # MODIFIED 9/14/19 OLD:
-        # # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_STATE
-        # if any(proj.sender == projection.sender and proj != projection for proj in self.path_afferents):
-        #     from psyneulink.core.components.projections.projection import Projection
-        #     warnings.warn(f'{Projection.__name__} from {projection.sender.name}  {projection.sender.__class__.__name__}'
-        #                   f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
-        #                   f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
-        #     return True
-        # return False
-        # MODIFIED 9/14/19 NEW:
+
         # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_STATE
-        # FIX: 9/14/19 - RESTORE WARNING
         duplicate = next(iter([proj for proj in self.path_afferents
                                if ((proj.sender == projection.sender and proj != projection)
                                    or (proj.initialization_status == ContextFlags.DEFERRED_INIT
@@ -990,7 +980,6 @@ class InputState(State_Base):
                           f' of {projection.sender.owner.name} to {self.name} {self.__class__.__name__} of '
                           f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
         return duplicate
-        # MODIFIED 9/14/19 END:
 
     def _parse_function_variable(self, variable, context=None):
         variable = super()._parse_function_variable(variable, context)

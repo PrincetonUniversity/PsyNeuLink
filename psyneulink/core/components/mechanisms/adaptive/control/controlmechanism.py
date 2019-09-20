@@ -14,17 +14,13 @@ Sections
   * `ControlMechanism_Overview`
   * `ControlMechanism_Composition_Controller`
   * `ControlMechanism_Creation`
-  COMMENT:
       - `ControlMechanism_Monitor_for_Control`
       - `ControlMechanism_ObjectiveMechanism`
       - `ControlMechanism_Control_Signals`
-  COMMENT
   * `ControlMechanism_Structure`
-  COMMENT:
       - `ControlMechanism_Input`
       - `ControlMechanism_Function`
       - `ControlMechanism_Costs_NetOutcome`
-  COMMENT
   * `ControlMechanism_Execution`
   * `ControlMechanism_Examples`
   * `ControlMechanism_Class_Reference`
@@ -206,7 +202,7 @@ Note that the MappingProjections created by specification of a ControlMechanism'
 <ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument in the constructor for an
 ObjectiveMechanism in the ControlMechanism's **objective_mechanism** `argument
 <ControlMechanism_Objective_Mechanism_Argument>` supercede any MappingProjections that would otherwise be created for
-them when included in the **pathway**  argumentof a Composition's `add_linear_processing_pathway
+them when included in the **pathway** argument of a Composition's `add_linear_processing_pathway
 <Composition.add_linear_processing_pathway>` method.
 
 .. _ControlMechanism_ObjectiveMechanism:
