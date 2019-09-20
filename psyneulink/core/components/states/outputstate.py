@@ -1039,11 +1039,8 @@ class OutputState(State_Base):
 
         self.reference_value = reference_value
 
-        # FIX: PUT THIS IN DEDICATED OVERRIDE OF COMPONENT VARIABLE-SETTING METHOD??
         if variable is None:
             if reference_value is None:
-                # variable = owner.defaults.value[0]
-                # variable = self.paramClassDefaults[DEFAULT_VARIABLE_SPEC] # Default is 1st item of owner.value
                 variable = DEFAULT_VARIABLE_SPEC
             else:
                 variable = reference_value
@@ -1083,34 +1080,10 @@ class OutputState(State_Base):
         """
         super()._instantiate_attributes_before_function(function=function, context=context)
 
-        # MODIFIED 9/19/19 OLD:
         # If variable has not been assigned, or it is numeric (in which case it can be assumed that
         #    the value was a reference_value generated during initialization/parsing and passed in the constructor
         if self._variable_spec is None or is_numeric(self._variable_spec):
             self._variable_spec = DEFAULT_VARIABLE_SPEC
-
-        # # MODIFIED 9/19/19 NEW: [JDC] MOVED FROM INIT
-        # # FIX: PUT THIS IN DEDICATED OVERRIDE OF COMPONENT VARIABLE-SETTING METHOD??
-        # # If variable has not been assigned, or it is numeric (in which case it can be assumed that
-        # #    the value was a reference_value generated during initialization/parsing and passed in the constructor
-        #
-        # if VARIABLE in self.init_args:
-        #
-        # else:
-        #     if self._variable_spec is None:
-        #         if reference_value is None:
-        #             # variable = owner.defaults.value[0]
-        #             # variable = self.paramClassDefaults[DEFAULT_VARIABLE_SPEC] # Default is 1st item of owner.value
-        #             variable = DEFAULT_VARIABLE_SPEC
-        #         else:
-        #             variable = reference_value
-        #     variable_getter = None
-        #     self._variable_spec = variable
-        #
-        #     if not is_numeric(variable):
-        #         self._variable = variable
-
-        # MODIFIED 9/19/19 END
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -1133,22 +1106,6 @@ class OutputState(State_Base):
             _is_modulatory_spec
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 
-        # Treat as ModulatoryProjection spec if it is a ModulatoryProjection, ModulatorySignal or AdaptiveMechanism
-        # or one of those is the first or last item of a ProjectionTuple
-        # modulatory_projections = [proj for proj in projections
-        #                           if (isinstance(proj, (ModulatoryProjection_Base,
-        #                                                ModulatorySignal,
-        #                                                AdaptiveMechanism_Base)) or
-        #                               (isinstance(proj, ProjectionTuple) and
-        #                                any(isinstance(item, (ModulatoryProjection_Base,
-        #                                                    ModulatorySignal,
-        #                                                    AdaptiveMechanism_Base)) for item in proj)))]
-        # modulatory_projections = [proj for proj in projections
-        #                           if ((_is_modulatory_spec(proj) and
-        #                               isinstance(proj, ProjectionTuple)) or
-        #                                any((_is_modulatory_spec(item)
-        #                                     or isinstance(item, ProjectionTuple))
-        #                                    for item in proj))]
         modulatory_projections = [proj for proj in projections if _is_modulatory_spec(proj)]
         self._instantiate_projections_to_state(projections=modulatory_projections, context=context)
 
@@ -1167,18 +1124,8 @@ class OutputState(State_Base):
 
         Returns redundant Projection if found, otherwise False.
         """
-        # # MODIFIED 9/14/19 OLD:
-        # # FIX: 7/22/19 - CHECK IF RECEIVER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_INPUT_STATE
-        # if any(proj.receiver == projection.receiver and proj != projection for proj in self.efferents):
-        #     from psyneulink.core.components.projections.projection import Projection
-        #     warnings.warn(f'{Projection.__name__} from {projection.sender.name} of {projection.sender.owner.name} '
-        #                   f'to {self.name} of {self.owner.name} already exists; will ignore additional '
-        #                   f'one specified ({projection.name}).')
-        #     return True
-        # return False
-        # MODIFIED 9/14/19 NEW:
+
         # FIX: 7/22/19 - CHECK IF RECEIVER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_INPUT_STATE
-        # FIX: 9/14/19 - RESTORE WARNING
         duplicate = next(iter([proj for proj in self.efferents
                                if ((proj.receiver == projection.receiver and proj != projection)
                                    or (proj.initialization_status == ContextFlags.DEFERRED_INIT
@@ -1189,7 +1136,6 @@ class OutputState(State_Base):
                           f'to {self.name} of {self.owner.name} already exists; will ignore additional '
                           f'one specified ({projection.name}).')
         return duplicate
-        # MODIFIED 9/14/19 END:
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state

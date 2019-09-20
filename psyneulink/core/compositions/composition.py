@@ -1112,6 +1112,8 @@ from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.state import State, _parse_state_spec
 from psyneulink.core.components.states.inputstate import InputState, SHADOW_INPUTS
+from psyneulink.core.components.states.inputstate import InputState, SHADOW_INPUTS
+from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -1949,9 +1951,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # If the sender or receiver is an AutoAssociativeProjection, then the owner will be another projection
                 # instead of a mechanism, so we need to use owner_mech instead.
                 sender_node = proj_spec[0].sender.owner
+                receiver_node = proj_spec[0].receiver.owner
                 if isinstance(sender_node, AutoAssociativeProjection):
                     sender_node = proj_spec[0].sender.owner.owner_mech
-                receiver_node = proj_spec[0].receiver.owner
                 if isinstance(receiver_node, AutoAssociativeProjection):
                     receiver_node = proj_spec[0].receiver.owner.owner_mech
                 if sender_node in self.nodes and \
@@ -1982,18 +1984,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Add ControlSignals to controller and ControlProjections
         #     to any parameter_states specified for control in node's constructor
-        # FIX: 9/14/19 - HANDLE THIS USING AUX_COMPONENTS IN MECHANISM CONSTRUCTOR?
         if self.controller:
             deferred_init_control_specs = node._get_parameter_state_deferred_init_control_specs()
-            # # MODIFIED 9/15/19 NEW:
-            # if deferred_init_control_specs:
-            #     for ctl_sig_specs in deferred_init_control_specs.values():
-            #         # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-            #         for ctl_sig_spec in ctl_sig_specs:
-            #             self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
-            #                                                    context=Context(source=ContextFlags.COMPOSITION))
-            #             self.controller._activate_projections_for_compositions(self)
-            # MODIFIED 9/15/19 NEWER:
             if deferred_init_control_specs:
                 self.controller._remove_default_modulatory_signal(type=CONTROL_SIGNAL)
                 for ctl_sig_spec in deferred_init_control_specs:
@@ -2001,7 +1993,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
                                                            context=Context(source=ContextFlags.COMPOSITION))
                     self.controller._activate_projections_for_compositions(self)
-            # MODIFIED 9/15/19 END
 
     def add_nodes(self, nodes, required_roles=None):
         """
@@ -2897,7 +2888,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Mechanism spec -- update receiver_input_state to reference primary InputState
             receiver_input_state = receiver.input_state
 
-        elif isinstance(receiver, InputState):
+        elif isinstance(receiver, (InputState, ParameterState)):
             # InputState spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
             receiver_mechanism = graph_receiver = receiver.owner
 
@@ -2936,8 +2927,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nested_compositions.append(graph_receiver)
             # Otherwise, there was a mistake in the spec
             if receiver is None:
-                raise CompositionError(f"receiver arg ({repr(receiver_arg)}) in call to add_projection method of "
-                                       f"{self.name} is not in it or any of its nested {Composition.__name__}s.")
+                # raise CompositionError(f"receiver arg ({repr(receiver_arg)}) in call to add_projection method of "
+                #                        f"{self.name} is not in it or any of its nested {Composition.__name__}s.")
+                if isinstance(receiver_arg, State):
+                    receiver_str = f"{receiver_arg} of {receiver_arg.owner}"
+                else:
+                    receiver_str = f"{receiver_arg}"
+                raise CompositionError(f"{receiver_str}, specified as receiver of {Projection.__name__} from "
+                                       f"{sender.name}, is not in {self.name} or any {Composition.__name__}s nested "
+                                       f"within it.")
 
         return receiver, receiver_mechanism, graph_receiver, receiver_input_state, \
                nested_compositions, learning_projection
@@ -3124,12 +3122,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Tuples (Mechanism, `NodeRoles <NodeRole>`) can be used to assign `required_roles
         <Composition.add_node.required_roles>` to Mechanisms.
 
-        COMMENT:
-        # FIX 8/27/19 [JDC]:  Generalize to ModulatoryMechanism
-        COMMENT
-        Note that any specifications of a ControlMechanism's **monitor_for_control** `argument
-        <ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument specified in the constructor for an
-        ObjectiveMechanism in the **objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>`
+        Note that any specifications of a ModulatoryMechanism's **monitor_for_modulation** `argument
+        <ModulatoryMechanism_Monitor_for_Modulation_Argument>` or the **monitor** argument specified in the constructor
+        for an ObjectiveMechanism in the **objective_mechanism** `argument <ModulatoryMechanism_ObjectiveMechanism>`
         supercede any MappingProjections that would otherwise be created for them when specified in the **pathway**
         argument.
         """
@@ -3199,7 +3194,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            f'or in the {repr(MONITOR_FOR_CONTROL)} arg of its associated {ControlMechanism.__name__}'
             warnings.warn(f'No new {Projection.__name__}s were added to {item.name} that was included in '
                           f'the {repr(PATHWAY)} arg of add_linear_processing_pathway for {self.name}, '
-                          f'since they were already specified {arg_name}.')
+                          f'since there were ones already specified {arg_name}.')
             del pathway[pathway.index(item)]
         # MODIFIED 8/12/19 END
 
@@ -4228,14 +4223,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
 
         # Get rid of default ControlSignal if it has no ControlProjections
-        # # MODIFIED 9/15/19 NEW:
-        # if (len(controller.control_signals)==1
-        #         and controller.control_signals[0].name=='ControlSignal-0'
-        #         and not controller.control_signals[0].efferents):
-        #     controller.remove_states(controller.control_signals[0])
-        # MODIFIED 9/15/19 NEWER:
         controller._remove_default_modulatory_signal(type=CONTROL_SIGNAL)
-        # MODIFIED 9/15/19 END
 
         # Add any ControlSignals specified for ParameterStates of nodes already in the Composition
         control_signal_specs = self._get_control_signals_for_composition()
@@ -4278,20 +4266,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if node.controller:
                     control_signal_specs.append(node._get_control_signals_for_composition())
             elif isinstance(node, Mechanism):
-                # for parameter_state in node._parameter_states:
-                #     for proj in parameter_state.mod_afferents:
-                #         if proj.initialization_status == ContextFlags.DEFERRED_INIT:
-                #             proj_control_signal_specs = proj.control_signal_params or {}
-                #             proj_control_signal_specs.update({PROJECTIONS: [proj]})
-                #             control_signal_specs.append(proj_control_signal_specs)
-                # FIX: 9/14/19 - None GETS APPENDED (ALSO FIX IN add_node)
-                # # MODIFIED 9/15/19 NEW:
-                # ctl_sig_spec = node._get_parameter_state_deferred_init_control_specs()
-                # if ctl_sig_spec:
-                #     control_signal_specs.append(ctl_sig_spec)
-                # MODIFIED 9/15/19 NEWER:
                 control_signal_specs.extend(node._get_parameter_state_deferred_init_control_specs())
-                # MODIFIED 9/15/19 END
         return control_signal_specs
 
     def _build_predicted_inputs_dict(self, predicted_input):
