@@ -2335,13 +2335,13 @@ class State_Base(State):
             f_mod_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx + 1), ctx.int32_ty(0)])
 
             # Get name of the modulated parameter
-            if afferent.sender.modulation is ModulationParam.MULTIPLICATIVE:
+            if afferent.sender.modulation is MULTIPLICATIVE:
                 name = self.function.parameters.multiplicative_param.source.name
-            elif afferent.sender.modulation is ModulationParam.ADDITIVE:
+            elif afferent.sender.modulation is ADDITIVE:
                 name = self.function.parameters.additive_param.source.name
-            elif afferent.sender.modulation is ModulationParam.DISABLE:
+            elif afferent.sender.modulation is DISABLE:
                 name = None
-            elif afferent.sender.modulation is ModulationParam.OVERRIDE:
+            elif afferent.sender.modulation is OVERRIDE:
                 # Directly store the value in the output array
                 output_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(builder.load(f_mod_ptr), output_ptr)
