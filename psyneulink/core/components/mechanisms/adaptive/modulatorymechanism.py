@@ -1406,16 +1406,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             if modulatory_signal == existing_mod_sig:
                 continue
 
-            # # MODIFIED 9/14/19 NEW:
-            # # Return if *all* projections from modulatory_signal are identical to ones in an existing modulatory_signal
-            # if all(
-            #         any(new_p.receiver == existing_p.receiver
-            #            for existing_p in existing_mod_sig.efferents) for new_p in modulatory_signal.efferents):
-            #     if self.verbosePref:
-            #         warnings.warn(f"Specification of {modulatory_signal.name} for {self.name} "
-            #                       f"is redundant with existing one ({existing_mod_sig.name}) so it has been ignored.")
-            #     return
-            # MODIFIED 9/14/19 NEWER: [JDC]
             # Return if *all* projections from modulatory_signal are identical to ones in an existing modulatory_signal
             for proj in modulatory_signal.efferents:
                 if proj not in existing_mod_sig.efferents:
@@ -1423,7 +1413,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                     #    so break and move on to next existing_mod_sig
                     break
                 return
-            # MODIFIED 9/14/19 END
 
             # Warn if *any* projections from modulatory_signal are identical to ones in an existing modulatory_signal
             if any(
