@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Control Mechanisms &mdash; PsyNeuLink 0.5.3.2+735.gb729497 documentation</title>
+  <title>Control Mechanisms &mdash; PsyNeuLink 0.5.3.2+736.gfa5e33e documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+735.gb729497',
+              VERSION:'0.5.3.2+736.gfa5e33e',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+735
+                0.5.3.2+736
               </div>
             
           
@@ -207,8 +207,26 @@
 <div><ul class="simple">
 <li><a class="reference internal" href="#controlmechanism-overview"><span class="std std-ref">Overview</span></a></li>
 <li><a class="reference internal" href="#controlmechanism-composition-controller"><span class="std std-ref">ControlMechanisms and a Composition</span></a></li>
-<li><a class="reference internal" href="#controlmechanism-creation"><span class="std std-ref">Creating a ControlMechanism</span></a></li>
-<li><a class="reference internal" href="#controlmechanism-structure"><span class="std std-ref">Structure</span></a></li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#controlmechanism-creation"><span class="std std-ref">Creating a ControlMechanism</span></a></dt>
+<dd><ul class="first last">
+<li><a class="reference internal" href="#controlmechanism-monitor-for-control"><span class="std std-ref">Specifying OutputStates to be monitored</span></a></li>
+<li><a class="reference internal" href="#controlmechanism-objectivemechanism"><span class="std std-ref">Objective Mechanism</span></a></li>
+<li><a class="reference internal" href="#controlmechanism-control-signals"><span class="std std-ref">Specifying Parameters to Control</span></a></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#controlmechanism-structure"><span class="std std-ref">Structure</span></a></dt>
+<dd><ul class="first last">
+<li><a class="reference internal" href="#controlmechanism-input"><span class="std std-ref">Input</span></a></li>
+<li><a class="reference internal" href="#controlmechanism-function"><span class="std std-ref">Function</span></a></li>
+<li><a class="reference internal" href="#controlmechanism-costs-netoutcome"><span class="std std-ref">Costs and Net Outcome</span></a></li>
+</ul>
+</dd>
+</dl>
+</li>
 <li><a class="reference internal" href="#controlmechanism-execution"><span class="std std-ref">Execution</span></a></li>
 <li><a class="reference internal" href="#controlmechanism-examples"><span class="std std-ref">Examples</span></a></li>
 <li><a class="reference internal" href="#controlmechanism-class-reference"><span class="std std-ref">Class Reference</span></a></li>
@@ -217,22 +235,24 @@
 </div>
 <div class="section" id="overview">
 <span id="controlmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A ControlMechanism is an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> that <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulates the value(s)</span></a> of one or more <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterStates</span></a> of other Mechanisms in the
-<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to which it belongs.  It’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> calculates a <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>: a list of values provided to each of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>.  Its control_signals are <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> OutputStates that are used to that
-modulate the parameters of other Mechanisms’ <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="ControlSignal.html#controlsignal-modulation"><span class="std std-ref">Modulation</span></a> for a
-more detailed description of how modulation operates).  A ControlMechanism can be configured to monitor the outputs
-of other Mechanisms in order to determine its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>, by specifying
-these in the <strong>monitor_for_control</strong> <a class="reference internal" href="#controlmechanism-monitor-for-control-argument"><span class="std std-ref">argument</span></a> of its constructor,
-or in the <strong>monitor</strong> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">argument</span></a> of an ObjectiveMechanism` assigned to its
+<p>A ControlMechanism is a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> that <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulates the value(s)</span></a> of one or more <a class="reference internal" href="State.html"><span class="doc">States</span></a> of other Mechanisms in the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to which it
+belongs.  In general, a ControlMechanism is used to modulate the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState(s)</span></a> of one or more
+Mechanisms, that determine the value(s) of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of those Mechanism(s).  However,
+a ControlMechanis can also be used to modulate the function of an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, much like a
+<a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>.  A ControlMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> calculates a <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>: a list of values provided to each of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>.  Its control_signals are <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> OutputStates that are used to modulate
+the parameters of other Mechanisms’ <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="ControlSignal.html#controlsignal-modulation"><span class="std std-ref">Modulation</span></a> for a more
+detailed description of how modulation operates).  A ControlMechanism can be configured to monitor the outputs of other
+Mechanisms in order to determine its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>, by specifying these
+in the <strong>monitor_for_control</strong> <a class="reference internal" href="#controlmechanism-monitor-for-control-argument"><span class="std std-ref">argument</span></a> of its constructor, or in
+the <strong>monitor</strong> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">argument</span></a> of an ObjectiveMechanism` assigned to its
 <strong>objective_mechanism</strong> <a class="reference internal" href="#controlmechanism-objective-mechanism-argument"><span class="std std-ref">argument</span></a> (see <a class="reference internal" href="#controlmechanism-creation"><span class="std std-ref">Creating a ControlMechanism</span></a>
-below).  A ControlMechanism can also be assigned as the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>,  which
-has a special relation to that Composition: it generally executes either before or after all of the other Mechanisms in
-that Composition (see <a class="reference internal" href="Composition.html#composition-controller-execution"><span class="std std-ref">Controller Execution</span></a>).  The OutputStates monitored by the ControlMechanism or its
-<a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, and the parameters it modulates can be listed using its
-<code class="xref any docutils literal"><span class="pre">show</span></code> method.</p>
-<p>Note that a ControlMechanism is a subclass of <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> that is restricted to using only <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> and not GatingSignals.  Accordingly, its constructor has a <strong>control_signals</strong> argument in place of
-a <strong>modulatory_signals</strong> argument, and is restricted to the modulation of <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterStates</span></a>.  It also
-lacks any attributes related to gating.  In all other respects it is identical to its parent class,
+below).  A ControlMechanism can also be assigned as the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>,
+which has a special relation to that Composition: it generally executes either before or after all of the other
+Mechanisms in that Composition (see <a class="reference internal" href="Composition.html#composition-controller-execution"><span class="std std-ref">Controller Execution</span></a>).  The OutputStates monitored by the
+ControlMechanism or its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, and the parameters it modulates
+can be listed using its <code class="xref any docutils literal"><span class="pre">show</span></code> method.</p>
+<p>Note that a ControlMechanism is a subclass of <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> that is restricted to using only <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  Accordingly, its constructor has a <strong>control_signals</strong> argument in place of a <strong>modulatory_signals</strong>
+argument.  It also lacks any attributes related to gating.  In all other respects it is identical to its parent class,
 ModulatoryMechanism</p>
 <div class="section" id="controlmechanisms-and-a-composition">
 <span id="controlmechanism-composition-controller"></span><h3><em>ControlMechanisms and a Composition</em><a class="headerlink" href="#controlmechanisms-and-a-composition" title="Permalink to this headline">¶</a></h3>
@@ -250,8 +270,11 @@ Components can be displayed using the Composition’s <a class="reference intern
 </div>
 <div class="section" id="creating-a-controlmechanism">
 <span id="controlmechanism-creation"></span><h2>Creating a ControlMechanism<a class="headerlink" href="#creating-a-controlmechanism" title="Permalink to this headline">¶</a></h2>
-<p>When a ControlMechanism is created, the OutputStates it monitors and the parameters it controls must be specified.
-Each can be done in several ways, as described below.</p>
+<p>A ControlMechanism is created by calling its constructor.  When a ControlMechanism is created, the OutputStates it
+monitors and the parameters it controls can be specified in the <strong>montior_for_control</strong> nor <strong>objective_mechanism</strong>
+arguments of its constructor.  Each can be specified in several ways, as described below.  If neither of those
+arguments is specified, then only the ControlMechanism is constructed, and its inputs and the parameters it controls
+must be specified in some other way.</p>
 <div class="section" id="specifying-outputstates-to-be-monitored">
 <span id="controlmechanism-monitor-for-control"></span><h3><em>Specifying OutputStates to be monitored</em><a class="headerlink" href="#specifying-outputstates-to-be-monitored" title="Permalink to this headline">¶</a></h3>
 <p>A ControlMechanism can be configured to monitor the output of other Mechanisms directly (by receiving direct
@@ -327,7 +350,7 @@ are listed in the ControlMechanism’s <a class="reference internal" href="#psyn
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, if specified).</p>
 <p id="controlmechanism-add-linear-processing-pathway">Note that the MappingProjections created by specification of a ControlMechanism’s <strong>monitor_for_control</strong> <a class="reference internal" href="#controlmechanism-monitor-for-control-argument"><span class="std std-ref">argument</span></a> or the <strong>monitor</strong> argument in the constructor for an
 ObjectiveMechanism in the ControlMechanism’s <strong>objective_mechanism</strong> <a class="reference internal" href="#controlmechanism-objective-mechanism-argument"><span class="std std-ref">argument</span></a> supercede any MappingProjections that would otherwise be created for
-them when included in the <strong>pathway</strong>  argumentof a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal"><span class="pre">add_linear_processing_pathway</span></code></a> method.</p>
+them when included in the <strong>pathway</strong> argument of a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal"><span class="pre">add_linear_processing_pathway</span></code></a> method.</p>
 <div class="section" id="objective-mechanism">
 <span id="controlmechanism-objectivemechanism"></span><h4>Objective Mechanism<a class="headerlink" href="#objective-mechanism" title="Permalink to this headline">¶</a></h4>
 <p>If an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> is specified for a ControlMechanism (in the <strong>objective_mechanism</strong> <a class="reference internal" href="#controlmechanism-objective-mechanism-argument"><span class="std std-ref">argument</span></a> of its constructor; also see <a class="reference internal" href="#controlmechanism-examples"><span class="std std-ref">Examples</span></a>),
@@ -420,7 +443,7 @@ and is used as the input to the ControlMechanism’s <a class="reference interna
 <p>A ControlMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> uses its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.outcome" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.outcome"><code class="xref any py py-attr docutils literal"><span class="pre">outcome</span></code></a>
 attribute (the <a class="reference internal" href="InputState.html#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>OUTCOME</em> <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>) to generate a <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>.  By default, <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.function" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is assigned
 the <code class="xref any docutils literal"><span class="pre">DefaultAllocationFunction</span></code>, which takes a single value as its input, and assigns that as the value of
-each item of <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">modulatory_allocation</span></code></a>.  Each of these items is assigned as
+each item of <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>.  Each of these items is assigned as
 the allocation for the corresponding  <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> in <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>. This
 distributes the ControlMechanism’s input as the allocation to each of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>.  This same behavior also applies to any custom function assigned to a
 ControlMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
