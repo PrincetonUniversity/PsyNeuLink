@@ -563,7 +563,6 @@ Class Reference
 ---------------
 
 """
-
 import numpy as np
 import typecheck as tc
 import warnings
