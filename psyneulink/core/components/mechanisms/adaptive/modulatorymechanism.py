@@ -404,6 +404,7 @@ import threading
 import typecheck as tc
 import warnings
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
@@ -559,6 +560,14 @@ class DefaultAllocationFunction(Function_Base):
         num_mod_sigs = self.get_current_function_param('num_modulatory_signals')
         result = np.array([variable[0]] * num_mod_sigs)
         return self.convert_output_type(result)
+
+    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
+        val_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        val = builder.load(val_ptr)
+        with pnlvm.helpers.array_ptr_loop(builder, arg_out, "alloc_loop") as (b, idx):
+            out_ptr = builder.gep(arg_out, [ctx.int32_ty(0), idx])
+            builder.store(val, out_ptr)
+        return builder
 
 
 class ModulatoryMechanism(AdaptiveMechanism_Base):

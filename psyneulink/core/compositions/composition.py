@@ -7401,25 +7401,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 m_in = builder.alloca(m_function.args[2].type.pointee)
                 incoming_projections = node.afferents
 
-            # Run all incoming projections
+            # Execute all incoming projections
             # TODO: This should filter out projections with different execution ID
-
-            for par_proj in incoming_projections:
+            for proj in incoming_projections:
                 # Skip autoassociative projections
-                if par_proj.sender.owner is par_proj.receiver.owner:
+                if proj.sender.owner is proj.receiver.owner:
                     continue
 
-                proj_idx = self.projections.index(par_proj)
-
-                # Get parent mechanism
-                par_mech = par_proj.sender.owner
-
-                proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-                proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-                proj_function = ctx.get_llvm_function(par_proj)
-
-                output_s = par_proj.sender
-                assert output_s in par_mech.output_states
+                # Get location of projection input data
+                par_mech = proj.sender.owner
                 if par_mech in self._all_nodes:
                     par_idx = self._get_node_index(par_mech)
                 else:
@@ -7427,37 +7417,43 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     assert par_mech is comp.output_CIM
                     par_idx = self.nodes.index(comp)
 
+                output_s = proj.sender
+                assert output_s in par_mech.output_states
                 output_state_idx = par_mech.output_states.index(output_s)
                 proj_in = builder.gep(data_in, [ctx.int32_ty(0),
                                                 ctx.int32_ty(0),
                                                 ctx.int32_ty(par_idx),
                                                 ctx.int32_ty(output_state_idx)])
 
-                state = par_proj.receiver
-                assert state.owner is node or state.owner is node.input_CIM
-                if state in state.owner.input_states:
-                    state_idx = state.owner.input_states.index(state)
+                # Get location of projection output (in mechanism's input structure
+                rec_state = proj.receiver
+                assert rec_state.owner is node or rec_state.owner is node.input_CIM
+                indices = [0]
+                if proj in rec_state.owner.path_afferents:
+                    rec_state_idx = rec_state.owner.input_states.index(rec_state)
 
-                    assert par_proj in state.pathway_projections
-                    projection_idx = state.pathway_projections.index(par_proj)
+                    assert proj in rec_state.pathway_projections
+                    projection_idx = rec_state.pathway_projections.index(proj)
 
                     # Adjust for AutoAssociative projections
                     for i in range(projection_idx):
-                        if isinstance(state.pathway_projections[i], AutoAssociativeProjection):
+                        if isinstance(rec_state.pathway_projections[i], AutoAssociativeProjection):
                             projection_idx -= 1
-                elif state in state.owner.parameter_states:
-                    state_idx = state.owner.parameter_states.index(state) + len(state.owner.input_states)
-
-                    assert par_proj in state.mod_afferents
-                    projection_idx = state.mod_afferents.index(par_proj)
+                    indices.extend([rec_state_idx, projection_idx])
+                elif proj in rec_state.owner.mod_afferents:
+                    projection_idx = rec_state.owner.mod_afferents.index(proj)
+                    indices.extend([len(rec_state.owner.input_states), projection_idx])
                 else:
-                    assert False, "State neither an input state nor a parameter state"
+                    assert False, "Projection neither pathway nor modulatory"
 
-                assert state_idx < len(m_in.type.pointee)
-                assert projection_idx < len(m_in.type.pointee.elements[state_idx])
-                proj_out = builder.gep(m_in, [ctx.int32_ty(0),
-                                              ctx.int32_ty(state_idx),
-                                              ctx.int32_ty(projection_idx)])
+                proj_out = builder.gep(m_in, [ctx.int32_ty(i) for i in indices])
+
+                # Get projection parameters and state
+                proj_idx = self.projections.index(proj)
+                # Projections are listed second in param and state structure
+                proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
+                proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
+                proj_function = ctx.get_llvm_function(proj)
 
                 builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
 
