@@ -161,7 +161,7 @@ case the AutodiffComposition executes like a Composition.
 However, if `learning_enabled <AutodiffComposition.learning_enabled>` is True, the **inputs** argument
 format is different. If `learning_enabled <AutodiffComposition.learning_enabled>` is True, then **inputs**
 argument must be a dictionary with at least two nested dictionaries within it, one for the inputs and the other
-for the targets, as well as an additional entry specifying the numbrer of training epochs to run.  Specifically,
+for the targets, as well as an additional entry specifying the number of training epochs to run.  Specifically,
 the outer dictionary must have at least two entries with keys *"inputs"* and  *"targets"*.  The value of the
 *"inputs"* entry must be a standard input dictionary, specifying the inputs for each `ORIGIN` Mechanism.  The value
 of the *"targets"* entry must be a similar dictionary, in this case specifying the target values for the outputs of
@@ -265,7 +265,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import SOFT_CLAMP
+from psyneulink.core.globals.keywords import SOFT_CLAMP, TRAINING_SET
 from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter
@@ -614,7 +614,7 @@ class AutodiffComposition(Composition):
         if self.learning_enabled:
             if isinstance(inputs, dict):
                 if self._has_required_keys(inputs):
-                    return [inputs]
+                    return inputs
                 raise AutodiffCompositionError("Invalid input specification.")
             elif isinstance(inputs, list):
                 for input_dict in inputs:
@@ -823,7 +823,6 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 skip_initialization=False,
                 bin_execute=False,
-
                 ):
         self._assign_execution_ids(context)
         context.composition = self
@@ -886,19 +885,139 @@ class AutodiffComposition(Composition):
         scheduler_processing=None,
         termination_processing=None,
         context=None,
-        num_trials=1,
+        num_trials=None,
+        minibatch_size=TRAINING_SET,
         call_before_time_step=None,
         call_after_time_step=None,
         call_before_pass=None,
         call_after_pass=None,
         call_before_trial=None,
         call_after_trial=None,
+        call_before_minibatch=None,
+        call_after_minibatch=None,
         clamp_input=SOFT_CLAMP,
         bin_execute=False,
         initial_values=None,
         reinitialize_values=None,
         runtime_params=None,
-        ):
+    ):
+        """Passes inputs to AutodiffComposition, then execute sets of nodes that are eligible to run until termination
+        conditions are met.
+
+            Arguments
+            ---------
+
+            inputs: {'inputs': {`Mechanism <Mechanism>`: list}, 'targets': {`Mechanism <Mechanism>`: list}, 'epochs': int }
+                a key-value pair with the keys "inputs", "targets", and "epochs". The value corresponding
+                to the "inputs" key should itself be a key-value pair for each Node in the composition that receives
+                inputs from the user. For each pair, the key is the Node and the value is a list of inputs. Each input
+                in the list corresponds to one `TRIAL`. Analogously, the value corresponding with 'targets' should be a
+                key-value pair with keys for each terminal Node in the composition and a corresponding list of the Node's
+                target values for each trial. The value corresponding to the 'epochs' key is an int specifying how many
+                times the Composition should run through the entire input set.
+
+            scheduler_processing: Scheduler
+                the scheduler object that owns the conditions that will instruct the execution of the Composition.
+                If not specified, the Composition will use its automatically generated scheduler.
+
+            context
+                context will be set to self.default_execution_id if unspecified
+
+            base_context
+                the context corresponding to the execution context from which this execution will be initialized,
+                if values currently do not exist for **context**
+
+            num_trials: int
+                typically, the composition will infer the number of trials from the length of its input specification.
+                To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
+                or use default inputs, and select a number of trials with num_trials.
+
+            minibatch_size: int or `TRAINING_SET`
+                if learning is enabled, the number of trials to be executed by the autodiff composition between weight
+                updates. if set to `TRAINING_SET`, weights will be updated after each full traversal of the provided
+                inputs (i.e. after each epoch).
+
+            call_before_time_step: callable
+                Not currently implemented for autodiff compositions.
+
+            call_after_time_step: callable
+                Not currently implemented for autodiff compositions.
+
+            call_before_pass: callable
+                Not currently implemented for autodiff compositions.
+
+            call_after_pass: callable
+                Not currently implemented for autodiff compositions.
+
+            call_before_trial: callable
+                Not currently implemented for autodiff compositions.
+
+            call_after_trial: callable
+                Not currently implemented for autodiff compositions.
+
+            call_before_minibatch: callable
+                will be called before each minibatch is executed.
+
+            call_after_minibatch: callable
+                will be called after each minibatch is executed.
+
+            initial_values: Dict[Node: Node Value]
+                sets the values of nodes before the start of the run. This is useful in cases where a node's value is
+                used before that node executes for the first time (usually due to recurrence or control).
+
+            runtime_params: Dict[Node: Dict[Parameter: Tuple(Value, Condition)]]
+                nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
+                `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
+                during this `Run` when the specified `Condition` is met.
+
+                Outer dictionary:
+                    - *key* - Node
+                    - *value* - Runtime Parameter Specification Dictionary
+
+                Runtime Parameter Specification Dictionary:
+                    - *key* - keyword corresponding to a parameter of the Node
+                    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
+                      a `Condition`
+
+                See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+
+            log: bool, LogCondition
+                Sets the `log_condition <Parameter.log_condition>` for every primary `node <Composition.nodes>` and
+                `projection <Composition.projections>` in this Composition, if it is not already set.
+
+                .. note::
+                   as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
+                   correspond to the `EXECUTION LogCondition <LogCondition.EXECUTION>`.
+
+        COMMENT:
+        REPLACE WITH EVC/OCM EXAMPLE
+        Examples
+        --------
+
+        This figure shows an animation of the Composition in the XXX example script, with
+        the show_graph **show_learning** argument specified as *ALL*:
+
+        .. _Composition_XXX_movie:
+
+        .. figure:: _static/XXX_movie.gif
+           :alt: Animation of Composition in XXX example script
+           :scale: 50 %
+
+        This figure shows an animation of the Composition in the XXX example script, with
+        the show_graph **show_control** argument specified as *ALL* and *UNIT* specified as *EXECUTION_SET*:
+
+        .. _Composition_XXX_movie:
+
+        .. figure:: _static/XXX_movie.gif
+           :alt: Animation of Composition in XXX example script
+           :scale: 150 %
+        COMMENT
+
+        Returns
+        ---------
+
+        output value of the final Node executed in the composition : various
+        """
         # TBI: Handle trials, timesteps, etc
         self._assign_execution_ids(context)
         context.composition = self
@@ -963,31 +1082,55 @@ class AutodiffComposition(Composition):
                 self._initialize_from_context(context, base_context=Context(execution_id=None), override=False)
                 if self.refresh_losses or (self.parameters.losses._get(context) is None):
                     self.parameters.losses._set([], context)
-                adjusted_stimuli = self._adjust_stimulus_dict(inputs)
+                if callable(inputs):
+                    stimuli = inputs()
+                else:
+                    stimuli = self._adjust_stimulus_dict(inputs)
+                minibatch = {
+                    'inputs':{
+                        k:[] for k in stimuli['inputs'].keys()
+                    },
+                    'targets':{
+                        k:[] for k in stimuli['targets'].keys()
+                    }
+                }
+                minibatch.update({k:v for k,v in stimuli.items() if not isinstance(v, dict)})
                 if num_trials is None:
-                    num_trials = len(adjusted_stimuli)
-
+                    num_trials = len(list(stimuli['inputs'].values())[0])
+                if minibatch_size == TRAINING_SET:
+                    minibatch_size = num_trials
                 results = []
                 for trial_num in range(num_trials):
-                    stimulus_index = trial_num % len(adjusted_stimuli)
-                    trial_output = self.execute(
-                        inputs=adjusted_stimuli[stimulus_index],
-                        context=context,
-                        do_logging=do_logging,
-                        bin_execute = bin_execute
-                    )
-                    results.append(trial_output)
-
-            full_results = self.parameters.results._get(context)
-            if full_results is None:
-                full_results = results
-            else:
-                full_results.extend(results)
-
-            self.parameters.results._set(full_results, context)
+                    for k,v in stimuli['inputs'].items():
+                        minibatch['inputs'][k].append(v[trial_num])
+                    for k, v in stimuli['targets'].items():
+                        minibatch['targets'][k].append(v[trial_num])
+                    if len(list(minibatch['inputs'].values())[0]) == minibatch_size or \
+                            trial_num == num_trials-1:
+                        if call_before_minibatch:
+                            call_before_minibatch()
+                        trial_output = self.execute(
+                            inputs=minibatch,
+                            context=context,
+                            do_logging=do_logging,
+                            bin_execute = bin_execute
+                        )
+                        if call_after_minibatch:
+                            call_after_minibatch()
+                        results.append(trial_output)
+                        self.most_recent_context = context
+                        for k, v in stimuli['inputs'].items():
+                            minibatch['inputs'][k] = []
+                        for k, v in stimuli['targets'].items():
+                            minibatch['targets'][k] = []
+                full_results = self.parameters.results._get(context)
+                if full_results is None:
+                    full_results = results
+                else:
+                    full_results.extend(results)
+                self.parameters.results._set(full_results, context)
             self.most_recent_context = context
             return results
-
 
         else:
             results = super(AutodiffComposition, self).run(inputs=inputs,
