@@ -32,16 +32,96 @@ either before or after all of the other Mechanisms in that Composition (see `Com
 Creating a ModulatoryMechanism
 ------------------------------
 
-A ModulatoryMechanism is created by calling its constructor.  If neither its **montior_for_control** nor
-**objective_mechanism** arguments are specified, then only the ModulatoryMechanism is constructed, and its inputs
-must be specified in some other way.  However, either of those arguments can be used to configure its inputs, as
-described below.
+A ModulatoryMechanism is created by calling its constructor.  When a ModulatoryMechanism is created, the OutputStates it
+monitors and the States it modulates can be specified can be specified in the **montior_for_modulation** and
+**objective_mechanism** arguments of its constructor, respectively.  Each can be specified in several ways,
+as described below. If neither of those arguments is specified, then only the ModulatoryMechanism is constructed,
+and its inputs and the parameters it modulates must be specified in some other way.
+
+
+.. _ModulatoryMechanism_Monitor_for_Modulation:
+
+*Specifying OutputStates to be monitored*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A ModulatoryMechanism can be configured to monitor the output of other Mechanisms directly (by receiving direct
+Projections from their OutputStates), or by way of an `ObjectiveMechanism` that evaluates those outputs and passes the
+result to the ModulatoryMechanism (see `below <ModulatoryMechanism_ObjectiveMechanism>` for more detailed description).
+
+Which configuration is used is determined by how the following arguments of the ModulatoryMechanism's constructor are
+specified:
+
+  .. _ModulatoryMechanism_Monitor_for_Modulation_Argument:
+
+  * **monitor_for_modulation** -- a list of `OutputState specifications <OutputState_Specification>`.  If the
+    **objective_mechanism** argument is not specified (or is *False* or *None*) then, when the ModulatoryMechanism is
+    added to a `Composition`, a `MappingProjection` is created for each OutputState specified to the
+    ModulatoryMechanism's *OUTCOME* `input_state <ModulatoryMechanism_Input>`.  If the **objective_mechanism** `argument
+    <ModulatoryMechanism_Objective_Mechanism_Argument>` is specified, then the OutputStates specified in
+    **monitor_for_modulation** are assigned to the `ObjectiveMechanism` rather than the ModulatoryMechanism itself (see
+    `ModulatoryMechanism_ObjectiveMechanism` for details).
+
+  .. _ModulatoryMechanism_Objective_Mechanism_Argument:
+
+  * **objective_mechanism** -- if this is specfied in any way other than **False** or **None** (the default),
+    then an ObjectiveMechanism is created that projects to the ModulatoryMechanism and, when added to a `Composition`,
+    is assigned Projections from all of the OutputStates specified either in the  **monitor_for_modulation** argument of
+    the ModulatoryMechanism's constructor, or the **monitor** `argument <ObjectiveMechanism_Monitor>` of the
+    ObjectiveMechanism's constructor (see `ModulatoryMechanism_ObjectiveMechanism` for details).  The
+    **objective_mechanism** argument can be specified in any of the following ways:
+
+    - *False or None* -- no ObjectiveMechanism is created and, when the ModulatoryMechanism is added to a
+      `Composition`, Projections from the OutputStates specified in the ModulatoryMechanism's **monitor_for_modulation**
+      argument are sent directly to ModulatoryMechanism (see specification of **monitor_for_modulation** `argument
+      <ModulatoryMechanism_Monitor_for_Modulation_Argument>`).
+
+    - *True* -- an `ObjectiveMechanism` is created that projects to the ModulatoryMechanism, and any OutputStates
+      specified in the ModulatoryMechanism's **monitor_for_modulation** argument are assigned to ObjectiveMechanism's
+      **monitor** `argument <ObjectiveMechanism_Monitor>` instead (see `ModulatoryMechanism_ObjectiveMechanism` for
+      additional details).
+
+    - *a list of* `OutputState specifications <ObjectiveMechanism_Monitor>`; an ObjectiveMechanism is created that
+      projects to the ModulatoryMechanism, and the list of OutputStates specified, together with any specified in the
+      ModulatoryMechanism's **monitor_for_modulation** `argument <ModulatoryMechanism_Monitor_for_Modulation_Argument>`,
+      are assigned to the ObjectiveMechanism's **monitor** `argument <ObjectiveMechanism_Monitor>` (see
+      `ModulatoryMechanism_ObjectiveMechanism` for additional details).
+
+    - *a constructor for an* `ObjectiveMechanism` -- the specified ObjectiveMechanism is created, adding any
+      OutputStates specified in the ModulatoryMechanism's **monitor_for_modulation** `argument
+      <ModulatoryMechanism_Monitor_for_Modulation_Argument>` to any specified in the ObjectiveMechanism's **monitor**
+      `argument <ObjectiveMechanism_Monitor>` .  This can be used to specify the `function
+      <ObjectiveMechanism.function>` used by the ObjectiveMechanism to evaluate the OutputStates monitored as well as
+      how it weights those OutputStates when they are evaluated  (see `below
+      <ModulatoryMechanism_ObjectiveMechanism_Function>` for additional details).
+
+    - *an existing* `ObjectiveMechanism` -- for any OutputStates specified in the ModulatoryMechanism's
+      **monitor_for_modulation** `argument <ModulatoryMechanism_Monitor_for_Modulation_Argument>`, an InputState is
+      added to the ObjectiveMechanism, along with `MappingProjection` to it from the specified OutputState.    This
+      can be used to specify an ObjectiveMechanism with a custom `function <ObjectiveMechanism.function>` and
+      weighting of the OutputStates monitored (see `below <ModulatoryMechanism_ObjectiveMechanism_Function>` for
+      additional details).
+
+The OutputStates monitored by a ModulatoryMechanism or its `objective_mechanism
+<ModulatoryMechanism.objective_mechanism>` are listed in the ModulatoryMechanism's `monitor_for_modulation
+<ModulatoryMechanism.monitor_for_modulation>` attribute (and are the same as those listed in the `monitor
+<ObjectiveMechanism.monitor>` attribute of the `objective_mechanism <ModulatoryMechanism.objective_mechanism>`,
+if specified).
+
+.. _ModulatoryMechanism_Add_Linear_Processing_Pathway:
+
+Note that the MappingProjections created by specification of a ModulatoryMechanism's **monitor_for_modulation**
+`argument <ModulatoryMechanism_Monitor_for_Modulation_Argument>` or the **monitor** argument in the constructor for an
+ObjectiveMechanism in the ModulatoryMechanism's **objective_mechanism** `argument
+<ModulatoryMechanism_Objective_Mechanism_Argument>` supercede any MappingProjections that would otherwise be created for
+them when included in the **pathway** argument of a Composition's `add_linear_processing_pathway
+<Composition.add_linear_processing_pathway>` method.
+
 
 .. _ModulatoryMechanism_ObjectiveMechanism:
 
 
-*ObjectiveMechanism*
-~~~~~~~~~~~~~~~~~~~~
+ObjectiveMechanism
+^^^^^^^^^^^^^^^^^^
 
 If an `ObjectiveMechanism` is specified in the **objective_mechanism** argument of a ModulatoryMechanism's constructor
 or any `OutputStates <OutputState>` are specified in its **monitor_for_modulation** argument, then an ObjectiveMechanism
@@ -64,18 +144,18 @@ for the ModualtoryMechanism:
 
   * in the **objective_mechanism** argument:
 
-    - An existing `ObjectiveMechanism`
+    - an existing `ObjectiveMechanism`;
     ..
-    - A constructor for an ObjectiveMechanism; its **monitor** argument can be used to specify `the OutputStates to
+    - a constructor for an ObjectiveMechanism -- its **monitor** argument can be used to specify `the OutputStates to
       be monitored <ObjectiveMechanism_Monitor>`, and its **function** argument can be used to
-      specify how those OutputStates are evaluated (see `ModulatoryMechanism_Examples`).
+      specify how those OutputStates are evaluated (see `ModulatoryMechanism_Examples`);
     ..
-    - A list of `OutputState specifications <ObjectiveMechanism_Monitor>`; a default ObjectiveMechanism
-      is created, and the list of OutputState specifications are assigned to its **monitor** argument.
+    - a list of `OutputState specifications <ObjectiveMechanism_Monitor>` -- a default ObjectiveMechanism
+      is created, and the list of OutputState specifications are assigned to its **monitor** argument;
   ..
-  * in the **monitor_for_modulation** argument, a list of `OutputState specifications
-    <ObjectiveMechanism_Monitor>`;  a default ObjectiveMechanism is created, and the list of OutputState specifications
-    are assigned to its **monitor** argument.
+  * in the **monitor_for_modulation** argument, a list of `OutputState specifications <ObjectiveMechanism_Monitor>` --
+    a default ObjectiveMechanism is created, and the list of OutputState specifications are assigned to its
+    **monitor** argument.
 
   If OutputStates to be monitored are specified in both the **objective_mechanism** argument (on their own, or within
   the constructor for an ObjectiveMechanism) *and* the **monitor_for_modulation** argument, both sets are used in

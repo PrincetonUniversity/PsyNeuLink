@@ -3122,12 +3122,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Tuples (Mechanism, `NodeRoles <NodeRole>`) can be used to assign `required_roles
         <Composition.add_node.required_roles>` to Mechanisms.
 
-        COMMENT:
-        # FIX 8/27/19 [JDC]:  Generalize to ModulatoryMechanism
-        COMMENT
-        Note that any specifications of a ControlMechanism's **monitor_for_control** `argument
-        <ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument specified in the constructor for an
-        ObjectiveMechanism in the **objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>`
+        Note that any specifications of a ModulatoryMechanism's **monitor_for_modulation** `argument
+        <ModulatoryMechanism_Monitor_for_Modulation_Argument>` or the **monitor** argument specified in the constructor
+        for an ObjectiveMechanism in the **objective_mechanism** `argument <ModulatoryMechanism_ObjectiveMechanism>`
         supercede any MappingProjections that would otherwise be created for them when specified in the **pathway**
         argument.
         """

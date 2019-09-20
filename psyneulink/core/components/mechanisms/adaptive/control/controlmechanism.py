@@ -85,8 +85,11 @@ Components can be displayed using the Composition's `show_graph <Composition.sho
 Creating a ControlMechanism
 ---------------------------
 
-When a ControlMechanism is created, the OutputStates it monitors and the parameters it controls must be specified.
-Each can be done in several ways, as described below.
+A ControlMechanism is created by calling its constructor.  When a ControlMechanism is created, the OutputStates it
+monitors and the parameters it controls can be specified in the **montior_for_control** nor **objective_mechanism**
+arguments of its constructor.  Each can be specified in several ways, as described below.  If neither of those
+arguments is specified, then only the ControlMechanism is constructed, and its inputs and the parameters it controls
+must be specified in some other way.
 
 .. _ControlMechanism_Monitor_for_Control:
 
@@ -201,7 +204,7 @@ Note that the MappingProjections created by specification of a ControlMechanism'
 <ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument in the constructor for an
 ObjectiveMechanism in the ControlMechanism's **objective_mechanism** `argument
 <ControlMechanism_Objective_Mechanism_Argument>` supercede any MappingProjections that would otherwise be created for
-them when included in the **pathway**  argumentof a Composition's `add_linear_processing_pathway
+them when included in the **pathway** argument of a Composition's `add_linear_processing_pathway
 <Composition.add_linear_processing_pathway>` method.
 
 .. _ControlMechanism_ObjectiveMechanism:
