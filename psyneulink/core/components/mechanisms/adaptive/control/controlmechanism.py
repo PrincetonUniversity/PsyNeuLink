@@ -32,11 +32,10 @@ Overview
 
 A ControlMechanism is a `ModulatoryMechanism <ModulatoryMechanism>` that `modulates the value(s)
 <ModulatorySignal_Modulation>` of one or more `States <State>` of other Mechanisms in the `Composition` to which it
-belongs.  In general, a ControlMechanism is used to
-modulate the `ParameterState(s) <ParameterState>` of one or more Mechanisms, that determine the value(s) of
-the `function <Mechanism_Base.function>` of those Mechanism(s).  However, a ControlMechanis can also be used to
-modulate the function of an `InputState` or `OutputState`, much like a `GatingMechanism`.  A
-ControlMechanism's `function <ControlMechanism.function>` calculates a `control_allocation
+belongs.  In general, a ControlMechanism is used to modulate the `ParameterState(s) <ParameterState>` of one or more
+Mechanisms, that determine the value(s) of the `function <Mechanism_Base.function>` of those Mechanism(s).  However,
+a ControlMechanis can also be used to modulate the function of an `InputState` or `OutputState`, much like a
+`GatingMechanism`.  A ControlMechanism's `function <ControlMechanism.function>` calculates a `control_allocation
 <ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
 <ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputStates that are used to modulate
 the parameters of other Mechanisms' `function <Mechanism_Base.function>` (see `ControlSignal_Modulation` for a more
@@ -369,7 +368,7 @@ A ControlMechanism's `function <ControlMechanism.function>` uses its `outcome <C
 attribute (the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `control_allocation
 <ControlMechanism.control_allocation>`.  By default, `function <ControlMechanism.function>` is assigned
 the `DefaultAllocationFunction`, which takes a single value as its input, and assigns that as the value of
-each item of `modulatory_allocation <ControlMechanism.control_allocation>`.  Each of these items is assigned as
+each item of `control_allocation <ControlMechanism.control_allocation>`.  Each of these items is assigned as
 the allocation for the corresponding  `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. This
 distributes the ControlMechanism's input as the allocation to each of its `control_signals
 <ControlMechanism.control_signals>`.  This same behavior also applies to any custom function assigned to a
