@@ -2885,7 +2885,7 @@ class Component(object, metaclass=ComponentsMeta):
             if function.owner is None and not function.is_pnl_inherent:
                 self.function = function
             else:
-                self.function = self._clone_function(function)
+                self.function = copy.deepcopy(function)
 
             # setting init status because many mechanisms change execution or validation behavior
             # during initialization
@@ -3036,13 +3036,6 @@ class Component(object, metaclass=ComponentsMeta):
                     param_state.source = self.function
         except AttributeError:
             pass
-
-    def _clone_function(self, function):
-        from psyneulink.core.components.functions.function import Function_Base, FunctionRegistry
-        fct = copy.deepcopy(function)
-        # ensure copy does not have identical name
-        register_category(fct, Function_Base, fct.name, FunctionRegistry)
-        return fct
 
     @property
     def current_execution_count(self):
