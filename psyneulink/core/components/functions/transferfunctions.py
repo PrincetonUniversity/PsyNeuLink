@@ -3887,14 +3887,14 @@ class TransferWithCosts(TransferFunction):
         self._instantiate_cost_functions(context=context)
 
     def _instantiate_cost_functions(self, context):
-        '''Instantiate cost functions and the multiplicative and additive modulatory parameters for them.
+        """Instantiate cost functions and the multiplicative and additive modulatory parameters for them.
 
         Parse specification of cost functions to enable
         Instantiate cost functions specified in construtor arguments, and enable ones in enabled_cost_functions
         Assign default value for multipicative and additive parameters for each, from the values of those parameters
             on the respective cost functions just instantiated.
         Initialize intensity_cost
-        '''
+        """
 
         if self.enabled_cost_functions:
             self.assign_costs(self.enabled_cost_functions)
