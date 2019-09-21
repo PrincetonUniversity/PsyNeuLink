@@ -15,31 +15,62 @@
 Overview
 --------
 
-An AdaptiveMechanism is a type of `Mechanism <Mechanism>` that modifies the parameters of one or more other `Components
+An AdaptiveMechanism is a type of `Mechanism <Mechanism>` that modifies the operation of one or more other `Components
 <Component>`.  In general, an AdaptiveMechanism receives its input from an `ObjectiveMechanism`, however
-this need not be the case. There are three types of AdaptiveMechanism:
+this need not be the case.
 
-* `LearningMechanism`
-    takes an error signal (generally received from an `ObjectiveMechanism`) and generates a `learning_signal
-    <LearningMechanism.learning_signal>` that is provided to its `LearningSignal(s) <LearningSignal>`, and used
-    by their `LearningProjections <LearningProjection>` to modulate the `matrix <MappingProjection.matrix>` parameter
-    of a `MappingProjection`.
-..
-* `ControlMechanism <ControlMechanism>`
+.. _AdaptiveMechanism_Types:
+
+
+There are four types of AdaptiveMechanism:
+
+* `ModulatoryMechanism`
     takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates an
-    `control_allocation <ControlMechanism.control_allocation>`, each item of which is assigned to one of its
-    `ControlSignals <ControlSignal>`;  each of those generates a `control_signal <ControlSignal.control_signal>`
-    that is used by its `ControlProjection(s) <ControlProjection>` to modulate the parameter of a Component.
+    `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`, each item of which is assigned to one of its
+    `ModulatorySignals <ModulatorySignal>`;  each of those generates a `modulatory_signal
+    <ModulatorySignal.modulatory_signal>` that is used by its `ModulatoryProjection(s) <ModulatoryProjection>` to
+    modulate the parameter of a `function <State_Base.function>` (and thereby the `value <State_Base.value>`) of a
+    `State`.  A ModulatoryMechanism can be assigned any combination of `ControlSignals <ControlSignal>` and
+    `GatingSignals <GatingSignal>`.
+..
+* `ControlMechanism`
+    a subclsass of `ModulatoryMechanism` that adds support for `costs <ControlMechanism.costs>`;  it takes an
+    evaluative signal (generally received from an `ObjectiveMechanism`) and generates a `control_allocation
+    <ControlMechanism.control_allocation>`, each item of which is assigned to one of its `ControlSignals
+    <ControlSignal>`;  each of those generates a `control_signal <ControlSignal.control_signal>` that is used by its
+    `ControlProjection(s) <ControlProjection>` to modulate the parameter of a `function <State_Base.function>` (and
+    thereby the `value <State_Base.value>`) of a `State`.  A ControlMechanism can be assigned only the `ControlSignal`
+    class of `ModulatorySignal`, but can be also be assigned other generic `OutputStates <OutputState>`.
 ..
 * `GatingMechanism`
-    takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates a
+    a subclsass of `ModulatoryMechanism` that is specialized for modulating the input to or ouput from a `Mechanism`;
+    it takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates a
     `gating_allocation <GatingMechanism.gating_allocation>`, each item of which is assigned to one of its
     `GatingSignals <ControlSignal>`;  each of those generates a `gating_signal <ControlSignal.control_signal>`
-    that is used by its `GatingProjection(s) <ControlProjection>` to modulate the value of the `InputState` or
-    `OutputState` of a `Mechanism <Mechanism>`.
-
+    that is used by its `GatingProjection(s) <ControlProjection>` to modulate the parameter of a `function
+    <State_Base.function>` (and thereby the `value <State_Base.value>`) of an `InputState` or `OutputState`.
+    A GatingMechanism can be assigned only the `GatingSignal` class of `ModulatorySignal`, but can be also be assigned
+    other generic `OutputStates <OutputState>`.
+.
+..
+* `LearningMechanism`
+    takes an error signal (received from an `ObjectiveMechanism` or another `LearningMechanism`) and generates a
+    `learning_signal <LearningMechanism.learning_signal>` that is provided to its `LearningSignal(s)
+    <LearningSignal>`, and used by their `LearningProjections <LearningProjection>` to modulate the `matrix
+    <MappingProjection.matrix>` parameter of a `MappingProjection`. A LearningMechanism can be assigned only
+    `LearningSignals <LearningSignal>` as its `OuputStates <OutputState>`.
 
 See `ModulatorySignal <ModulatorySignal_Naming>` for conventions used for the names of Modulatory components.
+
+A single `AdaptiveMechanism` can be assigned more than one ModulatorySignal of the appropriate
+
+which, each of which can
+be assigned
+different `allocations <ModulatorySignal.allocation>` (for ControlSignals and GatingSignals) or `learning_signals
+<LearningMechanism.learning_signal>` (for LearningSignals).  A single ModulatorySignal can also be assigned multiple
+ModulatoryProjections; however, as described  under `_ModulatorySignal_Projections`, they will all be assigned the
+same `variable <ModulatoryProjection_Base.variable>`.
+
 
 COMMENT:
 AdaptiveMechanisms are always executed after all `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or

@@ -34,18 +34,16 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import \
-    Function_Base, FunctionError, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
+from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction, THRESHOLD
 from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
 from psyneulink.core.globals.keywords import \
-    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, DECAY, DEFAULT_VARIABLE,\
-    DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, INCREMENT, \
-    INITIALIZER, INPUT_STATES, INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, NOISE, \
-    OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, PRODUCT, RATE, REST, \
-    SCALE, SIMPLE_INTEGRATOR_FUNCTION, SUM, \
-    TIME_STEP_SIZE, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, \
-    INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE
+    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM, \
+    DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, \
+    INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
+    INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
+    MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, PRODUCT, \
+    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
@@ -527,10 +525,6 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         NOISE: None,
     })
 
-    # multiplicative param does not make sense in this case
-    multiplicative_param = RATE
-    additive_param = INCREMENT
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -784,8 +778,6 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         OFFSET: None
     })
 
-    multiplicative_param = RATE
-    additive_param = OFFSET
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -999,9 +991,6 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
     """
 
     componentName = ADAPTIVE_INTEGRATOR_FUNCTION
-
-    multiplicative_param = RATE
-    additive_param = OFFSET
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -1446,8 +1435,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
     componentName = DUAL_ADAPTIVE_INTEGRATOR_FUNCTION
 
-    # multiplicative_param = RATE
-    additive_param = OFFSET
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -2000,8 +1987,6 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         NOISE: None,
     })
 
-    multiplicative_param = RATE
-    # additive_param = OFFSET
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -2253,7 +2238,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         (see `offset <DriftDiffusionIntegrator.offset>` for details).
 
     starting_point : float, list or 1d array:  default 0.0
-        determspecifies ines the starting value for the integration process; if it is a list or array, it must be the
+        specifies the starting value for the integration process; if it is a list or array, it must be the
         same length as `variable <DriftDiffusionIntegrator.variable>` (see `starting_point
         <DriftDiffusionIntegrator.starting_point>` for details).
 
@@ -2324,7 +2309,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         `modulation <ModulatorySignal_Modulation>` of `function <DriftDiffusionIntegrator.function>`.
 
     starting_point : float or 1d array
-        determines the start the starting value for the integration process; if it is a list or array, it must be the
+        determines the starting value for the integration process; if it is a list or array, it must be the
         same length as `variable <DriftDiffusionIntegrator.variable>`. If `variable <DriftDiffusionIntegrator.variable>`
         is an array and starting_point is a float, starting_point is used for each element of the integral;  if
         starting_point is a list or array, each of its elements is used as the starting point for each element of the
@@ -2371,8 +2356,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
     componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
 
-    multiplicative_param = RATE
-    additive_param = OFFSET
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -2721,8 +2704,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
     componentName = ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION
 
-    multiplicative_param = RATE
-    additive_param = OFFSET
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -3058,9 +3039,6 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         OFFSET: None,
         NOISE: None
     })
-
-    multiplicative_param = RATE
-    additive_param = OFFSET
 
     @tc.typecheck
     def __init__(self,

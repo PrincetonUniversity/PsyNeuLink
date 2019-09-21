@@ -145,8 +145,8 @@ mySystem = pnl.System(processes=[TargetControlProcess,
                                                                            (pnl.SLOPE, Distractor_Rep)
                                                                            ],
                                                                 function=psyneulink.core.components.functions.transferfunctions.Logistic,
-                                                                cost_options=[pnl.ControlSignalCosts.INTENSITY,
-                                                                               pnl.ControlSignalCosts.ADJUSTMENT],
+                                                                cost_options=[pnl.CostFunctions.INTENSITY,
+                                                                               pnl.CostFunctions.ADJUSTMENT],
                                                                 allocation_samples=signalSearchRange
                                                                 )),
                       enable_controller=True,

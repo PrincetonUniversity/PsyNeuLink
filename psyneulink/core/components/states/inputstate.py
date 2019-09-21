@@ -427,7 +427,7 @@ to, and that can be used to customize the InputState:
 
 .. _InputState_Function:
 
-* `function <InputState.function>` -- aggregates the `value <Projection_Base.value>` of all of the
+* `function <InputState.function>` -- combines the `value <Projection_Base.value>` of all of the
   `Projections <Projection>` received by the InputState, and assigns the result to the InputState's `value
   <InputState.value>` attribute.  The default function is `LinearCombination` that performs an elementwise (Hadamard)
   sums the values. However, the parameters of the `function <InputState.function>` -- and thus the `value
@@ -459,7 +459,7 @@ Execution
 
 An InputState cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
 When this occurs, the InputState executes any `Projections <Projection>` it receives, calls its `function
-<InputState.function>` to aggregate the values received from any `MappingProjections <MappingProjection>` it receives
+<InputState.function>` to combines the values received from any `MappingProjections <MappingProjection>` it receives
 (listed in its its `path_afferents  <InputState.path_afferents>` attribute) and modulate them in response to any
 `GatingProjections <GatingProjection>` (listed in its `mod_afferents <InputState.mod_afferents>` attribute),
 and then assigns the result to the InputState's `value <InputState.value>` attribute. This, in turn, is assigned to

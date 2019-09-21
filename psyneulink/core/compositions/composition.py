@@ -1112,7 +1112,6 @@ from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.state import State, _parse_state_spec
 from psyneulink.core.components.states.inputstate import InputState, SHADOW_INPUTS
-from psyneulink.core.components.states.inputstate import InputState, SHADOW_INPUTS
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
@@ -1480,7 +1479,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             this Composition
 
         input_CIM : `CompositionInterfaceMechanism`
-            aggregates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
+            mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
             input_CIM and its InputStates serve as proxies for the Composition itself in terms of afferent projections.
 
         input_CIM_states : dict
@@ -1974,7 +1973,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Add projections to node from sender of any shadowed InputStates
         for input_state in node.input_states:
-            if hasattr(input_state, "shadow_inputs") and input_state.shadow_inputs is not None:
+            if hasattr(input_state, SHADOW_INPUTS) and input_state.shadow_inputs is not None:
                 for proj in input_state.shadow_inputs.path_afferents:
                     sender = proj.sender
                     if sender.owner != self.input_CIM:
@@ -2216,10 +2215,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #    - not used for Learning;
                     #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
                     #    - do not project to any other nodes.
-                    # FIX: STILL NOT ASSIGNING A1 AS TERMINAL IN SCRATCH PAD;
-                    #      BUT ALSO RISKS ASSIGNING BOTH A1 AND A2 SINCE BOTH ARE IN THE SAME CONSIDERATION_SET
-                    # First, find last consideration_set in scheduler_processing that does not contain
-                    #    learning-related nodes or a ControlMechanism
+
+                    # First, find last consideration_set in scheduler_processing that does not contain only
+                    #    learning-related nodes, ControlMechanism(s) or control-related ObjectiveMechanism(s);
+                    #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
                     output_nodes = list([items for items in self.scheduler_processing.consideration_queue
                                            if any([item for item in items if
                                                    (not NodeRole.LEARNING in self.nodes_to_roles[item]
@@ -2227,7 +2226,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                     and not (isinstance(item, ObjectiveMechanism)
                                                              and item._role == CONTROL))
                                                    ])]
-                                          )[-1]
+                                          )[-1].copy()
+
+                    # Next, remove any learning-related nodes, ControlMechanism(s) or control-related
+                    #    ObjectiveMechanism(s) that may have "snuck in" (i.e., happen to be in the set)
+                    output_nodes_copy = output_nodes.copy()
+                    for node in output_nodes_copy:
+                        if (NodeRole.LEARNING in self.nodes_to_roles[node]
+                                or isinstance(node, ControlMechanism)
+                                or (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)):
+                            output_nodes.remove(node)
+
                     # Then, add any nodes that are not learning-related or a ControlMechanism,
                     #    and that have *no* efferent Projections
                     # IMPLEMENTATION NOTE:
@@ -2890,6 +2899,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         elif isinstance(receiver, (InputState, ParameterState)):
             # InputState spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
+            receiver_mechanism = graph_receiver = receiver.owner
+
+        elif isinstance(sender, (ControlSignal, ControlMechanism)) and isinstance(receiver, ParameterState):
+            # ParameterState spec -- update receiver_mechanism and graph_receiver to reference owner Mechanism
             receiver_mechanism = graph_receiver = receiver.owner
 
         elif isinstance(receiver, Composition):
@@ -4187,7 +4200,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_shadows_dict(controller)
 
         # INSTANTIATE SHADOW_INPUT PROJECTIONS
-
         # Skip controller's first (OUTCOME) input_state (that receives the Projection from its objective_mechanism
         input_cims=[self.input_CIM] + [comp.input_CIM for comp in self._get_nested_compositions()]
         # For the rest of the controller's input_states if they are marked as receiving SHADOW_INPUTS,
