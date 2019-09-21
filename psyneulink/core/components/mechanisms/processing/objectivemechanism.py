@@ -43,7 +43,7 @@ FOR DEVELOPERS:
     The monitor property returns the OutputStates that project to the Mechanism's InputStates
 COMMENT
 
-The **monitor** argument of the constructor specifies the `OutputStates <OutputState>` it monitors.
+The **monitor** argument of an ObjectiveMechanism's constructor specifies the `OutputStates <OutputState>` it monitors.
 This takes the place of the **input_states** argument used by most other forms of `Mechanism <Mechanism>`, and is used
 by the ObjectiveMechanism to create an `InputState` for each OutputState it monitors, along with a `MappingProjection`
 from the OutputState to that InputState.  The **monitor** argument takes a list of items that can
@@ -64,6 +64,11 @@ or `size <ObjectiveMechanism.size>` attributes (see `Mechanism InputState specif
 be monitored, the InputState is created but will be ignored until an OutputState (and MappingProjection from it) are
 specified for that InputState.
 
+COMMENT:
+FIX 8/27/19 [JDC]:
+ADD DISCUSSION OF monitor_weights_and_exponents ARGUMENT HERE
+.. _ObjectiveMechanism_Monitor_Weights_and_Exponents:
+COMMENT
 
 COMMENT:
 Note that some forms of specification may depend on specifications made for the OutputState referenced, the Mechanism
@@ -87,15 +92,25 @@ precedence afforded to each) are described below.
     types listed below:  if it is `None`, then none of that Mechanism's OutputStates are monitored; if it
     specifies OutputStates to be monitored, those are monitored even if they do not satisfy any of the conditions
     described in the specifications below.
-COMMENT
 
+TBI FOR COMPOSITION:
 The OutputStates monitored by the ObjectiveMechanism are listed in its `monitor <ObjectiveMechanism.monitor>`
 attribute.  When an ObjectiveMechanism is created by a `ControlMechanism`, or a `System` for its `controller
 <System.controller>`, these may pass a set of OutputStates to be monitored to the ObjectiveMechanism.  A
 ControlMechanism passes OutputState specifications listed in its **objective_mechanism** argument (see
 `ControlMechanism_ObjectiveMechanism`), and a System passes any listed in its **monitor_for_control** argument (see
 `System_Control_Specification`).
+COMMENT
 
+COMMENT:
+FIX 8/27/19 [JDC]:
+GENERALIZE TO ModulatoryMechanism
+COMMENT
+
+The OutputStates monitored by the ObjectiveMechanism are listed in its `monitor <ObjectiveMechanism.monitor>` attribute.
+When an ObjectiveMechanism is created by a `ControlMechanism`, these may pass a set of OutputStates to be monitored to
+the ObjectiveMechanism.  A ControlMechanism passes OutputState specifications listed in its **objective_mechanism**
+argument (see `ControlMechanism_ObjectiveMechanism`).
 
 .. _ObjectiveMechanism_Structure:
 
@@ -149,8 +164,8 @@ the items in its `variable <ObjectiveMechanism.variable>`. However, by assigning
 <InputState.weight>` and/or 'exponent <InputState.exponent>` attributes of the corresponding InputStates,
 it can be configured to calculate differences, ratios,  etc. (see `example
 <ObjectiveMechanism_Weights_and_Exponents_Example>` below).  The `function <ObjectiveMechanism.function>`  can also
-be replaced with any `CombinationFunction`, or any python function that takes an ndarray as its input (with a number of
-items in axis 0 equal to the number of the ObjectiveMechanism's InputStates), and generates a 1d array as its result.
+be replaced with any `CombinationFunction`, or any python function that takes an 2d array as its input (with a number
+of items in axis 0 equal to the number of the ObjectiveMechanism's InputStates), and generates a 1d array as its result.
 If it implements :keyword:`weight` and/or :keyword:`exponent` attributes, those are assigned from `weight
 <InputState.weight>` and `exponent <InputState.exponent>` attributes of its `input_states
 <ObjectiveMechanism.input_states>` (also listed in the `monitor_weights_and_exponents
@@ -331,12 +346,14 @@ Class Reference
 ---------------
 
 """
+
 import itertools
 import warnings
-
-from collections import Iterable, namedtuple
-
 import typecheck as tc
+import numpy as np
+
+from collections.abc import Iterable
+from collections import namedtuple
 
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -346,13 +363,13 @@ from psyneulink.core.components.states.inputstate import InputState, INPUT_STATE
 from psyneulink.core.components.states.state import _parse_state_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, \
-    OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
+    CONTEXT, CONTROL, EXPONENT, EXPONENTS, FUNCTION, LEARNING, MATRIX, NAME, \
+    OBJECTIVE_MECHANISM, OUTCOME, PARAMS, PROJECTION, PROJECTIONS, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
     kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList
+from psyneulink.core.globals.utilities import ContentAddressableList, type_match
 
 __all__ = [
     'DEFAULT_MONITORED_STATE_WEIGHT', 'DEFAULT_MONITORED_STATE_EXPONENT', 'DEFAULT_MONITORED_STATE_MATRIX',
@@ -518,8 +535,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         input_states) and returns a 1d array.
 
     role : None, LEARNING or CONTROL
-        specifies whether the ObjectiveMechanism is used for learning in a Process or System (in conjunction with a
-        `ObjectiveMechanism`), or for control in a System (in conjunction with a `ControlMechanism <ControlMechanism>`).
+        specifies whether the ObjectiveMechanism is used for learning in a `Composition` (in conjunction with a
+        `LearningMechanism`), or for control in a Composition (in conjunction with a `ControlMechanism
+        <ControlMechanism>`).
 
     value : 1d np.array
         the output of the evaluation carried out by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.
@@ -594,7 +612,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  **kwargs):
 
         # For backward compatibility
-
         if MONITORED_OUTPUT_STATES in kwargs:
             if monitor:
                 raise ObjectiveMechanismError(f'Can\'t specifiy both {repr(MONITOR)} ({monitor}) '
@@ -602,8 +619,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                               f' args of {self.name} specified; pick one!')
             warnings.warn(f'Use of {repr(MONITORED_OUTPUT_STATES)} as arg of {self.__class__.__name__} is deprecated;  '
                           f'use {repr(MONITOR)} instead')
-            monitor = kwargs[MONITORED_OUTPUT_STATES]
-
+            monitor = kwargs.pop(MONITORED_OUTPUT_STATES)
         monitor = monitor or None # deal with possibility of empty list
         input_states = monitor
         if output_states is None or output_states is OUTCOME:
@@ -631,10 +647,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         **kwargs)
 
         # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
-        #    the controller for a System;  it is set by the ControlMechanism when it creates the ObjectiveMechanism
+        #    the controller for a Composition;  it is set by the ControlMechanism when it creates the ObjectiveMechanism
         self.for_controller = False
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -665,7 +681,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
 
         # If call is for initialization
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.initialization_status == ContextFlags.INITIALIZING:
             # Use self.input_states (containing specs from **input_states** arg of constructor)
             #    or pass off instantiation of default InputState(s) to super
             input_states = self.input_states or None
@@ -766,9 +782,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             else:
                 reference_value.append(projection_tuple.state.value)
 
+        context.source = ContextFlags.METHOD
         input_states = self._instantiate_input_states(monitor_specs=monitor_specs,
                                                       reference_value=reference_value,
-                                                      context = ContextFlags.METHOD)
+                                                      context=context
+                                                      )
 
         output_states = [[projection.sender for projection in state.path_afferents] for state in input_states]
 
@@ -802,6 +820,17 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 self.function.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
         assert True
 
+    # # MODIFIED 6/8/19 NEW: [JDC]
+    # def _parse_function_variable(self, variable, context=None, context=None):
+    #     # CRASHES IN x_or TEST AND LLVM TESTS:
+    #     if self.function.variableEncodingDim < self.variableEncodingDim:
+    #         return np.squeeze(variable)
+    #     # if self.function.variableEncodingDim > self.variableEncodingDim:
+    #     #     return np.expand_dims(variable,0)
+    #     return variable
+    #
+    #     # assert False
+    # # MODIFIED 6/8/19 END
 
     @property
     def monitor(self):
@@ -850,13 +879,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     @monitored_output_states_weights_and_exponents.setter
     def monitored_output_states_weights_and_exponents(self, weights_and_exponents_tuples):
         self.monitor_weights_and_exponents = weights_and_exponents_tuples
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            self.monitor,
-        ))
 
 
 def _objective_mechanism_role(mech, role):
@@ -943,7 +965,7 @@ def _parse_monitor_specs(monitor_specs):
 #         if isinstance(sender, OutputState):
 #             # Projection has been specified for receiver and initialization begun, so call deferred_init()
 #             if receiver.path_afferents:
-#                 if not receiver.path_afferents[0].context.initialization_status == ContextFlags.DEFERRED_INIT:
+#                 if not receiver.path_afferents[0].initialization_status == ContextFlags.DEFERRED_INIT:
 #                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
 #                                                   "implemented and initialized ({})".
 #                                                   format(receiver.name, owner.name, receiver.path_afferents[0].name))
@@ -958,7 +980,7 @@ def _parse_monitor_specs(monitor_specs):
 #                                                          projection_spec,
 #                                                          receiver.path_afferents[0].function_params[MATRIX]))
 #                 receiver.path_afferents[0].init_args[SENDER] = sender
-#                 receiver.path_afferents[0]._deferred_init()
+#                 receiver.path_afferents[0]._deferred_init(context=context)
 #             else:
 #                 projection_spec = MappingProjection(sender=sender,
 #                                                     receiver=receiver,

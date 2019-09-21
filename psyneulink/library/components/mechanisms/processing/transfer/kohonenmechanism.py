@@ -15,9 +15,9 @@ Overview
 A KohonenMechanism is a subclass of `RecurrentTransferMechanism` that implements a `Kohonen network
 <http://www.scholarpedia.org/article/Kohonen_network>`_ (`brief explanation
 <https://www.cs.bham.ac.uk/~jlw/sem2a2/Web/Kohonen.htm>`_; `nice demo <https://www.youtube.com/watch?v=QvI6L-KqsT4>`_),
-which is a particular form of `self-organized map (SOM) <https://en.wikipedia.org/wiki/Self-organizing_map>`_.
-By default, a KohonenMechanism uses a `KohonenLearningMechanism` and the `Kohonen` `LearningFunction` to implement
-implement a form of unsupervised learning that produces the self-organized map.
+which is a particular form of `self-organized map (SOM) <https://en.wikipedia.org/wiki/Self-organizing_map>`_. By
+default, a KohonenMechanism uses a `KohonenLearningMechanism` and the `Kohonen` `LearningFunction <LearningFunctions>`
+to implement implement a form of unsupervised learning that produces the self-organized map.
 
 .. _Kohonen_Creation:
 
@@ -55,7 +55,7 @@ import logging
 import numbers
 import warnings
 
-from collections import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -71,7 +71,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, LEARNED_PROJECTION, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -425,12 +425,10 @@ class KohonenMechanism(TransferMechanism):
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function:is_function_type=Kohonen(distance_function=GAUSSIAN),
                  learned_projection:tc.optional(MappingProjection)=None,
-                 # input_states:tc.optional(tc.any(list, dict)) = None,
                  additional_output_states:tc.optional(tc.any(str, Iterable))=None,
-                 params=None,
                  name=None,
                  prefs: is_pref_set = None,
-                 context=componentType + INITIALIZING,
+                 **kwargs
                  ):
         # # Default output_states is specified in constructor as a string rather than a list
         # # to avoid "gotcha" associated with mutable default arguments
@@ -449,9 +447,7 @@ class KohonenMechanism(TransferMechanism):
         self._learning_enable_deferred = False
 
         params = self._assign_args_to_param_dicts(
-                # input_states=input_states,
                 integrator_mode=integrator_mode,
-                # selection_function=selection_function,
                 learning_rate=learning_rate,
                 learning_function=learning_function,
                 learned_projection=learned_projection,
@@ -460,7 +456,6 @@ class KohonenMechanism(TransferMechanism):
 
         super().__init__(default_variable=default_variable,
                          size=size,
-                         # input_states=input_states,
                          function=function,
                          integrator_function=integrator_function,
                          integrator_mode=integrator_mode,
@@ -471,7 +466,8 @@ class KohonenMechanism(TransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set, target_set, context)
@@ -489,6 +485,7 @@ class KohonenMechanism(TransferMechanism):
             self.configure_learning(context=context)
 
     # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
+    @handle_external_context()
     def configure_learning(self,
                            learning_function:tc.optional(tc.any(is_function_type))=None,
                            learning_rate:tc.optional(tc.any(numbers.Number, list, np.ndarray, np.matrix))=None,
@@ -538,9 +535,6 @@ class KohonenMechanism(TransferMechanism):
                 return
 
         self.matrix = self.learned_projection.parameter_states[MATRIX]
-
-        context = context or ContextFlags.COMMAND_LINE
-        self.context.source = self.context.source or ContextFlags.COMMAND_LINE
 
         self.learning_mechanism = self._instantiate_learning_mechanism(learning_function=self.learning_function,
                                                                        learning_rate=self.learning_rate,

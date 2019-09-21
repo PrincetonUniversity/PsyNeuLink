@@ -8,17 +8,17 @@
 #
 #
 # *******************************************   SAMPLER CLASSES ********************************************************
-'''
+"""
 
 * `SampleSpec`
 * `SampleIterator`
 
-'''
+"""
 
 import numpy as np
 
 import typecheck as tc
-from collections import Iterator
+from collections.abc import Iterator
 from inspect import isclass
 from decimal import Decimal, getcontext
 from numbers import Number
@@ -32,7 +32,7 @@ SAMPLE_SPEC_PRECISION = 16
 
 
 def _validate_function(source, function):
-    '''Ensure function specification is appropriate for SampleIterator'''
+    """Ensure function specification is appropriate for SampleIterator"""
     source_name = source.__class__.__name__
     try:
         result = function()
@@ -53,7 +53,7 @@ class SampleIteratorError(Exception):
 
 
 class SampleSpec():
-    '''
+    """
     SampleSpec(      \
     start=None,      \
     stop=None,       \
@@ -147,7 +147,7 @@ class SampleSpec():
     custom_spec : anything
         specification in a format recognized by receiver of SampleIterator.
 
-    '''
+    """
 
     @tc.typecheck
     def __init__(self,
@@ -217,7 +217,12 @@ class SampleSpec():
         getcontext().prec = _global_precision
 
 
-allowable_specs = (list, np.array, range, np.arange, callable, tuple, SampleSpec)
+allowable_specs = (tuple, list, np.array, range, np.arange, callable, SampleSpec)
+def is_sample_spec(spec):
+    if spec is None or type(spec) in allowable_specs:
+        return True
+    return False
+
 
 class SampleIterator(Iterator):
     """
@@ -260,7 +265,7 @@ class SampleIterator(Iterator):
     @tc.typecheck
     def __init__(self,
                  specification:tc.any(*allowable_specs)):
-        '''
+        """
 
         Arguments
         ---------
@@ -294,13 +299,13 @@ class SampleIterator(Iterator):
         -------
 
         List(self) : list
-        '''
+        """
 
         # FIX: DEAL WITH head?? OR SIMPLY USE CURRENT_STEP?
         # FIX Are nparrays allowed? Below assumes one list dimension. How to handle nested arrays/lists?
         self.specification = specification
 
-        if isinstance(specification, range):
+        if isinstance(specification, (tuple, range)):
             specification = list(specification)
 
         elif callable(specification):
@@ -410,10 +415,10 @@ class SampleIterator(Iterator):
         return list(self)
 
     def reset(self, head=None):
-        '''Reset iterator to a specified item
+        """Reset iterator to a specified item
         If called with None, resets to first item (if `generator <SampleIterators.generator>` is a list or
         deterministic function.
-        '''
+        """
 
         self.current_step = 0
         self.head = head or self.start

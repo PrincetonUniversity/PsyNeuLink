@@ -10,14 +10,15 @@
 
 """
 ..
-    Sections of this document:
-      * :ref:`Projection_Overview`
-      * :ref:`Projection_Creation`
-      * :ref:`Projection_Structure`
-         * :ref:`Projection_Sender`
-         * :ref:`Projection_Receiver`
-      * :ref:`Projection_Execution`
-      * :ref:`Projection_Class_Reference`
+Sections
+--------
+      * `Projection_Overview`
+      * `Projection_Creation`
+      * `Projection_Structure`
+         * `Projection_Sender`
+         * `Projection_Receiver`
+      * `Projection_Execution`
+      * `Projection_Class_Reference`
 
 .. _Projection_Overview:
 
@@ -107,7 +108,8 @@ Projection in context:
         determined (e.g., it is used in the specification of a `pathway <Process.pathway>` for a `Process`). For
         MappingProjections, a `matrix specification <Mapping_Matrix_Specification>` can also be used to specify the
         projection (see **value** below).
-      |
+      COMMENT:
+
       * *LEARNING_PROJECTION*  (or *LEARNING*) -- this can only be used in the specification of a `MappingProjection`
         (see `tuple <Mapping_Matrix_Specification>` format).  If the `receiver <MappingProjection.receiver>` of the
         MappingProjection projects to a `LearningMechanism` or a `ComparatorMechanism` that projects to one, then a
@@ -115,7 +117,8 @@ Projection in context:
         <LearningProjection.sender>`;  otherwise, a LearningMechanism is `automatically created
         <LearningMechanism_Creation>`, along with a LearningSignal that is assigned as the LearningProjection's `sender
         <LearningProjection.sender>`. See `LearningMechanism_Learning_Configurations` for additional details.
-      |
+      COMMENT
+
       * *CONTROL_PROJECTION* (or *CONTROL*) -- this can be used when specifying a parameter using the `tuple format
         <ParameterState_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterState` for that
         parameter.  If the `Component <Component>` to which the parameter belongs is part of a `System`, then a
@@ -125,7 +128,7 @@ Projection in context:
         at which time the ControlSignal is added to the System's `controller <System.controller>` and assigned
         as its the ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_Control_Signals` for
         additional details.
-      |
+
       * *GATING_PROJECTION* (or *GATING*) -- this can be used when specifying an `InputState
         <InputState_Projection_Source_Specification>` or an `OutputState <OutputState_Projections>`, to create a
         default `GatingProjection` to the `State <State>`. If the GatingProjection's `sender <GatingProjection.sender>`
@@ -157,7 +160,7 @@ Projection in context:
         (for example, a `MappingProjection` for an `InputState`, a `LearningProjection` for the `matrix
         <MappingProjection.matrix>` parameter of a `MappingProjection`, and a `ControlProjection` for any other
         type of parameter.
-      |
+
       * *PROJECTION_PARAMS*: *Dict[Projection argument, argument value]* --
         the key for each entry of the dictionary must be the name of a Projection parameter, and its value the value
         of the parameter.  It can contain any of the standard parameters for instantiating a Projection (in particular
@@ -186,13 +189,13 @@ Projection in context:
 
      * **State specification** -- specifies the `State <State_Specification>` to connect with (**not** the one being
        connected; that is determined from context)
-     |
+
      * **weight** -- must be a value specifying the `weight <Projection_Base.weight>` of the Projection;  it can be
        `None`, in which case it is ignored, but there must be a specification present;
-     |
+
      * **exponent** -- must be a value specifying the `exponent <Projection_Base.exponent>` of the Projection;  it
        can be `None`, in which case it is ignored, but there must be a specification present;
-     |
+
      * **Projection specification** -- this is optional but, if included, msut be a `Projection specification
        <Projection_Specification>`;  it can take any of the forms of a Projection specification described above for
        any Projection subclass; it can be used to provide additional specifications for the Projection, such as its
@@ -296,7 +299,7 @@ A sender can be specified as:
     `ModulatorySignal <ModulatorySignal>` of the appropriate type is created and assigned to the Mechanism.
 
 If the `sender <Projection_Base.sender>` is not specified and it can't be determined from the context, or an OutputState
-specification is not associated with a Mechanism that can be determined from context, then the initialization of the
+specification is not associated with a Mechanism that can be determined from , then the initialization of the
 Projection is `deferred <Projection_Deferred_Initialization>`.
 
 .. _Projection_Receiver:
@@ -382,6 +385,7 @@ COMMENT
 .. _Projection_Class_Reference:
 
 """
+import abc
 import inspect
 import itertools
 import warnings
@@ -390,7 +394,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Component
-from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix, Identity
+from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.states.state import StateError
@@ -403,7 +407,9 @@ from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric, type_match
 
 __all__ = [
-    'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError', 'ProjectionRegistry'
+    'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS',
+    'ProjectionError', 'DuplicateProjectionError', 'ProjectionRegistry',
+    'kpProjectionTimeScaleLogEntry'
 ]
 
 ProjectionRegistry = {}
@@ -431,6 +437,10 @@ ProjectionTuple = namedtuple("ProjectionTuple", "state, weight, exponent, projec
 
 
 class ProjectionError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+class DuplicateProjectionError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -524,7 +534,7 @@ class Projection_Base(Projection):
         State to which Projection sends its output  (see `Projection_Receiver` for additional information)
 
     value : value
-        output of Projection, transmitted to `variable <InputState.variable>` of `receiver <Projection_Base.receiver>`.
+        output of Projection, transmitted to variable of function of its `receiver <Projection_Base.receiver>`.
 
     parameter_states : ContentAddressableList[str, ParameterState]
         a list of the Projection's `ParameterStates <Projection_ParameterStates>`, one for each of its specifiable
@@ -618,16 +628,17 @@ class Projection_Base(Projection):
     requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
     requiredParamClassDefaultTypes.update({PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
 
+    @abc.abstractmethod
     def __init__(self,
                  receiver,
                  sender=None,
                  weight=None,
                  exponent=None,
+                 function=None,
                  params=None,
                  name=None,
                  prefs=None,
                  context=None,
-                 function=None,
                  ):
         """Assign sender, receiver, and execute method and register Mechanism with ProjectionRegistry
 
@@ -679,16 +690,11 @@ class Projection_Base(Projection):
         from psyneulink.core.components.states.parameterstate import ParameterState
         from psyneulink.core.components.states.state import State_Base
 
-        if context != ContextFlags.CONSTRUCTOR:
-            raise ProjectionError("Direct call to abstract class Projection() is not allowed; "
-                                 "use projection() or one of the following subclasses: {0}".
-                                 format(", ".join("{!s}".format(key) for (key) in ProjectionRegistry.keys())))
-
         params = self._assign_args_to_param_dicts(weight=weight,
                                                   exponent=exponent,
                                                   params=params)
 
-        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if self.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
             self.init_args = locals().copy()
             self.init_args[NAME] = name
@@ -812,24 +818,29 @@ class Projection_Base(Projection):
         If self.sender is a State class reference, validate that it is a OutputState
         Assign projection to sender's efferents attribute
         """
+        from psyneulink.core.compositions.composition import Composition
+        from psyneulink.core.components.states.inputstate import InputState
+        from psyneulink.core.components.states.parameterstate import ParameterState
         from psyneulink.core.components.states.outputstate import OutputState
 
         if not (
-            isinstance(sender, (Mechanism, State, Process_Base))
+            isinstance(sender, (Composition, Mechanism, State, Process_Base))
             or (inspect.isclass(sender) and issubclass(sender, (Mechanism, State)))
         ):
-            raise ProjectionError("PROGRAM ERROR: Invalid specification for {} ({1}) of {} "
-                                  "(including paramClassDefaults: {}".
-                                  format(SENDER, sender, self.name, self.paramClassDefaults[PROJECTION_SENDER]))
+            assert False, \
+                f"PROGRAM ERROR: Invalid specification for {SENDER} ({sender}) of {self.name} " \
+                f"(including paramClassDefaults: {self.paramClassDefaults[PROJECTION_SENDER]})."
 
-        self.sender = sender
         # If self.sender is specified as a Mechanism (rather than a State),
         #     get relevant OutputState and assign it to self.sender
         # IMPLEMENTATION NOTE: Assume that self.sender should be the primary OutputState; if that is not the case,
         #                      self.sender should either be explicitly assigned, or handled in an override of the
         #                      method by the relevant subclass prior to calling super
-        if isinstance(self.sender, Mechanism):
-            self.sender = self.sender.output_state
+        if isinstance(sender, Composition):
+            sender = sender.output_CIM
+        if isinstance(sender, Mechanism):
+            sender = sender.output_state
+        self.sender = sender
 
         # At this point, self.sender should be a OutputState
         if not isinstance(self.sender, OutputState):
@@ -837,8 +848,32 @@ class Projection_Base(Projection):
                                   format(self.name, self.sender))
 
         # Assign projection to self.sender's efferents list attribute
+        # First make sure that projection is not already in efferents
         if self not in self.sender.efferents:
+            # Then make sure there is not already a projection to its receiver
+            receiver = self.receiver
+            if isinstance(receiver, Composition):
+                receiver = receiver.input_CIM
+            if isinstance(receiver, Mechanism):
+                receiver = receiver.input_state
+            assert isinstance(receiver, (State)), \
+                f"Illegal receiver ({receiver}) detected in _instantiate_sender() method for {self.name}"
+            dup =  receiver._check_for_duplicate_projections(self)
+            # If duplicate is a deferred_init Projection, delete it and use one currently being instantiated
+            # IMPLEMENTATION NOTE:  this gives precedence to a Projection to a Component specified by its sender
+            #                      (e.g., controller of a Composition for a ControlProjection)
+            #                       over its specification in the constructor for the receiver or its owner
+            if dup:
+                if dup.initialization_status == ContextFlags.DEFERRED_INIT:
+                    del receiver.mod_afferents[receiver.mod_afferents.index(dup)]
+                else:
+                    raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} to {receiver.name} of "
+                                                   f"{receiver.owner.name} that already has an identical "
+                                                   f"{Projection.__name__}.")
             self.sender.efferents.append(self)
+        else:
+            raise DuplicateProjectionError(f"Attempt to assign {Projection.__name__} from {sender.name} of "
+                                           f"{sender.owner.name} that already has an identical {Projection.__name__}.")
 
     def _instantiate_attributes_after_function(self, context=None):
         from psyneulink.core.components.states.parameterstate import _instantiate_parameter_state
@@ -889,33 +924,10 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
-
+    def _update_parameter_states(self, context=None, runtime_params=None):
         for state in self._parameter_states:
-
             state_name = state.name
-            state.update(execution_id=execution_id, params=runtime_params, context=context)
-
-            # # Assign ParameterState's value to parameter value in runtime_params
-            # if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
-            #     param = param_template = runtime_params
-            # # Otherwise use paramsCurrent
-            # else:
-            #     param = param_template = self.paramsCurrent
-
-            param = param_template = self.paramsCurrent
-
-            # Determine whether template (param to type-match) is at top level or in a function_params dictionary
-            try:
-                param_template[state_name]
-            except KeyError:
-                param_template = self.function_params
-
-            # Get its type
-            param_type = type(param_template[state_name])
-            # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or Modulation)
-            if param_type is tuple:
-                param_type = type(param_template[state_name][0])
+            state._update(context=context, params=runtime_params)
 
             # Assign version of ParameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
@@ -923,29 +935,25 @@ class Projection_Base(Projection):
             # set by the statement below. For example, if state_name is 'matrix', the statement below sets
             # params['matrix'] to state.value, calls setattr(state.owner, 'matrix', state.value), which sets the
             # 'matrix' parameter state's variable to ALSO be equal to state.value! If this is unintended, please change.
-            value = state.parameters.value.get(execution_id)
-            param[state_name] = type_match(value, param_type)
+            value = state.parameters.value._get(context)
+            getattr(self.parameters, state_name)._set(value, context)
             # manual setting of previous value to matrix value (happens in above param['matrix'] setting
             if state_name == MATRIX:
-                state.function.parameters.previous_value.set(value, execution_id, override=True)
+                state.function.parameters.previous_value._set(value, context)
 
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:
-            variable = self.sender.parameters.value.get(execution_id)
-
-        self.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
-        self.parameters.context.get(execution_id).string = context
+            variable = self.sender.parameters.value._get(context)
 
         value = super()._execute(
             variable=variable,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
-        self.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
         return value
 
     def _activate_for_compositions(self, composition):
@@ -968,7 +976,7 @@ class Projection_Base(Projection):
     @property
     def socket_assignments(self):
 
-        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if self.initialization_status == ContextFlags.DEFERRED_INIT:
             sender = self.init_args[SENDER]
             receiver = self.init_args[RECEIVER]
         else:
@@ -979,7 +987,7 @@ class Projection_Base(Projection):
                 RECEIVER:receiver}
 
     def _projection_added(self, projection, context=None):
-        '''Stub that can be overidden by subclasses that need to know when a projection is added to the Projection'''
+        """Stub that can be overidden by subclasses that need to know when a projection is added to the Projection"""
         pass
 
     def _assign_default_name(self, **kwargs):
@@ -991,6 +999,7 @@ class Projection_Base(Projection):
 
     @property
     def parameter_states(self):
+        """Read-only access to _parameter_states"""
         return self._parameter_states
 
     @parameter_states.setter
@@ -1000,28 +1009,12 @@ class Projection_Base(Projection):
         #    but averts exception when setting paramsCurrent in Component (around line 850)
         pass
 
-    def _get_output_struct_type(self, ctx):
-        return ctx.get_output_struct_type(self.function)
-
-    def _get_input_struct_type(self, ctx):
-        return ctx.get_input_struct_type(self.function)
-
-    def _get_param_struct_type(self, ctx):
-        return ctx.get_param_struct_type(self.function)
-
-    def _get_context_struct_type(self, ctx):
-        return ctx.get_context_struct_type(self.function)
-
-    def _get_param_initializer(self, execution_id):
-        return self.function._get_param_initializer(execution_id)
-
-    def _get_context_initializer(self, execution_id):
-        return self.function._get_context_initializer(execution_id)
-
     # Provide invocation wrapper
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        mf_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
+        mf_params = ctx.get_param_ptr(self, builder, params, self.parameters.function.name)
         main_function = ctx.get_llvm_function(self.function)
-        builder.call(main_function, [params, context, arg_in, arg_out])
+        builder.call(main_function, [mf_params, mf_state, arg_in, arg_out])
 
         return builder
 
@@ -1029,9 +1022,11 @@ class Projection_Base(Projection):
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
-            [self.function],
             self.parameter_states,
         ))
+
+    def _delete_projection(projection):
+        raise ProjectionError(f"{Projection.__name__} class {type(projection)} does not implement _delete method.")
 
 
 @tc.typecheck
@@ -1149,7 +1144,6 @@ def _parse_projection_spec(projection_spec,
                            state_type = None,  # Used only for default assignment
                            # socket=None,
                            **kwargs):
-
     """Return either Projection object or Projection specification dict for projection_spec
 
     All keys in kwargs must be from PROJECTION_ARGS
@@ -1176,7 +1170,7 @@ def _parse_projection_spec(projection_spec,
                                   "between Projection and ProjectionTuple")
         projection._weight = proj_spec_dict[WEIGHT] or projection.weight
         projection._exponent = proj_spec_dict[EXPONENT] or projection.exponent
-        if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if projection.initialization_status == ContextFlags.DEFERRED_INIT:
             projection.init_args[NAME] = proj_spec_dict[NAME] or projection.init_args[NAME]
         else:
             projection.name = proj_spec_dict[NAME] or projection.name
@@ -1626,9 +1620,8 @@ def _parse_connection_specs(connectee_state_type,
                                               mech_state_attribute=mech_state_attribute,
                                               projection_socket=projection_socket)
             except StateError as e:
-                raise ProjectionError("Problem with specification for {} in {} specification for {}: ".
-                                      format(State.__name__, Projection.__name__, owner.name) + e.error_value)
-
+                raise ProjectionError(f"Problem with specification for {State.__name__} in {Projection.__name__} "
+                                      f"specification for {owner.name}: " + e.error_value)
 
             # Check compatibility with any State(s) returned by _get_state_for_socket
 
@@ -1713,7 +1706,6 @@ def _validate_connection_request(
         projection_spec:_is_projection_spec,     # projection specification
         projection_socket:str,                   # socket of Projection to be connected to target state
         connectee_state:tc.optional(type)=None): # State for which connection is being sought
-
     """Validate that a Projection specification is compatible with the State to which a connection is specified
 
     Carries out undirected validation (i.e., without knowing whether the connectee is the sender or receiver).
@@ -1763,7 +1755,7 @@ def _validate_connection_request(
     if isinstance(projection_spec, Projection):
 
         # It is in deferred_init status
-        if projection_spec.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if projection_spec.initialization_status == ContextFlags.DEFERRED_INIT:
 
             # Try to get the State to which the Projection will be connected when fully initialized
             #     as confirmation that it is the correct type for state_type
@@ -1884,7 +1876,7 @@ def _validate_receiver(sender_mech:Mechanism,
     """
     spec_type = " in the {} arg ".format(spec_type) or ""
 
-    if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+    if projection.initialization_status == ContextFlags.DEFERRED_INIT:
         # receiver = projection.init_args['receiver'].owner
         state = projection.init_args['receiver']
         receiver = state.owner

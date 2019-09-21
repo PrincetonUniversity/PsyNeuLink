@@ -7,9 +7,132 @@ import re
 
 from psyneulink.core.components.functions.optimizationfunctions import OptimizationFunctionError
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 
+class TestControlSpecification:
+    # These test the coordination of adding a node with a control specification to a Composition
+    #    with adding a controller that may also specify control of that node.
+    # Principles:
+    #    1) there should be no redundant ControlSignals or ControlProjections created;
+    #    2) specification of control in controller supercedes any conflicting specification on a node;
+    #    3) order of addition to the composition does not matter (i.e., Principle 2 always applies)
+
+    # FIX: OUTSTANDING ISSUES -
+    #      When control is specified in a controller for a Mechanism that is not yet a node in the Composition
+    #          it neverhtless gets activated (in call to controller._activate_projections_for_compositions;
+    #          instead, it should either be put in deferred_init or added to node's aux_components attribute
+
+    def test_add_node_with_control_specified_then_add_controller(self):
+        # First add Mechanism with control specification to Composition,
+        #    then add controller with NO control specification to Composition
+        # ControlProjection specified on Mechanism should initially be in deferred_init,
+        #    but then initialized and added to controller when the Mechanism is added.
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+        ctl_mech = pnl.ControlMechanism()
+        comp = pnl.Composition()
+        comp.add_node(ddm)
+        comp.add_controller(ctl_mech)
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert np.allclose(comp.controller.control_signals[0].allocation_samples(),
+                           [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
+
+    def test_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
+        # First create Composition with controller that has NO control specification,
+        #    then add Mechanism with control specification to Composition;
+        # ControlProjection specified on Mechanism should initially be in deferred_init,
+        #    but then initialized and added to controller when the Mechanism is added.
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+        ctl_mech = pnl.ControlMechanism()
+        comp = pnl.Composition(controller=ctl_mech)
+        comp.add_node(ddm)
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert np.allclose(comp.controller.control_signals[0].allocation_samples(),
+                           [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
+
+    def test_redundant_control_spec_add_node_with_control_specified_then_controller_in_comp_constructor(self):
+        # First add Mechanism with control specification to Composition,
+        #    then add controller WITH redundant control specification to Composition
+        # Control specification on controller should replace one on Mechanism
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+        comp = pnl.Composition()
+        comp.add_node(ddm)
+        comp.add_controller(pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].allocation_samples is None
+
+    def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
+        # First create Composition with controller that has HAS control specification,
+        #    then add Mechanism with control specification to Composition;
+        # Control specification on controller should supercede one on Mechanism (which should be ignored)
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
+        comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
+        comp.add_node(ddm)
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert comp.controller.control_signals[0].allocation_samples is None
 
 class TestControlMechanisms:
+
+    def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):
+        # tests multiplicative modulation of default intensity_cost_function (Exponential) of
+        #    a ControlMechanism's default function (TransferWithCosts);
+        #    intensity_cost should = e ^ (allocation (3) * value of ctl_mech_B (also 3)) = e^9
+        mech = pnl.ProcessingMechanism()
+        ctl_mech_A = pnl.ControlMechanism(monitor_for_control=mech,
+                                      control_signals=pnl.ControlSignal(modulates=(pnl.INTERCEPT,mech),
+                                                                        cost_options=pnl.CostFunctions.INTENSITY))
+        ctl_mech_B = pnl.ControlMechanism(monitor_for_control=mech,
+                                          control_signals=pnl.ControlSignal(
+                                                              modulates=ctl_mech_A.control_signals[0],
+                                                              modulation=pnl.INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
+        comp = pnl.Composition()
+        comp.add_linear_processing_pathway(pathway=[mech,
+                                                    ctl_mech_A,
+                                                    ctl_mech_B
+                                                    ])
+
+        comp.run(inputs={mech:[3]}, num_trials=2)
+        assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 8103.083927575384008)
+
+    def test_modulation_of_control_signal_intensity_cost_function_ADDITIVE(self):
+        # tests additive modulation of default intensity_cost_function (Exponential) of
+        #    a ControlMechanism's default function (TransferWithCosts)
+        #    intensity_cost should = e ^ (allocation (3) + value of ctl_mech_B (also 3)) = e^6
+        mech = pnl.ProcessingMechanism()
+        ctl_mech_A = pnl.ControlMechanism(monitor_for_control=mech,
+                                      control_signals=pnl.ControlSignal(modulates=(pnl.INTERCEPT,mech),
+                                                                        cost_options=pnl.CostFunctions.INTENSITY))
+        ctl_mech_B = pnl.ControlMechanism(monitor_for_control=mech,
+                                          control_signals=pnl.ControlSignal(
+                                                              modulates=ctl_mech_A.control_signals[0],
+                                                              modulation=pnl.INTENSITY_COST_FCT_ADDITIVE_PARAM))
+        comp = pnl.Composition()
+        comp.add_linear_processing_pathway(pathway=[mech,
+                                                    ctl_mech_A,
+                                                    ctl_mech_B
+                                                    ])
+
+        comp.run(inputs={mech:[3]}, num_trials=2)
+        assert np.allclose(ctl_mech_A.control_signals[0].intensity_cost, 403.428793492735123)
 
     def test_lvoc(self):
         m1 = pnl.TransferMechanism(input_states=["InputState A", "InputState B"])
@@ -23,7 +146,11 @@ class TestControlMechanisms:
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
-                                                control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
+                                                control_signals=[
+                                                    {PROJECTIONS: (pnl.SLOPE, m1),
+                                                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                                    {PROJECTIONS: (pnl.SLOPE, m2),
+                                                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
 
@@ -43,10 +170,13 @@ class TestControlMechanisms:
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
-                                                control_signals=[(pnl.SLOPE, m1), (pnl.SLOPE, m2)])
+                                                control_signals=[
+                                                    {PROJECTIONS: (pnl.SLOPE, m1),
+                                                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                                    {PROJECTIONS: (pnl.SLOPE, m2),
+                                                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
-
 
         c.run(inputs=input_dict)
 
@@ -103,7 +233,8 @@ class TestControlMechanisms:
         S = pnl.Composition()
         S.add_node(A, required_roles=pnl.NodeRole.INPUT)
         S.add_linear_processing_pathway(pathway=path)
-        S.add_node(LC, required_roles=pnl.NodeRole.OUTPUT)
+        S.add_node(LC)
+        S.show_graph()
         LC.reinitialize_when = pnl.Never()
 
         gain_created_by_LC_output_state_1 = []
@@ -187,9 +318,532 @@ class TestControlMechanisms:
     #                               Ty: [4, 4]})
     #     assert np.allclose(result, [[[4.], [4.]],
     #                                 [[4.], [4.]]])
+    def test_multilevel_ocm_gridsearch_conflicting_directions(self):
+        oa = pnl.TransferMechanism(name='oa')
+        ob = pnl.TransferMechanism(name='ob')
+        ocomp = pnl.Composition(name='ocomp', controller_mode=pnl.BEFORE)
+        ia = pnl.TransferMechanism(name='ia')
+        ib = pnl.ProcessingMechanism(name='ib',
+                                     function=lambda x: abs(x - 75))
+        icomp = pnl.Composition(name='icomp', controller_mode=pnl.BEFORE)
+        ocomp.add_node(oa, required_roles=pnl.NodeRole.INPUT)
+        ocomp.add_node(ob)
+        ocomp.add_node(icomp)
+        icomp.add_node(ia, required_roles=pnl.NodeRole.INPUT)
+        icomp.add_node(ib)
+        ocomp._analyze_graph()
+        icomp._analyze_graph()
+        ocomp.add_projection(pnl.MappingProjection(), sender=oa, receiver=ia)
+        icomp.add_projection(pnl.MappingProjection(), sender=ia, receiver=ib)
+        ocomp.add_projection(pnl.MappingProjection(), sender=ib, receiver=ob)
 
+        ocomp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=ocomp,
+                features=[oa.input_state],
+                # feature_function=pnl.Buffer(history=2),
+                name="Controller",
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=ib.output_state,
+                    function=pnl.SimpleIntegrator,
+                    name="oController Objective Mechanism"
+                ),
+                function=pnl.GridSearch(direction=pnl.MINIMIZE),
+                control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
+                                                   function=pnl.Linear,
+                                                   variable=1.0,
+                                                   intensity_cost_function=pnl.Linear(slope=0.0),
+                                                   allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
+        )
+        icomp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=icomp,
+                features=[ia.input_state],
+                # feature_function=pnl.Buffer(history=2),
+                name="Controller",
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=ib.output_state,
+                    function=pnl.SimpleIntegrator,
+                    name="oController Objective Mechanism"
+                ),
+                function=pnl.GridSearch(direction=pnl.MAXIMIZE),
+                control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
+                                                   function=pnl.Linear,
+                                                   variable=1.0,
+                                                   intensity_cost_function=pnl.Linear(slope=0.0),
+                                                   allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
+        )
+        results = ocomp.run([5])
+        assert np.allclose(results, [[50]])
+        return ocomp
+
+    def test_multilevel_ocm_gridsearch_maximize(self):
+        oa = pnl.TransferMechanism(name='oa')
+        ob = pnl.TransferMechanism(name='ob')
+        ocomp = pnl.Composition(name='ocomp', controller_mode=pnl.BEFORE)
+        ia = pnl.TransferMechanism(name='ia')
+        ib = pnl.ProcessingMechanism(name='ib',
+                                     function=lambda x: abs(x - 75))
+        icomp = pnl.Composition(name='icomp', controller_mode=pnl.BEFORE)
+        ocomp.add_node(oa, required_roles=pnl.NodeRole.INPUT)
+        ocomp.add_node(ob)
+        ocomp.add_node(icomp)
+        icomp.add_node(ia, required_roles=pnl.NodeRole.INPUT)
+        icomp.add_node(ib)
+        ocomp._analyze_graph()
+        icomp._analyze_graph()
+        ocomp.add_projection(pnl.MappingProjection(), sender=oa, receiver=ia)
+        icomp.add_projection(pnl.MappingProjection(), sender=ia, receiver=ib)
+        ocomp.add_projection(pnl.MappingProjection(), sender=ib, receiver=ob)
+
+        ocomp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=ocomp,
+                features=[oa.input_state],
+                # feature_function=pnl.Buffer(history=2),
+                name="Controller",
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=ib.output_state,
+                    function=pnl.SimpleIntegrator,
+                    name="oController Objective Mechanism"
+                ),
+                function=pnl.GridSearch(direction=pnl.MAXIMIZE),
+                control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
+                                                   function=pnl.Linear,
+                                                   variable=1.0,
+                                                   intensity_cost_function=pnl.Linear(slope=0.0),
+                                                   allocation_samples=pnl.SampleSpec(start=1.0,
+                                                                                     stop=5.0,
+                                                                                     num=5))])
+        )
+        icomp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=icomp,
+                features=[ia.input_state],
+                # feature_function=pnl.Buffer(history=2),
+                name="Controller",
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=ib.output_state,
+                    function=pnl.SimpleIntegrator,
+                    name="oController Objective Mechanism"
+                ),
+                function=pnl.GridSearch(direction=pnl.MAXIMIZE),
+                control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
+                                                   function=pnl.Linear,
+                                                   variable=1.0,
+                                                   intensity_cost_function=pnl.Linear(slope=0.0),
+                                                   allocation_samples=pnl.SampleSpec(start=1.0,
+                                                                                     stop=5.0,
+                                                                                     num=5))])
+        )
+        results = ocomp.run([5])
+        assert np.allclose(results, [[70]])
+        return ocomp
+
+    def test_multilevel_ocm_gridsearch_minimize(self):
+        oa = pnl.TransferMechanism(name='oa')
+        ob = pnl.TransferMechanism(name='ob')
+        ocomp = pnl.Composition(name='ocomp', controller_mode=pnl.BEFORE)
+        ia = pnl.TransferMechanism(name='ia')
+        ib = pnl.ProcessingMechanism(name='ib',
+                                     function=lambda x: abs(x - 75))
+        icomp = pnl.Composition(name='icomp', controller_mode=pnl.BEFORE)
+        ocomp.add_node(oa, required_roles=pnl.NodeRole.INPUT)
+        ocomp.add_node(ob)
+        ocomp.add_node(icomp)
+        icomp.add_node(ia, required_roles=pnl.NodeRole.INPUT)
+        icomp.add_node(ib)
+        ocomp._analyze_graph()
+        icomp._analyze_graph()
+        ocomp.add_projection(pnl.MappingProjection(), sender=oa, receiver=ia)
+        icomp.add_projection(pnl.MappingProjection(), sender=ia, receiver=ib)
+        ocomp.add_projection(pnl.MappingProjection(), sender=ib, receiver=ob)
+
+        ocomp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=ocomp,
+                features=[oa.input_state],
+                # feature_function=pnl.Buffer(history=2),
+                name="Controller",
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=ib.output_state,
+                    function=pnl.SimpleIntegrator,
+                    name="oController Objective Mechanism"
+                ),
+                function=pnl.GridSearch(direction=pnl.MINIMIZE),
+                control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
+                                                   function=pnl.Linear,
+                                                   variable=1.0,
+                                                   intensity_cost_function=pnl.Linear(slope=0.0),
+                                                   allocation_samples=pnl.SampleSpec(start=1.0,
+                                                                                     stop=5.0,
+                                                                                     num=5))])
+        )
+        icomp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=icomp,
+                features=[ia.input_state],
+                # feature_function=pnl.Buffer(history=2),
+                name="Controller",
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=ib.output_state,
+                    function=pnl.SimpleIntegrator,
+                    name="oController Objective Mechanism"
+                ),
+                function=pnl.GridSearch(direction=pnl.MINIMIZE),
+                control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
+                                                   function=pnl.Linear,
+                                                   variable=1.0,
+                                                   intensity_cost_function=pnl.Linear(slope=0.0),
+                                                   allocation_samples=pnl.SampleSpec(start=1.0,
+                                                                                     stop=5.0,
+                                                                                     num=5))])
+        )
+        results = ocomp.run([5])
+        assert np.allclose(results, [[0]])
+        return ocomp
+
+    def test_two_tier_ocm(self):
+        integrationConstant = 0.8  # Time Constant
+        DRIFT = 0.25  # Drift Rate
+        STARTING_POINT = 0.0  # Starting Point
+        THRESHOLD = 0.05  # Threshold
+        NOISE = 0.1  # Noise
+        T0 = 0.2  # T0
+        congruentWeight = 0.2
+
+        # Task Layer: [Color, Motion] {0, 1} Mutually Exclusive
+        taskLayer = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
+                                          # size=2,
+                                          function=pnl.Linear(slope=1, intercept=0),
+                                          output_states=[pnl.RESULT],
+                                          name='Task Input [I1, I2]')
+
+        # Stimulus Layer: [Color Stimulus, Motion Stimulus]
+        stimulusInfo = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
+                                             # size=2,
+                                             function=pnl.Linear(slope=1, intercept=0),
+                                             output_states=[pnl.RESULT],
+                                             name="Stimulus Input [S1, S2]")
+
+        congruenceWeighting = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
+                                                    size=2,
+                                                    function=pnl.Linear(slope=congruentWeight, intercept=0),
+                                                    name='Congruence * Automatic Component')
+
+        # Activation Layer: [Color Activation, Motion Activation]
+        activation = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0]],
+                                                    function=pnl.Logistic(gain=1.0),
+                                                    matrix=[[1.0, -1.0],
+                                                            [-1.0, 1.0]],
+                                                    integrator_mode=True,
+                                                    integrator_function=pnl.AdaptiveIntegrator(
+                                                        rate=integrationConstant),
+                                                    initial_value=np.array([[0.0, 0.0]]),
+                                                    output_states=[pnl.RESULT],
+                                                    name='Task Activations [Act1, Act2]')
+
+        activation.set_log_conditions([pnl.RESULT, "mod_gain"])
+
+        # Hadamard product of Activation and Stimulus Information
+        nonAutomaticComponent = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
+                                                      size=2,
+                                                      function=pnl.Linear(slope=1, intercept=0),
+                                                      input_states=pnl.InputState(combine=pnl.PRODUCT),
+                                                      output_states=[pnl.RESULT],
+                                                      name='Non-Automatic Component')
+
+        # Summation of nonAutomatic and Automatic Components
+        ddmCombination = pnl.TransferMechanism(size=1,
+                                               function=pnl.Linear(slope=1, intercept=0),
+                                               input_states=pnl.InputState(combine=pnl.SUM),
+                                               output_states=[pnl.RESULT],
+                                               name="Drift = Wa*(S1 + S2) + (S1*Act1 + S2*Act2)")
+
+        decisionMaker = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=DRIFT,
+                                                                      starting_point=STARTING_POINT,
+                                                                      threshold=THRESHOLD,
+                                                                      noise=NOISE,
+                                                                      t0=T0),
+                                output_states=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
+                                               pnl.PROBABILITY_UPPER_THRESHOLD,
+                                               pnl.PROBABILITY_LOWER_THRESHOLD],
+                                name='DDM')
+
+        weightingFunction = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
+                                                  size=2,
+                                                  function=pnl.Linear(slope=1, intercept=0),
+                                                  input_states=pnl.InputState(combine=pnl.PRODUCT),
+                                                  output_states=[pnl.RESULT],
+                                                  name='Bias')
+
+        topCorrect = pnl.TransferMechanism(size=1,
+                                           function=pnl.Linear(slope=1, intercept=0),
+                                           input_states=pnl.InputState(combine=pnl.PRODUCT),
+                                           output_states=[pnl.RESULT],
+                                           name="weightDDMInput")
+
+        stabilityFlexibility = pnl.Composition(name='inner', controller_mode=pnl.BEFORE)
+
+        # Linear pathway from the task input origin node to the DDM
+        stabilityFlexibility.add_linear_processing_pathway(pathway=[taskLayer,
+                                                                    activation,
+                                                                    nonAutomaticComponent,
+                                                                    ddmCombination,
+                                                                    topCorrect,
+                                                                    decisionMaker])
+
+        # Linear pathway from the stimulus input origin node to the DDM
+        stabilityFlexibility.add_linear_processing_pathway(pathway=[stimulusInfo,
+                                                                    nonAutomaticComponent,
+                                                                    ddmCombination,
+                                                                    topCorrect,
+                                                                    decisionMaker])
+
+        # Linear pathway from the stimulus input origin node to the DDM with congruence
+        stabilityFlexibility.add_linear_processing_pathway(pathway=[stimulusInfo,
+                                                                    congruenceWeighting,
+                                                                    ddmCombination,
+                                                                    topCorrect,
+                                                                    decisionMaker])
+
+        stabilityFlexibility.add_linear_processing_pathway(pathway=[taskLayer,
+                                                                    weightingFunction,
+                                                                    topCorrect,
+                                                                    decisionMaker])
+
+        stabilityFlexibility.add_linear_processing_pathway(pathway=[stimulusInfo,
+                                                                    weightingFunction,
+                                                                    topCorrect,
+                                                                    decisionMaker])
+
+        stabilityFlexibility.add_controller(
+            pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
+                                             features=[taskLayer.input_state,
+                                                       stimulusInfo.input_state],
+                                             feature_function=pnl.Buffer(history=2),
+                                             name="Controller",
+                                             objective_mechanism=pnl.ObjectiveMechanism(
+                                                 monitor=[(pnl.PROBABILITY_UPPER_THRESHOLD,
+                                                           decisionMaker)],
+                                                 function=pnl.SimpleIntegrator,
+                                                 name="Controller Objective Mechanism"),
+                                             function=pnl.GridSearch(),
+                                             control_signals=[pnl.ControlSignal(
+                                                 projections=[(pnl.GAIN, activation)],
+                                                 function=pnl.Linear,
+                                                 variable=1.0,
+                                                 intensity_cost_function=pnl.Linear(
+                                                     slope=0.0),
+                                                 allocation_samples=pnl.SampleSpec(
+                                                     start=1.0,
+                                                     stop=5.0,
+                                                     num=2))]
+                                             )
+        )
+        outerComposition = pnl.Composition(name='outer',
+                                           controller_mode=pnl.AFTER,
+                                           retain_old_simulation_data=True)
+        outerComposition.add_node(stabilityFlexibility)
+        outerComposition.add_controller(
+            pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
+                                             features=[taskLayer.input_state, stimulusInfo.input_state],
+                                             feature_function=pnl.Buffer(history=2),
+                                             name="OuterController",
+                                             objective_mechanism=pnl.ObjectiveMechanism(
+                                                 monitor=[(pnl.PROBABILITY_UPPER_THRESHOLD, decisionMaker)],
+                                                 function=pnl.SimpleIntegrator,
+                                                 name="Controller Objective Mechanism"),
+                                             function=pnl.GridSearch(),
+                                             control_signals=[
+                                                 pnl.ControlSignal(
+                                                     projections=[(pnl.THRESHOLD, decisionMaker)],
+                                                     function=pnl.Linear,
+                                                     variable=1.0,
+                                                     intensity_cost_function=pnl.Linear(
+                                                         slope=0.0),
+                                                     allocation_samples=pnl.SampleSpec(
+                                                         start=0.5,
+                                                         stop=2.0,
+                                                         num=3))
+                                             ])
+        )
+        taskTrain = [[0, 1], [0, 1], [0, 1]]
+        stimulusTrain = [[1, -1], [1, -1], [1, -1]]
+        zipTrain = list(zip(taskTrain, stimulusTrain))
+        outerComposition.run(zipTrain)
+        assert np.allclose(outerComposition.results,
+                           [[[0.05], [0.42357798], [0.76941918], [0.23058082]],
+                            [[0.1], [0.64721378], [0.98737278], [0.01262722]],
+                            [[0.1], [0.60232676], [0.9925894], [0.0074106]]])
+
+    def test_multilevel_control(self):
+        oA = pnl.TransferMechanism(
+            name='OuterA',
+        )
+        oB = pnl.TransferMechanism(
+            name='OuterB',
+        )
+        iA = pnl.TransferMechanism(
+            name='InnerA',
+        )
+        iB = pnl.TransferMechanism(
+            name='InnerB',
+        )
+        iComp = pnl.Composition(name='InnerComp')
+        iComp.add_node(iA)
+        iComp.add_node(iB)
+        iComp.add_projection(pnl.MappingProjection(), iA, iB)
+        oComp = pnl.Composition(name='OuterComp')
+        oComp.add_node(oA)
+        oComp.add_node(oB)
+        oComp.add_node(iComp)
+        oComp.add_projection(pnl.MappingProjection(), oA, iComp)
+        oComp.add_projection(pnl.MappingProjection(), iB, oB)
+        oController = pnl.ControlMechanism(
+            name='Controller',
+            control_signals=[
+                pnl.ControlSignal(
+                    name='ControllerTransfer',
+                    function=pnl.Linear(slope=2),
+                    modulates=(pnl.SLOPE, iA),
+                )
+            ],
+        )
+        oComp.add_controller(oController)
+        assert oComp.controller == oController
+        iController = pnl.ControlMechanism(
+            name='Controller___',
+            control_signals=[
+                pnl.ControlSignal(
+                    name='ControllerTransfer',
+                    function=pnl.Linear(slope=4),
+                    modulates=(pnl.SLOPE, iB)
+                )
+            ],
+        )
+        iComp.add_controller(iController)
+        assert iComp.controller == iController
+        assert oComp.controller == oController
+        assert oComp.run(inputs=[5]) == [40]
 
 class TestModelBasedOptimizationControlMechanisms:
+
+    def test_nested_evc(self):
+        import psyneulink as pnl
+        import numpy as np
+        from psyneulink import PROJECTIONS, ALLOCATION_SAMPLES
+
+        outer_comp = pnl.Composition(retain_old_simulation_data=True)
+        # Mechanisms
+        Input = pnl.TransferMechanism(name='Input')
+        reward = pnl.TransferMechanism(output_states=[pnl.RESULT, pnl.OUTPUT_MEAN, pnl.OUTPUT_VARIANCE],
+                                       name='reward')
+        Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                            drift_rate=(1.0,
+                                                        pnl.ControlProjection(function=pnl.Linear,
+                                                                              control_signal_params={
+                                                                                  pnl.ALLOCATION_SAMPLES: np.arange(
+                                                                                          0.1, 1.01,
+                                                                                          0.3)})),
+                                            threshold=(1.0,
+                                                       pnl.ControlProjection(function=pnl.Linear,
+                                                                             control_signal_params={
+                                                                                 pnl.ALLOCATION_SAMPLES: np.arange(
+                                                                                         0.1, 1.01,
+                                                                                         0.3)})),
+                                            noise=0.5,
+                                            starting_point=0,
+                                            t0=0.45),
+                                            output_states=[pnl.DECISION_VARIABLE,
+                                                                      pnl.RESPONSE_TIME,
+                                                                      pnl.PROBABILITY_UPPER_THRESHOLD],
+                                                       name='Decision')
+
+        comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
+        comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
+        comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
+        task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
+        comp.add_linear_processing_pathway(task_execution_pathway)
+        comp._analyze_graph()
+        outer_comp.add_node(comp)
+        outer_comp._analyze_graph()
+        outer_comp.add_controller(controller=pnl.OptimizationControlMechanism(
+            agent_rep=outer_comp,
+            features=[Input.input_state, reward.input_state],
+            feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+            objective_mechanism=pnl.ObjectiveMechanism(
+                function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                monitor=[reward,
+                         Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
+                         (Decision.output_states[pnl.RESPONSE_TIME], -1, 1)]),
+            function=pnl.GridSearch(),
+            control_signals=[{PROJECTIONS: ("drift_rate", Decision),
+                              ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                             {PROJECTIONS: ("threshold", Decision),
+                              ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
+        )
+
+        comp.enable_controller = True
+
+        comp._analyze_graph()
+
+        outer_comp._analyze_graph()
+        outer_comp.run(inputs=[
+            [[20], [0.5]],
+            [[20], [0.123]]
+        ])
+
+        # Note: Removed decision variable OutputState from simulation results because sign is chosen randomly
+        expected_sim_results_array = [
+            [[10.], [10.0], [0.0], [0.48999867], [0.50499983]],
+            [[10.], [10.0], [0.0], [1.08965888], [0.51998934]],
+            [[10.], [10.0], [0.0], [2.40680493], [0.53494295]],
+            [[10.], [10.0], [0.0], [4.43671978], [0.549834]],
+            [[10.], [10.0], [0.0], [0.48997868], [0.51998934]],
+            [[10.], [10.0], [0.0], [1.08459402], [0.57932425]],
+            [[10.], [10.0], [0.0], [2.36033556], [0.63645254]],
+            [[10.], [10.0], [0.0], [4.24948962], [0.68997448]],
+            [[10.], [10.0], [0.0], [0.48993479], [0.53494295]],
+            [[10.], [10.0], [0.0], [1.07378304], [0.63645254]],
+            [[10.], [10.0], [0.0], [2.26686573], [0.72710822]],
+            [[10.], [10.0], [0.0], [3.90353015], [0.80218389]],
+            [[10.], [10.0], [0.0], [0.4898672], [0.549834]],
+            [[10.], [10.0], [0.0], [1.05791834], [0.68997448]],
+            [[10.], [10.0], [0.0], [2.14222978], [0.80218389]],
+            [[10.], [10.0], [0.0], [3.49637662], [0.88079708]],
+            [[15.], [15.0], [0.0], [0.48999926], [0.50372993]],
+            [[15.], [15.0], [0.0], [1.08981011], [0.51491557]],
+            [[15.], [15.0], [0.0], [2.40822035], [0.52608629]],
+            [[15.], [15.0], [0.0], [4.44259627], [0.53723096]],
+            [[15.], [15.0], [0.0], [0.48998813], [0.51491557]],
+            [[15.], [15.0], [0.0], [1.0869779], [0.55939819]],
+            [[15.], [15.0], [0.0], [2.38198336], [0.60294711]],
+            [[15.], [15.0], [0.0], [4.33535807], [0.64492386]],
+            [[15.], [15.0], [0.0], [0.48996368], [0.52608629]],
+            [[15.], [15.0], [0.0], [1.08085171], [0.60294711]],
+            [[15.], [15.0], [0.0], [2.32712843], [0.67504223]],
+            [[15.], [15.0], [0.0], [4.1221271], [0.7396981]],
+            [[15.], [15.0], [0.0], [0.48992596], [0.53723096]],
+            [[15.], [15.0], [0.0], [1.07165729], [0.64492386]],
+            [[15.], [15.0], [0.0], [2.24934228], [0.7396981]],
+            [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]
+        ]
+
+        for simulation in range(len(expected_sim_results_array)):
+            assert np.allclose(expected_sim_results_array[simulation],
+                               # Note: Skip decision variable OutputState
+                               outer_comp.simulation_results[simulation][0:3] + outer_comp.simulation_results[
+                                                                                    simulation][4:6])
+
+        expected_results_array = [
+            [[20.0], [20.0], [0.0], [1.0], [2.378055160151634], [0.9820137900379085]],
+            [[20.0], [20.0], [0.0], [0.1], [0.48999967725112503], [0.5024599801509442]]
+        ]
+
+        for trial in range(len(expected_results_array)):
+            np.testing.assert_allclose(outer_comp.results[trial], expected_results_array[trial], atol=1e-08,
+                                       err_msg='Failed on expected_output[{0}]'.format(trial))
 
     def test_evc(self):
         # Mechanisms
@@ -210,22 +864,26 @@ class TestModelBasedOptimizationControlMechanisms:
                                         pnl.PROBABILITY_UPPER_THRESHOLD],
                            name='Decision')
 
-        comp = pnl.Composition(name="evc")
+        comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
         comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
         comp.add_linear_processing_pathway(task_execution_pathway)
 
-        comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
-                                                                                  features=[Input.input_state, reward.input_state],
-                                                                                  feature_function=pnl.AdaptiveIntegrator(rate=0.5),
-                                                                                  objective_mechanism=pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT),
-                                                                                                                             monitor=[reward,
-                                                                                                                                                      Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
-                                                                                                                                                      (Decision.output_states[pnl.RESPONSE_TIME], -1, 1)]),
-                                                                                  function=pnl.GridSearch(),
-                                                                                  control_signals=[("drift_rate", Decision),
-                                                                                                   ("threshold", Decision)])
+        comp.add_controller(controller=pnl.OptimizationControlMechanism(
+                                                agent_rep=comp,
+                                                features=[Input.input_state, reward.input_state],
+                                                feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                                                objective_mechanism=pnl.ObjectiveMechanism(
+                                                        function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                                                        monitor=[reward,
+                                                                 Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
+                                                                 (Decision.output_states[pnl.RESPONSE_TIME], -1, 1)]),
+                                                function=pnl.GridSearch(),
+                                                control_signals=[{PROJECTIONS: ("drift_rate", Decision),
+                                                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                                                 {PROJECTIONS: ("threshold", Decision),
+                                                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
                                        )
 
         comp.enable_controller = True
@@ -237,7 +895,7 @@ class TestModelBasedOptimizationControlMechanisms:
             reward: [20, 20]
         }
 
-        comp.run(inputs=stim_list_dict, retain_old_simulation_data=True)
+        comp.run(inputs=stim_list_dict)
 
         # Note: Removed decision variable OutputState from simulation results because sign is chosen randomly
         expected_sim_results_array = [
@@ -554,7 +1212,9 @@ class TestModelBasedOptimizationControlMechanisms:
         B = pnl.ProcessingMechanism(name='B')
 
         comp = pnl.Composition(name='comp',
-                               controller_mode=pnl.BEFORE)
+                               controller_mode=pnl.BEFORE,
+                               retain_old_simulation_data=True,
+                               )
         comp.add_linear_processing_pathway([A, B])
 
         search_range = pnl.SampleSpec(start=0.25, stop=0.75, step=0.25)
@@ -579,7 +1239,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         for i in range(1, len(ocm.input_states)):
             ocm.input_states[i].function.reinitialize()
-        comp.run(inputs=inputs, retain_old_simulation_data=True)
+        comp.run(inputs=inputs)
 
         log = objective_mech.log.nparray_dictionary()
 
@@ -888,7 +1548,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         comp.run(inputs=inputs,
                  num_trials=10,
-                 execution_id='outer_comp')
+                 context='outer_comp')
 
         log_arr = A.log.nparray_dictionary()
 

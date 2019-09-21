@@ -133,13 +133,13 @@ def test_delta():
 
 def test_delta_fail():
     t = pnl.TransferMechanism()
-    t.parameters.value.set(None)
+    t.parameters.value.set(None, override=True)
 
     t.execute(10)
     with pytest.raises(TypeError) as error:
         t.parameters.value.get_delta()
 
-    assert "Parameter 'value' value mismatch between current" in str(error)
+    assert "Parameter 'value' value mismatch between current" in str(error.value)
 
 
 def test_validation():
@@ -182,7 +182,7 @@ def test_dot_notation():
     assert t.value == 5
     d.run({t: 10})
     assert t.value == 10
-    c.run({t: 20}, execution_id='custom execution id')
+    c.run({t: 20}, context='custom execution id')
     assert t.value == 20
 
     # context None

@@ -103,13 +103,15 @@ class Mechanism(ShellClass):
                  function=None,
                  param_defaults=None,
                  name=None,
-                 prefs=None):
+                 prefs=None,
+                 **kwargs):
         super().__init__(default_variable=default_variable,
                          size=size,
                          function=function,
                          param_defaults=param_defaults,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         raise ShellClassError("Must implement _validate_params in {0}".format(self))
@@ -151,7 +153,7 @@ class State(ShellClass):
     def set_value(self, new_value):
         raise ShellClassError("Must implement set_value in {0}".format(self.__class__.__name__))
 
-    def update(self, params=None, context=None):
+    def _update(self, params=None, context=None):
         raise ShellClassError("{} must implement update".format(self.__class__.__name__))
 
 

@@ -51,6 +51,7 @@ from itertools import product
 from psyneulink.core.components.functions.learningfunctions import BayesGLM
 from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
 from psyneulink.core.globals.keywords import DEFAULT_VARIABLE
+from psyneulink.core.globals.parameters import Parameter
 
 __all__ = ['GymForagerCFA']
 
@@ -61,7 +62,7 @@ class GymForagerCFAError(Exception):
 
 
 class GymForagerCFA(CompositionFunctionApproximator):
-    '''Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
+    """Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
     <CompositionFunctionApproximator.evaluate>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
     for a `Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, from a set of `feature_values
     <OptimizationControlMechanism.feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
@@ -84,13 +85,16 @@ class GymForagerCFA(CompositionFunctionApproximator):
     predict the `net_outcome <ControlMechanism.net_outcome>` from the
     `prediction_vector <RegressorCFA.prediction_vector>`.
 
-    '''
+    """
+
+    class Parameters(CompositionFunctionApproximator.Parameters):
+        update_weights = Parameter(BayesGLM, stateful=False, loggable=False)
 
     def __init__(self,
                  name=None,
                  update_weights=BayesGLM,
                  prediction_terms:tc.optional(list)=None):
-        '''
+        """
 
         Arguments
         ---------
@@ -99,7 +103,7 @@ class GymForagerCFA(CompositionFunctionApproximator):
         Attributes
         ----------
 
-        '''
+        """
 
         self.update_weights = update_weights
         self._instantiate_prediction_terms(prediction_terms)
@@ -108,10 +112,10 @@ class GymForagerCFA(CompositionFunctionApproximator):
 
 
     def initialize(self, features_array, control_signals):
-        '''Assign owner and instantiate `prediction_vector <RegressorCFA.prediction_vector>`
+        """Assign owner and instantiate `prediction_vector <RegressorCFA.prediction_vector>`
 
         Must be called before RegressorCFA's methods can be used.
-        '''
+        """
 
         prediction_terms = self.prediction_terms
         self.prediction_vector = self.PredictionVector(features_array, control_signals, prediction_terms)
@@ -124,17 +128,18 @@ class GymForagerCFA(CompositionFunctionApproximator):
         else:
             self.update_weights.reinitialize({DEFAULT_VARIABLE: update_weights_default_variable})
 
-    def adapt(self, feature_values, control_allocation, net_outcome, execution_id=None):
-        '''Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
-        **net_outcome** from **feature_values** and **control_allocation**.'''
-        prediction_vector = self.parameters.prediction_vector.get(execution_id)
-        previous_state = self.parameters.previous_state.get(execution_id)
+    def adapt(self, feature_values, control_allocation, net_outcome, context=None):
+        """Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
+        **net_outcome** from **feature_values** and **control_allocation**.
+        """
+        prediction_vector = self.parameters.prediction_vector._get(context)
+        previous_state = self.parameters.previous_state._get(context)
 
         if previous_state is not None:
             # Update regression_weights
-            regression_weights = self.update_weights([previous_state, net_outcome], execution_id=execution_id)
+            regression_weights = self.update_weights([previous_state, net_outcome], context=context)
             # Update vector with current feature_values and control_allocation and store for next trial
-            prediction_vector.update_vector(control_allocation, feature_values, execution_id)
+            prediction_vector.update_vector(control_allocation, feature_values, context)
             previous_state = prediction_vector.vector
         else:
             # Initialize vector and control_signals on first trial
@@ -142,20 +147,19 @@ class GymForagerCFA(CompositionFunctionApproximator):
             # FIX: 11/9/19 LOCALLY MANAGE STATEFULNESS OF ControlSignals AND costs
             # prediction_vector.reference_variable = control_allocation
             previous_state = np.full_like(prediction_vector.vector, 0)
-            regression_weights = self.update_weights([previous_state, 0], execution_id=execution_id)
+            regression_weights = self.update_weights([previous_state, 0], context=context)
 
         self._set_multiple_parameter_values(
-            execution_id,
+            context,
             previous_state=previous_state,
             prediction_vector=prediction_vector,
             regression_weights=regression_weights,
-            override=True
         )
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
     # def evaluate(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
-    def evaluate(self, feature_values, control_allocation, num_estimates, context, execution_id=None):
-        '''Update prediction_vector <RegressorCFA.prediction_vector>`,
+    def evaluate(self, feature_values, control_allocation, num_estimates, context):
+        """Update prediction_vector <RegressorCFA.prediction_vector>`,
         then multiply by regression_weights.
 
         Uses the current values of `regression_weights <RegressorCFA.regression_weights>` together with
@@ -165,20 +169,20 @@ class GymForagerCFA(CompositionFunctionApproximator):
         .. note::
             If this method is assigned as the `objective_funtion of a `GradientOptimization` `Function`,
             it is differentiated using `autograd <https://github.com/HIPS/autograd>`_\\.grad().
-        '''
+        """
         predicted_outcome=0
 
-        prediction_vector = self.parameters.prediction_vector.get(execution_id)
+        prediction_vector = self.parameters.prediction_vector._get(context)
 
         count = num_estimates if num_estimates else 1
         for i in range(count):
             terms = self.prediction_terms
-            vector = prediction_vector.compute_terms(control_allocation, execution_id=execution_id)
+            vector = prediction_vector.compute_terms(control_allocation, context=context)
             # FIX: THIS SHOULD GET A SAMPLE RATHER THAN JUST USE THE ONE RETURNED FROM ADAPT METHOD
             #      OR SHOULD MULTIPLE SAMPLES BE DRAWN AND AVERAGED AT END OF ADAPT METHOD?
             #      I.E., AVERAGE WEIGHTS AND THEN OPTIMIZE OR OTPIMZE FOR EACH SAMPLE OF WEIGHTS AND THEN AVERAGE?
 
-            weights = self.parameters.regression_weights.get(execution_id)
+            weights = self.parameters.regression_weights._get(context)
             net_outcome = 0
 
             for term_label, term_value in vector.items():
@@ -189,10 +193,3 @@ class GymForagerCFA(CompositionFunctionApproximator):
             predicted_outcome+=net_outcome
         predicted_outcome/=count
         return predicted_outcome
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            [self.update_weights]
-        ))
-

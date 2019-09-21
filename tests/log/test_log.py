@@ -5,222 +5,14 @@ import pytest
 from collections import OrderedDict
 
 import psyneulink.core.components.functions.transferfunctions
-
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 
 class TestLog:
 
-    def test_log_with_identity_matrix(self):
+    def test_log(self):
 
         T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
         T_2 = pnl.TransferMechanism(name='log_test_T_2', size=2)
-        PS = pnl.Process(name='log_test_PS', pathway=[T_1, T_2])
-        PJ = T_2.path_afferents[0]
-
-        assert T_1.loggable_items == {
-            'InputState-0': 'OFF',
-            'RESULTS': 'OFF',
-            'clip': 'OFF',
-            'convergence_criterion': 'OFF',
-            'func_additive_param': 'OFF',
-            'func_bounds': 'OFF',
-            'func_has_initializers': 'OFF',
-            'func_intercept': 'OFF',
-            'func_multiplicative_param': 'OFF',
-            'func_slope': 'OFF',
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'function': 'OFF',
-            'has_initializers': 'OFF',
-            'initial_value': 'OFF',
-            'integration_rate': 'OFF',
-            'integrator_function_value': 'OFF',
-            'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
-            'mod_integration_rate': 'OFF',
-            'mod_intercept': 'OFF',
-            'mod_noise': 'OFF',
-            'mod_slope': 'OFF',
-            'noise': 'OFF',
-            'previous_value': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF'
-        }
-        assert T_2.loggable_items == {
-            'InputState-0': 'OFF',
-            'RESULTS': 'OFF',
-            'clip': 'OFF',
-            'convergence_criterion': 'OFF',
-            'func_additive_param': 'OFF',
-            'func_bounds': 'OFF',
-            'func_has_initializers': 'OFF',
-            'func_intercept': 'OFF',
-            'func_multiplicative_param': 'OFF',
-            'func_slope': 'OFF',
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'function': 'OFF',
-            'has_initializers': 'OFF',
-            'initial_value': 'OFF',
-            'integration_rate': 'OFF',
-            'integrator_function_value': 'OFF',
-            'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
-            'mod_integration_rate': 'OFF',
-            'mod_intercept': 'OFF',
-            'mod_noise': 'OFF',
-            'mod_slope': 'OFF',
-            'noise': 'OFF',
-            'previous_value': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF'
-        }
-        assert PJ.loggable_items == {
-            'exponent': 'OFF',
-            'func_bounds': 'OFF',
-            'func_has_initializers': 'OFF',
-            # 'func_matrix': 'OFF', # Uses Identity function, so no func_matrix
-            'func_value': 'OFF',
-            'has_initializers': 'OFF',
-            'func_variable': 'OFF',
-            'matrix': 'OFF',
-            'mod_matrix': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF',
-            'weight': 'OFF'
-        }
-
-        T_1.set_log_conditions('mod_noise')
-        T_1.set_log_conditions(pnl.RESULTS)
-        # PJ.set_log_conditions('mod_matrix')
-
-        assert T_1.loggable_items == {
-            'InputState-0': 'OFF',
-            'RESULTS': 'EXECUTION',
-            'clip': 'OFF',
-            'convergence_criterion': 'OFF',
-            'func_additive_param': 'OFF',
-            'func_bounds': 'OFF',
-            'func_has_initializers': 'OFF',
-            'func_intercept': 'OFF',
-            'func_multiplicative_param': 'OFF',
-            'func_slope': 'OFF',
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'function': 'OFF',
-            'has_initializers': 'OFF',
-            'initial_value': 'OFF',
-            'integration_rate': 'OFF',
-            'integrator_function_value': 'OFF',
-            'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
-            'mod_integration_rate': 'OFF',
-            'mod_intercept': 'OFF',
-            'mod_noise': 'EXECUTION',
-            'mod_slope': 'OFF',
-            'noise': 'OFF',
-            'previous_value': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF'
-        }
-        assert T_2.loggable_items == {
-            'InputState-0': 'OFF',
-            'RESULTS': 'OFF',
-            'clip': 'OFF',
-            'convergence_criterion': 'OFF',
-            'func_additive_param': 'OFF',
-            'func_bounds': 'OFF',
-            'func_has_initializers': 'OFF',
-            'func_intercept': 'OFF',
-            'func_multiplicative_param': 'OFF',
-            'func_slope': 'OFF',
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'function': 'OFF',
-            'has_initializers': 'OFF',
-            'initial_value': 'OFF',
-            'integration_rate': 'OFF',
-            'integrator_function_value': 'OFF',
-            'integrator_mode': 'OFF',
-            'max_passes': 'OFF',
-            'mod_convergence_criterion': 'OFF',
-            'mod_integration_rate': 'OFF',
-            'mod_intercept': 'OFF',
-            'mod_noise': 'OFF',
-            'mod_slope': 'OFF',
-            'noise': 'OFF',
-            'previous_value': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF'
-        }
-        assert PJ.loggable_items == {
-            'exponent': 'OFF',
-            'func_bounds': 'OFF',
-            'func_has_initializers': 'OFF',
-            # 'func_matrix': 'OFF', # Uses Identity function, so no func_matrix
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'has_initializers': 'OFF',
-            'matrix': 'OFF',
-            'mod_matrix': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF',
-            'weight': 'OFF'
-        }
-
-        PS.execute()
-        PS.execute()
-        PS.execute()
-
-        assert T_1.logged_items == {'RESULTS': 'EXECUTION', 'mod_noise': 'EXECUTION'}
-        # assert PJ.logged_items == {}
-
-        T_1.log.print_entries(execution_contexts=PS)
-
-        # assert T_1.log.print_entries() ==
-        # # Log for mech_A:
-        # #
-        # # Index     Variable:                                          Context                                                                  Value
-        # # 0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # #
-        # #
-        # # 0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        #
-        # assert T_2.log.print_entries() ==
-        # # Log for mech_A:
-        # #
-        # # Index     Variable:                                          Context                                                                  Value
-        # # 0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # #
-        # #
-        # # 0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-
-        T_1_csv = T_1.log.csv(entries=['mod_noise', 'RESULTS'], owner_name=False, quotes=None)
-        print(T_1_csv)
-        assert T_1_csv == \
-            "'Execution Context', 'Data'\n" \
-            + "'{0}', \'Index\', \'mod_noise\', \'RESULTS\'\n".format(PS.default_execution_id) \
-            + ", 0, 0.0, 0.0 0.0\n" \
-            + ", 1, 0.0, 0.0 0.0\n" \
-            + ", 2, 0.0, 0.0 0.0\n"
-
-        result = T_1.log.nparray(entries=['mod_noise', 'RESULTS'], header=False, owner_name=True)
-        np.testing.assert_array_equal(result[1][0],
-                                      np.array([[[0], [1], [2]],
-                                                [[ 0.], [ 0.], [ 0.]],
-                                                [[ 0.,  0.], [ 0.,  0.],[ 0., 0.]]]))
-
-
-    def test_log_without_identity_matrix(self):
-
-        T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
-        T_2 = pnl.TransferMechanism(name='log_test_T_2', size=3)
         PS = pnl.Process(name='log_test_PS', pathway=[T_1, T_2])
         PJ = T_2.path_afferents[0]
 
@@ -367,7 +159,7 @@ class TestLog:
             'exponent': 'OFF',
             'func_bounds': 'OFF',
             'func_has_initializers': 'OFF',
-            'func_matrix': 'OFF', # Uses Identity function, so no func_matrix
+            'func_matrix': 'OFF',
             'func_value': 'OFF',
             'func_variable': 'OFF',
             'has_initializers': 'OFF',
@@ -385,7 +177,7 @@ class TestLog:
         assert T_1.logged_items == {'RESULTS': 'EXECUTION', 'mod_noise': 'EXECUTION'}
         assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
 
-        T_1.log.print_entries(execution_contexts=PS)
+        T_1.log.print_entries(contexts=PS)
 
         # assert T_1.log.print_entries() ==
         # # Log for mech_A:
@@ -421,9 +213,9 @@ class TestLog:
         assert PJ.log.csv(entries='mod_matrix', owner_name=True, quotes=True) == \
             "'Execution Context', 'Data'\n" \
             + "'{0}', \'Index\', \'MappingProjection from log_test_T_1 to log_test_T_2[mod_matrix]\'\n".format(PS.default_execution_id) \
-            + ", \'0\', \'1.0 1.0 1.0\' \'1.0 1.0 1.0\'\n" \
-            + ", \'1\', \'1.0 1.0 1.0\' \'1.0 1.0 1.0\'\n" \
-            + ", \'2\', \'1.0 1.0 1.0\' \'1.0 1.0 1.0\'\n" \
+            + ", \'0\', \'1.0 0.0\' \'0.0 1.0\'\n" \
+            + ", \'1\', \'1.0 0.0\' \'0.0 1.0\'\n" \
+            + ", \'2\', \'1.0 0.0\' \'0.0 1.0\'\n"
 
         result = T_1.log.nparray(entries=['mod_noise', 'RESULTS'], header=False, owner_name=True)
         assert result[0] == PS.default_execution_id
@@ -431,8 +223,6 @@ class TestLog:
                                       np.array([[[0], [1], [2]],
                                                 [[ 0.], [ 0.], [ 0.]],
                                                 [[ 0.,  0.], [ 0.,  0.],[ 0., 0.]]]))
-
-        assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
 
     def test_log_initialization(self):
         T = pnl.TransferMechanism(
@@ -445,7 +235,7 @@ class TestLog:
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                     size=2)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                    size=3)
+                                    size=2)
         PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
         PJ = T2.path_afferents[0]
 
@@ -982,7 +772,7 @@ class TestLog:
         log_array_T1 = T1.log.nparray(entries=['RESULTS', 'mod_slope', 'value'])
         log_array_T2 = T2.log.nparray(entries=['value', 'mod_slope'])
 
-        execution_context_results = [pnl.Log.execution_id_header, SYS.default_execution_id]
+        context_results = [pnl.Log.context_header, SYS.default_execution_id]
         # Check values
         run_results = [["Run"], [0], [0], [0]]
         trial_results = [["Trial"], [0], [0], [0]]
@@ -993,7 +783,7 @@ class TestLog:
         value_results = ["value", [[0.5]], [[0.75]], [[0.875]]]
 
         for i in range(2):
-            assert log_array_T1[0][i] == execution_context_results[i]
+            assert log_array_T1[0][i] == context_results[i]
 
         assert log_array_T1[1][0] == pnl.Log.data_header
         data_array = log_array_T1[1][1]
@@ -1016,7 +806,7 @@ class TestLog:
         slope_results = ["mod_slope", [6], [6], [6]]
 
         for i in range(2):
-            assert log_array_T1[0][i] == execution_context_results[i]
+            assert log_array_T1[0][i] == context_results[i]
 
         assert log_array_T2[1][0] == pnl.Log.data_header
         data_array = log_array_T2[1][1]
@@ -1079,10 +869,10 @@ class TestLog:
         X.add_linear_processing_pathway([A, C])
         Y.add_linear_processing_pathway([B, C])
 
-        # running with manual execution_ids for consistent output
-        # because output is sorted by execution_id
-        X.run(inputs={A: 1}, execution_id='comp X')
-        Y.run(inputs={B: 2}, execution_id='comp Y')
+        # running with manual contexts for consistent output
+        # because output is sorted by context
+        X.run(inputs={A: 1}, context='comp X')
+        Y.run(inputs={B: 2}, context='comp Y')
 
         expected_str = "'Execution Context', 'Data'\n" \
             + "'comp X', 'Run', 'Trial', 'Pass', 'Time_step', 'value'\n" \
@@ -1101,7 +891,7 @@ class TestClearLog:
 
         # Create System
         T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
-        T_2 = pnl.TransferMechanism(name='log_test_T_2', size=3)
+        T_2 = pnl.TransferMechanism(name='log_test_T_2', size=2)
         PS = pnl.Process(name='log_test_PS', pathway=[T_1, T_2])
         PJ = T_2.path_afferents[0]
         SYS = pnl.System(name="log_test_SYS", processes=[PS])
@@ -1131,12 +921,11 @@ class TestClearLog:
         assert np.allclose(sys_log_dict['mod_noise'], np.array([[0.0]]))
 
         sys_log_dict = log_dict_T_2[SYS.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULTS'], np.array([[2., 2., 2.]]))
+        assert np.allclose(sys_log_dict['RESULTS'], np.array([[1.0, 1.0]]))
         assert np.allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
 
         sys_log_dict = log_dict_PJ[SYS.default_execution_id]
-        assert np.allclose(sys_log_dict['mod_matrix'],
-                           np.array([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]))
+        assert np.allclose(sys_log_dict['mod_matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
 
         # KDM 10/3/18: below was changed to delete_entry=True because it's not implemented in Parameter logs,
         # and it's not clear this option results in much difference than just deleting the entries and
@@ -1159,8 +948,7 @@ class TestClearLog:
         assert log_dict_T_2 == OrderedDict()
 
         # Confirm that PJ log values were not affected by changes to T_1 and T_2's logs
-        assert np.allclose(log_dict_PJ[SYS.default_execution_id]['mod_matrix'],
-                           np.array([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]))
+        assert np.allclose(log_dict_PJ[SYS.default_execution_id]['mod_matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
 
         # Run system again
         SYS.run(inputs={T_1: [2.0, 2.0]})
@@ -1179,22 +967,20 @@ class TestClearLog:
 
         # Confirm that T_2 log values only include most recent run
         sys_log_dict = log_dict_T_2[SYS.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULTS'], np.array([[4., 4., 4.]]))
+        assert np.allclose(sys_log_dict['RESULTS'], np.array([[2.0, 2.0]]))
         assert np.allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
         assert np.allclose(sys_log_dict['Run'], np.array([[1]]))
 
         # Confirm that PJ log values include all runs
         sys_log_dict = log_dict_PJ[SYS.default_execution_id]
-        assert np.allclose(sys_log_dict['mod_matrix'],
-                           np.array([[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
-                                     [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]))
+        assert np.allclose(sys_log_dict['mod_matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]]))
         assert np.allclose(sys_log_dict['Run'], np.array([[0], [1]]))
 
     @pytest.mark.parametrize(
         'insertion_eids, deletion_eids, log_is_empty',
         [
-            (['execution_id'], 'execution_id', True),     # fails if string handling not correct due to str being Iterable
-            (['execution_id'], ['execution_id'], True),
+            (['context'], 'context', True),     # fails if string handling not correct due to str being Iterable
+            (['context'], ['context'], True),
         ]
     )
     def test_clear_log_arguments(self, insertion_eids, deletion_eids, log_is_empty):
@@ -1205,7 +991,7 @@ class TestClearLog:
         t.parameters.value.log_condition = True
 
         for eid in insertion_eids:
-            c.run({t: 0}, execution_id=eid)
+            c.run({t: 0}, context=eid)
 
         t.parameters.value.clear_log(deletion_eids)
 
@@ -1243,7 +1029,7 @@ class TestFiltering:
             name='Decision'
         )
 
-        comp = pnl.Composition(name="evc")
+        comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
         comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
         task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
@@ -1264,15 +1050,15 @@ class TestFiltering:
                 ),
                 function=pnl.GridSearch(),
                 control_signals=[
-                    ("drift_rate", Decision),
-                    ("threshold", Decision)
+                    {PROJECTIONS: ("drift_rate", Decision),
+                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                    {PROJECTIONS: ("threshold", Decision),
+                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}
                 ]
             )
         )
 
         comp.enable_controller = True
-
-        comp._analyze_graph()
 
         stim_list_dict = {
             Input: [0.5, 0.123],
@@ -1281,7 +1067,7 @@ class TestFiltering:
 
         Input.parameters.value.log_condition = True
 
-        comp.run(inputs=stim_list_dict, retain_old_simulation_data=True)
+        comp.run(inputs=stim_list_dict)
 
         return Input
 
@@ -1306,5 +1092,5 @@ class TestFiltering:
 
         # get each row, excluding header
         for row in full_csv.split('\n')[1:]:
-            # if present in a row, execution_id will be in the first cell
+            # if present in a row, context will be in the first cell
             assert pnl.EID_SIMULATION not in row.replace("'", '').split(',')[0]

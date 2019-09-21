@@ -180,18 +180,16 @@ class TestAccumulator():
     def test_accumulator_as_function_of_matrix_param_of_mapping_projection(self):
         # Test that accumulator is function of parameter_state of mapping project,
         # and that its increment param works properly (used as modulatory param by LearningProjetion)
-        from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 
-        # Note: use different sizes for T1 & T2 so as not to be assigned an IDENTITY_MATRIX, which doesn't use a matrix
         T1 = TransferMechanism(size=3)
-        T2 = TransferMechanism(size=2)
+        T2 = TransferMechanism(size=3)
         M = MappingProjection(sender=T1, receiver=T2)
         C = Composition()
         C.add_linear_processing_pathway([T1, M, T2])
         C.run(inputs={T1: [1.0, 1.0, 1.0]})
-        assert np.allclose(M.matrix, [[ 1.,  1.], [ 1.,  1.], [1.,  1.]])
+        assert np.allclose(M.matrix, [[ 1.,  0.,  0.], [ 0.,  1.,  0.],[ 0.,  0.,  1.]])
         M.parameter_states[MATRIX].function.parameters.increment.set(2, C)
         C.run(inputs={T1: [1.0, 1.0, 1.0]})
-        assert np.allclose(M.matrix, [[ 3.,  3.], [ 3.,  3.], [3.,  3.]])
+        assert np.allclose(M.matrix, [[ 3.,  2.,  2.], [ 2.,  3.,  2.], [ 2.,  2.,  3.]])
         C.run(inputs={T1: [1.0, 1.0, 1.0]})
-        assert np.allclose(M.matrix, [[ 5.,  5.], [ 5.,  5.], [ 5.,  5.]])
+        assert np.allclose(M.matrix, [[ 5.,  4.,  4.], [ 4.,  5.,  4.], [ 4.,  4.,  5.]])

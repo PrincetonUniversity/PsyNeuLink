@@ -1,9 +1,20 @@
 version: '{build}'
 clone_depth: 25
 
+branches:
+  only:
+    - master
+    - devel
+    - appveyor
+    - /devel.*/
+    - /.*-avy/
+    - /.*-ci/
+
 environment:
   PYTHONWARNINGS: ignore::DeprecationWarning
-  PATH: '%APPDATA%\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;%PATH%'
+  GRAPHVIZ_VERSION: 2.38
+  GRAPHVIZ_INSTALLER: graphviz-%GRAPHVIZ_VERSION%.msi
+  PATH: '%APPDATA%\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;C:\Program Files (x86)\Graphviz%GRAPHVIZ_VERSION%\bin;%PATH%'
   matrix:
   - PYTHON: Python36
     EXTRA_ARGS: -m llvm
@@ -11,40 +22,35 @@ environment:
     EXTRA_ARGS: -m llvm
   - PYTHON: Python36
     ARCH: -x64
-    PYTORCH: cp36-cp36m
   - PYTHON: Python37
     ARCH: -x64
-    PYTORCH: cp37-cp37m
 
 install:
-  - choco upgrade graphviz.portable -y
+  - if not exist %GRAPHVIZ_INSTALLER% appveyor-retry curl https://graphviz.gitlab.io/_pages/Download/windows/%GRAPHVIZ_INSTALLER% -o %GRAPHVIZ_INSTALLER%
+  - msiexec.exe /i %GRAPHVIZ_INSTALLER% /passive
   - pip --version
   - pip install --user -U pip
   - pip --version
   # certifi upgrade is needed by pytest-profiling (it does not set the dependencies right)
   # numpy 1.16 gets pulled by leabra below and pnl downgrades it to <1.16 later
-  # llvmlite==0.27 segfaults in windows when using 64bit python
-  - pip install --user -U certifi "numpy<1.16" "llvmlite<0.27"
+  - pip install --user -U certifi "numpy<1.16"
   - pip install --user git+https://github.com/benureau/leabra.git@master
 
-  # pytorch does not distribute packages over pypi. Install it directly.
-  - if not "%PYTORCH%" == "" pip install --user http://download.pytorch.org/whl/cpu/torch-0.4.1-%PYTORCH%-win_amd64.whl
-
-  # Remove pytorch from requirements if none is available
-  - if "%PYTORCH%" == "" (findstr /V torch < dev_requirements.txt > tmp_req && move /Y tmp_req dev_requirements.txt)
+  # pytorch does not distribute windows packages over pypi.
+  # Install it directly, or remove from requirements if not available (win32).
+  - if "%ARCH%" == "" (findstr /V torch < dev_requirements.txt > tmp_req && move /Y tmp_req dev_requirements.txt) else (pip install --user torch -f https://download.pytorch.org/whl/cpu/torch_stable.html)
 
   - pip install --user -e .[dev]
 
 cache:
-    - '%LOCALAPPDATA%\pip\Cache -> .appveyor.yml'
-    - 'C:\ProgramData\chocolatey\lib -> .appveyor.yml'
-    - 'C:\ProgramData\chocolatey\bin -> .appveyor.yml'
+    - '%LOCALAPPDATA%\pip\Cache'
+    - '%GRAPHVIZ_INSTALLER%'
 
 build: off
 
 test_script:
-  - pytest --junit-xml=tests_out.xml tests/ %EXTRA_ARGS%
+  - pytest --junit-xml=tests_out.xml -n auto --strict-markers %EXTRA_ARGS%
 
 on_finish:
   # Upload tests to appveyor overview
-  - curl -X POST -F "file=@tests_out.xml" https://ci.appveyor.com/api/testresults/junit/%APPVEYOR_JOB_ID%
+  - appveyor-retry curl -X POST -F "file=@tests_out.xml" https://ci.appveyor.com/api/testresults/junit/%APPVEYOR_JOB_ID%

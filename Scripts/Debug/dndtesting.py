@@ -180,7 +180,7 @@ print(comp.run([10000,100000]))
 #comp.output.value
 
 input_dict = [[0,1], [1,2], [2,3], [3,4], [4,5]]
-result = comp.run(inputs=input_dict, execution_id = 5) #, do_logging=True)
+result = comp.run(inputs=input_dict, context = 5) #, do_logging=True)
 print(ContentAddressableMemory.input_values)
 print(hidden.value)
 
@@ -200,7 +200,7 @@ ContentAddressableMemory.ASSOC_INPUT = [1,2,3,4,5]
 print(ContentAddressableMemory.input_values)
 print(ContentAddressableMemory.output_values)
 
-# ContentAddressableMemory.function.add_to_memory([[[100,101,102,103,104],[23,24,25,26,27]]], execution_id=5)
+# ContentAddressableMemory.function.add_to_memory([[[100,101,102,103,104],[23,24,25,26,27]]], context=5)
 # assert True
 
 # ContentAddressableMemory.dict.insert_memory({0,1})

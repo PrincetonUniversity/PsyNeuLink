@@ -84,13 +84,16 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LearningMechanism, LearningTiming, LearningType
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
+    ACTIVATION_INPUT, LearningMechanism, LearningTiming, LearningType
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
+from psyneulink.core.globals.keywords import \
+    ADDITIVE, AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_STATES, \
+    LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, parameter_spec
@@ -125,7 +128,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         function=Hebbian,                          \
         learning_rate=None,                        \
         learning_signals=LEARNING_SIGNAL,          \
-        modulation=ModulationParam.ADDITIVE,       \
+        modulation=ADDITIVE,                       \
         params=None,                               \
         name=None,                                 \
         prefs=None)
@@ -149,7 +152,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         specifies the `matrix <AutoAssociativeProjection.matrix>` to be learned (see `learning_signals
         <LearningMechanism.learning_signals>` for details of specification).
 
-    modulation : ModulationParam : default ModulationParam.ADDITIVE
+    modulation : ModulationParam : default ADDITIVE
         specifies the default form of modulation used by the AutoAssociativeLearningMechanism's LearningSignals,
         unless they are `individually specified <LearningSignal_Specification>`.
 
@@ -298,12 +301,12 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                 modulation
                     see `modulation <AutoAssociativeLearningMechanism.modulation>`
 
-                    :default value: ModulationParam.ADDITIVE
+                    :default value: ADDITIVE
                     :type: `ModulationParam`
 
         """
         learning_signals = None
-        modulation = ModulationParam.ADDITIVE
+        modulation = ADDITIVE
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -324,11 +327,13 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  size=None,
                  function:is_function_type=Hebbian,
                  learning_signals:tc.optional(list) = None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
+                 modulation:tc.optional(str)=ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs
+                 ):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
@@ -342,7 +347,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # self.init_args['name'] = name
 
         # # Flag for deferred initialization
-        # self.context.initialization_status = ContextFlags.DEFERRED_INIT
+        # self.initialization_status = ContextFlags.DEFERRED_INIT
         # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         # self._learning_rate = learning_rate
@@ -355,11 +360,12 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         **kwargs
+                         )
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
+    def _parse_function_variable(self, variable, context=None):
         return variable
-    
+
     def _instantiate_attributes_after_function(self, context=None):
         super(AutoAssociativeLearningMechanism, self)._instantiate_attributes_after_function(context=context)
         # KAM 2/27/19 added the line below to set the learning rate of the hebbian learning function to the learning
@@ -394,9 +400,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     def _execute(
         self,
         variable=None,
-        execution_id=None,
+        context=None,
         runtime_params=None,
-        context=None
+
     ):
         """Execute AutoAssociativeLearningMechanism. function and return learning_signal
 
@@ -409,47 +415,36 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         #                       which are not relevant to an autoassociative projection
         learning_signal = super(LearningMechanism, self)._execute(
             variable=variable,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
 
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
-            print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal.get(execution_id)))
-
-        # # TEST PRINT
-        # if not self.context.initialization_status == ContextFlags.INITIALIZING:
-        #     if self.context.composition:
-        #         time = self.context.composition.scheduler_processing.clock.simple_time
-        #     else:
-        #         time = self.current_execution_time
-        #     print("\nEXECUTED AutoAssociative LearningMechanism [CONTEXT: {}]\nTRIAL:  {}  TIME-STEP: {}".
-        #         format(self.context.flags_string,
-        #                time.trial,
-        #                # self.pass_,
-        #                time.time_step))
-        #     print("{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
+        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+            print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal._get(context)))
 
         value = np.array([learning_signal])
 
-        self.parameters.value.set(value, execution_id, override=True)
+        self.parameters.value._set(value, context)
 
         return value
 
-    def _update_output_states(self, execution_id=None, runtime_params=None, context=None):
-        '''Update the weights for the AutoAssociativeProjection for which this is the AutoAssociativeLearningMechanism
+    def _update_output_states(self, context=None, runtime_params=None):
+        """Update the weights for the AutoAssociativeProjection for which this is the AutoAssociativeLearningMechanism
 
         Must do this here, so it occurs after LearningMechanism's OutputState has been updated.
         This insures that weights are updated within the same trial in which they have been learned
-        '''
+        """
 
-        super()._update_output_states(execution_id, runtime_params, context)
+        super()._update_output_states(context, runtime_params)
 
         from psyneulink.core.components.process import Process
-        if self.parameters.learning_enabled.get(execution_id) and self.parameters.context.get(execution_id).composition and not isinstance(self.parameters.context.get(execution_id).composition, Process):
+        if self.parameters.learning_enabled._get(context) and context.composition and not isinstance(context.composition, Process):
             learned_projection = self.activity_source.recurrent_projection
-            learned_projection.execute(execution_id=execution_id, context=ContextFlags.LEARNING)
-            learned_projection.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
+            old_exec_phase = context.execution_phase
+            context.execution_phase = ContextFlags.LEARNING
+            learned_projection.execute(context=context)
+            context.execution_phase = old_exec_phase
 
     @property
     def activity_source(self):

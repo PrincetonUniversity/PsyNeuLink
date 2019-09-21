@@ -8,13 +8,13 @@
 #
 #
 # *****************************************  STATEFUL FUNCTION *********************************************************
-'''
+"""
 
 * `StatefulFunction`
 * `IntegratorFunctions`
 * `MemoryFunctions`
 
-'''
+"""
 
 import numpy as np
 import typecheck as tc
@@ -31,7 +31,7 @@ from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, iscompatible
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 
 __all__ = ['StatefulFunction']
 
@@ -202,6 +202,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         RATE: None
     })
 
+    @handle_external_context()
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -229,7 +230,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             else:
                 initializer = self.class_defaults.variable
 
-        previous_value = self._initialize_previous_value(initializer)
+        previous_value = self._initialize_previous_value(initializer, context)
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -249,10 +250,10 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         self.has_initializers = True
 
-    def _validate(self):
+    def _validate(self, context=None):
         self._validate_rate(self.defaults.rate)
-        self._validate_initializers(self.defaults.variable)
-        super()._validate()
+        self._validate_initializers(self.defaults.variable, context=context)
+        super()._validate(context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -309,13 +310,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             noise = target_set[NOISE]
             if isinstance(noise, DistributionFunction):
                 noise.owner = self
-                target_set[NOISE] = noise._execute
+                target_set[NOISE] = noise.execute
             self._validate_noise(target_set[NOISE])
 
-    def _validate_initializers(self, default_variable):
+    def _validate_initializers(self, default_variable, context=None):
         for initial_value_name in self.initializers:
 
-            initial_value = self.get_current_function_param(initial_value_name)
+            initial_value = self.get_current_function_param(initial_value_name, context=context)
 
             if isinstance(initial_value, (list, np.ndarray)):
                 if len(initial_value) != 1:
@@ -394,7 +395,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             else:
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
-                        noise[i] = noise[i]._execute
+                        noise[i] = noise[i].execute
                     # if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
                     if not np.isscalar(noise[i]) and not callable(noise[i]):
                         raise FunctionError("The elements of a noise list or array must be scalars or functions. "
@@ -406,7 +407,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."
                     .format(noise, self.name))
 
-    def _try_execute_param(self, param, var):
+    def _try_execute_param(self, param, var, context=None):
 
         # FIX: [JDC 12/18/18 - HACK TO DEAL WITH ENFORCEMENT OF 2D BELOW]
         param_shape = np.array(param).shape
@@ -463,20 +464,21 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
-    def _initialize_previous_value(self, initializer, execution_context=None):
+    def _initialize_previous_value(self, initializer, context=None):
         val = np.atleast_1d(initializer)
-        if execution_context is None:
+        if context is None:
             # Since this is run during initialization, self.parameters will refer to self.class_parameters
             # because self.parameters has not been created yet
             with warnings.catch_warnings():
                 warnings.filterwarnings('ignore')
                 self.previous_value = val
         else:
-            self.parameters.previous_value.set(val, execution_context)
+            self.parameters.previous_value.set(val, context)
 
         return val
 
-    def reinitialize(self, *args, execution_context=None):
+    @handle_external_context(execution_id=NotImplemented)
+    def reinitialize(self, *args, context=None):
         """
             Resets `value <StatefulFunction.previous_value>`  and `previous_value <StatefulFunction.previous_value>`
             to the specified value(s).
@@ -502,19 +504,22 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         """
 
+        if context.execution_id is NotImplemented:
+            context.execution_id = self.most_recent_context.execution_id
+
         reinitialization_values = []
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None or all(arg is None for arg in args):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
-                reinitialization_values.append(self.get_current_function_param(initializer_name, execution_context))
+                reinitialization_values.append(self.get_current_function_param(initializer_name, context))
 
         elif len(args) == len(self.initializers):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
                 if args[i] is None:
-                    reinitialization_values.append(self.get_current_function_param(initializer_name, execution_context))
+                    reinitialization_values.append(self.get_current_function_param(initializer_name, context))
                 else:
                     # Not sure if np.atleast_1d is necessary here:
                     reinitialization_values.append(np.atleast_1d(args[i]))
@@ -555,20 +560,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         for i in range(len(self.stateful_attributes)):
             setattr(self, self.stateful_attributes[i], reinitialization_values[i])
             getattr(self.parameters, self.stateful_attributes[i]).set(reinitialization_values[i],
-                                                                      execution_context,
+                                                                      context,
                                                                       override=True)
             value.append(getattr(self, self.stateful_attributes[i]))
 
-        self.parameters.value.set(value, execution_context, override=True)
+        self.parameters.value.set(value, context, override=True)
         return value
 
     @abc.abstractmethod
-    def function(self, *args, **kwargs):
+    def _function(self, *args, **kwargs):
         raise FunctionError("StatefulFunction is not meant to be called explicitly")
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            [self.noise] if isinstance(self.noise, DistributionFunction) else []
-        ))

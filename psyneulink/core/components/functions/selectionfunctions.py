@@ -8,7 +8,7 @@
 #
 #
 # *******************************************  SELECTION FUNCTIONS *****************************************************
-'''
+"""
 
 * `OneHot`
 
@@ -20,7 +20,7 @@ COMMENT
 
 Functions that selects a subset of elements to maintain or transform, while nulling the others.
 
-'''
+"""
 
 __all__ = ['SelectionFunction', 'OneHot', 'max_vs_avg', 'max_vs_next', 'MAX_VS_NEXT', 'MAX_VS_AVG']
 
@@ -29,13 +29,11 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import \
-    Function, Function_Base, MULTIPLICATIVE_PARAM, FunctionError, ADDITIVE_PARAM
-from psyneulink.core.components.functions.transferfunctions import MODE
+from psyneulink.core.components.functions.function import Function, Function_Base, FunctionError
 from psyneulink.core.globals.keywords import \
-    SELECTION_FUNCTION_TYPE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, \
-    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR, kwPreferenceSetName, MIN_VAL, \
-    MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR
+    ADDITIVE_PARAM, MULTIPLICATIVE_PARAM, MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, \
+    MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
+    MODE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, kwPreferenceSetName
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.componentpreferenceset import \
@@ -68,40 +66,29 @@ class SelectionFunction(Function_Base):
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
-                 params,
-                 owner,
-                 prefs,
-                 context):
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 context=None):
 
-        if not hasattr(self, MULTIPLICATIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
-
-        if not hasattr(self, ADDITIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
-                                format(self.__class__.__name__, ADDITIVE_PARAM))
+        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE OneHot DOESN"T IMPLEMENT MODULATORY PARAMS
+        # try:
+        #     self.parameters.multiplicative_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(MULTIPLICATIVE_PARAM)} Parameter or alias to one.")
+        #
+        # try:
+        #     self.parameters.additive_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(ADDITIVE_PARAM)} Parameter or alias to one.")
 
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
                          context=context)
-
-    @property
-    def multiplicative(self):
-        return getattr(self, self.multiplicative_param)
-
-    @multiplicative.setter
-    def multiplicative(self, val):
-        setattr(self, self.multiplicative_param, val)
-
-    @property
-    def additive(self):
-        return getattr(self, self.additive_param)
-
-    @additive.setter
-    def additive(self, val):
-        setattr(self, self.additive_param, val)
 
 
 class OneHot(SelectionFunction):
@@ -200,8 +187,6 @@ class OneHot(SelectionFunction):
     componentName = ONE_HOT_FUNCTION
 
     bounds = None
-    multiplicative_param = None
-    additive_param = None
 
     classPreferences = {
         kwPreferenceSetName: 'OneHotClassPreferences',
@@ -278,7 +263,7 @@ class OneHot(SelectionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         if reset_default_variable_flexibility:
             self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
@@ -300,7 +285,7 @@ class OneHot(SelectionFunction):
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
                                     "array of elements each of which is in the (0,1) interval".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
-            if self.context.initialization_status == ContextFlags.INITIALIZING:
+            if self.is_initializing:
                 return
             if not np.sum(prob_dist)==1:
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
@@ -322,15 +307,15 @@ class OneHot(SelectionFunction):
             prob_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (builder, index):
-            idx = builder.load(idx_ptr)
-            prev_ptr = builder.gep(arg_in, [ctx.int32_ty(0), idx])
-            current_ptr = builder.gep(arg_in, [ctx.int32_ty(0), index])
-            prev = builder.load(prev_ptr)
-            current = builder.load(current_ptr)
+        with pnlvm.helpers.array_ptr_loop(builder, arg_in, "search") as (b1, index):
+            idx = b1.load(idx_ptr)
+            prev_ptr = b1.gep(arg_in, [ctx.int32_ty(0), idx])
+            current_ptr = b1.gep(arg_in, [ctx.int32_ty(0), index])
+            prev = b1.load(prev_ptr)
+            current = b1.load(current_ptr)
 
-            prev_res_ptr = builder.gep(arg_out, [ctx.int32_ty(0), idx])
-            cur_res_ptr = builder.gep(arg_out, [ctx.int32_ty(0), index])
+            prev_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), idx])
+            cur_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), index])
             if self.mode not in {PROB, PROB_INDICATOR}:
                 fabs = ctx.get_builtin("fabs", [current.type])
             if self.mode is MAX_VAL:
@@ -340,8 +325,8 @@ class OneHot(SelectionFunction):
                 val = current
             elif self.mode is MAX_ABS_VAL:
                 cmp_op = ">="
-                cmp_prev = builder.call(fabs, [prev])
-                cmp_curr = builder.call(fabs, [current])
+                cmp_prev = b1.call(fabs, [prev])
+                cmp_curr = b1.call(fabs, [current])
                 val = current
             elif self.mode is MAX_INDICATOR:
                 cmp_op = ">="
@@ -350,8 +335,8 @@ class OneHot(SelectionFunction):
                 val = current.type(1.0)
             elif self.mode is MAX_ABS_INDICATOR:
                 cmp_op = ">="
-                cmp_prev = builder.call(fabs, [prev])
-                cmp_curr = builder.call(fabs, [current])
+                cmp_prev = b1.call(fabs, [prev])
+                cmp_curr = b1.call(fabs, [current])
                 val = current.type(1.0)
             elif self.mode is MIN_VAL:
                 cmp_op = "<="
@@ -360,8 +345,8 @@ class OneHot(SelectionFunction):
                 val = current
             elif self.mode is MIN_ABS_VAL:
                 cmp_op = "<="
-                cmp_prev = builder.call(fabs, [prev])
-                cmp_curr = builder.call(fabs, [current])
+                cmp_prev = b1.call(fabs, [prev])
+                cmp_curr = b1.call(fabs, [current])
                 val = current
             elif self.mode is MIN_INDICATOR:
                 cmp_op = "<="
@@ -370,21 +355,21 @@ class OneHot(SelectionFunction):
                 val = current.type(1.0)
             elif self.mode is MIN_ABS_INDICATOR:
                 cmp_op = "<="
-                cmp_prev = builder.call(fabs, [prev])
-                cmp_curr = builder.call(fabs, [current])
+                cmp_prev = b1.call(fabs, [prev])
+                cmp_curr = b1.call(fabs, [current])
                 val = current.type(1.0)
             elif self.mode in {PROB, PROB_INDICATOR}:
                 # Update prefix sum
-                current_prob_ptr = builder.gep(prob_in, [ctx.int32_ty(0), index])
-                sum_old = builder.load(sum_ptr)
-                sum_new = builder.fadd(sum_old, builder.load(current_prob_ptr))
-                builder.store(sum_new, sum_ptr)
+                current_prob_ptr = b1.gep(prob_in, [ctx.int32_ty(0), index])
+                sum_old = b1.load(sum_ptr)
+                sum_new = b1.fadd(sum_old, b1.load(current_prob_ptr))
+                b1.store(sum_new, sum_ptr)
 
-                old_below = builder.fcmp_ordered("<=", sum_old, dice)
-                new_above = builder.fcmp_ordered("<", dice, sum_new)
-                cond = builder.and_(new_above, old_below)
+                old_below = b1.fcmp_ordered("<=", sum_old, dice)
+                new_above = b1.fcmp_ordered("<", dice, sum_new)
+                cond = b1.and_(new_above, old_below)
                 cmp_prev = ctx.float_ty(1.0)
-                cmp_curr = builder.select(cond, cmp_prev, ctx.float_ty(0.0))
+                cmp_curr = b1.select(cond, cmp_prev, ctx.float_ty(0.0))
                 cmp_op = "=="
                 if self.mode is PROB:
                     val = current
@@ -404,11 +389,11 @@ class OneHot(SelectionFunction):
 
         return builder
 
-    def function(self,
+    def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -431,8 +416,6 @@ class OneHot(SelectionFunction):
 
 
         """
-
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         if self.mode is MAX_VAL:
             max_value = np.max(variable)
@@ -474,7 +457,7 @@ class OneHot(SelectionFunction):
             if not prob_dist.any():
                 return self.convert_output_type(v)
             cum_sum = np.cumsum(prob_dist)
-            random_state = self.get_current_function_param("random_state", execution_id)
+            random_state = self.get_current_function_param("random_state", context)
             random_value = random_state.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)

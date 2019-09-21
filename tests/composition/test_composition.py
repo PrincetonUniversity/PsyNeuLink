@@ -10,7 +10,6 @@ from itertools import product
 
 import psyneulink.core.llvm as pnlvm
 import psyneulink as pnl
-from psyneulink.core.components.functions.function import ModulationParam
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
@@ -24,14 +23,16 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
-from psyneulink.core.globals.keywords import INPUT_STATE, NAME
+from psyneulink.core.globals.keywords import \
+    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_STATE, NAME, PROJECTIONS, OVERRIDE
 from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.condition import AfterNCalls
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism import LCControlMechanism
-from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RECURRENT_OUTPUT, RecurrentTransferMechanism
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
+    RECURRENT_OUTPUT, RecurrentTransferMechanism
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +135,7 @@ class TestAddMechanism:
         projections = [ab, bc]
         with pytest.raises(CompositionError) as err:
             comp.add_projections(projections)
-        assert "The add_projections method of Composition requires a list of Projections" in str(err)
+        assert "The add_projections method of Composition requires a list of Projections" in str(err.value)
 
     def test_add_multiple_projections_no_receiver(self):
         comp = Composition(name='comp')
@@ -151,7 +152,7 @@ class TestAddMechanism:
         projections = [ab, bc]
         with pytest.raises(CompositionError) as err:
             comp.add_projections(projections)
-        assert "The add_projections method of Composition requires a list of Projections" in str(err)
+        assert "The add_projections method of Composition requires a list of Projections" in str(err.value)
 
     def test_add_multiple_projections_not_a_proj(self):
         comp = Composition(name='comp')
@@ -168,7 +169,7 @@ class TestAddMechanism:
         projections = [ab, bc]
         with pytest.raises(CompositionError) as err:
             comp.add_projections(projections)
-        assert "The add_projections method of Composition requires a list of Projections" in str(err)
+        assert "The add_projections method of Composition requires a list of Projections" in str(err.value)
 
     def test_add_multiple_nodes_at_once(self):
         comp = Composition()
@@ -192,12 +193,12 @@ class TestAddMechanism:
     def test_timing_stress(self, count):
         t = timeit(
             'comp.add_node(TransferMechanism())',
-            setup='''
+            setup="""
 
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
 comp = Composition()
-''',
+""",
             number=count
         )
         print()
@@ -234,7 +235,7 @@ class TestAddProjection:
     #     comp.add_projection(proj, A, B)
     #     with pytest.raises(CompositionError) as error_text:
     #         comp.add_projection(proj, A, B)
-    #     assert "This Projection is already in the Composition" in str(error_text)
+    #     assert "This Projection is already in the Composition" in str(error_text.value)
 
     def test_add_fully_specified_projection_object(self):
         comp = Composition()
@@ -265,7 +266,7 @@ class TestAddProjection:
         comp.add_node(B)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(receiver=B)
-        assert "a sender must be specified" in str(error_text)
+        assert "a sender must be specified" in str(error_text.value)
 
     def test_add_proj_missing_receiver(self):
         comp = Composition()
@@ -276,7 +277,7 @@ class TestAddProjection:
         comp.add_node(B)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(sender=A)
-        assert "a receiver must be specified" in str(error_text)
+        assert "a receiver must be specified" in str(error_text.value)
 
     def test_add_proj_invalid_projection_spec(self):
         comp = Composition()
@@ -287,7 +288,7 @@ class TestAddProjection:
         comp.add_node(B)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection("projection")
-        assert "Invalid projection" in str(error_text)
+        assert "Invalid projection" in str(error_text.value)
 
     # KAM commented out this test 7/24/18 because it does not work. Should it work?
     # Or should the add_projection method of Composition only consider composition nodes as senders and receivers
@@ -349,7 +350,8 @@ class TestAddProjection:
         proj = MappingProjection(sender=A, receiver=B)
         with pytest.raises(CompositionError) as error:
             comp.add_projection(projection=proj, receiver=C)
-        assert "receiver assignment" in str(error) and "incompatible" in str(error)
+        assert "receiver assignment" in str(error.value)
+        assert "incompatible" in str(error.value)
 
     @pytest.mark.stress
     @pytest.mark.parametrize(
@@ -359,7 +361,7 @@ class TestAddProjection:
     )
     def test_timing_stress(self, count):
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
-                   setup='''
+                   setup="""
 
 from psyneulink.core.components.mechanisms.processingmechanisms.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathwayprojections.mappingprojection import MappingProjection
@@ -370,7 +372,7 @@ A = TransferMechanism(name='composition-pytests-A')
 B = TransferMechanism(name='composition-pytests-B')
 comp.add_node(A)
 comp.add_node(B)
-''',
+""",
                    number=count
                    )
         print()
@@ -384,7 +386,7 @@ comp.add_node(B)
     )
     def test_timing_stress(self, count):
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
-                   setup='''
+                   setup="""
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition
@@ -393,7 +395,7 @@ A = TransferMechanism(name='composition-pytests-A')
 B = TransferMechanism(name='composition-pytests-B')
 comp.add_node(A)
 comp.add_node(B)
-''',
+""",
                    number=count
                    )
         print()
@@ -482,16 +484,19 @@ class TestAnalyzeGraph:
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         comp.add_linear_processing_pathway([A, B])
-
         comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
-                                                                                  features=[A.input_state],
-                                                                                  objective_mechanism=pnl.ObjectiveMechanism(
-                                                                                      function=pnl.LinearCombination(
-                                                                                          operation=pnl.PRODUCT),
-                                                                                      monitor=[A]),
-                                                                                  function=pnl.GridSearch(),
-                                                                                  control_signals=[("slope", B)]
-                                                                                  )
+                                                                        features=[A.input_state],
+                                                                        objective_mechanism=pnl.ObjectiveMechanism(
+                                                                                function=pnl.LinearCombination(
+                                                                                        operation=pnl.PRODUCT),
+                                                                                monitor=[A]),
+                                                                        function=pnl.GridSearch(),
+                                                                        control_signals=[
+                                                                            {PROJECTIONS:("slope", B),
+                                                                             ALLOCATION_SAMPLES:np.arange(0.1,
+                                                                                                          1.01,
+                                                                                                          0.3)}]
+                                                                        )
                                        )
         comp._analyze_graph()
         assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
@@ -508,14 +513,18 @@ class TestAnalyzeGraph:
         comp.add_linear_processing_pathway([A, B])
 
         comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
-                                                                                  features=[A.input_state],
-                                                                                  objective_mechanism=pnl.ObjectiveMechanism(
-                                                                                      function=pnl.LinearCombination(
-                                                                                          operation=pnl.PRODUCT),
-                                                                                      monitor=[A, B]),
-                                                                                  function=pnl.GridSearch(),
-                                                                                  control_signals=[("slope", B)]
-                                                                                  )
+                                                                        features=[A.input_state],
+                                                                        objective_mechanism=pnl.ObjectiveMechanism(
+                                                                                function=pnl.LinearCombination(
+                                                                                        operation=pnl.PRODUCT),
+                                                                                monitor=[A, B]),
+                                                                        function=pnl.GridSearch(),
+                                                                        control_signals=[
+                                                                            {PROJECTIONS:("slope", B),
+                                                                             ALLOCATION_SAMPLES:np.arange(0.1,
+                                                                                                          1.01,
+                                                                                                          0.3)}]
+                                                                        )
                                        )
         comp._analyze_graph()
         assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
@@ -596,7 +605,8 @@ class TestExecutionOrder:
 
         comp = Composition()
         comp.add_linear_processing_pathway([A, B, MappingProjection(matrix=2.0), C, MappingProjection(matrix=3.0), D, E])
-        comp.add_linear_processing_pathway([D, MappingProjection(matrix=4.0), B], feedback=True)
+        # comp.add_linear_processing_pathway([D, MappingProjection(matrix=4.0), B], feedback=True)
+        comp.add_linear_processing_pathway([D, (MappingProjection(matrix=4.0), True), B])
 
         comp.run(inputs={A: 1.0})
 
@@ -799,7 +809,7 @@ class TestExecutionOrder:
 
         cycle_nodes = [B, C, D, C2]
         for cycle_node in cycle_nodes:
-            cycle_node.output_states[0].parameters.value.set([1.0])
+            cycle_node.output_states[0].parameters.value.set([1.0], override=True)
 
         comp.add_linear_processing_pathway([A, B, MappingProjection(matrix=2.0), C, D, MappingProjection(matrix=5.0), E])
         comp.add_linear_processing_pathway([D, MappingProjection(matrix=3.0), C2, MappingProjection(matrix=4.0), B])
@@ -996,9 +1006,12 @@ class TestExecutionOrder:
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Frozen values")
     @pytest.mark.parametrize("mode", ['Python',
-                     pytest.param('LLVM', marks=pytest.mark.llvm),
-                     pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                     pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      ])
     def test_3_mechanisms_frozen_values(self, benchmark, mode):
         #
         #   B
@@ -1022,7 +1035,6 @@ class TestExecutionOrder:
         comp.add_linear_processing_pathway([C, B])
         comp.add_linear_processing_pathway([A, B, D])
         comp.add_linear_processing_pathway([A, C, D])
-        comp._analyze_graph()
 
         inputs_dict = {A: [4.0]}
         sched = Scheduler(composition=comp)
@@ -1036,44 +1048,49 @@ class TestExecutionOrder:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_multi_control_1_terminal(self, benchmark, mode):
         #
-        #   B--A
+        #   A--LC
         #  /    \
-        # C------D
+        # B------C
         #  \     |
-        #   -----+-> E
+        #   -----+-> D
         #
-        # C: 4 x 5 = 20
-        # B: 20 x 1 = 20
-        # A: f(20)[0] = 0.50838675
-        # D: 20 x 5 x 0.50838675 = 50.83865743
-        # E: (20 + 50.83865743) x 5 = 354.19328716
+        # B: 4 x 5 = 20
+        # A: 20 x 1 = 20
+        # LC: f(20)[0] = 0.50838675
+        # C: 20 x 5 x 0.50838675 = 50.83865743
+        # D: (20 + 50.83865743) x 5 = 354.19328716
 
         comp = Composition()
+        B = TransferMechanism(name="B", function=Linear(slope=5.0))
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        A = ObjectiveMechanism(function=Linear,
+                               monitor=[B],
+                               name="A")
+        LC = LCControlMechanism(name="LC",
+                               modulated_mechanisms=C,
+                               objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
-        B = ObjectiveMechanism(function=Linear,
-                               monitor=[C],
-                               name="B")
-        A = LCControlMechanism(name="A",
-                               modulated_mechanisms=D,
-                               objective_mechanism=B)
-        E = TransferMechanism(name="E", function=Linear(slope=5.0))
-        comp.add_linear_processing_pathway([C, D, E])
-        comp.add_linear_processing_pathway([C, E])
-        comp.add_node(B)
+        comp.add_linear_processing_pathway([B, C, D])
+        comp.add_linear_processing_pathway([B, D])
         comp.add_node(A)
+        comp.add_node(LC)
 
-        comp._analyze_graph()
 
-        inputs_dict = {C: [4.0]}
-        sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        inputs_dict = {B: [4.0]}
+        # sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict,
+                          # scheduler_processing=sched,
+                          bin_execute=mode)
         assert np.allclose(output, 354.19328716)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        benchmark(comp.run, inputs=inputs_dict,
+                  # scheduler_processing=sched,
+                  bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1081,40 +1098,40 @@ class TestExecutionOrder:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_additive_control_1_terminal(self, benchmark, mode):
         #
-        #   B--A
+        #   A--LC
         #  /    \
-        # C------D
+        # B------C
         #  \     |
-        #   -----+-> E
+        #   -----+-> D
         #
-        # C: 4 x 5 = 20
-        # B: 20 x 1 = 20
-        # A: f(20)[0] = 0.50838675
-        # D: 20 x 5 + 0.50838675 = 100.50838675
-        # E: (20 + 100.50838675) x 5 = 650.83865743
+        # B: 4 x 5 = 20
+        # A: 20 x 1 = 20
+        # LC: f(20)[0] = 0.50838675
+        # C: 20 x 5 + 0.50838675 = 100.50838675
+        # D: (20 + 100.50838675) x 5 = 650.83865743
 
         comp = Composition()
+        B = TransferMechanism(name="B", function=Linear(slope=5.0))
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        A = ObjectiveMechanism(function=Linear,
+                               monitor=[B],
+                               name="A")
+        LC = LCControlMechanism(name="LC", modulation=ADDITIVE,
+                               modulated_mechanisms=C,
+                               objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
-        B = ObjectiveMechanism(function=Linear,
-                               monitor=[C],
-                               name="B")
-        A = LCControlMechanism(name="A", modulation=ModulationParam.ADDITIVE,
-                               modulated_mechanisms=D,
-                               objective_mechanism=B)
-        E = TransferMechanism(name="E", function=Linear(slope=5.0))
-        comp.add_linear_processing_pathway([C, D, E])
-        comp.add_linear_processing_pathway([C, E])
-        comp.add_node(B)
+        comp.add_linear_processing_pathway([B, C, D])
+        comp.add_linear_processing_pathway([B, D])
         comp.add_node(A)
+        comp.add_node(LC)
 
-        comp._analyze_graph()
-
-        inputs_dict = {C: [4.0]}
+        inputs_dict = {B: [4.0]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, 650.83865743)
@@ -1126,44 +1143,49 @@ class TestExecutionOrder:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_override_control_1_terminal(self, benchmark, mode):
         #
-        #   B--A
+        #   A--LC
         #  /    \
-        # C------D
+        # B------C
         #  \     |
-        #   -----+-> E
+        #   -----+-> D
         #
-        # C: 4 x 5 = 20
-        # B: 20 x 1 = 20
-        # A: f(20)[0] = 0.50838675
-        # D: 20 x 0.50838675 = 10.167735
-        # E: (20 + 10.167735) x 5 = 150.83865743
+        # B: 4 x 5 = 20
+        # A: 20 x 1 = 20
+        # LC: f(20)[0] = 0.50838675
+        # C: 20 x 0.50838675 = 10.167735
+        # D: (20 + 10.167735) x 5 = 150.83865743
 
         comp = Composition()
+        B = TransferMechanism(name="B", function=Linear(slope=5.0))
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        A = ObjectiveMechanism(function=Linear,
+                               monitor=[B],
+                               name="A")
+        LC = LCControlMechanism(name="LC", modulation=OVERRIDE,
+                               modulated_mechanisms=C,
+                               objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
-        B = ObjectiveMechanism(function=Linear,
-                               monitor=[C],
-                               name="B")
-        A = LCControlMechanism(name="A", modulation=ModulationParam.OVERRIDE,
-                               modulated_mechanisms=D,
-                               objective_mechanism=B)
-        E = TransferMechanism(name="E", function=Linear(slope=5.0))
-        comp.add_linear_processing_pathway([C, D, E])
-        comp.add_linear_processing_pathway([C, E])
-        comp.add_node(B)
+        comp.add_linear_processing_pathway([B, C, D])
+        comp.add_linear_processing_pathway([B, D])
         comp.add_node(A)
+        comp.add_node(LC)
 
-        comp._analyze_graph()
 
-        inputs_dict = {C: [4.0]}
-        sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        inputs_dict = {B: [4.0]}
+        # sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict,
+                          # scheduler_processing=sched,
+                          bin_execute=mode)
         assert np.allclose(output, 150.83865743)
-        benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
+        benchmark(comp.run, inputs=inputs_dict,
+                  # scheduler_processing=sched,
+                  bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1171,40 +1193,41 @@ class TestExecutionOrder:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_disable_control_1_terminal(self, benchmark, mode):
         #
-        #   B--A
+        #   A--LC
         #  /    \
-        # C------D
+        # B------C
         #  \     |
-        #   -----+-> E
+        #   -----+-> D
         #
-        # C: 4 x 5 = 20
-        # B: 20 x 1 = 20
-        # A: f(20)[0] = 0.50838675
-        # D: 20 x 5 = 100
-        # E: (20 + 100) x 5 = 600
+        # B: 4 x 5 = 20
+        # A: 20 x 1 = 20
+        # LC: f(20)[0] = 0.50838675
+        # C: 20 x 5 = 100
+        # D: (20 + 100) x 5 = 600
 
         comp = Composition()
+        B = TransferMechanism(name="B", function=Linear(slope=5.0))
         C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        A = ObjectiveMechanism(function=Linear,
+                               monitor=[B],
+                               name="A")
+        LC = LCControlMechanism(name="LC", modulation=DISABLE,
+                               modulated_mechanisms=C,
+                               objective_mechanism=A)
         D = TransferMechanism(name="D", function=Linear(slope=5.0))
-        B = ObjectiveMechanism(function=Linear,
-                               monitor=[C],
-                               name="B")
-        A = LCControlMechanism(name="A", modulation=ModulationParam.DISABLE,
-                               modulated_mechanisms=D,
-                               objective_mechanism=B)
-        E = TransferMechanism(name="E", function=Linear(slope=5.0))
-        comp.add_linear_processing_pathway([C, D, E])
-        comp.add_linear_processing_pathway([C, E])
-        comp.add_node(B)
+        comp.add_linear_processing_pathway([B, C, D])
+        comp.add_linear_processing_pathway([B, D])
         comp.add_node(A)
+        comp.add_node(LC)
 
-        comp._analyze_graph()
 
-        inputs_dict = {C: [4.0]}
+        inputs_dict = {B: [4.0]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, 600)
@@ -1284,12 +1307,10 @@ class TestGetMechanismsByRole:
             else:
                 assert comp.get_nodes_by_role(role) == []
 
+    @pytest.mark.xfail(raises=CompositionError)
     def test_nonexistent_role(self):
-
         comp = Composition()
-
-        with pytest.raises(CompositionError):
-            comp.get_nodes_by_role(None)
+        comp.get_nodes_by_role(None)
 
 
 class TestGraph:
@@ -1509,7 +1530,6 @@ class TestRun:
     #     comp.add_node(A)
     #     comp.add_node(B)
     #     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    #     comp._analyze_graph()
     #     sched = Scheduler(composition=comp)
     #     output = comp.run(
     #         scheduler_processing=sched
@@ -1521,7 +1541,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_input_grow(self, mode):
         comp = Composition()
@@ -1531,14 +1553,9 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(P, A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [5, 4]}
         sched = Scheduler(composition=comp)
-        output = comp.run(
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
-        )
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(output, [[225, 225, 225]])
 
     @pytest.mark.projection
@@ -1546,7 +1563,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_input_shrink(self, mode):
         comp = Composition()
@@ -1556,13 +1575,9 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(P, A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [5, 4, 3]}
         sched = Scheduler(composition=comp)
-        output = comp.run(
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
+        output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode
         )
         assert np.allclose(output, [[300, 300]])
 
@@ -1570,7 +1585,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_input_5(self, mode):
         comp = Composition()
@@ -1579,7 +1596,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
@@ -1626,7 +1642,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_5_mechanisms_2_origins_1_terminal(self, mode):
         # A ----> C --
@@ -1652,7 +1670,6 @@ class TestRun:
         comp.add_node(E)
         comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
         comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
-        comp._analyze_graph()
         inputs_dict = {A: [5],
                        B: [5]}
         sched = Scheduler(composition=comp)
@@ -1673,7 +1690,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -1685,7 +1701,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_with_scheduling_AAB_transfer(self, mode):
         comp = Composition()
@@ -1699,7 +1717,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -1710,7 +1727,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_with_multiple_trials_of_input_values(self, mode):
         comp = Composition()
@@ -1720,7 +1739,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
@@ -1731,7 +1749,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_sender_receiver_not_specified(self, mode):
         comp = Composition()
@@ -1741,7 +1761,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
@@ -1752,7 +1771,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_reuse_input(self, mode):
         comp = Composition()
@@ -1761,7 +1782,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=5, bin_execute=mode)
@@ -1771,7 +1791,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_2_mechanisms_double_trial_specs(self, mode):
         comp = Composition()
@@ -1780,7 +1802,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [[5], [4], [3]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=3, bin_execute=mode)
@@ -1791,7 +1812,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_execute_composition(self, mode):
         comp = Composition()
@@ -1803,11 +1826,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: 3}
         sched = Scheduler(composition=comp)
-        output = comp.execute(
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
-        )
+        output = comp.execute(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose([75], output)
 
     @pytest.mark.composition
@@ -1815,7 +1834,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_LPP(self, benchmark, mode):
 
@@ -1829,18 +1850,16 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
-        output = benchmark(comp.execute,
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
-        )
+        output = benchmark(comp.execute, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(89., output)
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_LPP_with_projections(self, mode):
         comp = Composition()
@@ -1855,11 +1874,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
-        output = comp.execute(
-            inputs=inputs_dict,
-            scheduler_processing=sched,
-            bin_execute=mode
-        )
+        output = comp.execute(inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(32., output)
 
     def test_LPP_end_with_projection(self):
@@ -1870,9 +1885,9 @@ class TestRun:
         D = TransferMechanism(name="composition-pytests-D", function=Linear(slope=2.0))
         E = TransferMechanism(name="composition-pytests-E", function=Linear(slope=2.0))
         A_to_B = MappingProjection(sender=A, receiver=B)
-        D_to_E = MappingProjection(sender=D, receiver=E)
+        C_to_E = MappingProjection(sender=C, receiver=E)
         with pytest.raises(CompositionError) as error_text:
-            comp.add_linear_processing_pathway([A, A_to_B, B, C, D, E, D_to_E])
+            comp.add_linear_processing_pathway([A, A_to_B, B, C, D, E, C_to_E])
 
         assert "A projection cannot be the last item in a linear processing pathway." in str(error_text.value)
 
@@ -1926,7 +1941,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_LPP_two_origins_one_terminal(self, mode):
         # A ----> C --
@@ -1945,7 +1962,6 @@ class TestRun:
         E = TransferMechanism(name="composition-pytests-E", function=Linear(slope=5.0))
         comp.add_linear_processing_pathway([A, C, E])
         comp.add_linear_processing_pathway([B, D, E])
-        comp._analyze_graph()
         inputs_dict = {A: [5],
                        B: [5]}
         sched = Scheduler(composition=comp)
@@ -1957,7 +1973,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_composition(self, benchmark, mode):
         comp = Composition()
@@ -1966,7 +1984,6 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs={A: [[1.0]]}, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose(25, output)
@@ -1978,7 +1995,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_composition_default(self, benchmark, mode):
         comp = Composition()
@@ -1987,24 +2006,28 @@ class TestRun:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, scheduler_processing=sched, bin_execute=mode)
         assert 25 == output[0][0]
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="LinearComposition Vector")
-    @pytest.mark.parametrize("mode", ['Python', pytest.param('LLVM', marks=pytest.mark.llvm), pytest.param('LLVMExec', marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      ])
     @pytest.mark.parametrize("vector_length", [2**x for x in range(1)])
     def test_run_composition_vector(self, benchmark, mode, vector_length):
-        var = [1.0 for x in range(vector_length)];
+        var = [1.0 for x in range(vector_length)]
         comp = Composition()
         A = IntegratorMechanism(default_variable=var, function=Linear(slope=5.0))
         B = TransferMechanism(default_variable=var, function=Linear(slope=5.0))
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs={A: [var]}, scheduler_processing=sched, bin_execute=mode)
         assert np.allclose([25.0 for x in range(vector_length)], output[0])
@@ -2014,7 +2037,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_terminal(self, benchmark, mode):
         # C --
@@ -2034,7 +2059,6 @@ class TestRun:
         comp.add_node(E)
         comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
         comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
-        comp._analyze_graph()
         inputs_dict = {C: [5.0],
                        D: [5.0]}
         sched = Scheduler(composition=comp)
@@ -2046,7 +2070,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_1_origin_2_terminals(self, benchmark, mode):
         #       ==> D
@@ -2066,7 +2092,6 @@ class TestRun:
         comp.add_node(E)
         comp.add_projection(MappingProjection(sender=C, receiver=D), C, D)
         comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
-        comp._analyze_graph()
         inputs_dict = {C: [5.0]}
         sched = Scheduler(composition=comp)
         output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=mode)
@@ -2077,7 +2102,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_terminal_mimo_last(self, benchmark, mode):
         # C --
@@ -2097,7 +2124,6 @@ class TestRun:
         comp.add_node(E)
         comp.add_projection(MappingProjection(sender=C, receiver=E.input_states['a']), C, E)
         comp.add_projection(MappingProjection(sender=D, receiver=E.input_states['b']), D, E)
-        comp._analyze_graph()
         inputs_dict = {C: [6.0],
                        D: [8.0]}
         sched = Scheduler(composition=comp)
@@ -2110,7 +2136,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_terminal_mimo_parallel(self, benchmark, mode):
         # C --
@@ -2132,7 +2160,6 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=C.output_states[1], receiver=E.input_states['b']), C, E)
         comp.add_projection(MappingProjection(sender=D.output_states[0], receiver=E.input_states['a']), D, E)
         comp.add_projection(MappingProjection(sender=D.output_states[1], receiver=E.input_states['b']), D, E)
-        comp._analyze_graph()
         inputs_dict = {C: [[5.0], [6.0]],
                        D: [[7.0], [8.0]]}
         sched = Scheduler(composition=comp)
@@ -2145,7 +2172,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_3_mechanisms_2_origins_1_terminal_mimo_all_sum(self, benchmark, mode):
         # C --
@@ -2167,7 +2196,6 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=C.output_states[1], receiver=E), C, E)
         comp.add_projection(MappingProjection(sender=D.output_states[0], receiver=E), D, E)
         comp.add_projection(MappingProjection(sender=D.output_states[1], receiver=E), D, E)
-        comp._analyze_graph()
         inputs_dict = {C: [[5.0], [6.0]],
                        D: [[7.0], [8.0]]}
         sched = Scheduler(composition=comp)
@@ -2179,13 +2207,14 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism(self, benchmark, mode):
         comp = Composition()
         A = RecurrentTransferMechanism(size=3, function=Linear(slope=5.0), name="A")
         comp.add_node(A)
-        comp._analyze_graph()
         sched = Scheduler(composition=comp)
         output1 = comp.run(inputs={A: [[1.0, 2.0, 3.0]]}, scheduler_processing=sched, bin_execute=(mode == 'LLVM'))
         assert np.allclose([5.0, 10.0, 15.0], output1)
@@ -2201,7 +2230,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_hetero(self, benchmark, mode):
         comp = Composition()
@@ -2230,7 +2261,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_integrator(self, benchmark, mode):
         comp = Composition()
@@ -2261,7 +2294,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_vector_2(self, benchmark, mode):
         comp = Composition()
@@ -2287,7 +2322,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_hetero_2(self, benchmark, mode):
         comp = Composition()
@@ -2316,7 +2353,9 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_integrator_2(self, benchmark, mode):
         comp = Composition()
@@ -2342,7 +2381,7 @@ class TestRun:
 
         benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
-    def test_run_termination_condition_custom_execution_id(self):
+    def test_run_termination_condition_custom_context(self):
         D = pnl.DDM(function=pnl.DriftDiffusionIntegrator)
         comp = pnl.Composition()
 
@@ -2351,7 +2390,7 @@ class TestRun:
         comp.run(
             inputs={D: 0},
             termination_processing={pnl.TimeScale.RUN: pnl.WhenFinished(D)},
-            execution_id='custom'
+            context='custom'
         )
 
 
@@ -2366,7 +2405,6 @@ class TestCallBeforeAfterTimescale:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
 
@@ -2413,7 +2451,6 @@ class TestCallBeforeAfterTimescale:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
 
@@ -2483,7 +2520,6 @@ class TestCallBeforeAfterTimescale:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [1, 2]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -2579,7 +2615,6 @@ class TestCallBeforeAfterTimescale:
     #     comp.add_node(A)
     #     comp.add_node(B)
     #     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    #     comp._analyze_graph()
     #     inputs_dict = {A: [[5], [4], [3]]}
     #     output = comp.run(
     #         inputs=inputs_dict,
@@ -2629,7 +2664,6 @@ class TestCallBeforeAfterTimescale:
     #     comp.add_projection(Hidden_Layer_1, MappingProjection(), Hidden_Layer_2)
     #     comp.add_projection(Hidden_Layer_2, MappingProjection(), Output_Layer)
     #
-    #     comp._analyze_graph()
     #     stim_list = {Input_Layer: [[-1, 30]]}
     #     sched = Scheduler(composition=comp)
     #     output = comp.run(
@@ -2692,7 +2726,6 @@ class TestCallBeforeAfterTimescale:
 #         comp.add_node(E)
 #         comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
 #         comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
-#         comp._analyze_graph()
 #         inputs_dict = {
 #             A: [[5]],
 #             B: [[5]]
@@ -2728,7 +2761,6 @@ class TestCallBeforeAfterTimescale:
 #         comp.add_node(E)
 #         comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
 #         comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
-#         comp._analyze_graph()
 #         inputs_dict = {
 #             A: [[5.]],
 #             B: [[5.]]
@@ -2764,7 +2796,6 @@ class TestCallBeforeAfterTimescale:
 #         comp.add_node(E)
 #         comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
 #         comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
-#         comp._analyze_graph()
 #         inputs_dict = {
 #             A: [[5]],
 #             B: [[5]]
@@ -2813,7 +2844,6 @@ class TestCallBeforeAfterTimescale:
 #         comp.add_node(E)
 #         comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
 #         comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
-#         comp._analyze_graph()
 #         inputs_dict = {
 #             A: [[5]],
 #             B: [[5]]
@@ -2864,7 +2894,6 @@ class TestCallBeforeAfterTimescale:
 #         comp.add_node(E)
 #         comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
 #         comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
-#         comp._analyze_graph()
 #         inputs_dict = {
 #             A: [[100.0]],
 #             B: [[500.0]]
@@ -2896,7 +2925,6 @@ class TestSystemComposition:
     #     sys.add_node(A)
     #     sys.add_node(B)
     #     sys.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    #     sys._analyze_graph()
     #     sched = Scheduler(composition=sys)
     #     output = sys.run(
     #         scheduler_processing=sched
@@ -2910,7 +2938,6 @@ class TestSystemComposition:
         sys.add_node(A)
         sys.add_node(B)
         sys.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        sys._analyze_graph()
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=sys)
         output = sys.run(inputs=inputs_dict, scheduler_processing=sched)
@@ -2924,7 +2951,6 @@ class TestSystemComposition:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [[1], [2], [3], [4]]}
         sched = Scheduler(composition=comp)
 
@@ -2995,7 +3021,6 @@ class TestSystemComposition:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [[1], [2]]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -3090,7 +3115,6 @@ class TestSystemComposition:
     #     comp.add_node(A)
     #     comp.add_node(B)
     #     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    #     comp._analyze_graph()
     #     inputs_dict = {A: [[5], [4], [3]]}
     #     output = comp.run(
     #         inputs=inputs_dict,
@@ -3140,7 +3164,6 @@ class TestSystemComposition:
     #     comp.add_projection(Hidden_Layer_1, MappingProjection(), Hidden_Layer_2)
     #     comp.add_projection(Hidden_Layer_2, MappingProjection(), Output_Layer)
     #
-    #     comp._analyze_graph()
     #     stim_list = {Input_Layer: [[-1, 30]]}
     #     sched = Scheduler(composition=comp)
     #     output = comp.run(
@@ -3400,15 +3423,14 @@ class TestNestedCompositions:
 
         inner_comp = Composition(name="inner_comp")
         inner_comp.add_linear_processing_pathway([A, B])
-        inner_comp._analyze_graph()
         sched = Scheduler(composition=inner_comp)
 
         outer_comp = Composition(name="outer_comp")
         outer_comp.add_node(inner_comp)
 
-        outer_comp._analyze_graph()
         sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs=[1.0], bin_execute=mode)
+
         assert np.allclose(ret, [[[0.52497918747894]]])
 
 
@@ -3431,7 +3453,6 @@ class TestNestedCompositions:
 
         inner_comp1 = Composition(name="inner_comp1")
         inner_comp1.add_linear_processing_pathway([A, B])
-        inner_comp1._analyze_graph()
         sched = Scheduler(composition=inner_comp1)
 
         C = TransferMechanism(name="C",
@@ -3441,14 +3462,12 @@ class TestNestedCompositions:
 
         inner_comp2 = Composition(name="inner_comp2")
         inner_comp2.add_node(C)
-        inner_comp2._analyze_graph()
         sched = Scheduler(composition=inner_comp2)
 
         outer_comp = Composition(name="outer_comp")
         outer_comp.add_node(inner_comp1)
         outer_comp.add_node(inner_comp2)
 
-        outer_comp._analyze_graph()
         sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, bin_execute=mode)
         assert np.allclose(ret, [[[0.52497918747894]],[[0.52497918747894]]])
@@ -3679,9 +3698,6 @@ class TestNestedCompositions:
         # add mechanisms to myPath with default MappingProjections between them
         myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
 
-        # analyze graph (assign roles)
-        myPath._analyze_graph()
-
         # assign input to origin mech
         stimulus = {myMech1: [[1]]}
 
@@ -3719,14 +3735,10 @@ class TestNestedCompositions:
         # add mechanisms to myPath with default MappingProjections between them
         myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
 
-        # analyze graph (assign roles)
-        myPath._analyze_graph()
-
         myPath2 = PathwayComposition()
         myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
         myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
         myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech3])
-        myPath2._analyze_graph()
 
         sys = SystemComposition()
         sys.add_pathway(myPath)
@@ -3757,15 +3769,11 @@ class TestNestedCompositions:
         # add mechanisms to myPath with default MappingProjections between them
         myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
 
-        # analyze graph (assign roles)
-        myPath._analyze_graph()
-
         myPath2 = PathwayComposition()
         myMech4 = TransferMechanism(function=Linear(slope=2.0))
         myMech5 = TransferMechanism(function=Linear(slope=2.0))
         myMech6 = TransferMechanism(function=Linear(slope=2.0))
         myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech6])
-        myPath2._analyze_graph()
 
         sys = SystemComposition()
         sys.add_pathway(myPath)
@@ -3776,7 +3784,6 @@ class TestNestedCompositions:
         # assign input to origin mechs
         # myMech4 ignores its input from the outside world because it is no longer considered an origin!
         stimulus = {myMech1: [[1]]}
-        sys._analyze_graph()
 
         # schedule = Scheduler(composition=sys)
         output = sys.run(inputs=stimulus)
@@ -3804,8 +3811,6 @@ class TestNestedCompositions:
         # add mechanisms to myPath with default MappingProjections between them
         myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
 
-        # analyze graph (assign roles)
-        myPath._analyze_graph()
         myPathScheduler = Scheduler(composition=myPath)
         myPathScheduler.add_condition(myMech2, AfterNCalls(myMech1, 2))
 
@@ -3815,7 +3820,6 @@ class TestNestedCompositions:
         myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
         myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
         myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech3])
-        myPath2._analyze_graph()
 
         sys = SystemComposition()
         sys.add_pathway(myPath)
@@ -3885,7 +3889,6 @@ class TestCompositionInterface:
         comp.add_node(E)
         comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
         comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
-        comp._analyze_graph()
         inputs_dict = {
             A: [[5.]],
             # two trials of one input state each
@@ -3931,7 +3934,6 @@ class TestCompositionInterface:
         comp.add_node(E)
         comp.add_projection(MappingProjection(sender=C, receiver=E), C, E)
         comp.add_projection(MappingProjection(sender=D, receiver=E), D, E)
-        comp._analyze_graph()
         inputs_dict = {
             A: [[5.]],
             B: [[5.]]
@@ -3969,9 +3971,6 @@ class TestCompositionInterface:
         comp.add_projection(projection=MappingProjection(sender=F, receiver=G), sender=F, receiver=G)
         comp.add_projection(projection=MappingProjection(sender=G, receiver=E), sender=G, receiver=E)
 
-        # reassign roles
-        comp._analyze_graph()
-
         # execute the updated composition
         inputs_dict2 = {
             A: [[1.]],
@@ -3998,7 +3997,6 @@ class TestCompositionInterface:
         comp.add_node(C)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp.add_projection(MappingProjection(sender=B, receiver=C), B, C)
-        comp._analyze_graph()
         inputs_dict = {A: [[5.]]}
         sched = Scheduler(composition=comp)
 
@@ -4011,8 +4009,6 @@ class TestCompositionInterface:
         comp.add_node(F)
         comp.add_projection(projection=MappingProjection(sender=F, receiver=A), sender=F, receiver=A)
 
-        # reassign roles
-        comp._analyze_graph()
 
         # execute the updated composition
         inputs_dict2 = {F: [[3.]]}
@@ -4045,7 +4041,6 @@ class TestCompositionInterface:
                               function=my_fun
                               )
         comp.add_node(A)
-        comp._analyze_graph()
         inputs_dict = {A: [[5.], [5.]]}
 
         sched = Scheduler(composition=comp)
@@ -4086,7 +4081,6 @@ class TestCompositionInterface:
         comp.add_node(C)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp.add_projection(MappingProjection(sender=B, receiver=C), B, C)
-        comp._analyze_graph()
 
         inputs_dict = {A: [[5.], [5.]]}
 
@@ -4114,7 +4108,6 @@ class TestCompositionInterface:
         comp.add_projection(MappingProjection(sender=D, receiver=B), D, B)
         # Need to analyze graph again (identify D as an origin so that we can assign input) AND create the scheduler
         # again (sched, even though it is tied to comp, will not update according to changes in comp)
-        comp._analyze_graph()
         sched = Scheduler(composition=comp)
 
         inputs_dict2 = {A: [[2.], [4.]],
@@ -4148,7 +4141,6 @@ class TestCompositionInterface:
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
         comp.add_projection(MappingProjection(sender=B, receiver=C), B, C)
 
-        comp._analyze_graph()
         comp.run(inputs={A: [1.0]})
 
         for terminal_state in comp.output_CIM_states:
@@ -4186,7 +4178,6 @@ class TestCompositionInterface:
         comp.add_projection(MappingProjection(sender=B, receiver=C), B, C)
         comp.add_projection(MappingProjection(sender=B, receiver=D), B, D)
         comp.add_projection(MappingProjection(sender=B, receiver=E), B, E)
-        comp._analyze_graph()
         comp.run(inputs={A: [1.0]})
 
         for terminal_state in comp.output_CIM_states:
@@ -4265,7 +4256,6 @@ class TestInputStateSpecifications:
 
         comp.add_node(A)
 
-        comp._analyze_graph()
 
         inputs_dict = {A: [[2.], [4.]]}
         sched = Scheduler(composition=comp)
@@ -4298,7 +4288,6 @@ class TestInputStateSpecifications:
         comp.add_node(A)
 
         # get comp ready to run (identify roles, create sched, assign inputs)
-        comp._analyze_graph()
         inputs_dict = { A: [[2.],[4.]]}
 
         sched = Scheduler(composition=comp)
@@ -4324,7 +4313,6 @@ class TestInputStateSpecifications:
         comp.add_node(A)
 
         # get comp ready to run (identify roles, create sched, assign inputs)
-        comp._analyze_graph()
         inputs_dict = {A: [[2.], [4.]]}
 
         sched = Scheduler(composition=comp)
@@ -4352,7 +4340,6 @@ class TestInputStateSpecifications:
         comp.add_node(A)
 
         # get comp ready to run (identify roles, create sched, assign inputs)
-        comp._analyze_graph()
 
         inputs_dict = {A: [[2.], [4.]]}
 
@@ -4379,7 +4366,6 @@ class TestInputStateSpecifications:
         comp.add_node(A)
 
         # get comp ready to run (identify roles, create sched, assign inputs)
-        comp._analyze_graph()
         inputs_dict = {A: [[2.], [4.]]}
 
         sched = Scheduler(composition=comp)
@@ -4399,7 +4385,6 @@ class TestInputSpecifications:
     #     comp.add_node(A)
     #     comp.add_node(B)
     #     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    #     comp._analyze_graph()
     #     sched = Scheduler(composition=comp)
     #     output = comp.run(
     #         scheduler_processing=sched
@@ -4441,7 +4426,6 @@ class TestInputSpecifications:
         comp.add_projection(MappingProjection(sender=A, receiver=D), A, D)
         comp.add_projection(MappingProjection(sender=B, receiver=D), B, D)
         comp.add_projection(MappingProjection(sender=C, receiver=D), C, D)
-        comp._analyze_graph()
         inputs = {A: [[[0], [0]], [[1], [1]], [[2], [2]]],
                   B: [[0, 0], [1, 1], [2, 2]],
                   C: [[0, 0, 0], [1, 1, 1], [2, 2, 2]]
@@ -4459,7 +4443,6 @@ class TestInputSpecifications:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched)
@@ -4472,7 +4455,6 @@ class TestInputSpecifications:
         comp.add_node(A)
         comp.add_node(B)
         comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        comp._analyze_graph()
         inputs_dict = {A: [[5]]}
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler_processing=sched, num_trials=5)
@@ -4498,7 +4480,6 @@ class TestInputSpecifications:
         comp.add_node(C)
         comp.add_node(D)
 
-        comp._analyze_graph()
 
         inputs = {B: [[1., 2., 3.]],
                   D: [[4.]]}
@@ -4518,7 +4499,6 @@ class TestInputSpecifications:
                               default_variable=[[1.0, 2.0], [3.0, 4.0]],
                               function=Linear(slope=2.0))
         compA.add_node(A)
-        compA._analyze_graph()
 
         comp = Composition()
 
@@ -4535,7 +4515,6 @@ class TestInputSpecifications:
         comp.add_node(C)
         comp.add_node(D)
 
-        comp._analyze_graph()
 
         inputs = {B: [[1., 2., 3.]],
                   D: [[4.]]}
@@ -4555,7 +4534,8 @@ class TestProperties:
     @pytest.mark.parametrize("mode", ['Python', True,
                                       pytest.param('LLVM', marks=(pytest.mark.xfail, pytest.mark.llvm)),
                                       pytest.param('LLVMExec', marks=(pytest.mark.xfail, pytest.mark.llvm)),
-                                      pytest.param('LLVMRun', marks=(pytest.mark.xfail, pytest.mark.llvm))])
+                                      pytest.param('LLVMRun', marks=(pytest.mark.xfail, pytest.mark.llvm)),
+                                      pytest.param('PTXExec', marks=(pytest.mark.xfail, pytest.mark.llvm))])
     def test_llvm_fallback(self, mode):
         comp = Composition()
         def myFunc(variable, params, context):
@@ -4771,7 +4751,6 @@ class TestShadowInputs:
         assert B.value == [[1.0]]
         assert C.value == [[1.0]]
 
-        # comp.show_graph()
         input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert A in input_nodes
@@ -4848,3 +4827,16 @@ class TestNodeRoles:
         comp._analyze_graph()
 
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A, B, C}
+
+
+class TestMisc:
+
+    def test_disable_all_history(self):
+        comp = Composition(name='comp')
+        A = ProcessingMechanism(name='A')
+
+        comp.add_node(A)
+        comp.disable_all_history()
+        comp.run(inputs={A: [2]})
+
+        assert len(A.parameters.value.history[comp.default_execution_id]) == 0

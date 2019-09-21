@@ -6,7 +6,7 @@ from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.scheduling.condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTimeStep, AtTrial, BeforeNCalls, BeforePass, BeforeTimeStep, BeforeTrial, Condition, ConditionError, ConditionSet, EveryNCalls, EveryNPasses, NWhen, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny, WhileNot
+from psyneulink.core.scheduling.condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTimeStep, AtTrial, AtTrialStart, BeforeNCalls, BeforePass, BeforeTimeStep, BeforeTrial, Condition, ConditionError, ConditionSet, EveryNCalls, EveryNPasses, NWhen, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny, WhileNot
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -231,6 +231,7 @@ class TestCondition:
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, BeforeTimeStep(2))
+            sched.add_condition(B, Always())
 
             termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
@@ -300,6 +301,8 @@ class TestCondition:
 
             sched = Scheduler(composition=comp)
             sched.add_condition(A, AtPass(0))
+            sched.add_condition(B, Always())
+            sched.add_condition(C, Always())
 
             termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
@@ -546,6 +549,25 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A, A, set([A, B]), set([A, B]), set([A, B])]
+            assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    class TestConvenience:
+
+        def test_AtTrialStart(self):
+            comp = Composition()
+            A = TransferMechanism(name='A')
+            B = TransferMechanism(name='B')
+            comp.add_linear_processing_pathway([A, B])
+
+            sched = Scheduler(composition=comp)
+            sched.add_condition(B, AtTrialStart())
+
+            termination_conds = {
+                TimeScale.TRIAL: AtPass(3)
+            }
+            output = list(sched.run(termination_conds=termination_conds))
+
+            expected_output = [A, B, A, A]
             assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_composite_condition_multi(self):

@@ -68,7 +68,7 @@ GROUP_PREFIX="IntegratorFunction "
 @pytest.mark.benchmark
 def test_basic(func, variable, params, expected, benchmark):
     f = func(default_variable=variable, **params)
-    benchmark.group = GROUP_PREFIX + func.componentName;
+    benchmark.group = GROUP_PREFIX + func.componentName
     f(variable)
     res = f(variable)
     assert np.allclose(res[0], expected[0])
@@ -84,7 +84,7 @@ def test_basic(func, variable, params, expected, benchmark):
 def test_llvm(func, variable, params, expected, benchmark):
     if func is Functions.Buffer:
         pytest.skip("Not implemented")
-    benchmark.group = GROUP_PREFIX + func.componentName;
+    benchmark.group = GROUP_PREFIX + func.componentName
     f = func(default_variable=variable, **params)
     m = pnlvm.execution.FuncExecution(f)
     m.execute(variable)
@@ -103,7 +103,7 @@ def test_llvm(func, variable, params, expected, benchmark):
 def test_ptx_cuda(func, variable, params, expected, benchmark):
     if func is Functions.Buffer:
         pytest.skip("Not implemented")
-    benchmark.group = GROUP_PREFIX + func.componentName;
+    benchmark.group = GROUP_PREFIX + func.componentName
     f = func(default_variable=variable, **params)
     m = pnlvm.execution.FuncExecution(f)
     m.cuda_execute(variable)
@@ -513,3 +513,25 @@ def test_ContentAddressableMemory_max_entries():
                        [[11,21,31],[41,51,61]],
                        [[12,22,32],[42,52,62]]]
     assert np.allclose(em.memory, expected_memory)
+
+
+@pytest.mark.parametrize(
+    'param_name',
+    [
+        'distance_function',
+        'selection_function',
+    ]
+)
+def test_ContentAddressableMemory_unique_functions(param_name):
+    a = ContentAddressableMemory()
+    b = ContentAddressableMemory()
+
+    assert (
+        getattr(a.parameters, param_name).get()
+        is not getattr(b.parameters, param_name).get()
+    )
+
+    assert (
+        getattr(a.defaults, param_name)
+        is not getattr(b.defaults, param_name)
+    )

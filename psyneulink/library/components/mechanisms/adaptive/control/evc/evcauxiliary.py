@@ -15,6 +15,7 @@ Auxiliary functions for `EVCControlMechanism`.
 
 import numpy as np
 import typecheck as tc
+import copy
 import warnings
 
 from psyneulink.core.components.functions.function import Function_Base
@@ -23,7 +24,7 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.core.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_PARAMS, NOISE, PREDICTION_MECHANISM, RATE, \
     kwPreferenceSetName, kwProgressBarChar
@@ -125,7 +126,7 @@ class ValueFunction(EVCAuxiliaryFunction):
     ValueFunction takes as its arguments an outcome (a value representing the performance of a `System`)
     and list of costs (each reflecting the `cost <ControlSignal.cost>` of a `ControlSignal` of the `controller
     System.controller` of that System), and returns an `expected value of control (EVC) <EVCControlMechanism_EVC>`
-    based on these (along with the outcome and aggregation of costs used to calculate the EVC).
+    based on these (along with the outcome and combination of costs used to calculate the EVC).
 
     ValueFunction is the default for an EVCControlMechanism's `value_function <EVCControlMechanism.value_function>`
     attribute, and it is called by `ControlSignalGridSearch` (the EVCControlMechanism's default `function
@@ -148,17 +149,17 @@ class ValueFunction(EVCAuxiliaryFunction):
     def __init__(self, function=None):
         function = function or self.function
         super().__init__(function=function,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
-    def function(
+    def _function(
         self,
         controller=None,
         outcome=None,
         costs=None,
         variable=None,
-        execution_id=None,
+        context=None,
         params=None,
-        context=None
+
     ):
         """
         function (controller, outcome, costs)
@@ -201,7 +202,7 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         """
 
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+        if self.is_initializing:
             return (np.array([0]), np.array([0]), np.array([0]))
 
         # remove this in favor of attribute or parameter?
@@ -212,15 +213,15 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         # Aggregate costs
         if isinstance(cost_function, UserDefinedFunction):
-            cost = cost_function._execute(controller=controller, costs=costs, execution_id=execution_id)
+            cost = cost_function._execute(controller=controller, costs=costs, context=context)
         else:
-            cost = cost_function._execute(variable=costs, execution_id=execution_id, context=context)
+            cost = cost_function._execute(variable=costs, context=context)
 
         # Combine outcome and cost to determine value
         if isinstance(combine_function, UserDefinedFunction):
-            value = combine_function._execute(controller=controller, outcome=outcome, cost=cost, execution_id=execution_id)
+            value = combine_function._execute(controller=controller, outcome=outcome, cost=cost, context=context)
         else:
-            value = combine_function._execute(variable=[outcome, -cost], execution_id=execution_id)
+            value = combine_function._execute(variable=[outcome, -cost], context=context)
 
         return (value, outcome, cost)
 
@@ -301,16 +302,15 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         function = function or self.function
         super().__init__(function=function,
                          owner=owner,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
-    def function(
+    def _function(
         self,
         controller=None,
         variable=None,
-        execution_id=None,
+        context=None,
         runtime_params=None,
         params=None,
-        context=None,
     ):
         """Grid search combinations of control_signals in specified allocation ranges to find one that maximizes EVC
 
@@ -333,9 +333,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         """
 
-        if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING or
-                self.owner.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING):
-            return defaultControlAllocation
+        if self.is_initializing:
+            return [defaultControlAllocation]
 
         # Get value of, or set default for standard args
         if controller is None:
@@ -347,12 +346,6 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         EVC_values = []
         EVC_policies = []
 
-        # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
-        # FIX 3/30/18 - IS controller CORRECT FOR THIS, OR SHOULD IT BE System (controller.system)??
-        controller.parameters.context.get(execution_id).execution_phase = ContextFlags.SIMULATION
-        controller.parameters.context.get(execution_id).string = "{0} EXECUTING {1} of {2}".format(controller.name,
-                                                                      EVC_SIMULATION,
-                                                                      controller.system.name)
         # Get allocation_samples for all ControlSignals
         num_control_signals = len(controller.control_signals)
         control_signal_sample_lists = []
@@ -382,7 +375,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         if PY_MULTIPROCESSING:
             EVC_pool = Pool()
             results = EVC_pool.map(compute_EVC, [(controller, arg, runtime_params, context)
-                                                 for arg in control_signal_search_space], execution_id=execution_id)
+                                                 for arg in control_signal_search_space], context=context)
 
         else:
 
@@ -418,7 +411,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             result = None
             EVC_max = float('-Infinity')
             EVC_max_policy = np.zeros_like(control_signal_search_space[0])
-            EVC_max_state_values = np.zeros_like(controller.get_input_values(execution_id))
+            EVC_max_state_values = np.zeros_like(controller.get_input_values(context))
             max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             EVC_values = np.array([])
@@ -442,7 +435,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 sample +=1
 
                 # Calculate EVC for specified allocation policy
-                result_tuple = compute_EVC(controller, allocation_vector, runtime_params, context, execution_id=execution_id)
+                result_tuple = compute_EVC(controller, allocation_vector, runtime_params, context)
                 EVC, outcome, cost = result_tuple
 
                 EVC_max = max(EVC, EVC_max)
@@ -469,7 +462,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     # Keep track of state values and allocation policy associated with EVC max
                     # EVC_max_state_values = controller.input_value.copy()
                     # EVC_max_policy = allocation_vector.copy()
-                    EVC_max_state_values = controller.get_input_values(execution_id)
+                    EVC_max_state_values = controller.get_input_values(context)
                     EVC_max_policy = allocation_vector
                     max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
 
@@ -494,12 +487,12 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     EVC_values = np.concatenate(Comm.allgather(EVC_values), axis=0)
                     EVC_policies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
 
-            controller.parameters.EVC_max.set(EVC_max, execution_id, override=True)
-            controller.parameters.EVC_max_state_values.set(EVC_max_state_values, execution_id, override=True)
-            controller.parameters.EVC_max_policy.set(EVC_max_policy, execution_id, override=True)
+            controller.parameters.EVC_max._set(EVC_max, context)
+            controller.parameters.EVC_max_state_values._set(EVC_max_state_values, context)
+            controller.parameters.EVC_max_policy._set(EVC_max_policy, context)
             if controller.save_all_values_and_policies:
-                controller.parameters.EVC_values.set(EVC_values, execution_id, override=True)
-                controller.parameters.EVC_policies.set(EVC_policies, execution_id, override=True)
+                controller.parameters.EVC_values._set(EVC_values, context)
+                controller.parameters.EVC_policies._set(EVC_policies, context)
             # # TEST PRINT:
             # import re
             # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
@@ -526,7 +519,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         # Assign max values for optimal allocation policy to controller.input_states (for reference only)
         for i in range(len(controller.input_states)):
-            controller.input_states[controller.input_states.names[i]].parameters.value.set(np.atleast_1d(next(EVC_maxStateValue)), execution_id, override=True)
+            controller.input_states[controller.input_states.names[i]].parameters.value._set(np.atleast_1d(next(EVC_maxStateValue)), context)
 
 
         # Report EVC max info
@@ -548,12 +541,12 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #     assign to controller.control_allocation, and return (where it will be assigned to controller.value).
         #     (note:  the conversion is to be consistent with use of controller.value for assignments to control_signals.value)
         allocation_policy = np.array(EVC_max_policy).reshape(len(EVC_max_policy), -1)
-        controller.parameters.value.set(allocation_policy, execution_id, override=True)
+        controller.parameters.value._set(allocation_policy, context)
         return allocation_policy
         #endregion
 
 
-def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=None):
+def compute_EVC(ctlr, allocation_vector, runtime_params, context):
     """Compute EVC for a specified `control_allocation <EVCControlMechanism.control_allocation>`.
 
     IMPLEMENTATION NOTE:  implemented as a function so it can be used with multiprocessing Pool
@@ -569,7 +562,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
         context (value): context passed to ctlr.update
 
     Returns (float, float, float):
-        (EVC_current, outcome, aggregated_costs)
+        (EVC_current, outcome, combined_costs)
 
     """
     # # TEST PRINT:
@@ -579,7 +572,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
 
 
     # Run one simulation and get EVC for each trial's worth of inputs in predicted_input
-    predicted_input = ctlr.parameters.predicted_input.get(execution_id)
+    predicted_input = ctlr.parameters.predicted_input._get(context)
 
     origin_mechs = list(predicted_input.keys())
     # number of trials' worth of inputs in predicted_input should be the same for all ORIGIN Mechanisms, so use first:
@@ -598,44 +591,47 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
 
         if isinstance(mechanism.function, StatefulFunction):
             for attr in mechanism.function.stateful_attributes:
-                reinitialization_value.append(mechanism.function.get_current_function_param(attr, execution_id))
+                reinitialization_value.append(mechanism.function.get_current_function_param(attr, context))
         elif hasattr(mechanism, "integrator_function"):
             if isinstance(mechanism.integrator_function, IntegratorFunction):
                 for attr in mechanism.integrator_function.stateful_attributes:
-                    reinitialization_value.append(mechanism.integrator_function.get_current_function_param(attr, execution_id))
+                    reinitialization_value.append(mechanism.integrator_function.get_current_function_param(attr, context))
 
         reinitialization_values[mechanism] = reinitialization_value
 
     # Run simulation trial by trial in order to get EVC for each trial
     # IMPLEMENTATION NOTE:  Consider calling execute rather than run (for efficiency)
     for i in range(num_trials):
-        sim_execution_id = ctlr.get_next_sim_id(execution_id)
+        sim_context = copy.copy(context)
+        sim_context.execution_id = ctlr.get_next_sim_id(context)
+        # sim_context.add_flag(ContextFlags.SIMULATION)
         try:
-            ctlr.parameters.simulation_ids.get(execution_id).append(sim_execution_id)
+            ctlr.parameters.simulation_ids._get(context).append(sim_context.execution_id)
         except AttributeError:
-            ctlr.parameters.simulation_ids.set([sim_execution_id], execution_id)
+            ctlr.parameters.simulation_ids._set([sim_context.execution_id], context)
 
-        ctlr.system._initialize_from_context(sim_execution_id, execution_id)
+        ctlr.system._initialize_from_context(sim_context, context)
 
         inputs = {key:value[i] for key, value in predicted_input.items()}
 
         outcome = ctlr.evaluate(
             inputs=inputs,
             allocation_vector=allocation_vector,
-            execution_id=sim_execution_id,
+            context=sim_context,
             runtime_params=runtime_params,
             reinitialize_values=reinitialization_values,
-            context=context
+
         )
         EVC_list.append(
             ctlr.value_function(
                 controller=ctlr,
                 outcome=outcome,
-                costs=ctlr.parameters.control_signal_costs.get(sim_execution_id),
-                execution_id=sim_execution_id,
-                context=context
+                costs=ctlr.parameters.control_signal_costs._get(sim_context),
+                context=sim_context,
+
             )
         )
+        # sim_context.remove_flag(ContextFlags.SIMULATION)
         # assert True
         # # TEST PRINT EVC:
         # print ("Trial: {}\tInput: {}\tAllocation: {}\tOutcome: {}\tCost: {}\tEVC: {}".
@@ -644,7 +640,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context, execution_id=N
 
     # Re-assign values of reinitialization attributes to their value at entry
     for mechanism in reinitialization_values:
-        mechanism.reinitialize(*reinitialization_values[mechanism], execution_context=execution_id)
+        mechanism.reinitialize(*reinitialization_values[mechanism], context=context)
 
     EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
 
@@ -876,6 +872,7 @@ class PredictionMechanism(IntegratorMechanism):
         rate = Parameter(1.0, modulable=True)
 
     @tc.typecheck
+    @handle_external_context(source=None)
     def __init__(self,
                  default_variable=None,
                  size=None,
@@ -894,9 +891,9 @@ class PredictionMechanism(IntegratorMechanism):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if not context in {ContextFlags.COMPONENT, ContextFlags.COMPOSITION, ContextFlags.COMMAND_LINE}:
+        if not context.source in {ContextFlags.COMPONENT, ContextFlags.COMPOSITION, ContextFlags.COMMAND_LINE}:
             warnings.warn("PredictionMechanism should not be constructed on its own.  If you insist,"
-                          "set context=ContextFlags.COMMAND_LINE, but proceed at your peril!")
+                          "set context=Context(source=ContextFlags.COMMAND_LINE), but proceed at your peril!")
             return
 
         if params and FUNCTION in params:
@@ -941,15 +938,16 @@ class PredictionMechanism(IntegratorMechanism):
                 name=name,
                 prefs=prefs)
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        '''Update predicted value on "real" but not simulation runs '''
+    def _execute(self, variable=None, context=None, runtime_params=None):
+        """Update predicted value on "real" but not simulation runs"""
 
-        if self.parameters.context.get(execution_id).execution_phase == ContextFlags.SIMULATION:
+        if ContextFlags.SIMULATION in context.execution_phase:
             # Just return current value for simulation runs
-            value = self.parameters.value.get(execution_id)
+            value = self.parameters.value._get(context)
+
         else:
             # Update deque with new input for any other type of run
-            value = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
+            value = super()._execute(variable=variable, context=context, runtime_params=runtime_params)
 
             # If inputs are being recorded (#recorded = window_size):
             if len(value) > 1:

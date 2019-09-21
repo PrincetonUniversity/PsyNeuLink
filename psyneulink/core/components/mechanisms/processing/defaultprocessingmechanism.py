@@ -73,6 +73,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  function=None,
+                 **kwargs
                  ):
         """Add Linear as default function, assign default name, and call super.__init__
 
@@ -91,4 +92,5 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
                                                               params=params,
                                                               name=name,
                                                               prefs=prefs,
-                                                              context=ContextFlags.CONSTRUCTOR)
+
+                                                              **kwargs)

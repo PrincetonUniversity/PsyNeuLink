@@ -9,7 +9,9 @@
 #
 # *****************************************  COMBINATION FUNCTIONS  ****************************************************
 
-'''
+"""
+* `Concatenate`
+* `Rearrange`
 * `Reduce`
 * `LinearCombination`
 * `CombineMeans`
@@ -27,27 +29,28 @@ this is for use by ModulatoryProjections (and, in particular, GatingProjections,
 when the CombinationFunction is used as the function of an InputState or OutputState).
 
 
-'''
+"""
 
-import functools
 import numbers
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import \
-    Function_Base, FunctionError, ADDITIVE_PARAM, MULTIPLICATIVE_PARAM
-from psyneulink.core.globals.keywords import PREDICTION_ERROR_DELTA_FUNCTION, COMBINATION_FUNCTION_TYPE, \
-    REDUCE_FUNCTION, SCALE, OFFSET, SUM, PRODUCT, WEIGHTS, EXPONENTS, OPERATION, LINEAR_COMBINATION_FUNCTION, \
-    COMBINE_MEANS_FUNCTION, kwPreferenceSetName
+from psyneulink.core.components.functions.function import Function_Base, FunctionError, FunctionOutputType
+from psyneulink.core.globals.keywords import \
+    ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION, \
+    DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
+    PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
+    kwPreferenceSetName
 from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d, parameter_spec
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import \
     kpReportOutputPref, is_pref_set, PreferenceEntry, PreferenceLevel
 
-__all__ = ['CombinationFunction', 'Reduce', 'LinearCombination', 'CombineMeans', 'PredictionErrorDeltaFunction']
+__all__ = ['CombinationFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce', 'LinearCombination',
+           'PredictionErrorDeltaFunction']
 
 class CombinationFunction(Function_Base):
     """Function that combines multiple items, yielding a result with the same shape as its operands
@@ -78,18 +81,23 @@ class CombinationFunction(Function_Base):
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
-                 params,
-                 owner,
-                 prefs,
-                 context):
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 context=None):
 
-        if not hasattr(self, MULTIPLICATIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
-
-        if not hasattr(self, ADDITIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
-                                format(self.__class__.__name__, ADDITIVE_PARAM))
+        # # FIX: 9/3/19 - DON'T IMPLEMENT, SINCE PredictionErrorDeltaFunction DOESN"T IMPLEMENT MODULATORY PARAMS
+        # try:
+        #     self.parameters.multiplicative_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(MULTIPLICATIVE_PARAM)} Parameter or alias to one.")
+        #
+        # try:
+        #     self.parameters.additive_param
+        # except:
+        #     raise FunctionError(f"PROGRAM ERROR: {self.__class__.__name__} must implement "
+        #                         f"a {repr(ADDITIVE_PARAM)} Parameter or alias to one.")
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -97,21 +105,482 @@ class CombinationFunction(Function_Base):
                          prefs=prefs,
                          context=context)
 
+
+class Concatenate(CombinationFunction):  # ------------------------------------------------------------------------
+    """
+    Concatenate(                                   \
+         default_variable=class_defaults.variable, \
+         scale=1.0,                                \
+         offset=0.0,                               \
+         params=None,                              \
+         owner=None,                               \
+         prefs=None,                               \
+    )
+
+    .. _Concatenate:
+
+    Concatenates items in outer dimension (axis 0) of of `variable <Concatenate.variable>` into a single array,
+    optionally scaling and/or adding an offset to the result after concatenating.
+
+    `function <Concatenate.function>` returns a 1d array with lenght equal to the sum of the lengths of the items
+    in `variable <Concatenate.variable>`.
+
+    Arguments
+    ---------
+
+    default_variable : list or np.array : default class_defaults.variable
+        specifies a template for the value to be transformed and its default value;  all entries must be numeric.
+
+    scale : float
+        specifies a value by which to multiply each element of the output of `function <Concatenate.function>`
+        (see `scale <Concatenate.scale>` for details)
+
+    offset : float
+        specifies a value to add to each element of the output of `function <Concatenate.function>`
+        (see `offset <Concatenate.offset>` for details)
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    default_variable : list or np.array
+        contains template of array(s) to be concatenated.
+
+    scale : float
+        value is applied multiplicatively to each element of the concatenated, before  applying the `offset
+        <Concatenate.offset>` (if it is specified).
+
+    offset : float
+        value is added to each element of the concatentated array, after `scale <Concatenate.scale>` has been
+        applied (if it is specified).
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+    componentName = CONCATENATE_FUNCTION
+
+
+    class Parameters(CombinationFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                offset
+                    see `offset <Concatenate.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                scale
+                    see `scale <Concatenate.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 scale: parameter_spec = 1.0,
+                 offset: parameter_spec = 0.0,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts
+        params = self._assign_args_to_param_dicts(scale=scale,
+                                                  offset=offset,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         )
+
+    def _validate_variable(self, variable, context=None):
+        """Insure that list or array is 1d and that all elements are numeric
+
+        Args:
+            variable:
+            context:
+        """
+        variable = super()._validate_variable(variable=variable, context=context)
+        if not is_numeric(variable):
+            raise FunctionError("All elements of {} must be scalar values".
+                                format(self.__class__.__name__))
+        return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate scale and offset parameters
+
+        Check that SCALE and OFFSET are scalars.
+        """
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        if SCALE in target_set and target_set[SCALE] is not None:
+            scale = target_set[SCALE]
+            if not isinstance(scale, numbers.Number):
+                raise FunctionError("{} param of {} ({}) must be a scalar".format(SCALE, self.name, scale))
+
+        if OFFSET in target_set and target_set[OFFSET] is not None:
+            offset = target_set[OFFSET]
+            if not isinstance(offset, numbers.Number):
+                raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        """Use numpy hstack to concatenate items in outer dimension (axis 0) of variable.
+
+        Arguments
+        ---------
+
+        variable : list or np.array : default class_defaults.variable
+           a list or np.array of numeric values.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        Concatenated array of items in variable : array
+            in an array that is one dimension less than `variable <Concatenate.variable>`.
+
+        """
+        scale = self.get_current_function_param(SCALE, context)
+        offset = self.get_current_function_param(OFFSET, context)
+
+        result = np.hstack(variable) * scale + offset
+
+        return self.convert_output_type(result)
+
+
+class Rearrange(CombinationFunction):  # ------------------------------------------------------------------------
+    """
+    Rearrange(                                     \
+         default_variable=class_defaults.variable, \
+         arrangement=None,                         \
+         scale=1.0,                                \
+         offset=0.0,                               \
+         params=None,                              \
+         owner=None,                               \
+         prefs=None,                               \
+    )
+
+    .. _Rearrange:
+
+    Rearranges items in outer dimension (axis 0) of `variable <Rearrange.variable>`, as specified by **arrangement**,
+    optionally scaling and/or adding an offset to the result after concatenating.
+
+    .. _Rearrange_Arrangement:
+
+    The **arrangement** argument specifies how to rearrange the items of `variable <Rearrange.variable>`, possibly
+    concatenating subsets of them into single 1d arrays.  The specification must be an integer, a tuple of integers,
+    or a list containing either or both.  Each integer must be an index of an item in the outer dimension (axis 0) of
+    `variable <Rearrange.variable>`.  Items referenced in a tuple are concatenated in the order specified into a single
+    1d array, and that 1d array is included in the resulting 2d array in the order it appears in **arrangement**.
+    If **arrangement** is specified, then only the items of `variable <Rearrange.variable>` referenced in the
+    specification are included in the result; if **arrangement** is not specified, all of the items of `variable
+    <Rearrange.variable>` are concatenated into a single 1d array (i.e., it functions identically to `Concatenate`).
+
+    `function <Rearrange.function>` returns a 2d array with the items of `variable` rearranged
+    (and possibly concatenated) as specified by **arrangement**.
+
+    Examples
+    --------
+
+    >>> r = Rearrange(arrangement=[(1,2),(0)])
+    >>> print(r(np.array([[0,0],[1,1],[2,2]])))
+    [array([1., 1., 2., 2.]) array([0., 0.])]
+
+    >>> r = Rearrange()
+    >>> print(r(np.array([[0,0],[1,1],[2,2]])))
+    [0. 0. 1. 1. 2. 2.]
+
+
+    Arguments
+    ---------
+
+    default_variable : list or np.array : default class_defaults.variable
+        specifies a template for the value to be transformed and its default value;  all entries must be numeric.
+
+    arrangement : int, tuple, or list : default None
+        specifies ordering of items in `variable <Rearrange.variable>` and/or ones to concatenate.
+        (see `above <Rearrange_Arrangement>` for details).
+
+    scale : float
+        specifies a value by which to multiply each element of the output of `function <Rearrange.function>`
+        (see `scale <Rearrange.scale>` for details).
+
+    offset : float
+        specifies a value to add to each element of the output of `function <Rearrange.function>`
+        (see `offset <Rearrange.offset>` for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    default_variable : list or np.array
+        contains template of array(s) to be concatenated.
+
+    arrangement : list of one or more tuples
+        determines ordering of items in `variable <Rearrange.variable>` and/or ones to concatenate
+        (see `above <Rearrange_Arrangement>` for additional details).
+
+    scale : float
+        value is applied multiplicatively to each element of the concatenated, before  applying the `offset
+        <Rearrange.offset>` (if it is specified).
+
+    offset : float
+        value is added to each element of the concatentated array, after `scale <Rearrange.scale>` has been
+        applied (if it is specified).
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+    componentName = REARRANGE_FUNCTION
+
+    class Parameters(CombinationFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                arrangement
+                    see `arrangement <Rearrange.arrangement>`
+
+                    :default value: None
+                    :type:
+
+                offset
+                    see `offset <Rearrange.offset>`
+
+                    :default value: 0.0
+                    :type: float
+
+                scale
+                    see `scale <Rearrange.scale>`
+
+                    :default value: 1.0
+                    :type: float
+
+        """
+        arrangement = Parameter(None, modulable=False)
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 scale: parameter_spec = 1.0,
+                 offset: parameter_spec = 0.0,
+                 arrangement:tc.optional(tc.any(int, tuple, list))=None,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # Assign args to params and functionParams dicts
+        params = self._assign_args_to_param_dicts(arrangement=arrangement,
+                                                  scale=scale,
+                                                  offset=offset,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         )
+
+    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
+        if default_variable is not None:
+            self.parameters.variable._user_specified = True
+        return default_variable
+
+    def _validate_variable(self, variable, context=None):
+        """Insure that all elements are numeric and that list or array is at least 2d
+        """
+        variable = super()._validate_variable(variable=variable, context=context)
+        if not is_numeric(variable):
+            raise FunctionError(
+                    f"All elements of {repr(DEFAULT_VARIABLE)} for {self.__class__.__name__} must be scalar values.")
+
+        if self.parameters.variable._user_specified and np.array(variable).ndim<2:
+            raise FunctionError(f"{repr(DEFAULT_VARIABLE)} for {self.__class__.__name__} must be at least 2d.")
+
+        return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate arrangement, scale and offset parameters"""
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        if ARRANGEMENT in target_set and target_set[ARRANGEMENT] is not None:
+
+            # If default_varilable was specified by user, validate indices in arrangement
+            owner_str = ''
+            if self.owner:
+                owner_str = f' of {self.owner.name}'
+            for i in self._indices:
+                if not isinstance(i, int):
+                    raise FunctionError(f"Index specified in {repr(ARRANGEMENT)} arg for "
+                                        f"{self.name}{owner_str} ({repr(i)}) is not an int.")
+                if self.parameters.variable._user_specified:
+                    try:
+                        self.parameters.variable.default_value[i]
+                    except IndexError:
+                        raise FunctionError(f"Index ({i}) specified in {repr(ARRANGEMENT)} arg for "
+                                            f"{self.name}{owner_str} is out of bounds for its {repr(DEFAULT_VARIABLE)} "
+                                            f"arg (max index = {len(self.parameters.variable.default_value)-1}).")
+
+        # Check that SCALE and OFFSET are scalars.
+        if SCALE in target_set and target_set[SCALE] is not None:
+            scale = target_set[SCALE]
+            if not isinstance(scale, numbers.Number):
+                raise FunctionError("{} param of {} ({}) must be a scalar".format(SCALE, self.name, scale))
+
+        if OFFSET in target_set and target_set[OFFSET] is not None:
+            offset = target_set[OFFSET]
+            if not isinstance(offset, numbers.Number):
+                raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
+
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+        """Insure all items of arrangement are tuples and compatibility with default_variable
+
+        If arrangement is specified, convert all items to tuples
+        If default_variable is NOT specified, assign with length in outer dimension = max index in arragnement
+        If default_variable IS _user_specified, compatiblility with arrangement is checked in _validate_params
+        """
+
+        arrangement = self.parameters.arrangement.get()
+
+        if arrangement is not None:
+            # Insure that all items are tuples
+            self.parameters.arrangement.set([item if isinstance(item,tuple) else tuple([item]) for item in arrangement])
+
+        if not self.parameters.variable._user_specified:
+            # Reshape variable.default_value to match maximum index specified in arrangement
+            self.parameters.variable.default_value = np.zeros((max(self._indices)+1,1))
+
+        super()._instantiate_attributes_before_function(function, context)
+
     @property
-    def multiplicative(self):
-        return getattr(self, self.multiplicative_param)
+    def _indices(self):
+        arrangement = list(self.parameters.arrangement.get())
+        items = [list(item) if isinstance(item, tuple) else [item] for item in arrangement]
+        indices = []
+        for item in items:
+            indices.extend(item)
+        return indices
 
-    @multiplicative.setter
-    def multiplicative(self, val):
-        setattr(self, self.multiplicative_param, val)
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        """Rearrange items in outer dimension (axis 0) of variable according to `arrangement <Rearrange.arrangement>`.
 
-    @property
-    def additive(self):
-        return getattr(self, self.additive_param)
+        Arguments
+        ---------
 
-    @additive.setter
-    def additive(self, val):
-        setattr(self, self.additive_param, val)
+        variable : list or np.array : default class_defaults.variable
+           a list or np.array of numeric values.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        Rearranged items of outer dimension (axis 0) of **variable** : array
+            in a 2d array.
+        """
+        variable = np.atleast_2d(variable)
+
+        scale = self.get_current_function_param(SCALE, context)
+        offset = self.get_current_function_param(OFFSET, context)
+        arrangement = self.parameters.arrangement.get(context)
+
+        if arrangement is None:
+            result = np.hstack(variable) * scale + offset
+
+        else:
+            try:
+                result = []
+                for item in arrangement:
+                    stack = []
+                    for index in item:
+                        stack.append(variable[index])
+                    result.append(np.hstack(tuple(stack)))
+                result = np.array(result) * scale + offset
+            except IndexError:
+                assert False, f"PROGRAM ERROR: Bad index specified in {repr(ARRANGEMENT)} arg -- " \
+                    f"should have been caught in _validate_params or _instantiate_attributes_before_function"
+
+        return self.convert_output_type(result, FunctionOutputType.NP_2D_ARRAY)
 
 
 class Reduce(CombinationFunction):  # ------------------------------------------------------------------------
@@ -221,8 +690,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     """
     componentName = REDUCE_FUNCTION
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -263,8 +730,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         weights = None
         exponents = None
         operation = SUM
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -294,7 +761,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         """Insure that list or array is 1d and that all elements are numeric
@@ -305,8 +772,12 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         """
         variable = super()._validate_variable(variable=variable, context=context)
         if not is_numeric(variable):
-            raise FunctionError("All elements of {} must be scalar values".
-                                format(self.__class__.__name__))
+            if self.owner:
+                err_msg = f"{self.__class__.__name__} function of {repr(self.owner.name)} " \
+                          f"passed variable ({variable}) with non-scalar element."
+            else:
+                err_msg = f"All elements of variable ({variable}) for {self.__class__.__name__} must be scalar values."
+            raise FunctionError(err_msg)
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -327,7 +798,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_1d(target_set[WEIGHTS])
-            if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
                 if len(target_set[WEIGHTS]) != len(self.defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of elements in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.defaults.variable)))
@@ -335,7 +806,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
             target_set[EXPONENTS] = np.atleast_1d(target_set[EXPONENTS])
-            if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
                 if len(target_set[EXPONENTS]) != len(self.defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of elements in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.defaults.variable)))
@@ -350,11 +821,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             if not isinstance(offset, numbers.Number):
                 raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
 
-    def function(self,
+    def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -377,15 +848,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
 
         """
-
-        # Validate variable and assign to variable, and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
-        weights = self.get_current_function_param(WEIGHTS, execution_id)
-        exponents = self.get_current_function_param(EXPONENTS, execution_id)
-        operation = self.get_current_function_param(OPERATION, execution_id)
-        scale = self.get_current_function_param(SCALE, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
+        weights = self.get_current_function_param(WEIGHTS, context)
+        exponents = self.get_current_function_param(EXPONENTS, context)
+        operation = self.get_current_function_param(OPERATION, context)
+        scale = self.get_current_function_param(SCALE, context)
+        offset = self.get_current_function_param(OFFSET, context)
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
@@ -393,7 +860,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            if self.is_initializing:
                 with np.errstate(divide='raise'):
                     try:
                         variable = variable ** exponents
@@ -415,7 +882,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
-                                format(self.get_current_function_param(OPERATION, execution_id)))
+                                format(self.get_current_function_param(OPERATION, context)))
 
         return self.convert_output_type(result)
 
@@ -603,9 +1070,6 @@ class LinearCombination(
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(CombinationFunction.Parameters):
@@ -677,7 +1141,7 @@ class LinearCombination(
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
@@ -729,14 +1193,14 @@ class LinearCombination(
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
-            if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
                 if np.array(target_set[WEIGHTS]).shape != self.defaults.variable.shape:
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.defaults.variable)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if np.array(target_set[EXPONENTS]).shape != self.defaults.variable.shape:
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.defaults.variable)))
@@ -752,7 +1216,7 @@ class LinearCombination(
                                     format(SCALE, self.name, scale))
             scale_is_a_scalar = isinstance(scale, numbers.Number) or (len(scale) == 1) and isinstance(scale[0],
                                                                                                       numbers.Number)
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if not scale_is_a_scalar:
                     err_msg = "Scale is using Hadamard modulation but its shape and/or size (scale shape: {}, size:{})" \
                               " do not match the variable being modulated (variable shape: {}, size: {})". \
@@ -775,7 +1239,7 @@ class LinearCombination(
                                     format(OFFSET, self.name, offset))
             offset_is_a_scalar = isinstance(offset, numbers.Number) or (len(offset) == 1) and isinstance(offset[0],
                                                                                                          numbers.Number)
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if not offset_is_a_scalar:
                     err_msg = "Offset is using Hadamard modulation but its shape and/or size (offset shape: {}, size:{})" \
                               " do not match the variable being modulated (variable shape: {}, size: {})". \
@@ -793,11 +1257,11 @@ class LinearCombination(
                         #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
                         #     format(operation))
 
-    def function(self,
+    def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -819,20 +1283,16 @@ class LinearCombination(
             the result of linearly combining the arrays in `variable <LinearCombination.variable>`.
 
         """
-
-        # Validate variable and assign to variable, and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
-        weights = self.get_current_function_param(WEIGHTS, execution_id)
-        exponents = self.get_current_function_param(EXPONENTS, execution_id)
-        # if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZED:
+        weights = self.get_current_function_param(WEIGHTS, context)
+        exponents = self.get_current_function_param(EXPONENTS, context)
+        # if self.initialization_status == ContextFlags.INITIALIZED:
         #     if weights is not None and weights.shape != variable.shape:
         #         weights = weights.reshape(variable.shape)
         #     if exponents is not None and exponents.shape != variable.shape:
         #         exponents = exponents.reshape(variable.shape)
-        operation = self.get_current_function_param(OPERATION, execution_id)
-        scale = self.get_current_function_param(SCALE, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
+        operation = self.get_current_function_param(OPERATION, context)
+        scale = self.get_current_function_param(SCALE, context)
+        offset = self.get_current_function_param(OFFSET, context)
 
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
@@ -856,7 +1316,7 @@ class LinearCombination(
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING:
+            if self.is_initializing:
                 with np.errstate(divide='raise'):
                     try:
                         variable = variable ** exponents
@@ -937,18 +1397,23 @@ class LinearCombination(
         offset = ctx.float_ty(-0.0) if isinstance(offset_type, pnlvm.ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
 
         # assume operation does not change dynamically
-        operation = self.get_current_function_param(OPERATION)
+        operation = self.parameters.operation.get()
         if operation is SUM:
             val = ctx.float_ty(-0.0)
-        else:
+        elif operation is PRODUCT:
             val = ctx.float_ty(1.0)
+        else:
+            assert False, "Unknown operation: {}".format(operation)
 
         pow_f = ctx.get_builtin("pow", [ctx.float_ty])
 
         for i in range(vi.type.pointee.count):
+            ptri = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(i), index])
+            in_val = builder.load(ptri)
+
             # No exponent
             if isinstance(exponent_type, pnlvm.ir.LiteralStructType):
-                exponent = ctx.float_ty(1.0)
+                pass
             # Vector exponent
             elif isinstance(exponent_type, pnlvm.ir.ArrayType):
                 assert len(exponent_type) > 1
@@ -957,13 +1422,11 @@ class LinearCombination(
                 exponent_index = builder.add(exponent_index, index)
                 exponent_ptr = builder.gep(exponent_param_ptr, [ctx.int32_ty(0), exponent_index])
                 exponent = builder.load(exponent_ptr)
+                in_val = builder.call(pow_f, [in_val, exponent])
             # Scalar exponent
             else:
                 exponent = builder.load(exponent_param_ptr)
-
-            ptri = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(i), index])
-            in_val = builder.load(ptri)
-            in_val = builder.call(pow_f, [in_val, exponent])
+                in_val = builder.call(pow_f, [in_val, exponent])
 
             # No weights
             if isinstance(weights_type, pnlvm.ir.LiteralStructType):
@@ -986,8 +1449,10 @@ class LinearCombination(
 
             if operation is SUM:
                 val = builder.fadd(val, in_val)
-            else:
+            elif operation is PRODUCT:
                 val = builder.fmul(val, in_val)
+            else:
+                assert False, "Unknown operation: " + operation
 
         val = builder.fmul(val, scale)
         val = builder.fadd(val, offset)
@@ -997,16 +1462,10 @@ class LinearCombination(
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
         # Sometimes we arg_out to 2d array
-        out_t = arg_out.type.pointee
-        if isinstance(out_t, pnlvm.ir.ArrayType) and isinstance(out_t.element, pnlvm.ir.ArrayType):
-            assert len(out_t) == 1
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        kwargs = {"ctx": ctx, "vi": arg_in, "vo": arg_out, "params": params}
-        inner = functools.partial(self.__gen_llvm_combine, **kwargs)
+        arg_out = ctx.unwrap_2d_array(builder, arg_out)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_out, "linear") as args:
-            inner(*args)
+            self.__gen_llvm_combine(ctx=ctx, vi=arg_in, vo=arg_out, params=params, *args)
         return builder
 
     @property
@@ -1211,8 +1670,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -1284,7 +1741,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
@@ -1318,14 +1775,14 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if len(target_set[WEIGHTS]) != len(self.defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.defaults.variable.shape)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if len(target_set[EXPONENTS]) != len(self.defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.defaults.variable.shape)))
@@ -1339,7 +1796,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(SCALE, self.name, scale))
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if (isinstance(scale, np.ndarray) and
                         (scale.size != self.defaults.variable.size or
                                  scale.shape != self.defaults.variable.shape)):
@@ -1358,7 +1815,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(OFFSET, self.name, offset))
-            if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 if (isinstance(offset, np.ndarray) and
                         (offset.size != self.defaults.variable.size or
                                  offset.shape != self.defaults.variable.shape)):
@@ -1374,11 +1831,11 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                     #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
                     #     format(operation))
 
-    def function(self,
+    def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -1400,15 +1857,11 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             the result of taking the means of each array in `variable <CombineMeans.variable>` and combining them.
 
         """
-
-        # Validate variable and assign to variable, and validate params
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-
-        exponents = self.get_current_function_param(EXPONENTS, execution_id)
-        weights = self.get_current_function_param(WEIGHTS, execution_id)
-        operation = self.get_current_function_param(OPERATION, execution_id)
-        offset = self.get_current_function_param(OFFSET, execution_id)
-        scale = self.get_current_function_param(SCALE, execution_id)
+        exponents = self.get_current_function_param(EXPONENTS, context)
+        weights = self.get_current_function_param(WEIGHTS, context)
+        operation = self.get_current_function_param(OPERATION, context)
+        offset = self.get_current_function_param(OFFSET, context)
+        scale = self.get_current_function_param(SCALE, context)
 
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
@@ -1435,7 +1888,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         if exponents is not None:
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
-            if (self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING and
+            if (self.is_initializing and
                     any(not any(i) and j < 0 for i, j in zip(variable, exponents))):
                 means = np.ones_like(means)
             else:
@@ -1455,7 +1908,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         else:
             raise FunctionError("Unrecognized operator ({0}) for CombineMeans function".
-                                format(self.get_current_function_param(OPERATION, execution_id)))
+                                format(self.get_current_function_param(OPERATION, context)))
 
         return self.convert_output_type(result)
 
@@ -1525,8 +1978,6 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         gamma = Parameter(1.0, modulable=True)
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    multiplicative_param = None
-    additive_param = None
 
     @tc.typecheck
     def __init__(self,
@@ -1544,7 +1995,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
         self.gamma = gamma
 
@@ -1614,7 +2065,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-            if self.context.execution_phase & (ContextFlags.EXECUTING):
+            if context.execution_phase & (ContextFlags.EXECUTING):
                 if len(target_set[WEIGHTS]) != len(
                         self.defaults.variable):
                     raise FunctionError("Number of weights {} is not equal to "
@@ -1622,11 +2073,11 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                         len(target_set[WEIGHTS]),
                         len(self.defaults.variable.shape)))
 
-    def function(self,
+    def _function(self,
                  variable=None,
-                 execution_id=None,
+                 context=None,
                  params=None,
-                 context=None):
+                 ):
         """
 
         Arguments
@@ -1648,8 +2099,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         delta values : 1d np.array
 
         """
-        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
-        gamma = self.get_current_function_param(GAMMA, execution_id)
+        gamma = self.get_current_function_param(GAMMA, context)
         sample = variable[0]
         reward = variable[1]
         delta = np.zeros(sample.shape)

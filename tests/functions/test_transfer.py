@@ -37,7 +37,7 @@ def gaussian_distort_helper(seed):
 test_data = [
     (Functions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, None, test_var * RAND1 + RAND2),
     (Functions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, None, RAND1 * np.exp(RAND2 * test_var)),
-    (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3}, None, 1 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))),
+    (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3, 'scale':RAND4}, None, RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))),
     (Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'x_0':RAND3, 'offset':RAND4}, None, tanh_helper),
     (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, None, np.maximum(RAND1 * (test_var - RAND2), RAND3 * RAND1 *(test_var - RAND2))),
     (Functions.Gaussian, test_var, {'standard_deviation':RAND1, 'bias':RAND2, 'scale':RAND3, 'offset':RAND4}, None, gaussian_helper),
@@ -75,7 +75,7 @@ names = [
 @pytest.mark.benchmark
 def test_basic(func, variable, params, fail, expected, benchmark):
     f = func(default_variable=variable, **params)
-    benchmark.group = "TransferFunction " + func.componentName;
+    benchmark.group = "TransferFunction " + func.componentName
     res = f.function(variable)
     benchmark(f.function, variable)
     assert np.allclose(res, expected)
@@ -91,7 +91,7 @@ def test_llvm(func, variable, params, fail, expected, benchmark):
         pytest.xfail(fail)
 
     f = func(default_variable=variable, **params)
-    benchmark.group = "TransferFunction " + func.componentName;
+    benchmark.group = "TransferFunction " + func.componentName
     m = pnlvm.execution.FuncExecution(f)
     res = m.execute(variable)
     benchmark(m.execute, variable)
@@ -108,8 +108,42 @@ def test_ptx_cuda(func, variable, params, fail, expected, benchmark):
         pytest.xfail(fail)
 
     f = func(default_variable=variable, **params)
-    benchmark.group = "TransferFunction " + func.componentName;
+    benchmark.group = "TransferFunction " + func.componentName
     m = pnlvm.execution.FuncExecution(f)
     res = m.cuda_execute(variable)
     benchmark(m.cuda_execute, variable)
     assert np.allclose(res, expected)
+
+def test_transfer_with_costs_function():
+    from psyneulink.core.components.functions.transferfunctions import TransferWithCosts, CostFunctions
+    f = TransferWithCosts()
+    result = f(1)
+    assert np.allclose(result, 1)
+    f.toggle_cost_function(CostFunctions.INTENSITY)
+    f = TransferWithCosts(enabled_cost_functions=CostFunctions.INTENSITY)
+    result = f(2)
+    assert np.allclose(result, 2)
+    assert np.allclose(f.intensity_cost, 7.38905609893065)
+    assert f.adjustment_cost == None
+    assert f.duration_cost == None
+    assert np.allclose(np.float(f.combined_costs), 7.38905609893065)
+    f.toggle_cost_function(CostFunctions.ADJUSTMENT)
+    result = f(3)
+    assert np.allclose(result, 3)
+    assert np.allclose(f.intensity_cost, 20.085536923187668)
+    assert np.allclose(f.adjustment_cost, 1)
+    assert f.duration_cost == None
+    assert np.allclose(np.float(f.combined_costs), 21.085536923187668)
+    f.toggle_cost_function(CostFunctions.DURATION)
+    result = f(5)
+    assert np.allclose(result, 5)
+    assert np.allclose(f.intensity_cost, 148.413159102576603)
+    assert np.allclose(f.adjustment_cost, 2)
+    assert np.allclose(f.duration_cost, 5)
+    assert np.allclose(np.float(f.combined_costs), 155.413159102576603)
+    result = f(1)
+    assert np.allclose(result, 1)
+    assert np.allclose(f.intensity_cost, 2.718281828459045)
+    assert np.allclose(f.adjustment_cost, 4)
+    assert np.allclose(f.duration_cost, 6)
+    assert np.allclose(np.float(f.combined_costs), 12.718281828459045)

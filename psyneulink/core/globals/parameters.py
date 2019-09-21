@@ -107,13 +107,14 @@ To create new Parameters, reference this example of a new class *B*
 
 - setters and getters (used for more advanced behavior than parsing) should both return the final value to return (getter) or set (setter)
 
-    For example, `costs <ControlMechanism.costs>` of `ControlMechanism <ControlMechanism>` has a special getter method, which computes the cost on-the-fly:
+    For example, `costs <ModulatoryMechanism.costs>` of `ModulatoryMechanism <ModulatoryMechanism>` has a special
+    getter method, which computes the cost on-the-fly:
 
         ::
 
-            def _modulatory_mechanism_costs_getter(owning_component=None, execution_id=None):
+            def _modulatory_mechanism_costs_getter(owning_component=None, context=None):
                 try:
-                    return [c.compute_costs(c.parameters.variable.get(execution_id), execution_id=execution_id) for c in owning_component.control_signals]
+                    return [c.compute_costs(c.parameters.variable._get(context), context=context) for c in owning_component.control_signals]
                 except TypeError:
                     return None
 
@@ -122,7 +123,7 @@ To create new Parameters, reference this example of a new class *B*
 
         ::
 
-            def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, execution_id=None):
+            def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, context=None):
                 try:
                     value = get_matrix(value, owning_component.size[0], owning_component.size[0])
                 except AttributeError:
@@ -130,9 +131,9 @@ To create new Parameters, reference this example of a new class *B*
 
                 if value is not None:
                     temp_matrix = value.copy()
-                    owning_component.parameters.auto.set(np.diag(temp_matrix).copy(), execution_id)
+                    owning_component.parameters.auto._set(np.diag(temp_matrix).copy(), context)
                     np.fill_diagonal(temp_matrix, 0)
-                    owning_component.parameters.hetero.set(temp_matrix, execution_id)
+                    owning_component.parameters.hetero._set(temp_matrix, context)
 
                 return value
 
@@ -145,9 +146,9 @@ To create new Parameters, reference this example of a new class *B*
 Using Parameters
 ^^^^^^^^^^^^
 
-Methods that are called during runtime in general must take *execution_id* as an argument and must pass this *execution_id* along to other
+Methods that are called during runtime in general must take *context* as an argument and must pass this *context* along to other
 PNL methods. The most likely place this will come up would be for the *function* method on a PNL `Function` class, or *_execute* method on other
-`Components`. Any getting and setting of stateful parameter values must use this *execution_id*, and using standard attributes to store data
+`Components`. Any getting and setting of stateful parameter values must use this *context*, and using standard attributes to store data
 must be avoided at risk of causing computation errors. You may use standard attributes only when their values will never change during a
 `Run <TimeScale.RUN>`.
 
@@ -170,9 +171,9 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 |     stateful     |     True      |whether the parameter has different values  |                                         |
 |                  |               |based on execution context                  |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
-|    modulable     |     False     |if True, the parameter can be modulated (has|Currently this does not determine what   |
-|                  |               |a ParameterState                            |gets a ParameterState, but in the future |
-|                  |               |                                            |it should                                |
+|    modulable     |     False     |if True, the parameter can be modulated     |Currently this does not determine what   |
+|                  |               |(if it belongs to a Mechanism or Projection |gets a ParameterState, but in the future |
+|                  |               | it is assigned a `ParameterState`)         |it should                                |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |    read_only     |     False     |whether the user should be able to set the  |Can be manually set, but will trigger a  |
 |                  |               |value or not (e.g. variable and value are   |warning unless override=True             |
@@ -190,21 +191,21 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 |                  |               |different execution contexts                |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |      getter      |     None      |hook that allows overriding the retrieval of|kwargs self, owning_component, and       |
-|                  |               |values based on a supplied method           |execution_id will be passed in if your   |
+|                  |               |values based on a supplied method           |context will be passed in if your        |
 |                  |               |(e.g. _output_state_variable_getter)        |method uses them. self - the Parameter   |
 |                  |               |                                            |calling the setter; owning_component -   |
 |                  |               |                                            |the Component to which the Parameter     |
-|                  |               |                                            |belongs; execution_id - the execution_id |
+|                  |               |                                            |belongs; context - the context           |
 |                  |               |                                            |the setter is called with; should return |
 |                  |               |                                            |the value                                |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |      setter      |     None      |hook that allows overriding the setting of  |should take a positional argument; kwargs|
-|                  |               |values based on a supplied method (e.g.     |self, owning_component, and execution_id |
+|                  |               |values based on a supplied method (e.g.     |self, owning_component, and context      |
 |                  |               |_recurrent_transfer_mechanism_matrix_setter)|will be passed in if your method uses    |
 |                  |               |                                            |them. self - the Parameter calling the   |
 |                  |               |                                            |setter; owning_component - the Component |
 |                  |               |                                            |to which the Parameter belongs;          |
-|                  |               |                                            |execution_id - the execution_id the      |
+|                  |               |                                            |context - the context the                |
 |                  |               |                                            |setter is called with; should return the |
 |                  |               |                                            |value to be set                          |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
@@ -243,14 +244,17 @@ import types
 import warnings
 import weakref
 
-from psyneulink.core.globals.context import ContextFlags, _get_time
+from psyneulink.core.globals.keywords import MULTIPLICATIVE
+from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
-from psyneulink.core.globals.utilities import call_with_pruned_args, copy_dict_or_list_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy
+from psyneulink.core.globals.utilities import \
+    call_with_pruned_args, copy_dict_or_list_with_shared, get_alias_property_getter, get_alias_property_setter, \
+    get_deepcopy_with_shared, unproxy_weakproxy
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'get_validator_by_type_only', 'Parameter', 'ParameterAlias', 'ParameterError',
-    'ParametersBase', 'parse_execution_context',
+    'ParametersBase', 'parse_context',
 ]
 
 logger = logging.getLogger(__name__)
@@ -265,7 +269,7 @@ def get_validator_by_type_only(valid_types):
         :return: A validation method for use with Parameters classes that rejects any assignment that is not one of the **valid_types**
         :rtype: types.FunctionType
     """
-    if not isinstance(valid_types, collections.Iterable):
+    if not isinstance(valid_types, collections.abc.Iterable):
         valid_types = [valid_types]
 
     def validator(self, value):
@@ -298,19 +302,19 @@ def get_validator_by_function(function):
     return validator
 
 
-def parse_execution_context(execution_context):
+def parse_context(context):
     """
         Arguments
         ---------
-            execution_context
-                An execution context (execution_id, Composition)
+            context
+                An execution context (context, Composition)
 
-        :return: the execution_id associated with **execution_context**
+        :return: the context associated with **context**
     """
     try:
-        return execution_context.default_execution_id
+        return context.default_execution_id
     except AttributeError:
-        return execution_context
+        return context
 
 
 class ParametersTemplate:
@@ -469,29 +473,41 @@ class Parameter(types.SimpleNamespace):
     Attributes
     ----------
         default_value
-            the default value of the Parameter
+            the default value of the Parameter.
 
             :default: None
 
         name
-            the name of the Parameter
+            the name of the Parameter.
 
             :default: None
 
         stateful
-            whether the parameter has different values based on execution context
+            whether the parameter has different values based on execution context.
 
             :default: True
 
         modulable
-            if True, the parameter can be modulated (has a ParameterState
+            if True, the parameter can be modulated; if the Parameter belongs to a `Mechanism` or `Projection`,
+            it is assigned a `ParameterState`.
 
             :default: False
 
             :Developer Notes: Currently this does not determine what gets a ParameterState, but in the future it should
 
+        modulation_combination_function
+            specifies the function used in State._get_combined_mod_val() to combine values for the parameter if
+            it receives more than one ModulatoryProjections;  must be either the keyword *MULTIPLICATIVE*,
+            *PRODUCT*, *ADDITIVE*, *SUM*, or a function that accepts an n dimensional array and retursn an n-1
+            dimensional array.  If it is None, the an attempt is made to determine it from the an alias for the
+            Parameter's name (i.e., if that is MULTIPLICATIVE_PARAM or ADDITIVE_PARAM);  otherwise the default
+            behavior is determined by State._get_combined_mod_val().
+
+            :default: None
+
         read_only
-            whether the user should be able to set the value or not (e.g. variable and value are just for informational purposes).
+            whether the user should be able to set the value or not
+            (e.g. variable and value are just for informational purposes).
 
             :default: False
 
@@ -506,74 +522,78 @@ class Parameter(types.SimpleNamespace):
             :Developer Notes: specify as a list of strings
 
         user
-            whether the parameter is something the user will care about (e.g. NOT context)
+            whether the parameter is something the user will care about (e.g. NOT context).
 
             :default: True
 
         values
-            stores the parameter's values under different execution contexts
+            stores the parameter's values under different execution contexts.
 
             :type: dict{execution_id: value}
             :default: None
 
         getter
-            hook that allows overriding the retrieval of values based on a supplied method (e.g. _output_state_variable_getter)
+            hook that allows overriding the retrieval of values based on a supplied method
+            (e.g. _output_state_variable_getter).
 
             :type: types.FunctionType
             :default: None
 
-            :Developer Notes: kwargs self, owning_component, and execution_id will be passed in if your method uses them. self - the Parameter calling the setter; owning_component - the Component to which the Parameter belongs; execution_id - the execution_id the setter is called with; should return the value
+            :Developer Notes: kwargs self, owning_component, and context will be passed in if your method uses them. self - the Parameter calling the setter; owning_component - the Component to which the Parameter belongs; context - the context the setter is called with; should return the value
 
         setter
-            hook that allows overriding the setting of values based on a supplied method (e.g.  _recurrent_transfer_mechanism_matrix_setter)
+            hook that allows overriding the setting of values based on a supplied method
+            (e.g.  _recurrent_transfer_mechanism_matrix_setter).
 
             :type: types.FunctionType
             :default: None
 
-            :Developer Notes: should take a positional argument; kwargs self, owning_component, and execution_id will be passed in if your method uses them. self - the Parameter calling the setter; owning_component - the Component to which the Parameter belongs; execution_id - the execution_id the setter is called with; should return the value to be set
+            :Developer Notes: should take a positional argument; kwargs self, owning_component, and context will be passed in if your method uses them. self - the Parameter calling the setter; owning_component - the Component to which the Parameter belongs; context - the context the setter is called with; should return the value to be set
 
         loggable
-            whether the parameter can be logged
+            whether the parameter can be logged.
 
             :default: True
 
         log
-            stores the log of the parameter if applicable
+            stores the log of the parameter if applicable.
 
             :type: dict{execution_id: deque([LogEntry])}
             :default: None
 
         log_condition
-            the LogCondition for which the parameter should be logged
+            the LogCondition for which the parameter should be logged.
 
             :type: `LogCondition`
             :default: `OFF <LogCondition.OFF>`
 
         history
-            stores the history of the parameter (previous values). Also see `get_previous`
+            stores the history of the parameter (previous values). Also see `get_previous`.
 
             :type: dict{execution_id: deque([LogEntry])}
             :default: None
 
         history_max_length
-            the maximum length of the stored history
+            the maximum length of the stored history.
 
             :default: 1
 
         history_min_length
             the minimum length of the stored history. generally this does not need to be
-            overridden, but is used to indicate if parameter history is necessary to computation
+            overridden, but is used to indicate if parameter history is necessary to computation.
 
             :default: 0
 
         fallback_default
-            if False, the Parameter will return None if a requested value is not present for a given execution context; if True, the Parameter's default_value will be returned instead
+            if False, the Parameter will return None if a requested value is not present for a given execution context;
+            if True, the Parameter's default_value will be returned instead.
 
             :default: False
 
         retain_old_simulation_data
-            if False, the Parameter signals to other PNL objects that any values generated during simulations may be deleted after they
-            are no longer needed for computation; if True, the values should be saved for later inspection
+            if False, the Parameter signals to other PNL objects that any values generated during simulations may be
+            deleted after they are no longer needed for computation; if True, the values should be saved for later
+            inspection.
 
             :default: False
     """
@@ -603,7 +623,9 @@ class Parameter(types.SimpleNamespace):
         name=None,
         stateful=True,
         modulable=False,
+        modulation_combination_function=None,
         read_only=False,
+        function_arg=True,
         aliases=None,
         user=True,
         values=None,
@@ -638,7 +660,9 @@ class Parameter(types.SimpleNamespace):
             name=name,
             stateful=stateful,
             modulable=modulable,
+            modulation_combination_function=modulation_combination_function,
             read_only=read_only,
+            function_arg=function_arg,
             aliases=aliases,
             user=user,
             values=values,
@@ -765,7 +789,7 @@ class Parameter(types.SimpleNamespace):
             return None
 
     @property
-    def _validate(self):
+    def _validate(self, context=None):
         return self._owner._validate
 
     @property
@@ -788,29 +812,40 @@ class Parameter(types.SimpleNamespace):
     def _default_setter_kwargs(self):
         return self._default_getter_kwargs
 
-    def get(self, execution_context=None, **kwargs):
+    @handle_external_context()
+    def get(self, context=None, **kwargs):
         """
-            Gets the value of this `Parameter` in the context of **execution_context**
-            If no execution_context is specified, attributes on the associated `Component` will be used
+            Gets the value of this `Parameter` in the context of **context**
+            If no context is specified, attributes on the associated `Component` will be used
 
             Arguments
             ---------
 
-                execution_context : execution_id, Composition
-                    the execution_id for which the value is stored; if a Composition, uses **execution_context**.default_execution_id
+                context : Context, execution_id, Composition
+                    the context for which the value is stored; if a Composition, uses **context**.default_execution_id
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `getter` if it exists
         """
+        return self._get(context, **kwargs)
+
+    def _get(self, context=None, **kwargs):
         if not self.stateful:
             execution_id = None
         else:
-            execution_id = parse_execution_context(execution_context)
+            try:
+                execution_id = context.execution_id
+            except AttributeError as e:
+                raise ParameterError(
+                    '_get must pass in a Context object as the context '
+                    'argument. To get parameter values using only an '
+                    'execution id, use get.'
+                ) from e
 
         if self.getter is not None:
-            kwargs = {**self._default_getter_kwargs, **{'execution_id': execution_id}, **kwargs}
-            value = call_with_pruned_args(self.getter, **kwargs)
+            kwargs = {**self._default_getter_kwargs, **kwargs}
+            value = call_with_pruned_args(self.getter, context=context, **kwargs)
             if self.stateful:
-                self._set_value(value, execution_id)
+                self._set_value(value, execution_id=execution_id, context=context)
             return value
         else:
             try:
@@ -822,56 +857,59 @@ class Parameter(types.SimpleNamespace):
                 else:
                     return None
 
-    def get_previous(self, execution_context=None, index=1):
+    @handle_external_context()
+    def get_previous(self, context=None, index=1):
         """
-            Gets the value set before the current value of this `Parameter` in the context of **execution_context**
+            Gets the value set before the current value of this `Parameter` in the context of **context**
 
             Arguments
             ---------
 
-                execution_context : execution_id, Composition
-                    the execution_id for which the value is stored; if a Composition, uses **execution_context**.default_execution_id
+                context : Context, execution_id, Composition
+                    the context for which the value is stored; if a Composition, uses **context**.default_execution_id
 
                 index : int : 1
                     how far back to look into the history. A value of 1 means the first previous value
 
         """
         try:
-            return self.history[execution_context][-1 * index]
+            return self.history[context.execution_id][-1 * index]
         except (KeyError, IndexError):
             return None
 
-    def get_delta(self, execution_context=None):
+    @handle_external_context()
+    def get_delta(self, context=None):
         """
-            Gets the difference between the current value and previous value of `Parameter` in the context of **execution_context**
+            Gets the difference between the current value and previous value of `Parameter` in the context of **context**
 
             Arguments
             ---------
 
-                execution_context : execution_id, Composition
-                    the execution_id for which the value is stored; if a Composition, uses **execution_context**.default_execution_id
+                context : Context, execution_id, Composition
+                    the context for which the value is stored; if a Composition, uses **context**.default_execution_id
         """
         try:
-            return self.get(execution_context) - self.get_previous(execution_context)
+            return self.get(context) - self.get_previous(context)
         except TypeError as e:
             raise TypeError(
                 "Parameter '{0}' value mismatch between current ({1}) and previous ({2}) values".format(
                     self.name,
-                    self.get(execution_context),
-                    self.get_previous(execution_context)
+                    self.get(context),
+                    self.get_previous(context)
                 )
             ) from e
 
-    def set(self, value, execution_context=None, override=False, skip_history=False, skip_log=False, _ro_warning_stacklevel=2, **kwargs):
+    @handle_external_context()
+    def set(self, value, context=None, override=False, skip_history=False, skip_log=False, **kwargs):
         """
-            Sets the value of this `Parameter` in the context of **execution_context**
-            If no execution_context is specified, attributes on the associated `Component` will be used
+            Sets the value of this `Parameter` in the context of **context**
+            If no context is specified, attributes on the associated `Component` will be used
 
             Arguments
             ---------
 
-                execution_context : execution_id, Composition
-                    the execution_id for which the value is stored; if a Composition, uses **execution_context**.default_execution_id
+                context : Context, execution_id, Composition
+                    the context for which the value is stored; if a Composition, uses **context**.default_execution_id
                 override : False
                     if True, ignores a warning when attempting to set a *read-only* Parameter
                 skip_history : False
@@ -882,27 +920,33 @@ class Parameter(types.SimpleNamespace):
                     any additional arguments to be passed to this `Parameter`'s `setter` if it exists
         """
         if not override and self.read_only:
-            warnings.warn('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to suppress this warning.'.format(self.name), stacklevel=_ro_warning_stacklevel)
+            raise ParameterError('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to force set.'.format(self.name))
 
+        self._set(value, context, skip_history, skip_log, **kwargs)
+
+    def _set(self, value, context=None, skip_history=False, skip_log=False, **kwargs):
         if not self.stateful:
             execution_id = None
         else:
-            execution_id = parse_execution_context(execution_context)
+            try:
+                execution_id = context.execution_id
+            except AttributeError as e:
+                raise ParameterError(
+                    '_set must pass in a Context object as the context '
+                    'argument. To set parameter values using only an '
+                    'execution id, use set.'
+                ) from e
 
         if self.setter is not None:
             kwargs = {
                 **self._default_setter_kwargs,
-                **{
-                    'execution_id': execution_id,
-                    'override': override,
-                },
                 **kwargs
             }
-            value = call_with_pruned_args(self.setter, value, **kwargs)
+            value = call_with_pruned_args(self.setter, value, context=context, **kwargs)
 
-        self._set_value(value, execution_id, skip_history=skip_history, skip_log=skip_log)
+        self._set_value(value, execution_id=execution_id, context=context, skip_history=skip_history, skip_log=skip_log)
 
-    def _set_value(self, value, execution_id=None, skip_history=False, skip_log=False):
+    def _set_value(self, value, execution_id=None, context=None, skip_history=False, skip_log=False):
         # store history
         if not skip_history:
             if execution_id in self.values:
@@ -913,36 +957,35 @@ class Parameter(types.SimpleNamespace):
 
         # log value
         if not skip_log and self.loggable:
-            self._log_value(value, execution_id)
+            self._log_value(value, context)
 
         # set value
         self.values[execution_id] = value
 
-    def delete(self, execution_context=None):
-        execution_context = parse_execution_context(execution_context)
+    @handle_external_context()
+    def delete(self, context=None):
         try:
-            del self.values[execution_context]
+            del self.values[context.execution_id]
         except KeyError:
             pass
 
         try:
-            del self.history[execution_context]
+            del self.history[context.execution_id]
         except KeyError:
             pass
 
-        self.clear_log(execution_context)
+        self.clear_log(context.execution_id)
 
-    def _log_value(self, value, execution_id=None, context=None):
+    def _log_value(self, value, context=None):
         # manual logging
-        if context is ContextFlags.COMMAND_LINE:
+        if context is not None and context.source is ContextFlags.COMMAND_LINE:
             try:
-                # attempt to infer the time via this Parameters object's context if it exists
-                owner_context = self._owner.context.get(execution_id)
-                time = _get_time(self._owner._owner, owner_context.execution_phase, execution_id)
-            except AttributeError:
+                time = _get_time(self._owner._owner, context)
+            except (AttributeError, ContextError):
                 time = time_object(None, None, None, None)
 
-            context_str = ContextFlags._get_context_string(context)
+            # this branch only ran previously when context was ContextFlags.COMMAND_LINE
+            context_str = ContextFlags._get_context_string(ContextFlags.COMMAND_LINE)
             log_condition_satisfied = True
 
         # standard logging
@@ -951,16 +994,25 @@ class Parameter(types.SimpleNamespace):
                 return
 
             if context is None:
-                try:
-                    context = self._owner.context.get(execution_id)
-                except AttributeError:
-                    logger.warning('Attempted to log {0} but has no context attribute'.format(self))
+                context = self._owner._owner.most_recent_context
 
-            time = _get_time(self._owner._owner, context.execution_phase, execution_id)
+            time = _get_time(self._owner._owner, context)
             context_str = ContextFlags._get_context_string(context.flags)
             log_condition_satisfied = self.log_condition & context.flags
 
+        if (
+            not log_condition_satisfied
+            and self.log_condition & LogCondition.INITIALIZATION
+            and self._owner._owner.initialization_status is ContextFlags.INITIALIZING
+        ):
+            log_condition_satisfied = True
+
         if log_condition_satisfied:
+            if not self.stateful:
+                execution_id = None
+            else:
+                execution_id = context.execution_id
+
             if execution_id not in self.log:
                 self.log[execution_id] = collections.deque([])
 
@@ -968,16 +1020,22 @@ class Parameter(types.SimpleNamespace):
                 LogEntry(time, context_str, value)
             )
 
-    def clear_log(self, execution_ids=NotImplemented):
+    def clear_log(self, contexts=NotImplemented):
         """
-            Clears the log of this Parameter for every execution_id in **execution_ids**
+            Clears the log of this Parameter for every context in **contexts**
         """
-        if execution_ids is NotImplemented:
+        if contexts is NotImplemented:
             self.log.clear()
             return
 
-        if isinstance(execution_ids, str):
-            execution_ids = [execution_ids]
+        if not isinstance(contexts, list):
+            contexts = [contexts]
+
+        contexts = [parse_context(c) for c in contexts]
+        execution_ids = [
+            c.execution_id if hasattr(c, 'execution_id') else c
+            for c in contexts
+        ]
 
         try:
             for eid in execution_ids:
@@ -985,23 +1043,23 @@ class Parameter(types.SimpleNamespace):
         except TypeError:
             self.log.pop(execution_ids, None)
 
-    def _initialize_from_context(self, execution_context=None, base_execution_context=None, override=True):
+    def _initialize_from_context(self, context=None, base_context=Context(execution_id=None), override=True):
         from psyneulink.core.components.component import Component
 
         try:
             try:
-                cur_val = self.values[execution_context]
+                cur_val = self.values[context.execution_id]
             except KeyError:
                 cur_val = None
 
             if cur_val is None or override:
                 try:
-                    new_val = self.values[base_execution_context]
+                    new_val = self.values[base_context.execution_id]
                 except KeyError:
                     return
 
                 try:
-                    new_history = self.history[base_execution_context]
+                    new_history = self.history[base_context.execution_id]
                 except KeyError:
                     new_history = NotImplemented
 
@@ -1012,16 +1070,16 @@ class Parameter(types.SimpleNamespace):
                 elif not isinstance(new_val, shared_types):
                     new_val = copy.deepcopy(new_val)
 
-                self.values[execution_context] = new_val
+                self.values[context.execution_id] = new_val
 
                 if new_history is None:
                     raise ParameterError('history should always be a collections.deque if it exists')
                 elif new_history is not NotImplemented:
-                    new_history = copy_dict_or_list_with_shared(new_history, shared_types)
-                    self.history[execution_context] = new_history
+                    # shallow copy is OK because history should not change
+                    self.history[context.execution_id] = copy.copy(new_history)
 
         except ParameterError as e:
-            raise ParameterError('Error when attempting to initialize from {0}: {1}'.format(base_execution_context, e))
+            raise ParameterError('Error when attempting to initialize from {0}: {1}'.format(base_context.execution_id, e))
 
     # KDM 7/30/18: the below is weird like this in order to use this like a property, but also include it
     # in the interface for user simplicity: that is, inheritable (by this Parameter's children or from its parent),
@@ -1040,14 +1098,17 @@ class Parameter(types.SimpleNamespace):
 
     def _set_log_condition(self, value):
         if not isinstance(value, LogCondition):
-            try:
-                value = LogCondition.from_string(value)
-            except (AttributeError, LogError):
+            if value is True:
+                value = LogCondition.ALL_ASSIGNMENTS
+            else:
                 try:
-                    value = LogCondition(value)
-                except ValueError:
-                    # if this fails, value can't be interpreted as a LogCondition
-                    raise
+                    value = LogCondition.from_string(value)
+                except (AttributeError, LogError):
+                    try:
+                        value = LogCondition(value)
+                    except ValueError:
+                        # if this fails, value can't be interpreted as a LogCondition
+                        raise
 
         super().__setattr__('log_condition', value)
 
@@ -1150,11 +1211,16 @@ class ParametersBase(ParametersTemplate):
             return getattr(self._parent, attr)
         except AttributeError:
             try:
-                owner_string = ' of {0}'.format(self._owner)
+                param_owner = self._owner
+                owner_string = f' of {param_owner.name}'
+                if hasattr(param_owner, 'owner') and param_owner.owner:
+                    owner_string += f' for {param_owner.owner.name}'
+                    if hasattr(param_owner.owner, 'owner') and param_owner.owner.owner:
+                        owner_string += f' of {param_owner.owner.owner.name}'
             except AttributeError:
                 owner_string = ''
 
-            raise AttributeError("No attribute '{0}' exists in the parameter hierarchy{1}".format(attr, owner_string)) from None
+            raise AttributeError(f"No attribute '{attr}' exists in the parameter hierarchy{owner_string}.") from None
 
     def __setattr__(self, attr, value):
         # handles parsing: Parameter or ParameterAlias housekeeping if assigned, or creation of a Parameter

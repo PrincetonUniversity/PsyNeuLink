@@ -7,11 +7,11 @@
 #
 #
 # ***********************************************  Init ****************************************************************
-'''
+"""
 This module provides core psyneulink mechanisms, projections, functions, and states
 
 https://princetonuniversity.github.io/PsyNeuLink/Component.html
-'''
+"""
 
 #
 # __all__ = ['INPUT_STATES',
@@ -275,11 +275,17 @@ for projection_type in ProjectionRegistry:
     if isinstance(projection_sender, str):
         try:
             # Look it up in Mechanism Registry;
+            # FIX 5/24/16
+            # projection_sender = MechanismRegistry[projection_sender].subclass
             projection_params[PROJECTION_SENDER] = MechanismRegistry[projection_sender].subclass
+            # print("Looking for default sender ({0}) for {1} in MechanismRegistry...".
+            #       format(projection_sender,projection_type.__name__))
         except KeyError:
             pass
         try:
             # Look it up in State Registry;  if that fails, raise an exception
+            # FIX 5/24/16
+            # projection_sender = StateRegistry[projection_sender].subclass
             projection_params[PROJECTION_SENDER] = StateRegistry[projection_sender].subclass
 
         except KeyError:

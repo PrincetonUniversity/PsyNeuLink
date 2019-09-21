@@ -12,9 +12,11 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
     FitzHughNagumoIntegrator, AccumulatorIntegrator, LeakyCompetingIntegrator, DualAdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
-from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.core.components.mechanisms.processing.integratormechanism import \
+    IntegratorMechanism, IntegratorMechanismError
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
+from psyneulink.core.globals.context import Context
 from psyneulink.core.scheduling.condition import AtTrial
 from psyneulink.core.scheduling.condition import Never
 
@@ -83,15 +85,16 @@ class TestReinitialize:
 
         assert np.allclose([[0.3]], I.function.previous_short_term_avg)
         assert np.allclose([[0.7]], I.function.previous_long_term_avg)
+        context = Context()
         print(I.value)
-        print(I.function._combine_terms(0.3, 0.7))
-        assert np.allclose(I.function._combine_terms(0.3, 0.7), I.value)
+        print(I.function._combine_terms(0.3, 0.7, context))
+        assert np.allclose(I.function._combine_terms(0.3, 0.7, context), I.value)
 
         I.reinitialize()
 
         assert np.allclose([[0.0]], I.function.previous_short_term_avg)
         assert np.allclose([[0.0]], I.function.previous_long_term_avg)
-        assert np.allclose(I.function._combine_terms(0.0, 0.0), I.value)
+        assert np.allclose(I.function._combine_terms(0.0, 0.0, context), I.value)
 
     def test_Simple_valid(self):
         I = IntegratorMechanism(
@@ -359,8 +362,8 @@ class TestReinitialize:
             I_not_integrator = IntegratorMechanism(function=Linear)
             I_not_integrator.execute(1.0)
             I_not_integrator.reinitialize(0.0)
-        assert "not allowed because this Mechanism is not stateful." in str(err_txt) \
-               and "(It does not have an accumulator to reinitialize)" in str(err_txt)
+        assert "not allowed because this Mechanism is not stateful." in str(err_txt.value)
+        assert "(It does not have an accumulator to reinitialize)" in str(err_txt.value)
 
 
 VECTOR_SIZE=4
@@ -776,7 +779,7 @@ class TestIntegratorInputs:
             )
             # P = Process(pathway=[I])
             I.execute([10.0, 5.0, 2.0, 1.0, 0.0])
-        assert "does not match required length" in str(error_text)
+        assert "does not match required length" in str(error_text.value)
 
     # input = list of length < default length
 
@@ -791,7 +794,7 @@ class TestIntegratorInputs:
             )
             # P = Process(pathway=[I])
             I.execute([10.0, 5.0, 2.0])
-        assert "does not match required length" in str(error_text)
+        assert "does not match required length" in str(error_text.value)
 
 
 # ======================================= RATE TESTS ============================================
@@ -984,20 +987,37 @@ class TestIntegratorRate:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
+    def test_integrator_type_adaptive_variable_and_rate_conflict(self):
+        with pytest.raises(IntegratorMechanismError) as error_text:
+            I = IntegratorMechanism(
+                    name='IntegratorMechanism',
+                    default_variable=[0],
+                    function=AdaptiveIntegrator(rate=[0.5, 0.6])
+            )
+        error_msg_a = "Shape of 'variable' for function specified for IntegratorMechanism (AdaptiveIntegrator Function"
+        error_msg_b = "(2,)) does not match the shape of the 'default_variable' specified for the 'Mechanism'."
+        assert error_msg_a in str(error_text.value)
+        assert error_msg_b in str(error_text.value)
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
     def test_integrator_type_simple_rate_list_input_float(self):
-        with pytest.raises(ComponentError) as error_text:
+        with pytest.raises(MechanismError) as error_text:
             I = IntegratorMechanism(
                 name='IntegratorMechanism',
                 function=SimpleIntegrator(
                     rate=[5.0, 5.0, 5.0]
                 )
             )
-            # P = Process(pathway=[I])
-            float(I.execute(10.0))
-        assert (
-            "is not compatible with the variable format" in str(error_text)
-            and "to which it is being assigned" in str(error_text)
-        )
+            result = I.execute(10.0)
+            float(result)
+        returned_error_msg = str(error_text.value)
+        # Need to break up error message because length value returned ([10.0] vs. [ 10.0]) may differ by Python vers.
+        error_msg_a1 = 'Length (1) of input'
+        error_msg_a2 = 'does not match required length (3) for input to '
+        error_msg_b = 'InputState-0 InputState of IntegratorMechanism'
+        assert [msg in returned_error_msg for msg in {error_msg_a1, error_msg_a2, '10'}]
+        assert error_msg_b in str(error_text.value)
 
     # rate = list len 2, incrment = list len 3, integration_type = accumulator
 
@@ -1011,10 +1031,11 @@ class TestIntegratorRate:
                     rate=[1.0, 2.0],
                     increment=[3.0, 4.0, 5.0]
                 ))
-        assert (
-            "args are both specified as lists or arrays for" in str(error_text)
-            and "respectively) must be the same" in str(error_text)
-        )
+
+        error_msg_a = "The parameters with len>1 specified for AccumulatorIntegrator Function-0 "
+        error_msg_b = "(['rate', 'increment']) don't all have the same length"
+        assert error_msg_a in str(error_text.value)
+        assert error_msg_b in str(error_text.value)
 
 
     # @pytest.mark.mechanism
@@ -1029,11 +1050,9 @@ class TestIntegratorRate:
     #         )
     #         # P = Process(pathway=[I])
     #         float(I.execute(10.0))
-    #     assert (
-    #         "array specified for the rate parameter" in str(error_text)
-    #         and "must match the length" in str(error_text)
-    #         and "of the default input" in str(error_text)
-    #     )
+    #     assert "array specified for the rate parameter" in str(error_text.value)
+    #     assert "must match the length" in str(error_text.value)
+    #     assert "of the default input" in str(error_text.value)
 
     # @pytest.mark.mechanism
     # @pytest.mark.integrator_mechanism

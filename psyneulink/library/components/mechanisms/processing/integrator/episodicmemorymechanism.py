@@ -91,7 +91,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.inputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import NAME, OWNER_VALUE, SIZE, VARIABLE
+from psyneulink.core.globals.keywords import CONTEXT, NAME, OWNER_VALUE, SIZE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 
@@ -129,10 +129,10 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     ---------
 
     content_size : int : default 1
-        specifies length of the content stored in the `function <EpisodicMemoryMechanism.function>`\s memory.
+        specifies length of the content stored in the `function <EpisodicMemoryMechanism.function>`\\s memory.
 
     assoc_size : int : default 0
-        specifies length of the assoc stored in the `function <EpisodicMemoryMechanism.function>`\s memory;
+        specifies length of the assoc stored in the `function <EpisodicMemoryMechanism.function>`\\s memory;
         if it is 0 (the default) then no *ASSOC_INPUT* InputState or *ASSOC_OUTPUT* OutputState are created.
 
     function : function : default ContentAddressableMemory
@@ -182,7 +182,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                 variable
                     see `variable <EpisodicMemoryMechanism.variable>`
 
-                    :default value: [[0], [0]]
+                    :default value: [[0]]
                     :type: list
 
         """
@@ -194,8 +194,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                  function:Function=ContentAddressableMemory,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
-
+                 prefs:is_pref_set=None,
+                 **kwargs):
         # Template for memory_store entries
         default_variable = [np.zeros(content_size)]
 
@@ -216,15 +216,15 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR
+                         **kwargs
                          )
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, context=None, runtime_params=None):
 
         value =  super()._execute(variable=variable,
-                                           execution_id=execution_id,
+                                           context=context,
                                            runtime_params=runtime_params,
-                                           context=context)
+                                           )
         # Only return content if assoc has not been specified (in which case second element of value should be empty)
         if len(value[1]) == 0:
             return np.delete(value,1)
@@ -245,7 +245,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
         return super()._instantiate_output_states(context=context)
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
+    def _parse_function_variable(self, variable, context=None):
 
         # If assoc has not been specified, add empty list to call to function (which expects two items in its variable)
         if len(variable) != 2:
@@ -255,7 +255,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     @property
     def memory(self):
-        '''Return function's memory attribute'''
+        """Return function's memory attribute"""
         try:
             return self.function.memory
         except:

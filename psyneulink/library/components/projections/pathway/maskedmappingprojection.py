@@ -36,10 +36,7 @@ Structure
 ---------
 
 A MaskedMappingProjection is identical to a MappingProjection, with the addition of `mask
-<MaskedMappingProjection.mask>` and `mask_operation <MaskedMappingProjection.mask_operation>` attributes, and the
-exception that it automatically sets `suppress_identity_function <MappingProjection.suppress_identity_function>` to
-True (so that even if it is assigned an `IDENTITY_MATRIX` it can still be masked).
-
+<MaskedMappingProjection.mask>` and `mask_operation <MaskedMappingProjection.mask_operation>` attributes.
 
 .. _Masked_MappingProjection_Execution:
 
@@ -237,7 +234,8 @@ class MaskedMappingProjection(MappingProjection):
                  function=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None):
+                 prefs: is_pref_set = None,
+                 **kwargs):
 
         params = self._assign_args_to_param_dicts(mask=mask,
                                                   mask_operation=mask_operation,
@@ -248,11 +246,10 @@ class MaskedMappingProjection(MappingProjection):
                          receiver=receiver,
                          matrix=matrix,
                          function=function,
-                         suppress_identity_function=True,
                          params=params,
                          name=name,
-                         prefs=prefs)
-
+                         prefs=prefs,
+                         **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate **mask** argument"""
@@ -275,15 +272,15 @@ class MaskedMappingProjection(MappingProjection):
                                                    format(repr(MASK), self.name, mask_shape,
                                                           repr(MATRIX), matrix_shape))
 
-    def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
+    def _update_parameter_states(self, context=None, runtime_params=None):
 
-        # Update parameters first, to be sure that mask has been updated if it is being modulated
+        # Update parameters first, to be sure mask that has been updated if it is being modulated
         #  and that it is applied to the updated matrix param
-        super()._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
+        super()._update_parameter_states(context=context, runtime_params=runtime_params)
 
-        mask = self.parameters.mask.get(execution_id)
-        mask_operation = self.parameters.mask_operation.get(execution_id)
-        matrix = self.parameters.matrix.get(execution_id)
+        mask = self.parameters.mask._get(context)
+        mask_operation = self.parameters.mask_operation._get(context)
+        matrix = self.parameters.matrix._get(context)
         # Apply mask to matrix using mask_operation
         if mask is not None:
             if mask_operation is ADD:
@@ -293,4 +290,4 @@ class MaskedMappingProjection(MappingProjection):
             elif mask_operation is EXPONENTIATE:
                 matrix **= mask
 
-        self.parameters.matrix.set(matrix, execution_id)
+        self.parameters.matrix._set(matrix, context)

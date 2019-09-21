@@ -138,7 +138,8 @@ from psyneulink.core.components.component import function_type, method_type
 from psyneulink.core.components.functions.combinationfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.learningfunctions import BackPropagation, Hebbian, Reinforcement, TDLearning
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
+from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, \
+    ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism, LearningType, LearningTiming
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -148,7 +149,7 @@ from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
     BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
     MATRIX, MONITOR_FOR_LEARNING, NAME, OUTCOME, PREDICTION_ERROR_MECHANISM, PROJECTIONS, RL_FUNCTION, SAMPLE, \
@@ -219,7 +220,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     # Call should generally be from LearningProjection._instantiate_sender,
     #    but may be used more generally in the future
-    if context != ContextFlags.METHOD:
+    if context.source != ContextFlags.METHOD:
         raise LearningAuxiliaryError("PROGRAM ERROR".format("_instantiate_learning_components only supports "
                                                              "calls from a LearningProjection._instantiate_sender()"))
 
@@ -535,7 +536,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                           function=error_function,
                                                           output_states=[OUTCOME, MSE],
                                                           name="{} {}".format(lc.activation_output_mech.name,
-                                                                              COMPARATOR_MECHANISM))
+                                                                              COMPARATOR_MECHANISM),
+                                                          context=context)
                 # MODIFIED 10/10/17 END
 
             # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism
@@ -600,6 +602,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                            # learning_signals=[lc.activation_mech_projection],
                                            learning_signals=[learning_projection],
                                            name=LEARNING_MECHANISM + " for " + lc.activation_mech_projection.name)
+    learning_mechanism.learning_type = LearningType.SUPERVISED
+    learning_mechanism.learning_timing = LearningTiming.LEARNING_PHASE
 
     # IMPLEMENTATION NOTE:
     # ADD ARGUMENTS TO LearningMechanism FOR activation_input AND activation_output, AND THEN INSTANTIATE THE
@@ -779,8 +783,8 @@ def _assign_error_signal_projections(processing_mech:Mechanism,
                 #                              name=ERROR_SIGNAL))
                 aff_lm.add_states(InputState(projections=eff_lm.output_states[ERROR_SIGNAL],
                                              name=ERROR_SIGNAL,
-                                             context=ContextFlags.METHOD),
-                                  context=ContextFlags.METHOD)
+                                             context=Context(source=ContextFlags.METHOD)),
+                                  context=Context(source=ContextFlags.METHOD))
 
         for projection in aff_lm.projections:
             projection._activate_for_compositions(system)

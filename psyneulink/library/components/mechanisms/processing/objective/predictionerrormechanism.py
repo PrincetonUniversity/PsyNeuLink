@@ -283,6 +283,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
                     :type: float
 
         """
+
         variable = Parameter(None, read_only=True)
         learning_rate = Parameter(0.3, modulable=True)
         function = PredictionErrorDeltaFunction
@@ -306,7 +307,9 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
-                 context=componentType + INITIALIZING):
+                 **kwargs
+                 ):
+
         input_states = [sample, target]
         params = self._assign_args_to_param_dicts(sample=sample,
                                                   target=target,
@@ -324,19 +327,19 @@ class PredictionErrorMechanism(ComparatorMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         **kwargs
+                         )
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
+    def _parse_function_variable(self, variable, context=None):
         # TODO: update to take sample/reward from variable
         # sample = x(t) in Montague on first run, V(t) on subsequent runs
-        sample = self.input_states[SAMPLE].parameters.value.get(execution_id)
-        reward = self.input_states[TARGET].parameters.value.get(execution_id)
+        sample = self.input_states[SAMPLE].parameters.value._get(context)
+        reward = self.input_states[TARGET].parameters.value._get(context)
 
         return [sample, reward]
 
-    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
-        delta = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
+    def _execute(self, variable=None, context=None, runtime_params=None):
+        delta = super()._execute(variable=variable, context=context, runtime_params=runtime_params)
         delta = delta[0][1:]
-        # delta = delta[1:]
         delta = np.append(delta, 0)
         return delta

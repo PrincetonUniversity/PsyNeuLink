@@ -16,7 +16,7 @@ N_PERCEPTS = len(ALL_PERCEPTS)
 assert N_PERCEPTS == 2
 
 # variables
-n_nodes_per_percepts = 3
+n_nodes_per_percepts = 8
 node_dict = {percept: None for percept in ALL_PERCEPTS}
 
 excit_level = 1

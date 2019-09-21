@@ -1,15 +1,16 @@
 import logging
 import numpy as np
 import pytest
-import uuid
 
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.system import System
 from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import VALUE
 from psyneulink.core.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, \
     EveryNCalls, EveryNPasses, JustRan, WhenFinished
@@ -35,19 +36,19 @@ class TestScheduler:
 
         comp.scheduler_processing.clock._increment_time(TimeScale.TRIAL)
 
-        eid2 = uuid.uuid4()
-        eid3 = uuid.uuid4()
-        comp.scheduler_processing._init_counts(execution_id=eid2)
+        eid = 'eid'
+        eid1 = 'eid1'
+        comp.scheduler_processing._init_counts(execution_id=eid)
 
-        assert comp.scheduler_processing.clocks[eid2].time.trial == 0
+        assert comp.scheduler_processing.clocks[eid].time.trial == 0
 
         comp.scheduler_processing.clock._increment_time(TimeScale.TRIAL)
 
-        assert comp.scheduler_processing.clocks[eid2].time.trial == 0
+        assert comp.scheduler_processing.clocks[eid].time.trial == 0
 
-        comp.scheduler_processing._init_counts(execution_id=eid3, base_execution_id=comp.scheduler_processing.default_execution_id)
+        comp.scheduler_processing._init_counts(execution_id=eid1, base_execution_id=comp.scheduler_processing.default_execution_id)
 
-        assert comp.scheduler_processing.clocks[eid3].time.trial == 2
+        assert comp.scheduler_processing.clocks[eid1].time.trial == 2
 
     def test_two_compositions_one_scheduler(self):
         comp1 = Composition()
@@ -101,12 +102,12 @@ class TestScheduler:
         termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(6)
         termination_conds[TimeScale.TRIAL] = AfterNPasses(1)
-        eid = uuid.uuid4()
+        eid = 'eid'
         comp.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
             scheduler_processing=sched,
             termination_processing=termination_conds,
-            execution_id=eid,
+            context=eid,
         )
         output = sched.execution_list[eid]
 
@@ -120,7 +121,7 @@ class TestScheduler:
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
             scheduler_processing=sched,
             termination_processing=termination_conds,
-            execution_id=eid,
+            context=eid,
         )
         output = sched.execution_list[eid]
 
@@ -130,14 +131,14 @@ class TestScheduler:
         # pprint.pprint(output)
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
-        eid2 = uuid.uuid4()
+        eid = 'eid1'
         comp.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
             scheduler_processing=sched,
             termination_processing=termination_conds,
-            execution_id=eid2,
+            context=eid,
         )
-        output = sched.execution_list[eid2]
+        output = sched.execution_list[eid]
 
         expected_output = [
             A, A, A, A, A, set()
@@ -1087,9 +1088,40 @@ class TestTermination:
 
         # reset the RUN because schedulers run TRIALs
         sched.clock._increment_time(TimeScale.RUN)
-        sched._reset_counts_total(TimeScale.RUN)
+        sched._reset_counts_total(TimeScale.RUN, execution_id=sched.default_execution_id)
 
         output = list(sched.run())
 
         expected_output = [A, A, B]
         assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    def test_partial_override_scheduler(self):
+        comp = Composition()
+        A = TransferMechanism(name='scheduler-pytests-A')
+        B = TransferMechanism(name='scheduler-pytests-B')
+        for m in [A, B]:
+            comp.add_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+
+        sched = Scheduler(composition=comp)
+        sched.add_condition(B, EveryNCalls(A, 2))
+        termination_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
+
+        output = list(sched.run(termination_conds=termination_conds))
+
+        expected_output = [A, A, B, A, A, B]
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    def test_partial_override_composition(self):
+        comp = Composition()
+        A = TransferMechanism(name='scheduler-pytests-A')
+        B = IntegratorMechanism(name='scheduler-pytests-B')
+        for m in [A, B]:
+            comp.add_node(m)
+        comp.add_projection(MappingProjection(), A, B)
+
+        termination_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
+
+        output = comp.run(inputs={A: 1}, termination_processing=termination_conds)
+        # two executions of B
+        assert output == [.75]

@@ -13,13 +13,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.system import System
-
-try:
-    import torch
-    from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-    torch_available = True
-except ImportError:
-    torch_available = False
+from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +25,7 @@ logger = logging.getLogger(__name__)
 # or override functions in Composition
 
 
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+@pytest.mark.pytorch
 @pytest.mark.acconstructor
 class TestACConstructor:
 
@@ -71,11 +61,7 @@ class TestACConstructor:
         assert comp.patience == 10
 
 
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+@pytest.mark.pytorch
 @pytest.mark.acmisc
 class TestMiscTrainingFunctionality:
 
@@ -110,7 +96,7 @@ class TestMiscTrainingFunctionality:
 
         # mini version of xor.execute just to build up pytorch representation
         xor._analyze_graph()
-        xor._build_pytorch_representation(execution_id=xor.default_execution_id)
+        xor._build_pytorch_representation(context=xor.default_execution_id)
         # check whether pytorch parameters are identical to projections
         assert np.allclose(hid_map.parameters.matrix.get(None),
                            xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy())
@@ -118,7 +104,10 @@ class TestMiscTrainingFunctionality:
                            xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy())
 
     # test whether processing doesn't interfere with pytorch parameters after training
-    def test_training_then_processing(self):
+    @pytest.mark.parametrize("mode", ['Python',
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    ])
+    def test_training_then_processing(self,mode):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -160,7 +149,7 @@ class TestMiscTrainingFunctionality:
         #                               epochs=10)
         results_before_proc = xor.run(inputs = {"inputs": {xor_in:xor_inputs},
                                                 "targets": {xor_out:xor_targets},
-                                               "epochs": 10})
+                                               "epochs": 10},bin_execute = mode)
 
         # get weight parameters from pytorch
         pt_weights_hid_bp = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
@@ -182,7 +171,10 @@ class TestMiscTrainingFunctionality:
     @pytest.mark.parametrize(
         'loss', ['l1', 'poissonnll']
     )
-    def test_various_loss_specs(self, loss):
+    @pytest.mark.parametrize("mode", ['Python',
+                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.skip]), # these loss specs remain unimplemented at the moment
+                                    ])
+    def test_various_loss_specs(self, loss, mode):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -220,9 +212,13 @@ class TestMiscTrainingFunctionality:
 
         xor.run(inputs = {"inputs": {xor_in:xor_inputs},
                           "targets": {xor_out:xor_targets},
-                          "epochs": 10})
+                          "epochs": 10}, bin_execute = mode)
 
-    def test_pytorch_loss_spec(self):
+    @pytest.mark.parametrize("mode", ['Python',
+                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.skip]), # Not implemented?
+                                    ])
+    def test_pytorch_loss_spec(self,mode):
+        import torch
         ls = torch.nn.SoftMarginLoss(reduction='sum')
 
         xor_in = TransferMechanism(name='xor_in',
@@ -262,10 +258,10 @@ class TestMiscTrainingFunctionality:
 
         xor.run(inputs={"inputs": {xor_in:xor_inputs},
                           "targets": {xor_out:xor_targets},
-                          "epochs": 10})
+                          "epochs": 10}, bin_execute = mode)
         xor.run(inputs={"inputs": {xor_in: xor_inputs},
                         "targets": {xor_out: xor_targets},
-                        "epochs": 10})
+                        "epochs": 10}, bin_execute = mode)
 
 
     @pytest.mark.parametrize(
@@ -273,7 +269,10 @@ class TestMiscTrainingFunctionality:
             (10, 0, 'sgd'), (1.5, 1, 'sgd'),  (1.5, 1, 'adam'),
         ]
     )
-    def test_optimizer_specs(self, learning_rate, weight_decay, optimizer_type):
+    @pytest.mark.parametrize("mode", ['Python',
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    ])
+    def test_optimizer_specs(self, learning_rate, weight_decay, optimizer_type,mode):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -318,10 +317,13 @@ class TestMiscTrainingFunctionality:
         #                               epochs=10)
         results_before_proc = xor.run(inputs = {"inputs": {xor_in:xor_inputs},
                                                 "targets": {xor_out:xor_targets},
-                                               "epochs": 10})
+                                               "epochs": 10}, bin_execute = mode)
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
-    def test_params_stay_separate(self):
+    @pytest.mark.parametrize("mode", ['Python',
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    ])
+    def test_params_stay_separate(self,mode):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -372,7 +374,7 @@ class TestMiscTrainingFunctionality:
         # train the model for a few epochs
         result = xor.run(inputs={"inputs": {xor_in:xor_inputs},
                                  "targets": {xor_out:xor_targets},
-                                 "epochs": 10})
+                                 "epochs": 10}, bin_execute=mode)
 
         # get weight parameters from pytorch
         pt_weights_hid = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
@@ -388,7 +390,10 @@ class TestMiscTrainingFunctionality:
         assert not np.allclose(pt_weights_out, out_map.parameters.matrix.get(None))
 
     # test whether the autodiff composition's get_parameters method works as desired
-    def test_get_params(self):
+    @pytest.mark.parametrize("mode", ['Python',
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    ])
+    def test_get_params(self,mode):
 
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
@@ -454,7 +459,7 @@ class TestMiscTrainingFunctionality:
         # call run to train the pytorch parameters
         results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
                                   "targets": {xor_out:xor_targets},
-                                  "epochs": 10})
+                                  "epochs": 10},bin_execute = mode)
 
 
         # check that the parameter copies obtained from get_parameters have not changed with the
@@ -463,24 +468,23 @@ class TestMiscTrainingFunctionality:
         assert not np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
 
 
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+@pytest.mark.pytorch
 @pytest.mark.accorrectness
 class TestTrainingCorrectness:
 
     # test whether xor model created as autodiff composition learns properly
     @pytest.mark.parametrize(
         'eps, calls, opt, from_pnl_or_no', [
-            (2000, 'single', 'adam', True),
+            (20000, 'single', 'adam', True),
             # (6000, 'multiple', 'adam', True),
-            (2000, 'single', 'adam', False),
+            (20000, 'single', 'adam', False),
             # (6000, 'multiple', 'adam', False)
         ]
     )
-    def test_xor_training_correctness(self, eps, calls, opt, from_pnl_or_no):
+    @pytest.mark.parametrize("mode", ['Python',
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    ])
+    def test_xor_training_correctness(self, eps, calls, opt, from_pnl_or_no,mode):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -521,7 +525,7 @@ class TestTrainingCorrectness:
         if calls == 'single':
             results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
                                       "targets": {xor_out:xor_targets},
-                                      "epochs": eps}
+                                      "epochs": eps}, bin_execute = mode
                                       )
 
             for i in range(len(results[0])):
@@ -530,18 +534,20 @@ class TestTrainingCorrectness:
         else:
             results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
                                       "targets": {xor_out:xor_targets},
-                                      "epochs": 1}
+                                      "epochs": 1}, bin_execute = mode
                                       )
 
             for i in range(eps-1):
                 results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
                                       "targets": {xor_out:xor_targets},
-                                      "epochs": 1}
+                                      "epochs": 1}, bin_execute = mode
                                       )
 
             for i in range(len(results[eps-1])):
                 assert np.allclose(np.round(results[eps-1][i][0]), xor_targets[i])
 
+
+    @pytest.mark.benchmark(group="Recurrent")
     # tests whether semantic network created as autodiff composition learns properly
     @pytest.mark.parametrize(
         'eps, opt, from_pnl_or_no', [
@@ -549,7 +555,10 @@ class TestTrainingCorrectness:
             # (1000, 'adam', False)
         ]
     )
-    def test_semantic_net_training_correctness(self, eps, opt, from_pnl_or_no):
+    @pytest.mark.parametrize("mode", ["Python",
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    ])
+    def test_semantic_net_training_correctness(self, eps, opt, from_pnl_or_no,mode,benchmark):
 
         # MECHANISMS FOR SEMANTIC NET:
 
@@ -622,7 +631,7 @@ class TestTrainingCorrectness:
 
         # COMPOSITION FOR SEMANTIC NET
         sem_net = AutodiffComposition(param_init_from_pnl=from_pnl_or_no,
-                                      optimizer_type=opt, learning_rate=0.001)
+                                      optimizer_type=opt, learning_rate=.001)
 
         sem_net.add_node(nouns_in)
         sem_net.add_node(rels_in)
@@ -711,12 +720,11 @@ class TestTrainingCorrectness:
                 targets_dict[out_sig_can].append(truth_can[i])
 
         # TRAIN THE MODEL
-        result = sem_net.run(inputs=[{'inputs': inputs_dict,
+        result = sem_net.run(inputs={'inputs': inputs_dict,
                                       'targets': targets_dict,
-                                      'epochs': eps}])
+                                      'epochs': eps}, bin_execute=mode)
 
         # CHECK CORRECTNESS
-
         for i in range(len(result[0])): # go over trial outputs in the single results entry
             for j in range(len(result[0][i])): # go over outputs for each output layer
 
@@ -730,12 +738,11 @@ class TestTrainingCorrectness:
 
                 # compare model output for terminal node on current trial with target for terminal node on current trial
                 assert np.allclose(np.round(result[0][i][j]), correct_value)
-
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+        
+        benchmark(sem_net.run,inputs={'inputs': inputs_dict,
+                                      'targets': targets_dict,
+                                      'epochs': eps}, bin_execute=mode)
+@pytest.mark.pytorch
 @pytest.mark.actime
 class TestTrainingTime:
 
@@ -747,7 +754,10 @@ class TestTrainingTime:
             (100, 'sgd')
         ]
     )
-    def test_and_training_time(self, eps, opt):
+    @pytest.mark.parametrize("mode", ['Python',
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    ])
+    def test_and_training_time(self, eps, opt,mode):
 
         # SET UP MECHANISMS FOR COMPOSITION
 
@@ -811,7 +821,8 @@ class TestTrainingTime:
                              targets={and_out:and_targets},
                              epochs=eps,
                              learning_rate=0.1,
-                             controller=opt)
+                             controller=opt,
+                             bin_execute=mode)
         end = timeit.default_timer()
         comp_time = end - start
 
@@ -860,7 +871,10 @@ class TestTrainingTime:
             (100, 'sgd')
         ]
     )
-    def test_xor_training_time(self, eps, opt):
+    @pytest.mark.parametrize("mode", ['Python',
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    ])
+    def test_xor_training_time(self, eps, opt,mode):
 
         # SET UP MECHANISMS FOR COMPOSITION
 
@@ -914,7 +928,7 @@ class TestTrainingTime:
 
         # SET UP COMPOSITION
 
-        xor = AutodiffComposition(param_init_from_pnl=True)
+        xor = AutodiffComposition(param_init_from_pnl=True,bin_execute=mode)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -944,7 +958,8 @@ class TestTrainingTime:
                          targets={xor_out:xor_targets},
                          epochs=eps,
                          learning_rate=0.1,
-                         controller=opt)
+                         controller=opt,
+                         bin_execute=mode)
         end = timeit.default_timer()
         comp_time = end - start
 
@@ -1309,11 +1324,7 @@ class TestTrainingTime:
         logger.info(msg)
 
 
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+@pytest.mark.pytorch
 @pytest.mark.acidenticalness
 class TestTrainingIdenticalness():
 
@@ -1408,27 +1419,22 @@ class TestTrainingIdenticalness():
                        "targets": {xor_out:xor_targets},
                        "epochs": eps}
         result = xor.run(inputs=inputs_dict)
-
         comp_weights = xor.get_parameters()[0]
 
         # SET UP SYSTEM
-
         xor_process = Process(pathway=[xor_in_sys,
                                        hid_map_sys,
                                        xor_hid_sys,
                                        out_map_sys,
                                        xor_out_sys],
                               learning=pnl.LEARNING)
-
         xor_sys = System(processes=[xor_process],
                          learning_rate=10)
 
         # TRAIN SYSTEM
-
         results_sys = xor_sys.run(inputs={xor_in_sys:xor_inputs},
                                   targets={xor_out_sys:xor_targets},
                                   num_trials=(eps*xor_inputs.shape[0]))
-
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
 
         assert np.allclose(comp_weights[hid_map], hid_map_sys.get_mod_matrix(xor_sys))
@@ -1748,11 +1754,7 @@ class TestTrainingIdenticalness():
         assert np.allclose(comp_weights[map_h2_has], map_h2_has_sys.get_mod_matrix(sem_net_sys))
         assert np.allclose(comp_weights[map_h2_can], map_h2_can_sys.get_mod_matrix(sem_net_sys))
 
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+@pytest.mark.pytorch
 @pytest.mark.aclogging
 class TestACLogging:
     def test_autodiff_logging(self):
@@ -1800,15 +1802,15 @@ class TestACLogging:
         exec_id = xor.default_execution_id
 
         in_np_dict_vals = xor_in.log.nparray_dictionary()[exec_id]['value']
-        in_np_vals = xor_in.log.nparray()[1][1][1][1:]
+        in_np_vals = xor_in.log.nparray()[1][1][4][1:]
 
         hid_map_np_dict_mats = hid_map.log.nparray_dictionary()[exec_id]['matrix']
-        hid_map_np_mats = np.array(hid_map.log.nparray()[1][1][1][1:])
+        hid_map_np_mats = np.array(hid_map.log.nparray()[1][1][4][1:])
 
         hid_np_dict_vals = xor_hid.log.nparray_dictionary()[exec_id]['value']
 
         out_map_np_dict_mats = out_map.log.nparray_dictionary()[exec_id]['matrix']
-        out_map_np_mats = np.array(out_map.log.nparray()[1][1][1][1:])
+        out_map_np_mats = np.array(out_map.log.nparray()[1][1][4][1:])
 
         out_np_dict_vals = xor_out.log.nparray_dictionary()[exec_id]['value']
 
@@ -1832,19 +1834,19 @@ class TestACLogging:
 
         xor_out.log.print_entries()
 
-@pytest.mark.skipif(
-    not torch_available,
-    reason='Pytorch python module (torch) is not installed. Please install it with '
-           '`pip install torch` or `pip3 install torch`'
-)
+@pytest.mark.pytorch
 @pytest.mark.acnested
 class TestNested:
+
     @pytest.mark.parametrize(
         'num_epochs, learning_rate, patience, min_delta', [
             (2000, 4, 10, .00001),
         ]
     )
-    def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate, patience, min_delta):
+    @pytest.mark.parametrize("mode", ['Python',
+                                    pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.skip]), # Not implemented
+                                    ])
+    def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate, patience, min_delta,mode):
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0],
              [0, 1],
@@ -1900,8 +1902,6 @@ class TestNested:
 
         # -----------------------------------------------------------------
 
-        xor_autodiff._analyze_graph()
-
         no_training_input_dict = {xor_in: xor_inputs}
         input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
 
@@ -1913,7 +1913,7 @@ class TestNested:
         result1 = parentComposition.run(inputs=input)
 
         xor_autodiff.learning_enabled = False
-        result2 = parentComposition.run(inputs=no_training_input)
+        result2 = parentComposition.run(inputs=no_training_input,bin_execute=mode)
 
         assert np.allclose(result1, [[0]], atol=0.1)
         assert np.allclose(result2, [[0]], atol=0.1)
@@ -1978,8 +1978,6 @@ class TestNested:
         xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         # -----------------------------------------------------------------
-
-        xor_autodiff._analyze_graph()
 
         no_training_input_dict = {xor_in: xor_inputs}
         input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
@@ -2320,7 +2318,6 @@ class TestNested:
         input_dict = {"inputs": inputs_dict,
                       "targets": targets_dict,
                       "epochs": eps}
-        sem_net._analyze_graph()
 
         parentComposition = pnl.Composition()
         parentComposition.add_node(sem_net)

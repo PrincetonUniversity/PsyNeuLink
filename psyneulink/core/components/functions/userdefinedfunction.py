@@ -11,13 +11,14 @@
 
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import ADDITIVE_PARAM, FunctionError, Function_Base, MULTIPLICATIVE_PARAM
+from psyneulink.core.components.functions.function import FunctionError, Function_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTEXT, CUSTOM_FUNCTION, PARAMETER_STATE_PARAMS, PARAMS, SELF, \
-    USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, VARIABLE, OWNER, EXECUTION_ID
+from psyneulink.core.globals.keywords import \
+    ADDITIVE_PARAM, CONTEXT, CUSTOM_FUNCTION, EXECUTION_ID, MULTIPLICATIVE_PARAM, OWNER, PARAMS, \
+    PARAMETER_STATE_PARAMS, SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences import is_pref_set
-from psyneulink.core.globals.utilities import call_with_pruned_args, iscompatible
+from psyneulink.core.globals.utilities import iscompatible
 
 __all__ = ['UserDefinedFunction']
 
@@ -65,7 +66,7 @@ class UserDefinedFunction(Function_Base):
     ..
     .. _UDF_Params_Context:
 
-    * It may include **self**, **owner**, **execution_id**, **context** and/or **params** arguments;  none of these are
+    * It may include **self**, **owner**, **context**, and/or **params** arguments;  none of these are
       required, but can be included to gain access to the standard `Function` parameters (such as the history of its
       parameter values), those of the `Component` to which it has been assigned (i.e., its `owner <Function.owner>`,
       and/or receive information about the current conditions of execution.   When the function or method is called,
@@ -390,14 +391,14 @@ class UserDefinedFunction(Function_Base):
 
                 # MODIFIED 3/6/19 NEW: [JDC]
                 # Custom function specified owner as arg
-                if arg_name in {SELF, OWNER, EXECUTION_ID}:
+                if arg_name in {SELF, OWNER, CONTEXT}:
                     # Flag for inclusion in call to function
                     if arg_name is SELF:
                         self.self_arg = True
                     elif arg_name is OWNER:
                         self.owner_arg = True
                     else:
-                        self.execution_id_arg = True
+                        self.context_arg = True
                     # Skip rest, as these don't need to be params
                     continue
                 # MODIFIED 3/6/19 END
@@ -428,7 +429,7 @@ class UserDefinedFunction(Function_Base):
 
         self.self_arg = False
         self.owner_arg = False
-        self.execution_id_arg = False
+        self.context_arg = False
 
         # Get variable and names of other any other args for custom_function and assign to cust_fct_params
         if params is not None and CUSTOM_FUNCTION in params:
@@ -480,18 +481,28 @@ class UserDefinedFunction(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         )
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         super()._instantiate_attributes_before_function(function=function, context=context)
         # create transient Parameters objects for custom function params
         # done here because they need to be present before _instantiate_value which calls self.function
         for param_name in self.cust_fct_params:
-            setattr(self.parameters, param_name, Parameter(self.cust_fct_params[param_name], modulable=True))
+            p = Parameter(self.cust_fct_params[param_name], modulable=True)
+            setattr(self.parameters, param_name, p)
 
-        self._initialize_parameters()
+            try:
+                attr_name = '_{0}'.format(p.name)
+                attr_value = getattr(self, attr_name)
+                if attr_value is None:
+                    attr_value = p.default_value
 
-    def function(self, variable, execution_id=None, **kwargs):
+                p._set(attr_value, context, skip_history=True)
+                delattr(self, attr_name)
+            except AttributeError:
+                p._set(p.default_value, context, skip_history=True)
+
+    def _function(self, variable, context=None, **kwargs):
 
         # Update value of parms in cust_fct_params
         for param in self.cust_fct_params:
@@ -501,7 +512,7 @@ class UserDefinedFunction(Function_Base):
                 self.cust_fct_params[param] = kwargs[PARAMS][param]
             else:
                 # Otherwise, get current value from ParameterState (in case it is being modulated by ControlSignal(s)
-                self.cust_fct_params[param] = self.get_current_function_param(param, execution_id)
+                self.cust_fct_params[param] = self.get_current_function_param(param, context)
 
         call_params = self.cust_fct_params.copy()
 
@@ -511,8 +522,8 @@ class UserDefinedFunction(Function_Base):
             call_params[SELF] = self
         if self.owner_arg:
             call_params[OWNER] = self.owner
-        if self.execution_id_arg:
-            call_params[EXECUTION_ID] = execution_id
+        if self.context_arg:
+            call_params[CONTEXT] = context
         # MODIFIED 3/6/19 END
 
         kwargs.update(call_params)

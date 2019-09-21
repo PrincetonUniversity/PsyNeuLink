@@ -197,11 +197,11 @@ class TestStroop:
 
         #   CREATE THRESHOLD FUNCTION
         # first value of DDM's value is DECISION_VARIABLE
-        # execution_context is always passed to Condition functions and is the context
+        # context is always passed to Condition functions and is the context
         # in which the function gets called - below, during system execution
-        def pass_threshold(mech1, mech2, thresh, execution_context=None):
-            results1 = mech1.output_states[0].parameters.value.get(execution_context)
-            results2 = mech2.output_states[0].parameters.value.get(execution_context)
+        def pass_threshold(mech1, mech2, thresh, context=None):
+            results1 = mech1.output_states[0].parameters.value.get(context)
+            results2 = mech2.output_states[0].parameters.value.get(context)
             for val in results1:
                 if val >= thresh:
                     return True

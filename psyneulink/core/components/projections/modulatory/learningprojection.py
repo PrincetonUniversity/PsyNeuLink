@@ -137,15 +137,19 @@ learned.
 Execution
 ---------
 
-A LearningProjection cannot be executed directly.  It is executed when the *MATRIX* ParameterState to which it
-projects is updated.  This occurs when the `learned_projection <LearningProjection.learned_projection>` (the
-`MappingProjection` to which the *MATRIX* ParameterState belongs) is updated. Note that these events occur only
-when the ProcessingMechanism that receives the `learned_projection <LearningProjection.learned_projection>` is
-executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When the LearningProjection is
-executed, its `function <LearningProjection.function>` gets the `learning_signal <LearningProjection.learning_signal>`
-from its `sender <LearningProjection.sender>` and conveys that to its `receiver <LearningProjection.receiver>`,
-possibly modified by a `learning_rate <LearningProjection.learning_rate>` if that is specified for it or its `sender
-<LearningProjection.sender>` (see `above <LearningProjection_Function_and_Learning_Rate>`).
+A LearningProjection cannot be executed directly.  It's execution is determined by its `learning_enabled
+<LearningProjection.learning_enabled>` attribute.  If that is False`, it is never executed.  If it is True or
+*ONLINE*, is executed when the *MATRIX* ParameterState to which it projects is updated.  This occurs when the
+`learned_projection <LearningProjection.learned_projection>` (the `MappingProjection` to which the *MATRIX*
+ParameterState belongs) is updated. Note that these events occur only when the ProcessingMechanism that receives the
+`learned_projection <LearningProjection.learned_projection>` is executed (see :ref:`Lazy Evaluation <LINK>` for an
+explanation of "lazy" updating).  If `learning_enabled <LearningProjection.learning_enabled>` is *AFTER*, then
+LearningProjection is executed at the end of the `TRIAL` of the Composition to which it belongs.  When the
+LearningProjection is executed, its `function <LearningProjection.function>` gets the `learning_signal
+<LearningProjection.learning_signal>` from its `sender <LearningProjection.sender>` and conveys that to its
+`receiver <LearningProjection.receiver>`, possibly modified by a `learning_rate <LearningProjection.learning_rate>`
+if that is specified for it or its `sender <LearningProjection.sender>` (see `above
+<LearningProjection_Function_and_Learning_Rate>`).
 
 .. note::
    The changes to the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection` in response to the
@@ -168,7 +172,7 @@ import typecheck as tc
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import BackPropagation
-from psyneulink.core.components.functions.transferfunctions import Linear, Identity
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -179,8 +183,10 @@ from psyneulink.core.components.shellclasses import ShellClass
 from psyneulink.core.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
+from psyneulink.core.globals.context import Context, ContextFlags
+from psyneulink.core.globals.keywords import \
+    CONTEXT, FUNCTION, FUNCTION_PARAMS, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
+    MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE, ONLINE, AFTER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -208,27 +214,28 @@ class LearningProjectionError(Exception):
         return repr(self.error_value)
 
 
-def _learning_signal_getter(owning_component=None, execution_id=None):
-    return owning_component.sender.parameters.value.get(execution_id)
+def _learning_signal_getter(owning_component=None, context=None):
+    return owning_component.sender.parameters.value._get(context)
 
 
-def _learning_signal_setter(value, owning_component=None, execution_id=None, override=False):
-    owning_component.sender.parameters.value.set(value, execution_id, override=override)
+def _learning_signal_setter(value, owning_component=None, context=None):
+    owning_component.sender.parameters.value._set(value, context)
     return value
 
 
 class LearningProjection(ModulatoryProjection_Base):
     """
-    LearningProjection(               \
-                 sender=None,         \
-                 receiver=None,       \
-                 error_function,      \
-                 learning_function,   \
-                 learning_rate=None,  \
-                 weight=None,         \
-                 exponent=None,       \
-                 params=None,         \
-                 name=None,           \
+    LearningProjection(                \
+                 sender=None,          \
+                 receiver=None,        \
+                 error_function,       \
+                 learning_function,    \
+                 learning_rate=None,   \
+                 learning_enabled=None \
+                 weight=None,          \
+                 exponent=None,        \
+                 params=None,          \
+                 name=None,            \
                  prefs=None)
 
     Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of a `ParameterState` for the
@@ -302,6 +309,11 @@ class LearningProjection(ModulatoryProjection_Base):
         `learning_signal <LearningProjection.learning_signal>` (see `LearningProjection_Function_and_Learning_Rate` for
         additional details).
 
+    learning_enabled : Optional[bool or Enum[ONLINE|AFTER]] : default : None
+        determines whether or when the `value <LearningProjection.value>` of the LearningProjection is used to modify
+        the `learned_projection <LearningProjection.learned_projection>` when the latter is executed (see
+        `learning_enabled <LearningProjection.learning_enabled>` for additional details).
+
     weight : number : default None
        specifies the value by which to multiply the LearningProjection's `value <LearningProjection.value>`
        before combining it with others (see `weight <LearningProjection.weight>` for additional details).
@@ -316,7 +328,7 @@ class LearningProjection(ModulatoryProjection_Base):
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default see ModulatoryProjection `name <ModulatoryProjection.name>`
+    name : str : default see ModulatoryProjection `name <ModulatoryProjection_Base.name>`
         specifies the name of the LearningProjection.
 
     prefs : PreferenceSet or specification dict : default Projection.classPreferences
@@ -343,11 +355,14 @@ class LearningProjection(ModulatoryProjection_Base):
     variable : 2d np.array
         same as `learning_signal <LearningProjection.learning_signal>`.
 
-    learning_enabled : bool : default True
-        determines whether the `value <LearningProjection.value>` of the LearningProjection is used to modify
-        the `learned_projection <LearningProjection.learned_projection>` when the latter is executed;  its value is
-        set by the value of the `learning_enabled <LearningMechanism.learning_enabled>` attribute of the
-        `LearningMechanism` to which the LearningProjection's `sender <LearningProjection.sender>` belongs.
+    learning_enabled : bool or Enum[ONLINE|AFTER]
+        determines whether or when the `value <LearningProjection.value>` of the LearningProjection is used to modify
+        the `learned_projection <LearningProjection.learned_projection>` when the latter is executed;  by default, its
+        value is set to the value of the `learning_enabled <LearningMechanism.learning_enabled>` attribute of the
+        `LearningMechanism` to which the LearningProjection's `sender <LearningProjection.sender>` belongs; however
+        it can be overridden using the **learning_enabled** argument of the LearningProjection's constructor and/or
+        by assignment after it is constructed (see `learning_enabled <LearningMechanism.learning_enabled>` for
+        additional details).
 
     learning_signal : 2d np.array
         the `value <LearningSignal.value>` of the LearningProjection's `sender <LearningProjectoin.sender>`: a matrix of
@@ -384,7 +399,7 @@ class LearningProjection(ModulatoryProjection_Base):
        <LearningProjection.exponent>`, and before combining it with any others that project to the `ParameterState`
        for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
        MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
-       <LearningProjection_Weight_and_Exponent>` for additional details, including relationship to `learning_rate
+       <LearningProjection_Weight_Exponent>` for additional details, including relationship to `learning_rate
        <LearningProjection.learning_rate>`).
 
     exponent : number
@@ -392,12 +407,12 @@ class LearningProjection(ModulatoryProjection_Base):
         <ControlProjection.weight>`, and before combining it with any others that project to the `ParameterState`
        for the `matrix <MappingProjection.matrix>` parameter of the same `MappingProjection` to determine how that
        MappingProjection's `matrix <MappingProjection.matrix>` is modified (see `description above
-       <LearningProjection_Weight_and_Exponent>` for additional details, including relationship to `learning_rate
+       <LearningProjection_Weight_Exponent>` for additional details, including relationship to `learning_rate
        <LearningProjection.learning_rate>`).
 
     name : str
         name of the LearningProjection; if it is not specified in the **name** argument of its constructor,
-        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection.name>`;
+        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection_Base.name>`;
         also see `Naming` for conventions regarding duplicate names).
 
     prefs : PreferenceSet or specification dict
@@ -441,6 +456,12 @@ class LearningProjection(ModulatoryProjection_Base):
                     :default value: `Linear`
                     :type: `Function`
 
+                learning_enabled
+                    see `learning_enabled <LearningProjection.learning_enabled>`
+
+                    :default value: None
+                    :type:
+
                 learning_function
                     see `learning_function <LearningProjection.learning_function>`
 
@@ -467,6 +488,7 @@ class LearningProjection(ModulatoryProjection_Base):
         learning_function = Parameter(BackPropagation, stateful=False, loggable=False)
         learning_rate = Parameter(None, modulable=True)
         learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter, setter=_learning_signal_setter)
+        learning_enabled = None
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
@@ -486,25 +508,27 @@ class LearningProjection(ModulatoryProjection_Base):
                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                  # learning_signal_params:tc.optional(dict)=None,
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
+                 learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None,
                  weight=None,
                  exponent=None,
-                 function=None,
                  params:tc.optional(dict)=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs
+                 ):
 
         # IMPLEMENTATION NOTE:
         #     the error_function and learning_function arguments are implemented to preserve the ability to pass
         #     error function and learning function specifications from the specification of a LearningProjection (used
         #     to implement learning for a MappingProjection, e.g., in a tuple) to the LearningMechanism responsible
         #     for implementing the function; and for specifying the default LearningProjection for a Process.
-
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(error_function=error_function,
                                                   learning_function=learning_function,
                                                   learning_rate=learning_rate,
                                                   # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                                                   # learning_signal_params=learning_signal_params,
+                                                  learning_enabled=learning_enabled,
                                                   weight=weight,
                                                   exponent=exponent,
                                                   params=params)
@@ -512,7 +536,8 @@ class LearningProjection(ModulatoryProjection_Base):
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization
-            self.context.initialization_status = ContextFlags.DEFERRED_INIT
+            self.initialization_status = ContextFlags.DEFERRED_INIT
+
         super().__init__(sender=sender,
                          receiver=receiver,
                          weight=weight,
@@ -520,9 +545,7 @@ class LearningProjection(ModulatoryProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
-        self.learning_enable = True
-
+                         **kwargs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate sender and receiver
@@ -535,7 +558,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.initialization_status == ContextFlags.INITIALIZING:
             # VALIDATE SENDER
             sender = self.sender
             if isinstance(sender, LearningMechanism):
@@ -590,8 +613,10 @@ class LearningProjection(ModulatoryProjection_Base):
         if not isinstance(self.sender, (OutputState, LearningMechanism)):
             from psyneulink.core.components.mechanisms.adaptive.learning.learningauxiliary \
                 import _instantiate_learning_components
+            context.source = ContextFlags.METHOD
             _instantiate_learning_components(learning_projection=self,
-                                             context=ContextFlags.METHOD)
+                                             # TODO: do we need this argument?
+                                             context=context)
 
         if isinstance(self.sender, OutputState) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
@@ -607,6 +632,8 @@ class LearningProjection(ModulatoryProjection_Base):
 
     def _instantiate_receiver(self, context=None):
         """Validate that receiver has been assigned and is compatible with the output of function
+
+        Set learning_enabled to value of receiver if it was not otherwise specified in the constructor
 
         Notes:
         * _validate_params verifies that receiver is a parameterState for the matrix parameter of a MappingProjection.
@@ -635,29 +662,21 @@ class LearningProjection(ModulatoryProjection_Base):
         except TypeError:
             learning_signal_shape = 1
 
-        # If MappingProjection to which the receiver belongs has been assigned an Identity function (for efficiency),
-        #    then it does not have an actual matrix;  so re-assign its defaults.value Identity matrix,
-        #    which also forces reassignment of its _original_function (in _mapping_projection_matrix_setter)
-        if isinstance(self.receiver.owner.function, Identity):
-            self.receiver.owner.matrix = self.receiver.defaults.value
 
         # FIX: SHOULD TEST WHETHER IT CAN BE USED, NOT WHETHER IT IS THE SAME SHAPE
-        # # MODIFIED 3/8/17 OLD:
-        # if receiver_weight_matrix_shape != learning_signal_shape:
-        #     raise ProjectionError("Shape ({}) of learing_signal matrix for {} from {}"
-        #                           " must match shape of the weight matrix ({}) for the receiver {}".
-        #                           format(learning_signal_shape,
-        #                                  self.name,
-        #                                  self.sender.name,
-        #                                  receiver_weight_matrix_shape,
-        #                                  self.receiver.owner.name))
-        # MODIFIED 3/8/17 END
-
         learning_mechanism = self.sender.owner
         learned_projection = self.receiver.owner
 
+        # Set learning_enabled to value of its LearningMechanism sender if it was not specified in the constructor
+        if self.learning_enabled is None:
+            self.learning_enabled = self.parameters.learning_enabled.default_value = learning_mechanism.learning_enabled
+
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
+
+        # FIX: REMOVE WHEN System IS FULLY DEPRECATED
+        # MODIFIED 7/15/19 OLD: JDC RESTORED TO ALLOW SYSTEM TO WORK (DOESN"T SEEM TO TRASH BP)
+        # KAM Commented out next 8 lines on 6/24/19 to get past bug in multilayer backprop on Composition
         try:
             candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
             if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
@@ -666,24 +685,26 @@ class LearningProjection(ModulatoryProjection_Base):
             # learning_mechanism does not receive from an ObjectiveMechanism
             #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
             pass
+        # MODIFIED 7/15/19 END
+
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = self
 
-    def _execute(self, variable, execution_id=None, runtime_params=None, context=None):
+    def _execute(self, variable, context=None, runtime_params=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
         runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized
-        if self.parameters.context.get(execution_id).initialization_status == ContextFlags.DEFERRED_INIT:
-            return self.parameters.context.get(execution_id).initialization_status
+        if self.initialization_status == ContextFlags.DEFERRED_INIT:
+            return self.initialization_status
 
         if variable is not None:
             learning_signal = variable
         else:
-            learning_signal = self.sender.parameters.value.get(execution_id)
-        matrix = self.receiver.parameters.value.get(execution_id)
+            learning_signal = self.sender.parameters.value._get(context)
+        matrix = self.receiver.parameters.value._get(context)
         # If learning_signal is lower dimensional than matrix being trained
         #    and the latter is a diagonal matrix (square, with values only along the main diagonal)
         #    and the learning_signal is the same as the matrix,
@@ -713,16 +734,16 @@ class LearningProjection(ModulatoryProjection_Base):
         #                       which undermines formatting of it (as learning_signal) above
         value = super(ShellClass, self)._execute(
             variable=learning_signal,
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
-            context=context
+
         )
 
-        learning_rate = self.parameters.learning_rate.get(execution_id)
+        learning_rate = self.parameters.learning_rate._get(context)
         if learning_rate is not None:
             value *= learning_rate
 
-        if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(value)))
 
         return value

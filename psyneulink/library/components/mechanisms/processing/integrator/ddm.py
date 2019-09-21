@@ -10,11 +10,12 @@
 
 """
 ..
-    Sections:
-      * :ref:`DDM_Overview`
-      * :ref:`DDM_Creation`
-      * :ref:`DDM_Execution`
-      * :ref:`DDM_Class_Reference`
+Sections
+--------
+  * `DDM_Overview`
+  * `DDM_Creation`
+  * `DDM_Execution`
+  * `DDM_Class_Reference`
 
 .. _DDM_Overview:
 
@@ -175,7 +176,7 @@ The Drift Diffusion Model `Functions <Function>` that calculate analytic solutio
 `DDM_Execution` for details). In addition to `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and
 `RESPONSE_TIME <DDM_RESPONSE_TIME>`, the Function returns an accuracy value (represented in the
 `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputState), and an error rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>`
-OutputState, and moments (mean, variance, and skew) for conditional (correct\positive or incorrect\negative) response time distributions.
+OutputState, and moments (mean, variance, and skew) for conditional (correct\\positive or incorrect\\negative) response time distributions.
 These are; the mean RT for correct responses  (`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>`, the RT variance for correct responses
 (`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`, the RT skew for correct responses (`RT_CORRECT_SKEW <DDM_RT_CORRECT_SKEW>`,
 the mean RT for incorrect responses  (`RT_INCORRECT_MEAN <DDM_RT_INCORRECT_MEAN>`, the RT variance for incorrect
@@ -346,7 +347,7 @@ Class Reference
 import logging
 import random
 
-from collections import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -359,12 +360,12 @@ from psyneulink.core.components.functions.distributionfunctions import THRESHOLD
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import SEQUENTIAL, StandardOutputStates
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Parameter, parse_execution_context
+from psyneulink.core.globals.parameters import Parameter, parse_context
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value
@@ -401,14 +402,15 @@ VECTOR='VECTOR'
 
 def decision_variable_to_array(x):
     """Generate "one-hot" 1d array designating selected action from DDM's scalar decision variable
-    (used to generate value of OutputState for action_selection Mechanism"""
+    (used to generate value of OutputState for action_selection Mechanism
+    """
     if x >= 0:
         return [x,0]
     else:
         return [0,x]
 
-DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or lower threshold in TRIAL mode
-                              {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL in TIME_STEP mode
+DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analtyic function
+                              {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL for Integrator function
                               {NAME: PROBABILITY_UPPER_THRESHOLD},  # Accuracy (TRIAL mode only)
                               {NAME: PROBABILITY_LOWER_THRESHOLD},  # Error rate (TRIAL mode only)
                               {NAME: RT_CORRECT_MEAN},              # (DriftDiffusionAnalytical only)
@@ -601,17 +603,17 @@ class DDMError(Exception):
         return repr(self.error_value)
 
 
-class DDM(ProcessingMechanism_Base):
+class DDM(ProcessingMechanism):
     # DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
     #             ADD INFO ABOUT B VS. N&F
     #             ADD _instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
     """
-    DDM(                    \
-    default_variable=None,  \
-    size=None,              \
-    function=DriftDiffusionAnalytical,    \
-    params=None,            \
-    name=None,              \
+    DDM(                               \
+    default_variable=None,             \
+    size=None,                         \
+    function=DriftDiffusionAnalytical, \
+    params=None,                       \
+    name=None,                         \
     prefs=None)
 
     Implement a Drift Diffusion Process, either by calculating an `analytic solution <DDM_Analytic_Mode>` or carrying
@@ -781,7 +783,7 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class Parameters(ProcessingMechanism_Base.Parameters):
+    class Parameters(ProcessingMechanism.Parameters):
         """
             Attributes
             ----------
@@ -828,8 +830,6 @@ class DDM(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 # function:tc.enum(type(DriftDiffusionAnalytical))=DriftDiffusionAnalytical(drift_rate=1.0,
-                 # input_states:tc.optional(tc.any(list, dict))=None,
                  input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=SCALAR,
                  function=DriftDiffusionAnalytical(drift_rate=1.0,
                                                    starting_point=0.0,
@@ -839,8 +839,8 @@ class DDM(ProcessingMechanism_Base):
                  output_states:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
                  params=None,
                  name=None,
-                 # prefs:tc.optional(ComponentPreferenceSet)=None,
-                 prefs: is_pref_set = None):
+                 prefs: is_pref_set = None,
+                 **kwargs):
 
         self.standard_output_states = StandardOutputStates(self,
                                                            DDM_standard_output_states,
@@ -926,12 +926,9 @@ class DDM(ProcessingMechanism_Base):
                                   name=name,
                                   prefs=prefs,
                                   size=size,
-                                  context=ContextFlags.CONSTRUCTOR)
+                                  **kwargs),
+
         self._instantiate_plotting_functions()
-        # # TEST PRINT
-        # print("\n{} user_params:".format(self.name))
-        # for param in self.user_params.keys():
-        #     print("\t{}: {}".format(param, self.user_params[param]))
 
 
     def plot(self, stimulus=1.0, threshold=10.0):
@@ -1078,9 +1075,9 @@ class DDM(ProcessingMechanism_Base):
     def _execute(
         self,
         variable=None,
-        execution_id=None,
+        context=None,
         runtime_params=None,
-        context=None
+
     ):
         """Execute DDM function (currently only trial-level, analytic solution)
         Execute DDM and estimate outcome or calculate trajectory of decision variable
@@ -1125,9 +1122,9 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if isinstance(self.function, IntegratorFunction):
 
-            result = super()._execute(variable, execution_id=execution_id, context=context)
+            result = super()._execute(variable, context=context)
 
-            if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+            if self.initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
             return np.array([result[0], [result[1]]])
@@ -1137,9 +1134,9 @@ class DDM(ProcessingMechanism_Base):
 
             result = super()._execute(
                 variable=variable,
-                execution_id=execution_id,
+                context=context,
                 runtime_params=runtime_params,
-                context=context
+
             )
 
             if isinstance(self.function, DriftDiffusionAnalytical):
@@ -1160,30 +1157,34 @@ class DDM(ProcessingMechanism_Base):
                                format(self.function.name, self.name))
 
             # Convert ER to decision variable:
-            threshold = float(self.function.get_current_function_param(THRESHOLD, execution_id))
+            threshold = float(self.function.get_current_function_param(THRESHOLD, context))
             if random.random() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
             return return_value
 
-    def reinitialize(self, *args, execution_context=None):
+    @handle_external_context(execution_id=NotImplemented)
+    def reinitialize(self, *args, context=None):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
+
+        if context.execution_id is NotImplemented:
+            context.execution_id = self.most_recent_context.execution_id
 
         # (1) reinitialize function, (2) update mechanism value, (3) update output states
         if isinstance(self.function, IntegratorFunction):
-            new_values = self.function.reinitialize(*args, execution_context=execution_context)
-            self.parameters.value.set(np.array(new_values), execution_context, override=True)
-            self._update_output_states(execution_id=parse_execution_context(execution_context),
-                                       context="REINITIALIZING")
+            new_values = self.function.reinitialize(*args, context=context)
+            self.parameters.value._set(np.array(new_values), context)
+            self._update_output_states(context=context)
 
-    def is_finished(self, execution_context=None):
+    @handle_external_context()
+    def is_finished(self, context=None):
         # find the single numeric entry in previous_value
         try:
-            single_value = self.function.get_previous_value(execution_context)
+            single_value = self.function.get_previous_value(context)
         except AttributeError:
-            # Analytical function so fall back to more standard behavior
-            return super().is_finished(execution_context)
+            # Analytical function so it is always finished after it is called
+            return True
 
         # indexing into a matrix doesn't reduce dimensionality
         if not isinstance(single_value, (np.matrix, str)):
@@ -1194,14 +1195,14 @@ class DDM(ProcessingMechanism_Base):
                     break
 
         if (
-            abs(single_value) >= self.function.get_current_function_param(THRESHOLD, execution_context)
+            abs(single_value) >= self.function.get_current_function_param(THRESHOLD, context)
             and isinstance(self.function, IntegratorFunction)
         ):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(
                     type(self).__name__,
                     self.name,
-                    self.function.get_current_function_param(THRESHOLD, execution_context)
+                    self.function.get_current_function_param(THRESHOLD, context)
                 )
             )
             return True

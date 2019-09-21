@@ -146,13 +146,13 @@ When a KTWA is executed, it first determines its `variable <KWTAMechanism.variab
   - calculate the scope of offsets that will satisfy the constraint; how this is done is determined by the
     `average_based <KWTAMechanism.average_based>` attribute (see `above
     <KWTAMechanism_average_based>`);
-  |
+
   - select an offset from the scope based on the `ratio <KWTAMechanism.ratio>` option (see `above
     <KWTAMechanism_ratio>`);
-  |
+
   - constrain the offset to be 0 or negative if the `inhibition_only <KWTAMechanism.inhibition_only>` option
     is set (see `above <KWTAMechanism_inhibition_only>`;
-  |
+
   - apply the offset to all elements of the `variable <KWTAMechanism.variable>`.
 ..
 The modified `variable <KWTAMechanism.variable>` is then passed to the KWTAMechanism's `function
@@ -170,7 +170,7 @@ import logging
 import numbers
 import warnings
 
-from collections import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -577,7 +577,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
-                 context=componentType + INITIALIZING,
+                 **kwargs
                  ):
         # Default output_states is specified in constructor as a string rather than a list
         # to avoid "gotcha" associated with mutable default arguments
@@ -616,9 +616,10 @@ class KWTAMechanism(RecurrentTransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         **kwargs)
 
-    def _parse_function_variable(self, variable, execution_id=None, context=None):
+    def _parse_function_variable(self, variable, context=None):
         if variable.dtype.char == "U":
             raise KWTAError(
                 "input ({0}) to {1} was a string, which is not supported for {2}".format(
@@ -626,7 +627,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                 )
             )
 
-        return self._kwta_scale(variable, context=context, execution_id=execution_id)
+        return self._kwta_scale(variable, context=context)
 
     # adds indexOfInhibitionInputState to the attributes of KWTAMechanism
     def _instantiate_attributes_before_function(self, function=None, context=None):
@@ -638,12 +639,12 @@ class KWTAMechanism(RecurrentTransferMechanism):
         # so it shouldn't be a problem)
         self.indexOfInhibitionInputState = len(self.input_states) - 1
 
-    def _kwta_scale(self, current_input, context=None, execution_id=None):
-        k_value = self.get_current_mechanism_param("k_value", execution_id)
-        threshold = self.get_current_mechanism_param("threshold", execution_id)
-        average_based = self.get_current_mechanism_param("average_based", execution_id)
-        ratio = self.get_current_mechanism_param("ratio", execution_id)
-        inhibition_only = self.get_current_mechanism_param("inhibition_only", execution_id)
+    def _kwta_scale(self, current_input, context=None):
+        k_value = self.get_current_mechanism_param("k_value", context)
+        threshold = self.get_current_mechanism_param("threshold", context)
+        average_based = self.get_current_mechanism_param("average_based", context)
+        ratio = self.get_current_mechanism_param("ratio", context)
+        inhibition_only = self.get_current_mechanism_param("inhibition_only", context)
 
         try:
             int_k_value = int(k_value[0])

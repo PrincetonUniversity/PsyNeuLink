@@ -51,15 +51,16 @@ Structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An AGTControlMechanism has a single (primary) `InputState <InputState_Primary>` that receives its input via a
-`MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
-The ObjectiveMechanism is created automatically when the AGTControlMechanism is created, using a `DualAdaptiveIntegrator` as its
-`function <ObjectiveMechanism.function>`, and is listed in the AGTControlMechanism's `objective_mechanism
-<AGTControlMechanism.objective_mechanism>` attribute.  The ObjectiveMechanism aggregates the `value <OutputState.value>`\\s
-of the OutputStates that it monitors, integrates their aggregated value at two different rates, and combines those to
-generate the its output, which is used by the AGTControlMechanism as its input. The OutputStates monitored by the
-ObjectiveMechanism, listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
-attribute, are also listed in the AGTControlMechanism's `monitored_output_states <AGTControlMechanism_Base.monitored_output_states>`
-attribute.  They can be displayed using the AGTControlMechanism's `show <AGTControlMechanism.show>` method.
+`MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`. The
+ObjectiveMechanism is created automatically when the AGTControlMechanism is created, using a `DualAdaptiveIntegrator`
+as its `function <ObjectiveMechanism.function>`, and is listed in the AGTControlMechanism's `objective_mechanism
+<AGTControlMechanism.objective_mechanism>` attribute.  The ObjectiveMechanism aggregates the `value
+<OutputState.value>`\\s of the OutputStates that it monitors, integrates their aggregated value at two different
+rates, and combines those to generate the its output, which is used by the AGTControlMechanism as its input. The
+OutputStates monitored by the ObjectiveMechanism, listed in its `monitored_output_states
+<ObjectiveMechanism.monitored_output_states>` attribute, are also listed in the AGTControlMechanism's
+`monitored_output_states <AGTControlMechanism_Base.monitored_output_states>` attribute.  They can be displayed using
+the AGTControlMechanism's `show <AGTControlMechanism.show>` method.
 
 .. _AGTControlMechanism_Function:
 
@@ -146,13 +147,14 @@ Class Reference
 """
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DualAdaptiveIntegrator
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_STATES, ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism, System_Base
 from psyneulink.core.components.states.outputstate import OutputState
-from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
+from psyneulink.core.globals.keywords import \
+    CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
+    MECHANISM, MULTIPLICATIVE, OBJECTIVE_MECHANISM
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -307,7 +309,7 @@ class AGTControlMechanism(ControlMechanism):
                  function=None,
                  # control_signals:tc.optional(list) = None,
                  control_signals= None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
+                 modulation:tc.optional(str)=MULTIPLICATIVE,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):

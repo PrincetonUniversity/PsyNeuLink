@@ -18,10 +18,11 @@
 Overview
 --------
 
-An LCAMechanism is a subclass of `RecurrentTransferMechanism` that implements a single-layered leaky competitive accumulator
-network, in which each element is connected to every other element with mutually inhibitory weights. The LCAMechanism's recurrent
-projection matrix *always* consists of `self_excitation <LCAMechanism.self_excitation>` on the diagonal and -`competition
-<LCAMechanism.competition>` off-diagonal.
+An LCAMechanism is a subclass of `RecurrentTransferMechanism` that implements a single-layered `leaky competitng
+accumulator (LCA) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_  network, in which each element is connected to
+every other element with mutually inhibitory weights. The LCAMechanism's recurrent projection matrix *always* consists
+of `self_excitation <LCAMechanism.self_excitation>` on the diagonal and -`competition <LCAMechanism.competition>`
+off-diagonal.
 
     COMMENT:
     .. math::
@@ -134,7 +135,7 @@ Class Reference
 
 import warnings
 
-from collections import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
@@ -233,7 +234,7 @@ class LCAMechanism_OUTPUT():
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class LCAMechanism(RecurrentTransferMechanism):
     """
-    LCAMechanism(                                   \
+    LCAMechanism(                          \
         default_variable=None,             \
         size=None,                         \
         function=Logistic,                 \
@@ -591,7 +592,8 @@ class LCAMechanism(RecurrentTransferMechanism):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 **kwargs):
         """Instantiate LCAMechanism
         """
 
@@ -637,15 +639,16 @@ class LCAMechanism(RecurrentTransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs)
+                         prefs=prefs,
+                         **kwargs)
 
-    def _get_integrated_function_input(self, function_variable, initial_value, noise, context, execution_id=None):
+    def _get_integrated_function_input(self, function_variable, initial_value, noise, context):
 
-        leak = self.get_current_mechanism_param("leak", execution_id)
-        time_step_size = self.get_current_mechanism_param("time_step_size", execution_id)
+        leak = self.get_current_mechanism_param("leak", context)
+        time_step_size = self.get_current_mechanism_param("time_step_size", context)
 
         # if not self.integrator_function:
-        if self.context.initialization_status == ContextFlags.INITIALIZING:
+        if self.initialization_status == ContextFlags.INITIALIZING:
             self.integrator_function = LeakyCompetingIntegrator(
                 function_variable,
                 initializer=initial_value,
@@ -656,7 +659,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         current_input = self.integrator_function._execute(
             function_variable,
-            execution_id=execution_id,
+            context=context,
             # Should we handle runtime params?
             runtime_params={
                 INITIALIZER: initial_value,
@@ -664,7 +667,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                 RATE: leak,
                 TIME_STEP_SIZE: time_step_size
             },
-            context=context
+
         )
 
         return current_input

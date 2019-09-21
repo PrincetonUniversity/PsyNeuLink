@@ -83,14 +83,14 @@ arguments of the `System`, as described below.
     Mechanisms within the System. If an OutputState of a particular Mechanism is desired, and it shares its name with
     other Mechanisms in the System, then it must be referenced explicitly (see `InputState specification
     <InputState_Specification>`, and examples under `System_Control_Examples`).
-  |
+
   * **MonitoredOutputStatesOption** -- must be a value of `MonitoredOutputStatesOption`, and must appear alone or as a
     single item in the list specifying the **monitor_for_control** argument;  any other specification(s) included in
     the list will take precedence.  The MonitoredOutputStatesOption applies to all of the Mechanisms in the System
     except its `controller <System.controller>` and `LearningMechanisms <LearningMechanism>`. The
     *PRIMARY_OUTPUT_STATES* value specifies that the `primary OutputState <OutputState_Primary>` of every Mechanism be
     monitored, whereas *ALL_OUTPUT_STATES* specifies that *every* OutputState of every Mechanism be monitored.
-  |
+
   The default for the **monitor_for_control** argument is *MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES*.
   The OutputStates specified in the **monitor_for_control** argument are added to any already specified for the
   ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>`, and the full set is listed in
@@ -160,7 +160,7 @@ The `Mechanisms <Mechanism>` in a System are assigned designations based on the 
        Any `ORIGIN` and `TERMINAL` Mechanisms of a System must be, respectively, the `ORIGIN` or `TERMINAL` of any
        Process(es) to which they belong.  However, it is not necessarily the case that the `ORIGIN` and/or `TERMINAL`
        Mechanism of a Process is also the `ORIGIN` and/or `TERMINAL` of a System to which the Process belongs (see
-       `example <LearningProjection_Target_vs_Terminal_Figure>`).
+       `example <LearningProjection_Output_vs_Terminal_Figure>`).
 
     .. note:: designations are stored in the `systems <Mechanism.systems>` attribute of a `Mechanism <Mechanism>`.
     COMMENT:
@@ -433,7 +433,8 @@ import re
 import warnings
 
 from PIL import Image
-from collections import Iterable, OrderedDict, namedtuple
+from collections.abc import Iterable
+from collections import OrderedDict, namedtuple
 from os import path, remove
 from shutil import rmtree
 
@@ -455,7 +456,7 @@ from psyneulink.core.components.projections.projection import Projection
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, EXECUTING, FUNCTION, FUNCTIONS, \
     INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, \
@@ -515,7 +516,8 @@ kwSystemInputState = 'SystemInputState'
 
 class MonitoredOutputStatesOption(AutoNumber):
     """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
-    (see `ObjectiveMechanism_Monitor` for a more complete description of their meanings."""
+    (see `ObjectiveMechanism_Monitor` for a more complete description of their meanings.
+    """
     ONLY_SPECIFIED_OUTPUT_STATES = ()
     """Only monitor explicitly specified Outputstates."""
     PRIMARY_OUTPUT_STATES = ()
@@ -909,7 +911,7 @@ class System(System_Base):
 
         # Required to defer assignment of self.controller by setter
         #     until the rest of the System has been instantiated
-        self.context.initialization_status = ContextFlags.INITIALIZING
+        self.initialization_status = ContextFlags.INITIALIZING
 
         processes = processes or []
         if not isinstance(processes, list):
@@ -955,9 +957,8 @@ class System(System_Base):
         prefs = SystemPreferenceSet(owner=self, prefs=prefs, context=context)
 
         if not context:
-            context = ContextFlags.COMPOSITION
-            self.context.initialization_status = ContextFlags.INITIALIZING
-            self.context.string = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
+            context = Context(source=ContextFlags.COMPOSITION)
+            self.initialization_status = ContextFlags.INITIALIZING
 
         self.default_execution_id = self.name
 
@@ -968,7 +969,7 @@ class System(System_Base):
                          prefs=prefs,
                          context=context)
 
-        self.context.initialization_status = ContextFlags.INITIALIZED
+        self.initialization_status = ContextFlags.INITIALIZED
         self.reinitialize_mechanisms_when = reinitialize_mechanisms_when
 
         # Assign controller
@@ -976,7 +977,7 @@ class System(System_Base):
 
         # Assign processing scheduler (learning_scheduler is assigned in _instantiate_learning_graph)
         if self.scheduler_processing is None:
-            self.scheduler_processing = Scheduler(system=self, execution_id=self.default_execution_id)
+            self.scheduler_processing = Scheduler(system=self, default_execution_id=self.default_execution_id)
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -1440,7 +1441,7 @@ class System(System_Base):
                             #    include it
                             if (isinstance(receiver, LearningMechanism) and
                                     receiver.learning_timing is LearningTiming.EXECUTION_PHASE):
-                                # If it is an AutoassociativeLearningMechanism, check that it projects to itself
+                                # If it is an AutoAssociativeLearningMechanism, check that it projects to itself
                                 if isinstance(receiver, AutoAssociativeLearningMechanism):
                                     if not receiver == sender_mech.learning_mechanism:
                                         raise SystemError("PROGRAM ERROR: {} is an {} that receives a projection "
@@ -1991,7 +1992,7 @@ class System(System_Base):
 
         # Assign scheduler for _execute_learning:
         if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph, execution_id=self.default_execution_id)
+            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph, default_execution_id=self.default_execution_id)
 
         # Assign conditions to scheduler_learning:
         #   insure that MappingProjections execute after all LearningMechanisms have executed in _execute_learning
@@ -2579,7 +2580,7 @@ class System(System_Base):
             for parameter_state in mech._parameter_states:
                 for projection in parameter_state.mod_afferents:
                     # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
-                    if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                    if projection.initialization_status == ContextFlags.DEFERRED_INIT:
                         proj_control_signal_specs = projection.control_signal_params or {}
                         proj_control_signal_specs.update({PROJECTIONS: [projection]})
                         control_signal_specs.append(proj_control_signal_specs)
@@ -2597,14 +2598,14 @@ class System(System_Base):
 
         condition_set = {}
         for item in self.execution_list:
-            if hasattr(item, CONDITION) and item.condition and not item in self.scheduler_processing.condition_set:
+            if hasattr(item, CONDITION) and item.condition and not item in self.scheduler_processing.conditions:
                 condition_set[item] = item.condition
         self.scheduler_processing.add_condition_set(condition_set)
 
         # FIX: DEAL WITH LEARNING PROJECTIONS HERE (ADD CONDITIONS ATTRIBUTE?)
         condition_set = {}
         for item in self.learning_execution_list:
-            if hasattr(item, CONDITION) and item.condition and not item in self.scheduler_learning.condition_set:
+            if hasattr(item, CONDITION) and item.condition and not item in self.scheduler_learning.conditions:
                 condition_set[item] = item.condition
         self.scheduler_learning.add_condition_set(condition_set)
 
@@ -2627,7 +2628,7 @@ class System(System_Base):
                     runtime_params[mechanism][param] = (runtime_params[mechanism][param], Always())
         return runtime_params
 
-    def initialize(self, execution_context=None):
+    def initialize(self, context=None):
         """Assign `initial_values <System.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and
         contained in recurrent_init_mechanisms.
         """
@@ -2637,16 +2638,18 @@ class System(System_Base):
         # FIX: ADD SOFT_CLAMP AND HARD_CLAMP OPTIONS
         # FIX: ONLY ASSIGN ONES THAT RECEIVE PROJECTIONS
         for mech, value in self.initial_values.items():
-            mech.initialize(value, execution_context=execution_context)
+            mech.initialize(value, context=context)
 
+    # execute previously always set source to ContextFlags.COMPOSITION
+    # @handle_external_context(source=ContextFlags.COMPOSITION, execution_phase=ContextFlags.PROCESSING)
     def execute(self,
                 input=None,
                 target=None,
-                execution_id=None,
+                context=None,
                 termination_processing=None,
                 termination_learning=None,
                 runtime_params=None,
-                context=None):
+                ):
         """Execute mechanisms in System in order specified by the `execution_graph <System.execution_graph>` attribute.
 
         Assign items of input to `ORIGIN` mechanisms
@@ -2689,10 +2692,10 @@ class System(System_Base):
         """
 
         if self.scheduler_processing is None:
-            self.scheduler_processing = Scheduler(system=self, execution_id=self.default_execution_id)
+            self.scheduler_processing = Scheduler(system=self, default_execution_id=self.default_execution_id)
 
         if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph, execution_id=self.default_execution_id)
+            self.scheduler_learning = Scheduler(graph=self.learning_execution_graph, default_execution_id=self.default_execution_id)
 
         self._add_mechanism_conditions(context=context)
 
@@ -2704,31 +2707,18 @@ class System(System_Base):
             self._component_execution_count = 0
 
         if not context:
-            context = ContextFlags.COMPOSITION
-            self._assign_context_values(
-                execution_id,
+            context = Context(
+                source=ContextFlags.COMPOSITION,
                 execution_phase=ContextFlags.PROCESSING,
-                string=EXECUTING + " " + SYSTEM + " " + self.name,
+                composition=self
             )
 
-        # Update execution_id for self and all mechanisms in graph (including learning) and controller
-        # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
-        # self.learning_execution_list
-        for mech in self.execution_graph:
-            mech._assign_context_values(execution_id, composition=self)
+        context.composition = self
 
-        for learning_mech in self.learning_execution_list:
-            learning_mech._assign_context_values(execution_id, composition=self)
-
-        if self.controller is not None:
-            self.controller._assign_context_values(execution_id, composition=self)
-            if self.enable_controller and self.controller.input_states:
-                for state in self.controller.input_states:
-                    for projection in state.all_afferents:
-                        projection.sender.owner._assign_context_values(execution_id, composition=self)
-
-        self._report_system_output = (self.prefs.reportOutputPref and
-                                      self.parameters.context.get(execution_id).execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING))
+        self._report_system_output = (
+            self.prefs.reportOutputPref
+            and context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING)
+        )
 
         if self._report_system_output:
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
@@ -2739,8 +2729,13 @@ class System(System_Base):
         num_origin_mechs = len(list(self.origin_mechanisms))
 
         if input is None:
-            if (self.prefs.verbosePref and not (self.parameters.context.get(execution_id).source == ContextFlags.COMMAND_LINE or
-                                                self.parameters.context.get(execution_id).initialization_status == ContextFlags.INITIALIZING)):
+            if (
+                self.prefs.verbosePref
+                and not (
+                    context.source == ContextFlags.COMMAND_LINE
+                    or self.initialization_status == ContextFlags.INITIALIZING
+                )
+            ):
                 print("- No input provided;  default will be used: {0}")
             input = np.zeros_like(self.defaults.variable)
             for i in range(num_origin_mechs):
@@ -2771,10 +2766,10 @@ class System(System_Base):
 
                     if system_input_state:
                         if isinstance(input, dict):
-                            system_input_state.parameters.value.set(input[origin_mech][j], execution_id, override=True)
+                            system_input_state.parameters.value._set(input[origin_mech][j], context)
 
                         else:
-                            system_input_state.parameters.value.set(input[j], execution_id, override=True)
+                            system_input_state.parameters.value._set(input[j], context)
                     else:
                         logger.warning("Failed to find expected SystemInputState "
                                        "for {} at input state number ({}), ({})".
@@ -2791,16 +2786,19 @@ class System(System_Base):
         self.termination_learning = termination_learning
 
         if self._report_system_output:
-            self._report_system_initiation(execution_id)
+            self._report_system_initiation(context)
 
 
         # Generate first frame of animation without any active_items
         if self._animate is not False:
-            # if this fails, the scheduler has no data for execution_id yet. It also may be the first, so fall back to default execution_id
+            # if this fails, the scheduler has no data for context.execution_id yet. It also may be the first, so fall back to default execution_id
             try:
-                self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif', execution_id=execution_id)
+                self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif', context=context)
             except KeyError:
-                self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif', execution_id=self.default_execution_id)
+                old_eid = context.execution_id
+                context.execution_id = self.default_execution_id
+                self.show_graph(active_items=INITIAL_FRAME, **self._animate, output_fmt='gif', context=context)
+                context.execution_id = old_eid
 
         # EXECUTE MECHANISMS
 
@@ -2810,71 +2808,64 @@ class System(System_Base):
         # sorted_list = list(object_item[0].name for object_item in self.execution_list)
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
+        context.add_flag(ContextFlags.PROCESSING)
         self._execute_processing(
-            execution_id=execution_id,
+            context=context,
             runtime_params=runtime_params,
             termination_processing=termination_processing,
-            context=context
-        )
-        outcome = self.terminal_mechanisms.get_output_state_values(execution_id)
 
-        if self.recordSimulationPref and self.parameters.context.get(execution_id).execution_phase == ContextFlags.SIMULATION:
+        )
+        context.remove_flag(ContextFlags.PROCESSING)
+
+        outcome = self.terminal_mechanisms.get_output_state_values(context)
+
+        if self.recordSimulationPref and ContextFlags.SIMULATION in context.execution_phase:
             self.simulation_results.append(outcome)
 
         # EXECUTE LEARNING FOR EACH PROCESS
 
         # Execute learning except for simulation runs
-        if self.parameters.context.get(execution_id).execution_phase != ContextFlags.SIMULATION and self.learning:
-            self._assign_context_values(
-                execution_id,
-                execution_phase=ContextFlags.LEARNING,
-                string=self.parameters.context.get(execution_id).string.replace(EXECUTING, LEARNING + ' ')
-            )
+        if ContextFlags.SIMULATION not in context.execution_phase and self.learning:
+            context.add_flag(ContextFlags.LEARNING)
+            self._execute_learning(target=target, context=context)
 
-            self._execute_learning(target=target, execution_id=execution_id, context=context)
-
-            self._assign_context_values(
-                execution_id,
-                execution_phase=ContextFlags.IDLE,
-                string=self.parameters.context.get(execution_id).string.replace(LEARNING, EXECUTING)
-            )
+            context.remove_flag(ContextFlags.LEARNING)
 
         # EXECUTE CONTROLLER
         # FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
         # FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-        if self.parameters.context.get(execution_id).execution_phase != ContextFlags.SIMULATION and self.enable_controller:
-            self.parameters.context.get(execution_id).execution_phase = ContextFlags.CONTROL
-            self.controller.parameters.context.get(execution_id).execution_phase = ContextFlags.PROCESSING
+        if ContextFlags.SIMULATION not in context.execution_phase and self.enable_controller:
+            context.add_flag(ContextFlags.CONTROL)
             try:
                 self.controller.execute(
-                    execution_id=execution_id,
+                    context=context,
                     runtime_params=None,
-                    context=context
+
                 )
 
                 if self._animate != False and SHOW_CONTROL in self._animate and self._animate[SHOW_CONTROL]:
-                    self.show_graph(active_items=self.controller, **self._animate, output_fmt='gif')
+                    self.show_graph(active_items=self.controller, **self._animate, output_fmt='gif', context=context)
                 self._component_execution_count += 1
 
                 if self._report_system_output:
                     print("{0}: {1} executed".format(self.name, self.controller.name))
 
             except AttributeError as error_msg:
-                if self.parameters.context.get(execution_id).initialization_status != ContextFlags.INITIALIZING:
+                if self.initialization_status != ContextFlags.INITIALIZING:
                     error_msg.args += ("PROGRAM ERROR: Problem executing controller ({}) for {}".format(self.controller.name, self.name),)
                     raise
 
-            self.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
+            context.remove_flag(ContextFlags.CONTROL)
 
         # Report completion of system execution and value of designated outputs
         if self._report_system_output:
-            self._report_system_completion(execution_id)
+            self._report_system_completion(context)
 
         return outcome
 
-    def _execute_processing(self, runtime_params, termination_processing, execution_id=None, context=None):
+    def _execute_processing(self, runtime_params, termination_processing, context=None):
         # Execute each Mechanism in self.execution_list, in the order listed during its phase
         # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
         # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update())
@@ -2884,12 +2875,12 @@ class System(System_Base):
                               'must be initialized before execution'.format(self.name))
         logger.debug('{0}.scheduler processing termination conditions: {1}'.format(self, termination_processing))
 
-        for next_execution_set in self.scheduler_processing.run(execution_id=execution_id, termination_conds=termination_processing):
+        for next_execution_set in self.scheduler_processing.run(context=context, termination_conds=termination_processing):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             i = 0
 
             if not self._animate is False and self._animate_unit is EXECUTION_SET:
-                self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif')
+                self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif', context=context)
 
             for mechanism in next_execution_set:
                 logger.debug('\tRunning Mechanism {0}'.format(mechanism))
@@ -2898,48 +2889,36 @@ class System(System_Base):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
 
-                context = ContextFlags.COMPOSITION
-                mechanism._assign_context_values(
-                    execution_id,
-                    string="Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]",
-                    composition=self
-                )
-
                 # Set up runtime params and context
                 execution_runtime_params = {}
                 if mechanism in runtime_params:
                     for param in runtime_params[mechanism]:
-                        if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing, execution_context=execution_id):
+                        if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing, context=context):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
-
-                mechanism.parameters.context.get(execution_id).execution_phase = self.parameters.context.get(execution_id).execution_phase
 
                 # FIX: DO THIS LOCALLY IN LearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
                 if (isinstance(mechanism, LearningMechanism) and
                         mechanism.learning_timing is LearningTiming.EXECUTION_PHASE):
-                    mechanism.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
-
+                    context.execution_phase = ContextFlags.LEARNING
                 # Execute
                 # # TEST PRINT:
                 # print("\nEXECUTING System._execute_processing\n")
-                mechanism.execute(execution_id=execution_id, runtime_params=execution_runtime_params, context=context)
+                mechanism.execute(context=context, runtime_params=execution_runtime_params)
 
                 if not self._animate is False and self._animate_unit is COMPONENT:
-                    self.show_graph(active_items=mechanism, **self._animate, output_fmt='gif')
+                    self.show_graph(active_items=mechanism, **self._animate, output_fmt='gif', context=context)
                 self._component_execution_count += 1
 
                 # Reset runtime params and context
-                if execution_id in mechanism._runtime_params_reset:
-                    for key in mechanism._runtime_params_reset[execution_id]:
-                        mechanism._set_parameter_value(key, mechanism._runtime_params_reset[execution_id][key], execution_id)
-                mechanism._runtime_params_reset[execution_id] = {}
+                if context.execution_id in mechanism._runtime_params_reset:
+                    for key in mechanism._runtime_params_reset[context.execution_id]:
+                        mechanism._set_parameter_value(key, mechanism._runtime_params_reset[context.execution_id][key], context)
+                mechanism._runtime_params_reset[context.execution_id] = {}
 
-                if execution_id in mechanism.function._runtime_params_reset:
-                    for key in mechanism.function._runtime_params_reset[execution_id]:
-                        mechanism.function._set_parameter_value(key, mechanism.function._runtime_params_reset[execution_id][key], execution_id)
-                mechanism.function._runtime_params_reset[execution_id] = {}
-
-                mechanism.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
+                if context.execution_id in mechanism.function._runtime_params_reset:
+                    for key in mechanism.function._runtime_params_reset[context.execution_id]:
+                        mechanism.function._set_parameter_value(key, mechanism.function._runtime_params_reset[context.execution_id][key], context)
+                mechanism.function._runtime_params_reset[context.execution_id] = {}
 
                 if self._report_system_output and  self._report_process_output:
 
@@ -2950,7 +2929,7 @@ class System(System_Base):
                     process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                     for process in process_keys_sorted:
                         if mechanism.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
-                            process._report_process_initiation(input=mechanism.get_input_values(execution_id)[0])
+                            process._report_process_initiation(input=mechanism.get_input_values(context)[0])
 
                     # REPORT COMPLETION OF PROCESS IF TERMINAL:
                     # Report completion of process(es) for which mechanism is a TERMINAL
@@ -2963,6 +2942,9 @@ class System(System_Base):
                         if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
                             process._report_process_completion()
 
+                # # TEST PRINT 7/22/19
+                # print(f'Executed {mechanism.name}: \n\tvariable: {mechanism.variable}\n\tvalue: {mechanism.value}')
+
             if i == 0:
                 # Zero input to first mechanism after first run (in case it is repeated in the pathway)
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
@@ -2970,14 +2952,13 @@ class System(System_Base):
                 pass
             i += 1
 
-    def _execute_learning(self, target=None, execution_id=None, context=None):
+    def _execute_learning(self, target=None, context=None):
         # Execute each LearningMechanism as well as LearningProjections in self.learning_execution_list
 
         # FIRST, if targets were specified as a function, call the function now
         #    (i.e., after execution of the pathways, but before learning)
         # Note:  this accomodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
-
         if not hasattr(self, "target"):
             self.target = self.targets
         if target is None or len(target) == 0:
@@ -2988,14 +2969,14 @@ class System(System_Base):
                 terminal_mechanism = self.target_mechanisms[i].input_states[SAMPLE].path_afferents[0].sender.owner
                 target_value = target[terminal_mechanism]
                 if callable(target_value):
-                    val = call_with_pruned_args(target_value, execution_context=execution_id, execution_id=execution_id, composition=self)
-                    self.target_input_states[i].parameters.value.set(val, execution_id, override=True)
+                    val = call_with_pruned_args(target_value, context=context, composition=self)
+                    self.target_input_states[i].parameters.value._set(val, context)
                 else:
-                    self.target_input_states[i].parameters.value.set(target_value, execution_id, override=True)
+                    self.target_input_states[i].parameters.value._set(target_value, context)
 
         elif isinstance(target, (list, np.ndarray)):
             for i in range(len(self.target_mechanisms)):
-                self.target_input_states[i].parameters.value.set(target[i], execution_id, override=True)
+                self.target_input_states[i].parameters.value._set(target[i], context)
 
         # THEN, execute all components involved in learning
         if self.scheduler_learning is None:
@@ -3003,20 +2984,19 @@ class System(System_Base):
                               'must be initialized before execution'.format(self.name))
         logger.debug('{0}.scheduler learning termination conditions: {1}'.format(self, self.termination_learning))
 
-        for next_execution_set in self.scheduler_learning.run(execution_id=execution_id, termination_conds=self.termination_learning):
+        for next_execution_set in self.scheduler_learning.run(context=context, termination_conds=self.termination_learning):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
 
             if (not self._animate is False and
                     self._animate_unit is EXECUTION_SET and
                     SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
                 # mech = [mech for mech in next_execution_set if isinstance(mech, Mechanism)]
-                self.show_graph(active_items=list(next_execution_set), **self._animate, output_fmt='gif')
+                self.show_graph(active_items=list(next_execution_set), **self._animate, output_fmt='gif', context=context)
 
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
 
-                component.parameters.context.get(execution_id).composition = self
-                component.parameters.context.get(execution_id).execution_phase = ContextFlags.LEARNING
+                context.execution_phase = ContextFlags.LEARNING
 
                 if isinstance(component, Mechanism):
                     params = None
@@ -3034,34 +3014,27 @@ class System(System_Base):
                                              component_type,
                                              component.name,
                                              re.sub(r'[\[,\],\n]','',str(process_names))))
-                    component.parameters.context.get(execution_id).string = context_str
-
                     # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-                    component.execute(execution_id=execution_id, runtime_params=params, context=context)
+                    component.execute(context=context, runtime_params=params)
+
+                    # # TEST PRINT 7/22/19
+                    # print(f'Executed {component.name}: \n\tvariable: {component.variable}\n\tvalue: {component.value}')
 
                 elif isinstance(component, MappingProjection):
                     processes = list(component.sender.owner.processes.keys())
-                    component.parameters.context.get(execution_id).string = "Updating {} for {} in {}".format(ParameterState.__name__,
-                                                                                 component.name, self.name)
-                    component._parameter_states[MATRIX].update(execution_id=execution_id, context=ContextFlags.COMPOSITION)
-
-                component.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
+                    component._parameter_states[MATRIX]._update(context=context)
 
                 if not self._animate is False:
                     if (self._animate_unit is COMPONENT and
                             SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
-                            self.show_graph(active_items=component, **self._animate, output_fmt='gif')
+                            self.show_graph(active_items=component, **self._animate, output_fmt='gif', context=context)
 
                 self._component_execution_count += 1
-
-                component.parameters.context.get(execution_id).execution_phase = ContextFlags.IDLE
 
                 # # TEST PRINT LEARNING:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
                 # # TEST PRINT LEARNING:
-                # print ("UPDATING WEIGHT UPDATES FOR {} in System [CONTEXT: {}]:".
-                #        format(component.name, component.parameters.context.get(execution_id).flags_string))
                 # print(component._parameter_states[MATRIX].value)
 
         # FINALLY report outputs
@@ -3079,10 +3052,12 @@ class System(System_Base):
                       # format(append_type_to_name(target_mech),
                       format(target_mech.name,
                              re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i)))
-                                                         for i in target_mech.output_state.parameters.value.get(execution_id)])),
+                                                         for i in target_mech.output_state.parameters.value._get(context)])),
                              ))
                              # process_names))
 
+    # correct here? happens in code but maybe should be COMMAND_LINE
+    @handle_external_context(source=ContextFlags.COMPOSITION)
     def run(self,
             inputs=None,
             num_trials=None,
@@ -3098,11 +3073,10 @@ class System(System_Base):
             termination_learning=None,
             runtime_params=None,
             reinitialize_values=None,
-            execution_id=None,
-            base_execution_id=None,
+            context=None,
+            base_context=Context(execution_id=None),
             animate=False,
-            context=None):
-
+            ):
         """Run a sequence of executions
 
         Call execute method for each execution in a sequence specified by inputs.  See :doc:`Run` for details of
@@ -3175,7 +3149,7 @@ class System(System_Base):
             in the dict to specify parameters of the animation.  If the **animate** argument is specified simply as
             `True`, defaults are used for all arguments of `show_graph <System.show_graph>` and the options below:
 
-            * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\ *EXECUTION_SET*\ ) -- specifies which Components to
+            * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components to
               treat as active in each call to `show_graph <System.show_graph>`. *COMPONENT* generates an image for the
               execution of each Component.  *EXECUTION_SET* generates an image for each `execution_set
               <System.execution_sets>`, showing all of the Components in that set as active.
@@ -3186,13 +3160,13 @@ class System(System_Base):
               If the number specified is less than the total number of trials being run, only the number specified are
               animated; if it is greater than the number of trials being run, only the number being run are animated.
 
-            * *MOVIE_NAME*: str (default=\ `name <System.name>` + 'movie') -- specifies the name to be used for the
+            * *MOVIE_NAME*: str (default=\\ `name <System.name>` + 'movie') -- specifies the name to be used for the
               movie file; it is automatically appended with '.gif'.
 
-            * *SAVE_IMAGES*: bool (default=\ `False`\ ) -- specifies whether to save each of the images used to
+            * *SAVE_IMAGES*: bool (default=\\ `False`\\ ) -- specifies whether to save each of the images used to
               construct the animation in separate gif files, in addition to the file containing the animation.
 
-            * *SHOW*: bool (default=\ `False`\ ) -- specifies whether to show the animation after it is constructed,
+            * *SHOW*: bool (default=\\ `False`\\ ) -- specifies whether to show the animation after it is constructed,
               using the OS's default viewer.
 
         Examples
@@ -3229,15 +3203,17 @@ class System(System_Base):
         if reinitialize_values is None:
             reinitialize_values = {}
 
-        if execution_id is None:
-            execution_id = self.default_execution_id
+        if context.execution_id is None:
+            context.execution_id = self.default_execution_id
 
-        # initialize from base context but don't overwrite any values already set for this execution_id
-        if self.parameters.context.get(execution_id) is None or not (ContextFlags.SIMULATION & self.parameters.context.get(execution_id).flags):
-            self._initialize_from_context(execution_id, base_execution_id, override=False)
+        context.composition = self
+
+        # initialize from base context but don't overwrite any values already set for this context
+        if ContextFlags.SIMULATION not in context.execution_phase:
+            self._initialize_from_context(context, base_context, override=False)
 
         for mechanism in reinitialize_values:
-            mechanism.reinitialize(*reinitialize_values[mechanism], execution_context=execution_id)
+            mechanism.reinitialize(*reinitialize_values[mechanism], context=context)
 
         self.initial_values = initial_values
 
@@ -3294,6 +3270,7 @@ class System(System_Base):
 
         logger.debug(inputs)
 
+        context.source = ContextFlags.COMPOSITION
         from psyneulink.core.globals.environment import run
         result = run(self,
                    inputs=inputs,
@@ -3309,8 +3286,7 @@ class System(System_Base):
                    termination_processing=termination_processing,
                    termination_learning=termination_learning,
                    runtime_params=runtime_params,
-                   execution_id=execution_id,
-                   context=ContextFlags.COMPOSITION)
+                   context=context)
 
         if self._animate is not False:
             # Save list of gifs in self._animation as movie file
@@ -3328,7 +3304,7 @@ class System(System_Base):
 
         return result
 
-    def _report_system_initiation(self, inputs=None, execution_id=None):
+    def _report_system_initiation(self, inputs=None, context=None):
         """Prints iniiation message, time_step, and list of Processes in System being executed
         """
 
@@ -3352,14 +3328,14 @@ class System(System_Base):
 
         else:
             try:
-                time = self.scheduler_processing.get_clock(execution_id).simple_time
+                time = self.scheduler_processing.get_clock(context).simple_time
             except KeyError:
                 time = self.scheduler_processing.clock.simple_time
 
             print("\n\'{}\'{} executing ********** (Time: {}) ".
                   format(self.name, system_string, time))
 
-    def _report_system_completion(self, execution_id=None):
+    def _report_system_completion(self, context=None):
         """Prints completion message and output_values of system
         """
 
@@ -3370,14 +3346,14 @@ class System(System_Base):
 
         # Print output value of primary (first) outputState of each terminal Mechanism in System
         # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
-        print("\n\'{}\'{} completed ***********(Time: {})".format(self.name, system_string, self.scheduler_processing.get_clock(execution_id).simple_time))
+        print("\n\'{}\'{} completed ***********(Time: {})".format(self.name, system_string, self.scheduler_processing.get_clock(context).simple_time))
         if self.learning:
             from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import MSE
             for mech in self.target_mechanisms:
                 if not MSE in mech.output_states:
                     continue
                 print("\n- MSE: {:0.3}".
-                      format(float(mech.output_states[MSE].parameters.value.get(execution_id))))
+                      format(float(mech.output_states[MSE].parameters.value._get(context))))
 
 
     # TBI:
@@ -3705,8 +3681,7 @@ class System(System_Base):
 
     @controller.setter
     def controller(self, control_mech_spec):
-        self.context.string = 'System.controller setter'
-        self._instantiate_controller(control_mech_spec, context=ContextFlags.PROPERTY)
+        self._instantiate_controller(control_mech_spec, context=Context(source=ContextFlags.PROPERTY))
 
     @property
     def control_signals(self):
@@ -3784,6 +3759,7 @@ class System(System_Base):
             [self.controller] if self.controller is not None else [],
         ))
 
+    @handle_external_context()
     def show_graph(self,
                    show_processes = False,
                    show_learning = False,
@@ -3805,7 +3781,7 @@ class System(System_Base):
                    prediction_mechanism_color='pink',
                    system_color = 'purple',
                    output_fmt='pdf',
-                   execution_id=NotImplemented,
+                   context=NotImplemented,
                    ):
         """Generate a display of the graph structure of Mechanisms and Projections in the System.
 
@@ -3931,10 +3907,10 @@ class System(System_Base):
             show_mechanism_structure
 
         COMMENT:
-             and, optionally, the `function <Component.function>` and `value <Component.value>` of each
-            (these can be specified using the **show_functions** and **show_values** arguments.  If this option
-            is specified, Projections are connected to and from the State that is the `sender <Projection.sender>` or
-            `receiver <Projection.receiver>` of each.
+            and, optionally, the `function <Component.function>` and `value <Component.value>` of each (these
+            can be specified using the **show_functions** and **show_values** arguments.  If this option is
+            specified, Projections are connected to and from the State that is the `sender <Projection_Base.sender>`
+            or `receiver <Projection_Base.receiver>` of each.
         COMMENT
 
         show_headers : bool : default False
@@ -4056,14 +4032,14 @@ class System(System_Base):
 
         # HELPER METHODS
 
-        if execution_id is NotImplemented:
-            execution_id = self.default_execution_id
+        if context is NotImplemented:
+            context = self.default_execution_id
 
         tc.typecheck
         def _assign_processing_components(G, sg, rcvr,
                                           processes:tc.optional(list)=None,
                                           subgraphs:tc.optional(dict)=None):
-            '''Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** '''
+            """Assign nodes to graph, or subgraph for rcvr in any of the specified **processes**."""
 
             from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
@@ -4129,7 +4105,7 @@ class System(System_Base):
             rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
             if show_mechanism_structure:
                 sg.node(rcvr_label,
-                        rcvr.show_structure(**mech_struct_args),
+                        rcvr._show_structure(**mech_struct_args),
                         color=rcvr_color,
                         rank=rcvr_rank,
                         penwidth=rcvr_penwidth)
@@ -4322,7 +4298,7 @@ class System(System_Base):
 
         tc.typecheck
         def _assign_learning_components(G, sg, lg, rcvr, processes:tc.optional(list)=None):
-            '''Assign learning nodes and edges to graph, or subgraph for rcvr in any of the specified **processes**'''
+            """Assign learning nodes and edges to graph, or subgraph for rcvr in any of the specified **processes**"""
 
             # if rcvr is Projection, skip (handled in _assign_processing_components)
             if isinstance(rcvr, MappingProjection):
@@ -4348,7 +4324,7 @@ class System(System_Base):
             # Implement node for Mechanism
             if show_mechanism_structure:
                 sg.node(rcvr_label,
-                        rcvr.show_structure(**mech_struct_args),
+                        rcvr._show_structure(**mech_struct_args),
                         rank=obj_mech_rank, color=rcvr_color, penwidth=rcvr_width)
             else:
                 sg.node(rcvr_label,
@@ -4546,7 +4522,7 @@ class System(System_Base):
             return True
 
         def _assign_control_components(G, sg, show_prediction_mechanisms):
-            '''Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
+            """Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes**."""
 
             controller = self.controller
             if controller in active_items:
@@ -4595,13 +4571,13 @@ class System(System_Base):
             objmech_label = self._get_label(objmech, show_dimensions, show_roles)
             if show_mechanism_structure:
                 sg.node(ctlr_label,
-                        controller.show_structure(**mech_struct_args),
+                        controller._show_structure(**mech_struct_args),
                         color=ctlr_color,
                         penwidth=ctlr_width,
                         rank = control_rank
                        )
                 sg.node(objmech_label,
-                        objmech.show_structure(**mech_struct_args),
+                        objmech._show_structure(**mech_struct_args),
                         color=objmech_color,
                         penwidth=ctlr_width,
                         rank = control_rank
@@ -4730,7 +4706,7 @@ class System(System_Base):
                                 pred_proj_color = prediction_mechanism_color
                                 pred_proj_width = str(default_width)
                             sg.node(mech.name,
-                                    shape=mech.show_structure(**mech_struct_args),
+                                    shape=mech._show_structure(**mech_struct_args),
                                     color=pred_mech_color,
                                     penwidth=pred_mech_width)
 
@@ -4950,18 +4926,18 @@ class System(System_Base):
         elif output_fmt == 'gif':
             if self.active_item_rendered or INITIAL_FRAME in active_items:
                 G.format = 'gif'
-                execution_phase = self.parameters.context.get(execution_id).execution_phase
+                execution_phase = context.execution_phase
                 if INITIAL_FRAME in active_items:
                     time_string = ''
                     phase_string = ''
-                elif execution_phase == ContextFlags.PROCESSING:
+                elif execution_phase & (ContextFlags.PROCESSING | ContextFlags.IDLE):
                     # time_string = repr(self.scheduler_processing.clock.simple_time)
-                    time = self.scheduler_processing.get_clock(execution_id).time
+                    time = self.scheduler_processing.get_clock(context).time
                     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
                         format(time.run, time.trial, time.pass_, time.time_step)
                     phase_string = 'Processing Phase - '
                 elif execution_phase == ContextFlags.LEARNING:
-                    time = self.scheduler_learning.get_clock(execution_id).time
+                    time = self.scheduler_learning.get_clock(context).time
                     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
                         format(time.run, time.trial, time.pass_, time.time_step)
                     phase_string = 'Learning Phase - '
@@ -4979,7 +4955,7 @@ class System(System_Base):
                     index = '-'
                 else:
                     index = repr(self._component_execution_count)
-                image_filename = repr(self.scheduler_processing.get_clock(execution_id).simple_time.trial) + '-' + index + '-'
+                image_filename = repr(self.scheduler_processing.get_clock(context).simple_time.trial) + '-' + index + '-'
                 image_file = self._animate_directory + '/' + image_filename + '.gif'
                 G.render(filename = image_filename,
                          directory=self._animate_directory,
@@ -5061,20 +5037,13 @@ class SystemInputState(OutputState):
             self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_STATE
         else:
             self.name = owner.name + "_" + name
-        self.context.initialization_status = ContextFlags.INITIALIZING
-        self.context.string = context
+        self.initialization_status = ContextFlags.INITIALIZING
         self.prefs = prefs
         self.log = Log(owner=self)
-        self.efferents = []
+        self.path_afferents = []
         self.owner = owner
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
-        self.parameters.value.set(variable, override=True)
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            self.efferents,
-        ))
+        self.parameters.value._set(variable, context)

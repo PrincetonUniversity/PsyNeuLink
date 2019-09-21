@@ -24,11 +24,11 @@ ACTION = AGENT_ACTION
 ACTION_REPORTING = 3
 SIMULATION_REPORTING = 2
 STANDARD_REPORTING = 1
-VERBOSE = SIMULATION_REPORTING
+VERBOSE = ACTION_REPORTING
 
 # ControlSignal parameters
 COST_RATE = -.05
-COST_BIAS = -3
+COST_BIAS = -5
 ALLOCATION_SAMPLES = [0, 500]
 
 
@@ -147,7 +147,7 @@ difference = Distance(metric=DIFFERENCE)
 #   function for ObjectiveMechanism
 
 def objective_function(variable):
-    '''Return difference between optimal and actual actions'''
+    """Return difference between optimal and actual actions"""
     actual_action = variable[0]
     optimal_action = variable[1]
     similarity = 1-difference([optimal_action, actual_action])/4
@@ -162,15 +162,15 @@ ocm = OptimizationControlMechanism(name='EVC',
                                                                           function=objective_function,
                                                                           monitor=[action_mech, optimal_action_mech]),
                                    # compute_reconfiguration_cost=Distance(metric=EUCLIDEAN, normalize=True),
-                                   control_signals=[ControlSignal(projections=(VARIANCE,player_percept),
+                                   control_signals=[ControlSignal(modulates=(VARIANCE, player_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
                                                                                                       bias=COST_BIAS)),
-                                                    ControlSignal(projections=(VARIANCE,predator_percept),
+                                                    ControlSignal(modulates=(VARIANCE, predator_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
                                                                                                       bias=COST_BIAS)),
-                                                    ControlSignal(projections=(VARIANCE,prey_percept),
+                                                    ControlSignal(modulates=(VARIANCE, prey_percept),
                                                                   allocation_samples=ALLOCATION_SAMPLES,
                                                                   intensity_cost_function=Exponential(rate=COST_RATE,
                                                                                                       bias=COST_BIAS))])
@@ -178,13 +178,13 @@ ocm = OptimizationControlMechanism(name='EVC',
 agent_comp.add_controller(ocm)
 agent_comp.enable_controller = True
 agent_comp.controller_mode = BEFORE
-agent_comp.controller_condition=All(AtRun(0), AtTrial(0))
+# agent_comp.controller_condition=All(AtRun(0), AtTrial(0))
 
 if SHOW_GRAPH:
     # agent_comp.show_graph()
-    agent_comp.show_graph(show_model_based_optimizer=True, show_cim=True)
-    # agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
-    # agent_comp.show_graph(show_model_based_optimizer=True,
+    agent_comp.show_graph(show_controller=True, show_cim=True)
+    # agent_comp.show_graph(show_controller=True, show_node_structure=True, show_cim=True)
+    # agent_comp.show_graph(show_controller=True,
     #                       show_cim=True,
     #                       show_node_structure=ALL,
     #                       show_headers=True,
@@ -210,7 +210,7 @@ def main():
         observation = ddqn_agent.env.reset()
         new_episode()
         while True:
-            execution_id = 'TEST'
+            context = 'TEST'
             if PNL_COMPILE:
                 BIN_EXECUTE = 'LLVM'
             else:
@@ -236,7 +236,7 @@ def main():
                                                  predator_percept:[observation[predator_coord_slice]],
                                                  prey_percept:[observation[prey_coord_slice]],
                                                  optimal_action_mech:optimal_action},
-                                         execution_id=execution_id,
+                                         context=context,
                                          bin_execute=BIN_EXECUTE,
                                          )
             agent_action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
@@ -246,16 +246,16 @@ def main():
                     print('\nSIMULATION RESULTS:')
                     for sample, value in zip(ocm.saved_samples, ocm.saved_values):
                         print(f'\t\tSample: {sample} Value: {value}')
-                # print(f'\nOCM Allocation:\n\t{repr(list(np.squeeze(ocm.parameters.control_allocation.get(execution_id))))})
+                # print(f'\nOCM Allocation:\n\t{repr(list(np.squeeze(ocm.parameters.control_allocation.get(context))))})
                 print(f'\nOCM:'
                       f'\n\tControlSignals:'
-                      f'\n\t\tPlayer:\t\t{ocm.control_signals[0].parameters.value.get(execution_id)}'
-                      f'\n\t\tPredator\t{ocm.control_signals[1].parameters.value.get(execution_id)}'
-                      f'\n\t\tPrey:\t\t{ocm.control_signals[2].parameters.value.get(execution_id)}'
+                      f'\n\t\tPlayer:\t\t{ocm.control_signals[0].parameters.value.get(context)}'
+                      f'\n\t\tPredator\t{ocm.control_signals[1].parameters.value.get(context)}'
+                      f'\n\t\tPrey:\t\t{ocm.control_signals[2].parameters.value.get(context)}'
                       f'\n\n\tControlSignal Costs:'
-                      f'\n\t\tPlayer:\t\t{ocm.control_signals[0].parameters.cost.get(execution_id)}'
-                      f'\n\t\tPredator:\t{ocm.control_signals[1].parameters.cost.get(execution_id)}'
-                      f'\n\t\tPrey:\t\t{ocm.control_signals[2].parameters.cost.get(execution_id)}')
+                      f'\n\t\tPlayer:\t\t{ocm.control_signals[0].parameters.cost.get(context)}'
+                      f'\n\t\tPredator:\t{ocm.control_signals[1].parameters.cost.get(context)}'
+                      f'\n\t\tPrey:\t\t{ocm.control_signals[2].parameters.cost.get(context)}')
 
             if VERBOSE >= ACTION_REPORTING:
                 print(f'OUTER LOOP RUN RESULTS:{run_results}')
@@ -265,14 +265,14 @@ def main():
                 if agent_comp.controller_mode is BEFORE:
                     print_controller()
                 print(f'\nObservations:'
-                      f'\n\tPlayer:\n\t\tveridical: {player_percept.parameters.variable.get(execution_id)}'
-                      f'\n\t\tperceived: {player_percept.parameters.value.get(execution_id)}'
-                      f'\n\tPredator:\n\t\tveridical: {predator_percept.parameters.variable.get(execution_id)}'
-                      f'\n\t\tperceived: {predator_percept.parameters.value.get(execution_id)}'
-                      f'\n\tPrey:\n\t\tveridical: {prey_percept.parameters.variable.get(execution_id)}'
-                      f'\n\t\tperceived: {prey_percept.parameters.value.get(execution_id)}'
+                      f'\n\tPlayer:\n\t\tveridical: {player_percept.parameters.variable.get(context)}'
+                      f'\n\t\tperceived: {player_percept.parameters.value.get(context)}'
+                      f'\n\tPredator:\n\t\tveridical: {predator_percept.parameters.variable.get(context)}'
+                      f'\n\t\tperceived: {predator_percept.parameters.value.get(context)}'
+                      f'\n\tPrey:\n\t\tveridical: {prey_percept.parameters.variable.get(context)}'
+                      f'\n\t\tperceived: {prey_percept.parameters.value.get(context)}'
                       f'\n\nActions:\n\tAgent: {agent_action}\n\tOptimal: {optimal_action}'
-                      f'\n\nOutcome:\n\t{ocm.objective_mechanism.parameters.value.get(execution_id)}'
+                      f'\n\nOutcome:\n\t{ocm.objective_mechanism.parameters.value.get(context)}'
                       )
                 if agent_comp.controller_mode is AFTER:
                     print_controller()
