@@ -913,9 +913,6 @@ class LCControlMechanism(ControlMechanism):
 
         return new_out, builder
 
-    def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
-        return func_in, builder
-
     @tc.typecheck
     def _add_system(self, system, role:str):
         super()._add_system(system, role)

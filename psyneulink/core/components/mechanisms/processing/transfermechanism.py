@@ -1423,14 +1423,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return builder
 
-    def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
-        # LLVM version of parse input variable
-        # FIXME: Should this be more targeted?
-        # FIXME: Remove this workaround
-        if func.args[2].type != func_in.type:
-            func_in = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        return func_in, builder
-
     def _execute(self,
         variable=None,
         context=None,
