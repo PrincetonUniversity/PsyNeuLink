@@ -207,7 +207,7 @@ class GatingProjection(ModulatoryProjection_Base):
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default see ModulatoryProjection `name <ModulatoryProjection.name>`
+    name : str : default see ModulatoryProjection `name <ModulatoryProjection_Base.name>`
         specifies the name of the GatingProjection.
 
     prefs : PreferenceSet or specification dict : default Projection.classPreferences
@@ -244,17 +244,17 @@ class GatingProjection(ModulatoryProjection_Base):
        multiplies the `value <GatingProjection.value>` of the GatingProjection after applying `exponent
        <GatingProjection.exponent>`, and before combining it with any others that project to the same `InputState`
        or `OutputState` to determine how that State's `variable <State.variable>` is modified (see description in
-       `Projection <Projection_Weight_and_Exponent>` for details).
+       `Projection <Projection_Weight_Exponent>` for details).
 
     exponent : number
         exponentiates the `value <GatingProjection.value>` of the GatingProjection, before applying `weight
         <ControlProjection.weight>`, and before combining it with any others that project to the same `InputState`
        or `OutputState` to determine how that State's `variable <State.variable>` is modified (see description in
-       `Projection <Projection_Weight_and_Exponent>` for details).
+       `Projection <Projection_Weight_Exponent>` for details).
 
     name : str
         name of the GatingProjection; if it is not specified in the **name** argument of its constructor,
-        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection.name>`;
+        a default name is assigned (see ModulatoryProjection `name <ModulatoryProjection_Base.name>`;
         also see `Naming` for conventions regarding duplicate names).
 
     prefs : PreferenceSet or specification dict

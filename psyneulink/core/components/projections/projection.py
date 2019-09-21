@@ -525,7 +525,7 @@ class Projection_Base(Projection):
     ----------
 
     variable : value
-        input to Projection, received from OutputState.value of `sender <Projection_Base.sender>`.
+        input to Projection, received from `value <OutputState.value>` of `sender <Projection_Base.sender>`.
 
     sender : State
         State from which Projection receives its input (see `Projection_Sender` for additional information).
@@ -534,7 +534,7 @@ class Projection_Base(Projection):
         State to which Projection sends its output  (see `Projection_Receiver` for additional information)
 
     value : value
-        Output of Projection, transmitted as variable to InputState of `receiver <Projection_Base.receiver>`.
+        output of Projection, transmitted to variable of function of its `receiver <Projection_Base.receiver>`.
 
     parameter_states : ContentAddressableList[str, ParameterState]
         a list of the Projection's `ParameterStates <Projection_ParameterStates>`, one for each of its specifiable
@@ -1620,9 +1620,8 @@ def _parse_connection_specs(connectee_state_type,
                                               mech_state_attribute=mech_state_attribute,
                                               projection_socket=projection_socket)
             except StateError as e:
-                raise ProjectionError("Problem with specification for {} in {} specification for {}: ".
-                                      format(State.__name__, Projection.__name__, owner.name) + e.error_value)
-
+                raise ProjectionError(f"Problem with specification for {State.__name__} in {Projection.__name__} "
+                                      f"specification for {owner.name}: " + e.error_value)
 
             # Check compatibility with any State(s) returned by _get_state_for_socket
 

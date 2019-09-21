@@ -119,7 +119,7 @@ lvoc = pnl.OptimizationControlMechanism(
         modulates=[(pnl.SLOPE, color_task), ('color_control', word_task)],
         # function=pnl.ReLU,
         function=pnl.Logistic,
-        cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
+        cost_options=[pnl.CostFunctions.INTENSITY, pnl.CostFunctions.ADJUSTMENT],
         intensity_cost_function=pnl.Exponential(rate=0.25, bias=-3),
         adjustment_cost_function=pnl.Exponential(rate=0.25, bias=-3),
         # allocation_samples=[i / 2 for i in list(range(0, 50, 1))]

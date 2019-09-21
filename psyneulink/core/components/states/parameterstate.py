@@ -176,7 +176,7 @@ In the following example, a Mechanism is created by specifying two of its parame
     ...                         noise=pnl.ControlSignal(),
     ...                         function=pnl.Logistic(
     ...                                         gain=(0.5, pnl.ControlSignal),
-    ...                                         bias=(1.0, pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
+    ...                                         bias=(1.0, pnl.ControlSignal(modulation=pnl.ADDITIVE))))
 
 COMMENT:
     If assigning a default ControlSignal makes the noise value the same as the
@@ -218,7 +218,7 @@ The example below shows how to specify the parameters in the first example using
     ...                              pnl.FUNCTION: pnl.Logistic,
     ...                              pnl.FUNCTION_PARAMS:{
     ...                                     pnl.GAIN:(0.5,pnl.ControlSignal),
-    ...                                     pnl.BIAS:(1.0,pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))}})
+    ...                                     pnl.BIAS:(1.0,pnl.ControlSignal(modulation=pnl.ADDITIVE))}})
 
 There are several things to note here.
 
@@ -357,15 +357,15 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Component, function_type, method_type, parameter_keywords
-from psyneulink.core.components.functions.function import ModulationParam, get_param_value_for_keyword
+from psyneulink.core.components.functions.function import get_param_value_for_keyword
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
-    LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
-    PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
+    ADDITIVE, CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, DISABLE, FUNCTION, FUNCTION_PARAMS, \
+    LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, MULTIPLICATIVE, NAME, OVERRIDE, PARAMETER_STATE, PARAMETER_STATES, \
+    PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities \
@@ -483,7 +483,7 @@ class ParameterState(State_Base):
         a list of the `ModulatoryProjection <ModulatoryProjection>` that project to the ParameterState (i.e.,
         for which it is a `receiver <Projection_Base.receiver>`); these can be
         `ControlProjection(s) <ControlProjection>` and/or `LearningProjection(s) <LearningProjection>`,
-        but not `GatingProjection <GatingProjection>`.  The `value <ModulatoryProjection.value>` of each
+        but not `GatingProjection <GatingProjection>`.  The `value <ModulatoryProjection_Base.value>` of each
         must match the format (number and types of elements) of the ParameterState's
         `variable <ParameterState.variable>`.
 

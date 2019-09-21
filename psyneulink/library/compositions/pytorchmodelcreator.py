@@ -211,7 +211,7 @@ class PytorchModelCreator(torch.nn.Module):
                 bias = forward_info[1]
                 if bias is not None:
                     if "no_ref_pass" not in debug_env:
-                        node_params.append(bias.detach().numpy().ctypes.data)
+                        node_params += [bias.detach().numpy().ctypes.data]
                     else:
                         node_params.append(bias.detach().numpy())
 

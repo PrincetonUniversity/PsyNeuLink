@@ -21,6 +21,7 @@ Sections
   * `ModulatoryMechanism_Structure`
       - `ModulatoryMechanism_Input`
       - `ModulatoryMechanism_Function`
+      - `ModulatoryMechanism_Output`
   * `ModulatoryMechanism_Execution`
   * `ModulatoryMechanism_Examples`
   * `ModulatoryMechanism_Class_Reference`
@@ -248,14 +249,6 @@ Structure
 ~~~~~~~
 
 By default, a ModulatoryMechanism has a single (`primary <InputState_Primary>`) `input_state
-<ModulatoryMechanism.input_state>` that is named *OUTCOME*.  If its `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>` is implemented, then it receives a MappingProjection from that
-ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Output>`, the value of which is also stored in the
-ModulatoryMechanism's `outcome  <ModulatoryMechanism.outcome>` attribute.  This is used as the input to the
-ModulatoryMechanism's `function <ModulatoryMechanism.function>`, that determines its `modulatory_allocation
-<ModulatoryMechanism.modulatory_allocation>`.
-
-By default, a ModulatoryMechanism has a single (`primary <InputState_Primary>`) `input_state
 <ModulatoryMechanism.input_state>` that is named *OUTCOME*.  If the ModulatoryMechanism has an `objective_mechanism
 <ModulatoryMechanism.objective_mechanism>`, then the *OUTCOME* `input_state <ModulatoryMechanism.input_state>` receives
 a single `MappingProjection` from the `objective_mechanism <ModulatoryMechanism.objective_mechanism>`\\'s *OUTCOME*
@@ -461,12 +454,10 @@ import typecheck as tc
 import warnings
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import \
-    Function_Base, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
-# from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
 from psyneulink.core.components.states.state import State
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
@@ -480,7 +471,7 @@ from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGa
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
     EID_SIMULATION, GATING_SIGNAL, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
-    MODULATORY_PROJECTION, MODULATORY_SIGNAL, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, \
+    MODULATORY_PROJECTION, MODULATORY_SIGNAL, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, MULTIPLICATIVE, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -549,8 +540,14 @@ def _gating_allocation_setter(value, owning_component=None, context=None):
 def _modulatory_mechanism_costs_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
-        costs = [c.compute_costs(c.parameters.variable._get(context), context=context)
+        # # MODIFIED 8/30/19 OLD:
+        # costs = [c.compute_costs(c.parameters.variable._get(context), context=context)
+        #          for c in owning_component.control_signals]
+        # MODIFIED 8/30/19 NEW: [JDC]
+        # FIX 8/30/19: SHOULDN'T THIS JUST GET ControlSignal.cost FOR EACH ONE?
+        costs = [c.compute_costs(c.parameters.value._get(context), context=context)
                  for c in owning_component.control_signals]
+        # MODIFIED 8/30/19 END
         return costs
 
     except TypeError:
@@ -563,9 +560,7 @@ def _outcome_getter(owning_component=None, context=None):
         return None
 
 def _net_outcome_getter(owning_component=None, context=None):
-    # NOTE: In cases where there is a reconfiguration_cost,
-    # that cost is not included in the net_outcome
-
+    # NOTE: In cases where there is a reconfiguration_cost, that cost is not included in the net_outcome
     try:
         c = owning_component
         return c.compute_net_outcome(c.parameters.outcome._get(context),
@@ -633,7 +628,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         function=DefaultAllocationFunction,                      \
         default_allocation=None,                                 \
         modulatory_signals=None,                                 \
-        modulation=ModulationParam.MULTIPLICATIVE                \
+        modulation=MULTIPLICATIVE                                \
         combine_costs=np.sum,                                    \
         compute_reconfiguration_cost=None,                       \
         compute_net_outcome=lambda x,y:x-y,                      \
@@ -714,7 +709,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         which the **default_allocation** was not specified in its constructor (see default_allocation
         <ModulatoryMechanism.default_allocation>` for additional details).
 
-    modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
+    modulation : ModulationParam : MULTIPLICATIVE
         specifies the default form of modulation used by the ModulatoryMechanism's `ControlSignals <ControlSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
@@ -748,11 +743,19 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
     Attributes
     ----------
 
+    COMMENT:
     system : System_Base
         The `System` for which the ModulatoryMechanism is a `controller <System>`.  Note that this is distinct from
         a Mechanism's `systems <Mechanism_Base.systems>` attribute, which lists all of the Systems to which a
         `Mechanism` belongs -- a ModulatoryMechanism can belong to but not be the `controller of a Composition
         <ModulatoryMechanism_Composition_Controller>`.
+    COMMENT
+
+    composition : Composition
+        The `Composition` for which the ModulatoryMechanism is a `controller <Composition.controller>`
+        (see `<`ModulatoryMechanism_Composition_Controller` for additional details).  Note that a ModulatoryMechanism
+        can belong to but not be the `controller <Composition.controller>` of a Composition;  if the ModulatoryMechanism
+        is *not* a `controller <Composition.controller>` of a Composition, this attribute does not exist.
 
     objective_mechanism : ObjectiveMechanism
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ModulatoryMechanism's
@@ -793,7 +796,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         See documentation for **default_allocation** argument of ModulatorySignal constructor for additional details.
 
     modulatory_signals : ContentAddressableList[ModulatorySignal]
-        list of the ModulatoryMechanisms `ControlSignals <ControlSignals>` and `GatingSignals <GatingSignals>`.
+        list of the ModulatoryMechanism's `ControlSignals <ControlSignals>` and `GatingSignals <GatingSignals>`.
         COMMENT:
         TBI FOR COMPOSITION
         including any inherited from a `system <ModulatoryMechanism.system>` for which it is a `controller
@@ -991,7 +994,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                 modulation
                     see `modulation <ModulatoryMechanism.modulation>`
 
-                    :default value: ModulationParam.MULTIPLICATIVE
+                    :default value: MULTIPLICATIVE
                     :type: `ModulationParam`
 
                 net_outcome
@@ -1043,7 +1046,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         simulation_ids = Parameter([], user=False)
 
-        modulation = ModulationParam.MULTIPLICATIVE
+        modulation = MULTIPLICATIVE
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -1066,7 +1069,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                        OutputState,
                                                        ControlSignal,
                                                        GatingSignal))=None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
+                 modulation:tc.optional(str)=MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
                  compute_net_outcome:is_function_type=lambda outcome, cost : outcome - cost,
@@ -1162,6 +1165,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                 f"it must be an {OutputState.__name__} or a {Mechanism.__name__}.")
                 # If ModulatoryMechanism has been assigned to a System, check that
                 #    all the items in the list used to specify objective_mechanism are in the same System
+                # FIX: TBI FOR COMPOSITION
                 if self.system:
                     if not isinstance(spec, (list, ContentAddressableList)):
                         spec = [spec]
@@ -1427,6 +1431,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         """
         from psyneulink.core.components.states.state import _instantiate_state, StateError
         from psyneulink.core.components.projections.projection import ProjectionError
+        from psyneulink.core.components.states.state import StateError
 
         if self._output_states is None:
             self._output_states = []
@@ -1445,7 +1450,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             if not type(modulatory_signal) in convert_to_list(self.outputStateTypes):
                 raise ProjectionError(f'{type(modulatory_signal)} inappropriate for {self.name}')
 
-        except (StateError, ProjectionError):
+        except (ProjectionError, StateError):
             try:
                 modulatory_signal = _instantiate_state(state_type=GatingSignal,
                                                        owner=self,
@@ -1456,8 +1461,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                        state_spec=mod_spec,
                                                        context=context)
             except StateError as e:
-                raise ModulatoryMechanismError(f"PROGRAM ERROR: Unrecognized {repr(MODULATORY_SIGNAL)} "
-                                               f"specification for {self.name} ({modulatory_signal});"
+                raise ModulatoryMechanismError(f"\nPROGRAM ERROR: Unrecognized {repr(MODULATORY_SIGNAL)} "
+                                               f"specification for {self.name} ({modulatory_signal}); \n"
                                                f"ERROR MESSAGE: {e.args[0]}")
 
         modulatory_signal.owner = self

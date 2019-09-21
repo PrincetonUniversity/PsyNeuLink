@@ -383,8 +383,8 @@ The three types of States are shown schematically in the figure below, and descr
 InputStates
 ^^^^^^^^^^^
 
-These receive, aggregate and represent the input to a Mechanism, and provide this to the Mechanism's `function
-<Mechanism_Base.function>`. Usually, a Mechanism has only one (`primary <InputState_Primary>`) `InputState`,
+These receive, potentially combine, and represent the input to a Mechanism, and provide this to the Mechanism's
+`function <Mechanism_Base.function>`. Usually, a Mechanism has only one (`primary <InputState_Primary>`) `InputState`,
 identified in its `input_state <Mechanism_Base.input_state>` attribute. However some Mechanisms have more than one
 InputState. For example, a `ComparatorMechanism` has one InputState for its **SAMPLE** and another for its **TARGET**
 input. All of the Mechanism's InputStates (including its primary InputState <InputState_Primary>` are listed in its
@@ -945,7 +945,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, function_type, method_type
-from psyneulink.core.components.functions.function import FunctionOutputType, ADDITIVE_PARAM, MULTIPLICATIVE_PARAM
+from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.core.components.states.inputstate import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputState
@@ -955,12 +955,13 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import REMOVE_STATES, _parse_state_spec
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
-    INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
-    INPUT_LABELS_DICT, INPUT_STATE, INPUT_STATES, INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
+    ADDITIVE_PARAM, CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_PHASE, \
+    FUNCTION, FUNCTION_PARAMS, INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
+    INPUT_LABELS_DICT, INPUT_STATE, INPUT_STATES, INPUT_STATE_VARIABLES, \
+    MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
     OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, \
-    PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, PROJECTIONS, \
-    REFERENCE_VALUE, TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
+    PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, PROJECTIONS, REFERENCE_VALUE, \
+    TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -2184,12 +2185,12 @@ class Mechanism_Base(Mechanism):
             Execution sequence:
             - Call self.input_state.execute() for each entry in self.input_states:
                 + execute every self.input_state.path_afferents.[<Projection>.execute()...]
-                + aggregate results and/or gate state using self.input_state.function()
+                + combine results and/or gate state using self.input_state.function()
                 + assign the result in self.input_state.value
             - Call every self.params[<ParameterState>].execute(); for each:
                 + execute self.params[<ParameterState>].mod_afferents.[<Projection>.execute()...]
                     (usually this is just a single ControlProjection)
-                + aggregate results for each ModulationParam or assign value from an OVERRIDE specification
+                + combine results for each ModulationParam or assign value from an OVERRIDE specification
                 + assign the result to self.params[<ParameterState>].value
             - Call subclass' self.execute(params):
                 - use self.input_state.value as its variable,

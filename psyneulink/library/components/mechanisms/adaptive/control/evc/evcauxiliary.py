@@ -126,7 +126,7 @@ class ValueFunction(EVCAuxiliaryFunction):
     ValueFunction takes as its arguments an outcome (a value representing the performance of a `System`)
     and list of costs (each reflecting the `cost <ControlSignal.cost>` of a `ControlSignal` of the `controller
     System.controller` of that System), and returns an `expected value of control (EVC) <EVCControlMechanism_EVC>`
-    based on these (along with the outcome and aggregation of costs used to calculate the EVC).
+    based on these (along with the outcome and combination of costs used to calculate the EVC).
 
     ValueFunction is the default for an EVCControlMechanism's `value_function <EVCControlMechanism.value_function>`
     attribute, and it is called by `ControlSignalGridSearch` (the EVCControlMechanism's default `function
@@ -562,7 +562,7 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context):
         context (value): context passed to ctlr.update
 
     Returns (float, float, float):
-        (EVC_current, outcome, aggregated_costs)
+        (EVC_current, outcome, combined_costs)
 
     """
     # # TEST PRINT:

@@ -1109,7 +1109,9 @@ class Component(object, metaclass=ComponentsMeta):
         # INSTANTIATE ATTRIBUTES BEFORE FUNCTION
         # Stub for methods that need to be executed before instantiating function
         #    (e.g., _instantiate_sender and _instantiate_receiver in Projection)
-        self._instantiate_attributes_before_function(function=function, context=context)
+        # Allow _instantiate_attributes_before_function of subclass
+        #    to modify/replace function arg provided in constructor (e.g. TransferWithCosts)
+        function = self._instantiate_attributes_before_function(function=function, context=context) or function
 
         # INSTANTIATE FUNCTION
         #    - assign initial function parameter values from ParameterStates,
@@ -1198,7 +1200,7 @@ class Component(object, metaclass=ComponentsMeta):
             if p.name not in black_list and not isinstance(p, ParameterAlias):
                 val = p.get(context)
                 # Check if the value is string (like integration_method)
-                return not isinstance(val, str)
+                return not isinstance(val, (str, ComponentsMeta))
             return False
 
         return filter(_is_compilation_param, self.parameters)
