@@ -293,9 +293,9 @@ PCTC.show_graph(show_dimensions=pnl.ALL)  # ,show_mechanism_structure=pnl.VALUES
 # Create threshold function -------------------------------------------------------------------------------------------
 
 
-def pass_threshold(response_layer, thresh, execution_context):
-    results1 = response_layer.get_output_values(execution_context)[0][0]  # red response
-    results2 = response_layer.get_output_values(execution_context)[0][1]  # green response
+def pass_threshold(response_layer, thresh, context):
+    results1 = response_layer.get_output_values(context)[0][0]  # red response
+    results2 = response_layer.get_output_values(context)[0][1]  # green response
     # print(results1)
     # print(results2)
     if results1 >= thresh or results2 >= thresh:
@@ -370,10 +370,10 @@ color_feature_layer.log.clear_entries()
 word_feature_layer.log.clear_entries()
 task_demand_layer.log.clear_entries()
 
-color_feature_layer.reinitialize([[0, 0]], execution_context=PCTC)
-word_feature_layer.reinitialize([[0, 0]], execution_context=PCTC)
-response_layer.reinitialize([[0, 0]], execution_context=PCTC)
-task_demand_layer.reinitialize([[0, 0]], execution_context=PCTC)
+color_feature_layer.reinitialize([[0, 0]], context=PCTC)
+word_feature_layer.reinitialize([[0, 0]], context=PCTC)
+response_layer.reinitialize([[0, 0]], context=PCTC)
+task_demand_layer.reinitialize([[0, 0]], context=PCTC)
 
 # Run neutral trials --------------------------------------------------------------------------------------------------
 # Set input projections back to 0 for settling period
@@ -436,10 +436,10 @@ color_feature_layer.log.clear_entries()
 word_feature_layer.log.clear_entries()
 task_demand_layer.log.clear_entries()
 
-color_feature_layer.reinitialize([[0, 0]], execution_context=PCTC)
-word_feature_layer.reinitialize([[0, 0]], execution_context=PCTC)
-response_layer.reinitialize([[0, 0]], execution_context=PCTC)
-task_demand_layer.reinitialize([[0, 0]], execution_context=PCTC)
+color_feature_layer.reinitialize([[0, 0]], context=PCTC)
+word_feature_layer.reinitialize([[0, 0]], context=PCTC)
+response_layer.reinitialize([[0, 0]], context=PCTC)
+task_demand_layer.reinitialize([[0, 0]], context=PCTC)
 
 # Run incongruent trials ----------------------------------------------------------------------------------------------
 # Set input projections back to 0 for settling period

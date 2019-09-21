@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to PsyNeuLink &mdash; PsyNeuLink 0.5.3.2+1.g71d8a0b documentation</title>
+  <title>Welcome to PsyNeuLink &mdash; PsyNeuLink 0.5.3.2+749.g546edf4 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+1.g71d8a0b',
+              VERSION:'0.5.3.2+749.g546edf4',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -69,7 +69,7 @@
             
             
               <div class="version">
-                0.5.3.2+1
+                0.5.3.2+749
               </div>
             
           
@@ -262,9 +262,8 @@ interpreted vs. compiled).</p>
 <p>That said, priorities for ongoing development of PsyNeuLink are:  i) acceleration, using just-in-time
 compilation methods and parallelization; ii) enhancement of the API to facilitate wrapping modules from
 other packages for integration into the PsyNeuLink environment (examples currently exist for Pytorch and Emergent); iii)
-integration of tools for parameter estimation, model comparison and data fitting; and iv) a graphic interface for the</p>
-<blockquote>
-<div>construction of models and realtime display of their execution.</div></blockquote>
+integration of tools for parameter estimation, model comparison and data fitting; and iv) a graphic interface for the
+construction of models and realtime display of their execution.</p>
 </div>
 <div class="section" id="environment-overview">
 <span id="overview"></span><h2>Environment Overview<a class="headerlink" href="#environment-overview" title="Permalink to this headline">¶</a></h2>
@@ -287,8 +286,23 @@ switch to your preferred python3 environment, then run</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
 </pre></div>
 </div>
+<p>Dependencies that are automatically installed (except those noted as optional) include:</p>
+<blockquote>
+<div><ul class="simple">
+<li>numpy (version 1.16)</li>
+<li>matplotlib</li>
+<li>toposort (version 1.4)</li>
+<li>typecheck-decorator (version 1.2)</li>
+<li>pillow</li>
+<li>llvmlite</li>
+<li>mpi4py (optional)</li>
+<li>autograd (optional)</li>
+</ul>
+</div></blockquote>
 <p>Lists of required packages for PsyNeuLink, developing PsyNeuLink, and running the PsyNeuLink tutorial are also
 stored in pip-style <code class="xref any docutils literal"><span class="pre">requirements.txt</span></code>, <code class="xref any docutils literal"><span class="pre">dev_requirements.txt</span></code>, and <code class="xref any docutils literal"><span class="pre">tutorial_requirements.txt</span></code> in the source code.</p>
+<p>PsyNeuLink is an open source project maintined on <a class="reference external" href="https://github.com">GitHub</a>. The repo can be cloned
+from <a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink">here</a>.</p>
 <p>If you have trouble installing the package, or run into other problems, please contact <a class="reference external" href="mailto:psyneulinkhelp&#37;&#52;&#48;princeton&#46;edu">psyneulinkhelp<span>&#64;</span>princeton<span>&#46;</span>edu</a>.</p>
 </div>
 <div class="section" id="tutorial">
@@ -331,7 +345,9 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
 <li><strong>Justin Junge</strong>, Department of Psychology, Princeton University</li>
 <li><strong>Kristen Manning</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Katherine Mantel</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Dillon Smith</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Markus Spitzer</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>David Turner</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Jan Vesely</strong>, Department of Computer Science, Rutgers University</li>
 <li><strong>Changyan Wang</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Nate Wilson</strong>, Princeton Neuroscience Institute, Princeton University</li>
@@ -341,6 +357,7 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
 <li><strong>Abhishek Bhattacharjee</strong>, Department of Computer Science, Rutgers University</li>
 <li><strong>Mihai Capota</strong>, Intel Labs, Intel Corporation</li>
 <li><strong>Bryn Keller</strong>, Intel Labs, Intel Corporation</li>
+<li><strong>Susan Liu</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Garrett McGrath</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Sebastian Musslick</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Amitai Shenhav</strong>, Cognitive, Linguistic, &amp; Psychological Sciences, Brown University</li>
@@ -380,6 +397,8 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
 <li class="toctree-l3"><a class="reference internal" href="Projection.html">Projections</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html">Pathway Projections</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
+<li class="toctree-l5"><a class="reference internal" href="MaskedMappingProjection.html">MaskedMappingProjection</a></li>
+<li class="toctree-l5"><a class="reference internal" href="AutoAssociativeProjection.html">AutoAssociativeProjection</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="ModulatoryProjection.html">Modulatory Projections</a><ul>
@@ -441,8 +460,10 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Process.html">Process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CompositionFunctionApproximator.html">CompositionFunctionApproximator</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="AutodiffComposition.html">AutodiffComposition</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Scheduling.html">Scheduling</a><ul>
@@ -482,7 +503,7 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="AdaptiveMechanisms.html">Adaptive Mechanisms</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="LearningMechanisms.html">Learning Mechanisms</a><ul>
-<li class="toctree-l6"><a class="reference internal" href="AutoAssociativeLearningMechanism.html">AutoAssociativeMechanism</a></li>
+<li class="toctree-l6"><a class="reference internal" href="AutoAssociativeLearningMechanism.html">AutoAssociativeLearningMechanism</a></li>
 </ul>
 </li>
 <li class="toctree-l5"><a class="reference internal" href="ModulatoryMechanisms.html">ModulatoryMechanisms</a><ul class="simple">
@@ -523,6 +544,9 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Compositions.html">Compositions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="AutodiffComposition.html">AutodiffComposition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CompositionFunctionApproximator.html">CompositionFunctionApproximator</a><ul class="simple">
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Subystems.html">Subsystems</a><ul>

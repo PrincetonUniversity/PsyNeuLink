@@ -190,13 +190,13 @@ decision_layer_distractor_values = [0.0]
 response_layer_values = [0.0]
 
 
-def record_trial(execution_context):
+def record_trial(context):
     # After each trial, store all of the following values:
-    LC_results_h_of_v.append(h_v(LC.parameters.value.get(execution_context)[1][0], C, d))
-    LC_results_u.append(LC.parameters.value.get(execution_context)[2][0])
-    decision_layer_target_values.append(decision_layer.parameters.value.get(execution_context)[0][0])
-    decision_layer_distractor_values.append(decision_layer.parameters.value.get(execution_context)[0][1])
-    response_layer_values.append(response_layer.parameters.value.get(execution_context)[0][0])
+    LC_results_h_of_v.append(h_v(LC.parameters.value.get(context)[1][0], C, d))
+    LC_results_u.append(LC.parameters.value.get(context)[2][0])
+    decision_layer_target_values.append(decision_layer.parameters.value.get(context)[0][0])
+    decision_layer_distractor_values.append(decision_layer.parameters.value.get(context)[0][1])
+    response_layer_values.append(response_layer.parameters.value.get(context)[0][0])
 
     # Progress bar
     current_trial_num = len(LC_results_h_of_v)

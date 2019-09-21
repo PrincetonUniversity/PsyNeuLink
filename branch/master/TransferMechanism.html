@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.5.3.2+1.g71d8a0b documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.5.3.2+749.g546edf4 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+1.g71d8a0b',
+              VERSION:'0.5.3.2+749.g546edf4',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+1
+                0.5.3.2+749
               </div>
             
           
@@ -195,16 +195,27 @@
             
   <div class="section" id="module-psyneulink.core.components.mechanisms.processing.transfermechanism">
 <span id="transfermechanism"></span><h1>TransferMechanism<a class="headerlink" href="#module-psyneulink.core.components.mechanisms.processing.transfermechanism" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="sections">
+<h2>Sections<a class="headerlink" href="#sections" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#transfer-overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#transfer-creation"><span class="std std-ref">Creating a TransferMechanism</span></a></li>
+<li><a class="reference internal" href="#transfer-execution"><span class="std std-ref">Execution</span></a></li>
+<li><a class="reference internal" href="#transfer-class-reference"><span class="std std-ref">Class Reference</span></a></li>
+</ul>
+</div></blockquote>
+</div>
 <div class="section" id="overview">
 <span id="transfer-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A TransferMechanism transforms its input using a simple mathematical function, that maintains the form (dimensionality)
-of its input.  The input can be a single scalar value, a multidimensional array (list or numpy array), or several
-independent ones.</p>
-<p>The function used to carry out the transformation can be selected from the following PsyNeuLink
-<a class="reference internal" href="Function.html"><span class="doc">Functions</span></a>: <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Exponential" title="psyneulink.core.components.functions.transferfunctions.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>, <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, or <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax" title="psyneulink.core.components.functions.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal"><span class="pre">SoftMax</span></code></a>.</p>
-<p>The <strong>integrator_mode</strong> argument can switch the transformation from an “instantaneous”  to a “time averaged”
+<p>A TransferMechanism is a subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a> that adds the ability to integrate its input.</p>
+<p>Like a ProcessingMechanism, it transforms its input using a simple mathematical function, that maintains the form
+(dimensionality) of its input.  The input can be a single scalar value, a multidimensional array (list or numpy
+array), or several independent ones. The function used to carry out the transformation can be selected from the
+following PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a>: <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Exponential" title="psyneulink.core.components.functions.transferfunctions.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>, <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, or <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax" title="psyneulink.core.components.functions.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal"><span class="pre">SoftMax</span></code></a>.</p>
+<p>Its <strong>integrator_mode</strong> argument can switch the transformation from an “instantaneous”  to a “time averaged”
 (integrated) manner of execution. When <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> is set to True, the
-mechanism’s input is first transformed by its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> (the
+mechanism’s input is first transformed by its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> (
 <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AdaptiveIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AdaptiveIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AdaptiveIntegrator</span></code></a>). That result is then transformed by the mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 </div>
 <div class="section" id="creating-a-transfermechanism">

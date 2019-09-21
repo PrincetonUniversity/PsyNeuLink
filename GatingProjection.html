@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GatingProjection &mdash; PsyNeuLink 0.5.3.2+1.g71d8a0b documentation</title>
+  <title>GatingProjection &mdash; PsyNeuLink 0.5.3.2+749.g546edf4 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+1.g71d8a0b',
+              VERSION:'0.5.3.2+749.g546edf4',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+1
+                0.5.3.2+749
               </div>
             
           
@@ -276,7 +276,7 @@ of GatingSignal parameters).</li>
 the GatingProjection, its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.function" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its parameters.
 Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
 constructor.</li>
-<li><strong>name</strong> (str : default see ModulatoryProjection <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the GatingProjection.</li>
+<li><strong>name</strong> (str : default see ModulatoryProjection <a class="reference internal" href="ModulatoryProjection.html#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.name" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the name of the GatingProjection.</li>
 <li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Projection.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the GatingProjection; see <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.prefs" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
 </ul>
 </td>
@@ -334,7 +334,7 @@ and OutputStates).</p>
 <code class="descname">weight</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.weight" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>number</em> – multiplies the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.value" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the GatingProjection after applying <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.exponent" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a>, and before combining it with any others that project to the same <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>
 or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> to determine how that State’s <code class="xref any docutils literal"><span class="pre">variable</span></code> is modified (see description in
-<code class="xref any docutils literal"><span class="pre">Projection</span></code> for details).</p>
+<a class="reference internal" href="Projection.html#projection-weight-exponent"><span class="std std-ref">Projection</span></a> for details).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -345,14 +345,14 @@ or <a class="reference internal" href="OutputState.html"><span class="doc">Outpu
 <dd>&lt;ControlProjection.weight&gt;`, and before combining it with any others that project to the same <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a></dd>
 </dl>
 <p>or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> to determine how that State’s <code class="xref any docutils literal"><span class="pre">variable</span></code> is modified (see description in
-<code class="xref any docutils literal"><span class="pre">Projection</span></code> for details).</p>
+<a class="reference internal" href="Projection.html#projection-weight-exponent"><span class="std std-ref">Projection</span></a> for details).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str</em> – name of the GatingProjection; if it is not specified in the <strong>name</strong> argument of its constructor,
-a default name is assigned (see ModulatoryProjection <code class="xref any docutils literal"><span class="pre">name</span></code>;
+a default name is assigned (see ModulatoryProjection <a class="reference internal" href="ModulatoryProjection.html#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.name" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>;
 also see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions regarding duplicate names).</p>
 </dd></dl>
 

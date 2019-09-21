@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.5.3.2+1.g71d8a0b documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.5.3.2+749.g546edf4 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+1.g71d8a0b',
+              VERSION:'0.5.3.2+749.g546edf4',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+1
+                0.5.3.2+749
               </div>
             
           
@@ -260,11 +260,6 @@ is not otherwise specified.  The <a class="reference internal" href="#psyneulink
 </div>
 <p>This will create a default instance of the specified subclass, using default values for its parameters.</p>
 </li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul>
 <li><p class="first"><strong>Function</strong> - this can be either an existing <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object or the constructor for one, as in the
 following examples:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_component</span> <span class="o">=</span> <span class="n">SomeComponent</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">SomeFunction</span><span class="p">)</span>
@@ -323,8 +318,10 @@ preference (see <code class="xref any docutils literal"><span class="pre">Prefer
 <li><p class="first"><strong>reinitialize_when</strong> - the <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize_when" title="psyneulink.core.components.component.Component.reinitialize_when"><code class="xref any py py-attr docutils literal"><span class="pre">reinitialize_when</span></code></a> attribute contains a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>. When
 this condition is satisfied, the Component calls its <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method. The
 <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method is executed without arguments, meaning that the relevant function’s
-<code class="xref any docutils literal"><span class="pre">initializer</span></code> attribute (or equivalent – initialization attributes vary among functions) is
-used for reinitialization. Keep in mind that the <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method and <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize_when" title="psyneulink.core.components.component.Component.reinitialize_when"><code class="xref any py py-attr docutils literal"><span class="pre">reinitialize_when</span></code></a> attribute only exist on stateful Mechanisms.</p>
+<code class="xref any docutils literal"><span class="pre">initializer</span></code> attribute (or equivalent – initialization attributes vary among
+functions) is used for reinitialization. Keep in mind that the <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method and
+<a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize_when" title="psyneulink.core.components.component.Component.reinitialize_when"><code class="xref any py py-attr docutils literal"><span class="pre">reinitialize_when</span></code></a> attribute only exist for Mechanisms that have <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a> Parameters, or that have a <code class="xref any docutils literal"><span class="pre">function</span></code> with <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a>
+Parameters.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Currently, only Mechanisms reinitialize when their reinitialize_when Conditions are satisfied. Other types of
@@ -447,7 +444,7 @@ argument, using a value of <a class="reference internal" href="#component-resetm
 <span id="component-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.components.component.Component">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>function=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>function=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for Component.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -538,6 +535,23 @@ It should be instantiated using the constructor for a subclass.</p>
 <dd><p>an object that provides access to the default values of a <code class="xref any docutils literal"><span class="pre">Component's</span></code> <a class="reference internal" href="#psyneulink.core.components.component.Component.parameters" title="psyneulink.core.components.component.Component.parameters"><code class="xref any py py-attr docutils literal"><span class="pre">parameters</span></code></a></p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="psyneulink.core.components.component.Component.initialization_status">
+<code class="descname">initialization_status</code><a class="headerlink" href="#psyneulink.core.components.component.Component.initialization_status" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>field of flags attribute</em> – indicates the state of initialization of the Component;
+one and only one of the following flags is always set:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="xref any docutils literal"><span class="pre">DEFERRED_INIT</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">INITIALIZING</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">VALIDATING</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">INITIALIZED</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">REINITIALIZED</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">UNINITIALIZED</span></code></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.components.component.Component.assign_params">
 <code class="descname">assign_params</code><span class="sig-paren">(</span><em>request_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.assign_params" title="Permalink to this definition">¶</a></dt>
@@ -585,17 +599,18 @@ This is a convenience method that calls the <a class="reference internal" href="
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.component.Component.most_recent_execution_context">
-<code class="descname">most_recent_execution_context</code><a class="headerlink" href="#psyneulink.core.components.component.Component.most_recent_execution_context" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.component.Component.most_recent_context">
+<code class="descname">most_recent_context</code><a class="headerlink" href="#psyneulink.core.components.component.Component.most_recent_context" title="Permalink to this definition">¶</a></dt>
 <dd><p>used to set a default behavior for attributes that correspond to parameters</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="psyneulink.core.components.component.Component.reinitialize">
-<code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reinitialize" title="Permalink to this definition">¶</a></dt>
+<code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reinitialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>If the component’s execute method involves execution of an <code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code> Function, this method
 effectively begins the function’s accumulation over again at the specified value, and may update related
-values on the component, depending on the component type.</p>
+values on the component, depending on the component type.  Otherwise, it simply reassigns the Component’s
+value based on its default_variable.</p>
 </dd></dl>
 
 <dl class="method">

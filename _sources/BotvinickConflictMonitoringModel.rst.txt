@@ -101,4 +101,4 @@ Note that this script implements a slightly different Figure than in the origina
 However, this implementation is identical with a plot we created with an old MATLAB code which was used for the
 conflict monitoring simulations.
 
-Script: :download:`Botvinick_conflict_monitoring_model.py <../../Scripts/Models/Botvinick_conflict_monitoring_model.py>`
+Script: :download:`Botvinick_conflict_monitoring_model.py <../../psyneulink/library/models/Botvinick_conflict_monitoring_model.py>`

@@ -169,20 +169,20 @@ Bidirectional_Stroop.show()
 # Bidirectional_Stroop.show_graph(show_dimensions=pnl.ALL)#,show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
 
 # Create threshold function -------------------------------------------------------------------------------------------
-# execution_context is automatically passed into Conditions, and references the execution context in which they are being run,
+# context is automatically passed into Conditions, and references the execution context in which they are being run,
 # which in this case is simply the Bidirectional_Stroop system
-def pass_threshold(response_layer, thresh, execution_context):
-    results1 = response_layer.get_output_values(execution_context)[0][0] #red response
-    results2 = response_layer.get_output_values(execution_context)[0][1] #green response
+def pass_threshold(response_layer, thresh, context):
+    results1 = response_layer.get_output_values(context)[0][0] #red response
+    results2 = response_layer.get_output_values(context)[0][1] #green response
     if results1  >= thresh or results2 >= thresh:
         return True
     return False
 
 # 2nd threshold function
-def pass_threshold2(response_layer, thresh, terminate, execution_context):
-    results1 = response_layer.get_output_values(execution_context)[0][0] #red response
-    results2 = response_layer.get_output_values(execution_context)[0][1] #green response
-    length = response_layer.log.nparray_dictionary()[execution_context]['value'].shape[0]
+def pass_threshold2(response_layer, thresh, terminate, context):
+    results1 = response_layer.get_output_values(context)[0][0] #red response
+    results2 = response_layer.get_output_values(context)[0][1] #green response
+    length = response_layer.log.nparray_dictionary()[context.execution_id]['value'].shape[0]
     if results1  >= thresh or results2 >= thresh:
         return True
     if length ==terminate:
@@ -289,10 +289,10 @@ for cond in range(conditions):
         words_hidden_layer.log.clear_entries()
         task_layer.log.clear_entries()
 
-        colors_hidden_layer.reinitialize([[0, 0, 0]], execution_context=Bidirectional_Stroop)
-        words_hidden_layer.reinitialize([[0, 0, 0]], execution_context=Bidirectional_Stroop)
-        response_layer.reinitialize([[0, 0]], execution_context=Bidirectional_Stroop)
-        task_layer.reinitialize([[0, 0]], execution_context=Bidirectional_Stroop)
+        colors_hidden_layer.reinitialize([[0, 0, 0]], context=Bidirectional_Stroop)
+        words_hidden_layer.reinitialize([[0, 0, 0]], context=Bidirectional_Stroop)
+        response_layer.reinitialize([[0, 0]], context=Bidirectional_Stroop)
+        task_layer.reinitialize([[0, 0]], context=Bidirectional_Stroop)
 
     print('response_all: ', response_all)
 
@@ -323,10 +323,10 @@ for cond in range(conditions):
         colors_hidden_layer.log.clear_entries()
         words_hidden_layer.log.clear_entries()
         task_layer.log.clear_entries()
-        colors_hidden_layer.reinitialize([[0, 0, 0]], execution_context=Bidirectional_Stroop)
-        words_hidden_layer.reinitialize([[0, 0, 0]], execution_context=Bidirectional_Stroop)
-        response_layer.reinitialize([[0, 0]], execution_context=Bidirectional_Stroop)
-        task_layer.reinitialize([[0, 0]], execution_context=Bidirectional_Stroop)
+        colors_hidden_layer.reinitialize([[0, 0, 0]], context=Bidirectional_Stroop)
+        words_hidden_layer.reinitialize([[0, 0, 0]], context=Bidirectional_Stroop)
+        response_layer.reinitialize([[0, 0]], context=Bidirectional_Stroop)
+        task_layer.reinitialize([[0, 0]], context=Bidirectional_Stroop)
 
 # Plotting ------------------------------------------------------------------------------------------------------------
 #compute regression for model

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterState &mdash; PsyNeuLink 0.5.3.2+1.g71d8a0b documentation</title>
+  <title>ParameterState &mdash; PsyNeuLink 0.5.3.2+749.g546edf4 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+1.g71d8a0b',
+              VERSION:'0.5.3.2+749.g546edf4',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+1
+                0.5.3.2+749
               </div>
             
           
@@ -257,12 +257,11 @@ assigned to the argument for the parameter in the Component’s constructor.</li
 </div></blockquote>
 <p id="parameterstate-value-specification">The specification of the initial value of a parameter can take any of the following forms:</p>
 <blockquote>
-<div><ul class="simple" id="parameterstate-value-assignment">
-<li><strong>Value</strong> – this must be a valid value for the parameter. It creates a default ParameterState,
+<div><ul id="parameterstate-value-assignment">
+<li><p class="first"><strong>Value</strong> – this must be a valid value for the parameter. It creates a default ParameterState,
 assigns the parameter’s default value as the ParameterState’s <a class="reference internal" href="#psyneulink.core.components.states.parameterstate.ParameterState.value" title="psyneulink.core.components.states.parameterstate.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>,
-and assigns the parameter’s name as the name of the ParameterState.</li>
-</ul>
-<ul>
+and assigns the parameter’s name as the name of the ParameterState.</p>
+</li>
 <li><p class="first"><strong>ParameterState reference</strong> – this must refer to an existing <strong>ParameterState</strong> object; its name must be the
 name of a parameter of the owner or of the owner’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and its value must be a valid
 one for the parameter.</p>
@@ -321,7 +320,7 @@ listed above, then no ParameterState is created and the parameter cannot be modi
 <span class="gp">... </span>                        <span class="n">noise</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ControlSignal</span><span class="p">(),</span>
 <span class="gp">... </span>                        <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">(</span>
 <span class="gp">... </span>                                        <span class="n">gain</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ControlSignal</span><span class="p">),</span>
-<span class="gp">... </span>                                        <span class="n">bias</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ControlSignal</span><span class="p">(</span><span class="n">modulation</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">))))</span>
+<span class="gp">... </span>                                        <span class="n">bias</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ControlSignal</span><span class="p">(</span><span class="n">modulation</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">))))</span>
 </pre></div>
 </div>
 <p>The first argument of the constructor for the Mechanism specifies its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.size" title="psyneulink.core.components.component.Component.size"><code class="xref any py py-attr docutils literal"><span class="pre">size</span></code></a> parameter by
@@ -358,7 +357,7 @@ its arguments are available in the constructor for the Projection (see
 <span class="gp">... </span>                             <span class="n">pnl</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">,</span>
 <span class="gp">... </span>                             <span class="n">pnl</span><span class="o">.</span><span class="n">FUNCTION_PARAMS</span><span class="p">:{</span>
 <span class="gp">... </span>                                    <span class="n">pnl</span><span class="o">.</span><span class="n">GAIN</span><span class="p">:(</span><span class="mf">0.5</span><span class="p">,</span><span class="n">pnl</span><span class="o">.</span><span class="n">ControlSignal</span><span class="p">),</span>
-<span class="gp">... </span>                                    <span class="n">pnl</span><span class="o">.</span><span class="n">BIAS</span><span class="p">:(</span><span class="mf">1.0</span><span class="p">,</span><span class="n">pnl</span><span class="o">.</span><span class="n">ControlSignal</span><span class="p">(</span><span class="n">modulation</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">))}})</span>
+<span class="gp">... </span>                                    <span class="n">pnl</span><span class="o">.</span><span class="n">BIAS</span><span class="p">:(</span><span class="mf">1.0</span><span class="p">,</span><span class="n">pnl</span><span class="o">.</span><span class="n">ControlSignal</span><span class="p">(</span><span class="n">modulation</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">))}})</span>
 </pre></div>
 </div>
 <p>There are several things to note here.</p>
@@ -487,7 +486,7 @@ a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanis
 <dd><p><em>Optional[List[Projection]]</em> – a list of the <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that project to the ParameterState (i.e.,
 for which it is a <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>); these can be
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> and/or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a>,
-but not <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.  The <code class="xref any docutils literal"><span class="pre">value</span></code> of each
+but not <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.  The <a class="reference internal" href="ModulatoryProjection.html#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.value" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each
 must match the format (number and types of elements) of the ParameterState’s
 <a class="reference internal" href="#psyneulink.core.components.states.parameterstate.ParameterState.variable" title="psyneulink.core.components.states.parameterstate.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
