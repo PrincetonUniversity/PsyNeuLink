@@ -2176,10 +2176,10 @@ class State_Base(State):
         return mod_spec, mod_param_name, mod_param_value
 
     def _get_combined_mod_val(self, mod_param_name, values):
-        '''Combine the modulatory values received by ModulatoryProjections to mod_param_name
+        """Combine the modulatory values received by ModulatoryProjections to mod_param_name
         Uses function specified by modulation_combination_function attribute of param,
         or MULTIPLICATIVE if not specified
-        '''
+        """
         comb_fct = getattr(self.function.parameters, mod_param_name).modulation_combination_function or MULTIPLICATIVE
         aliases = getattr(self.function.parameters, mod_param_name).aliases
 
