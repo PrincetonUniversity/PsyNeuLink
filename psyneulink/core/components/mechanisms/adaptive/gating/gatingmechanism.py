@@ -114,24 +114,28 @@ A GatingMechanism's `function <GatingMechanism.function>` is determined and oper
 *Output*
 ~~~~~~~~
 
-A GatingMechanism has a `GatingSignal` for each `InputState` and/or `OutputState` specified in the **gating_signals**
-argument of its constructor, to which it sends a `GatingProjection`.  If the GatingMechanism's `function
-<GatingMechanism.function>` generates a `gating_allocation <GatingMechanism.gating_allocation>` with a
-single value (the default), then this is used as the `allocation <GatingSignal.alloction>` to all of the
-GatingMechanism's `gating_signals <GatingMechanism.gating_signals>`.  If the `gating_allocation
-<GatingMechanism.gating_allocation>` has multiple items, and this is the same as the number of GatingSignals,
-then each GatingSignal is assigned the value of the corresponding item in the `gating_allocation
-<GatingMechanism.gating_allocation>`.  If there is a different number of `gating_signals
-<GatingMechanism.gating_signals>` than the number of items in the `gating_allocation
+The OutputStates of a GatingMechanism are `GatingSignals <GatingSignal>` (listed in its `gating_signals
+<GatingMechanism.gating_signals>` attribute). It  has a `GatingSignal` for each `InputState` and/or `OutputState` 
+specified in the **gating_signals** argument of its constructor, that sends a `GatingProjection` to those States.  
+The GatingSignals are listed in the `gating_signals <GatingMechanism.gating_signals>` attribute;  since they are a 
+type of `OutputState`, they are also listed in the GatingMechanism's `output_states <GatingMechanism.output_states>` 
+attribute. The InputStates and/or OutputStates modulated by a GatingMechanism's GatingSignals can be displayed using 
+its `show <GatingMechanism.show>` method. If the GatingMechanism's `function <GatingMechanism.function>` generates a
+`gating_allocation <GatingMechanism.gating_allocation>` with a single value (the default), then this is used as the
+`allocation <GatingSignal.alloction>` for all of the GatingMechanism's `gating_signals
+<GatingMechanism.gating_signals>`.  If the `gating_allocation <GatingMechanism.gating_allocation>` has multiple
+items, and this is the same as the number of GatingSignals, then each GatingSignal is assigned the value of the
+corresponding item in the `gating_allocation <GatingMechanism.gating_allocation>`.  If there is a different number of
+`gating_signals <GatingMechanism.gating_signals>` than the number of items in the `gating_allocation
 <GatingMechanism.gating_allocation>`, then the `index <GatingSignal.index>` attribute of each GatingSignal must be
 specified (e.g., in a `specification dictionary <GatingSignal_Specification>` in the **gating_signal** argument of
 the GatingMechanism's constructor), or an error is generated.  The `default_allocation
-<GatingMechanism.default_allocation>` attribute can be used to specify a  default allocation
-for GatingSignals that have not been assigned their own `default_allocation  <GatingSignal.default_allocation>`.
-The GatingSignals of a GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.
-Since GatingSignals are a type of `OutputState`, they are also listed in the GatingMechanism's `output_states
-<Mechanism_Base.output_states>` attribute. The InputStates and/or OutputStates modulated by a GatingMechanism's
-GatingSignals can be displayed using its :func:`show <GatingMechanism.show>` method.
+<GatingMechanism.default_allocation>` attribute can be used to specify a  default allocation for GatingSignals that
+have not been assigned their own `default_allocation  <GatingSignal.default_allocation>`. The `allocation
+<GatingSignal.allocation>` is used by each GatingSignal to determine its `intensity  <GatingSignal.intensity>`,
+which is then assigned to the `value <GatingProjection.value>` of the GatingSignal's `GatingProjection`.   The `value
+<GatingProjection.value>` of the GatingProjection is used to modify the value of the InputState and/or OutputState it
+gates (see `GatingSignal_Modulation` for description of how a GatingSignal modulates the value of a parameter).
 
 .. _GatingMechanism_Execution:
 
