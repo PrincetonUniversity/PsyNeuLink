@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.5.3.2+740.gbf06731 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.5.3.2+744.g05f81fc documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+740.gbf06731',
+              VERSION:'0.5.3.2+744.g05f81fc',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+740
+                0.5.3.2+744
               </div>
             
           
@@ -266,7 +266,7 @@ For information on writing a custom loss function, see <a class="reference exter
 <li><p class="first"><strong>randomize</strong> – specifies whether the order of inputs will be randomized in each epoch. All inputs are run in each
 epoch.  However, if <strong>randomize</strong> is True, then the order in which inputs are within an epoch is random.</p>
 </li>
-<li><p class="first"><strong>refresh_losses</strong> – specifies whether the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses"><code class="xref any py py-attr docutils literal"><span class="pre">losses</span></code></a> attribute is refreshed for each call to <code class="xref any docutils literal"><span class="pre">run</span></code>. If False, the losses of each run are appended to the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses"><code class="xref any py py-attr docutils literal"><span class="pre">losses</span></code></a> attribute. If True, the losses of each run overwrite <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses"><code class="xref any py py-attr docutils literal"><span class="pre">losses</span></code></a> instead.</p>
+<li><p class="first"><strong>refresh_losses</strong> – specifies whether the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses"><code class="xref any py py-attr docutils literal"><span class="pre">losses</span></code></a> attribute is refreshed for each call to <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>. If False, the losses of each run are appended to the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses"><code class="xref any py py-attr docutils literal"><span class="pre">losses</span></code></a> attribute. If True, the losses of each run overwrite <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses"><code class="xref any py py-attr docutils literal"><span class="pre">losses</span></code></a> instead.</p>
 </li>
 <li><p class="first"><strong>force_no_retain_graph</strong> – False by default.  If True, the AutodiffComposition does not use PyTorch’s <a class="reference external" href="https://pytorch.org/docs/master/autograd.html?highlight=retain_graph">retain_graph</a>  option when computing the gradient. This
 can reduce memory usage; however, it breaks recurrent networks, so it should only be used when the network is not
@@ -300,13 +300,13 @@ at initialization by the <strong>loss_spec</strong> argument.</li>
 </div>
 <div class="section" id="execution">
 <span id="autodiffcomposition-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>Most arguments to AutodiffComposition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> or <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> methods are the same as for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>. When
+<p>Most arguments to AutodiffComposition’s <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> or <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> methods are the same as for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>. When
 <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_enabled" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_enabled"><code class="xref any py py-attr docutils literal"><span class="pre">learning_enabled</span></code></a> is False, the arguments are the same, since in this
 case the AutodiffComposition executes like a Composition.</p>
 <p id="autodiffcomposition-input">However, if <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_enabled" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_enabled"><code class="xref any py py-attr docutils literal"><span class="pre">learning_enabled</span></code></a> is True, the <strong>inputs</strong> argument
 format is different. If <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_enabled" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_enabled"><code class="xref any py py-attr docutils literal"><span class="pre">learning_enabled</span></code></a> is True, then <strong>inputs</strong>
 argument must be a dictionary with at least two nested dictionaries within it, one for the inputs and the other
-for the targets, as well as an additional entry specifying the numbrer of training epochs to run.  Specifically,
+for the targets, as well as an additional entry specifying the number of training epochs to run.  Specifically,
 the outer dictionary must have at least two entries with keys <em>“inputs”</em> and  <em>“targets”</em>.  The value of the
 <em>“inputs”</em> entry must be a standard input dictionary, specifying the inputs for each <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism.  The value
 of the <em>“targets”</em> entry must be a similar dictionary, in this case specifying the target values for the outputs of
@@ -410,7 +410,7 @@ When False, the AutodiffComposition executes just like an ordinary Composition</
 <a class="reference external" href="https://pytorch.org/docs/stable/nn.html#loss-functions">https://pytorch.org/docs/stable/nn.html#loss-functions</a></li>
 <li><strong>randomize</strong> (<em>boolean : default False</em>) – specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are run, but
 if <strong>randomize</strong> is True then the order of inputs within an epoch is random.)</li>
-<li><strong>refresh_losses</strong> (<em>boolean: default False</em>) – specifies whether the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses"><code class="xref any py py-attr docutils literal"><span class="pre">losses</span></code></a> attribute is refreshed for each call to <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run()</span></code></a>. If False, the losses of each run
+<li><strong>refresh_losses</strong> (<em>boolean: default False</em>) – specifies whether the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses"><code class="xref any py py-attr docutils literal"><span class="pre">losses</span></code></a> attribute is refreshed for each call to <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run()</span></code></a>. If False, the losses of each run
 are appended to the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses"><code class="xref any py py-attr docutils literal"><span class="pre">losses</span></code></a> attribute. If True, the losses of each run overwrite <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses"><code class="xref any py py-attr docutils literal"><span class="pre">losses</span></code></a> instead.</li>
 </ul>
 </td>
@@ -588,6 +588,100 @@ used in naming, including for default and duplicate names).</p>
 </table>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>do_logging=False</em>, <em>scheduler_processing=None</em>, <em>termination_processing=None</em>, <em>context=None</em>, <em>num_trials=None</em>, <em>minibatch_size='training set'</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_pass=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>call_before_minibatch=None</em>, <em>call_after_minibatch=None</em>, <em>clamp_input='soft_clamp'</em>, <em>bin_execute=False</em>, <em>initial_values=None</em>, <em>reinitialize_values=None</em>, <em>runtime_params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Passes inputs to AutodiffComposition, then execute sets of nodes that are eligible to run until termination
+conditions are met.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>inputs: {‘inputs’: {<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>: list}, ‘targets’: {<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>: list}, ‘epochs’: int }</dt>
+<dd>a key-value pair with the keys “inputs”, “targets”, and “epochs”. The value corresponding
+to the “inputs” key should itself be a key-value pair for each Node in the composition that receives
+inputs from the user. For each pair, the key is the Node and the value is a list of inputs. Each input
+in the list corresponds to one <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>. Analogously, the value corresponding with ‘targets’ should be a
+key-value pair with keys for each terminal Node in the composition and a corresponding list of the Node’s
+target values for each trial. The value corresponding to the ‘epochs’ key is an int specifying how many
+times the Composition should run through the entire input set.</dd>
+<dt>scheduler_processing: Scheduler</dt>
+<dd>the scheduler object that owns the conditions that will instruct the execution of the Composition.
+If not specified, the Composition will use its automatically generated scheduler.</dd>
+<dt>context</dt>
+<dd>context will be set to self.default_execution_id if unspecified</dd>
+<dt>base_context</dt>
+<dd>the context corresponding to the execution context from which this execution will be initialized,
+if values currently do not exist for <strong>context</strong></dd>
+<dt>num_trials: int</dt>
+<dd>typically, the composition will infer the number of trials from the length of its input specification.
+To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
+or use default inputs, and select a number of trials with num_trials.</dd>
+<dt>minibatch_size: int or <code class="xref any docutils literal"><span class="pre">TRAINING_SET</span></code></dt>
+<dd>if learning is enabled, the number of trials to be executed by the autodiff composition between weight
+updates. if set to <code class="xref any docutils literal"><span class="pre">TRAINING_SET</span></code>, weights will be updated after each full traversal of the provided
+inputs (i.e. after each epoch).</dd>
+<dt>call_before_time_step: callable</dt>
+<dd>Not currently implemented for autodiff compositions.</dd>
+<dt>call_after_time_step: callable</dt>
+<dd>Not currently implemented for autodiff compositions.</dd>
+<dt>call_before_pass: callable</dt>
+<dd>Not currently implemented for autodiff compositions.</dd>
+<dt>call_after_pass: callable</dt>
+<dd>Not currently implemented for autodiff compositions.</dd>
+<dt>call_before_trial: callable</dt>
+<dd>Not currently implemented for autodiff compositions.</dd>
+<dt>call_after_trial: callable</dt>
+<dd>Not currently implemented for autodiff compositions.</dd>
+<dt>call_before_minibatch: callable</dt>
+<dd>will be called before each minibatch is executed.</dd>
+<dt>call_after_minibatch: callable</dt>
+<dd>will be called after each minibatch is executed.</dd>
+<dt>initial_values: Dict[Node: Node Value]</dt>
+<dd>sets the values of nodes before the start of the run. This is useful in cases where a node’s value is
+used before that node executes for the first time (usually due to recurrence or control).</dd>
+<dt>runtime_params: Dict[Node: Dict[Parameter: Tuple(Value, Condition)]]</dt>
+<dd><p class="first">nested dictionary of (value, <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>) tuples for parameters of Nodes (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or
+<a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> of the Composition; specifies alternate parameter values to be used only
+during this <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> when the specified <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is met.</p>
+<dl class="docutils">
+<dt>Outer dictionary:</dt>
+<dd><ul class="first last simple">
+<li><em>key</em> - Node</li>
+<li><em>value</em> - Runtime Parameter Specification Dictionary</li>
+</ul>
+</dd>
+<dt>Runtime Parameter Specification Dictionary:</dt>
+<dd><ul class="first last simple">
+<li><em>key</em> - keyword corresponding to a parameter of the Node</li>
+<li><em>value</em> - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
+a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a></li>
+</ul>
+</dd>
+</dl>
+<p class="last">See <a class="reference internal" href="Run.html#run-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a> for more details and examples of valid dictionaries.</p>
+</dd>
+<dt>log: bool, LogCondition</dt>
+<dd><p class="first">Sets the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.log_condition" title="psyneulink.core.globals.parameters.Parameter.log_condition"><code class="xref any py py-attr docutils literal"><span class="pre">log_condition</span></code></a> for every primary <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.nodes" title="psyneulink.core.compositions.composition.Composition.nodes"><code class="xref any py py-attr docutils literal"><span class="pre">node</span></code></a> and
+<code class="xref any docutils literal"><span class="pre">projection</span></code> in this Composition, if it is not already set.</p>
+<div class="last admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">as when setting the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.log_condition" title="psyneulink.core.globals.parameters.Parameter.log_condition"><code class="xref any py py-attr docutils literal"><span class="pre">log_condition</span></code></a> directly, a value of <code class="xref any docutils literal"><span class="pre">True</span></code> will
+correspond to the <code class="xref any docutils literal"><span class="pre">EXECUTION</span> <span class="pre">LogCondition</span></code>.</p>
+</div>
+</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>output value of the final Node executed in the composition</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">various</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
