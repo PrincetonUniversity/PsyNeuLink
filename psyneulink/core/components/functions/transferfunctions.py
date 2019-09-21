@@ -4166,3 +4166,16 @@ class TransferWithCosts(TransferFunction):
 
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        # Run transfer function first
+        transfer_f = self.parameters.transfer_fct
+        trans_f = ctx.get_llvm_function(transfer_f.get())
+        trans_p = ctx.get_param_ptr(self, builder, params, transfer_f.name)
+        trans_s = ctx.get_state_ptr(self, builder, state, transfer_f.name)
+        trans_in = arg_in
+        trans_out = arg_out
+        builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
+
+        # TODO: Implement cost calculations
+        return builder
