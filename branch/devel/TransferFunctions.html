@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.5.3.2+744.g05f81fc documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.5.3.2+745.g1616a3d documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+744.g05f81fc',
+              VERSION:'0.5.3.2+745.g1616a3d',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+744
+                0.5.3.2+745
               </div>
             
           
@@ -186,6 +186,7 @@
 <li><code class="xref any docutils literal"><span class="pre">GaussianDistort</span></code></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax" title="psyneulink.core.components.functions.transferfunctions.SoftMax"><code class="xref any py py-class docutils literal"><span class="pre">SoftMax</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix"><code class="xref any py py-class docutils literal"><span class="pre">LinearMatrix</span></code></a></li>
+<li><code class="xref any docutils literal"><span class="pre">TransferWithCosts</span></code></li>
 </ul>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
@@ -957,7 +958,7 @@ value with respect to the others (calculated as above). If <em>OUTPUT_TYPE</em> 
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>default_variable</strong> (<em>1d array : default class_defaults.variable</em>) – specifies a template for the value to be transformed.</li>
 <li><strong>gain</strong> (<em>float : default 1.0</em>) – specifies a value by which to multiply <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Linear.variable" title="psyneulink.core.components.functions.transferfunctions.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before SoftMax transformation.</li>
-<li><strong>output</strong> (<a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL"><em>ALL</em></a><em>, </em><em>MAX_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, or </em><em>PROB : default ALL</em>) – specifies the format of array returned by <code class="xref any docutils literal"><span class="pre">function</span></code>
+<li><strong>output</strong> (<em>ALL</em><em>, </em><em>MAX_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, or </em><em>PROB : default ALL</em>) – specifies the format of array returned by <code class="xref any docutils literal"><span class="pre">function</span></code>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.output" title="psyneulink.core.components.functions.transferfunctions.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">output</span></code></a> for details).</li>
 <li><strong>per_item</strong> (<em>boolean : default True</em>) – for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
 False), or applied to each item in the variable separately (per_item = True).</li>

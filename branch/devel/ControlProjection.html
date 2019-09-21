@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlProjection &mdash; PsyNeuLink 0.5.3.2+744.g05f81fc documentation</title>
+  <title>ControlProjection &mdash; PsyNeuLink 0.5.3.2+745.g1616a3d documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+744.g05f81fc',
+              VERSION:'0.5.3.2+745.g1616a3d',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+744
+                0.5.3.2+745
               </div>
             
           
@@ -274,7 +274,7 @@ of ControlSignal parameters).</li>
 the ControlProjection, its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.function" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its parameters.
 Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
 constructor.</li>
-<li><strong>name</strong> (str : default see ModulatoryProjection <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the ControlProjection.</li>
+<li><strong>name</strong> (str : default see ModulatoryProjection <a class="reference internal" href="ModulatoryProjection.html#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.name" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the name of the ControlProjection.</li>
 <li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Projection.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the ControlProjection; see <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.prefs" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details.</li>
 </ul>
 </td>
@@ -331,7 +331,7 @@ to a ParameterState).</p>
 <code class="descname">weight</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.weight" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>number</em> – multiplies the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the ControlProjection after applying <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.exponent" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a>, and before combining it with any others that project to the same <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>
 to determine how that ParameterState’s <a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState.variable" title="psyneulink.core.components.states.parameterstate.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is modified (see description in
-<code class="xref any docutils literal"><span class="pre">Projection</span></code> for details).</p>
+<a class="reference internal" href="Projection.html#projection-weight-exponent"><span class="std std-ref">Projection</span></a> for details).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -339,14 +339,14 @@ to determine how that ParameterState’s <a class="reference internal" href="Par
 <code class="descname">exponent</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.exponent" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>number</em> – exponentiates the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the ControlProjection, before applying <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.weight" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a>, and before combining it with any others that project to the same <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>
 to determine how that ParameterState’s <a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState.variable" title="psyneulink.core.components.states.parameterstate.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is modified (see description in
-<code class="xref any docutils literal"><span class="pre">Projection</span></code> for details).</p>
+<a class="reference internal" href="Projection.html#projection-weight-exponent"><span class="std std-ref">Projection</span></a> for details).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str</em> – name of the ControlProjection; if it is not specified in the <strong>name</strong> argument of its constructor,
-a default name is assigned (see ModulatoryProjection <code class="xref any docutils literal"><span class="pre">name</span></code>;
+a default name is assigned (see ModulatoryProjection <a class="reference internal" href="ModulatoryProjection.html#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.name" title="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>;
 also see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions regarding duplicate names).</p>
 </dd></dl>
 

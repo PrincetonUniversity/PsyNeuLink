@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Learning Mechanism &mdash; PsyNeuLink 0.5.3.2+744.g05f81fc documentation</title>
+  <title>Learning Mechanism &mdash; PsyNeuLink 0.5.3.2+745.g1616a3d documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+744.g05f81fc',
+              VERSION:'0.5.3.2+745.g1616a3d',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+744
+                0.5.3.2+745
               </div>
             
           
@@ -564,7 +564,7 @@ LearningProjections.  That value is used, in turn, to modify the <a class="refer
 <p>Each ParameterState uses the value it receives from the <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> that projects to it to modify the
 parameter of its <a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState.function" title="psyneulink.core.components.states.parameterstate.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, in a manner specified by the <a class="reference internal" href="LearningSignal.html#psyneulink.core.components.states.modulatorysignals.learningsignal.LearningSignal.modulation" title="psyneulink.core.components.states.modulatorysignals.learningsignal.LearningSignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute of the <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> from which it receives the LearningProjection (see
 <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for a description of how modulation operates). By default, the
-<a class="reference internal" href="LearningSignal.html#psyneulink.core.components.states.modulatorysignals.learningsignal.LearningSignal.modulation" title="psyneulink.core.components.states.modulatorysignals.learningsignal.LearningSignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute of a LearningSignal is <code class="xref any docutils literal"><span class="pre">ModulationParam.ADDITIVE</span></code>, the <a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState.function" title="psyneulink.core.components.states.parameterstate.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a <em>MATRIX</em> ParameterState for a MappingProjection is <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AccumulatorIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AccumulatorIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AccumulatorIntegrator</span></code></a>,
+<a class="reference internal" href="LearningSignal.html#psyneulink.core.components.states.modulatorysignals.learningsignal.LearningSignal.modulation" title="psyneulink.core.components.states.modulatorysignals.learningsignal.LearningSignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute of a LearningSignal is <code class="xref any docutils literal"><span class="pre">ADDITIVE</span></code>, the <a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState.function" title="psyneulink.core.components.states.parameterstate.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a <em>MATRIX</em> ParameterState for a MappingProjection is <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AccumulatorIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AccumulatorIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AccumulatorIntegrator</span></code></a>,
 and the parameter it uses for additive modulation is its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AccumulatorIntegrator.increment" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AccumulatorIntegrator.increment"><code class="xref any py py-attr docutils literal"><span class="pre">increment</span></code></a> parameter.
 These assignments cause the value of the LearningProjection to be added to the previous value of the <em>MATRIX</em>
 ParameterState, thus incrementing the weights by an amount specified by the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a>. Note, that the changes to the <code class="xref any docutils literal"><span class="pre">matrix</span></code> parameter itself do not take effect until the next time the
@@ -583,7 +583,7 @@ being learned in the sequence.</p>
 
 <dl class="class">
 <dt id="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.</code><code class="descname">LearningMechanism</code><span class="sig-paren">(</span><em>variable</em>, <em>error_sources</em>, <em>function=BackPropagation</em>, <em>learning_rate=None</em>, <em>learning_signals=LEARNING_SIGNAL</em>, <em>modulation=ModulationParam.ADDITIVE</em>, <em>learning_enabled=True</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.</code><code class="descname">LearningMechanism</code><span class="sig-paren">(</span><em>variable</em>, <em>error_sources</em>, <em>function=BackPropagation</em>, <em>learning_rate=None</em>, <em>learning_signals=LEARNING_SIGNAL</em>, <em>modulation=ADDITIVE</em>, <em>learning_enabled=True</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a Mechanism that modifies the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -604,7 +604,7 @@ for details).</li>
 <li><strong>learning_signals</strong> (<em>List</em><em>[</em><em>parameter of Projection</em><em>, </em><a class="reference internal" href="ParameterState.html#psyneulink.core.components.states.parameterstate.ParameterState" title="psyneulink.core.components.states.parameterstate.ParameterState"><em>ParameterState</em></a><em>, </em><em>Projection</em><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><em>Projection</em><em>] or </em><em>dict</em><em>] </em><em>:</em>) – </li>
 <li><strong>LEARNING_SIGNAL</strong> (<em>default</em>) – specifies the parameter(s) to be learned (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signals" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_signals"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signals</span></code></a> for
 details).</li>
-<li><strong>modulation</strong> (<em>ModulationParam : default ModulationParam.ADDITIVE</em>) – specifies the default form of modulation used by the LearningMechanism’s LearningSignals,
+<li><strong>modulation</strong> (<em>str : default ADDITIVE</em>) – specifies the default form of modulation used by the LearningMechanism’s LearningSignals,
 unless they are <a class="reference internal" href="LearningSignal.html#learningsignal-specification"><span class="std std-ref">individually specified</span></a>.</li>
 <li><strong>learning_enabled</strong> (<em>bool</em><em> or </em><em>Enum</em><em>[</em><em>ONLINE|AFTER</em><em>] </em><em>: True</em>) – specifies whether and when the LearningMechanism’s <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> are executed
 (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_enabled" title="psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism.LearningMechanism.learning_enabled"><code class="xref any py py-attr docutils literal"><span class="pre">learning_enabled</span></code></a> for additional details).</li>

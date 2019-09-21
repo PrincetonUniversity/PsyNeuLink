@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projections &mdash; PsyNeuLink 0.5.3.2+744.g05f81fc documentation</title>
+  <title>Projections &mdash; PsyNeuLink 0.5.3.2+745.g1616a3d documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+744.g05f81fc',
+              VERSION:'0.5.3.2+745.g1616a3d',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+744
+                0.5.3.2+745
               </div>
             
           
@@ -332,10 +332,10 @@ cannot be inferred from the context in which this specification occurs, then its
 <ul class="simple">
 <li><strong>value</strong> – creates a Projection of a type determined by the context of the specification, and using the
 specified value as the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Projection, which must be compatible with the
-<code class="xref any docutils literal"><span class="pre">variable</span></code> attribute of its <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  If the Projection is a
+<a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.variable" title="psyneulink.core.components.states.state.State_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute of its <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  If the Projection is a
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, the value is interpreted as a <a class="reference internal" href="MappingProjection.html#mapping-matrix-specification"><span class="std std-ref">matrix specification</span></a> and
 assigned as the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the Projection;  it must be compatible with the
-<a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute of its <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <code class="xref any docutils literal"><span class="pre">variable</span></code>
+<a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.value" title="psyneulink.core.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute of its <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.variable" title="psyneulink.core.components.states.state.State_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 attribute of its <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</li>
 </ul>
 <ul class="simple">
@@ -521,7 +521,7 @@ determined by the type of Projection —&nbsp;see subclasses for details).</li>
 <p>Every Projection has a <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.weight" title="psyneulink.core.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.exponent" title="psyneulink.core.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> attribute. These
 are applied to its <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> before combining it with other Projections that project to the same
 <a class="reference internal" href="State.html"><span class="doc">States</span></a>.  If both are specified, the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.exponent" title="psyneulink.core.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> is applied before the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.weight" title="psyneulink.core.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a>.  These attributes determine both how the Projection’s <code class="xref any docutils literal"><span class="pre">value</span></code> is combined
-with others to determine the <code class="xref any docutils literal"><span class="pre">variable</span></code> of the State to which they project.</p>
+with others to determine the <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.variable" title="psyneulink.core.components.states.state.State_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of the State to which they project.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.weight" title="psyneulink.core.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.exponent" title="psyneulink.core.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> attributes of a Projection are not
@@ -557,7 +557,7 @@ It should be created by calling the constructor for a subclass` or by using any 
 <dl class="attribute">
 <dt id="psyneulink.core.components.projections.projection.Projection_Base.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value</em> – input to Projection, received from OutputState.value of <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</p>
+<dd><p><em>value</em> – input to Projection, received from <a class="reference internal" href="OutputState.html#psyneulink.core.components.states.outputstate.OutputState.value" title="psyneulink.core.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -575,7 +575,7 @@ It should be created by calling the constructor for a subclass` or by using any 
 <dl class="attribute">
 <dt id="psyneulink.core.components.projections.projection.Projection_Base.value">
 <code class="descname">value</code><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value</em> – Output of Projection, transmitted as variable to InputState of <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
+<dd><p><em>value</em> – output of Projection, transmitted to variable of function of its <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -601,14 +601,14 @@ in the same manner as they can for a <a class="reference internal" href="Mechani
 <dt id="psyneulink.core.components.projections.projection.Projection_Base.weight">
 <code class="descname">weight</code><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base.weight" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>number</em> – multiplies the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Projection after applying the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.exponent" title="psyneulink.core.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a>, and before combining with any other Projections that project to the same <a class="reference internal" href="State.html"><span class="doc">States</span></a>
-to determine that State’s <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+to determine that State’s <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.variable" title="psyneulink.core.components.states.state.State_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.projections.projection.Projection_Base.exponent">
 <code class="descname">exponent</code><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base.exponent" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>number</em> – exponentiates the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Projection, before applying <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.weight" title="psyneulink.core.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a>, and before combining it with any other Projections that project to the same
-<a class="reference internal" href="State.html"><span class="doc">States</span></a> to determine that State’s <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+<a class="reference internal" href="State.html"><span class="doc">States</span></a> to determine that State’s <a class="reference internal" href="State.html#psyneulink.core.components.states.state.State_Base.variable" title="psyneulink.core.components.states.state.State_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">

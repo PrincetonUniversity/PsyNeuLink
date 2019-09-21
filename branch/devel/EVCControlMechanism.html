@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EVCControlMechanism &mdash; PsyNeuLink 0.5.3.2+744.g05f81fc documentation</title>
+  <title>EVCControlMechanism &mdash; PsyNeuLink 0.5.3.2+745.g1616a3d documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+744.g05f81fc',
+              VERSION:'0.5.3.2+745.g1616a3d',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+744
+                0.5.3.2+745
               </div>
             
           
@@ -600,10 +600,10 @@ as the EVCControlMechanism’s <a class="reference internal" href="#psyneulink.l
 <code class="descname">value_function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.value_function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>function : default ValueFunction</em> – calculates the <a class="reference internal" href="#evccontrolmechanism-evc"><span class="std std-ref">EVC</span></a> for a given <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>.  It takes as its arguments an
 <a class="reference internal" href="#"><span class="doc">EVCControlMechanism</span></a>, an <strong>outcome</strong> value and a list or ndarray of <strong>costs</strong>, uses these to calculate an EVC,
-and returns a three item tuple with the calculated EVC, and the outcome value and aggregated value of costs
-used to calculate the EVC.  The default, <a class="reference internal" href="EVCAuxiliary.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.ValueFunction" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.ValueFunction"><code class="xref any py py-class docutils literal"><span class="pre">ValueFunction</span></code></a>,  calls the EVCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.cost_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_function</span></code></a> to aggregate the value of the costs, and then calls its
+and returns a three item tuple with the calculated EVC, and the outcome value and combined value of costs
+used to calculate the EVC.  The default, <a class="reference internal" href="EVCAuxiliary.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.ValueFunction" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.ValueFunction"><code class="xref any py py-class docutils literal"><span class="pre">ValueFunction</span></code></a>,  calls the EVCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.cost_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_function</span></code></a> to combine the value of the costs, and then calls its
 <code class="xref any docutils literal"><span class="pre">combine_outcome_and_costs</span></code> to calculate the EVC from the
-outcome and aggregated cost (see <a class="reference internal" href="#evccontrolmechanism-default-configuration"><span class="std std-ref">Default Configuration of EVC Function and its Auxiliary Functions</span></a> for additional details).  A custom
+outcome and combined cost (see <a class="reference internal" href="#evccontrolmechanism-default-configuration"><span class="std std-ref">Default Configuration of EVC Function and its Auxiliary Functions</span></a> for additional details).  A custom
 function can be assigned to <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.value_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.value_function"><code class="xref any py py-attr docutils literal"><span class="pre">value_function</span></code></a> so long as it returns a tuple with three items: the calculated
 EVC (which must be a scalar value), and the outcome and cost from which it was calculated (these can be scalar
 values or <code class="xref any docutils literal"><span class="pre">None</span></code>). If used with the EVCControlMechanism’s default <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, a

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputState &mdash; PsyNeuLink 0.5.3.2+744.g05f81fc documentation</title>
+  <title>InputState &mdash; PsyNeuLink 0.5.3.2+745.g1616a3d documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+744.g05f81fc',
+              VERSION:'0.5.3.2+745.g1616a3d',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+744
+                0.5.3.2+745
               </div>
             
           
@@ -520,7 +520,7 @@ assigned (see <a class="reference internal" href="#inputstate-variable-and-value
 specification</span></a>).</li>
 </ul>
 <ul class="simple" id="inputstate-function">
-<li><a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.function" title="psyneulink.core.components.states.inputstate.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> – aggregates the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of all of the
+<li><a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.function" title="psyneulink.core.components.states.inputstate.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> – combines the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of all of the
 <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> received by the InputState, and assigns the result to the InputState’s <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.  The default function is <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> that performs an elementwise (Hadamard)
 sums the values. However, the parameters of the <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.function" title="psyneulink.core.components.states.inputstate.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> –&nbsp;and thus the <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the InputState – can be modified by any <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> received by
 the InputState (listed in its <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.mod_afferents" title="psyneulink.core.components.states.inputstate.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.  A custom function can also be
@@ -542,7 +542,7 @@ its <a class="reference internal" href="ObjectiveMechanism.html"><span class="do
 <div class="section" id="execution">
 <span id="inputstate-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An InputState cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
-When this occurs, the InputState executes any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> it receives, calls its <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.function" title="psyneulink.core.components.states.inputstate.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to aggregate the values received from any <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> it receives
+When this occurs, the InputState executes any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> it receives, calls its <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.function" title="psyneulink.core.components.states.inputstate.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to combines the values received from any <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> it receives
 (listed in its its <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.path_afferents" title="psyneulink.core.components.states.inputstate.InputState.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute) and modulate them in response to any
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> (listed in its <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.mod_afferents" title="psyneulink.core.components.states.inputstate.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute),
 and then assigns the result to the InputState’s <a class="reference internal" href="#psyneulink.core.components.states.inputstate.InputState.value" title="psyneulink.core.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute. This, in turn, is assigned to

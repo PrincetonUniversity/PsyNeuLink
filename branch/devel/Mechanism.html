@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+744.g05f81fc documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.5.3.2+745.g1616a3d documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+744.g05f81fc',
+              VERSION:'0.5.3.2+745.g1616a3d',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+744
+                0.5.3.2+745
               </div>
             
           
@@ -461,7 +461,8 @@ The <a class="reference internal" href="InputState.html#psyneulink.core.componen
 </div>
 <div class="section" id="inputstates">
 <span id="mechanism-inputstates"></span><h4>InputStates<a class="headerlink" href="#inputstates" title="Permalink to this headline">¶</a></h4>
-<p>These receive, aggregate and represent the input to a Mechanism, and provide this to the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. Usually, a Mechanism has only one (<a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary</span></a>) <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>,
+<p>These receive, potentially combine, and represent the input to a Mechanism, and provide this to the Mechanism’s
+<a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. Usually, a Mechanism has only one (<a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary</span></a>) <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>,
 identified in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_state" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_state"><code class="xref any py py-attr docutils literal"><span class="pre">input_state</span></code></a> attribute. However some Mechanisms have more than one
 InputState. For example, a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> has one InputState for its <strong>SAMPLE</strong> and another for its <strong>TARGET</strong>
 input. All of the Mechanism’s InputStates (including its primary InputState &lt;InputState_Primary&gt;` are listed in its

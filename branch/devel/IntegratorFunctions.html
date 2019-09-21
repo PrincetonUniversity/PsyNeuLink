@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorFunctions &mdash; PsyNeuLink 0.5.3.2+744.g05f81fc documentation</title>
+  <title>IntegratorFunctions &mdash; PsyNeuLink 0.5.3.2+745.g1616a3d documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+744.g05f81fc',
+              VERSION:'0.5.3.2+745.g1616a3d',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+744
+                0.5.3.2+745
               </div>
             
           
@@ -438,7 +438,7 @@ for details).</li>
 if it’s absolute value is below <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.threshold" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>;
 if it is a list or array, it must be the same length as <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.offset" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.offset"><code class="xref any py py-attr docutils literal"><span class="pre">offset</span></code></a> for details).</li>
-<li><strong>starting_point</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array:  default 0.0</em>) – determspecifies ines the starting value for the integration process; if it is a list or array, it must be the
+<li><strong>starting_point</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array:  default 0.0</em>) – specifies the starting value for the integration process; if it is a list or array, it must be the
 same length as <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.starting_point" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.starting_point"><code class="xref any py py-attr docutils literal"><span class="pre">starting_point</span></code></a> for details).</li>
 <li><strong>threshold</strong> (<em>float : default 0.0</em>) – specifies the threshold (boundaries) of the drift diffusion process – i.e., at which the
 integration process terminates (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.threshold" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> for details).</li>
@@ -495,7 +495,7 @@ the corresponding elements of the integral (i.e., Hadamard addition). Serves as 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.starting_point">
 <code class="descname">starting_point</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.starting_point" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d array</em> – determines the start the starting value for the integration process; if it is a list or array, it must be the
+<dd><p><em>float or 1d array</em> – determines the starting value for the integration process; if it is a list or array, it must be the
 same length as <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>. If <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 is an array and starting_point is a float, starting_point is used for each element of the integral;  if
 starting_point is a list or array, each of its elements is used as the starting point for each element of the

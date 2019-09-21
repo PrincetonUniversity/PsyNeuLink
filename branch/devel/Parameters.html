@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.5.3.2+744.g05f81fc documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.5.3.2+745.g1616a3d documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+744.g05f81fc',
+              VERSION:'0.5.3.2+745.g1616a3d',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.5.3.2+744
+                0.5.3.2+745
               </div>
             
           
@@ -269,7 +269,8 @@ must become stateful Parameters, or they are at risk of computational errors lik
 </li>
 <li><p class="first">setters and getters (used for more advanced behavior than parsing) should both return the final value to return (getter) or set (setter)</p>
 <blockquote>
-<div><p>For example, <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.costs" title="psyneulink.core.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.costs"><code class="xref any py py-attr docutils literal"><span class="pre">costs</span></code></a> of <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> has a special getter method, which computes the cost on-the-fly:</p>
+<div><p>For example, <a class="reference internal" href="ModulatoryMechanism.html#psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism.costs" title="psyneulink.core.components.mechanisms.adaptive.modulatorymechanism.ModulatoryMechanism.costs"><code class="xref any py py-attr docutils literal"><span class="pre">costs</span></code></a> of <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> has a special
+getter method, which computes the cost on-the-fly:</p>
 <blockquote>
 <div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_modulatory_mechanism_costs_getter</span><span class="p">(</span><span class="n">owning_component</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
@@ -348,8 +349,11 @@ based on execution context</td>
 </tr>
 <tr class="row-odd"><td>modulable</td>
 <td>False</td>
-<td>if True, the parameter can be modulated (has
-a ParameterState</td>
+<td><p class="first">if True, the parameter can be modulated
+(if it belongs to a Mechanism or Projection</p>
+<blockquote class="last">
+<div>it is assigned a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>)</div></blockquote>
+</td>
 <td>Currently this does not determine what
 gets a ParameterState, but in the future
 it should</td>
@@ -485,11 +489,11 @@ get or set the default value of the associated <code class="xref py py-class doc
 
 <dl class="class">
 <dt id="psyneulink.core.globals.parameters.Parameter">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>read_only=False</em>, <em>function_arg=True</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>history_min_length=0</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_user_specified=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>modulation_combination_function=None</em>, <em>read_only=False</em>, <em>function_arg=True</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>history_min_length=0</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_user_specified=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.default_value">
 <code class="descname">default_value</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.default_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>the default value of the Parameter</p>
+<dd><p>the default value of the Parameter.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -503,7 +507,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>the name of the Parameter</p>
+<dd><p>the name of the Parameter.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -517,7 +521,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.stateful">
 <code class="descname">stateful</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.stateful" title="Permalink to this definition">¶</a></dt>
-<dd><p>whether the parameter has different values based on execution context</p>
+<dd><p>whether the parameter has different values based on execution context.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -531,7 +535,8 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.modulable">
 <code class="descname">modulable</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.modulable" title="Permalink to this definition">¶</a></dt>
-<dd><p>if True, the parameter can be modulated (has a ParameterState</p>
+<dd><p>if True, the parameter can be modulated; if the Parameter belongs to a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>,
+it is assigned a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -546,9 +551,29 @@ get or set the default value of the associated <code class="xref py py-class doc
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.globals.parameters.Parameter.modulation_combination_function">
+<code class="descname">modulation_combination_function</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.modulation_combination_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>specifies the function used in State._get_combined_mod_val() to combine values for the parameter if
+it receives more than one ModulatoryProjections;  must be either the keyword <em>MULTIPLICATIVE</em>,
+<em>PRODUCT</em>, <em>ADDITIVE</em>, <em>SUM</em>, or a function that accepts an n dimensional array and retursn an n-1
+dimensional array.  If it is None, the an attempt is made to determine it from the an alias for the
+Parameter’s name (i.e., if that is MULTIPLICATIVE_PARAM or ADDITIVE_PARAM);  otherwise the default
+behavior is determined by State._get_combined_mod_val().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.read_only">
 <code class="descname">read_only</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.read_only" title="Permalink to this definition">¶</a></dt>
-<dd><p>whether the user should be able to set the value or not (e.g. variable and value are just for informational purposes).</p>
+<dd><p>whether the user should be able to set the value or not
+(e.g. variable and value are just for informational purposes).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -584,7 +609,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.user">
 <code class="descname">user</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.user" title="Permalink to this definition">¶</a></dt>
-<dd><p>whether the parameter is something the user will care about (e.g. NOT context)</p>
+<dd><p>whether the parameter is something the user will care about (e.g. NOT context).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -598,7 +623,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.values">
 <code class="descname">values</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.values" title="Permalink to this definition">¶</a></dt>
-<dd><p>stores the parameter’s values under different execution contexts</p>
+<dd><p>stores the parameter’s values under different execution contexts.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -614,7 +639,8 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.getter">
 <code class="descname">getter</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.getter" title="Permalink to this definition">¶</a></dt>
-<dd><p>hook that allows overriding the retrieval of values based on a supplied method (e.g. _output_state_variable_getter)</p>
+<dd><p>hook that allows overriding the retrieval of values based on a supplied method
+(e.g. _output_state_variable_getter).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -633,7 +659,8 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.setter">
 <code class="descname">setter</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.setter" title="Permalink to this definition">¶</a></dt>
-<dd><p>hook that allows overriding the setting of values based on a supplied method (e.g.  _recurrent_transfer_mechanism_matrix_setter)</p>
+<dd><p>hook that allows overriding the setting of values based on a supplied method
+(e.g.  _recurrent_transfer_mechanism_matrix_setter).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -652,7 +679,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.loggable">
 <code class="descname">loggable</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.loggable" title="Permalink to this definition">¶</a></dt>
-<dd><p>whether the parameter can be logged</p>
+<dd><p>whether the parameter can be logged.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -666,7 +693,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.log">
 <code class="descname">log</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.log" title="Permalink to this definition">¶</a></dt>
-<dd><p>stores the log of the parameter if applicable</p>
+<dd><p>stores the log of the parameter if applicable.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -682,7 +709,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.log_condition">
 <code class="descname">log_condition</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.log_condition" title="Permalink to this definition">¶</a></dt>
-<dd><p>the LogCondition for which the parameter should be logged</p>
+<dd><p>the LogCondition for which the parameter should be logged.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -698,7 +725,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.history">
 <code class="descname">history</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.history" title="Permalink to this definition">¶</a></dt>
-<dd><p>stores the history of the parameter (previous values). Also see <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.get_previous" title="psyneulink.core.globals.parameters.Parameter.get_previous"><code class="xref any py py-meth docutils literal"><span class="pre">get_previous</span></code></a></p>
+<dd><p>stores the history of the parameter (previous values). Also see <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.get_previous" title="psyneulink.core.globals.parameters.Parameter.get_previous"><code class="xref any py py-meth docutils literal"><span class="pre">get_previous</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -714,7 +741,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.history_max_length">
 <code class="descname">history_max_length</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.history_max_length" title="Permalink to this definition">¶</a></dt>
-<dd><p>the maximum length of the stored history</p>
+<dd><p>the maximum length of the stored history.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -729,7 +756,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 <dt id="psyneulink.core.globals.parameters.Parameter.history_min_length">
 <code class="descname">history_min_length</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.history_min_length" title="Permalink to this definition">¶</a></dt>
 <dd><p>the minimum length of the stored history. generally this does not need to be
-overridden, but is used to indicate if parameter history is necessary to computation</p>
+overridden, but is used to indicate if parameter history is necessary to computation.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -743,7 +770,8 @@ overridden, but is used to indicate if parameter history is necessary to computa
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.fallback_default">
 <code class="descname">fallback_default</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.fallback_default" title="Permalink to this definition">¶</a></dt>
-<dd><p>if False, the Parameter will return None if a requested value is not present for a given execution context; if True, the Parameter’s default_value will be returned instead</p>
+<dd><p>if False, the Parameter will return None if a requested value is not present for a given execution context;
+if True, the Parameter’s default_value will be returned instead.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -757,8 +785,9 @@ overridden, but is used to indicate if parameter history is necessary to computa
 <dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.retain_old_simulation_data">
 <code class="descname">retain_old_simulation_data</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.retain_old_simulation_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>if False, the Parameter signals to other PNL objects that any values generated during simulations may be deleted after they
-are no longer needed for computation; if True, the values should be saved for later inspection</p>
+<dd><p>if False, the Parameter signals to other PNL objects that any values generated during simulations may be
+deleted after they are no longer needed for computation; if True, the values should be saved for later
+inspection.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />

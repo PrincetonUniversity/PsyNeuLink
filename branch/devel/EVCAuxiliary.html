@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EVCAuxiliary &mdash; PsyNeuLink 0.5.3.2+744.g05f81fc documentation</title>
+  <title>EVCAuxiliary &mdash; PsyNeuLink 0.5.3.2+745.g1616a3d documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.5.3.2+744.g05f81fc',
+              VERSION:'0.5.3.2+745.g1616a3d',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.5.3.2+744
+                0.5.3.2+745
               </div>
             
           
@@ -199,7 +199,7 @@
 <p>ValueFunction takes as its arguments an outcome (a value representing the performance of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>)
 and list of costs (each reflecting the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.states.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of the <code class="xref any docutils literal"><span class="pre">controller</span>
 <span class="pre">System.controller</span></code> of that System), and returns an <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-evc"><span class="std std-ref">expected value of control (EVC)</span></a>
-based on these (along with the outcome and aggregation of costs used to calculate the EVC).</p>
+based on these (along with the outcome and combination of costs used to calculate the EVC).</p>
 <p>ValueFunction is the default for an EVCControlMechanism’s <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.value_function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.value_function"><code class="xref any py py-attr docutils literal"><span class="pre">value_function</span></code></a>
 attribute, and it is called by <a class="reference internal" href="#psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.ControlSignalGridSearch" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary.ControlSignalGridSearch"><code class="xref any py py-class docutils literal"><span class="pre">ControlSignalGridSearch</span></code></a> (the EVCControlMechanism’s default <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.function" title="psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism.EVCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>).</p>
 <p>The ValueFunction’s default <code class="xref any docutils literal"><span class="pre">function</span></code> calculates the EVC using the result of the
