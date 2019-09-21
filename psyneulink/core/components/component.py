@@ -1200,7 +1200,7 @@ class Component(object, metaclass=ComponentsMeta):
             if p.name not in black_list and not isinstance(p, ParameterAlias):
                 val = p.get(context)
                 # Check if the value is string (like integration_method)
-                return not isinstance(val, str)
+                return not isinstance(val, (str, ComponentsMeta))
             return False
 
         return filter(_is_compilation_param, self.parameters)
