@@ -3430,6 +3430,7 @@ class TestNestedCompositions:
 
         sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs=[1.0], bin_execute=mode)
+
         assert np.allclose(ret, [[[0.52497918747894]]])
 
 

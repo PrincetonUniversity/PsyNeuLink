@@ -959,7 +959,7 @@ class PytorchModelCreator(torch.nn.Module):
             gain = get_fct_param_value('gain')
             bias = get_fct_param_value('bias')
             offset = get_fct_param_value('offset')
-            return lambda x: 1 / (1 + torch.exp(-gain * (x - bias) + offset))
+            return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
 
         # if we have relu function (the only other kind of function allowed by the autodiff composition)
         else:

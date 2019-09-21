@@ -514,6 +514,12 @@ class Function_Base(Function):
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
 
+    def __deepcopy__(self, memo):
+        new = super().__deepcopy__(memo)
+        # ensure copy does not have identical name
+        register_category(new, Function_Base, new.name, FunctionRegistry)
+        return new
+
     @handle_external_context()
     def function(self,
                  variable=None,
