@@ -20,6 +20,7 @@ Sections
   * `ControlMechanism_Structure`
       - `ControlMechanism_Input`
       - `ControlMechanism_Function`
+      - 'ControlMechanism_Output`
       - `ControlMechanism_Costs_NetOutcome`
   * `ControlMechanism_Execution`
   * `ControlMechanism_Examples`
@@ -84,10 +85,10 @@ Creating a ControlMechanism
 ---------------------------
 
 A ControlMechanism is created by calling its constructor.  When a ControlMechanism is created, the OutputStates it
-monitors and the States it modulates can be specified can be specified in the **montior_for_control** and
-**objective_mechanism** arguments of its constructor, respectively.  Each can be specified in several ways,
-as described below. If neither of those arguments is specified, then only the ControlMechanism is constructed,
-and its inputs and the parameters it modulates must be specified in some other way.
+monitors and the States it modulates can be specified in the **montior_for_control** and **objective_mechanism**
+arguments of its constructor, respectively.  Each can be specified in several ways, as described below. If neither of
+those arguments is specified, then only the ControlMechanism is constructed, and its inputs and the parameters it
+modulates must be specified in some other way.
 
 .. _ControlMechanism_Monitor_for_Control:
 

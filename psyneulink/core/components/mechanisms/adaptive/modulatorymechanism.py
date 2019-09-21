@@ -21,6 +21,7 @@ Sections
   * `ModulatoryMechanism_Structure`
       - `ModulatoryMechanism_Input`
       - `ModulatoryMechanism_Function`
+      - `ModulatoryMechanism_Output`
   * `ModulatoryMechanism_Execution`
   * `ModulatoryMechanism_Examples`
   * `ModulatoryMechanism_Class_Reference`
@@ -246,14 +247,6 @@ Structure
 
 *Input*
 ~~~~~~~
-
-By default, a ModulatoryMechanism has a single (`primary <InputState_Primary>`) `input_state
-<ModulatoryMechanism.input_state>` that is named *OUTCOME*.  If its `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>` is implemented, then it receives a MappingProjection from that
-ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Output>`, the value of which is also stored in the
-ModulatoryMechanism's `outcome  <ModulatoryMechanism.outcome>` attribute.  This is used as the input to the
-ModulatoryMechanism's `function <ModulatoryMechanism.function>`, that determines its `modulatory_allocation
-<ModulatoryMechanism.modulatory_allocation>`.
 
 By default, a ModulatoryMechanism has a single (`primary <InputState_Primary>`) `input_state
 <ModulatoryMechanism.input_state>` that is named *OUTCOME*.  If the ModulatoryMechanism has an `objective_mechanism
