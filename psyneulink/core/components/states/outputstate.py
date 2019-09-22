@@ -596,7 +596,7 @@ from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALL, ASSIGN, CALCULATE, COMMAND_LINE, CONTEXT, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, \
+    ALL, ASSIGN, CALCULATE, CONTEXT, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, \
     MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MECHANISM_VALUE, NAME, \
     OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OUTPUT_STD_DEV, OUTPUT_VARIANCE, \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
@@ -707,8 +707,8 @@ def _parse_output_state_variable(variable, owner, context=None, output_state_nam
                     #                        format(spec, output_state_name or OutputState.__name__, owner.name))
                     raise Exception
             except:
-                raise OutputStateError("Can't parse variable ({}) for {} of {}".
-                                       format(spec, output_state_name or OutputState.__name__, owner.name))
+                raise OutputStateError(f"Can't parse variable ({spec}) for "
+                                       f"{output_state_name or OutputState.__name__} of {owner.name}.")
 
         elif isinstance(spec, str) and spec == PARAMS_DICT:
             # Specifies passing owner's params_dict as variable
@@ -734,18 +734,13 @@ def _parse_output_state_variable(variable, owner, context=None, output_state_nam
                     else:
                         return getattr(owner.function.parameters, owner_param_name)._get(context)
                 except AttributeError:
-                    raise OutputStateError(
-                        "Can't parse variable ({}) for {} of {}".format(
-                            spec, output_state_name or OutputState.__name__, owner.name
-                        )
-                    )
+                    raise OutputStateError(f"Can't parse variable ({spec}) for "
+                                           f"{output_state_name or OutputState.__name__} of {owner.name}.")
         else:
-            raise OutputStateError("\'{}\' entry for {} specification dictionary of {} ({}) must be "
-                                   "numeric or a list of {} attribute names".
-                                   format(VARIABLE.upper(),
-                                          output_state_name or OutputState.__name__,
-                                          owner.name, spec,
-                                          owner.__class__.__name__))
+            raise OutputStateError(f"'{VARIABLE.upper()}' entry for {output_state_name or OutputState.__name__} "
+                                   f"specification dictionary of {owner.name} ({spec}) must be "
+                                   "numeric or a list of {owner.__class__.__name__} attribute names.")
+
     if not isinstance(variable, list):
         variable = [variable]
 

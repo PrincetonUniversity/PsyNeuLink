@@ -888,10 +888,20 @@ class Component(object, metaclass=ComponentsMeta):
                     :default value: False
                     :type: bool
 
+                execution_count
+                    see `execution_count <Component.execution_count>`
+
+                    :default value: 0
+                    :type: int
+                    :read only: True
+
         """
         variable = Parameter(np.array([0]), read_only=True)
         value = Parameter(np.array([0]), read_only=True)
         has_initializers = Parameter(False, setter=_has_initializers_setter)
+        # execution_count ios not stateful because it is a global counter;
+        #    for context-specific counts should use schedulers which store this info
+        execution_count = Parameter(0, read_only=True, loggable=False, stateful=False, fallback_default=True)
 
         def _parse_variable(self, variable):
             return variable
@@ -3039,27 +3049,48 @@ class Component(object, metaclass=ComponentsMeta):
         except AttributeError:
             pass
 
-    @property
-    def current_execution_count(self):
-        """Maintains a simple count of executions over the life of the Component,
-        Incremented in the Component's execute method by call to self._increment_execution_count
-        """
-        try:
-            return self._current_execution_count
-        except:
-            self._current_execution_count = 0
-            return self._current_execution_count
-
-    @current_execution_count.setter
-    def current_execution_count(self, count:int):
-        self._current_execution_count = count
-
+    # # MODIFIED 9/22/19 OLD:
+    # @property
+    # def current_execution_count(self):
+    #     """Maintains a simple count of executions over the life of the Component,
+    #     Incremented in the Component's execute method by call to self._increment_execution_count
+    #     """
+    #     try:
+    #         return self._current_execution_count
+    #     except:
+    #         self._current_execution_count = 0
+    #         return self._current_execution_count
+    #
+    # @current_execution_count.setter
+    # def current_execution_count(self, count:int):
+    #     self._current_execution_count = count
+    #
+    # def _increment_execution_count(self, count=1):
+    #     try:
+    #         self._current_execution_count +=count
+    #     except:
+    #         self._current_execution_count = 1
+    #     return self._current_execution_count
+    #
+    # @property
+    # def current_execution_time(self):
+    #     try:
+    #         return self._current_execution_time
+    #     except AttributeError:
+    #         self._update_current_execution_time(self.most_recent_context.string)
+    #
+    # def get_current_execution_time(self, context=None):
+    #     if context is None:
+    #         return self.current_execution_time
+    #     else:
+    #         try:
+    #             return context.composition.scheduler_processing.get_clock(context).time
+    #         except AttributeError:
+    #             return None
+    # MODIFIED 9/22/19 NEW: [JDC]
     def _increment_execution_count(self, count=1):
-        try:
-            self._current_execution_count +=count
-        except:
-            self._current_execution_count = 1
-        return self._current_execution_count
+        self.parameters.execution_count.set(self.execution_count+count, override=True)
+        return self.execution_count
 
     @property
     def current_execution_time(self):
@@ -3076,6 +3107,7 @@ class Component(object, metaclass=ComponentsMeta):
                 return context.composition.scheduler_processing.get_clock(context).time
             except AttributeError:
                 return None
+    # MODIFIED 9/22/19 END
 
     def _get_current_execution_time(self, context):
         from psyneulink.core.globals.context import _get_context

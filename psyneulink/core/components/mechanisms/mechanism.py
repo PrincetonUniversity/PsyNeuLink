@@ -955,11 +955,11 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import REMOVE_STATES, _parse_state_spec
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_PHASE, \
-    FUNCTION, FUNCTION_PARAMS, INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
+    ADDITIVE_PARAM, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
+    INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
     INPUT_LABELS_DICT, INPUT_STATE, INPUT_STATES, INPUT_STATE_VARIABLES, \
     MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
-    OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, \
+    OUTPUT_LABELS_DICT, OUTPUT_STATE, OUTPUT_STATES, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
     PARAMETER_STATE, PARAMETER_STATES, PREVIOUS_VALUE, PROJECTIONS, REFERENCE_VALUE, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, kwMechanismComponentCategory
 from psyneulink.core.globals.parameters import Parameter
@@ -1952,8 +1952,8 @@ class Mechanism_Base(Mechanism):
         #   values are names of corresponding attributes
         self.attributes_dict_entries = dict(OWNER_VARIABLE = VARIABLE,
                                             OWNER_VALUE = VALUE,
-                                            EXECUTION_COUNT = CURRENT_EXECUTION_COUNT,
-                                            EXECUTION_TIME = CURRENT_EXECUTION_TIME)
+                                            OWNER_EXECUTION_COUNT = OWNER_EXECUTION_COUNT,
+                                            OWNER_EXECUTION_TIME = OWNER_EXECUTION_TIME)
         if hasattr(self, PREVIOUS_VALUE):
             self.attributes_dict_entries.update({'PREVIOUS_VALUE': PREVIOUS_VALUE})
 
