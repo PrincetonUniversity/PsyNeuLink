@@ -2430,6 +2430,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     proj = MappingProjection(
                         sender=output_state,
                         receiver=interface_input_state,
+                        # FIX:  This fails if OutputStates don't all have the same dimensionality (number of axes);
+                        #       see example in test_output_states/TestOutputStates
                         matrix=IDENTITY_MATRIX,
                         name=proj_name
                     )
