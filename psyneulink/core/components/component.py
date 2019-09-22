@@ -260,20 +260,19 @@ following two informational attributes:
 
 * **current_execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
   executions carried out during initialization and validation, but includes all other executions, whether they are of
-  the Component on its own are as part of a `Composition` (e.g., `Process` or `System`). The value can be changed
-  "manually" or programmatically by assigning an integer value directly to the attribute.
+  the Component on its own are as part of a `Composition`, and irresective of the `context <Context>` in which they
+  are occur. The value can be changed "manually" or programmatically by assigning an integer value directly to the
+  attribute.
 
 .. _Component_Current_Execution_Time:
 
-* **current_execution_time** -- maintains the `Time` of the last execution of the Component in the context of a
-  `System`'s `scheduler <System_Scheduler>`, and is stored as a `time <Context.time>` tuple of values indicating the
-  `TimeScale.TRIAL`,  `TimeScale.PASS`, and `TimeScale.TIME_STEP` of the last execution.  Note that a System has two
-  schedulers -- `scheduler_processing <Composition.scheduler_processing>` and `scheduler_learning
-  <Composition.scheduler_learning>`; `current_execution_time` stores the time of whichever of these was the last to
-  execute the Component.
-
+* **current_execution_time** -- maintains the `Time` of the last execution of the Component in the context of the
+  `Composition`'s current `scheduler_processing <Composition.scheduler_processing`, and is stored as a `time
+  <Context.time>` tuple of values indicating the `TimeScale.TRIAL`,  `TimeScale.PASS`, and `TimeScale.TIME_STEP` of the
+  last execution.
 
 COMMENT:
+FIX: STATEMENT ABOVE ABOUT MODIFYING EXECUTION COUNT VIOLATES THIS DEFINITION, AS PROBABLY DO OTHER ATTRIBUTES
   * parameters are things that govern the operation of the Mechanism (including its function) and/or can be modified/modulated
   * attributes include parameters, but also read-only attributes that reflect but do not determine the operation (e.g., EXECUTION_COUNT)
 COMMENT

@@ -1437,7 +1437,11 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                 if output_state.initialization_status == ContextFlags.DEFERRED_INIT:
                     try:
                         output_state_value = OutputState._get_state_function_value(owner,
-                                                                                   output_state.function,
+                                                                                   # MODIFIED 9/22/19 OLD:
+                                                                                   # output_state.function,
+                                                                                   # MODIFIED 9/22/19 NEW: [JDC]
+                                                                                   output_state.init_args[FUNCTION],
+                                                                                   # MODIFIED 9/22/19 END
                                                                                    output_state.init_args[VARIABLE])
                     # For backward compatibility with INDEX and ASSIGN
                     except AttributeError:

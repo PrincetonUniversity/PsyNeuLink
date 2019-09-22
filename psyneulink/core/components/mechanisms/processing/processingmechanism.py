@@ -266,8 +266,8 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                     :read only: True
 
         """
-        # not stateful because this really is just a global counter, for accurate counts
-        # should use schedulers which store this info
+        # not stateful because this really is just a global counter,
+        # for context-specifc counts should use schedulers which store this info
         execution_count = Parameter(0, read_only=True, loggable=False, stateful=False, fallback_default=True)
 
     classPreferenceLevel = PreferenceLevel.TYPE
