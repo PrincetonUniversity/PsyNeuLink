@@ -258,7 +258,7 @@ following two informational attributes:
 
 .. _Component_Execution_Count:
 
-* **current_execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
+* **execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
   executions carried out during initialization and validation, but includes all other executions, whether they are of
   the Component on its own are as part of a `Composition`, and irresective of the `context <Context>` in which they
   are occur. The value can be changed "manually" or programmatically by assigning an integer value directly to the
@@ -818,8 +818,8 @@ class Component(object, metaclass=ComponentsMeta):
     log : Log
         see `log <Component_Log>`
 
-    current_execution_count : int
-        see `current_execution_count <Component_Execution_Count>`
+    execution_count : int
+        see `execution_count <Component_Execution_Count>`
 
     current_execution_time : tuple(`Time.RUN`, `Time.TRIAL`, `Time.PASS`, `Time.TIME_STEP`)
         see `current_execution_time <Component_Current_Execution_Time>`
@@ -3049,45 +3049,6 @@ class Component(object, metaclass=ComponentsMeta):
         except AttributeError:
             pass
 
-    # # MODIFIED 9/22/19 OLD:
-    # @property
-    # def current_execution_count(self):
-    #     """Maintains a simple count of executions over the life of the Component,
-    #     Incremented in the Component's execute method by call to self._increment_execution_count
-    #     """
-    #     try:
-    #         return self._current_execution_count
-    #     except:
-    #         self._current_execution_count = 0
-    #         return self._current_execution_count
-    #
-    # @current_execution_count.setter
-    # def current_execution_count(self, count:int):
-    #     self._current_execution_count = count
-    #
-    # def _increment_execution_count(self, count=1):
-    #     try:
-    #         self._current_execution_count +=count
-    #     except:
-    #         self._current_execution_count = 1
-    #     return self._current_execution_count
-    #
-    # @property
-    # def current_execution_time(self):
-    #     try:
-    #         return self._current_execution_time
-    #     except AttributeError:
-    #         self._update_current_execution_time(self.most_recent_context.string)
-    #
-    # def get_current_execution_time(self, context=None):
-    #     if context is None:
-    #         return self.current_execution_time
-    #     else:
-    #         try:
-    #             return context.composition.scheduler_processing.get_clock(context).time
-    #         except AttributeError:
-    #             return None
-    # MODIFIED 9/22/19 NEW: [JDC]
     def _increment_execution_count(self, count=1):
         self.parameters.execution_count.set(self.execution_count+count, override=True)
         return self.execution_count
