@@ -988,7 +988,7 @@ class ControlMechanism(ModulatoryMechanism):
                                                **kwargs)
 
     def _instantiate_output_states(self, context=None):
-        self._register_modulatory_signal_type(ControlSignal,context)
+        self._register_control_signal_type(ControlSignal,context)
         super()._instantiate_output_states(context)
 
     def _instantiate_control_signal(self, control_signal, context):

@@ -1987,7 +1987,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller:
             deferred_init_control_specs = node._get_parameter_state_deferred_init_control_specs()
             if deferred_init_control_specs:
-                self.controller._remove_default_modulatory_signal(type=CONTROL_SIGNAL)
+                self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
                 for ctl_sig_spec in deferred_init_control_specs:
                     # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
                     self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
@@ -4238,7 +4238,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
 
         # Get rid of default ControlSignal if it has no ControlProjections
-        controller._remove_default_modulatory_signal(type=CONTROL_SIGNAL)
+        controller._remove_default_control_signal(type=CONTROL_SIGNAL)
 
         # Add any ControlSignals specified for ParameterStates of nodes already in the Composition
         control_signal_specs = self._get_control_signals_for_composition()

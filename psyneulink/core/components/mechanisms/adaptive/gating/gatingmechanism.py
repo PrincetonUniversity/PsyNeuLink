@@ -477,10 +477,10 @@ class GatingMechanism(ModulatoryMechanism):
 
     # MODIFIED 9/22/19 OLD:
     # def _instantiate_output_states(self, context=None):
-    #     self._register_modulatory_signal_type(GatingSignal,context)
+    #     self._register_control_signal_type(GatingSignal,context)
     #     super()._instantiate_output_states(context)
     # MODIFIED 9/22/19 NEW: [JDC]
-    def _register_modulatory_signal_type(self, context=None):
+    def _register_control_signal_type(self, context=None):
         from psyneulink.core.globals.registry import register_category
         from psyneulink.core.components.states.state import State_Base
 
