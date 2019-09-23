@@ -565,7 +565,7 @@ import typecheck as tc
 import warnings
 
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
+from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ModulatoryMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
@@ -590,7 +590,7 @@ ControlMechanismRegistry = {}
 
 def _is_control_spec(spec):
     from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-    from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
+    from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ModulatoryMechanism
     if isinstance(spec, tuple):
         return any(_is_control_spec(item) for item in spec)
     if isinstance(spec, dict) and PROJECTION_TYPE in spec:

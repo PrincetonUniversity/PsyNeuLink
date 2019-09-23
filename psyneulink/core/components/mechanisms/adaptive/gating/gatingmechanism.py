@@ -178,7 +178,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
+from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ModulatoryMechanism
 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultGatingAllocation

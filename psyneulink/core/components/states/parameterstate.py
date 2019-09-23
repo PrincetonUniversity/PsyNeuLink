@@ -1084,7 +1084,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
 
 def _is_legal_param_value(owner, value):
 
-    from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import _is_control_spec
+    from psyneulink.core.components.mechanisms.adaptive.controlmechanism import _is_control_spec
     from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
 
     # LEGAL PARAMETER VALUES:
