@@ -1424,7 +1424,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                         f"PROGRAM ERROR: The \'owner_value_index\' attribute for {control_signal.name} " \
                             f"of {self.name} ({control_signal.owner_value_index})is not an int."
 
-
     def _instantiate_control_signal(self,  control_signal, context=None):
         """Parse and instantiate modulatory_signal specifications (in call to State._parse_state_spec)
            and any embedded Projection specifications (in call to <State>._instantiate_projections)
