@@ -1789,19 +1789,19 @@ class ControlMechanism(AdaptiveMechanism_Base):
         except:
             return None
 
-    @property
-    def control_signals(self):
-        try:
-            return ContentAddressableList(component_type=ControlSignal,
-                                          list=[state for state in self.output_states
-                                                if isinstance(state, ControlSignal)])
-        except:
-            return None
-
-    @control_signals.setter
-    def control_signals(self, value):
-        self._control_signals = value
-
+    # @property
+    # def control_signals(self):
+    #     try:
+    #         return ContentAddressableList(component_type=ControlSignal,
+    #                                       list=[state for state in self.output_states
+    #                                             if isinstance(state, ControlSignal)])
+    #     except:
+    #         return None
+    #
+    # @control_signals.setter
+    # def control_signals(self, value):
+    #     self._control_signals = value
+    #
     @property
     def control_projections(self):
         try:
