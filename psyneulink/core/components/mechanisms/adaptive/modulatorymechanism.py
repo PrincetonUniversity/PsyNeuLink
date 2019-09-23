@@ -469,10 +469,10 @@ from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
-    AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
+    AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
     EID_SIMULATION, GATING_SIGNAL, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
     MODULATORY_PROJECTION, MODULATORY_SIGNAL, MODULATORY_SIGNALS, MONITOR_FOR_MODULATION, MULTIPLICATIVE, \
-    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTIONS, SYSTEM
+    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -488,6 +488,28 @@ CONTROL_ALLOCATION = 'control_allocation'
 GATING_ALLOCATION = 'gating_allocation'
 
 ModulatoryMechanismRegistry = {}
+
+def _is_control_spec(spec):
+    from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+    from psyneulink.core.components.mechanisms.adaptive.modulatorymechanism import ModulatoryMechanism
+    if isinstance(spec, tuple):
+        return any(_is_control_spec(item) for item in spec)
+    if isinstance(spec, dict) and PROJECTION_TYPE in spec:
+        return _is_control_spec(spec[PROJECTION_TYPE])
+    elif isinstance(spec, (ControlMechanism,
+                           ControlSignal,
+                           ControlProjection,
+                           ModulatoryMechanism)):
+        return True
+    elif isinstance(spec, type) and issubclass(spec, (ControlMechanism,
+                                                      ControlSignal,
+                                                      ControlProjection,
+                                                      ModulatoryMechanism)):
+        return True
+    elif isinstance(spec, str) and spec in {CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL}:
+        return True
+    else:
+        return False
 
 class ModulatoryMechanismError(Exception):
     def __init__(self, error_value):
@@ -912,8 +934,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
     outputStateTypes = [ControlSignal, GatingSignal]
     stateListAttr = Mechanism_Base.stateListAttr.copy()
-    stateListAttr.update({ControlSignal:CONTROL_SIGNALS,
-                          GatingSignal:GATING_SIGNALS})
+    stateListAttr.update({ControlSignal:CONTROL_SIGNALS, GatingSignal:GATING_SIGNALS})
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -1031,6 +1052,12 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                       getter=_gating_allocation_getter,
                                       setter=_gating_allocation_setter,
                                       read_only=True)
+        # # FIX: FROM ControlMechanism:
+        # gating_allocation = Parameter(NotImplemented,
+        #                               getter=_gating_allocation_getter,
+        #                               setter=_gating_allocation_setter,
+        #                               read_only=True)
+
         outcome = Parameter(None, read_only=True, getter=_outcome_getter)
 
         reconfiguration_cost = Parameter(None, read_only=True)
@@ -1058,12 +1085,12 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                  default_variable=None,
                  size=None,
                  system:tc.optional(tc.any(System_Base, Composition_Base))=None,
-                 monitor_for_modulation:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
+                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  # objective_mechanism:tc.optional(ObjectiveMechanism, list, bool)=None,
                  objective_mechanism=None,
                  function=None,
                  default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
-                 modulatory_signals:tc.optional(tc.any(is_iterable,
+                 control_signals:tc.optional(tc.any(is_iterable,
                                                        ParameterState,
                                                        InputState,
                                                        OutputState,
@@ -1078,10 +1105,17 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                  prefs:is_pref_set=None,
                  **kwargs
                  ):
+
+        monitor_for_modulation = monitor_for_control or []
+        modulatory_signals = control_signals or []
+
+        if kwargs:
+            if MONITOR_FOR_MODULATION in kwargs:
+                monitor_for_modulation.append(convert_to_list(kwargs.pop(MONITOR_FOR_MODULATION)))
+            if MODULATORY_SIGNALS in kwargs:
+                monitor_for_modulation.append(convert_to_list(kwargs.pop(MONITOR_FOR_MODULATION)))
+
         function = function or DefaultAllocationFunction
-        modulatory_signals = modulatory_signals or []
-        if not isinstance(modulatory_signals, list):
-            modulatory_signals = [modulatory_signals]
         self.combine_costs = combine_costs
         self.compute_net_outcome = compute_net_outcome
         self.compute_reconfiguration_cost = compute_reconfiguration_cost
