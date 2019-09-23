@@ -1,7 +1,7 @@
 from psyneulink import *
 import numpy as np
 
-class TestModulatoryMechanism:
+class TestControlMechanism:
 
     # def test_control_modulation_in_system(self):
     #     Tx = TransferMechanism(name='Tx')
@@ -25,8 +25,8 @@ class TestModulatoryMechanism:
 
     def test_assignment_of_control_and_gating_signals(self):
         m = ProcessingMechanism(function=Logistic)
-        c = ModulatoryMechanism(
-                modulatory_signals=[
+        c = ControlMechanism(
+                control_signals=[
                     ControlSignal(name="CS1", modulates=(GAIN, m)),
                     GatingSignal(name="GS", modulates=m),
                     ControlSignal(name="CS2", modulates=(BIAS, m)),
@@ -42,10 +42,10 @@ class TestModulatoryMechanism:
         Tx = TransferMechanism(name='Tx')
         Ty = TransferMechanism(name='Ty')
         Tz = TransferMechanism(name='Tz')
-        C =  ModulatoryMechanism(
+        C =  ControlMechanism(
                 default_variable=[1],
                 monitor_for_modulation=Ty,
-                modulatory_signals=ControlSignal(modulation=OVERRIDE,
+                control_signals=ControlSignal(modulation=OVERRIDE,
                                                  modulates=(SLOPE, Tz)))
 
         comp = Composition(enable_controller=True)

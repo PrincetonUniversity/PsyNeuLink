@@ -1097,12 +1097,12 @@ from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ModulatoryMechanism
+from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -1624,7 +1624,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def __init__(
             self,
             name=None,
-            controller:ModulatoryMechanism=None,
+            controller:ControlMechanism=None,
             enable_controller=None,
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
             controller_condition:Condition=Always(),
@@ -2461,7 +2461,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if afferent in state.mod_afferents:
                                 state.mod_afferents.remove(afferent)
 
-            for modulatory_signal in controller.modulatory_signals:
+            for modulatory_signal in controller.control_signals:
                 for projection in modulatory_signal.projections:
                     receiver = projection.receiver
                     mech = receiver.owner
@@ -3138,8 +3138,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Tuples (Mechanism, `NodeRoles <NodeRole>`) can be used to assign `required_roles
         <Composition.add_node.required_roles>` to Mechanisms.
 
-        Note that any specifications of a ModulatoryMechanism's **monitor_for_modulation** `argument
-        <ModulatoryMechanism_Monitor_for_Modulation_Argument>` or the **monitor** argument specified in the constructor
+        Note that any specifications of a ModulatoryMechanism's **monitor_for_control** `argument
+        <ModulatoryMechanism_Monitor_for_control_Argument>` or the **monitor** argument specified in the constructor
         for an ObjectiveMechanism in the **objective_mechanism** `argument <ModulatoryMechanism_ObjectiveMechanism>`
         supercede any MappingProjections that would otherwise be created for them when specified in the **pathway**
         argument.
@@ -3196,7 +3196,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    instantiated by their constructors or, for a controller, _add_controller()
         items_to_delete = []
         for i, item in enumerate(pathway):
-            if ((isinstance(item, ControlMechanism) and item.monitor_for_modulation)
+            if ((isinstance(item, ControlMechanism) and item.monitor_for_control)
                     or (isinstance(item, ObjectiveMechanism) and item._role == CONTROL)):
                 items_to_delete.append(item)
                 # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
@@ -4158,7 +4158,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                              CONTROL
     # ******************************************************************************************************************
 
-    def add_controller(self, controller:ModulatoryMechanism):
+    def add_controller(self, controller:ControlMechanism):
         """
         Add an `OptimizationControlMechanism` as the `controller
         <Composition.controller>` of the Composition, which gives the OCM access to the
@@ -4166,9 +4166,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         an optimal Control policy.
         """
 
-        if not isinstance(controller, ModulatoryMechanism):
+        if not isinstance(controller, ControlMechanism):
             raise CompositionError(f"Specification of {repr(CONTROLLER)} arg for {self.name} "
-                                   f"must be a {repr(ModulatoryMechanism.__name__)} ")
+                                   f"must be a {repr(ControlMechanism.__name__)} ")
 
         # VALIDATE AND ADD CONTROLLER
 
@@ -5632,7 +5632,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 except KeyError:
                     # # mech_role = r'\n[{}]'.format(self.system)
                     # mech_role = r'\n[CONTROLLER]'
-                    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import \
+                    from psyneulink.core.components.mechanisms.adaptive.controlmechanism import \
                         ControlMechanism
                     from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
                         ObjectiveMechanism

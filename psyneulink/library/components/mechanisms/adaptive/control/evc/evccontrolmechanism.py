@@ -382,7 +382,7 @@ import warnings
 
 from psyneulink.core.components.component import function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismList
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -931,17 +931,17 @@ class EVCControlMechanism(ControlMechanism):
             self._instantiate_prediction_mechanisms(system=self.system, context=context)
         super()._instantiate_input_states(context=context)
 
-    def _instantiate_modulatory_signals(self, context):
+    def _instantiate_control_signals(self, context):
         """Size control_allocation and assign modulatory_signals
         Set size of control_allocadtion equal to number of modulatory_signals.
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         """
         from psyneulink.core.globals.keywords import OWNER_VALUE
-        for i, spec in enumerate(self.modulatory_signals):
-            modulatory_signal = self._instantiate_modulatory_signal(spec, context=context)
-            modulatory_signal._variable_spec = (OWNER_VALUE, i)
-            self._modulatory_signals[i] = modulatory_signal
-        self.defaults.value = np.tile(modulatory_signal.parameters.variable.default_value, (i+1, 1))
+        for i, spec in enumerate(self.control_signals):
+            control_signal = self._instantiate_control_signal(spec, context=context)
+            control_signal._variable_spec = (OWNER_VALUE, i)
+            self._control_signals[i] = control_signal
+        self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i+1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
     def _instantiate_prediction_mechanisms(self, system:System_Base, context=None):

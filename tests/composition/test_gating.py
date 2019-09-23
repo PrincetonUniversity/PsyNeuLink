@@ -67,7 +67,7 @@ def test_gating(benchmark, mode):
                                   pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                   pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                   ])
-def test_gating_using_ModulatoryMechanism(benchmark, mode):
+def test_gating_using_ControlMechanism(benchmark, mode):
 
     Input_Layer = pnl.TransferMechanism(
         name='Input_Layer',
@@ -85,9 +85,9 @@ def test_gating_using_ModulatoryMechanism(benchmark, mode):
         }
     )
 
-    Gating_Mechanism = pnl.ModulatoryMechanism(
+    Gating_Mechanism = pnl.ControlMechanism(
         size=[1],
-        modulatory_signals=[Output_Layer.output_state]
+        control_signals=[Output_Layer.output_state]
     )
 
     p_pathway = [Input_Layer, Output_Layer]

@@ -36,7 +36,7 @@ COMMENT
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.globals.context import ContextFlags

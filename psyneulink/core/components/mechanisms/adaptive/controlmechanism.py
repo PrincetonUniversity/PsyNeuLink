@@ -15,7 +15,7 @@ Sections
 
   * `ModulatoryMechanism_Overview`
   * `ModulatoryMechanism_Creation`
-      - `ModulatoryMechanism_Monitor_for_Modulation`
+      - `ModulatoryMechanism_Monitor_for_control`
       - `ModulatoryMechanism_ObjectiveMechanism`
       - `ModulatoryMechanism_Modulatory_Signals`
   * `ModulatoryMechanism_Structure`
@@ -41,10 +41,10 @@ belongs.  It's `function <ModulatoryMechanism.function>` calculates a `modulator
 `OutputState`.  `GatingSignals <GatingSignal>` are restricting to modulating only an `InputState` or `OutputState`.
 A ModulatoryMechanism can be configured to monitor the outputs of other Mechanisms in order to determine its
 `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`, by specifying these in the
-**monitor_for_modulation** `argument <ModulatoryMechanism_Monitor_for_Modulation_Argument>` of its constructor, or in
+**monitor_for_control** `argument <ModulatoryMechanism_Monitor_for_control_Argument>` of its constructor, or in
 the **monitor** `argument <ObjectiveMechanism_Monitor>` of an ObjectiveMechanism` assigned to its
 **objective_mechanism** `argument <ModulatoryMechanism_Objective_Mechanism_Argument>` (see
-`ModulatoryMechanism_Monitor_for_Modulation` below).
+`ModulatoryMechanism_Monitor_for_control` below).
 
 
 .. _ModulatoryMechanism_Creation:
@@ -59,7 +59,7 @@ as described below. If neither of those arguments is specified, then only the Mo
 and its inputs and the parameters it modulates must be specified in some other way.
 
 
-.. _ModulatoryMechanism_Monitor_for_Modulation:
+.. _ModulatoryMechanism_Monitor_for_control:
 
 *Specifying OutputStates to be monitored*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -71,66 +71,66 @@ result to the ModulatoryMechanism (see `below <ModulatoryMechanism_ObjectiveMech
 Which configuration is used is determined by how the following arguments of the ModulatoryMechanism's constructor are
 specified:
 
-  .. _ModulatoryMechanism_Monitor_for_Modulation_Argument:
+  .. _ModulatoryMechanism_Monitor_for_control_Argument:
 
-  * **monitor_for_modulation** -- a list of `OutputState specifications <OutputState_Specification>`.  If the
+  * **monitor_for_control** -- a list of `OutputState specifications <OutputState_Specification>`.  If the
     **objective_mechanism** argument is not specified (or is *False* or *None*) then, when the ModulatoryMechanism is
     added to a `Composition`, a `MappingProjection` is created for each OutputState specified to the
     ModulatoryMechanism's *OUTCOME* `input_state <ModulatoryMechanism_Input>`.  If the **objective_mechanism** `argument
     <ModulatoryMechanism_Objective_Mechanism_Argument>` is specified, then the OutputStates specified in
-    **monitor_for_modulation** are assigned to the `ObjectiveMechanism` rather than the ModulatoryMechanism itself (see
+    **monitor_for_control** are assigned to the `ObjectiveMechanism` rather than the ModulatoryMechanism itself (see
     `ModulatoryMechanism_ObjectiveMechanism` for details).
 
   .. _ModulatoryMechanism_Objective_Mechanism_Argument:
 
   * **objective_mechanism** -- if this is specfied in any way other than **False** or **None** (the default),
     then an ObjectiveMechanism is created that projects to the ModulatoryMechanism and, when added to a `Composition`,
-    is assigned Projections from all of the OutputStates specified either in the  **monitor_for_modulation** argument of
+    is assigned Projections from all of the OutputStates specified either in the  **monitor_for_control** argument of
     the ModulatoryMechanism's constructor, or the **monitor** `argument <ObjectiveMechanism_Monitor>` of the
     ObjectiveMechanism's constructor (see `ModulatoryMechanism_ObjectiveMechanism` for details).  The
     **objective_mechanism** argument can be specified in any of the following ways:
 
     - *False or None* -- no ObjectiveMechanism is created and, when the ModulatoryMechanism is added to a
-      `Composition`, Projections from the OutputStates specified in the ModulatoryMechanism's **monitor_for_modulation**
-      argument are sent directly to ModulatoryMechanism (see specification of **monitor_for_modulation** `argument
-      <ModulatoryMechanism_Monitor_for_Modulation_Argument>`).
+      `Composition`, Projections from the OutputStates specified in the ModulatoryMechanism's **monitor_for_control**
+      argument are sent directly to ModulatoryMechanism (see specification of **monitor_for_control** `argument
+      <ModulatoryMechanism_Monitor_for_control_Argument>`).
 
     - *True* -- an `ObjectiveMechanism` is created that projects to the ModulatoryMechanism, and any OutputStates
-      specified in the ModulatoryMechanism's **monitor_for_modulation** argument are assigned to ObjectiveMechanism's
+      specified in the ModulatoryMechanism's **monitor_for_control** argument are assigned to ObjectiveMechanism's
       **monitor** `argument <ObjectiveMechanism_Monitor>` instead (see `ModulatoryMechanism_ObjectiveMechanism` for
       additional details).
 
     - *a list of* `OutputState specifications <ObjectiveMechanism_Monitor>`; an ObjectiveMechanism is created that
       projects to the ModulatoryMechanism, and the list of OutputStates specified, together with any specified in the
-      ModulatoryMechanism's **monitor_for_modulation** `argument <ModulatoryMechanism_Monitor_for_Modulation_Argument>`,
+      ModulatoryMechanism's **monitor_for_control** `argument <ModulatoryMechanism_Monitor_for_control_Argument>`,
       are assigned to the ObjectiveMechanism's **monitor** `argument <ObjectiveMechanism_Monitor>` (see
       `ModulatoryMechanism_ObjectiveMechanism` for additional details).
 
     - *a constructor for an* `ObjectiveMechanism` -- the specified ObjectiveMechanism is created, adding any
-      OutputStates specified in the ModulatoryMechanism's **monitor_for_modulation** `argument
-      <ModulatoryMechanism_Monitor_for_Modulation_Argument>` to any specified in the ObjectiveMechanism's **monitor**
+      OutputStates specified in the ModulatoryMechanism's **monitor_for_control** `argument
+      <ModulatoryMechanism_Monitor_for_control_Argument>` to any specified in the ObjectiveMechanism's **monitor**
       `argument <ObjectiveMechanism_Monitor>` .  This can be used to specify the `function
       <ObjectiveMechanism.function>` used by the ObjectiveMechanism to evaluate the OutputStates monitored as well as
       how it weights those OutputStates when they are evaluated  (see `below
       <ModulatoryMechanism_ObjectiveMechanism_Function>` for additional details).
 
     - *an existing* `ObjectiveMechanism` -- for any OutputStates specified in the ModulatoryMechanism's
-      **monitor_for_modulation** `argument <ModulatoryMechanism_Monitor_for_Modulation_Argument>`, an InputState is
+      **monitor_for_control** `argument <ModulatoryMechanism_Monitor_for_control_Argument>`, an InputState is
       added to the ObjectiveMechanism, along with `MappingProjection` to it from the specified OutputState.    This
       can be used to specify an ObjectiveMechanism with a custom `function <ObjectiveMechanism.function>` and
       weighting of the OutputStates monitored (see `below <ModulatoryMechanism_ObjectiveMechanism_Function>` for
       additional details).
 
 The OutputStates monitored by a ModulatoryMechanism or its `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>` are listed in the ModulatoryMechanism's `monitor_for_modulation
-<ModulatoryMechanism.monitor_for_modulation>` attribute (and are the same as those listed in the `monitor
+<ModulatoryMechanism.objective_mechanism>` are listed in the ModulatoryMechanism's `monitor_for_control
+<ModulatoryMechanism.monitor_for_control>` attribute (and are the same as those listed in the `monitor
 <ObjectiveMechanism.monitor>` attribute of the `objective_mechanism <ModulatoryMechanism.objective_mechanism>`,
 if specified).
 
 .. _ModulatoryMechanism_Add_Linear_Processing_Pathway:
 
-Note that the MappingProjections created by specification of a ModulatoryMechanism's **monitor_for_modulation**
-`argument <ModulatoryMechanism_Monitor_for_Modulation_Argument>` or the **monitor** argument in the constructor for an
+Note that the MappingProjections created by specification of a ModulatoryMechanism's **monitor_for_control**
+`argument <ModulatoryMechanism_Monitor_for_control_Argument>` or the **monitor** argument in the constructor for an
 ObjectiveMechanism in the ModulatoryMechanism's **objective_mechanism** `argument
 <ModulatoryMechanism_Objective_Mechanism_Argument>` supercede any MappingProjections that would otherwise be created for
 them when included in the **pathway** argument of a Composition's `add_linear_processing_pathway
@@ -151,15 +151,15 @@ and a `MappingProjection` is created automatically that projects from the Object
 ModulatoryMechanism.
 
 The `objective_mechanism <ModulatoryMechanism.objective_mechanism>` is used to monitor the OutputStates specified in
-the **monitor_for_modulation** `argument <ModulatoryMechanism_Monitor_for_Modulation_Argument>` of the
+the **monitor_for_control** `argument <ModulatoryMechanism_Monitor_for_control_Argument>` of the
 ModulatoryMechanism's constructor, as well as any specified in the **monitor** `argument <ObjectiveMechanism_Monitor>`
 of the ObjectiveMechanism's constructor.  Specifically, for each OutputState specified in either place, an `input_state
 <ObjectiveMechanism.input_states>` is added to the ObjectiveMechanism.  OutputStates to be monitored (and
 corresponding `input_states <ObjectiveMechanism.input_states>`) can be added to the `objective_mechanism
 <ModulatoryMechanism.objective_mechanism>` later, by using its `add_to_monitor <ObjectiveMechanism.add_to_monitor>`
 method. The set of OutputStates monitored by the `objective_mechanism <ModulatoryMechanism.objective_mechanism>` are
-listed in its `monitor <ObjectiveMechanism>` attribute, as well as in the ModulatoryMechanism's `monitor_for_modulation
-<ModulatoryMechanism.monitor_for_modulation>` attribute.
+listed in its `monitor <ObjectiveMechanism>` attribute, as well as in the ModulatoryMechanism's `monitor_for_control
+<ModulatoryMechanism.monitor_for_control>` attribute.
 
 When the ModulatoryMechanism is added to a `Composition`, the `objective_mechanism
 <ModulatoryMechanism.objective_mechanism>` is also automatically added, and MappingProjectons are created from each
@@ -255,7 +255,7 @@ a single `MappingProjection` from the `objective_mechanism <ModulatoryMechanism.
 OutputState (see `ModulatoryMechanism_ObjectiveMechanism` for additional details). Otherwise, when the
 ModulatoryMechanism is added to a `Composition`, MappingProjections are created that project to the
 ModulatoryMechanism's *OUTCOME* `input_state <ModulatoryMechanism.input_state>` from each of the OutputStates specified
-in the **monitor_for_modulation** `argument <ModulatoryMechanism_Monitor_for_Modulatory_Argument>` of its constructor.
+in the **monitor_for_control** `argument <ModulatoryMechanism_Monitor_for_Modulatory_Argument>` of its constructor.
 The `value <InputState.value>` of the ModulatoryMechanism's *OUTCOME* InputState is assigned to its `outcome
 <ModulatoryMechanism.outcome>` attribute), and is used as the input to the ModulatoryMechanism's `function
 <ModulatoryMechanism.function>` to determine its `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`.
@@ -470,7 +470,8 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
-    EID_SIMULATION, GATING_SIGNAL, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_MODULATION, MULTIPLICATIVE, \
+    EID_SIMULATION, GATING_SIGNAL, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
+    MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MULTIPLICATIVE, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
@@ -574,8 +575,8 @@ class DefaultAllocationFunction(Function_Base):
             Attributes
             ----------
 
-                num_modulatory_signals
-                    see `num_modulatory_signals <DefaultAllocationFunction.num_modulatory_signals>`
+                num_control_signals
+                    see `num_control_signals <DefaultAllocationFunction.num_control_signals>`
 
                     :default value: 1
                     :type: int
@@ -601,7 +602,7 @@ class DefaultAllocationFunction(Function_Base):
                  context=None,
                  params=None,
                  ):
-        num_ctl_sigs = self.get_current_function_param('num_modulatory_signals')
+        num_ctl_sigs = self.get_current_function_param('num_control_signals')
         result = np.array([variable[0]] * num_ctl_sigs)
         return self.convert_output_type(result)
 
@@ -618,7 +619,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
     """
     ModulatoryMechanism(                                         \
         system=None                                              \
-        monitor_for_modulation=None,                             \
+        monitor_for_control=None,                             \
         objective_mechanism=None,                                \
         function=DefaultAllocationFunction,                      \
         default_allocation=None,                                 \
@@ -681,7 +682,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         specifies the `System` to which the ModulatoryMechanism should be assigned as its `controller
         <System.controller>`.
 
-    monitor_for_modulation : List[OutputState or Mechanism] : default None
+    monitor_for_control : List[OutputState or Mechanism] : default None
         specifies the `OutputStates <OutputState>` to be monitored by the `ObjectiveMechanism` specified in the
         **objective_mechanism** argument; for any Mechanisms specified, their `primary OutputState
         <OutputState_Primary>` are used.
@@ -757,7 +758,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         **objective_mechanism** argument, and transmits the result to the ModulatoryMechanism's *OUTCOME*
         `input_state <Mechanism_Base.input_state>`.
 
-    monitor_for_modulation : List[OutputState]
+    monitor_for_control : List[OutputState]
         each item is an `OutputState` monitored by the ObjectiveMechanism listed in the ModulatoryMechanism's
         `objective_mechanism <ModulatoryMechanism.objective_mechanism>` attribute;  it is the same as that
         ObjectiveMechanism's `monitor <ObjectiveMechanism.monitor>` attribute
@@ -767,7 +768,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     monitored_output_states_weights_and_exponents : List[Tuple(float, float)]
         each tuple in the list contains the weight and exponent associated with a corresponding OutputState specified
-        in `monitor_for_modulation <ModulatoryMechanism.monitor_for_modulation>`;  these are the same as those in the
+        in `monitor_for_control <ModulatoryMechanism.monitor_for_control>`;  these are the same as those in the
         `monitored_output_states_weights_and_exponents
         <ObjectiveMechanism.monitored_output_states_weights_and_exponents>` attribute of the `objective_mechanism
         <ModulatoryMechanism.objective_mechanism>`, and are used by the ObjectiveMechanism's `function
@@ -781,7 +782,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
-        **monitor_for_modulation** argument of the ModulatoryMechanism's constructor are used to generate its
+        **monitor_for_control** argument of the ModulatoryMechanism's constructor are used to generate its
         `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`.
 
     default_allocation : number, list or 1d array
@@ -1074,13 +1075,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  **kwargs
                  ):
 
-        monitor_for_modulation = convert_to_list(monitor_for_control) or []
+        monitor_for_control = convert_to_list(monitor_for_control) or []
         control_signals = convert_to_list(control_signals) or []
 
         if kwargs:
-            if MONITOR_FOR_MODULATION in kwargs:
-                monitor_for_modulation.append(convert_to_list(kwargs.pop(MONITOR_FOR_MODULATION)))
-            if CONTROL_SIGNALS in kwargs:
+            if MONITOR_FOR_CONTROL in kwargs:
+                monitor_for_control.append(convert_to_list(kwargs.pop(MONITOR_FOR_CONTROL)))
+            if MODULATORY_SIGNALS in kwargs:
                 control_signals.append(convert_to_list(kwargs.pop(CONTROL_SIGNALS)))
 
         function = function or DefaultAllocationFunction
@@ -1090,7 +1091,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(system=system,
-                                                  monitor_for_modulation=monitor_for_modulation,
+                                                  monitor_for_control=monitor_for_control,
                                                   objective_mechanism=objective_mechanism,
                                                   function=function,
                                                   default_allocation=default_allocation,
@@ -1113,10 +1114,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
             self._activate_projections_for_compositions(system)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate SYSTEM, monitor_for_modulation, CONTROL_SIGNALS and GATING_SIGNALS
+        """Validate SYSTEM, monitor_for_control, CONTROL_SIGNALS and GATING_SIGNALS
 
         If System is specified, validate it
-        Check that all items in monitor_for_modulation are Mechanisms or OutputStates for Mechanisms in self.system
+        Check that all items in monitor_for_control are Mechanisms or OutputStates for Mechanisms in self.system
         Check that all items in CONTROL_SIGNALS are parameters or ParameterStates for Mechanisms in self.system
         Check that all items in GATING_SIGNALS are States for Mechanisms in self.system
         """
@@ -1153,17 +1154,17 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 if not isinstance(spec, (OutputState, Mechanism)):
                     if isinstance(spec, type) and issubclass(spec, Mechanism):
                         raise ControlMechanismError(
-                                f"Mechanism class ({spec.__name__}) specified in '{MONITOR_FOR_MODULATION}' arg "
+                                f"Mechanism class ({spec.__name__}) specified in '{MONITOR_FOR_CONTROL}' arg "
                                 f"of {self.name}; it must be an instantiated {Mechanism.__name__} or "
                                 f"{OutputState.__name__} of one.")
                     elif isinstance(spec, State):
                         raise ControlMechanismError(
-                                f"{spec.__class__.__name__} specified in '{MONITOR_FOR_MODULATION}' arg of {self.name} "
+                                f"{spec.__class__.__name__} specified in '{MONITOR_FOR_CONTROL}' arg of {self.name} "
                                 f"({spec.name} of {spec.owner.name}); "
                                 f"it must be an {OutputState.__name__} or {Mechanism.__name__}.")
                     else:
                         raise ControlMechanismError(
-                                f"Erroneous specification of '{MONITOR_FOR_MODULATION}' arg for {self.name} ({spec}); "
+                                f"Erroneous specification of '{MONITOR_FOR_CONTROL}' arg for {self.name} ({spec}); "
                                 f"it must be an {OutputState.__name__} or a {Mechanism.__name__}.")
                 # If ModulatoryMechanism has been assigned to a System, check that
                 #    all the items in the list used to specify objective_mechanism are in the same System
@@ -1180,8 +1181,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
             else:
                 self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
-        if MONITOR_FOR_MODULATION in target_set and target_set[MONITOR_FOR_MODULATION] is not None:
-            spec = target_set[MONITOR_FOR_MODULATION]
+        if MONITOR_FOR_CONTROL in target_set and target_set[MONITOR_FOR_CONTROL] is not None:
+            spec = target_set[MONITOR_FOR_CONTROL]
             if not isinstance(spec, (list, ContentAddressableList)):
                 spec = [spec]
             validate_monitored_state_spec(spec)
@@ -1269,17 +1270,17 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if self.system:
             monitored_output_states.extend(self.system._get_monitored_output_states_for_system(self,context=context))
 
-        self.monitor_for_modulation = self.monitor_for_modulation or []
-        if not isinstance(self.monitor_for_modulation, list):
-            self.monitor_for_modulation = [self.monitor_for_modulation]
+        self.monitor_for_control = self.monitor_for_control or []
+        if not isinstance(self.monitor_for_control, list):
+            self.monitor_for_control = [self.monitor_for_control]
 
         # If objective_mechanism is used to specify OutputStates to be monitored (legacy feature)
-        #    move them to monitor_for_modulation
+        #    move them to monitor_for_control
         if isinstance(self.objective_mechanism, list):
-            self.monitor_for_modulation.extend(self.objective_mechanism)
+            self.monitor_for_control.extend(self.objective_mechanism)
 
-        # Add items in monitor_for_modulation to monitored_output_states
-        for i, item in enumerate(self.monitor_for_modulation):
+        # Add items in monitor_for_control to monitored_output_states
+        for i, item in enumerate(self.monitor_for_control):
             # If it is already in the list received from System, ignore
             if item in monitored_output_states:
                 # NOTE: this can happen if ModulatoryMechanisms is being constructed by System
@@ -1334,7 +1335,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # ASSIGN ATTRIBUTES
 
         self._objective_projection = projection_from_objective
-        self.monitor_for_modulation = self.monitored_output_states
+        self.monitor_for_control = self.monitored_output_states
 
     def _instantiate_input_states(self, context=None):
 
@@ -1347,10 +1348,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if self._objective_mechanism:
             self._instantiate_objective_mechanism(context=context)
 
-        # Otherwise, instantiate Projections from monitor_for_modulation to ModulatoryMechanism
-        elif self.monitor_for_modulation:
+        # Otherwise, instantiate Projections from monitor_for_control to ModulatoryMechanism
+        elif self.monitor_for_control:
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-            for sender in convert_to_list(self.monitor_for_modulation):
+            for sender in convert_to_list(self.monitor_for_control):
                 self.aux_components.append(MappingProjection(sender=sender, receiver=self.input_states[OUTCOME]))
 
     def _instantiate_output_states(self, context=None):
@@ -1362,9 +1363,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
     # FIX                   AND MAKE SURE THEY ARE NOW ADDED TO ControlSignal SPECIFICATION DICT
     # ---------------------------------------------------
 
-        # MODIFIED 9/22/19 NEW: [JDC]
         self._register_control_signal_type(context=None)
-        # MODIFIED 9/22/19 OLD:
 
         if self.control_signals:
             self._instantiate_control_signals(context=context)
@@ -1378,7 +1377,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                        list=[state for state in self.output_states
                                                              if isinstance(state, (ControlSignal, GatingSignal))])
 
-    # MODIFIED 9/22/19 NEW: [JDC]
     def _register_control_signal_type(self, context=None):
         from psyneulink.core.globals.registry import register_category
         from psyneulink.core.components.states.state import State_Base
@@ -1388,7 +1386,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
-    # MODIFIED 9/22/19 OLD:
 
     def _instantiate_control_signals(self, context):
         """Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)"""

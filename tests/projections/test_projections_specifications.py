@@ -185,7 +185,7 @@ class TestProjectionSpecificationFormats:
             "CP_OBJECT",
             pnl.ControlMechanism,
             pnl.ControlMechanism(),
-            pnl.ModulatoryMechanism,
+            pnl.ControlMechanism,
             (0.3, pnl.CONTROL),
             (0.3, pnl.CONTROL_SIGNAL),
             (0.3, pnl.CONTROL_PROJECTION),
@@ -195,7 +195,7 @@ class TestProjectionSpecificationFormats:
             (0.3, "CP_OBJECT"),
             (0.3, pnl.ControlMechanism),
             (0.3, pnl.ControlMechanism()),
-            (0.3, pnl.ModulatoryMechanism)
+            (0.3, pnl.ControlMechanism)
         ]
         for i, ctl_tuple in enumerate([j for j in zip(control_spec_list, reversed(control_spec_list))]):
             C1, C2 = ctl_tuple
@@ -229,7 +229,7 @@ class TestProjectionSpecificationFormats:
             pnl.GatingProjection,
             "GP_OBJECT",
             pnl.GatingMechanism,
-            pnl.ModulatoryMechanism,
+            pnl.ControlMechanism,
             pnl.GatingMechanism(),
             (0.3, pnl.GATING),
             (0.3, pnl.GATING_SIGNAL),
@@ -239,7 +239,7 @@ class TestProjectionSpecificationFormats:
             (0.3, pnl.GatingProjection),
             (0.3, "GP_OBJECT"),
             (0.3, pnl.GatingMechanism),
-            (0.3, pnl.ModulatoryMechanism),
+            (0.3, pnl.ControlMechanism),
             (0.3, pnl.GatingMechanism())
         ]
         for i, gating_tuple in enumerate([j for j in zip(gating_spec_list, reversed(gating_spec_list))]):
@@ -265,13 +265,13 @@ class TestProjectionSpecificationFormats:
                    'GatingProjection for T-GATING-{}[OutputState-0]'.format(i)
 
         with pytest.raises(pnl.ProjectionError) as error_text:
-            T1 = pnl.ProcessingMechanism(name='T1', input_states=[pnl.ModulatoryMechanism()])
-        assert 'Primary OutputState of ModulatoryMechanism-0 (ControlSignal-0) ' \
+            T1 = pnl.ProcessingMechanism(name='T1', input_states=[pnl.ControlMechanism()])
+        assert 'Primary OutputState of ControlMechanism-0 (ControlSignal-0) ' \
                'cannot be used as a sender of a Projection to InputState of T1' in error_text.value.args[0]
 
         with pytest.raises(pnl.ProjectionError) as error_text:
-            T2 = pnl.ProcessingMechanism(name='T2', output_states=[pnl.ModulatoryMechanism()])
-        assert 'Primary OutputState of ModulatoryMechanism-1 (ControlSignal-0) ' \
+            T2 = pnl.ProcessingMechanism(name='T2', output_states=[pnl.ControlMechanism()])
+        assert 'Primary OutputState of ControlMechanism-1 (ControlSignal-0) ' \
                'cannot be used as a sender of a Projection to OutputState of T2' in error_text.value.args[0]
 
 

@@ -445,7 +445,7 @@ import typecheck as tc
 from toposort import toposort, toposort_flatten
 
 from psyneulink.core.components.component import Component
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, LearningTiming
 from psyneulink.core.components.mechanisms.mechanism import MechanismList
