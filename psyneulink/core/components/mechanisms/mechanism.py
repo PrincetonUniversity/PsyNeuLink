@@ -2607,7 +2607,7 @@ class Mechanism_Base(Mechanism):
 
         return tuple(state_init_list)
 
-    def _gen_llvm_states(self, ctx, builder, states, struct_idx,
+    def _gen_llvm_states(self, ctx, builder, states,
                          get_output_ptr, fill_input_data,
                          mech_params, mech_state, mech_input):
         # Avoid recreating combined list in every iteration
@@ -2674,9 +2674,9 @@ class Mechanism_Base(Mechanism):
             b.store(b.load(is_in), data_ptr)
             return b
 
-        # Input states are in the 1st block (idx 0).
-        builder = self._gen_llvm_states(ctx, builder, self.input_states, 0, _get_output_ptr,
-                                        _fill_input, mech_params, mech_state, mech_input)
+        builder = self._gen_llvm_states(ctx, builder, self.input_states,
+                                        _get_output_ptr, _fill_input,
+                                        mech_params, mech_state, mech_input)
 
         return is_output, builder
 
@@ -2701,10 +2701,9 @@ class Mechanism_Base(Mechanism):
             b.store(b.load(param_in_ptr), raw_ps_input)
             return b
 
-        # Parameter states are in the 4th block (idx 3).
-        # After input states, main function, and output states.
-        builder = self._gen_llvm_states(ctx, builder, param_states, 3, _get_output_ptr,
-                                        _fill_input, mech_params, mech_state, mech_input)
+        builder = self._gen_llvm_states(ctx, builder, param_states,
+                                        _get_output_ptr, _fill_input,
+                                        mech_params, mech_state, mech_input)
         return f_params_out, builder
 
     def _gen_llvm_output_state_parse_variable(self, ctx, builder,
@@ -2734,10 +2733,9 @@ class Mechanism_Base(Mechanism):
             b.store(b.load(data_ptr), input_ptr)
             return b
 
-        # Output states are in the 3rd block (idx 2).
-        # After input states, and main function.
-        builder = self._gen_llvm_states(ctx, builder, self.output_states, 2, _get_output_ptr,
-                                        _fill_input, mech_params, mech_state, mech_in)
+        builder = self._gen_llvm_states(ctx, builder, self.output_states,
+                                        _get_output_ptr, _fill_input,
+                                        mech_params, mech_state, mech_in)
         return builder
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
