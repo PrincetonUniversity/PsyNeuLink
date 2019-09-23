@@ -1449,7 +1449,9 @@ def insert_list(list1, position, list2):
     return list1[:position] + list2 + list1[position:]
 
 def convert_to_list(l):
-    if isinstance(l, list):
+    if l is None:
+        return None
+    elif isinstance(l, list):
         return l
     elif isinstance(l, set):
         return list(l)

@@ -1086,7 +1086,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                  size=None,
                  system:tc.optional(tc.any(System_Base, Composition_Base))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
-                 # objective_mechanism:tc.optional(ObjectiveMechanism, list, bool)=None,
                  objective_mechanism=None,
                  function=None,
                  default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
@@ -1106,14 +1105,14 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                  **kwargs
                  ):
 
-        monitor_for_modulation = monitor_for_control or []
-        modulatory_signals = control_signals or []
+        monitor_for_modulation = convert_to_list(monitor_for_control) or []
+        modulatory_signals = convert_to_list(control_signals) or []
 
         if kwargs:
             if MONITOR_FOR_MODULATION in kwargs:
                 monitor_for_modulation.append(convert_to_list(kwargs.pop(MONITOR_FOR_MODULATION)))
             if MODULATORY_SIGNALS in kwargs:
-                monitor_for_modulation.append(convert_to_list(kwargs.pop(MONITOR_FOR_MODULATION)))
+                modulatory_signals.append(convert_to_list(kwargs.pop(MODULATORY_SIGNALS)))
 
         function = function or DefaultAllocationFunction
         self.combine_costs = combine_costs
@@ -1368,16 +1367,6 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self._objective_projection = projection_from_objective
         self.monitor_for_modulation = self.monitored_output_states
 
-    def _register_modulatory_signal_type(self, modulatory_signal_type:ModulatorySignal, context=None):
-        from psyneulink.core.globals.registry import register_category
-        from psyneulink.core.components.states.state import State_Base
-
-        # Create registry for ControlSignals (to manage names)
-        register_category(entry=modulatory_signal_type,
-                          base_class=State_Base,
-                          registry=self._stateRegistry,
-                          context=context)
-
     def _instantiate_input_states(self, context=None):
 
         super()._instantiate_input_states(context=context)
@@ -1404,6 +1393,10 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
     # FIX                   AND MAKE SURE THEY ARE NOW ADDED TO ControlSignal SPECIFICATION DICT
     # ---------------------------------------------------
 
+        # MODIFIED 9/22/19 NEW: [JDC]
+        self._register_modulatory_signal_type(context=None)
+        # MODIFIED 9/22/19 OLD:
+
         if self.modulatory_signals:
             self._instantiate_modulatory_signals(context=context)
 
@@ -1415,6 +1408,18 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self._modulatory_signals = ContentAddressableList(component_type=ModulatorySignal,
                                                        list=[state for state in self.output_states
                                                              if isinstance(state, (ControlSignal, GatingSignal))])
+
+    # MODIFIED 9/22/19 NEW: [JDC]
+    def _register_modulatory_signal_type(self, context=None):
+        from psyneulink.core.globals.registry import register_category
+        from psyneulink.core.components.states.state import State_Base
+
+        # Create registry for ControlSignals (to manage names)
+        register_category(entry=ControlSignal,
+                          base_class=State_Base,
+                          registry=self._stateRegistry,
+                          context=context)
+    # MODIFIED 9/22/19 OLD:
 
     def _instantiate_modulatory_signals(self, context):
         """Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)"""
@@ -1801,6 +1806,11 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                    runtime_params=runtime_params,
                                    )
 
+    def _apply_control_allocation(self, control_allocation, runtime_params, context):
+        self._apply_modulatory_allocation(modulatory_allocation=control_allocation,
+                                          runtime_params=runtime_params,
+                                          context=context)
+
     @property
     def monitored_output_states(self):
         try:
@@ -1838,6 +1848,10 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                                                 if isinstance(state, ControlSignal)])
         except:
             return None
+
+    @control_signals.setter
+    def control_signals(self, value):
+        self._modulatory_signals = value
 
     @property
     def control_projections(self):

@@ -475,9 +475,21 @@ class GatingMechanism(ModulatoryMechanism):
 
                          **kwargs)
 
-    def _instantiate_output_states(self, context=None):
-        self._register_modulatory_signal_type(GatingSignal,context)
-        super()._instantiate_output_states(context)
+    # MODIFIED 9/22/19 OLD:
+    # def _instantiate_output_states(self, context=None):
+    #     self._register_modulatory_signal_type(GatingSignal,context)
+    #     super()._instantiate_output_states(context)
+    # MODIFIED 9/22/19 NEW: [JDC]
+    def _register_modulatory_signal_type(self, context=None):
+        from psyneulink.core.globals.registry import register_category
+        from psyneulink.core.components.states.state import State_Base
+
+        # Create registry for GatingSignals (to manage names)
+        register_category(entry=GatingSignal,
+                          base_class=State_Base,
+                          registry=self._stateRegistry,
+                          context=context)
+    # MODIFIED 9/22/19 END
 
     def _instantiate_gating_signal(self, gating_signal, context=None):
         """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection
