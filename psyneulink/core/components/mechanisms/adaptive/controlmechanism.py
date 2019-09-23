@@ -478,8 +478,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, is_iterable, convert_to_list
 
 __all__ = [
-    'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 
-    'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
+    'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
 ]
 
 CONTROL_ALLOCATION = 'control_allocation'
@@ -1016,12 +1015,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = np.array([[defaultControlAllocation]])
-        value = Parameter(np.array([[defaultControlAllocation]]), aliases='modulatory_allocation')
+        value = Parameter(np.array([[defaultControlAllocation]]), aliases='control_allocation')
         default_allocation = None,
-        control_allocation = Parameter(np.array([defaultControlAllocation]),
-                                       getter=_control_allocation_getter,
-                                       setter=_control_allocation_setter,
-                                       read_only=True)
         gating_allocation = Parameter(np.array([defaultGatingAllocation]),
                                       getter=_gating_allocation_getter,
                                       setter=_gating_allocation_setter,
