@@ -1084,6 +1084,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
             if MODULATORY_SIGNALS in kwargs:
                 control_signals.append(convert_to_list(kwargs.pop(CONTROL_SIGNALS)))
 
+        self._control_signal_specs = control_signals
+
         function = function or DefaultAllocationFunction
         self.combine_costs = combine_costs
         self.compute_net_outcome = compute_net_outcome
@@ -1095,7 +1097,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                   objective_mechanism=objective_mechanism,
                                                   function=function,
                                                   default_allocation=default_allocation,
-                                                  control_signals=control_signals,
+                                                  # control_signals=control_signals,
                                                   modulation=modulation,
                                                   params=params)
 
@@ -1365,7 +1367,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         self._register_control_signal_type(context=None)
 
-        if self.control_signals:
+        if self._control_signal_specs:
             self._instantiate_control_signals(context=context)
 
         super()._instantiate_output_states(context=context)
@@ -1389,8 +1391,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_control_signals(self, context):
         """Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)"""
-        for i, control_signal in enumerate(self.control_signals):
-            self.control_signals[i] = self._instantiate_control_signal(control_signal, context=context)
+        for i, control_signal in enumerate(self._control_signal_specs):
+            self._control_signal_specs[i] = self._instantiate_control_signal(control_signal, context=context)
         num_control_signals = i+1
 
         # For DefaultAllocationFunction, set defaults.value to have number of items equal to num modulatory_signals
@@ -1412,7 +1414,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             len_fct_value = len(self.function.value)
 
             # Assign each ModulatorySignal's variable_spec to index of ModulatoryMechanism's value
-            for i, control_signal in enumerate(self.control_signals):
+            for i, control_signal in enumerate(self._control_signal_specs):
 
                 # If number of modulatory_signals is same as number of items in function's value,
                 #    assign each ModulatorySignal to the corresponding item of the function's value
@@ -1674,6 +1676,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if (len(self.control_signals)==1
                 and self.control_signals[0].name=='ControlSignal-0'
                 and not self.control_signals[0].efferents):
+            # FIX: REPLACE WITH remove_states
             del self._output_states[0]
             del self.control_signals[0]
 
@@ -1721,7 +1724,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 and ctl_sig_attribute[0].name==type+'-0'
                 and not ctl_sig_attribute[0].efferents):
             self.remove_states(ctl_sig_attribute[0])
-            del self.control_signals[0]
 
     def _activate_projections_for_compositions(self, composition=None):
         """Activate eligible Projections to or from nodes in composition.
@@ -1790,19 +1792,19 @@ class ControlMechanism(AdaptiveMechanism_Base):
         except:
             return None
 
-    # @property
-    # def control_signals(self):
-    #     try:
-    #         return ContentAddressableList(component_type=ControlSignal,
-    #                                       list=[state for state in self.output_states
-    #                                             if isinstance(state, ControlSignal)])
-    #     except:
-    #         return None
-    #
+    @property
+    def control_signals(self):
+        try:
+            return ContentAddressableList(component_type=ControlSignal,
+                                          list=[state for state in self.output_states
+                                                if isinstance(state, ControlSignal)])
+        except:
+            return None
+
     # @control_signals.setter
     # def control_signals(self, value):
     #     self._control_signals = value
-    #
+
     @property
     def control_projections(self):
         try:
