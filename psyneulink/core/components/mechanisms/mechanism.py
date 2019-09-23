@@ -2532,29 +2532,18 @@ class Mechanism_Base(Mechanism):
     def _get_mech_params_type(self, ctx):
         pass
 
-    def _get_input_state_struct_type(self, ctx):
-        gen = (ctx.get_state_struct_type(state) for state in self.input_states)
-        return pnlvm.ir.LiteralStructType(gen)
 
-    def _get_param_state_struct_type(self, ctx):
-        gen = (ctx.get_state_struct_type(state) for state in self.parameter_states)
-        return pnlvm.ir.LiteralStructType(gen)
-
-    def _get_output_state_struct_type(self, ctx):
-        gen = (ctx.get_state_struct_type(state) for state in self.output_states)
+    def _get_states_state_struct_type(self, ctx):
+        gen = (ctx.get_state_struct_type(s) for s in self.states)
         return pnlvm.ir.LiteralStructType(gen)
 
     def _get_function_state_struct_type(self, ctx):
         return ctx.get_state_struct_type(self.function)
 
     def _get_state_struct_type(self, ctx):
-        input_state_struct = self._get_input_state_struct_type(ctx)
-        output_state_struct = self._get_output_state_struct_type(ctx)
-        param_state_struct = self._get_param_state_struct_type(ctx)
+        states_state_struct = self._get_states_state_struct_type(ctx)
         function_state_struct = self._get_function_state_struct_type(ctx)
-
-        context_list = [input_state_struct, function_state_struct,
-                        output_state_struct, param_state_struct]
+        context_list = [states_state_struct, function_state_struct]
 
         mech_context = self._get_mech_state_struct_type(ctx)
         if mech_context is not None:
@@ -2604,29 +2593,17 @@ class Mechanism_Base(Mechanism):
     def _get_mech_params_init(self):
         pass
 
-    def _get_input_state_initializer(self, context):
-        gen = (state._get_state_initializer(context) for state in self.input_states)
-        return tuple(gen)
-
-    def _get_param_state_initializer(self, context):
-        gen = (state._get_state_initializer(context) for state in self.parameter_states)
-        return tuple(gen)
-
-    def _get_output_state_initializer(self, context):
-        gen = (state._get_state_initializer(context) for state in self.output_states)
+    def _get_states_state_initializer(self, context):
+        gen = (s._get_state_initializer(context) for s in self.states)
         return tuple(gen)
 
     def _get_function_state_initializer(self, context):
         return self.function._get_state_initializer(context)
 
     def _get_state_initializer(self, context):
-        input_state_init = self._get_input_state_initializer(context)
+        states_state_init = self._get_states_state_initializer(context)
         function_state_init = self._get_function_state_initializer(context)
-        output_state_init = self._get_output_state_initializer(context)
-        param_state_init = self._get_param_state_initializer(context)
-
-        state_init_list = [input_state_init, function_state_init,
-                             output_state_init, param_state_init]
+        state_init_list = [states_state_init, function_state_init]
 
         return tuple(state_init_list)
 
@@ -2659,12 +2636,13 @@ class Mechanism_Base(Mechanism):
                 afferent_val = builder.load(mod_in_ptr)
                 builder.store(afferent_val, mod_out_ptr)
 
-            s_idx = ctx.int32_ty(struct_idx)
             state_idx = all_states.index(state)
             s_params = builder.gep(mech_params, [ctx.int32_ty(0),
                                                  ctx.int32_ty(0),
                                                  ctx.int32_ty(state_idx)])
-            s_state = builder.gep(mech_state, [ctx.int32_ty(0), s_idx, ctx.int32_ty(i)])
+            s_state = builder.gep(mech_state, [ctx.int32_ty(0),
+                                               ctx.int32_ty(0),
+                                               ctx.int32_ty(state_idx)])
 
             builder.call(s_function, [s_params, s_state, s_input, s_output])
 
