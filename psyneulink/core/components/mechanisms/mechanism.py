@@ -2511,29 +2511,17 @@ class Mechanism_Base(Mechanism):
         self.parameters.value.set(np.atleast_1d(value), context, override=True)
         self._update_output_states(context=context)
 
-    def _get_input_param_struct_type(self, ctx):
-        gen = (ctx.get_param_struct_type(state) for state in self.input_states)
-        return pnlvm.ir.LiteralStructType(gen)
-
-    def _get_param_param_struct_type(self, ctx):
-        gen = (ctx.get_param_struct_type(state) for state in self.parameter_states)
-        return pnlvm.ir.LiteralStructType(gen)
-
-    def _get_output_param_struct_type(self, ctx):
-        gen = (ctx.get_param_struct_type(state) for state in self.output_states)
+    def _get_states_param_struct_type(self, ctx):
+        gen = (ctx.get_param_struct_type(s) for s in self.states)
         return pnlvm.ir.LiteralStructType(gen)
 
     def _get_function_param_struct_type(self, ctx):
         return ctx.get_param_struct_type(self.function)
 
     def _get_param_struct_type(self, ctx):
-        input_param_struct = self._get_input_param_struct_type(ctx)
-        output_param_struct = self._get_output_param_struct_type(ctx)
-        param_param_struct = self._get_param_param_struct_type(ctx)
+        states_param_struct = self._get_states_param_struct_type(ctx)
         function_param_struct = self._get_function_param_struct_type(ctx)
-
-        param_list = [input_param_struct, function_param_struct,
-                      output_param_struct, param_param_struct]
+        param_list = [states_param_struct, function_param_struct]
 
         mech_params = self._get_mech_params_type(ctx)
         if mech_params is not None:
@@ -2595,29 +2583,17 @@ class Mechanism_Base(Mechanism):
             input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
         return pnlvm.ir.LiteralStructType(input_type_list)
 
-    def _get_input_param_initializer(self, context):
-        gen = (state._get_param_initializer(context) for state in self.input_states)
-        return tuple(gen)
-
-    def _get_param_param_initializer(self, context):
-        gen = (state._get_param_initializer(context) for state in self.parameter_states)
-        return tuple(gen)
-
-    def _get_output_param_initializer(self, context):
-        gen = (state._get_param_initializer(context) for state in self.output_states)
+    def _get_state_param_initializer(self, context):
+        gen = (s._get_param_initializer(context) for s in self.states)
         return tuple(gen)
 
     def _get_function_param_initializer(self, context):
         return self.function._get_param_initializer(context)
 
     def _get_param_initializer(self, context):
-        input_param_init = self._get_input_param_initializer(context)
+        state_param_init = self._get_state_param_initializer(context)
         function_param_init = self._get_function_param_initializer(context)
-        output_param_init = self._get_output_param_initializer(context)
-        param_param_init = self._get_param_param_initializer(context)
-
-        param_init_list = [input_param_init, function_param_init,
-                           output_param_init, param_param_init]
+        param_init_list = [state_param_init, function_param_init]
 
         mech_params_init = self._get_mech_params_init()
         if mech_params_init is not None:
@@ -2657,6 +2633,10 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_states(self, ctx, builder, states, struct_idx,
                          get_output_ptr, fill_input_data,
                          mech_params, mech_state, mech_input):
+        # Avoid recreating combined list in every iteration
+        # FIXME: This should be converted to more standard memoization approach
+        all_states = self.states
+        mod_afferents = self.mod_afferents
         for i, state in enumerate(states):
             s_function = ctx.get_llvm_function(state)
 
@@ -2669,8 +2649,6 @@ class Mechanism_Base(Mechanism):
             # Copy input data to input structure
             builder = fill_input_data(builder, s_input, i)
 
-            # Avoid recreating combined list in every iteration
-            mod_afferents = self.mod_afferents
             # Copy mod_afferent inputs
             for idx, s_mod in enumerate(state.mod_afferents):
                 mech_mod_afferent_idx = mod_afferents.index(s_mod)
@@ -2682,7 +2660,10 @@ class Mechanism_Base(Mechanism):
                 builder.store(afferent_val, mod_out_ptr)
 
             s_idx = ctx.int32_ty(struct_idx)
-            s_params = builder.gep(mech_params, [ctx.int32_ty(0), s_idx, ctx.int32_ty(i)])
+            state_idx = all_states.index(state)
+            s_params = builder.gep(mech_params, [ctx.int32_ty(0),
+                                                 ctx.int32_ty(0),
+                                                 ctx.int32_ty(state_idx)])
             s_state = builder.gep(mech_state, [ctx.int32_ty(0), s_idx, ctx.int32_ty(i)])
 
             builder.call(s_function, [s_params, s_state, s_input, s_output])
