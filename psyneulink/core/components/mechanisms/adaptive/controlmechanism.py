@@ -1721,6 +1721,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 and ctl_sig_attribute[0].name==type+'-0'
                 and not ctl_sig_attribute[0].efferents):
             self.remove_states(ctl_sig_attribute[0])
+            # del self.control_signals[0]
 
     def _activate_projections_for_compositions(self, composition=None):
         """Activate eligible Projections to or from nodes in composition.
