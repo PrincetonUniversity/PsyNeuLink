@@ -1476,7 +1476,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Check that modulatory_signal is not a duplicate of one already instantiated for the ModulatoryMechanism
         # (viz., if control of parameter was specified both in constructor for Mechanism and in ModulatoryMechanism)
-        for existing_ctl_sig in [ms for ms in self.control_signals if isinstance(ms, ControlSignal)]:
+        for existing_ctl_sig in [cs for cs in self.control_signals if isinstance(cs, ControlSignal)]:
 
             # OK if modulatory_signal is one already assigned to ModulatoryMechanism (i.e., let it get processed below);
             # this can happen if it was in deferred_init status and initalized in call to _instantiate_state above.

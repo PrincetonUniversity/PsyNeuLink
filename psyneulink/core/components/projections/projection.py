@@ -1621,7 +1621,7 @@ def _parse_connection_specs(connectee_state_type,
                                               projection_socket=projection_socket)
             except StateError as e:
                 raise ProjectionError(f"Problem with specification for {State.__name__} in {Projection.__name__} "
-                                      f"specification for {owner.name}: " + e.error_value)
+                                      f"specification{(' for ' + owner.name) if owner else ' '}: " + e.error_value)
 
             # Check compatibility with any State(s) returned by _get_state_for_socket
 
