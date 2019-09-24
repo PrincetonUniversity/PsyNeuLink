@@ -1,8 +1,6 @@
-import ctypes
 import numpy as np
 import os
 import pytest
-import random
 from itertools import combinations
 
 from psyneulink.core import llvm as pnlvm
