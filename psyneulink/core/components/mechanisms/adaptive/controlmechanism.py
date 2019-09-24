@@ -1679,7 +1679,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 and not self.control_signals[0].efferents):
             # FIX: REPLACE WITH remove_states
             del self._output_states[0]
-            del self.control_signals[0]
+            # del self.control_signals[0]
 
         # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
