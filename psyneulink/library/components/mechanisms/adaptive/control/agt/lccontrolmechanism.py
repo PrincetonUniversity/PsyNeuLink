@@ -831,7 +831,7 @@ class LCControlMechanism(ControlMechanism):
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
         if self.modulated_mechanisms:
             # Create (param_name, Mechanism) specification for **control_signals** argument of ControlSignal constructor
-            self.modulated_mechahisms = convert_to_list(self.modulated_mechanisms)
+            self.modulated_mechanisms = convert_to_list(self.modulated_mechanisms)
             multiplicative_param_names = []
             for mech in self.modulated_mechanisms:
                 if isinstance(mech.function.parameters.multiplicative_param, ParameterAlias):
@@ -842,7 +842,7 @@ class LCControlMechanism(ControlMechanism):
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))
             self._control_signal_specs = [{PROJECTIONS: ctl_sig_projs}]
-            self.default_allocation = [self.value[0]]
+            self.parameters.control_allocation.default_value = self.value[0]
 
         super()._instantiate_output_states(context=context)
 

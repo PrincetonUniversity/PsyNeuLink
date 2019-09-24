@@ -782,7 +782,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             else:
                 reference_value.append(projection_tuple.state.value)
 
+        if not context:
+            from psyneulink.core.globals.context import Context
+            context = Context()
         context.source = ContextFlags.METHOD
+
         input_states = self._instantiate_input_states(monitor_specs=monitor_specs,
                                                       reference_value=reference_value,
                                                       context=context
