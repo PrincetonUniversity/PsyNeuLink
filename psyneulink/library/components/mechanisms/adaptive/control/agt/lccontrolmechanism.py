@@ -291,7 +291,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import is_iterable
+from psyneulink.core.globals.utilities import is_iterable, convert_to_list
 
 __all__ = [
     'CONTROL_SIGNAL_NAME', 'ControlMechanismRegistry', 'LCControlMechanism', 'LCControlMechanismError',
@@ -831,8 +831,7 @@ class LCControlMechanism(ControlMechanism):
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
         if self.modulated_mechanisms:
             # Create (param_name, Mechanism) specification for **control_signals** argument of ControlSignal constructor
-            if not isinstance(self.modulated_mechanisms, list):
-                self._modulated_mechanisms = [self.modulated_mechanisms]
+            self.modulated_mechahisms = convert_to_list(self.modulated_mechanisms)
             multiplicative_param_names = []
             for mech in self.modulated_mechanisms:
                 if isinstance(mech.function.parameters.multiplicative_param, ParameterAlias):
@@ -842,7 +841,7 @@ class LCControlMechanism(ControlMechanism):
             ctl_sig_projs = []
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))
-            self.control_signal_specs = [{PROJECTIONS: ctl_sig_projs}]
+            self._control_signal_specs = [{PROJECTIONS: ctl_sig_projs}]
 
         super()._instantiate_output_states(context=context)
 

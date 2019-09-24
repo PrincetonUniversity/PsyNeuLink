@@ -1084,6 +1084,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             if MODULATORY_SIGNALS in kwargs:
                 control_signals.append(convert_to_list(kwargs.pop(CONTROL_SIGNALS)))
 
+        # FIX: THIS VERSION KEEPS ASSIGNS control_signals to private attribute, for use by _instantiate_control_signals
         self._control_signal_specs = control_signals
 
         function = function or DefaultAllocationFunction
@@ -1372,12 +1373,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         super()._instantiate_output_states(context=context)
 
-        # Reassign modulatory_signals, control_signals and gating_signals to backing fields of corresponding params
-        # to capture any user_defined ControlSignals and/or GatingSignals instantiated in call to super
-        # and assign to ContentAddressableLists
-        self._control_signals = ContentAddressableList(component_type=ControlSignal,
-                                                       list=[state for state in self.output_states
-                                                             if isinstance(state, (ControlSignal, GatingSignal))])
+        # # Reassign modulatory_signals, control_signals and gating_signals to backing fields of corresponding params
+        # # to capture any user_defined ControlSignals and/or GatingSignals instantiated in call to super
+        # # and assign to ContentAddressableLists
+        # self._control_signals = ContentAddressableList(component_type=ControlSignal,
+        #                                                list=[state for state in self.output_states
+        #                                                      if isinstance(state, (ControlSignal, GatingSignal))])
 
     def _register_control_signal_type(self, context=None):
         from psyneulink.core.globals.registry import register_category
