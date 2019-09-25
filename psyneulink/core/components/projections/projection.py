@@ -1197,6 +1197,7 @@ def _parse_projection_spec(projection_spec,
     elif (isinstance(projection_spec, State)
           or (isinstance(projection_spec, type) and issubclass(projection_spec, State))):
         proj_spec_dict[PROJECTION_TYPE] = projection_spec.paramClassDefaults[PROJECTION_TYPE]
+        state_type = projection_spec.__class__
 
     # Mechanism object or class
     elif (isinstance(projection_spec, Mechanism)

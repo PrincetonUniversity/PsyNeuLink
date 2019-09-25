@@ -986,6 +986,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 default_variable=default_variable,
                 size=size,
                 input_states=input_states,
+                output_states=output_states,
                 function=function,
                 params=params,
                 name=name,

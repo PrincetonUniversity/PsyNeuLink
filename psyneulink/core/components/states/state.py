@@ -771,7 +771,7 @@ from psyneulink.core.globals.utilities import \
     merge_param_dicts, MODULATION_OVERRIDE, type_match
 
 __all__ = [
-    'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry'
+    'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry', 'STATE_SPEC'
 ]
 
 state_keywords = component_keywords.copy()
