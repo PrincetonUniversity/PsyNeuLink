@@ -2334,9 +2334,6 @@ class TestNested:
         parentComposition.run(inputs=no_training_input)
 
 class TestBatching:
-    from psyneulink import TransferMechanism, Logistic, AutodiffComposition, Context, TRAINING_SET, MappingProjection
-    import numpy as np
-
     def test_call_before_minibatch(self):
         # SET UP MECHANISMS FOR COMPOSITION
 
