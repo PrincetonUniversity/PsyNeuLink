@@ -1,6 +1,5 @@
 import pytest
 import numpy as np
-import psyneulink as pnl
 
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
