@@ -462,7 +462,9 @@ from psyneulink.core.components.shellclasses import Composition_Base, System_Bas
 from psyneulink.core.components.states.state import State, _parse_state_spec
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
+# # MODIFIED 9/26/19 OLD:
+# from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
+# MODIFIED 9/26/19 END
 from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
@@ -472,7 +474,7 @@ from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
     EID_SIMULATION, GATING_SIGNAL, GATING_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
     MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, MULTIPLICATIVE, \
-    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, SYSTEM
+    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, STATE_TYPE, SYSTEM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -511,27 +513,29 @@ class ControlMechanismError(Exception):
         self.error_value = error_value
 
 
-def _gating_allocation_getter(owning_component=None, context=None):
-    try:
-        gating_signal_indices = [owning_component.control_signals.index(g)
-                                  for g in owning_component.gating_signals]
-        return np.array([owning_component.control_allocation[i] for i in gating_signal_indices])
-    except TypeError:
-        return owning_component.parameters.default_allocation or \
-               [owning_component.parameters.gating_allocation.default_value]
-
-def _gating_allocation_setter(value, owning_component=None, context=None):
-    gating_signal_indices = [owning_component.control_signals.index(c)
-                              for c in owning_component.gating_signals]
-    if len(value)!=len(gating_signal_indices):
-        raise ControlMechanismError(f"Attempt to set {GATING_ALLOCATION} parameter of {owning_component.name} "
-                                       f"with value ({value} that has a different length than the number of its"
-                                       f"{GATING_SIGNALS} ({len(gating_signal_indices)})")
-    mod_alloc = owning_component.parameters.control_allocation._get(context)
-    for j, i in enumerate(gating_signal_indices):
-        mod_alloc[i] = value[j]
-    owning_component.parameters.control_allocation._set(np.array(mod_alloc), context)
-    return value
+# # MODIFIED 9/26/19 OLD:
+# def _gating_allocation_getter(owning_component=None, context=None):
+#     try:
+#         gating_signal_indices = [owning_component.control_signals.index(g)
+#                                   for g in owning_component.gating_signals]
+#         return np.array([owning_component.control_allocation[i] for i in gating_signal_indices])
+#     except TypeError:
+#         return owning_component.parameters.default_allocation or \
+#                [owning_component.parameters.gating_allocation.default_value]
+#
+# def _gating_allocation_setter(value, owning_component=None, context=None):
+#     gating_signal_indices = [owning_component.control_signals.index(c)
+#                               for c in owning_component.gating_signals]
+#     if len(value)!=len(gating_signal_indices):
+#         raise ControlMechanismError(f"Attempt to set {GATING_ALLOCATION} parameter of {owning_component.name} "
+#                                        f"with value ({value} that has a different length than the number of its"
+#                                        f"{GATING_SIGNALS} ({len(gating_signal_indices)})")
+#     mod_alloc = owning_component.parameters.control_allocation._get(context)
+#     for j, i in enumerate(gating_signal_indices):
+#         mod_alloc[i] = value[j]
+#     owning_component.parameters.control_allocation._set(np.array(mod_alloc), context)
+#     return value
+# MODIFIED 9/26/19 END
 
 def _control_mechanism_costs_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
@@ -910,9 +914,15 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
-    outputStateTypes = [ControlSignal, GatingSignal]
+    # # MODIFIED 9/26/19 OLD:
+    # outputStateTypes = [ControlSignal, GatingSignal]
+    # stateListAttr = Mechanism_Base.stateListAttr.copy()
+    # stateListAttr.update({ControlSignal:CONTROL_SIGNALS, GatingSignal:GATING_SIGNALS})
+    # MODIFIED 9/26/19 NEW:
+    outputStateTypes = ControlSignal
     stateListAttr = Mechanism_Base.stateListAttr.copy()
-    stateListAttr.update({ControlSignal:CONTROL_SIGNALS, GatingSignal:GATING_SIGNALS})
+    stateListAttr.update({ControlSignal:CONTROL_SIGNALS})
+    # MODIFIED 9/26/19 END
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -1028,10 +1038,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
         control_signal_costs = Parameter(None, read_only=True)
         compute_reconfiguration_cost = Parameter(None, stateful=False, loggable=False)
         reconfiguration_cost = Parameter(None, read_only=True)
-        gating_allocation = Parameter(np.array([defaultGatingAllocation]),
-                                      getter=_gating_allocation_getter,
-                                      setter=_gating_allocation_setter,
-                                      read_only=True)
+        # # MODIFIED 9/26/19 OLD:
+        # gating_allocation = Parameter(np.array([defaultGatingAllocation]),
+        #                               getter=_gating_allocation_getter,
+        #                               setter=_gating_allocation_setter,
+        #                               read_only=True)
+        # MODIFIED 9/26/19 END
         outcome = Parameter(None, read_only=True, getter=_outcome_getter)
         compute_net_outcome = Parameter(lambda outcome, cost: outcome - cost, stateful=False, loggable=False)
         net_outcome = Parameter(None, read_only=True,
@@ -1058,7 +1070,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                             InputState,
                                             OutputState,
                                             ControlSignal,
-                                            GatingSignal))=None,
+                                            # # MODIFIED 9/26/19 OLD:
+                                            # GatingSignal))=None,
+                                            # MODIFIED 9/26/19 END
+                                            ))=None,
                  modulation:tc.optional(str)=MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
@@ -1226,13 +1241,22 @@ class ControlMechanism(AdaptiveMechanism_Base):
             control = target_set[CONTROL]
             assert isinstance(control, list), \
                 f"PROGRAM ERROR: control arg {control} of {self.name} should have been converted to a list."
-            from psyneulink.core.components.projections.projection import ProjectionError
+            # # MODIFIED 9/26/19 OLD:
+            # from psyneulink.core.components.projections.projection import ProjectionError
+            # for ctl_spec in control:
+            #     # _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
+            #     try:
+            #         _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=ctl_spec)
+            #     except ProjectionError:
+            #         _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=ctl_spec)
+            # MODIFIED 9/26/19 NEW:
             for ctl_spec in control:
-                # _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=control_signal)
-                try:
-                    _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=ctl_spec)
-                except ProjectionError:
-                    _parse_state_spec(state_type=GatingSignal, owner=self, state_spec=ctl_spec)
+                ctl_spec = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=ctl_spec)
+                if not (isinstance(ctl_spec, ControlSignal)
+                        or (isinstance(ctl_spec, dict) and ctl_spec[STATE_TYPE]==ControlSignal.__name__)):
+                    raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
+                                                f"({ctl_spec})")
+            # MODIFIED 9/26/19 END
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, context=None):
@@ -1443,32 +1467,17 @@ class ControlMechanism(AdaptiveMechanism_Base):
         mod_spec = control_signal
 
         # Try to instantiate as ControlSignal;  if that fails, try GatingSignal
-        try:
-            control_signal = _instantiate_state(state_type=ControlSignal,
-                                                   owner=self,
-                                                   variable=self.default_allocation or
-                                                            self.parameters.control_allocation.default_value,
-                                                   reference_value=self.parameters.control_allocation.default_value,
-                                                   modulation=self.modulation,
-                                                   state_spec=mod_spec,
-                                                   context=context)
-            if not type(control_signal) in convert_to_list(self.outputStateTypes):
-                raise ProjectionError(f'{type(control_signal)} inappropriate for {self.name}')
+        control_signal = _instantiate_state(state_type=ControlSignal,
+                                               owner=self,
+                                               variable=self.default_allocation or
+                                                        self.parameters.control_allocation.default_value,
+                                               reference_value=self.parameters.control_allocation.default_value,
+                                               modulation=self.modulation,
+                                               state_spec=mod_spec,
+                                               context=context)
+        if not type(control_signal) in convert_to_list(self.outputStateTypes):
+            raise ProjectionError(f'{type(control_signal)} inappropriate for {self.name}')
 
-        except (ProjectionError, StateError):
-            try:
-                control_signal = _instantiate_state(state_type=GatingSignal,
-                                                       owner=self,
-                                                       variable=self.parameters.gating_allocation.default_value,
-                                                       # reference_value=GatingSignal.defaults.allocation,
-                                                       reference_value=self.parameters.gating_allocation.default_value,
-                                                       modulation=self.modulation,
-                                                       state_spec=mod_spec,
-                                                       context=context)
-            except StateError as e:
-                raise ControlMechanismError(f"\nPROGRAM ERROR: Unrecognized {repr(CONTROL_SIGNAL)} "
-                                               f"specification for {self.name} ({control_signal}); \n"
-                                               f"ERROR MESSAGE: {e.args[0]}")
 
         control_signal.owner = self
 
@@ -1839,8 +1848,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
             # return ContentAddressableList(component_type=ControlSignal,
             #                               list=[state for state in self.output_states
             #                                     if isinstance(state, (ControlSignal, GatingSignal))])
-            # MODIFIED 9/25/19 NEW: [JDC]
-            return [state for state in self.output_states if isinstance(state, (ControlSignal, GatingSignal))]
+            # # MODIFIED 9/25/19 NEW: [JDC]
+            # return [state for state in self.output_states if isinstance(state, (ControlSignal, GatingSignal))]
+            # MODIFIED 9/25/19 NEWER: [JDC]
+            return [state for state in self.output_states if isinstance(state, ControlSignal)]
             # MODIFIED 9/25/19 END
         except:
             return None
@@ -1852,21 +1863,23 @@ class ControlMechanism(AdaptiveMechanism_Base):
         except:
             return None
 
-    @property
-    def gating_signals(self):
-        try:
-            return ContentAddressableList(component_type=GatingSignal,
-                                          list=[state for state in self.output_states
-                                                if isinstance(state, GatingSignal)])
-        except:
-            return None
-
-    @property
-    def gating_projections(self):
-        try:
-            return [projection for gating_signal in self.gating_signals for projection in gating_signal.efferents]
-        except:
-            return None
+    # # MODIFIED 9/26/19 OLD:
+    # @property
+    # def gating_signals(self):
+    #     try:
+    #         return ContentAddressableList(component_type=GatingSignal,
+    #                                       list=[state for state in self.output_states
+    #                                             if isinstance(state, GatingSignal)])
+    #     except:
+    #         return None
+    #
+    # @property
+    # def gating_projections(self):
+    #     try:
+    #         return [projection for gating_signal in self.gating_signals for projection in gating_signal.efferents]
+    #     except:
+    #         return None
+    # MODIFIED 9/26/19 END
 
     @property
     def _sim_count_lock(self):
