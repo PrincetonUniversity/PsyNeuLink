@@ -232,7 +232,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import PRIMARY, SEQUENTIAL, _output_state_variable_getter
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
@@ -257,10 +257,10 @@ class GatingSignalError(Exception):
         return repr(self.error_value)
 
 gating_signal_keywords = {GATE}
-gating_signal_keywords.update(modulatory_signal_keywords)
+# gating_signal_keywords.update(modulatory_signal_keywords)
 
 
-class GatingSignal(ModulatorySignal):
+class GatingSignal(ControlSignal):
     """
     GatingSignal(                                   \
         owner,                                      \
@@ -413,7 +413,7 @@ class GatingSignal(ModulatorySignal):
     componentName = 'GatingSignal'
     paramsType = OUTPUT_STATE_PARAMS
 
-    stateAttributes = ModulatorySignal.stateAttributes | {GATE}
+    stateAttributes = ControlSignal.stateAttributes | {GATE}
 
     connectsWith = [INPUT_STATE, OUTPUT_STATE]
     connectsWithAttribute = [INPUT_STATES, OUTPUT_STATES]
@@ -427,7 +427,7 @@ class GatingSignal(ModulatorySignal):
     #     kwPreferenceSetName: 'OutputStateCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class Parameters(ModulatorySignal.Parameters):
+    class Parameters(ControlSignal.Parameters):
         """
             Attributes
             ----------
@@ -457,6 +457,18 @@ class GatingSignal(ModulatorySignal):
                              getter=_output_state_variable_getter)
         value = Parameter(np.array([defaultGatingAllocation]), read_only=True, aliases=['intensity'])
         allocation_samples = Parameter(None, modulable=True)
+        modulation = None
+
+        # # Override ControlSignal cost-related attributes and functions
+        # cost_options = None
+        # intensity_cost = None
+        # adjustment_cost = None
+        # duration_cost = None
+        # cost = None
+        # intensity_cost_function = None
+        # adjustment_cost_function = None
+        # duration_cost_function = None
+        # combine_costs_function = None
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -472,7 +484,7 @@ class GatingSignal(ModulatorySignal):
                  default_allocation=defaultGatingAllocation,
                  size=None,
                  index=None,
-                 assign=None,
+                 # assign=None,
                  function=Linear(),
                  modulation:tc.optional(str)=None,
                  modulates=None,
@@ -504,7 +516,7 @@ class GatingSignal(ModulatorySignal):
                          size=size,
                          modulation=modulation,
                          index=index,
-                         assign=assign,
+                         # assign=assign,
                          modulates=modulates,
                          params=params,
                          name=name,
