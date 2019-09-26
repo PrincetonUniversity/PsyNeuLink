@@ -373,75 +373,75 @@ class AGTControlMechanism(ControlMechanism):
 
     @property
     def initial_short_term_utility(self):
-        return self._objective_mechanism.function._initial_short_term_avg
+        return self.objective_mechanism.function._initial_short_term_avg
 
     @initial_short_term_utility.setter
     def initial_short_term_utility(self, value):
-        self._objective_mechanism.function.initial_short_term_avg = value
+        self.objective_mechanism.function.initial_short_term_avg = value
 
     @property
     def initial_long_term_utility(self):
-        return self._objective_mechanism.function._initial_long_term_avg
+        return self.objective_mechanism.function._initial_long_term_avg
 
     @initial_long_term_utility.setter
     def initial_long_term_utility(self, value):
-        self._objective_mechanism.function.initial_long_term_avg = value
+        self.objective_mechanism.function.initial_long_term_avg = value
 
     @property
     def short_term_gain(self):
-        return self._objective_mechanism.function._short_term_gain
+        return self.objective_mechanism.function._short_term_gain
 
     @short_term_gain.setter
     def short_term_gain(self, value):
-        self._objective_mechanism.function.short_term_gain = value
+        self.objective_mechanism.function.short_term_gain = value
 
     @property
     def long_term_gain(self):
-        return self._objective_mechanism.function._long_term_gain
+        return self.objective_mechanism.function._long_term_gain
 
     @long_term_gain.setter
     def long_term_gain(self, value):
-        self._objective_mechanism.function.long_term_gain = value
+        self.objective_mechanism.function.long_term_gain = value
 
     @property
     def short_term_bias(self):
-        return self._objective_mechanism.function._short_term_bias
+        return self.objective_mechanism.function._short_term_bias
 
     @short_term_bias.setter
     def short_term_bias(self, value):
-        self._objective_mechanism.function.short_term_bias = value
+        self.objective_mechanism.function.short_term_bias = value
 
     @property
     def    long_term_bias(self):
-        return self._objective_mechanism.function._long_term_bias
+        return self.objective_mechanism.function._long_term_bias
 
     @long_term_bias.setter
     def long_term_bias(self, value):
-        self._objective_mechanism.function.long_term_bias = value
+        self.objective_mechanism.function.long_term_bias = value
 
     @property
     def    short_term_rate(self):
-        return self._objective_mechanism.function._short_term_rate
+        return self.objective_mechanism.function._short_term_rate
 
     @short_term_rate.setter
     def short_term_rate(self, value):
-        self._objective_mechanism.function.short_term_rate = value
+        self.objective_mechanism.function.short_term_rate = value
 
     @property
     def    long_term_rate(self):
-        return self._objective_mechanism.function._long_term_rate
+        return self.objective_mechanism.function._long_term_rate
 
     @long_term_rate.setter
     def long_term_rate(self, value):
-        self._objective_mechanism.function.long_term_rate = value
+        self.objective_mechanism.function.long_term_rate = value
 
     @property
     def operation(self):
-        return self._objective_mechanism.function._operation
+        return self.objective_mechanism.function._operation
 
     @operation.setter
     def operation(self, value):
-        self._objective_mechanism.function.operation = value
+        self.objective_mechanism.function.operation = value
 
     @property
     def agt_function_parameters(self):

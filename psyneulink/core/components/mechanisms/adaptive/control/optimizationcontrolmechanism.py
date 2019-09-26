@@ -735,6 +735,10 @@ class OptimizationControlMechanism(ControlMechanism):
                                                   feature_function=feature_function,
                                                   num_estimates=num_estimates,
                                                   search_statefulness=search_statefulness,
+                                                  search_function=search_function,
+                                                  search_termination_function=search_termination_function,
+                                                  agent_rep=agent_rep,
+                                                  features=features,
                                                   params=params)
 
         super().__init__(system=None,

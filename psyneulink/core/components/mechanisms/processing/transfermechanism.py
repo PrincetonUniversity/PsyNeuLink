@@ -919,7 +919,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         clip = None
         noise = Parameter(0.0, modulable=True)
         convergence_criterion = Parameter(0.01, modulable=True)
-        convergence_function = Parameter(Distance(metric=DIFFERENCE), stateful=False, loggable=False)
+        convergence_function = Parameter(Distance, stateful=False, loggable=False)
         max_passes = Parameter(1000, stateful=False)
 
         def _validate_integrator_mode(self, integrator_mode):

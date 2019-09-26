@@ -1794,6 +1794,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._check_for_projection_assignments()
         self.needs_update_graph = False
 
+        for n in self.nodes:
+            try:
+                n._analyze_graph()
+            except AttributeError:
+                pass
+
     def _update_processing_graph(self):
         """
         Constructs the processing graph (the graph that contains only Nodes as vertices)
