@@ -810,7 +810,7 @@ class OptimizationControlMechanism(ControlMechanism):
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         """
         from psyneulink.core.globals.keywords import OWNER_VALUE
-        for i, spec in enumerate(self._control_signal_specs):
+        for i, spec in enumerate(self.control):
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
             self.control_signals[i] = control_signal
