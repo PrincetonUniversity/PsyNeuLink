@@ -539,10 +539,14 @@ def _control_mechanism_costs_getter(owning_component=None, context=None):
         # # MODIFIED 8/30/19 OLD:
         # costs = [c.compute_costs(c.parameters.variable._get(context), context=context)
         #          for c in owning_component.control_signals]
-        # MODIFIED 8/30/19 NEW: [JDC]
-        # FIX 8/30/19: SHOULDN'T THIS JUST GET ControlSignal.cost FOR EACH ONE?
+        # # MODIFIED 8/30/19 NEW: [JDC]
+        # # FIX 8/30/19: SHOULDN'T THIS JUST GET ControlSignal.cost FOR EACH ONE?
+        # costs = [c.compute_costs(c.parameters.value._get(context), context=context)
+        #          for c in owning_component.control_signals]
+        # MODIFIED 9/26/19 NEWER: [JDC]
         costs = [c.compute_costs(c.parameters.value._get(context), context=context)
-                 for c in owning_component.control_signals]
+                 for c in owning_component.control_signals
+                 if hasattr(owning_component.control_signals, 'compute_costs')] # GatingSignals don't have cost fcts
         # MODIFIED 8/30/19 END
         return costs
 
