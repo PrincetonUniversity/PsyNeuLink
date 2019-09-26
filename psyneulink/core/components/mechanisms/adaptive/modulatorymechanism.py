@@ -1048,6 +1048,8 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         modulation = MULTIPLICATIVE
 
+        objective_mechanism = Parameter(None, stateful=False, loggable=False)
+
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         OBJECTIVE_MECHANISM: None,
@@ -1295,7 +1297,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         # Otherwise, instantiate ObjectiveMechanism with list of states in monitored_output_states
         else:
             try:
-                self._objective_mechanism = ObjectiveMechanism(monitor=monitored_output_states,
+                self.objective_mechanism = ObjectiveMechanism(monitor=monitored_output_states,
                                                                function=LinearCombination(operation=PRODUCT),
                                                                name=self.name + '_ObjectiveMechanism')
             except (ObjectiveMechanismError, FunctionError) as e:
@@ -1352,7 +1354,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
         # If objective_mechanism is specified, instantiate it,
         #     including Projections to it from monitor_for_control
-        if self._objective_mechanism:
+        if self.objective_mechanism:
             self._instantiate_objective_mechanism(context=context)
 
         # Otherwise, instantiate Projections from monitor_for_modulation to ModulatoryMechanism
@@ -1581,7 +1583,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
 
     def _add_process(self, process, role:str):
         super()._add_process(process, role)
-        if self._objective_mechanism:
+        if self.objective_mechanism:
             self.objective_mechanism._add_process(process, role)
 
     # FIX: TBI FOR COMPOSITION
@@ -1624,7 +1626,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
             system.controller = self
             return
 
-        if self._objective_mechanism is None:
+        if self.objective_mechanism is None:
             self._instantiate_objective_mechanism(context=context)
 
         # NEED TO BUFFER OBJECTIVE_MECHANISM AND CONTROL_SIGNAL ARGUMENTS FOR USE IN REINSTANTIATION HERE
@@ -1696,7 +1698,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         self.system = system
 
         # Flag ObjectiveMechanism as associated with a ModulatoryMechanism that is a controller for the System
-        self._objective_mechanism.for_controller = True
+        self.objective_mechanism.for_controller = True
 
         if context.source != ContextFlags.PROPERTY:
             system._controller = self
@@ -1735,7 +1737,7 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
                 f"PROGRAM ERROR:  {OBJECTIVE_MECHANISM} for {self.name} not listed in its 'aux_components' attribute."
             dependent_projections.add(self._objective_projection)
 
-            for aff in self._objective_mechanism.afferents:
+            for aff in self.objective_mechanism.afferents:
                 dependent_projections.add(aff)
 
         for ms in self.modulatory_signals:
@@ -1770,21 +1772,21 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
     @property
     def monitored_output_states(self):
         try:
-            return self._objective_mechanism.monitored_output_states
+            return self.objective_mechanism.monitored_output_states
         except AttributeError:
             return None
 
     @monitored_output_states.setter
     def monitored_output_states(self, value):
         try:
-            self._objective_mechanism._monitored_output_states = value
+            self.objective_mechanism._monitored_output_states = value
         except AttributeError:
             return None
 
     @property
     def monitored_output_states_weights_and_exponents(self):
         try:
-            return self._objective_mechanism.monitored_output_states_weights_and_exponents
+            return self.objective_mechanism.monitored_output_states_weights_and_exponents
         except:
             return None
 
@@ -1852,5 +1854,5 @@ class ModulatoryMechanism(AdaptiveMechanism_Base):
         return list(itertools.chain(
             super()._dependent_components,
             # [self.objective_mechanism],
-            [self._objective_mechanism] if self.objective_mechanism else [],
+            [self.objective_mechanism] if self.objective_mechanism else [],
         ))

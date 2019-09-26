@@ -1274,6 +1274,11 @@ class GridSearch(OptimizationFunction):
         search_termination_function = self._grid_complete
         self._return_values = save_values
         self._return_samples = save_values
+        try:
+            search_space = [x if isinstance(x, SampleIterator) else SampleIterator(x) for x in search_space]
+        except TypeError:
+            pass
+
         self.num_iterations = 1 if search_space is None else np.product([i.num for i in search_space])
         self.direction = direction
         # self.tolerance = tolerance
@@ -1753,9 +1758,9 @@ class GridSearch(OptimizationFunction):
             sample = next(self.grid)
         except StopIteration:
             raise OptimizationFunctionError("Expired grid in {} run from {} "
-                                            "(current_execution_count: {}; num_iterations: {})".
+                                            "(execution_count: {}; num_iterations: {})".
                 format(self.__class__.__name__, self.owner.name,
-                       self.owner.current_execution_count, self.num_iterations))
+                       self.owner.paramters.execution_count.get(), self.num_iterations))
         return sample
 
     def _grid_complete(self, variable, value, iteration, context=None):

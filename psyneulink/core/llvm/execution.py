@@ -17,7 +17,6 @@ from collections import defaultdict
 import numpy as np
 
 from psyneulink.core import llvm as pnlvm
-from .builder_context import *
 from . import helpers, jit_engine
 from .debug import debug_env
 

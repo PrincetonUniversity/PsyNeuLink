@@ -919,7 +919,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         clip = None
         noise = Parameter(0.0, modulable=True)
         convergence_criterion = Parameter(0.01, modulable=True)
-        convergence_function = Parameter(Distance(metric=DIFFERENCE), stateful=False, loggable=False)
+        convergence_function = Parameter(Distance, stateful=False, loggable=False)
         max_passes = Parameter(1000, stateful=False)
 
         def _validate_integrator_mode(self, integrator_mode):
@@ -1404,10 +1404,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_context, mf_in)
 
-        # KDM 12/13/18: for some reason on devel f8b1e2cbf this was returning None on several tests, but when
-        # refactoring function_object -> function using __call__ on Function_Base, it now returned a tuple in those cases.
-        # Seems not to cause any test failures however..
-        clip = self.get_current_mechanism_param("clip", Context())
+        # FIXME: Convert to runtime instead of compile time
+        clip = self.parameters.clip.get()
         if clip is not None:
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -1422,14 +1420,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         builder = self._gen_llvm_output_states(ctx, builder, mf_out, params, context, arg_in, arg_out)
 
         return builder
-
-    def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
-        # LLVM version of parse input variable
-        # FIXME: Should this be more targeted?
-        # FIXME: Remove this workaround
-        if func.args[2].type != func_in.type:
-            func_in = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        return func_in, builder
 
     def _execute(self,
         variable=None,

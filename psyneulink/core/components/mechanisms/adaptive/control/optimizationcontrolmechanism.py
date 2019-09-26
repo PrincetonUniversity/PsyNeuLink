@@ -735,6 +735,10 @@ class OptimizationControlMechanism(ControlMechanism):
                                                   feature_function=feature_function,
                                                   num_estimates=num_estimates,
                                                   search_statefulness=search_statefulness,
+                                                  search_function=search_function,
+                                                  search_termination_function=search_termination_function,
+                                                  agent_rep=agent_rep,
+                                                  features=features,
                                                   params=params)
 
         super().__init__(system=None,
@@ -1173,15 +1177,14 @@ class OptimizationControlMechanism(ControlMechanism):
         return f
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
-        from psyneulink.core.compositions.composition import Composition
-        is_comp = isinstance(self.agent_rep, Composition)
-
         fun = ctx.get_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)
 
         args = [params, context, fun_in, fun_out]
-        if is_comp:
+        # If we're calling compiled version of Composition.evaluate,
+        # we need to pass extra arguments
+        if len(fun.args) > 4:
             args += builder.function.args[-3:]
         builder.call(fun, args)
 

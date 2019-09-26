@@ -253,22 +253,24 @@ class ProcessingMechanism(ProcessingMechanism_Base):
 
     componentType = PROCESSING_MECHANISM
 
-    class Parameters(ProcessingMechanism_Base.Parameters):
-        """
-            Attributes
-            ----------
-
-                execution_count
-                    see `execution_count <ProcessingMechanism.execution_count>`
-
-                    :default value: 0
-                    :type: int
-                    :read only: True
-
-        """
-        # not stateful because this really is just a global counter, for accurate counts
-        # should use schedulers which store this info
-        execution_count = Parameter(0, read_only=True, loggable=False, stateful=False, fallback_default=True)
+    # # MODIFIED 9/22/19 OLD:
+    # class Parameters(ProcessingMechanism_Base.Parameters):
+    #     """
+    #         Attributes
+    #         ----------
+    #
+    #             execution_count
+    #                 see `execution_count <ProcessingMechanism.execution_count>`
+    #
+    #                 :default value: 0
+    #                 :type: int
+    #                 :read only: True
+    #
+    #     """
+    #     # not stateful because this really is just a global counter,
+    #     # for context-specifc counts should use schedulers which store this info
+    #     execution_count = Parameter(0, read_only=True, loggable=False, stateful=False, fallback_default=True)
+    # MODIFIED 9/22/19 END
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # These will override those specified in TypeDefaultPreferences
