@@ -88,9 +88,9 @@ What PsyNeuLink is **NOT**
 
 The longterm goal of PsyNeuLink is to provide an environment that integrates comptutational modeling of brain function
 and behavior at all levels of analysis.  While it is designed to be fully general, and can in principle be used to
-implement models at any level, it is still under development, and current efficiency consideration make it more
+implement models at any level, it is still under development, and current efficiency considerations make it more
 suitable for some of forms of modeling than others. In its present form, it is well suited to the creation of
-simple to moderately complex models, and for the integration of disparate models into a single envinroment, while in
+simple to moderately complex models, and for the integration of disparate models into a single environment, while in
 it is presently less well suited to efforts involving massively large computations, such as:
 
  - extensive model fitting

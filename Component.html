@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.6.0.0+6.g9c94b41 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.6.0.1+7.g27e9788 documentation</title>
   
 
   
@@ -23,7 +23,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'0.6.0.0+6.g9c94b41',
+              VERSION:'0.6.0.1+7.g27e9788',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.6.0.0+6
+                0.6.0.1+7
               </div>
             
           
@@ -409,17 +409,16 @@ parameter can be specified).</p>
 information about its contents and/or state, but do not directly affect its operation.  Every Component has the
 following two informational attributes:</p>
 <ul class="simple" id="component-execution-count">
-<li><strong>current_execution_count</strong> – maintains a record of the number of times a Component has executed; it <em>excludes</em> the
+<li><strong>execution_count</strong> – maintains a record of the number of times a Component has executed; it <em>excludes</em> the
 executions carried out during initialization and validation, but includes all other executions, whether they are of
-the Component on its own are as part of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> (e.g., <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a>). The value can be changed
-“manually” or programmatically by assigning an integer value directly to the attribute.</li>
+the Component on its own are as part of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, and irresective of the <a class="reference internal" href="Context.html"><span class="doc">context</span></a> in which they
+are occur. The value can be changed “manually” or programmatically by assigning an integer value directly to the
+attribute.</li>
 </ul>
 <ul class="simple" id="component-current-execution-time">
-<li><strong>current_execution_time</strong> – maintains the <a class="reference internal" href="Time.html"><span class="doc">Time</span></a> of the last execution of the Component in the context of a
-<a class="reference internal" href="System.html"><span class="doc">System</span></a>’s <a class="reference internal" href="System.html#system-scheduler"><span class="std std-ref">scheduler</span></a>, and is stored as a <code class="xref any docutils literal"><span class="pre">time</span></code> tuple of values indicating the
-<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a>,  <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.PASS</span></code></a>, and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a> of the last execution.  Note that a System has two
-schedulers – <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler_processing" title="psyneulink.core.compositions.composition.Composition.scheduler_processing"><code class="xref any py py-attr docutils literal"><span class="pre">scheduler_processing</span></code></a> and <code class="xref any docutils literal"><span class="pre">scheduler_learning</span></code>; <a class="reference internal" href="#psyneulink.core.components.component.Component.current_execution_time" title="psyneulink.core.components.component.Component.current_execution_time"><code class="xref any py py-attr docutils literal"><span class="pre">current_execution_time</span></code></a> stores the time of whichever of these was the last to
-execute the Component.</li>
+<li><strong>current_execution_time</strong> – maintains the <a class="reference internal" href="Time.html"><span class="doc">Time</span></a> of the last execution of the Component in the context of the
+<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>’s current <code class="xref any docutils literal"><span class="pre">scheduler_processing</span> <span class="pre">&lt;Composition.scheduler_processing</span></code>, and is stored as a <code class="xref any docutils literal"><span class="pre">time</span></code> tuple of values indicating the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a>,  <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.PASS</span></code></a>, and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a> of the
+last execution.</li>
 </ul>
 </div>
 <div class="section" id="component-methods">
@@ -494,9 +493,9 @@ It should be instantiated using the constructor for a subclass.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.component.Component.current_execution_count">
-<code class="descname">current_execution_count</code><a class="headerlink" href="#psyneulink.core.components.component.Component.current_execution_count" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – see <a class="reference internal" href="#component-execution-count"><span class="std std-ref">current_execution_count</span></a></p>
+<dt id="psyneulink.core.components.component.Component.execution_count">
+<code class="descname">execution_count</code><a class="headerlink" href="#psyneulink.core.components.component.Component.execution_count" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – see <a class="reference internal" href="#component-execution-count"><span class="std std-ref">execution_count</span></a></p>
 </dd></dl>
 
 <dl class="attribute">
@@ -559,13 +558,6 @@ one and only one of the following flags is always set:</p>
 <p>Call _instantiate_defaults with context = COMMAND_LINE, and “validated_set” as target_set.
 Update paramInstanceDefaults with validated_set so that any instantiations (below) are done in proper context.
 Instantiate any items in request set that require it (i.e., function or states).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">current_execution_count</code></dt>
-<dd><p>Maintains a simple count of executions over the life of the Component,
-Incremented in the Component’s execute method by call to self._increment_execution_count</p>
 </dd></dl>
 
 <dl class="attribute">
