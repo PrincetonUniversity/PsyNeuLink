@@ -558,7 +558,7 @@ class GatingMechanism(ControlMechanism):
     # Suppress control_signals
     @property
     def control_signals(self):
-        from psyneulink.core.components.mechanisms.adaptive import ControlMechanism
+        from psyneulink.core.components.mechanisms.adaptive.control import ControlMechanism
         from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
         raise GatingMechanismError(f"'control_signals' attribute is not implemented on {self.name} (a "
                                    f"{self.__class__.__name__}); consider using a {ControlMechanism.__name__} "
