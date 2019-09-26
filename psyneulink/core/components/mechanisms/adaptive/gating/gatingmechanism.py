@@ -231,7 +231,7 @@ def _gating_allocation_setter(value, owning_component=None, context=None):
     return value
 
 def _control_allocation_getter(owning_component=None, context=None):
-    from psyneulink.core.components.mechanisms.adaptive.control import ControlMechanism
+    from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
     from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
     raise GatingMechanismError(f"'control_allocation' attribute is not implemented on {owning_component.name};  "
                                 f"consider using a {ControlMechanism.__name__} instead, "
@@ -558,7 +558,7 @@ class GatingMechanism(ControlMechanism):
     # Suppress control_signals
     @property
     def control_signals(self):
-        from psyneulink.core.components.mechanisms.adaptive.control import ControlMechanism
+        from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
         from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
         raise GatingMechanismError(f"'control_signals' attribute is not implemented on {self.name} (a "
                                    f"{self.__class__.__name__}); consider using a {ControlMechanism.__name__} "
@@ -567,7 +567,7 @@ class GatingMechanism(ControlMechanism):
 
     @control_signals.setter
     def control_signals(self, value):
-        from psyneulink.core.components.mechanisms.adaptive.control import ControlMechanism
+        from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
         from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
         raise GatingMechanismError(f"'control_signals' attribute is not implemented on {self.name} (a "
                                    f"{self.__class__.__name__}); consider using a {ControlMechanism.__name__} "

@@ -1075,11 +1075,17 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # For backward compatibility:
         if kwargs:
             if MONITOR_FOR_MODULATION in kwargs:
-                monitor_for_control.extend(convert_to_list(kwargs.pop(MONITOR_FOR_MODULATION)))
+                monitor_for_control = kwargs.pop(MONITOR_FOR_MODULATION)
+                if monitor_for_control:
+                    monitor_for_control.extend(convert_to_list(monitor_for_control))
             if MODULATORY_SIGNALS in kwargs:
-                control.extend(convert_to_list(kwargs.pop(MODULATORY_SIGNALS)))
+                modulatory_signals = kwargs.pop(MODULATORY_SIGNALS)
+                if modulatory_signals:
+                    control.extend(convert_to_list(modulatory_signals))
             if CONTROL_SIGNALS in kwargs:
-                control.extend(convert_to_list(kwargs.pop(CONTROL_SIGNALS)))
+                control_signals = kwargs.pop(CONTROL_SIGNALS)
+                if control_signals:
+                    control.extend(convert_to_list(control_signals))
 
         function = function or DefaultAllocationFunction
         self.combine_costs = combine_costs
@@ -1716,7 +1722,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
             control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
             # FIX: 1/18/18 - CHECK FOR SAME NAME IN _instantiate_control_signal
             # # Don't add any that are already on the ModulatoryMechanism
-            if control_signal.name in self.control_signals.names and (self.verbosePref or system.verbosePref):
+            # if control_signal.name in self.control_signals.names and (self.verbosePref or system.verbosePref):
+            if ((self.verbosePref or system.verbosePref)
+                    and control_signal.name in [cs.name for cs in self.control_signals]):
                 warnings.warn("{} specified for {} has same name (\'{}\') "
                               "as one in controller ({}) being assigned to the {}."
                               "".format(ControlSignal.__name__, system.name,
