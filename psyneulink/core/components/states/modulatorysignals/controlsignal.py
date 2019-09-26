@@ -337,76 +337,12 @@ from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 
 __all__ = ['ControlSignal', 'ControlSignalError', 'COST_OPTIONS']
 
-# class OutputStateLog(IntEnum):
-#     NONE            = 0
-#     TIME_STAMP      = 1 << 0
-#     ALL = TIME_STAMP
-#     DEFAULTS = NONE
-
-
-# -------------------------------------------    KEY WORDS  -------------------------------------------------------
-
-
-# class CostFunctions(IntEnum):
-#     """Options for selecting `cost functions <ControlSignal_Costs>` to be used by a ControlSignal.
-#
-#     These can be used alone or in combination with one another, by `enabling or disabling <ControlSignal_Toggle_Costs>`
-#     each using the ControlSignal's `toggle_cost_function` method.
-#
-#     Attributes
-#     ----------
-#
-#     NONE
-#         ControlSignal's `cost` is not computed.
-#
-#     INTENSITY
-#         `intensity_cost_function` is used to calculate a contribution to the ControlSignal's `cost
-#         <ControlSignal.cost>` based its current `intensity` value.
-#
-#     ADJUSTMENT
-#         `adjustment_cost_function` is used to calculate a contribution to the `cost` based on the change in its
-#         `intensity` from its last value.
-#
-#     DURATION
-#         `duration_cost_function` is used to calculate a contribitution to the `cost` based on an integral of the
-#         ControlSignal's `cost <ControlSignal.cost>` (i.e., it accumulated value over multiple executions).
-#
-#     ALL
-#         all of the `cost functions <ControlSignal_Costs> are used to calculate the ControlSignal's
-#         `cost <ControlSignal.cost>`.
-#
-#     DEFAULTS
-#         assign default set of `cost functions <ControlSignal_Costs>` as `INTENSITY`).
-#
-#     """
-#     NONE          = 0
-#     INTENSITY     = 1 << 1
-#     ADJUSTMENT    = 1 << 2
-#     DURATION      = 1 << 3
-#     ALL           = INTENSITY | ADJUSTMENT | DURATION
-#     DEFAULTS      = INTENSITY
-
-# Getters for cost attributes (from TransferWithCosts function)
-
 from psyneulink.core.components.functions.transferfunctions import \
     ENABLED_COST_FUNCTIONS, \
     INTENSITY_COST, INTENSITY_COST_FUNCTION, ADJUSTMENT_COST, ADJUSTMENT_COST_FUNCTION, \
     DURATION_COST, DURATION_COST_FUNCTION, COMBINED_COSTS, COMBINE_COSTS_FUNCTION, costFunctionNames
 
 COST_OPTIONS = 'cost_options'
-
-
-# # FIX: DOESN'T WORK SINCE DON'T HAVE ACCESS TO OTHER ARGS
-# def _function_parser(function):
-#     from psyneulink.core.components.functions.transferfunctions import TransferWithCosts
-#     return TransferWithCosts(default_variable=self.defaults.variable,
-#                              transfer_fct=function,
-#                              enabled_cost_functions=cost_options,
-#                              intensity_cost_fct=intensity_cost_function,
-#                              adjustment_cost_fct=adjustment_cost_function,
-#                              duration_cost_fct=duration_cost_function,
-#                              combine_costs_fct=combine_costs_function)
-
 
 def _cost_options_getter(owning_component=None, context=None):
     try:

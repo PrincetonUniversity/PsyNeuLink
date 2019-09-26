@@ -1449,7 +1449,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                             f"of {self.name} ({control_signal.owner_value_index})is not an int."
 
     def _instantiate_control_signal(self,  control_signal, context=None):
-        # MODIFIED 9/25 OLD:
         """Parse and instantiate modulatory_signal specifications (in call to State._parse_state_spec)
            and any embedded Projection specifications (in call to <State>._instantiate_projections)
 
@@ -1533,38 +1532,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self._output_states.append(control_signal)
 
         return control_signal
-        # # MODIFIED 9/25 NEW: [JDC]
-        # # FIX: PUT ALL OF THIS IN _instantiate_control_signal
-        # """Assign control_signal to OutputStates
-        # If value is a spec (not a ControlSignal),
-        #    √ if output_state is a ContentAddressableList: call _instantiate_control_signal
-        #                                                   (which should add after other ControlSignals at start of output_states list)
-        #    - if output_states is still a spec:  make it a list if it is not already,
-        #                                         and then add spec after other ControlSignals at start of output_states list
-        #                                         (it will then be handled by _instantiate_output_states)
-        # If value (control_signal) is a ControlSignal:
-        #    - if output_state is a ContentAddressableList: simply add after other ControlSignals at start of output_states list
-        #    - if output_states is still a spec:  make it a list if it is not already,
-        #                                         and then add spec after other ControlSignals at start of output_states list
-        #                                         (it will then be handled by _instantiate_output_states)
-        #  - handle removal of default (if Mechanism.remove_states can't handle ControlSignal, override it and then call super() as needed?
-        # """
-        #     def add_ctl_sig_spec_to_output_states_spec(spec):
-        #         """Add ControlSignal specification after others at start of output_states list"""
-        #         spec
-        #
-        # ctl_signal_spec = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=value)
-        # if isinstance(ctl_signal_spec, dict) and ctl_signal_spec in {ControlSignal, GatingSignal}:
-        #     if isinstance(self.output_states, ContentAddressableList):
-        #         # FIX: 9/25/19 MAKE SURE THIS ADDS ControlSignal TO output_states
-        #         self._instantiate_control_signal(ctl_signal_spec)
-        # elif isinstance(ctl_signal_spec, {ControlSignal, GatingSignal}):
-        #     pass
-        # else:
-        #     raise ControlMechanismError(f"Value assigned to {CONTROL_SIGNALS} attribute of {self.name} but be a "
-        #                                 f"{ControlSignal.__name__}, {GatingSignal.__name__}, "
-        #                                 f"or a valid specification for one.")
-        # # MODIFIED 9/25 END
 
     def show(self):
         """Display the OutputStates monitored by ModulatoryMechanism's `objective_mechanism
