@@ -70,7 +70,6 @@ class Optimizer():
                 self._pytorch_model._get_param_struct_type(ctx).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
-        llvm_func.attributes.add('alwaysinline')
         optim_struct, model_params = llvm_func.args
 
         delta_w_struct = builder.gep(
@@ -145,7 +144,6 @@ class AdamOptimizer(Optimizer):
                 self._pytorch_model._get_param_struct_type(ctx).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
-        llvm_func.attributes.add('alwaysinline')
         optim_struct, model_params = llvm_func.args
 
         # setup values
@@ -315,7 +313,6 @@ class SGDOptimizer(Optimizer):
                 self._pytorch_model._get_param_struct_type(ctx).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
-        llvm_func.attributes.add('alwaysinline')
         optim_struct, model_params = llvm_func.args
 
         zero = ctx.int32_ty(0)
