@@ -557,6 +557,10 @@ class GatingSignal(ControlSignal):
                                             format(GATING_SIGNAL, INPUT_STATE, OUTPUT_STATE, owner.name))
             return state_spec, params_dict
 
+    def _instantiate_cost_functions(self, context):
+        """Override ControlSignal as GatingSignal has not cost functions"""
+        pass
+
     def _get_primary_state(self, mechanism):
         return mechanism.input_state
 

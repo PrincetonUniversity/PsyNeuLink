@@ -1449,66 +1449,21 @@ class ControlMechanism(AdaptiveMechanism_Base):
                             f"of {self.name} ({control_signal.owner_value_index})is not an int."
 
     def _instantiate_control_signal(self,  control_signal, context=None):
-        """Parse and instantiate modulatory_signal specifications (in call to State._parse_state_spec)
-           and any embedded Projection specifications (in call to <State>._instantiate_projections)
+        """Parse and instantiate ControlSignal (or subclass relveant to ControlMechanism subclass)
 
         Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:
            value, output_states and modulatory_signals haven't been expanded yet to accomodate the new
            ModulatorySignal; reassign modulatory_signal.variable to actual OWNER_VALUE below,
            once value has been expanded
         """
-        from psyneulink.core.components.states.state import _instantiate_state, StateError
-        from psyneulink.core.components.projections.projection import ProjectionError
-        from psyneulink.core.components.states.state import StateError
 
         if self._output_states is None:
             self._output_states = []
-        mod_spec = control_signal
 
-        # Try to instantiate as ControlSignal;  if that fails, try GatingSignal
-        control_signal = _instantiate_state(state_type=ControlSignal,
-                                               owner=self,
-                                               variable=self.default_allocation or
-                                                        self.parameters.control_allocation.default_value,
-                                               reference_value=self.parameters.control_allocation.default_value,
-                                               modulation=self.modulation,
-                                               state_spec=mod_spec,
-                                               context=context)
-        if not type(control_signal) in convert_to_list(self.outputStateTypes):
-            raise ProjectionError(f'{type(control_signal)} inappropriate for {self.name}')
-
-
+        control_signal = self._instantiate_control_signal_type(control_signal, context)
         control_signal.owner = self
 
-        # Check that modulatory_signal is not a duplicate of one already instantiated for the ModulatoryMechanism
-        # (viz., if control of parameter was specified both in constructor for Mechanism and in ModulatoryMechanism)
-        # MODIFIED 9/25/19 OLD:
-        # for existing_ctl_sig in [cs for cs in self.control_signals if isinstance(cs, ControlSignal)]:
-        # MODIFIED 9/25/19 NEW: [JDC]
-        for existing_ctl_sig in self.control_signals:
-        # MODIFIED 9/25/19 END
-
-            # OK if modulatory_signal is one already assigned to ModulatoryMechanism (i.e., let it get processed below);
-            # this can happen if it was in deferred_init status and initalized in call to _instantiate_state above.
-            if control_signal == existing_ctl_sig:
-                continue
-
-            # Return if *all* projections from modulatory_signal are identical to ones in an existing modulatory_signal
-            for proj in control_signal.efferents:
-                if proj not in existing_ctl_sig.efferents:
-                    # A Projection in modulatory_signal is not in this existing one: it is different,
-                    #    so break and move on to next existing_mod_sig
-                    break
-                return
-
-            # Warn if *any* projections from modulatory_signal are identical to ones in an existing modulatory_signal
-            if any(
-                    any(new_p.receiver == existing_p.receiver
-                        for existing_p in existing_ctl_sig.efferents) for new_p in control_signal.efferents):
-                # warnings.warn(f"{modulatory_signal.__class__.__name__} ({modulatory_signal.name}) has ")
-                warnings.warn(f"Specification of {control_signal.name} for {self.name} "
-                              f"has one or more {CONTROL_PROJECTION}s redundant with ones already on "
-                              f"an existing {ControlSignal.__name__} ({existing_ctl_sig.name}).")
+        self._check_for_duplicates(control_signal, self.control_signals, context)
 
         # Update control_signal_costs to accommodate instantiated Projection
         control_signal_costs = self.parameters.control_signal_costs._get(context)
@@ -1532,6 +1487,57 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self._output_states.append(control_signal)
 
         return control_signal
+
+    def _instantiate_control_signal_type(self, control_signal_spec, context):
+        """Instantiate actual ControlSignal, or subclass if overridden"""
+        from psyneulink.core.components.states.state import _instantiate_state
+        from psyneulink.core.components.projections.projection import ProjectionError
+
+        allocation_parameter_default = self.parameters.control_allocation.default_value
+        control_signal = _instantiate_state(state_type=ControlSignal,
+                                               owner=self,
+                                               variable=self.default_allocation           # User specified value
+                                                        or allocation_parameter_default,  # Parameter default
+                                               reference_value=allocation_parameter_default,
+                                               modulation=self.modulation,
+                                               state_spec=control_signal_spec,
+                                               context=context)
+        if not type(control_signal) in convert_to_list(self.outputStateTypes):
+            raise ProjectionError(f'{type(control_signal)} inappropriate for {self.name}')
+        return control_signal
+
+    def _check_for_duplicates(self, control_signal, control_signals, context):
+        """ Check that control_signal is not a duplicate of one already instantiated for the ControlMechanism
+
+        Can happen if control of parameter is specified in constructor for a Mechanism
+            and also in the ControlMechanism's **control** arg
+
+        control_signals arg passed in to allow override by subclasses
+        """
+
+        for existing_ctl_sig in control_signals:
+            # OK if control_signal is one already assigned to ControlMechanism (i.e., let it get processed below);
+            # this can happen if it was in deferred_init status and initalized in call to _instantiate_state above.
+            if control_signal == existing_ctl_sig:
+                continue
+
+            # Return if *all* projections from control_signal are identical to ones in an existing control_signal
+            for proj in control_signal.efferents:
+                if proj not in existing_ctl_sig.efferents:
+                    # A Projection in control_signal is not in this existing one: it is different,
+                    #    so break and move on to next existing_mod_sig
+                    break
+                return
+
+            # Warn if *any* projections from control_signal are identical to ones in an existing control_signal
+            projection_type = existing_ctl_sig.paramClassDefaults[PROJECTION_TYPE]
+            if any(
+                    any(new_p.receiver == existing_p.receiver
+                        for existing_p in existing_ctl_sig.efferents) for new_p in control_signal.efferents):
+                # warnings.warn(f"{modulatory_signal.__class__.__name__} ({modulatory_signal.name}) has ")
+                warnings.warn(f"Specification of {control_signal.name} for {self.name} "
+                              f"has one or more {projection_type}s redundant with ones already on "
+                              f"an existing {ControlSignal.__name__} ({existing_ctl_sig.name}).")
 
     def show(self):
         """Display the OutputStates monitored by ModulatoryMechanism's `objective_mechanism
@@ -1741,7 +1747,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             self.remove_states(ctl_sig_attribute[0])
 
     def _activate_projections_for_compositions(self, composition=None):
-        """Activate eligible Projections to or from nodes in composition.
+        """Activate eligible Projections to or from nodes in Composition.
         If Projection is to or from a node NOT (yet) in the Composition,
         assign it the node's aux_components attribute but do not activate it.
         """
