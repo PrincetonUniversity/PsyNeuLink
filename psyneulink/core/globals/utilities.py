@@ -117,7 +117,8 @@ __all__ = [
     'make_readonly_property', 'merge_param_dicts',
     'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY','MODULATION_OVERRIDE',
     'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf',
-    'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'scalar_distance', 'sinusoid',
+    'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
+    'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy'
 ]
@@ -1487,6 +1488,23 @@ def safe_len(arr, fallback=1):
         return len(arr)
     except TypeError:
         return fallback
+
+
+def safe_equals(x, y):
+    """
+        An == comparison that handles numpy's new behavior of returning
+        an array of booleans instead of a single boolean for ==
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        try:
+            val = x == y
+            if isinstance(val, bool):
+                return val
+            else:
+                raise ValueError
+        except (ValueError, DeprecationWarning, FutureWarning):
+            return np.array_equal(x, y)
 
 
 import typecheck as tc
