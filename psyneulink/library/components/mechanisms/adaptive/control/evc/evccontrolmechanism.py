@@ -1117,19 +1117,21 @@ class EVCControlMechanism(ControlMechanism):
                                           self.name,
                                           num_control_projections))
 
-    def _instantiate_control_signal(self, control_signal, context=None):
-        """Implement CostFunctions.DEFAULTS as default for cost_option of ControlSignals
-        EVCControlMechanism requires use of at least one of the cost options
-        """
-        control_signal = super()._instantiate_control_signal(control_signal, context)
-
-        if not control_signal:
-            return
-
-        if control_signal.cost_options is None:
-            control_signal.cost_options = CostFunctions.DEFAULTS
-            control_signal._instantiate_cost_attributes()
-        return control_signal
+    # MODIFIED 9/26/19 OLD:
+    # def _instantiate_control_signal(self, control_signal, context=None):
+    #     """Implement CostFunctions.DEFAULTS as default for cost_option of ControlSignals
+    #     EVCControlMechanism requires use of at least one of the cost options
+    #     """
+    #     control_signal = super()._instantiate_control_signal(control_signal, context)
+    #
+    #     if not control_signal:
+    #         return
+    #
+    #     if control_signal.cost_options is None:
+    #         control_signal.cost_options = CostFunctions.DEFAULTS
+    #         control_signal._instantiate_cost_attributes()
+    #     return control_signal
+    # MODIFIED 9/26/19 END
 
     @handle_external_context()
     @tc.typecheck
