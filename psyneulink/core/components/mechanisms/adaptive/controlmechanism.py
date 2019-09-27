@@ -1827,7 +1827,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             return [state for state in self.output_states if isinstance(state, ControlSignal)]
             # MODIFIED 9/25/19 END
         except:
-            return None
+            return []
 
     @property
     def control_projections(self):
