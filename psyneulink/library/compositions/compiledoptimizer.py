@@ -58,10 +58,27 @@ class Optimizer():
     def _gen_zero_gradient_struct(self, ctx, builder, grad_struct):
         builder.store(grad_struct.type.pointee(None),grad_struct)
 
-    def zero_grad(self, ctx, builder, optim_struct):
+    def zero_grad(self, ctx):
+        name = self._composition.name+"_ZERO_GRAD"
+        # try:
+        #     llvm_func = ctx.get_llvm_function(name)
+        #     return llvm_func
+        # except Exception as e:
+        #     pass
+
+        args = [self._get_optimizer_struct_type(ctx).as_pointer(),
+                self._pytorch_model._get_param_struct_type(ctx).as_pointer()]
+        builder = ctx.create_llvm_function(args, self, name)
+        llvm_func = builder.function
+        llvm_func.attributes.add('alwaysinline')
+        optim_struct, model_params = llvm_func.args
+
         delta_w_struct = builder.gep(
             optim_struct, [ctx.int32_ty(0), ctx.int32_ty(self._DELTA_W_NUM)])
         self._gen_zero_gradient_struct(ctx, builder, delta_w_struct)
+        builder.ret_void()
+
+        return llvm_func
 
     # to be implemented by child classes - sets the initial values for the optim struct
     def initialize_optimizer_struct(self, ctx, builder, optim_struct):
