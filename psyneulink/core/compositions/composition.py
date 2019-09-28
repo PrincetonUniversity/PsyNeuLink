@@ -4330,6 +4330,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                      base_control_allocation])
                 self.controller.reconfiguration_cost.set(reconfiguration_cost, context)
 
+            # TEST PRINT 9/27/19:
+            print(f"Compositon control_allocation: {candidate_control_allocation}")
+
             # Apply candidate control signal
             self.controller._apply_control_allocation(candidate_control_allocation,
                                                                 context=context,
