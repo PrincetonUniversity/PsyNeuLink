@@ -6764,14 +6764,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         context)
 
                         node.function._runtime_params_reset[context.execution_id] = {}
-                    #
-                    # # TEST PRINT 7/22/19
-                    # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(context)}'
-                    #       f'\n\tvalue: {node.parameters.value.get(context)}')
 
-                    # # TEST PRINT 7/22/19
-                    # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(context)}'
-                    #       f'\n\tvalue: {node.parameters.value.get(context)}')
+                    # TEST PRINT 7/22/19
+                    print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(context)}'
+                          f'\n\tvalue: {node.parameters.value.get(context)}')
 
                     # Set execution_phase for node's context back to IDLE
                     if self.enable_learning:
