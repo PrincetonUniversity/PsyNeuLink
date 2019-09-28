@@ -1686,7 +1686,15 @@ def _parse_connection_specs(connectee_state_type,
                 # ):
                 #     projection_spec = state
                 # MODIFIED 9/27/19 END
-                elif _is_gating_spec(first_item) or _is_control_spec((first_item)):
+
+                # # MODIFIED 9/27/19 OLD:
+                # elif _is_gating_spec(first_item):
+                # # MODIFIED 9/27/19 NEW: [JDC]
+                # elif _is_gating_spec(first_item) or _is_control_spec((first_item)):
+                # MODIFIED 9/27/19 NEWER: [JDC]
+                elif (_is_gating_spec(first_item) or _is_control_spec((first_item))
+                      and not _is_projection_spec(last_item)):
+                # MODIFIED 9/27/19 END
                     projection_spec = first_item
                 projection_spec = _parse_projection_spec(projection_spec,
                                                          owner=owner,
