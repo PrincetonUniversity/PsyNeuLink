@@ -217,6 +217,8 @@ def test_predator_prey(benchmark, mode, samples):
     print(f"action mech variable: {greedy_action_mech.parameters.variable.get(agent_comp)}")
     print(f"action mech value: {greedy_action_mech.parameters.value.get(agent_comp)}")
 
+    print(f"ocm control_allocation: {ocm.parameters.control_allocation.get(agent_comp)}")
+
     if len(samples) == 2:
         assert np.allclose(run_results[0], [[-19.06547277,   5.47274121]])
         # 9/27/19: CURRENTLY GETTING [[-18.965605474486303, 3.808163277937467]]

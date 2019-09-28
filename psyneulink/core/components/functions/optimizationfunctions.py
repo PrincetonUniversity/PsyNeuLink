@@ -1740,6 +1740,10 @@ class GridSearch(OptimizationFunction):
             if self._return_values:
                 return_all_values = all_values
 
+            # TEST PRINT 9/28/19:
+            print(f'sample_optimal: {sample_optimal}')
+            print(f'value_optimal: {value_optimal}')
+
         return sample_optimal, value_optimal, return_all_samples, return_all_values
 
     def _traverse_grid(self, variable, sample_num, context=None):
