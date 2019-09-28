@@ -1669,22 +1669,22 @@ def _parse_connection_specs(connectee_state_type,
                 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
                 from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
                 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-                # # MODIFIED 9/27/19 OLD:
-                # if (not isinstance(projection_spec, GatingProjection)
-                #     and isinstance(state, GatingSignal)
-                #     and connectee_state_type in {InputState, OutputState}):
-                #     projection_spec = state
-                # MODIFIED 9/27/19 NEW: [JDC]
-                if (
-                        (not isinstance(projection_spec, GatingProjection)
-                         and state.__class__ == GatingSignal
-                         and connectee_state_type in {InputState, OutputState})
-                    or
-                        (not isinstance(projection_spec, ControlProjection)
-                         and state.__class__ == ControlSignal
-                         and connectee_state_type in {InputState, OutputState})
-                ):
+                # MODIFIED 9/27/19 OLD:
+                if (not isinstance(projection_spec, GatingProjection)
+                    and isinstance(state, GatingSignal)
+                    and connectee_state_type in {InputState, OutputState}):
                     projection_spec = state
+                # # MODIFIED 9/27/19 NEW: [JDC]
+                # if (
+                #         (not isinstance(projection_spec, GatingProjection)
+                #          and state.__class__ == GatingSignal
+                #          and connectee_state_type in {InputState, OutputState})
+                #     or
+                #         (not isinstance(projection_spec, ControlProjection)
+                #          and state.__class__ == ControlSignal
+                #          and connectee_state_type in {InputState, OutputState})
+                # ):
+                #     projection_spec = state
                 # MODIFIED 9/27/19 END
                 elif _is_gating_spec(first_item) or _is_control_spec((first_item)):
                     projection_spec = first_item

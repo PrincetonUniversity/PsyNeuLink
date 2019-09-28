@@ -90,6 +90,22 @@ class TestControlSpecification:
         assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert comp.controller.control_signals[0].allocation_samples is None
 
+    def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_alloc_samples_specified(self):
+        # First create Composition with controller that has HAS control specification,
+        #    then add Mechanism with control specification to Composition;
+        # Control specification on controller should supercede one on Mechanism (which should be ignored)
+        ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
+                                drift_rate=(1.0,
+                                            pnl.ControlProjection(
+                                                  function=pnl.Linear,
+                                                  control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01,0.3)}))))
+        comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals={ALLOCATION_SAMPLES:np.arange(0.2,1.01, 0.3),
+                                                                                PROJECTIONS:('drift_rate', ddm)}))
+        comp.add_node(ddm)
+        assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_states['drift_rate']
+        assert ddm.parameter_states['drift_rate'].mod_afferents[0].sender.owner == comp.controller
+        assert np.allclose(comp.controller.control_signals[0].allocation_samples(), [0.2, 0.5, 0.8])
+
 class TestControlMechanisms:
 
     def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):

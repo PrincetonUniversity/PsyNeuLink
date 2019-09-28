@@ -2154,9 +2154,6 @@ class State_Base(State):
             raise StateError(f'Specification of {MODULATORY_PROJECTION} to {receiver.full_name} ({mod_proj}) '
                                 f'is not a {ModulatoryProjection_Base.__name__}')
 
-        # FIX: 9/17/19
-        # execution_id = parse_execution_context(context)
-
         # Get modulation specification from the Projection sender's modulation attribute
         mod_spec = mod_proj.sender.parameters.modulation._get(context)
 
