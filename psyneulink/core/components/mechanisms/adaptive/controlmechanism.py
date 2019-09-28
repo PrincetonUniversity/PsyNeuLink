@@ -1786,11 +1786,17 @@ class ControlMechanism(AdaptiveMechanism_Base):
         based on specified `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`
         (used by controller of a Composition in simulations)
         """
-        value = [np.atleast_1d(a) for a in control_allocation]
-        self.parameters.value._set(value, context)
-        self._update_output_states(context=context,
-                                   runtime_params=runtime_params,
-                                   )
+        # # MODIFIED 9/27/19 OLD:
+        # value = [np.atleast_1d(a) for a in control_allocation]
+        # self.parameters.value._set(value, context)
+        # self._update_output_states(context=context,
+        #                            runtime_params=runtime_params,
+        #                            )
+        # MODIFIED 9/27/19 NEW: [JDC]
+        self._apply_modulatory_allocation(modulatory_allocation=control_allocation,
+                                          runtime_params=runtime_params,
+                                          context=context)
+        # MODIFIED 9/27/19 END
 
     @property
     def monitored_output_states(self):

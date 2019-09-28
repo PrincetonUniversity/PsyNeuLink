@@ -6766,9 +6766,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         node.function._runtime_params_reset[context.execution_id] = {}
 
                     # TEST PRINT 7/22/19
-                    print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(context)}'
-                          f'\n\tvalue: {node.parameters.value.get(context)}')
-                    if 'variance' in node.parameter_states and node.parameter_states['variance'].mod_afferents:
+                    if 'PREY' in node.name:
+                        # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(context)}'
+                        #       f'\n\tvalue: {node.parameters.value.get(context)}')
+                        # if 'variance' in node.parameter_states and node.parameter_states['variance'].mod_afferents:
                         print(f"\n\tmod_val: "
                               f"{node.parameter_states['variance'].mod_afferents[0].parameters.value.get(context)}")
 

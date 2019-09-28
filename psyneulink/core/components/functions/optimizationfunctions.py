@@ -526,6 +526,8 @@ class OptimizationFunction(Function_Base):
             new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
             # Compute new value based on new sample
             new_value = call_with_pruned_args(self.objective_function, new_sample, context=context)
+            # TEST PRINT 9/27/19:
+            print(f"\n*** SAMPLE: {new_sample}\n")
             self._report_value(new_value)
             iteration += 1
             max_iterations = self.parameters.max_iterations._get(context)
