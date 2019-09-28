@@ -1787,12 +1787,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
         """
 
-        for n in self.nodes:
-            try:
-                n._analyze_graph()
-            except AttributeError:
-                pass
-
         self._check_feedback(scheduler)
         self._determine_node_roles()
         self._create_CIM_states()
