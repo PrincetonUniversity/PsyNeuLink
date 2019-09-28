@@ -4,8 +4,6 @@ import pytest
 
 from psyneulink.core import llvm as pnlvm
 
-from llvmlite import ir
-
 
 DIM_X=1000
 

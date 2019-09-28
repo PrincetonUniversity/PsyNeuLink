@@ -1270,6 +1270,11 @@ class GridSearch(OptimizationFunction):
         search_termination_function = self._grid_complete
         self._return_values = save_values
         self._return_samples = save_values
+        try:
+            search_space = [x if isinstance(x, SampleIterator) else SampleIterator(x) for x in search_space]
+        except TypeError:
+            pass
+
         self.num_iterations = 1 if search_space is None else np.product([i.num for i in search_space])
         self.direction = direction
         # self.tolerance = tolerance

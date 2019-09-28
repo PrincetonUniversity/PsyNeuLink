@@ -39,8 +39,11 @@ from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_s
 
 from psyneulink.core.globals.parameters import Parameter
 
-__all__ = ['DistributionFunction', 'NormalDist', 'UniformDist', 'UniformToNormalDist', 'ExponentialDist',
-           'GammaDist', 'WaldDist', 'DriftDiffusionAnalytical']
+__all__ = [
+    'DistributionFunction', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY', 'DriftDiffusionAnalytical', 'ExponentialDist',
+    'GammaDist', 'NON_DECISION_TIME', 'NormalDist', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'THRESHOLD',
+    'THRESHOLD_VARIABILITY', 'UniformDist', 'UniformToNormalDist', 'WaldDist',
+]
 
 
 class DistributionFunction(Function_Base):

@@ -163,6 +163,8 @@ def init_builtins():
         builtins.setup_vec_scalar_mult(ctx)
         builtins.setup_mat_scalar_mult(ctx)
         builtins.setup_mat_scalar_add(ctx)
+
+
 def cleanup():
     _cpu_engine.clean_module()
     if ptx_enabled:

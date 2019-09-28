@@ -2295,21 +2295,6 @@ class State_Base(State):
     def _get_compilation_state(self):
         return [self.parameters.function]
 
-    # Provide invocation wrapper
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
-        mf_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
-        mf_params = ctx.get_param_ptr(self, builder, params, self.parameters.function.name)
-        mf_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        # TODO: Implement modulation
-        main_function = ctx.get_llvm_function(self.function)
-
-        # OutputState returns 1D array even for scalar functions
-        if arg_out.type != main_function.args[3].type:
-            assert len(arg_out.type.pointee) == 1
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        builder.call(main_function, [mf_params, mf_state, mf_in, arg_out])
-
-        return builder
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         state_f = ctx.get_llvm_function(self.function)
 

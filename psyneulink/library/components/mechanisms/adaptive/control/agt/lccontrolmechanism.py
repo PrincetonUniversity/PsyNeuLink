@@ -885,7 +885,7 @@ class LCControlMechanism(ControlMechanism):
 
         # Load mechanism parameters
         params, _, _, _ = builder.function.args
-        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(4)])
+        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         scaling_factor_ptr = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         base_factor_ptr = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         scaling_factor =  builder.load(scaling_factor_ptr)
@@ -912,9 +912,6 @@ class LCControlMechanism(ControlMechanism):
             builder.store(val, out_ptr)
 
         return new_out, builder
-
-    def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
-        return func_in, builder
 
     @tc.typecheck
     def _add_system(self, system, role:str):

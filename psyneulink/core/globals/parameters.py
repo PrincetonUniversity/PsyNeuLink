@@ -444,6 +444,7 @@ class Defaults(ParametersTemplate):
 
     def __setattr__(self, attr, value):
         if (attr[:1] != '_'):
+            value = self._owner.parameters._parse(attr, value)
             self._owner.parameters._validate(attr, value)
 
             param = getattr(self._owner.parameters, attr)
@@ -788,9 +789,11 @@ class Parameter(types.SimpleNamespace):
         except AttributeError:
             return None
 
-    @property
-    def _validate(self, context=None):
-        return self._owner._validate
+    def _validate(self, value):
+        return self._owner._validate(self.name, value)
+
+    def _parse(self, value):
+        return self._owner._parse(self.name, value)
 
     @property
     def _default_getter_kwargs(self):
@@ -922,7 +925,7 @@ class Parameter(types.SimpleNamespace):
         if not override and self.read_only:
             raise ParameterError('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to force set.'.format(self.name))
 
-        self._set(value, context, skip_history, skip_log, **kwargs)
+        self._set(self._parse(value), context, skip_history, skip_log, **kwargs)
 
     def _set(self, value, context=None, skip_history=False, skip_log=False, **kwargs):
         if not self.stateful:
@@ -1085,7 +1088,7 @@ class Parameter(types.SimpleNamespace):
     # in the interface for user simplicity: that is, inheritable (by this Parameter's children or from its parent),
     # visible in a Parameter's repr, and easily settable by the user
     def _set_default_value(self, value):
-        self._validate(self.name, value)
+        self._validate(value)
 
         super().__setattr__('default_value', value)
 
@@ -1311,3 +1314,9 @@ class ParametersBase(ParametersTemplate):
         except AttributeError:
             # parameter does not have a validation method
             pass
+
+    def _parse(self, attr, value):
+        try:
+            return self._get_prefixed_method(parse=True, parameter_name=attr)(value)
+        except AttributeError:
+            return value

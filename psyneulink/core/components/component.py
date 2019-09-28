@@ -2172,8 +2172,10 @@ class Component(object, metaclass=ComponentsMeta):
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
 
         # assign defaults based on pass in params and class defaults
-        defaults = copy.deepcopy(self.class_defaults.values(show_all=True))
-
+        defaults = {
+            k: copy.deepcopy(v) for (k, v) in self.class_defaults.values(show_all=True).items()
+            if not isinstance(getattr(self.class_parameters, k), ParameterAlias)
+        }
         try:
             function_params = param_defaults[FUNCTION_PARAMS]
         except KeyError:

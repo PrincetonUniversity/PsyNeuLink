@@ -1034,7 +1034,7 @@ class ControlMechanism(ControlMechanism):
             system.controller = self
             return
 
-        if self._objective_mechanism is None:
+        if self.objective_mechanism is None:
             self._instantiate_objective_mechanism(context=context)
 
         # NEED TO BUFFER OBJECTIVE_MECHANISM AND CONTROL_SIGNAL ARGUMENTS FOR USE IN REINSTANTIATION HERE
@@ -1107,7 +1107,7 @@ class ControlMechanism(ControlMechanism):
         self.system = system
 
         # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
-        self._objective_mechanism.for_controller = True
+        self.objective_mechanism.for_controller = True
 
         if context.source != ContextFlags.PROPERTY:
             system._controller = self

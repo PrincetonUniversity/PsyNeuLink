@@ -683,6 +683,9 @@ class AutodiffComposition(Composition):
         self.parameters.pytorch_representation._get(context).detach_all()
         # self.parameters.pytorch_representation._get(context).reset_all()
 
+        # compute total loss across output neurons for current trial
+        curr_loss = torch.zeros(1, device=self.device).double()
+
         # iterate over inputs, targets
         for t in range(num_inputs):
 
@@ -706,52 +709,50 @@ class AutodiffComposition(Composition):
                 do_logging,
                 scheduler=scheduler,
             )
-            # compute total loss across output neurons for current trial
-            curr_loss = torch.zeros(1, device=self.device).double()
+
             for component in curr_tensor_outputs.keys():
                 # possibly add custom loss option, which is a loss function that takes many args
                 # (outputs, targets, weights, and more) and returns a scalar
                 new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
                 curr_loss += new_loss
             # save average loss across all output neurons on current trial
-            curr_losses[t] = (curr_loss[0].item())/out_size
-
-            optimizer = self.parameters.optimizer._get(context)
-
-            # backpropagate to compute gradients and perform learning update for parameters
-            optimizer.zero_grad()
-            curr_loss = curr_loss/2
-            printable = {}
-            for component in curr_tensor_outputs.keys():
-                printable[component] = curr_tensor_outputs[component].detach().numpy()
-            np.set_printoptions(precision=3)
-            if self.force_no_retain_graph:
-                curr_loss.backward(retain_graph=False)
-            else:
-                curr_loss.backward(retain_graph=True)
-            self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
-            optimizer.step()
+            curr_losses[t] = curr_loss[0].item()/num_inputs
 
             # save outputs of model if this is final epoch or if using early stopping
-            curr_output_list = []
             if patience is not None or curr_epoch == total_epochs - 1:
+                curr_output_list = []
                 for input_state in self.output_CIM.input_states:
-                    assert(len(input_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
+                    assert (len(input_state.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
                     component = input_state.all_afferents[0].sender.owner
                     curr_output_list.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
-            # for component in curr_tensor_outputs.keys():
-            #     curr_output_list.append(curr_tensor_outputs[component].detach().numpy().copy())
-            outputs.append(curr_output_list)
+                outputs.append(curr_output_list)
+                # outputs.extend(curr_output_list)
 
-            if curr_epoch == total_epochs - 1 and not do_logging:
-                self.parameters.pytorch_representation._get(context).\
-                    copy_outputs_to_psyneulink(curr_tensor_outputs, context)
+        optimizer = self.parameters.optimizer._get(context)
 
-            scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+        # backpropagate to compute gradients and perform learning update for parameters
+        optimizer.zero_grad()
+        curr_loss = curr_loss / num_inputs / 2
+        printable = {}
+        for component in curr_tensor_outputs.keys():
+            printable[component] = curr_tensor_outputs[component].detach().numpy()
+        np.set_printoptions(precision=3)
+        if self.force_no_retain_graph:
+            curr_loss.backward(retain_graph=False)
+        else:
+            curr_loss.backward(retain_graph=True)
+        self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
+        optimizer.step()
 
-            # save average loss on the current epoch
-            average_loss = np.mean(curr_losses)
-            self.parameters.losses._get(context).append(average_loss)
+        if curr_epoch == total_epochs - 1 and not do_logging:
+            self.parameters.pytorch_representation._get(context).\
+                copy_outputs_to_psyneulink(curr_tensor_outputs, context)
+
+        scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+
+        # save average loss on the current epoch
+        average_loss = np.mean(curr_losses)
+        self.parameters.losses._get(context).append(average_loss)
 
         # update early stopper with most recent average loss
         if self.parameters.patience._get(context) is not None:
@@ -806,9 +807,13 @@ class AutodiffComposition(Composition):
     def execute(self,
                 inputs=None,
                 autodiff_stimuli=None,
+                num_trials=None,
+                minibatch_size=1,
                 do_logging=False,
                 scheduler_processing=None,
                 termination_processing=None,
+                call_before_minibatch=None,
+                call_after_minibatch=None,
                 call_before_time_step=None,
                 call_before_pass=None,
                 call_after_time_step=None,
@@ -837,27 +842,64 @@ class AutodiffComposition(Composition):
 
             self._analyze_graph()  # ADDED by CW 12/17/18: unsure if correct here
 
-            self._build_pytorch_representation(context)
-
             autodiff_inputs = inputs["inputs"]
             autodiff_targets = inputs["targets"]
             autodiff_epochs = 1
             if "epochs" in inputs:
                 autodiff_epochs = inputs["epochs"]
 
+            minibatch = {
+                'inputs': {
+                    k: [] for k in inputs['inputs'].keys()
+                },
+                'targets': {
+                    k: [] for k in inputs['targets'].keys()
+                }
+            }
+
+            if num_trials is None:
+                num_trials = len(list(inputs['inputs'].values())[0])
+            if minibatch_size == TRAINING_SET:
+                minibatch_size = num_trials
+
+            results = []
+            self._build_pytorch_representation(context)
+
             for current_epoch in range(autodiff_epochs):
-                output = self.autodiff_training(autodiff_inputs, autodiff_targets, autodiff_epochs, current_epoch, context, do_logging, scheduler_processing)
-                self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
+                for trial_num in range(num_trials):
+                    for k,v in inputs['inputs'].items():
+                        minibatch['inputs'][k].append(v[trial_num])
+                    for k, v in inputs['targets'].items():
+                        minibatch['targets'][k].append(v[trial_num])
+                    minibatch_results = []
+                    if len(list(minibatch['inputs'].values())[0]) == minibatch_size or \
+                            trial_num == num_trials-1:
+                        if call_before_minibatch:
+                            call_before_minibatch()
+                        output = self.autodiff_training(minibatch['inputs'],
+                                                        minibatch['targets'],
+                                                        autodiff_epochs,
+                                                        current_epoch,
+                                                        context,
+                                                        do_logging,
+                                                        scheduler_processing)
+                        if call_after_minibatch:
+                            call_after_minibatch()
+                        self.most_recent_context = context
+                        for k, v in inputs['inputs'].items():
+                            minibatch['inputs'][k] = []
+                        for k, v in inputs['targets'].items():
+                            minibatch['targets'][k] = []
+                        if current_epoch == autodiff_epochs-1:
+                            results.extend(output)
 
             context.add_flag(ContextFlags.PROCESSING)
             # note that output[-1] might not be the truly most recent value
             # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
             # is not having its parameters populated correctly, and this should be fixed in the long run.
-            self.output_CIM.execute(input=output[-1], context=context)
-
+            self.output_CIM.execute(input=results[-1], context=context)
             context.remove_flag(ContextFlags.PROCESSING)
-
-            return output
+            return results
 
         return super(AutodiffComposition, self).execute(inputs=inputs,
                                                         scheduler_processing=scheduler_processing,
@@ -884,7 +926,7 @@ class AutodiffComposition(Composition):
         termination_processing=None,
         context=None,
         num_trials=None,
-        minibatch_size=TRAINING_SET,
+        minibatch_size=1,
         call_before_time_step=None,
         call_after_time_step=None,
         call_before_pass=None,
@@ -1084,49 +1126,23 @@ class AutodiffComposition(Composition):
                     stimuli = inputs()
                 else:
                     stimuli = self._adjust_stimulus_dict(inputs)
-                minibatch = {
-                    'inputs':{
-                        k:[] for k in stimuli['inputs'].keys()
-                    },
-                    'targets':{
-                        k:[] for k in stimuli['targets'].keys()
-                    }
-                }
-                minibatch.update({k:v for k,v in stimuli.items() if not isinstance(v, dict)})
-                if num_trials is None:
-                    num_trials = len(list(stimuli['inputs'].values())[0])
-                if minibatch_size == TRAINING_SET:
-                    minibatch_size = num_trials
-                results = []
-                for trial_num in range(num_trials):
-                    for k,v in stimuli['inputs'].items():
-                        minibatch['inputs'][k].append(v[trial_num])
-                    for k, v in stimuli['targets'].items():
-                        minibatch['targets'][k].append(v[trial_num])
-                    if len(list(minibatch['inputs'].values())[0]) == minibatch_size or \
-                            trial_num == num_trials-1:
-                        if call_before_minibatch:
-                            call_before_minibatch()
-                        trial_output = self.execute(
-                            inputs=minibatch,
-                            context=context,
-                            do_logging=do_logging,
-                            bin_execute = bin_execute
-                        )
-                        if call_after_minibatch:
-                            call_after_minibatch()
-                        results.append(trial_output)
-                        self.most_recent_context = context
-                        for k, v in stimuli['inputs'].items():
-                            minibatch['inputs'][k] = []
-                        for k, v in stimuli['targets'].items():
-                            minibatch['targets'][k] = []
+                trial_output = self.execute(
+                    inputs=stimuli,
+                    minibatch_size=minibatch_size,
+                    call_before_minibatch=call_before_minibatch,
+                    call_after_minibatch=call_after_minibatch,
+                    num_trials=num_trials,
+                    context=context,
+                    do_logging=do_logging,
+                    bin_execute=bin_execute
+                )
                 full_results = self.parameters.results._get(context)
                 if full_results is None:
-                    full_results = results
+                    full_results = trial_output
                 else:
-                    full_results.extend(results)
+                    full_results.append(trial_output)
                 self.parameters.results._set(full_results, context)
+                results = full_results
             self.most_recent_context = context
             return results
 
