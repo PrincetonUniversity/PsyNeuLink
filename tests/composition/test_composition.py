@@ -1014,10 +1014,10 @@ class TestExecutionOrder:
         start = ProcessingMechanism(name="start")
         expected_consideration_sets = [{start}]
         for i in range(10):
-            A = ProcessingMechanism(name='A'+str(i))
-            B = ProcessingMechanism(name='B'+str(i))
-            C = ProcessingMechanism(name='C'+str(i))
-            D = ProcessingMechanism(name='D'+str(i))
+            A = ProcessingMechanism(name='A' + str(i))
+            B = ProcessingMechanism(name='B' + str(i))
+            C = ProcessingMechanism(name='C' + str(i))
+            D = ProcessingMechanism(name='D' + str(i))
 
             comp.add_linear_processing_pathway([start, A, B, C, D])
             comp.add_linear_processing_pathway([C, B])

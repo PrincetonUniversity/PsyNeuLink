@@ -66,7 +66,7 @@ J=sys3l.run(inputs={input_layer: X,
             targets={output_layer: labels},
             num_trials=trials)
 
-rat=int(len(J)/4)
+rat = int(len(J) / 4)
 J=np.reshape(J,(rat,4))
 x=np.arange(0,rat,1)
 # plt.plot(x,J[:,0],x,J[:,1],x,J[:,2],x,J[:,3])
@@ -75,8 +75,8 @@ x=np.arange(0,rat,1)
 
 MSE=[]
 for i in range(np.shape(J)[0]):
-    diff=J[i,:]-np.array(labels).T[:]
-    MSE=np.append(MSE,(1/4)*(np.sum(diff**2)))
+    diff = J[i, :] - np.array(labels).T[:]
+    MSE = np.append(MSE, (1 / 4) * (np.sum(diff**2)))
 x=np.arange(0,np.shape(J)[0],1)
 # plt.plot(x,MSE)
 # plt.title('MSE of 3 layer net in PNL as a function of trials')

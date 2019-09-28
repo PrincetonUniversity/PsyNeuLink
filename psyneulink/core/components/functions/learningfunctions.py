@@ -890,8 +890,8 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         index_of_max = list(activities).index(max(activities))
         distances = np.zeros_like(activities)
         for i, item in enumerate(activities):
-            distances[i]=self.distance_function(self.measure, abs(i-index_of_max))
-        distances = 1-np.atleast_2d(distances).transpose()
+            distances[i] = self.distance_function(self.measure, abs(i - index_of_max))
+        distances = 1 - np.atleast_2d(distances).transpose()
 
         # Multiply distances by differences and learning_rate
         weight_change_matrix = distances * differences * learning_rate

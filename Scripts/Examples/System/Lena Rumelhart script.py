@@ -198,7 +198,7 @@ delta_sig_array=[]
 epochs=1000
 
 # CREATE CONDITIONAL:
-div=epochs/100
+div = epochs / 100
 spits=np.arange(0,epochs,div)
 
 #CREATE KILLSWITCH:
@@ -267,17 +267,17 @@ for epoch in range(epochs):
 ######################## SETUP THE LABEL ERRORS TO BE GRAPHED #######################################
 
 delta_bin_array=np.array(delta_bin_array)
-delta_bin_array_trunc=np.array(delta_bin_array[0:int(np.floor(len(delta_bin_array)/24)*24)])
-height=len(delta_bin_array_trunc)/24
+delta_bin_array_trunc = np.array(delta_bin_array[0:int(np.floor(len(delta_bin_array) / 24) * 24)])
+height = len(delta_bin_array_trunc) / 24
 delta_bin_array_trunc=np.reshape(delta_bin_array_trunc,(int(height),24))
-delta_bin_epochs=np.sum(delta_bin_array_trunc,axis=1)/24
+delta_bin_epochs = np.sum(delta_bin_array_trunc, axis=1) / 24
 
 ######################## SETUP THE SIGMOID ERRORS TO BE GRAPHED #######################################
 
 delta_sig_array=np.array(delta_sig_array)
-delta_sig_array_trunc=delta_sig_array[0:int(np.floor(len(delta_sig_array)/24)*24)]
+delta_sig_array_trunc = delta_sig_array[0:int(np.floor(len(delta_sig_array) / 24) * 24)]
 delta_sig_array_trunc=np.reshape(delta_sig_array_trunc,(int(height),24))
-delta_sig_epochs=np.sum(delta_sig_array_trunc,axis=1)/24
+delta_sig_epochs = np.sum(delta_sig_array_trunc, axis=1) / 24
 
 ######################## DO THE PLOTTING #######################################
 

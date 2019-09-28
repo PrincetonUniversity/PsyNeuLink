@@ -231,9 +231,9 @@ RumelNet.show_graph(output_fmt='jupyter')
 # to the input pairs. 
 
 
-irrel_is = np.ones((len(nouns), len(is_list)))*.5
-irrel_has = np.ones((len(nouns), len(has_list)))*.5
-irrel_can = np.ones((len(nouns), len(can_list)))*.5
+irrel_is = np.ones((len(nouns), len(is_list))) * .5
+irrel_has = np.ones((len(nouns), len(has_list))) * .5
+irrel_can = np.ones((len(nouns), len(can_list))) * .5
 
 # This block of code trains the network using a set of three loops. The innermost
 # pair of loops takes each noun and creates the appropriate training inputs and outputs associated
@@ -256,7 +256,7 @@ n_epochs=5
 tot_reps=200
 
 for reps in range(tot_reps):
-  print('Training rep: ',reps+1, ' of: ',tot_reps)
+  print('Training rep: ',reps + 1, ' of: ', tot_reps)
   for noun in range(len(nouns)):
     
     inputs_dict = {}
@@ -370,11 +370,11 @@ is_rel_log=data_is[0,:].T
 has_rel_log=data_has[1,:].T
 can_rel_log=data_can[2,:].T
 
-for i in range(int(log_length/len(relations))-1):
-  I_rel_log=np.append(I_rel_log,data_I[3*(i+1),:].T,1)
-  is_rel_log=np.append(is_rel_log,data_is[3*(i+1),:].T,1)
-  has_rel_log=np.append(has_rel_log,data_has[3*(i+1)+1,:].T,1)
-  can_rel_log=np.append(can_rel_log,data_can[3*(i+1)+2,:].T,1)
+for i in range(int(log_length / len(relations)) - 1):
+  I_rel_log = np.append(I_rel_log,data_I[3 * (i + 1), :].T, 1)
+  is_rel_log = np.append(is_rel_log,data_is[3 * (i + 1), :].T, 1)
+  has_rel_log = np.append(has_rel_log,data_has[3 * (i + 1) + 1, :].T, 1)
+  can_rel_log = np.append(can_rel_log,data_can[3 * (i + 1) + 2, :].T, 1)
   
   # This cell plots the last output values from the network for each noun/relation pair
 # This will show you what the network has learned with regards to the properties of 
@@ -383,34 +383,34 @@ for i in range(int(log_length/len(relations))-1):
 for i in range(len(nouns)):
   n=-i
   
-  plt.stem(I_rel_log[:,n-1])
+  plt.stem(I_rel_log[:, n - 1])
   
-  plt.title(nouns[n-1])
+  plt.title(nouns[n - 1])
   plt.ylabel('Strength of Association')
   plt.xticks(np.arange(len(nouns)), nouns,rotation=35)
   plt.yticks(np.arange(0,1.1,.1))
   plt.show()
 
   
-  plt.stem(is_rel_log[:,n-1])
+  plt.stem(is_rel_log[:, n - 1])
   
-  plt.title([nouns[n-1],' is:'])
+  plt.title([nouns[n - 1], ' is:'])
   plt.ylabel('Strength of Association')
   plt.xticks(np.arange(len(is_list)), is_list,rotation=35)
   plt.yticks(np.arange(0,1.1,.1))
   plt.show()
   
-  plt.stem(has_rel_log[:,n-1])
+  plt.stem(has_rel_log[:, n - 1])
   
-  plt.title([nouns[n-1],' has:'])
+  plt.title([nouns[n - 1], ' has:'])
   plt.ylabel('Strength of Association')
   plt.xticks(np.arange(len(has_list)), has_list,rotation=35)
   plt.yticks(np.arange(0,1.1,.1))
   plt.show()
 
-  plt.stem(can_rel_log[:,n-1])
+  plt.stem(can_rel_log[:, n - 1])
   
-  plt.title([nouns[n-1],' can:'])
+  plt.title([nouns[n - 1], ' can:'])
   plt.ylabel('Strength of Association')
   plt.xticks(np.arange(len(can_list)), can_list,rotation=35)
   plt.yticks(np.arange(0,1.1,.1))

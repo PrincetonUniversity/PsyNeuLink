@@ -3322,8 +3322,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     or (isinstance(item, ObjectiveMechanism) and item._role == CONTROL)):
                 items_to_delete.append(item)
                 # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
-                if i>0 and is_spec(pathway[i-1],PROJECTION):
-                    items_to_delete.append(pathway[i-1])
+                if i>0 and is_spec(pathway[i - 1],PROJECTION):
+                    items_to_delete.append(pathway[i - 1])
         for item in items_to_delete:
             if isinstance(item, ControlMechanism):
                 arg_name = f'in the {repr(MONITOR_FOR_CONTROL)} of its constructor'
@@ -3343,7 +3343,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # if the current item is a Node
             if is_spec(pathway[c], NODE):
-                if is_spec(pathway[c-1], NODE):
+                if is_spec(pathway[c - 1], NODE):
                     # if the previous item was also a node, add a MappingProjection between them
                     proj = self.add_projection(sender=pathway[c - 1],
                                                receiver=pathway[c])
@@ -3362,8 +3362,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     proj = pathway[c]
                     feedback = False
-                sender = pathway[c-1]
-                receiver = pathway[c+1]
+                sender = pathway[c - 1]
+                receiver = pathway[c + 1]
                 if isinstance(sender, (Mechanism, Composition)) \
                         and isinstance(receiver, (Mechanism, Composition)):
                     try:
@@ -3418,7 +3418,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         explicit_pathway = [nodes[0]]
         for i in range(len(projections)):
             explicit_pathway.append(projections[i])
-            explicit_pathway.append(nodes[i+1])
+            explicit_pathway.append(nodes[i + 1])
 
         return explicit_pathway
 
@@ -3946,7 +3946,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                        learned_projection,
                                                                        learning_rate,
                                                                        learning_update)
-            sequence_end = path_length-3
+            sequence_end = path_length - 3
 
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
         # Otherwise, if output_source already projects to a LearningMechanism, integrate with existing sequence
@@ -3959,7 +3959,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
             target = None
             comparator = None
-            sequence_end = path_length-1
+            sequence_end = path_length - 1
 
         # Otherwise create terminal_sequence for the sequence,
         #    and eliminate existing terminal_sequences previously created for Mechanisms now in the pathway
@@ -4005,7 +4005,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 COMPARATOR_MECHANISM: comparator}
             self.add_required_node_role(pathway[-1], NodeRole.OUTPUT)
 
-            sequence_end = path_length-3
+            sequence_end = path_length - 3
 
         # loop backwards through the rest of the pathway to create and connect
         # the remaining learning mechanisms
@@ -4013,8 +4013,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learned_projections = [learned_projection]
         for i in range(sequence_end, 1, -2):
             # set variables for this iteration
-            input_source = processing_pathway[i-2]
-            learned_projection = processing_pathway[i-1]
+            input_source = processing_pathway[i - 2]
+            learned_projection = processing_pathway[i - 1]
             output_source = processing_pathway[i]
 
             learning_mechanism = self._create_non_terminal_backprop_learning_components(input_source,
@@ -4801,7 +4801,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Use default args for nested Composition
                     args = output_fmt_arg
                 nested_comp_graph = rcvr.show_graph(**args)
-                nested_comp_graph.name = "cluster_"+rcvr.name
+                nested_comp_graph.name = "cluster_" + rcvr.name
                 rcvr_label = rcvr.name
                 # if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
                 #     nested_comp_graph.attr(color=feedback_color)
@@ -5936,7 +5936,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         name = item.name
 
         if show_types:
-            name = item.name+'\n('+item.__class__.__name__+')'
+            name = item.name + '\n(' + item.__class__.__name__ + ')'
 
         if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
             input_str = "in ({})".format(",".join(str(input_port.socket_width)
@@ -6531,7 +6531,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     format='GIF',
                                     save_all=True,
                                     append_images=self._animation[1:],
-                                    duration=self._image_duration*1000,
+                                    duration=self._image_duration * 1000,
                                     loop=0)
             # print(f'\nSaved movie for {self.name} in {self._animation_directory}/{self._movie_filename}')
             print(f"\nSaved movie for '{self.name}' in '{self._movie_filename}'")

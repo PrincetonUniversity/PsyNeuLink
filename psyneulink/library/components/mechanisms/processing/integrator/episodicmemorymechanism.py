@@ -238,7 +238,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
             assert False, \
                 f'PROGRAM ERROR: Number of {InputPort.__class__.__name__}s and ' \
                 f'{OutputPort.__class__.__name__}s do not match in {self.name}'
-        for i, input_port_spec, output_port_spec in zip(range(len(self.input_ports)-1),
+        for i, input_port_spec, output_port_spec in zip(range(len(self.input_ports) - 1),
                                                           self.input_ports,
                                                           self.output_ports):
             if input_port_spec.value is []:

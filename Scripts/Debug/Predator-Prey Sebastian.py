@@ -272,7 +272,7 @@ def main():
                                          animate={'show_controller':True,
                                                   'show_cim':True}
                                          )
-            agent_action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
+            agent_action = np.where(run_results[0] == 0, 0, run_results[0] / np.abs(run_results[0]))
 
             def print_controller():
 

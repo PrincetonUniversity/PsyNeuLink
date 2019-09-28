@@ -450,7 +450,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 spec_type = {'FF':'feature_values', 'CC':'control_signals'}
                 raise RegressionCFAError("Specification of {} for {} arg of {} "
                                                 "requires at least two {} be specified".
-                                                format('PV.'+term, repr(PREDICTION_TERMS), self.name, spec_type(term)))
+                                                format('PV.' + term, repr(PREDICTION_TERMS), self.name, spec_type(term)))
 
             F = PV.F.value
             C = PV.C.value
@@ -476,20 +476,20 @@ class RegressionCFA(CompositionFunctionApproximator):
             self.terms[F] = f = feature_values
             self.num[F] = len(f)  # feature_values are arrays
             self.num_elems[F] = len(f.reshape(-1)) # num of total elements assigned to vector
-            self.labels[F] = ['f'+str(i) for i in range(0,len(f))]
+            self.labels[F] = ['f' + str(i) for i in range(0, len(f))]
 
             # Placemarker until control_signals are instantiated
             self.terms[C] = c = np.array([[0]] * len(control_allocation))
             self.num[C] = len(c)
             self.num_elems[C] = len(c.reshape(-1))
-            self.labels[C] = ['c'+str(i) for i in range(0,len(control_allocation))]
+            self.labels[C] = ['c' + str(i) for i in range(0, len(control_allocation))]
 
             # Costs
             # Placemarker until control_signals are instantiated
             self.terms[COST] = cst = np.array([[0]] * len(control_allocation))
             self.num[COST] = self.num[C]
             self.num_elems[COST] = len(cst.reshape(-1))
-            self.labels[COST] = ['cst'+str(i) for i in range(0,self.num[COST])]
+            self.labels[COST] = ['cst' + str(i) for i in range(0, self.num[COST])]
 
             # INTERACTION TERMS (unflattened)
 
@@ -497,7 +497,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             if any(term in specified_terms for term in [PV.FF, PV.FFC, PV.FFCC]):
                 if len(f) < 2:
                     self.error_for_too_few_terms('FF')
-                self.terms[FF] = ff = np.array(tensor_power(f, levels=range(2,len(f)+1)))
+                self.terms[FF] = ff = np.array(tensor_power(f, levels=range(2, len(f) + 1)))
                 self.num[FF] = len(ff)
                 self.num_elems[FF] = len(ff.reshape(-1))
                 self.labels[FF]= get_intrxn_labels(self.labels[F])
@@ -506,7 +506,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             if any(term in specified_terms for term in [PV.CC, PV.FCC, PV.FFCC]):
                 if len(c) < 2:
                     self.error_for_too_few_terms('CC')
-                self.terms[CC] = cc = np.array(tensor_power(c, levels=range(2,len(c)+1)))
+                self.terms[CC] = cc = np.array(tensor_power(c, levels=range(2, len(c) + 1)))
                 self.num[CC]=len(cc)
                 self.num_elems[CC] = len(cc.reshape(-1))
                 self.labels[CC] = get_intrxn_labels(self.labels[C])
@@ -628,9 +628,9 @@ class RegressionCFA(CompositionFunctionApproximator):
 
             # Compute terms interaction that are used
             if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):
-                computed_terms[PV.FF] = ff = np.array(tensor_power(f, range(2, self.num[PV.F.value]+1)))
+                computed_terms[PV.FF] = ff = np.array(tensor_power(f, range(2, self.num[PV.F.value] + 1)))
             if any(term in terms for term in [PV.CC, PV.FCC, PV.FFCC]):
-                computed_terms[PV.CC] = cc = np.array(tensor_power(c, range(2, self.num[PV.C.value]+1)))
+                computed_terms[PV.CC] = cc = np.array(tensor_power(c, range(2, self.num[PV.C.value] + 1)))
             if any(term in terms for term in [PV.FC, PV.FCC, PV.FFCC]):
                 computed_terms[PV.FC] = np.tensordot(f, c, axes=0)
             if any(term in terms for term in [PV.FFC, PV.FFCC]):

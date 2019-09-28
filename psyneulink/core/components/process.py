@@ -1108,7 +1108,7 @@ class Process(Process_Base):
                 if previous_item_was_projection:
                     raise ProcessError("Illegal sequence of two adjacent projections ({0}:{1} and {1}:{2})"
                                        " in pathway for {3}".
-                                       format(i-1, pathway[i-1], i, pathway[i], self.name))
+                                       format(i - 1, pathway[i - 1], i, pathway[i], self.name))
                 previous_item_was_projection = True
                 continue
 
@@ -1152,7 +1152,7 @@ class Process(Process_Base):
             #                       SHOULD BE HANDLED MORE APPROPRIATELY IN COMPOSITION
             # If this is the last mechanism in the pathway, and it has a self-recurrent Projection,
             #    add that to the pathway so that it can be identified and assigned for learning if so specified
-            if i+1 == len(pathway):
+            if i + 1 == len(pathway):
                 if mech.output_ports and any(any(proj.receiver.owner is mech
                            for proj in port.efferents)
                        for port in mech.output_ports):
@@ -1779,7 +1779,7 @@ class Process(Process_Base):
                 # Create MappingProjection from Process InputPort to corresponding mechanism.input_port
                 proj = MappingProjection(sender=self.process_input_ports[i],
                                          receiver=mechanism.input_ports[i],
-                                         name=self.name+'_Input Projection')
+                                         name=self.name + '_Input Projection')
                 proj._activate_for_compositions(self)
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputPort of {3}".
@@ -1803,7 +1803,7 @@ class Process(Process_Base):
                     # Create MappingProjection from Process buffer_intput_port to corresponding mechanism.input_port
                     proj = MappingProjection(sender=self.process_input_ports[j],
                             receiver=mechanism.input_ports[i],
-                            name=self.name+'_Input Projection')
+                            name=self.name + '_Input Projection')
                     proj._activate_for_compositions(self)
                     if self.prefs.verbosePref:
                         print("Assigned input value {0} ({1}) of {2} to inputPort {3} of {4}".
@@ -2145,7 +2145,7 @@ class Process(Process_Base):
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
             proj = MappingProjection(sender=target_input_port,
                     receiver=target_mech_target,
-                    name=self.name+'_Input Projection to '+target_mech_target.name)
+                    name=self.name + '_Input Projection to ' + target_mech_target.name)
             proj._activate_for_compositions(self)
     # MODIFIED 8/14/17 END
 

@@ -1478,7 +1478,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)"""
         for i, control_signal in enumerate(self.control):
             self.control[i] = self._instantiate_control_signal(control_signal, context=context)
-        num_control_signals = i+1
+        num_control_signals = i + 1
 
         # For DefaultAllocationFunction, set defaults.value to have number of items equal to num control_signals
         if isinstance(self.function, DefaultAllocationFunction):
@@ -1806,7 +1806,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     f"(should have been caught by typecheck"
 
         if (len(ctl_sig_attribute)==1
-                and ctl_sig_attribute[0].name==type+'-0'
+                and ctl_sig_attribute[0].name==type + '-0'
                 and not ctl_sig_attribute[0].efferents):
             self.remove_ports(ctl_sig_attribute[0])
 

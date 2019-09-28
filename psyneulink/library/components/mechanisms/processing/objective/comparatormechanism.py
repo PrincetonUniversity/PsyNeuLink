@@ -350,9 +350,9 @@ class ComparatorMechanism(ObjectiveMechanism):
     standard_output_ports = ObjectiveMechanism.standard_output_ports.copy()
 
     standard_output_ports.extend([{NAME: SSE,
-                                    FUNCTION: lambda x: np.sum(x*x)},
-                                   {NAME: MSE,
-                                    FUNCTION: lambda x: np.sum(x * x) / safe_len(x)}])
+                                   FUNCTION: lambda x: np.sum(x * x)},
+                                  {NAME: MSE,
+                                   FUNCTION: lambda x: np.sum(x * x) / safe_len(x)}])
 
     @tc.typecheck
     def __init__(self,

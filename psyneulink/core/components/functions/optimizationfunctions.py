@@ -507,7 +507,7 @@ class OptimizationFunction(Function_Base):
             _progress_bar_char = '.'
             _progress_bar_rate_str = ""
             _search_space_size = len(self.search_space)
-            _progress_bar_rate = int(10 ** (np.log10(_search_space_size)-2))
+            _progress_bar_rate = int(10**(np.log10(_search_space_size) - 2))
             if _progress_bar_rate > 1:
                 _progress_bar_rate_str = str(_progress_bar_rate) + " "
             print("\n{} executing optimization process (one {} for each {}of {} samples): ".
@@ -1620,9 +1620,9 @@ class GridSearch(OptimizationFunction):
 
             self.search_space = np.atleast_2d(self.search_space)
 
-            chunk_size = (len(self.search_space) + (size-1)) // size
+            chunk_size = (len(self.search_space) + (size - 1)) // size
             start = chunk_size * rank
-            stop = chunk_size * (rank+1)
+            stop = chunk_size * (rank + 1)
             if start > len(self.search_space):
                 start = len(self.search_space)
             if stop > len(self.search_space):
@@ -1642,7 +1642,7 @@ class GridSearch(OptimizationFunction):
                 _progress_bar_char = '.'
                 _progress_bar_rate_str = ""
                 _search_space_size = len(self.search_space)
-                _progress_bar_rate = int(10 ** (np.log10(_search_space_size)-2))
+                _progress_bar_rate = int(10**(np.log10(_search_space_size) - 2))
                 if _progress_bar_rate > 1:
                     _progress_bar_rate_str = str(_progress_bar_rate) + " "
                 print("\n{} executing optimization process (one {} for each {}of {} samples): ".
@@ -1722,7 +1722,7 @@ class GridSearch(OptimizationFunction):
 
                     # swap with probability = 1/optimal_value_count in order to achieve
                     # uniformly random selection from identical outcomes
-                    probability = 1/optimal_value_count
+                    probability = 1 / optimal_value_count
                     random_state = self.get_current_function_param("random_state", context)
                     random_value = random_state.rand()
 
