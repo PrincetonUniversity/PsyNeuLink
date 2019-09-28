@@ -196,12 +196,24 @@ def test_predator_prey(benchmark, mode, samples):
                  }
     run_results = agent_comp.run(inputs=input_dict, num_trials=2, bin_execute=mode)
 
+    print(f"player_obs variable: {player_obs.parameters.variable.get(agent_comp)}")
+    print(f"player_obs mod_val: {player_obs.parameter_states['variance'].mod_afferents[0].parameters.value.get(agent_comp)}")
+    print(f"player_obs variance: {player_obs.function.parameters.variance.get(agent_comp)}")
     print(f"player_obs control allocation: {ocm.control_signals[0].parameters.allocation.get(agent_comp)}")
     print(f"player_obs control value: {ocm.control_signals[0].parameters.value.get(agent_comp)}")
+
+    print(f"predator_obs variable: {predator_obs.parameters.variable.get(agent_comp)}")
+    print(f"predator_obs mod_val: {predator_obs.parameter_states['variance'].mod_afferents[0].parameters.value.get(agent_comp)}")
+    print(f"predator_obs variance: {predator_obs.function.parameters.variance.get(agent_comp)}")
     print(f"predator_obs control allocation: {ocm.control_signals[0].parameters.allocation.get(agent_comp)}")
-    print(f"predator_obs VARANCE: {ocm.control_signals[0].parameters.value.get(agent_comp)}")
+    print(f"predator_obs control value:: {ocm.control_signals[0].parameters.value.get(agent_comp)}")
+
+    print(f"prey_obs variable: {prey_obs.parameters.variable.get(agent_comp)}")
+    print(f"prey_obs mod_val: {prey_obs.parameter_states['variance'].mod_afferents[0].parameters.value.get(agent_comp)}")
+    print(f"prey_obs variance: {prey_obs.function.parameters.variance.get(agent_comp)}")
     print(f"prey_obs control allocation: {ocm.control_signals[0].parameters.allocation.get(agent_comp)}")
     print(f"prey_obs control value: {ocm.control_signals[0].parameters.value.get(agent_comp)}")
+
     print(f"action mech variable: {greedy_action_mech.parameters.variable.get(agent_comp)}")
     print(f"action mech value: {greedy_action_mech.parameters.value.get(agent_comp)}")
 
