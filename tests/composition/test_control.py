@@ -717,7 +717,7 @@ class TestControlMechanisms:
         oComp.add_projection(pnl.MappingProjection(), oA, iComp)
         oComp.add_projection(pnl.MappingProjection(), iB, oB)
         oController = pnl.ControlMechanism(
-            name='Controller',
+            name='Outer Controller',
             control_signals=[
                 pnl.ControlSignal(
                     name='ControllerTransfer',
@@ -729,7 +729,7 @@ class TestControlMechanisms:
         oComp.add_controller(oController)
         assert oComp.controller == oController
         iController = pnl.ControlMechanism(
-            name='Controller___',
+            name='Inner Controller',
             control_signals=[
                 pnl.ControlSignal(
                     name='ControllerTransfer',
