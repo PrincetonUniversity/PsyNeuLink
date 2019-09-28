@@ -4405,6 +4405,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
         net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
 
+        # TEST PRINT 9/27/19
+        print(f"Outcome: {outcome}")
+        print(f"Total_cost: {total_cost}")
+        print(f"net_outcome: {net_outcome}")
+
         return net_outcome
 
 
