@@ -950,18 +950,10 @@ class OutputState(State_Base):
 
     # stateAttributes = State_Base.stateAttributes | {INDEX, ASSIGN}
 
-    connectsWith = [INPUT_STATE, GATING_SIGNAL,
-                    # MODIFIED 9/27/19 NEW: [JDC]
-                    CONTROL_SIGNAL
-                    # MODIFIED 9/27/19 END
-                    ]
+    connectsWith = [INPUT_STATE, GATING_SIGNAL, CONTROL_SIGNAL]
     connectsWithAttribute = [INPUT_STATES]
     projectionSocket = RECEIVER
-    modulators = [GATING_SIGNAL,
-                  # MODIFIED 9/27/19 NEW: [JDC]
-                  CONTROL_SIGNAL
-                  # MODIFIED 9/27/19 END
-                  ]
+    modulators = [GATING_SIGNAL, CONTROL_SIGNAL]
     canReceive = modulators
 
 

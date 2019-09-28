@@ -526,8 +526,6 @@ class OptimizationFunction(Function_Base):
             new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
             # Compute new value based on new sample
             new_value = call_with_pruned_args(self.objective_function, new_sample, context=context)
-            # TEST PRINT 9/27/19:
-            print(f"Sample: {new_sample}\nNEW VALUE: {new_value}\n")
             self._report_value(new_value)
             iteration += 1
             max_iterations = self.parameters.max_iterations._get(context)
@@ -1029,10 +1027,6 @@ class GradientOptimization(OptimizationFunction):
                                                                                   context=context,
                                                                                   params=params,
                                                                                   )
-        # # TEST PRINT 5/30/19:
-        # print(f'optimal_sample: {optimal_sample}')
-        # print(f'optimal_value: {optimal_value}')
-
         return_all_samples = return_all_values = []
         if self.parameters.save_samples._get(context):
             return_all_samples = all_samples
@@ -1626,11 +1620,6 @@ class GridSearch(OptimizationFunction):
             if stop > len(self.search_space):
                 stop = len(self.search_space)
 
-            # # TEST PRINT
-            # print("search_space length: {}".format(len(self.search_space)))
-            # print("Rank: {}\tSize: {}\tChunk size: {}".format(rank, size, chunk_size))
-            # print("START: {0}\tEND: {1}\tPROCESSED: {2}".format(start,stop,stop-start))
-
             # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
             samples = np.array([[]])
             sample_optimal = np.empty_like(self.search_space[0])
@@ -1741,10 +1730,6 @@ class GridSearch(OptimizationFunction):
                 return_all_samples = all_samples
             if self._return_values:
                 return_all_values = all_values
-
-            # TEST PRINT 9/28/19:
-            print(f'sample_optimal: {sample_optimal}')
-            print(f'value_optimal: {value_optimal}')
 
         return sample_optimal, value_optimal, return_all_samples, return_all_values
 

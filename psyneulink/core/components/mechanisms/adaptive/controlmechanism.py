@@ -513,45 +513,12 @@ class ControlMechanismError(Exception):
         self.error_value = error_value
 
 
-# # MODIFIED 9/26/19 OLD:
-# def _gating_allocation_getter(owning_component=None, context=None):
-#     try:
-#         gating_signal_indices = [owning_component.control_signals.index(g)
-#                                   for g in owning_component.gating_signals]
-#         return np.array([owning_component.control_allocation[i] for i in gating_signal_indices])
-#     except TypeError:
-#         return owning_component.parameters.default_allocation or \
-#                [owning_component.parameters.gating_allocation.default_value]
-#
-# def _gating_allocation_setter(value, owning_component=None, context=None):
-#     gating_signal_indices = [owning_component.control_signals.index(c)
-#                               for c in owning_component.gating_signals]
-#     if len(value)!=len(gating_signal_indices):
-#         raise ControlMechanismError(f"Attempt to set {GATING_ALLOCATION} parameter of {owning_component.name} "
-#                                        f"with value ({value} that has a different length than the number of its"
-#                                        f"{GATING_SIGNALS} ({len(gating_signal_indices)})")
-#     mod_alloc = owning_component.parameters.control_allocation._get(context)
-#     for j, i in enumerate(gating_signal_indices):
-#         mod_alloc[i] = value[j]
-#     owning_component.parameters.control_allocation._set(np.array(mod_alloc), context)
-#     return value
-# MODIFIED 9/26/19 END
-
 def _control_mechanism_costs_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
-        # # MODIFIED 8/30/19 OLD:
-        # costs = [c.compute_costs(c.parameters.variable._get(context), context=context)
-        #          for c in owning_component.control_signals]
-        # # MODIFIED 8/30/19 NEW: [JDC]
-        # # FIX 8/30/19: SHOULDN'T THIS JUST GET ControlSignal.cost FOR EACH ONE?
-        # costs = [c.compute_costs(c.parameters.value._get(context), context=context)
-        #          for c in owning_component.control_signals]
-        # MODIFIED 9/26/19 NEWER: [JDC]
         costs = [c.compute_costs(c.parameters.value._get(context), context=context)
                  for c in owning_component.control_signals
-                 if hasattr(owning_component.control_signals, 'compute_costs')] # GatingSignals don't have cost fcts
-        # MODIFIED 8/30/19 END
+                 if hasattr(c, 'compute_costs')] # GatingSignals don't have cost fcts
         return costs
 
     except TypeError:
@@ -1786,18 +1753,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
         based on specified `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`
         (used by controller of a Composition in simulations)
         """
-
-        # MODIFIED 9/27/19 OLD: [FROM ModulatoryMechanism]
         value = [np.atleast_1d(a) for a in control_allocation]
         self.parameters.value._set(value, context)
         self._update_output_states(context=context,
-                                   runtime_params=runtime_params,
-                                   )
-        # # MODIFIED 9/27/19 NEW: [JDC]
-        # self._apply_modulatory_allocation(modulatory_allocation=control_allocation,
-        #                                   runtime_params=runtime_params,
-        #                                   context=context)
-        # MODIFIED 9/27/19 END
+                                   runtime_params=runtime_params,)
 
     @property
     def monitored_output_states(self):

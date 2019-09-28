@@ -130,10 +130,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     """
 
     componentType = COMPOSITION_INTERFACE_MECHANISM
-
-    # MODIFIED 9/27/19 NEW: [JDC]
     outputStateTypes = [OutputState, ControlSignal]
-    # MODIFIED 9/27/19 END
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # These will override those specified in TypeDefaultPreferences

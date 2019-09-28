@@ -4330,9 +4330,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                      base_control_allocation])
                 self.controller.reconfiguration_cost.set(reconfiguration_cost, context)
 
-            # TEST PRINT 9/27/19:
-            print(f"\n******\nComposition control_allocation: {candidate_control_allocation}")
-
             # Apply candidate control signal
             self.controller._apply_control_allocation(candidate_control_allocation,
                                                                 context=context,
@@ -4404,11 +4401,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
         net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
-
-        # TEST PRINT 9/27/19
-        print(f"Outcome: {outcome}")
-        print(f"Total_cost: {total_cost}")
-        print(f"net_outcome: {net_outcome}")
 
         return net_outcome
 
@@ -6772,14 +6764,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         context)
 
                         node.function._runtime_params_reset[context.execution_id] = {}
-
-                    # TEST PRINT 7/22/19
-                    if 'PREY' in node.name:
-                        # print(f'Executed {node.name}: \n\tvariable: {node.parameters.variable.get(context)}'
-                        #       f'\n\tvalue: {node.parameters.value.get(context)}')
-                        # if 'variance' in node.parameter_states and node.parameter_states['variance'].mod_afferents:
-                        print(f"mod_val: "
-                              f"{node.parameter_states['variance'].mod_afferents[0].parameters.value.get(context)}")
 
                     # Set execution_phase for node's context back to IDLE
                     if self.enable_learning:

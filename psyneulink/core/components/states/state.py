@@ -2928,7 +2928,7 @@ def _parse_state_spec(state_type=None,
         #                                     Mechanism.__name__, state_owner.name))
         #     return state_specification
 
-        # MODIFIED 9/27/19 NEW: [JDC]  XYZ
+        # MODIFIED 9/27/19 NEW: [JDC]
         # Specification is a State that is same as connectee's type (state_type),
         #    so assume it is a reference to the State itself that is being (or has been) instantiated
         # # MODIFIED 9/27/19 OLD:

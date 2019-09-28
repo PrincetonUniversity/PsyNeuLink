@@ -196,32 +196,8 @@ def test_predator_prey(benchmark, mode, samples):
                  }
     run_results = agent_comp.run(inputs=input_dict, num_trials=2, bin_execute=mode)
 
-    # print(f"player_obs variable: {player_obs.parameters.variable.get(agent_comp)}")
-    # print(f"player_obs mod_val: {player_obs.parameter_states['variance'].mod_afferents[0].parameters.value.get(agent_comp)}")
-    # print(f"player_obs variance: {player_obs.function.parameters.variance.get(agent_comp)}")
-    # print(f"player_obs control allocation: {ocm.control_signals[0].parameters.allocation.get(agent_comp)}")
-    # print(f"player_obs control value: {ocm.control_signals[0].parameters.value.get(agent_comp)}")
-
-    # print(f"predator_obs variable: {predator_obs.parameters.variable.get(agent_comp)}")
-    # print(f"predator_obs mod_val: {predator_obs.parameter_states['variance'].mod_afferents[0].parameters.value.get(agent_comp)}")
-    # print(f"predator_obs variance: {predator_obs.function.parameters.variance.get(agent_comp)}")
-    # print(f"predator_obs control allocation: {ocm.control_signals[0].parameters.allocation.get(agent_comp)}")
-    # print(f"predator_obs control value:: {ocm.control_signals[0].parameters.value.get(agent_comp)}")
-
-    # print(f"prey_obs variable: {prey_obs.parameters.variable.get(agent_comp)}")
-    print(f"prey_obs mod_val: {prey_obs.parameter_states['variance'].mod_afferents[0].parameters.value.get(agent_comp)}")
-    # print(f"prey_obs variance: {prey_obs.function.parameters.variance.get(agent_comp)}")
-    # print(f"prey_obs control allocation: {ocm.control_signals[0].parameters.allocation.get(agent_comp)}")
-    # print(f"prey_obs control value: {ocm.control_signals[0].parameters.value.get(agent_comp)}")
-
-    # print(f"action mech variable: {greedy_action_mech.parameters.variable.get(agent_comp)}")
-    # print(f"action mech value: {greedy_action_mech.parameters.value.get(agent_comp)}")
-
-    print(f"ocm control_allocation: {ocm.parameters.control_allocation.get(agent_comp)}")
-
     if len(samples) == 2:
         assert np.allclose(run_results[0], [[-19.06547277,   5.47274121]])
-        # 9/27/19: CURRENTLY GETTING [[-18.965605474486303, 3.808163277937467]]
         if mode == 'Python':
             assert np.allclose(ocm.feature_values, [[ 1.1576537,   0.60782117],
                                                     [-0.03479106, -0.47666293],

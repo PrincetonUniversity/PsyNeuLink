@@ -417,12 +417,6 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             EVC_values = np.array([])
             EVC_policies = np.array([[]])
 
-            # # TEST PRINT EVC:
-            # inputs = []
-            # for i in controller.predicted_input.values():
-            #     inputs.append(repr(i).replace('\n', ''))
-            # print("\nEVC SIMULATION for Inputs: {}".format(inputs))
-
             for allocation_vector in control_signal_search_space[start:end,:]:
 
             # for iter in range(rank, len(control_signal_search_space), size):
@@ -465,9 +459,6 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     EVC_max_state_values = controller.get_input_values(context)
                     EVC_max_policy = allocation_vector
                     max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
-
-            # # TEST PRINT EVC:
-            # print("EVC_max: {}\tASSOCIATED control_allocation: {}\n".format(EVC_max, EVC_max_policy))
 
             #endregion
 

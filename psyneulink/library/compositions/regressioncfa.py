@@ -324,8 +324,6 @@ class RegressionCFA(CompositionFunctionApproximator):
             If this method is assigned as the `objective_funtion of a `GradientOptimization` `Function`,
             it is differentiated using `autograd <https://github.com/HIPS/autograd>`_\\.grad().
         """
-        # # TEST PRINT 5/30/19:
-        # print(f'control allocation: {control_allocation}')
 
         predicted_outcome=0
 
