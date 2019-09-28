@@ -100,14 +100,14 @@ class TestReinforcement:
         samples = []
         targets = []
         for trial in range(50):
-            target = [0.]*60
+            target = [0.] * 60
             target[reward_delivery] = 1.
             # {14, 29, 44, 59, 74, 89}
             if trial in {14, 29, 44}:
                 target[reward_delivery] = 0.
             targets.append(target)
 
-            sample = [0.]*60
+            sample = [0.] * 60
             for i in range(stimulus_onset, 60):
                 sample[i] =1.
             samples.append(sample)
@@ -124,11 +124,11 @@ class TestReinforcement:
                             0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.003,  0., 0., 0., 0.,
                             0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., -0.003,  0.]
 
-        trial_30_expected = [0.]*40
+        trial_30_expected = [0.] * 40
         trial_30_expected +=[.0682143186, .0640966042, .0994344173, .133236921, .152270799, .145592903, .113949692,
                              .0734420009, .0450652924, .0357386468, .0330810871, .0238007805, .0102892090, -.998098988,
                              -.0000773996815, -.0000277845011, -.00000720338916, -.00000120056486, -.0000000965971727, 0.]
-        trial_50_expected = [0.]*40
+        trial_50_expected = [0.] * 40
         trial_50_expected += [.717416347, .0816522429, .0595516548, .0379308899, .0193587853, .00686581694,
                               .00351883747, .00902310583, .0149133617, .000263272179, -.0407611997, -.0360124387,
                               .0539085146,  .0723714910, -.000000550934336, -.000000111783778, -.0000000166486478,
@@ -223,14 +223,14 @@ class TestReinforcement:
         samples = []
         targets = []
         for trial in range(50):
-            target = [0.]*60
+            target = [0.] * 60
             target[reward_delivery] = 1.
             # {14, 29, 44, 59, 74, 89}
             if trial in {14, 29, 44}:
                 target[reward_delivery] = 0.
             targets.append(target)
 
-            sample = [0.]*60
+            sample = [0.] * 60
             for i in range(stimulus_onset, 60):
                 sample[i] =1.
             samples.append(sample)
@@ -249,7 +249,7 @@ class TestReinforcement:
                             0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.003,  0., 0., 0., 0.,
                             0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., -0.003,  0.]
 
-        trial_30_expected = [0.]*40
+        trial_30_expected = [0.] * 40
         trial_30_expected +=[.0682143186, .0640966042, .0994344173, .133236921, .152270799, .145592903, .113949692,
                              .0734420009, .0450652924, .0357386468, .0330810871, .0238007805, .0102892090, -.998098988,
                              -.0000773996815, -.0000277845011, -.00000720338916, -.00000120056486, -.0000000965971727, 0.]
@@ -557,12 +557,12 @@ class TestBackProp:
         if pnl.SYSTEM in models:
             results_sys = xor_sys.run(inputs={input_sys:xor_inputs},
                                       targets={output_sys:xor_targets},
-                                      num_trials=(num_epochs*xor_inputs.shape[0]),
+                                      num_trials=(num_epochs * xor_inputs.shape[0]),
                                       )
         if pnl.COMPOSITION in models:
             result = xor_comp.run(inputs={input_comp:xor_inputs,
                                           target_mech:xor_targets},
-                                  num_trials=(num_epochs*xor_inputs.shape[0]),
+                                  num_trials=(num_epochs * xor_inputs.shape[0]),
                                   )
         if 'AUTODIFF' in models:
             result = xor_autodiff.run(inputs=inputs_dict)

@@ -883,7 +883,7 @@ class DDM(ProcessingMechanism):
                            # per VARIABLE assignment above, items of v of lambda function below are:
                            #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
                            #    v[1]=self.parameter_ports[THRESHOLD]
-                 FUNCTION: lambda v: [float(v[0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[0])]},
+                 FUNCTION: lambda v: [float(v[0]), 0] if (v[1] - v[0]) < (v[1] + v[0]) else [0, float(v[0])]},
                 # Provides a 1d 2-item array with:
                 #    input value in position corresponding to threshold crossed by decision variable, and 0 in the other
                 {NAME: SELECTED_INPUT_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
@@ -893,8 +893,8 @@ class DDM(ProcessingMechanism):
                  #    v[1]=self.parameter_ports[THRESHOLD]
                  #    v[2]=self.input_ports[0].variable
                  FUNCTION: lambda v: [float(v[2][0][0]), 0] \
-                                      if (v[1]-v[0]) < (v[1]+v[0]) \
-                                      else [0,float(v[2][0][1])]
+                                      if (v[1] - v[0]) < (v[1] + v[0]) \
+                                      else [0, float(v[2][0][1])]
 
                  }
 

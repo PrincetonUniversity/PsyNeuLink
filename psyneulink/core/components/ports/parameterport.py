@@ -854,7 +854,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
     # TBI / IMPLEMENT: use specs to implement ParameterPorts below
 
     owner._parameter_ports = ContentAddressableList(component_type=ParameterPort,
-                                                     name=owner.name+'.parameter_ports')
+                                                     name=owner.name + '.parameter_ports')
 
     # Check that all ParameterPorts for owner have not been explicitly suppressed
     #    (by assigning `NotImplemented` to PARAMETER_PORTS entry of paramClassDefaults)

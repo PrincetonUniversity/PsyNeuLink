@@ -1353,7 +1353,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         if (self.in_composition and
                 isinstance(self.function, BackPropagation) and
                 self.initialization_status == ContextFlags.INITIALIZING):
-            return [0*summed_learning_signal, 0*summed_error_signal]
+            return [0 * summed_learning_signal, 0 * summed_error_signal]
 
         return [summed_learning_signal, summed_error_signal]
 

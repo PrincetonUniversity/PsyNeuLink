@@ -183,7 +183,7 @@ for i in range(3): # testing for three subjects, 200 trials per subject
     # print(word_task.log.csv())
 
     print('\n')
-    print('Subject: ', i+1)
+    print('Subject: ', i + 1)
     print('--------------------')
     print('ControlSignal variables: ', [sig.parameters.variable.get(i) for sig in lvoc.control_signals])
     print('ControlSignal values: ', [sig.parameters.value.get(i) for sig in lvoc.control_signals])
