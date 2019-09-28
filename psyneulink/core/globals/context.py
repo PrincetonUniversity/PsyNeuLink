@@ -125,15 +125,15 @@ class ContextFlags(enum.IntFlag):
 
     UNSET = 0
 
-    DEFERRED_INIT = 1<<1  # 2
+    DEFERRED_INIT = 1 << 1  # 2
     """Set if flagged for deferred initialization."""
-    INITIALIZING =  1<<2  # 4
+    INITIALIZING =  1 << 2  # 4
     """Set during initialization of the Component."""
-    VALIDATING =    1<<3  # 8
+    VALIDATING =    1 << 3  # 8
     """Set during validation of the value of a Component or its attribute."""
-    INITIALIZED =   1<<4  # 16
+    INITIALIZED =   1 << 4  # 16
     """Set after completion of initialization of the Component."""
-    REINITIALIZED =   1<<4  # 16
+    REINITIALIZED = 1 << 4  # 16
     """Set on stateful Components when they are re-initialized."""
     UNINITIALIZED = 1 << 16
     """Default value set before initialization"""
@@ -141,13 +141,13 @@ class ContextFlags(enum.IntFlag):
     INITIALIZATION_MASK = DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | REINITIALIZED | UNINITIALIZED
 
     # execution_phase flags
-    PROCESSING =    1<<5  # 32
+    PROCESSING =    1 << 5  # 32
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
-    LEARNING =      1<<6 # 64
+    LEARNING =      1 << 6 # 64
     """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
-    CONTROL =       1<<7 # 128
+    CONTROL =       1 << 7 # 128
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    SIMULATION =    1<<8  # 256
+    SIMULATION =    1 << 8  # 256
     """Set during simulation by Composition.controller"""
     IDLE = 1 << 17
     """Identifies condition in which no flags in the `execution_phase <Context.execution_phase>` are set.
@@ -157,22 +157,22 @@ class ContextFlags(enum.IntFlag):
     EXECUTION_PHASE_MASK = EXECUTING | IDLE
 
     # source (source-of-call) flags
-    COMMAND_LINE =  1<<9  # 512
+    COMMAND_LINE =  1 << 9  # 512
     """Direct call by user (either interactively from the command line, or in a script)."""
-    CONSTRUCTOR =   1<<10 # 1024
+    CONSTRUCTOR =   1 << 10 # 1024
     """Call from Component's constructor method."""
-    INSTANTIATE =   1<<11 # 2048
+    INSTANTIATE =   1 << 11 # 2048
     """Call by an instantiation method."""
-    COMPONENT =     1<<12 # 4096
+    COMPONENT =     1 << 12 # 4096
     """Call by Component __init__."""
-    METHOD =        1<<13 # 8192
+    METHOD =        1 << 13 # 8192
     """Call by method of the Component other than its constructor."""
-    PROPERTY =      1<<14 # 16384
+    PROPERTY =      1 << 14 # 16384
     """Call by property of the Component."""
-    COMPOSITION =   1<<15 # 32768
+    COMPOSITION =   1 << 15 # 32768
     """Call by a/the Composition to which the Component belongs."""
 
-    PROCESS =   1<<15     # 32768
+    PROCESS =   1 << 15     # 32768
     NONE = 1 << 18
 
     """Call by a/the Composition to which the Component belongs."""

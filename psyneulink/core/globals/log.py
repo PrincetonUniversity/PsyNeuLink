@@ -426,9 +426,9 @@ class LogCondition(enum.IntFlag):
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
     SIMULATION = ContextFlags.SIMULATION
     # Set during simulation by Composition.controller
-    TRIAL = ContextFlags.SIMULATION<<1
+    TRIAL = ContextFlags.SIMULATION << 1
     """Set at the end of a `TRIAL`."""
-    RUN = ContextFlags.SIMULATION<<2
+    RUN = ContextFlags.SIMULATION << 2
     """Set at the end of a `RUN`."""
     ALL_ASSIGNMENTS = (
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
