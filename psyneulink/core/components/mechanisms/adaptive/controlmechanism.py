@@ -1786,6 +1786,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         based on specified `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`
         (used by controller of a Composition in simulations)
         """
+
         # MODIFIED 9/27/19 OLD: [FROM ModulatoryMechanism]
         value = [np.atleast_1d(a) for a in control_allocation]
         self.parameters.value._set(value, context)
