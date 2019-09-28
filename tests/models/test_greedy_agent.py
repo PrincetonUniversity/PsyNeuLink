@@ -117,12 +117,12 @@ def test_simplified_greedy_agent_random(benchmark, mode):
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")
 @pytest.mark.parametrize("mode", ['Python',
-    pytest.param('LLVM', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    # pytest.param('LLVM', marks=[pytest.mark.llvm]),
+    # pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+    # pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+    # pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    # pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    # pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
 @pytest.mark.parametrize("samples", [[0,10],
     pytest.param([0,3,6,10], marks=pytest.mark.stress),
@@ -190,14 +190,21 @@ def test_predator_prey(benchmark, mode, samples):
     agent_comp.enable_controller = True
     ocm.comp_execution_mode = mode
 
+    def print_control_values():
+        print(f"player_obs VARANCE: {ocm.control_signals[0].value}")
+        print(f"predator_obs VARANCE: {ocm.control_signals[0].value}")
+        print(f"prey_obs VARANCE: {ocm.control_signals[0].value}")
+
     input_dict = {player_obs:[[1.1576537,  0.60782117]],
                   predator_obs:[[-0.03479106, -0.47666293]],
                   prey_obs:[[-0.60836214,  0.1760381 ]],
                  }
-    run_results = agent_comp.run(inputs=input_dict, num_trials=2, bin_execute=mode)
+    run_results = agent_comp.run(inputs=input_dict, num_trials=2, bin_execute=mode,
+                                 call_before_trial=print_control_values())
 
     if len(samples) == 2:
         assert np.allclose(run_results[0], [[-19.06547277,   5.47274121]])
+        # 9/27/19: CURRENTLY GETTING [[-18.965605474486303, 3.808163277937467]]
         if mode == 'Python':
             assert np.allclose(ocm.feature_values, [[ 1.1576537,   0.60782117],
                                                     [-0.03479106, -0.47666293],

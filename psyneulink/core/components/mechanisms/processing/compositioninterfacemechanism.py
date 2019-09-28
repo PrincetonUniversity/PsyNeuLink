@@ -55,6 +55,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.states.inputstate import InputState
+from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
@@ -129,6 +130,10 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     """
 
     componentType = COMPOSITION_INTERFACE_MECHANISM
+
+    # MODIFIED 9/27/19 NEW: [JDC]
+    outputStateTypes = [OutputState, ControlSignal]
+    # MODIFIED 9/27/19 END
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # These will override those specified in TypeDefaultPreferences

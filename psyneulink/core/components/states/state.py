@@ -2931,7 +2931,11 @@ def _parse_state_spec(state_type=None,
         # MODIFIED 9/27/19 NEW: [JDC]  XYZ
         # Specification is a State that is same as connectee's type (state_type),
         #    so assume it is a reference to the State itself that is being (or has been) instantiated
-        if isinstance(state_specification, state_type):
+        # # MODIFIED 9/27/19 OLD:
+        # if isinstance(state_specification, state_type):
+        # MODIFIED 9/27/19 NEWER: [JDC]
+        if state_specification.__class__ == state_type:
+        # MODIFIED 9/27/19 END
             # Make sure that the specified State belongs to the Mechanism passed in the owner arg
             if state_specification.initialization_status == ContextFlags.DEFERRED_INIT:
                 state_owner = state_specification.init_args[OWNER]
