@@ -247,6 +247,7 @@ class TestProjectionSpecificationFormats:
             (0.3, pnl.GatingSignal()),
             (0.3, pnl.ControlSignal()),
             (0.3, pnl.GatingProjection),
+
             (0.3, pnl.ControlProjection),
             (0.3, "GP_OBJECT"),
             (0.3, pnl.GatingMechanism),
