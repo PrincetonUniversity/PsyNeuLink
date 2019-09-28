@@ -1040,6 +1040,7 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
     + specification dict containing:
         + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
     + valid matrix specification (if include_matrix_spec is set to `True`)
+    + state
 
     Otherwise, return :keyword:`False`
     """
@@ -1262,7 +1263,7 @@ def _parse_connection_specs(connectee_state_type,
 
     Connection attributes declared for each type (subclass) of State that are used here:
         connectsWith : State
-           - specifies the type (subclass) of State to which the connectee_state_type should be assigned projection(s)
+           - specifies the type (subclass) of State with which the connectee_state_type should be connected
         connectsWithAttribute : str
            - specifies the name of the attribute of the Mechanism that holds the states of the connectsWith's type
         projectionSocket : [SENDER or RECEIVER]
@@ -1604,7 +1605,11 @@ def _parse_connection_specs(connectee_state_type,
                 # FIX: 11/28/17 HACK TO DEAL WITH GatingSignal Projection to OutputState
                 # FIX: 5/11/19: CORRECTED TO HANDLE ControlMechanism SPECIFIED FOR GATING
                 if ((_is_gating_spec(first_item) or _is_control_spec(first_item))
-                    and (isinstance(last_item, OutputState) or last_item == OutputState)):
+                    and (isinstance(last_item, OutputState) or last_item == OutputState
+                        # # FIX: 9/27/19:  ADDED TO DEAL WITH ControlMechanism SPECIFIED FOR GATING OF INPUTSTATE
+                        #  or isinstance(last_item, InputState) or last_item == InputState
+                        )
+                ):
                     projection_socket = SENDER
                     state_types = [OutputState]
                     mech_state_attribute = [OUTPUT_STATES]
@@ -1630,11 +1635,11 @@ def _parse_connection_specs(connectee_state_type,
             else:
                 states = [state]
 
-            for state_spec in states:
-                if inspect.isclass(state_spec):
-                    state_type = state_spec
+            for item in states:
+                if inspect.isclass(item):
+                    state_type = item
                 else:
-                    state_type = state_spec.__class__
+                    state_type = item.__class__
 
                 # # Test that state_type is in the list for state's connects_with
                 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
@@ -1658,16 +1663,30 @@ def _parse_connection_specs(connectee_state_type,
             if _is_projection_spec(projection_spec) or _is_modulatory_spec(projection_spec) or projection_spec is None:
 
                 # FIX: 11/21/17 THIS IS A HACK TO DEAL WITH GatingSignal Projection TO InputState or OutputState
+                # FIX: 9/27/19 AUGMENT TO INCLUDE ControlSignal Projection??
                 from psyneulink.core.components.states.inputstate import InputState
                 from psyneulink.core.components.states.outputstate import OutputState
                 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
                 from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
-                if (not isinstance(projection_spec, GatingProjection)
-                    and isinstance(state, GatingSignal)
-                    and connectee_state_type in {InputState, OutputState}):
+                from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+                # # MODIFIED 9/27/19 OLD:
+                # if (not isinstance(projection_spec, GatingProjection)
+                #     and isinstance(state, GatingSignal)
+                #     and connectee_state_type in {InputState, OutputState}):
+                #     projection_spec = state
+                # MODIFIED 9/27/19 NEW: [JDC]
+                if (
+                        (not isinstance(projection_spec, GatingProjection)
+                         and state.__class__ == GatingSignal
+                         and connectee_state_type in {InputState, OutputState})
+                    or
+                        (not isinstance(projection_spec, ControlProjection)
+                         and state.__class__ == ControlSignal
+                         and connectee_state_type in {InputState, OutputState})
+                ):
                     projection_spec = state
-                # FIX: 11/29/17  GENERALIZE TO _is_modulatory_spec??
-                elif _is_gating_spec(first_item):
+                # MODIFIED 9/27/19 END
+                elif _is_gating_spec(first_item) or _is_control_spec((first_item)):
                     projection_spec = first_item
                 projection_spec = _parse_projection_spec(projection_spec,
                                                          owner=owner,
@@ -1788,7 +1807,8 @@ def _validate_connection_request(
             # FIX:               THEN THE projection_socket MUST BE SENDER
             from psyneulink.core.components.states.outputstate import OutputState
             from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
-            if connectee_state is OutputState and isinstance(projection_spec, GatingProjection):
+            from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+            if connectee_state is OutputState and isinstance(projection_spec, (GatingProjection, ControlProjection)):
                 projection_socket = SENDER
             projection_socket_state = getattr(projection_spec, projection_socket)
             if  issubclass(projection_socket_state.__class__, connect_with_states):

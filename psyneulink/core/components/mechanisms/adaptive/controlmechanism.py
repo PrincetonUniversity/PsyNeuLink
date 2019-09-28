@@ -1090,17 +1090,17 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # For backward compatibility:
         if kwargs:
             if MONITOR_FOR_MODULATION in kwargs:
-                monitor_for_control = kwargs.pop(MONITOR_FOR_MODULATION)
-                if monitor_for_control:
-                    monitor_for_control.extend(convert_to_list(monitor_for_control))
+                args = kwargs.pop(MONITOR_FOR_MODULATION)
+                if args:
+                    monitor_for_control.extend(convert_to_list(args))
             if MODULATORY_SIGNALS in kwargs:
-                modulatory_signals = kwargs.pop(MODULATORY_SIGNALS)
-                if modulatory_signals:
-                    control.extend(convert_to_list(modulatory_signals))
+                args = kwargs.pop(MODULATORY_SIGNALS)
+                if args:
+                    control.extend(convert_to_list(args))
             if CONTROL_SIGNALS in kwargs:
-                control_signals = kwargs.pop(CONTROL_SIGNALS)
-                if control_signals:
-                    control.extend(convert_to_list(control_signals))
+                args = kwargs.pop(CONTROL_SIGNALS)
+                if args:
+                    control.extend(convert_to_list(args))
 
         function = function or DefaultAllocationFunction
         self.combine_costs = combine_costs
@@ -1823,8 +1823,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
             #                                     if isinstance(state, (ControlSignal, GatingSignal))])
             # # MODIFIED 9/25/19 NEW: [JDC]
             # return [state for state in self.output_states if isinstance(state, (ControlSignal, GatingSignal))]
-            # MODIFIED 9/25/19 NEWER: [JDC]
-            return [state for state in self.output_states if isinstance(state, ControlSignal)]
+            # # MODIFIED 9/25/19 NEWER: [JDC]
+            # return [state for state in self.output_states if isinstance(state, ControlSignal)]
+            # MODIFIED 9/26/19 NEWEST: [JDC]
+            return ContentAddressableList(component_type=ControlSignal,
+                                          list=[state for state in self.output_states
+                                                if isinstance(state, (ControlSignal))])
             # MODIFIED 9/25/19 END
         except:
             return []

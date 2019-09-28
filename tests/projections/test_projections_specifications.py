@@ -221,58 +221,90 @@ class TestProjectionSpecificationFormats:
 
         gating_spec_list = [
             pnl.GATING,
+            pnl.CONTROL,
             pnl.GATING_SIGNAL,
+            pnl.CONTROL_SIGNAL,
             pnl.GATING_PROJECTION,
+            pnl.CONTROL_PROJECTION,
             pnl.GatingSignal,
-            pnl.GatingSignal,
+            pnl.ControlSignal,
             pnl.GatingSignal(),
+            pnl.ControlSignal(),
             pnl.GatingProjection,
             "GP_OBJECT",
             pnl.GatingMechanism,
             pnl.ControlMechanism,
             pnl.GatingMechanism(),
+            pnl.ControlMechanism(),
             (0.3, pnl.GATING),
+            (0.3, pnl.CONTROL),
             (0.3, pnl.GATING_SIGNAL),
+            (0.3, pnl.CONTROL_SIGNAL),
             (0.3, pnl.GATING_PROJECTION),
+            (0.3, pnl.CONTROL_PROJECTION),
             (0.3, pnl.GatingSignal),
+            (0.3, pnl.ControlSignal),
             (0.3, pnl.GatingSignal()),
+            (0.3, pnl.ControlSignal()),
             (0.3, pnl.GatingProjection),
+            (0.3, pnl.ControlProjection),
             (0.3, "GP_OBJECT"),
             (0.3, pnl.GatingMechanism),
             (0.3, pnl.ControlMechanism),
-            (0.3, pnl.GatingMechanism())
+            (0.3, pnl.GatingMechanism()),
+            (0.3, pnl.ControlMechanism())
         ]
         for i, gating_tuple in enumerate([j for j in zip(gating_spec_list, reversed(gating_spec_list))]):
-            G1, G2 = gating_tuple
+            G_IN, G_OUT = gating_tuple
 
             # This shenanigans is to avoid assigning the same instantiated ControlProjection more than once
-            if G1 is 'GP_OBJECT':
-                G1 = pnl.GatingProjection()
-            elif isinstance(G1, tuple) and G1[1] is 'GP_OBJECT':
-                G1 = (G1[0], pnl.GatingProjection())
-            if G2 is 'GP_OBJECT':
-                G2 = pnl.GatingProjection()
-            elif isinstance(G2, tuple) and G2[1] is 'GP_OBJECT':
-                G2 = (G2[0], pnl.GatingProjection())
+            if G_IN is 'GP_OBJECT':
+                G_IN = pnl.GatingProjection()
+            elif isinstance(G_IN, tuple) and G_IN[1] is 'GP_OBJECT':
+                G_IN = (G_IN[0], pnl.GatingProjection())
+            if G_OUT is 'GP_OBJECT':
+                G_OUT = pnl.GatingProjection()
+            elif isinstance(G_OUT, tuple) and G_OUT[1] is 'GP_OBJECT':
+                G_OUT = (G_OUT[0], pnl.GatingProjection())
+
+            if isinstance(G_IN, tuple):
+                IN_NAME = G_IN[1]
+            else:
+                IN_NAME = G_IN
+            IN_CONTROL = pnl.CONTROL in repr(IN_NAME).upper()
+            if isinstance(G_OUT, tuple):
+                OUT_NAME = G_OUT[1]
+            else:
+                OUT_NAME = G_OUT
+            OUT_CONTROL = pnl.CONTROL in repr(OUT_NAME).upper()
 
             T = pnl.TransferMechanism(name='T-GATING-{}'.format(i),
-                                      input_states=[G1],
-                                      output_states=[G2])
-            assert T.input_states[0].mod_afferents[0].name in \
-                   'GatingProjection for T-GATING-{}[InputState-0]'.format(i)
+                                      input_states=[G_IN],
+                                      output_states=[G_OUT])
 
-            assert T.output_states[0].mod_afferents[0].name in \
-                   'GatingProjection for T-GATING-{}[OutputState-0]'.format(i)
+            if IN_CONTROL:
+                assert T.input_states[0].mod_afferents[0].name in \
+                       'ControlProjection for T-GATING-{}[InputState-0]'.format(i)
+            else:
+                assert T.input_states[0].mod_afferents[0].name in \
+                       'GatingProjection for T-GATING-{}[InputState-0]'.format(i)
 
-        with pytest.raises(pnl.ProjectionError) as error_text:
-            T1 = pnl.ProcessingMechanism(name='T1', input_states=[pnl.ControlMechanism()])
-        assert 'Primary OutputState of ControlMechanism-0 (ControlSignal-0) ' \
-               'cannot be used as a sender of a Projection to InputState of T1' in error_text.value.args[0]
+            if OUT_CONTROL:
+                assert T.output_states[0].mod_afferents[0].name in \
+                       'ControlProjection for T-GATING-{}[OutputState-0]'.format(i)
+            else:
+                assert T.output_states[0].mod_afferents[0].name in \
+                       'GatingProjection for T-GATING-{}[OutputState-0]'.format(i)
 
-        with pytest.raises(pnl.ProjectionError) as error_text:
-            T2 = pnl.ProcessingMechanism(name='T2', output_states=[pnl.ControlMechanism()])
-        assert 'Primary OutputState of ControlMechanism-1 (ControlSignal-0) ' \
-               'cannot be used as a sender of a Projection to OutputState of T2' in error_text.value.args[0]
+        # with pytest.raises(pnl.ProjectionError) as error_text:
+        #     T1 = pnl.ProcessingMechanism(name='T1', input_states=[pnl.ControlMechanism()])
+        # assert 'Primary OutputState of ControlMechanism-0 (ControlSignal-0) ' \
+        #        'cannot be used as a sender of a Projection to InputState of T1' in error_text.value.args[0]
+        #
+        # with pytest.raises(pnl.ProjectionError) as error_text:
+        #     T2 = pnl.ProcessingMechanism(name='T2', output_states=[pnl.ControlMechanism()])
+        # assert 'Primary OutputState of ControlMechanism-1 (ControlSignal-0) ' \
+        #        'cannot be used as a sender of a Projection to OutputState of T2' in error_text.value.args[0]
 
 
     # KDM: this is a good candidate for pytest.parametrize

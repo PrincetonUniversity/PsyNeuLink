@@ -489,7 +489,7 @@ from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    COMBINE, COMMAND_LINE, CONTEXT, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
+    COMBINE, CONTROL_SIGNAL, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, \
     LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_STATE, OUTPUT_STATES, OWNER,\
     PARAMS, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
     SENDER, SIZE, STATE_TYPE, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
@@ -704,10 +704,11 @@ class InputState(State_Base):
                     PROCESS_INPUT_STATE,
                     SYSTEM_INPUT_STATE,
                     LEARNING_SIGNAL,
-                    GATING_SIGNAL]
+                    GATING_SIGNAL,
+                    CONTROL_SIGNAL]
     connectsWithAttribute = [OUTPUT_STATES]
     projectionSocket = SENDER
-    modulators = [GATING_SIGNAL]
+    modulators = [GATING_SIGNAL, CONTROL_SIGNAL]
     canReceive = modulators + [MAPPING_PROJECTION]
 
 

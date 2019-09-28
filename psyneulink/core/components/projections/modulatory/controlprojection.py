@@ -111,7 +111,7 @@ from psyneulink.core.components.projections.projection import ProjectionError, P
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, PARAMETER_STATE, PROJECTION_SENDER
+    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, INPUT_STATE, OUTPUT_STATE, PARAMETER_STATE, PROJECTION_SENDER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -287,7 +287,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     class sockets:
         sender=[CONTROL_SIGNAL]
-        receiver=[PARAMETER_STATE]
+        receiver=[PARAMETER_STATE, INPUT_STATE, OUTPUT_STATE]
 
     class Parameters(ModulatoryProjection_Base.Parameters):
         """

@@ -596,7 +596,7 @@ from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALL, ASSIGN, CALCULATE, CONTEXT, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, \
+    ALL, ASSIGN, CALCULATE, CONTEXT, CONTROL_SIGNAL, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, \
     MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MECHANISM_VALUE, NAME, \
     OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OUTPUT_STD_DEV, OUTPUT_VARIANCE, \
     OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
@@ -950,10 +950,10 @@ class OutputState(State_Base):
 
     # stateAttributes = State_Base.stateAttributes | {INDEX, ASSIGN}
 
-    connectsWith = [INPUT_STATE, GATING_SIGNAL]
+    connectsWith = [INPUT_STATE, GATING_SIGNAL, CONTROL_SIGNAL]
     connectsWithAttribute = [INPUT_STATES]
     projectionSocket = RECEIVER
-    modulators = [GATING_SIGNAL]
+    modulators = [GATING_SIGNAL, CONTROL_SIGNAL]
     canReceive = modulators
 
 

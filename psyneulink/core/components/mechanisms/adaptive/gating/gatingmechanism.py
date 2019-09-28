@@ -224,10 +224,10 @@ class GatingMechanismError(Exception):
         self.error_value = error_value
 
 def _gating_allocation_getter(owning_component=None, context=None):
-    return owning_component.modulatory_allocation
+    return owning_component.control_allocation
 
 def _gating_allocation_setter(value, owning_component=None, context=None):
-    owning_component.parameters.modulatory_allocation._set(np.array(value), context)
+    owning_component.parameters.control_allocation._set(np.array(value), context)
     return value
 
 # def _control_allocation_getter(owning_component=None, context=None):
@@ -436,9 +436,9 @@ class GatingMechanism(ControlMechanism):
 
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        value = Parameter(np.array([defaultGatingAllocation]), aliases='modulatory_allocation')
+        value = Parameter(np.array([defaultGatingAllocation]), aliases='control_allocation')
         gating_allocation = Parameter(np.array([defaultGatingAllocation]),
-                                      aliases='control_allocation',  # Overrides ControlMechanism's Parameter
+                                      # aliases='control_allocation',  # Overrides ControlMechanism's Parameter
                                       getter=_gating_allocation_getter,
                                       setter=_gating_allocation_setter,
                                       read_only=True)
@@ -469,7 +469,6 @@ class GatingMechanism(ControlMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-
                          **kwargs)
 
     # MODIFIED 9/22/19 OLD:

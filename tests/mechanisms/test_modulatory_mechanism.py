@@ -23,19 +23,20 @@ class TestControlMechanism:
     #     result = S.run(inputs={Tx:[1,1], Ty:[4,4]})
     #     assert result == [[[4.], [4.]], [[4.], [4.]]]
 
-    def test_assignment_of_control_and_gating_signals(self):
-        m = ProcessingMechanism(function=Logistic)
-        c = ControlMechanism(
-                control_signals=[
-                    ControlSignal(name="CS1", modulates=(GAIN, m)),
-                    GatingSignal(name="GS", modulates=m),
-                    ControlSignal(name="CS2", modulates=(BIAS, m)),
-                ]
-        )
-        assert  c.output_states.names == ['CS1', 'GS', 'CS2']
-        assert m.parameter_states['gain'].mod_afferents[0].sender.owner == c
-        assert m.parameter_states['bias'].mod_afferents[0].sender.owner == c
-        assert m.input_state.mod_afferents[0].sender.owner == c
+    # DEPRECATED FUNCTIONALITY 9/26/19
+    # def test_assignment_of_control_and_gating_signals(self):
+    #     m = ProcessingMechanism(function=Logistic)
+    #     c = ControlMechanism(
+    #             control_signals=[
+    #                 ControlSignal(name="CS1", modulates=(GAIN, m)),
+    #                 GatingSignal(name="GS", modulates=m),
+    #                 ControlSignal(name="CS2", modulates=(BIAS, m)),
+    #             ]
+    #     )
+    #     assert  c.output_states.names == ['CS1', 'GS', 'CS2']
+    #     assert m.parameter_states['gain'].mod_afferents[0].sender.owner == c
+    #     assert m.parameter_states['bias'].mod_afferents[0].sender.owner == c
+    #     assert m.input_state.mod_afferents[0].sender.owner == c
 
 
     def test_control_modulation_in_composition(self):
