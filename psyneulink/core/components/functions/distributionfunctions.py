@@ -1280,7 +1280,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                                  (csch(Z - X))**2 - 3 * (Z - X)*coth(Z - X))
 
             # divide third central moment by var_rt**1.5 to get skewness
-            moments['skew_rt_plus'] /=  moments['var_rt_plus']**1.5
+            moments['skew_rt_plus'] /= moments['var_rt_plus']**1.5
             moments['skew_rt_minus'] /= moments['var_rt_minus']**1.5
 
             # Add the non-decision time to the mean RTs

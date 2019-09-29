@@ -406,7 +406,7 @@ AFTER = 'after'
 ONLINE = 'online'
 INPUT = 'input'
 OUTPUT = 'output'
-RANDOM =  'random'
+RANDOM = 'random'
 OLDEST = 'oldest'
 NEWEST = 'newest'
 

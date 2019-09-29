@@ -2335,7 +2335,7 @@ class Component(object, metaclass=ComponentsMeta):
                 visited.add(comp)
                 comp._initialize_from_context(context, base_context, override, visited=visited)
 
-        non_alias_params =  [p for p in self.stateful_parameters if not isinstance(p, ParameterAlias)]
+        non_alias_params = [p for p in self.stateful_parameters if not isinstance(p, ParameterAlias)]
         for param in non_alias_params:
             if param.setter is None:
                 param._initialize_from_context(context, base_context, override)
@@ -2744,7 +2744,7 @@ class Component(object, metaclass=ComponentsMeta):
                  isinstance(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES) or
                  (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES)))
             ):
-            value =  param_spec[0]
+            value = param_spec[0]
 
         # Otherwise, just return the tuple
         else:
