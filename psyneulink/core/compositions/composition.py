@@ -1087,7 +1087,6 @@ import numpy as np
 import typecheck as tc
 
 from PIL import Image
-from os import path, remove
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
@@ -1097,12 +1096,11 @@ from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.optimizationcontrolmechanism import OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -1111,7 +1109,7 @@ from psyneulink.core.components.projections.modulatory.controlprojection import 
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.components.states.state import State, _parse_state_spec
+from psyneulink.core.components.states.state import State
 from psyneulink.core.components.states.inputstate import InputState, SHADOW_INPUTS
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.outputstate import OutputState
@@ -5191,7 +5189,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       proj_color, proj_width,
                                       sndr_label=None,
                                       rcvr_label=None):
-            from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
             proj_receiver = proj.receiver.owner
 
@@ -5632,7 +5629,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 except KeyError:
                     # # mech_role = r'\n[{}]'.format(self.system)
                     # mech_role = r'\n[CONTROLLER]'
-                    from psyneulink.core.components.mechanisms.adaptive.controlmechanism import \
+                    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import \
                         ControlMechanism
                     from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
                         ObjectiveMechanism

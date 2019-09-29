@@ -25,10 +25,11 @@ Sections
 Overview
 --------
 
-A GatingMechanism is a subclass of `ModulatoryMechanism` that is restricted to using only `GatingSignals
-<GatingSignal>` and not ControlSignals.  Accordingly, its constructor has a **gating_signals** argument in place of
-a **modulatory_signals** argument.  It also lacks any attributes related to control, including this related to cost
-and net_outcome.  In all other respects it is identical to its parent class, ModulatoryMechanism.
+A GatingMechanism is a subclass of `ControlMechanism` that is restricted to using only `GatingSignals <GatingSignal>`,
+which modulate the `input <Mechanism_InputStates>` or `output <Mechanism_InputStates>` of a `Mechanism`, but not the
+paramaters of its `function <Mechanism_Base.function>`.  Accordingly, its constructor has a **gate** argument in place
+of a **control** argument.  It also lacks several attributes related to control, including those related to costs
+and net_outcome.  In all other respects it is identical to its parent class, ControlMechanism.
 
 .. _GatingMechanism_Creation:
 
@@ -37,11 +38,11 @@ Creating A GatingMechanism
 
 A GatingMechanism is created by calling its constructor.  When a GatingMechanism is created, the OutputStates it
 monitors and the `InputStates <InputState>` and/or `OutputStates <OutputState>` it modulates can be specified in the 
-**montior_for_modulation** and **objective_mechanism** arguments of its constructor, respectively.  Each can be 
-specified in several ways, as described in `ModulatoryMechanism_Monitor_for_Modulation` and 
-`ModulatoryMechanism_Modulatory_Signals` respectively. If neither of those arguments is specified, then only the 
-GatingMechanism is constructed, and its inputs and the InputStates and/or OutputStates it modulates must be specified 
-in some other way.
+**montior_for_gating** and **gate** arguments of its constructor, respectively.  Each can be specified in several
+ways, paralleling those used for a ControlMechanism, and described in `ControlMechanism_Monitor_for_Control` and
+`ControlMechanism_Control_Signals` respectively. If neither the **montior_for_gating** or **gate** arguments is
+specified, then only the GatingMechanism is constructed, and its inputs and the InputStates and/or OutputStates it
+modulates must be specified in some other way.
 COMMENT:
 TBI FOR COMPOSITION
 A GatingMechanism is also created automatically if `gating
@@ -59,17 +60,17 @@ A GatingMechanism is used to modulate the value of an `InputState` or `OutputSta
 be specified for gating by assigning it a `GatingProjection` or `GatingSignal` anywhere that the Projections to a State
 or its `ModulatorySignals can be specified <State_Creation>`.  A `Mechanism <Mechanism>` can also be specified for
 gating, in which case the `primary InputState <InputState_Primary>` of the specified Mechanism is used.  States
-(and/or Mechanisms) can also be specified in the  **gating_signals** argument of the constructor for a
-GatingMechanism. The **gating_signals** argument must be a list, each item of which must refer to one or more States
-(or the Mechanism(s) to which they belong) to be gated by that GatingSignal.  The specification for each item in the
-list can use any of the forms used to `specify a GatingSignal <GatingSignal_Specification>`.
+(and/or Mechanisms) can also be specified in the  **gate** argument of the constructor for a GatingMechanism. The
+**gate** argument must be a list, each item of which must refer to one or more States (or the Mechanism(s) to which
+they belong) to be gated by that GatingSignal.  The specification for each item in the list can use any of the forms
+used to `specify a GatingSignal <GatingSignal_Specification>`.
 
 .. _GatingMechanism_GatingSignals:
 
 GatingSignals
 ^^^^^^^^^^^^^
 
-A `GatingSignal` is created for each item listed in the **gating_signals** argument of the constructor, and all of the
+A `GatingSignal` is created for each item listed in the **gate** argument of the constructor, and all of the
 GatingSignals for a GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.
 Each GatingSignal is assigned one or more `GatingProjections <GatingProjection>` to the InputState(s) and/or
 OutputState(s) it gates. By default, the `function <GatingMechanism.function>` of GatingMechanism generates a `value
@@ -116,7 +117,7 @@ A GatingMechanism's `function <GatingMechanism.function>` is determined and oper
 
 The OutputStates of a GatingMechanism are `GatingSignals <GatingSignal>` (listed in its `gating_signals
 <GatingMechanism.gating_signals>` attribute). It  has a `GatingSignal` for each `InputState` and/or `OutputState` 
-specified in the **gating_signals** argument of its constructor, that sends a `GatingProjection` to those States.  
+specified in the **gate** argument of its constructor, that sends a `GatingProjection` to those States.
 The GatingSignals are listed in the `gating_signals <GatingMechanism.gating_signals>` attribute;  since they are a 
 type of `OutputState`, they are also listed in the GatingMechanism's `output_states <GatingMechanism.output_states>` 
 attribute. The InputStates and/or OutputStates modulated by a GatingMechanism's GatingSignals can be displayed using 
@@ -173,18 +174,16 @@ Class Reference
 
 """
 
-import warnings
-
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
     GATING, GATING_PROJECTION, GATING_PROJECTIONS,GATING_SIGNAL,GATING_SIGNALS,GATING_SIGNAL_SPECS, \
-    INIT_EXECUTE_METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, MULTIPLICATIVE, PROJECTION_TYPE
+    INIT_EXECUTE_METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, MONITOR_FOR_CONTROL, MULTIPLICATIVE, PROJECTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -252,9 +251,10 @@ class GatingMechanism(ControlMechanism):
     GatingMechanism(                                \
         default_gating_allocation=None,             \
         size=None,                                  \
+        monitor_for_gating=None,                    \
         function=Linear(slope=1, intercept=0),      \
         default_allocation=None,                    \
-        gating_signals:tc.optional(list) = None,    \
+        gating:tc.optional(list) = None,            \
         modulation=MULTIPLICATIVE,                  \
         params=None,                                \
         name=None,                                  \
@@ -287,7 +287,7 @@ class GatingMechanism(ControlMechanism):
 
     default_gating_allocation : value, list or ndarray : default `defaultGatingAllocation`
         the default value for each of the GatingMechanism's GatingSignals;
-        its length must equal the number of items specified in the **gating_signals** argument.
+        its length must equal the number of items specified in the **gate** argument.
 
     size : int, list or 1d np.array of ints
         specifies default_gating_allocation as an array of zeros if **default_gating_allocation** is not passed as an
@@ -295,6 +295,13 @@ class GatingMechanism(ControlMechanism):
         As an example, the following mechanisms are equivalent::
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
+
+    monitor_for_gating : List[OutputState or Mechanism] : default None
+        specifies the `OutputStates <OutputState>` to be monitored by the `ObjectiveMechanism`, if specified in an
+        **objective_mechanism** argument (see `ControlMechanism_ObjectiveMechanism`), or directly by the
+        GatingMechanism itself if **objective_mechanism** is not specified.  If any specification is a Mechanism
+        (rather than its OutputState), its `primary OutputState <OutputState_Primary>` is used (see
+        `ControlMechanism_Monitor_for_Control` for additional details).
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies the function used to transform the GatingMechanism's `variable <GatingMechanism.variable>`
@@ -305,7 +312,7 @@ class GatingMechanism(ControlMechanism):
         which the **default_allocation** was not specified in its constructor (see default_allocation
         <GatingMechanism.default_allocation>` for additional details).
 
-    gating_signals : List[GatingSignal, InputState, OutputState, Mechanism, tuple[str, Mechanism], or dict]
+    gate : List[GatingSignal, InputState, OutputState, Mechanism, tuple[str, Mechanism], or dict]
         specifies the `InputStates <InputState>` and/or `OutputStates <OutputStates>` to be gated by the
         GatingMechanism; the number of items must equal the length of the **default_gating_allocation**
         argument; if a `Mechanism <Mechanism>` is specified, its `primary InputState <InputState_Primary>`
@@ -337,6 +344,11 @@ class GatingMechanism(ControlMechanism):
         and is the same format as its `gating_allocation <GatingMechanis.gating_allocation>` (unless a custom
         `function <GatingMechanism.function>` has been assigned).
 
+    monitor_for_gating : List[OutputState]
+        each item is an `OutputState` monitored by the GatingMechanism or its `objective_mechanism
+        <ControlMechanism.objective_mechanism>` if that is specified (see `ControlMechanism_ObjectiveMechanism`);
+        in the latter case, the list returned is ObjectiveMechanism's `monitor <ObjectiveMechanism.monitor>` attribute.
+
     function : TransferFunction
         determines the function used to transform the GatingMechanism's `variable <GatingMechanism.variable>`
         to a `gating_allocation`;  the default is an identity function that simply assigns
@@ -350,8 +362,8 @@ class GatingMechanism(ControlMechanism):
 
     gating_allocation : 2d array
         each item is the value assigned as the `allocation <GatingSignal.allocation>` for the corresponding
-        GatingSignal listed in the `gating_signals` attribute;  the gating_allocation is the same as the
-        GatingMechanism's `value <Mechanism_Base.value>` attribute).
+        `GatingSignal` listed in the `gating_signals <GatingMechanism.gating_signals>` attribute;  the
+        gating_allocation is the same as the GatingMechanism's `value <Mechanism_Base.value>` attribute).
 
     gating_signals : ContentAddressableList[GatingSignal]
         list of `GatingSignals <GatingSignals>` for the GatingMechanism, each of which sends
@@ -364,19 +376,19 @@ class GatingMechanism(ControlMechanism):
 
     value : scalar or 1d np.array of ints
         the result of the GatingMechanism's `function <GatingProjection.funtion>`;
-        each item is the value assigned to the corresponding GatingSignal listed in `gating_signals`,
-        and used by each GatingSignal to generate the `gating_signal <GatingSignal.gating_signal>` assigned to its
-        `GatingProjections <GatingProjection>`;
-        same as the GatingMechanism's `gating_allocation <GatingMechanism.gating_allocation>` attribute.
-        Default is a single item used by all of the `gating_signals`.
+        each item is the value assigned to the corresponding GatingSignal listed in `gating_signals
+        <GatingMechanism.gating_signals>`, and used by each GatingSignal to generate the `gating_signal
+        <GatingSignal.gating_signal>` assigned to its `GatingProjections <GatingProjection>`; same as the
+        GatingMechanism's `gating_allocation <GatingMechanism.gating_allocation>` attribute. Default is a
+        single item used by all of the `gating_signals <GatingMechanism.gating_signals>`.
 
     gating_allocation : scalar or 1d np.array of ints
         the result of the GatingMechanism's `function <GatingProjection.function>`;
-        each item is the value assigned to the corresponding GatingSignal listed in `gating_signals`,
-        and used by each GatingSignal to generate the `gating_signal <GatingSignal.gating_signal>` assigned to its
-        `GatingProjections <GatingProjection>`; same as the GatingMechanism's `value <GatingMechanism.value>` attribute.
-        Default is a single item used by all of the `gating_signals`.
-
+        each item is the value assigned to the corresponding `GatingSignal` listed in `gating_signals
+        <GatingMechanism.gating_signals>`, and used by each GatingSignal to generate the `gating_signal
+        <GatingSignal.gating_signal>` assigned to its `GatingProjections <GatingProjection>`; same as the
+        GatingMechanism's `value <GatingMechanism.value>` attribute. Default is a single item used by all of the
+        `gating_signals <GatingMechanism.gating_signals>`.
 
     modulation : ModulationParam
         the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
@@ -447,14 +459,28 @@ class GatingMechanism(ControlMechanism):
     def __init__(self,
                  default_gating_allocation=None,
                  size=None,
+                 monitor_for_gating=None,
                  function=None,
                  default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
-                 gating_signals:tc.optional(list) = None,
+                 gate:tc.optional(list) = None,
                  modulation:tc.optional(str)=MULTIPLICATIVE,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
+
+        gate = convert_to_list(gate) or []
+
+        if kwargs:
+            # For backward compatibility:
+            if GATING_SIGNALS in kwargs:
+                args = kwargs.pop(GATING_SIGNALS)
+                if args:
+                    gate.extend(convert_to_list(args))
+            if MONITOR_FOR_CONTROL in kwargs:
+                args = kwargs.pop(MONITOR_FOR_CONTROL)
+                if args:
+                    monitor_for_gating.extend(convert_to_list(args))
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(function=function,
@@ -462,20 +488,16 @@ class GatingMechanism(ControlMechanism):
 
         super().__init__(default_variable=default_gating_allocation,
                          size=size,
+                         monitor_for_control=monitor_for_gating,
                          function=function,
                          default_allocation=default_allocation,
-                         control_signals=gating_signals,
+                         control=gate,
                          modulation=modulation,
                          params=params,
                          name=name,
                          prefs=prefs,
                          **kwargs)
 
-    # MODIFIED 9/22/19 OLD:
-    # def _instantiate_output_states(self, context=None):
-    #     self._register_control_signal_type(GatingSignal,context)
-    #     super()._instantiate_output_states(context)
-    # MODIFIED 9/22/19 NEW: [JDC]
     def _register_control_signal_type(self, context=None):
         from psyneulink.core.globals.registry import register_category
         from psyneulink.core.components.states.state import State_Base
@@ -485,12 +507,6 @@ class GatingMechanism(ControlMechanism):
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
-
-    # def _instantiate_gating_signal(self, gating_signal, context=None):
-    #     """Instantiate GatingSignal OutputState and assign (if specified) or instantiate GatingProjection
-    #     Return GatingSignal (OutputState)
-    #     """
-    #     return super()._instantiate_control_signal(control_signal=gating_signal, context=context)
 
     def _instantiate_control_signal_type(self, gating_signal_spec, context):
         """Instantiate actual ControlSignal, or subclass if overridden"""

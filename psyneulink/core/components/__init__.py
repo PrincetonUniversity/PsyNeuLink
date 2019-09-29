@@ -72,7 +72,7 @@ from psyneulink.core.components.mechanisms.mechanism import MechanismRegistry
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.defaultprocessingmechanism \
     import DefaultProcessingMechanism_Base
-from psyneulink.core.components.mechanisms.adaptive.controlmechanism \
+from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism \
     import ControlMechanism
 register_category(entry=ControlMechanism,
                   base_class=Mechanism_Base,

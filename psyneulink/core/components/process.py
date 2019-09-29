@@ -460,7 +460,6 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Component, function_type
-from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import MechanismList, Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
@@ -471,7 +470,10 @@ from psyneulink.core.components.states.modulatorysignals.learningsignal import L
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.components.states.state import _instantiate_state, _instantiate_state_list
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import AUTO_ASSIGN_MATRIX, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SINGLETON, TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg, kwSeparator
+from psyneulink.core.globals.keywords import \
+    AUTO_ASSIGN_MATRIX, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
+    MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, SENDER, SINGLETON, \
+    TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg
 from psyneulink.core.globals.parameters import Defaults, Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1013,7 +1015,7 @@ class Process(Process_Base):
         #    and assign the Mechanism's status in the Process to its entry in the Mechanism's processes dict
 
         # Move any ControlMechanisms in the pathway to the end
-        from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
+        from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
         for i, item in enumerate(pathway):
             if len(pathway)>1 and isinstance(item, ControlMechanism):
                 pathway += [pathway.pop(i)]
@@ -1175,7 +1177,7 @@ class Process(Process_Base):
                                              append_type_to_name(mech)))
 
     def _parse_and_instantiate_projection_entries(self, pathway, context=None):
-        from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
+        from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 
         # ASSIGN DEFAULT PROJECTION PARAMS
 

@@ -4251,6 +4251,7 @@ class TestCompositionInterface:
         comp.add_projection(pnl.MappingProjection(), A, inner_comp)
         inner_comp.add_projection(pnl.MappingProjection(), B, C)
 
+        comp.show_graph()
         comp.run(inputs={A: 1})
 
         # inner_comp is updated to make B not an OUTPUT node

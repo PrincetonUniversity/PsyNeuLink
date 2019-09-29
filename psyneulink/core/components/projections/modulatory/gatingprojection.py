@@ -43,7 +43,7 @@ When a GatingProjection is created, its full initialization is `deferred <Compon
 a GatingProjection to be created before its `sender` and/or `receiver` have been created (e.g., before them in a
 script), by calling its constructor without specifying its **sender** or **receiver** arguments. However, for the
 GatingProjection to be operational, initialization must be completed by calling its `deferred_init` method.  This is
-not necessary if the State(s) to be gated are specified in the **gating_signals** argument of a `GatingMechanism
+not necessary if the State(s) to be gated are specified in the **gate** argument of a `GatingMechanism
 <GatingMechanism_Specifying_Gating>`, in which case deferred initialization is completed automatically by the
 GatingMechanism when it is created.
 

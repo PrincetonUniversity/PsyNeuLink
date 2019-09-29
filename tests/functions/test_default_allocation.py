@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import psyneulink.core.llvm as pnlvm
-from psyneulink.core.components.mechanisms.adaptive.controlmechanism import DefaultAllocationFunction
+from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import DefaultAllocationFunction
 
 @pytest.mark.function
 @pytest.mark.identity_function

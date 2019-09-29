@@ -38,7 +38,7 @@ def test_objective_mechanism():
 
 def test_control_mechanism():
     fail, total = doctest.testmod(
-            pnl.core.components.mechanisms.adaptive.controlmechanism)
+            pnl.core.components.mechanisms.adaptive.control.controlmechanism)
     if fail > 0:
         pytest.fail("{} out of {} examples failed".format(fail, total),
                     pytrace=False)

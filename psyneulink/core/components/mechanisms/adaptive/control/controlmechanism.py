@@ -575,7 +575,7 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.outputstate import OutputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.defaults import defaultControlAllocation, defaultGatingAllocation
+from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, \
     EID_SIMULATION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, \
@@ -764,10 +764,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         <System.controller>`.
 
     monitor_for_control : List[OutputState or Mechanism] : default None
-        specifies the `OutputStates <OutputState>` to be monitored by the `ObjectiveMechanism` specified in the
-        **objective_mechanism** argument; if any specification is a Mechanism (rather than its OutputState),
-        its `primary OutputState <OutputState_Primary>` is used (see `ControlMechanism_Monitor_for_Control` for
-        additional details).
+        specifies the `OutputStates <OutputState>` to be monitored by the `ObjectiveMechanism`, if specified in the
+        **objective_mechanism** argument (see `ControlMechanism_ObjectiveMechanism`), or directly by the
+        ControlMechanism itself if an **objective_mechanism** is not specified.  If any specification is a Mechanism
+        (rather than its OutputState), its `primary OutputState <OutputState_Primary>` is used (see
+        `ControlMechanism_Monitor_for_Control` for additional details).
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
         specifies either an `ObjectiveMechanism` to use for the ControlMechanism, or a list of the OutputStates it
@@ -1089,11 +1090,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                             ParameterState,
                                             InputState,
                                             OutputState,
-                                            ControlSignal,
-                                            # # MODIFIED 9/26/19 OLD:
-                                            # GatingSignal))=None,
-                                            # MODIFIED 9/26/19 END
-                                            ))=None,
+                                            ControlSignal))=None,
                  modulation:tc.optional(str)=MULTIPLICATIVE,
                  combine_costs:is_function_type=np.sum,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,

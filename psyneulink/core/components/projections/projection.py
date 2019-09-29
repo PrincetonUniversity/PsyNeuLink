@@ -404,7 +404,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric, type_match
+from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric
 
 __all__ = [
     'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS',
@@ -819,8 +819,6 @@ class Projection_Base(Projection):
         Assign projection to sender's efferents attribute
         """
         from psyneulink.core.compositions.composition import Composition
-        from psyneulink.core.components.states.inputstate import InputState
-        from psyneulink.core.components.states.parameterstate import ParameterState
         from psyneulink.core.components.states.outputstate import OutputState
 
         if not (
@@ -1328,7 +1326,7 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.core.components.states.outputstate import OutputState
     from psyneulink.core.components.states.parameterstate import ParameterState
     from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-    from psyneulink.core.components.mechanisms.adaptive.controlmechanism import _is_control_spec
+    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
     from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
 
     if not inspect.isclass(connectee_state_type):

@@ -2996,7 +2996,7 @@ class Mechanism_Base(Mechanism):
                     except KeyError:
                         # # mech_roles = r'\n[{}]'.format(self.system)
                         # mech_roles = r'\n[CONTROLLER]'
-                        from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
+                        from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
                         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
                         if isinstance(self, ControlMechanism) and hasattr(self, 'system'):
                             mech_roles = r'\n[CONTROLLER]'

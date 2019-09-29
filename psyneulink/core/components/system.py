@@ -436,8 +436,6 @@ from PIL import Image
 from collections.abc import Iterable
 from collections import OrderedDict, namedtuple
 from os import path, remove
-from shutil import rmtree
-
 
 import numpy as np
 import typecheck as tc
@@ -445,7 +443,7 @@ import typecheck as tc
 from toposort import toposort, toposort_flatten
 
 from psyneulink.core.components.component import Component
-from psyneulink.core.components.mechanisms.adaptive.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.adaptive.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
 from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, LearningTiming
 from psyneulink.core.components.mechanisms.mechanism import MechanismList
@@ -458,11 +456,10 @@ from psyneulink.core.components.states.inputstate import InputState
 from psyneulink.core.components.states.parameterstate import ParameterState
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, EXECUTING, FUNCTION, FUNCTIONS, \
-    INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, \
-    OBJECTIVE_MECHANISM, ORIGIN, OUTCOME, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, \
-    TARGET, TERMINAL, VALUES, \
-    kwSeparator, kwSystemComponentCategory
+    ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, FUNCTION, FUNCTIONS, \
+    INITIALIZE_CYCLE, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, \
+    OBJECTIVE_MECHANISM, ORIGIN, OUTCOME, PROJECTIONS, ROLES, SAMPLE, SINGLETON, TARGET, TERMINAL, VALUES, \
+    kwSystemComponentCategory
 from psyneulink.core.globals.log import Log
 from psyneulink.core.globals.parameters import Defaults, Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel

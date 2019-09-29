@@ -1,11 +1,11 @@
 from . import adaptivemechanism
-from . import controlmechanism
+from psyneulink.core.components.mechanisms.adaptive.control import controlmechanism
 from . import control
 from . import gating
 from . import learning
 
 from .adaptivemechanism import *
-from .controlmechanism import *
+from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import *
 from .control import *
 from .gating import *
 from .learning import *
