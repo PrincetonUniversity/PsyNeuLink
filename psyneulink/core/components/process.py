@@ -1015,7 +1015,7 @@ class Process(Process_Base):
         #    and assign the Mechanism's status in the Process to its entry in the Mechanism's processes dict
 
         # Move any ControlMechanisms in the pathway to the end
-        from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+        from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
         for i, item in enumerate(pathway):
             if len(pathway)>1 and isinstance(item, ControlMechanism):
                 pathway += [pathway.pop(i)]
@@ -1177,7 +1177,7 @@ class Process(Process_Base):
                                              append_type_to_name(mech)))
 
     def _parse_and_instantiate_projection_entries(self, pathway, context=None):
-        from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+        from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 
         # ASSIGN DEFAULT PROJECTION PARAMS
 
@@ -2025,7 +2025,7 @@ class Process(Process_Base):
         """
 
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-        from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism \
+        from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism \
             import ACTIVATION_INPUT
         def trace_learning_objective_mechanism_projections(mech):
             """Recursively trace projections to Objective mechanisms;
@@ -2229,7 +2229,7 @@ class Process(Process_Base):
         COMMENT
 
         """
-        from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
+        from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 
         if context.execution_id is None:
             context.execution_id = self.default_execution_id

@@ -15,7 +15,7 @@ Overview
 --------
 
 A ModulatoryProjection is a subclass of `Projection <Projection>` that takes the value of a
-`ModulatorySignal <ModulatorySignal>` belonging to an `AdaptiveMechanism <AdaptiveMechanism>`, and uses that to
+`ModulatorySignal <ModulatorySignal>` belonging to a `ModulatoryMechanism <ModulatoryMechanism>`, and uses that to
 modulate the function of the `State <State>` to which it projects.  There are three types of ModulatoryProjections,
 that modulate different types of Components and their States:
 

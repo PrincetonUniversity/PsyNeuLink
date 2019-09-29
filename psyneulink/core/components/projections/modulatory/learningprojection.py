@@ -174,7 +174,7 @@ from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import BackPropagation
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -611,7 +611,7 @@ class LearningProjection(ModulatoryProjection_Base):
         self.sender = sender
 
         if not isinstance(self.sender, (OutputState, LearningMechanism)):
-            from psyneulink.core.components.mechanisms.adaptive.learning.learningauxiliary \
+            from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary \
                 import _instantiate_learning_components
             context.source = ContextFlags.METHOD
             _instantiate_learning_components(learning_projection=self,

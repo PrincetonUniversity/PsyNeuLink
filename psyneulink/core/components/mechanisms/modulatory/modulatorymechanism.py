@@ -6,24 +6,24 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *********************************************  AdaptiveMechanism *****************************************************
+# *********************************************  ModulatoryMechanism *****************************************************
 
 """
 
-.. _AdaptiveMechanism_Overview:
+.. _ModulatoryMechanism_Overview:
 
 Overview
 --------
 
-An AdaptiveMechanism is a type of `Mechanism <Mechanism>` that modifies the operation of one or more other `Components
-<Component>`.  In general, an AdaptiveMechanism receives its input from an `ObjectiveMechanism`, however
+An ModulatoryMechanism is a type of `Mechanism <Mechanism>` that modifies the operation of one or more other `Components
+<Component>`.  In general, an ModulatoryMechanism receives its input from an `ObjectiveMechanism`, however
 this need not be the case.
 
-.. _AdaptiveMechanism_Types:
+.. _ModulatoryMechanism_Types:
 
 
 # FIX 9/27/19
-There are three types of AdaptiveMechanism:
+There are three types of ModulatoryMechanism:
 
 * `ModulatoryMechanism`
     takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates an
@@ -63,7 +63,7 @@ There are three types of AdaptiveMechanism:
 
 See `ModulatorySignal <ModulatorySignal_Naming>` for conventions used for the names of Modulatory components.
 
-A single `AdaptiveMechanism` can be assigned more than one ModulatorySignal of the appropriate
+A single `ModulatoryMechanism` can be assigned more than one ModulatorySignal of the appropriate
 
 which, each of which can
 be assigned
@@ -74,38 +74,38 @@ same `variable <ModulatoryProjection_Base.variable>`.
 
 
 COMMENT:
-AdaptiveMechanisms are always executed after all `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or
+ModulatoryMechanisms are always executed after all `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or
 `System` to which they belong have been executed, with all LearningMechanism executed first, then GatingMechanism,
-ControlMechanism. All three types of AdaptiveMechanisms are executed before the next `TRIAL`, so that the
+ControlMechanism. All three types of ModulatoryMechanisms are executed before the next `TRIAL`, so that the
 modifications they make are available during the next `TRIAL` run for the Process or System.
 COMMENT
 
-.. _AdaptiveMechanism_Creation:
+.. _ModulatoryMechanism_Creation:
 
-Creating an AdaptiveMechanism
+Creating an ModulatoryMechanism
 ------------------------------
 
-An AdaptiveMechanism can be created by using the standard Python method of calling the constructor for the desired type.
-AdaptiveMechanisms of the appropriate subtype are also created automatically when other Components are created that
+An ModulatoryMechanism can be created by using the standard Python method of calling the constructor for the desired type.
+ModulatoryMechanisms of the appropriate subtype are also created automatically when other Components are created that
 require them, or a form of modulation is specified for them. For example, a `ControlMechanism <ControlMechanism>` is
 automatically created as part of a `System <System_Creation>` (for use as its `controller
 <System.controller>`), or when `control is specified <ControlMechanism_Control_Signals>` for the parameter of a
 `Mechanism <Mechanism>`; and one or more `LearningMechanism <LearningMechanism>` are created when learning is
 specified for a `Process <Process_Learning_Sequence>` or a `System <System_Learning>` (see the documentation for
-`subtypes <AdaptiveMechanism_Subtypes>` of AdaptiveMechanisms for more specific information about how to create them).
+`subtypes <ModulatoryMechanism_Subtypes>` of ModulatoryMechanisms for more specific information about how to create them).
 
-.. _AdaptiveMechanism_Structure:
+.. _ModulatoryMechanism_Structure:
 
 Structure
 ---------
 
-An AdaptiveMechanism has the same basic structure as a `Mechanism <Mechanisms>`.  In addition, every AdaptiveMechanism
-has a `modulation <AdaptiveMechanism.modulation>` attribute, that determines the default method by which its
+An ModulatoryMechanism has the same basic structure as a `Mechanism <Mechanisms>`.  In addition, every ModulatoryMechanism
+has a `modulation <ModulatoryMechanism.modulation>` attribute, that determines the default method by which its
 `ModulatorySignals <ModulatorySignal>` modify the value of the Components that they modulate (see the `modulation
 <ModulatorySignal_Modulation>` for a description of how modulation operates, and the documentation for individual
-subtypes of AdaptiveMechanism for more specific information about their structure and modulatory operation).
+subtypes of ModulatoryMechanism for more specific information about their structure and modulatory operation).
 
-.. _AdaptiveMechanism_Execution:
+.. _ModulatoryMechanism_Execution:
 
 Execution
 ---------
@@ -118,7 +118,7 @@ introduce recurrent connections, care must be given to their `initialization and
 <GatingMechanism_Execution>`).
 
 
-.. _AdaptiveMechanism_Class_Reference:
+.. _ModulatoryMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -130,26 +130,26 @@ from psyneulink.core.globals.keywords import ADAPTIVE_MECHANISM
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
-    'AdaptiveMechanism_Base', 'AdaptiveMechanismError'
+    'ModulatoryMechanism_Base', 'ModulatoryMechanismError'
 ]
 
 
-class AdaptiveMechanismError(Exception):
+class ModulatoryMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
 
-class AdaptiveMechanism_Base(Mechanism_Base):
+class ModulatoryMechanism_Base(Mechanism_Base):
     """Subclass of `Mechanism <Mechanism>` that modulates the value(s) of one or more other `Component(s) <Component>`.
 
     .. note::
-       AdaptiveMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
-       They should be instantiated using the constructor for a `subclass <AdaptiveMechanism_Subtypes>`.
+       ModulatoryMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
+       They should be instantiated using the constructor for a `subclass <ModulatoryMechanism_Subtypes>`.
 
     COMMENT:
 
     Description:
-        An AdaptiveMechanism is a Type of the `Mechanism <Mechanism>` Category of Component
+        An ModulatoryMechanism is a Type of the `Mechanism <Mechanism>` Category of Component
 
     COMMENT
 
@@ -158,7 +158,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
     ----------
 
     modulation : ModulationParam
-        determines how the output of the AdaptiveMechanism's `ModulatorySignal(s) <ModulatorySignal>` are used to
+        determines how the output of the ModulatoryMechanism's `ModulatorySignal(s) <ModulatorySignal>` are used to
         modulate the value of the State(s) to which their `ModulatoryProjection(s) <ModulatoryProjection>` project.
    """
 
@@ -170,7 +170,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
             ----------
 
                 modulation
-                    see `modulation <AdaptiveMechanism_Base.modulation>`
+                    see `modulation <ModulatoryMechanism_Base.modulation>`
 
                     :default value: None
                     :type:
@@ -182,7 +182,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'AdaptiveMechanismClassPreferences',
+    #     kwPreferenceSetName: 'ModulatoryMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
     def __init__(self,
@@ -196,7 +196,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
                  function=None,
                  **kwargs
                  ):
-        """Abstract class for AdaptiveMechanism
+        """Abstract class for ModulatoryMechanism
         """
 
         if not hasattr(self, 'system'):

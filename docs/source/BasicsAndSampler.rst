@@ -38,7 +38,7 @@ information to a decision layer).
 
 Mechanisms and Projections fall into two broad categories:  `ProcessingMechanisms <ProcessingMechanism>`
 *directly transmit* and possibly *transform* information, and are linked by `PathwayProjections
-<PathwayProjection>` that transmit the information between them. *AdaptiveMechanisms <AdpativeMechanism>` *modify*
+<PathwayProjection>` that transmit the information between them. *ModulatoryMechanisms <ModulatoryMechanism>` *modify*
 or *modulate* the transmission and transformation of information, by way of `ModulatoryProjections
 <ModulatoryProjecdtion>` to the Components they modulate.  PsyNeuLink provides a library of Components of
 each type.  For example, there is a variety of ProcessingMechanisms that can be used to transform, integrate, and

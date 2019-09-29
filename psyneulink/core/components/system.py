@@ -443,9 +443,9 @@ import typecheck as tc
 from toposort import toposort, toposort_flatten
 
 from psyneulink.core.components.component import Component
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.adaptive.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, LearningTiming
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism, LearningTiming
 from psyneulink.core.components.mechanisms.mechanism import MechanismList
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
 from psyneulink.core.components.process import Process, ProcessInputState, ProcessList, ProcessTuple
@@ -1267,7 +1267,7 @@ class System(System_Base):
         Validate initial_values
 
         """
-        from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
+        from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 
         def is_monitoring_mech(mech):
             if ((isinstance(mech, ObjectiveMechanism) and mech._role) or
@@ -1711,7 +1711,7 @@ class System(System_Base):
     def _instantiate_learning_graph(self, context=None):
         """Build graph of LearningMechanism and LearningProjections
         """
-        from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
+        from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
             LearningMechanism
 
         self.learningGraph = OrderedDict()

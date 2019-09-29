@@ -523,7 +523,7 @@ kwComponentCategory = "Function_Base"
 
 # Mechanisms:
 PROCESSING_MECHANISM = "ProcessingMechanism"
-ADAPTIVE_MECHANISM = "AdaptiveMechanism"
+ADAPTIVE_MECHANISM = "ModulatoryMechanism"
 LEARNING_MECHANISM = "LearningMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
 TARGET_MECHANISM = "TargetMechanism"
@@ -970,7 +970,7 @@ INSTANTANEOUS_MODE_VALUE = "instantaneous_mode_value"
 LINEAR = 'linear'
 CONSTANT = 'constant'
 SIMPLE = 'scaled'
-ADAPTIVE = 'adaptive'
+ADAPTIVE = 'modulatory'
 DIFFUSION = 'diffusion'
 EXPONENTIAL = 'exponential'
 GAUSSIAN = 'gaussian'

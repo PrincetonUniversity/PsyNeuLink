@@ -4,7 +4,7 @@ import psyneulink.core.components.functions.transferfunctions
 
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
 from psyneulink.core.components.functions.transferfunctions import Logistic
-from psyneulink.core.components.mechanisms.adaptive.control.gating.gatingmechanism import GatingMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection

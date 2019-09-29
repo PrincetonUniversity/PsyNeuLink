@@ -31,7 +31,7 @@ Sections
 Overview
 --------
 
-A ControlMechanism is an `AdaptiveMechanism` that `modulates the value(s) <ModulatorySignal_Modulation>` of one or
+A ControlMechanism is a `ModulatoryMechanism` that `modulates the value(s) <ModulatorySignal_Modulation>` of one or
 more `States <State>` of other Mechanisms in the `Composition` to which it belongs. In general, a ControlMechanism is
 used to modulate the `ParameterState(s) <ParameterState>` of one or more Mechanisms, that determine the value(s) of
 the parameter(s) of the `function(s) <Mechanism_Base.function>` of those Mechanism(s). However, a ControlMechanism
@@ -566,7 +566,7 @@ import warnings
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.shellclasses import Composition_Base, System_Base
 from psyneulink.core.components.states.state import State, _parse_state_spec
@@ -696,7 +696,7 @@ class DefaultAllocationFunction(Function_Base):
         return builder
 
 
-class ControlMechanism(AdaptiveMechanism_Base):
+class ControlMechanism(ModulatoryMechanism_Base):
     """
     ControlMechanism(                               \
         system=None,                                \
@@ -713,7 +713,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         name=None,                                  \
         prefs=None)
 
-    Subclass of `AdaptiveMechanism <AdaptiveMechanism>` that modulates the parameter(s)
+    Subclass of `ModulatoryMechanism <ModulatoryMechanism>` that modulates the parameter(s)
     of one or more `Component(s) <Component>`.
 
 
@@ -956,7 +956,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class Parameters(AdaptiveMechanism_Base.Parameters):
+    class Parameters(ModulatoryMechanism_Base.Parameters):
         """
             Attributes
             ----------

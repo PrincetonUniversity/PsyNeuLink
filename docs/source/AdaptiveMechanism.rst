@@ -1,7 +1,7 @@
 Adaptive Mechanisms
 ===================
 
-.. _AdaptiveMechanism_Subtypes:
+.. _ModulatoryMechanism_Subtypes:
 
 .. toctree::
    :maxdepth: 1
@@ -10,6 +10,6 @@ Adaptive Mechanisms
    Control Mechanisms <ControlMechanism>
    Gating Mechanisms <GatingMechanism>
 
-.. automodule:: psyneulink.core.components.mechanisms.adaptive.adaptivemechanism
+.. automodule:: psyneulink.core.components.mechanisms.adaptive.modulatorymechanism
    :members:
    :exclude-members: Linear, random, Parameters

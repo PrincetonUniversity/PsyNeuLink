@@ -24,10 +24,10 @@ specialized validation. Almost any PsyNeuLink Function, including the `UserDefin
 ProcessingMechanism. Currently, the only exception is `BackPropagation`. Subtypes of
 ProcessingMechanism have more specialized features, and often have restrictions on which Functions are allowed.
 
-The output of a ProcessingMechanism may also be used by an `AdaptiveMechanism <AdaptiveMechanism>` to modify the
+The output of a ProcessingMechanism may also be used by a `ModulatoryMechanism <ModulatoryMechanism>` to modify the
 parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
-AdaptiveMechanisms in the Process and/or System to which they belong, so that any modifications made by the
-AdaptiveMechanism are available to all ProcessingMechanisms in the next `TRIAL`.
+ModulatoryMechanisms in the Process and/or System to which they belong, so that any modifications made by the
+ModulatoryMechanism are available to all ProcessingMechanisms in the next `TRIAL`.
 
 .. _ProcessingMechanism_Creation:
 
@@ -84,7 +84,7 @@ A ProcessingMechanism may be executed by calling its execute method directly:
 This option is intended for testing and debugging purposes.
 
 More commonly, a mechanism is executed when the `Process <Process_Execution>` or `System <System_Execution>` to which it
-belongs is run. A ProcessingMechanism always executes before any `AdaptiveMechanisms <AdaptiveMechanism>` in the same
+belongs is run. A ProcessingMechanism always executes before any `ModulatoryMechanisms <ModulatoryMechanism>` in the same
 `Process` or `System`.
 
 """

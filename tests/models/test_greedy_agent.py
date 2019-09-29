@@ -4,7 +4,7 @@ import numpy as np
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.mechanisms.adaptive.control import OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control import OptimizationControlMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.optimizationfunctions import GridSearch, MINIMIZE

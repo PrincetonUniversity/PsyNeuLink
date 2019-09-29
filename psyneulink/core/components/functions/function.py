@@ -35,7 +35,7 @@ more numpy functions).  There are two reasons PsyNeuLink packages functions in a
   PsyNeuLink Function has a set of attributes corresponding to the parameters of the function, that can be specified at
   the time the Function is created (in arguments to its constructor), and can be modified independently
   of a call to its :keyword:`function`. Modifications can be directly (e.g., in a script), or by the operation of other
-  PsyNeuLink Components (e.g., `AdaptiveMechanisms`) by way of `ControlProjections <ControlProjection>`.
+  PsyNeuLink Components (e.g., `ModulatoryMechanisms`) by way of `ControlProjections <ControlProjection>`.
 ..
 * **Modularity** -- by providing a standard interface, any Function assigned to a Components in PsyNeuLink can be
   replaced with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain

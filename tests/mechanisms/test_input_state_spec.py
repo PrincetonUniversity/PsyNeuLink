@@ -3,7 +3,7 @@ import psyneulink as pnl
 import pytest
 
 from psyneulink.core.components.functions.combinationfunctions import Reduce
-from psyneulink.core.components.mechanisms.adaptive.control.gating.gatingmechanism import GatingMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection

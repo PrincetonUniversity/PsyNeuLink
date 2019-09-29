@@ -1086,7 +1086,7 @@ class OutputState(State_Base):
         Assume specification in projections as ModulatoryProjection if it is a:
             ModulatoryProjection
             ModulatorySignal
-            AdaptiveMechanism
+            ModulatoryMechanism
         Call _instantiate_projections_to_state to assign ModulatoryProjections to .mod_afferents
 
         Assume all remaining specifications in projections are for outgoing MappingProjections;

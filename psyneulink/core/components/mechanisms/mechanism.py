@@ -39,8 +39,8 @@ types of Mechanisms in PsyNeuLink:
       System itself.  There are a variety of different types of ProcessingMechanism, that accept various forms of
       input and transform them in different ways (see `ProcessingMechanisms <ProcessingMechanism>` for a list).
     ..
-    * `AdaptiveMechanisms <AdaptiveMechanism>` monitor the output of one or more other Mechanisms, and use this
-      to modulate the parameters of other Mechanisms or Projections.  There are three basic AdaptiveMechanisms:
+    * `ModulatoryMechanisms <ModulatoryMechanism>` monitor the output of one or more other Mechanisms, and use this
+      to modulate the parameters of other Mechanisms or Projections.  There are three basic ModulatoryMechanisms:
 
       * `LearningMechanism <LearningMechanism>` - these receive training (target) values, and compare them with the
         output of a Mechanism to generate `LearningSignals <LearningSignal>` that are used to modify `MappingProjections
@@ -53,8 +53,8 @@ types of Mechanisms in PsyNeuLink:
         `value <State_Base.value>` of the `InputState(s) <InputState>` and/or `OutputState(s) <OutputState>` of other
         Mechanisms.
 
-      Each type of AdaptiveMechanism is associated with a corresponding type of `ModulatorySignal <ModulatorySignal>`
-      (a type of `OutputState` specialized for use with the AdaptiveMechanism) and `ModulatoryProjection
+      Each type of ModulatoryMechanism is associated with a corresponding type of `ModulatorySignal <ModulatorySignal>`
+      (a type of `OutputState` specialized for use with the ModulatoryMechanism) and `ModulatoryProjection
       <ModulatoryProjection>`.
 
 Every Mechanism is made up of four fundamental components:
@@ -661,7 +661,7 @@ Mechanisms that send/receive these:
     * `mod_afferents <Mechanism_Base.afferents>` -- all of the ModulatoryProjections received by the Mechanism;
     * `efferents <Mechanism_Base.efferents>` -- all of the Projections sent by the Mechanism;
     * `senders <Mechanism_Base.senders>` -- all of the Mechanisms that send a Projection to the Mechanism
-    * `modulators <Mechanism_Base.modulators>` -- all of the AdaptiveMechanisms that send a ModulatoryProjection to the
+    * `modulators <Mechanism_Base.modulators>` -- all of the ModulatoryMechanisms that send a ModulatoryProjection to the
       Mechanism
     * `receivers <Mechanism_Base.receivers>` -- all of the Mechanisms that receive a Projection from the Mechanism
 
@@ -1266,11 +1266,11 @@ class Mechanism_Base(Mechanism):
     senders : ContentAddressableList
         a list of all of the Mechanisms that send `Projections <Projection>` to the Mechanism (i.e., the senders of
         its `afferents <Mechanism_Base.afferents>`; this includes both `ProcessingMechanisms <ProcessingMechanism>`
-        (that send `MappingProjections <MappingProjection>` and `AdaptiveMechanisms <AdaptiveMechanism>` (that send
+        (that send `MappingProjections <MappingProjection>` and `ModulatoryMechanisms <ModulatoryMechanism>` (that send
         `ModulatoryProjections <ModulatoryProjection>` (also see `modulators <Mechanism_Base.modulators>`).
 
     modulators : ContentAddressableList
-        a list of all of the `AdapativeMechanisms <AdaptiveMechanism>` that send `ModulatoryProjections
+        a list of all of the `AdapativeMechanisms <ModulatoryMechanism>` that send `ModulatoryProjections
         <ModulatoryProjection>` to the Mechanism (i.e., the senders of its `mod_afferents
         <Mechanism_Base.mod_afferents>` (also see `senders <Mechanism_Base.senders>`).
 
@@ -2997,7 +2997,7 @@ class Mechanism_Base(Mechanism):
                     except KeyError:
                         # # mech_roles = r'\n[{}]'.format(self.system)
                         # mech_roles = r'\n[CONTROLLER]'
-                        from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+                        from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
                         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
                         if isinstance(self, ControlMechanism) and hasattr(self, 'system'):
                             mech_roles = r'\n[CONTROLLER]'

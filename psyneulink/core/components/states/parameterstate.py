@@ -1042,10 +1042,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
             # #                       for constraints before state_spec, which moves items to subdictionaries,
             # #                       which would make them inaccessible to the subsequent parse of state_spec
             from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-            from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+            from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
             if (
                 is_iterable(function_param_value)
-                and any(isinstance(item, (ModulatorySignal, ModulatoryProjection_Base, AdaptiveMechanism_Base)) for item in function_param_value)
+                and any(isinstance(item, (ModulatorySignal, ModulatoryProjection_Base, ModulatoryMechanism_Base)) for item in function_param_value)
             ):
                 reference_value = function_param_value
             else:
@@ -1084,8 +1084,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context, functi
 
 def _is_legal_param_value(owner, value):
 
-    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
-    from psyneulink.core.components.mechanisms.adaptive.control.gating.gatingmechanism import _is_gating_spec
+    from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
+    from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import _is_gating_spec
 
     # LEGAL PARAMETER VALUES:
 

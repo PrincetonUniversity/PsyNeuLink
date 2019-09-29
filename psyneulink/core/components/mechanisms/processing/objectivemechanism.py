@@ -17,7 +17,7 @@ An ObjectiveMechanism is a `ProcessingMechanism <ProcessingMechanism>` that moni
 of one or more other ProcessingMechanisms specified in its `monitor <ObjectiveMechanism.monitor>` attribute,
 and evaluates them using its `function <ObjectiveMechanism.function>`. The result of the evaluation is placed in the
 ObjectiveMechanism's *OUTCOME* (`primary <OutputState_Primary>`) OutputState.  ObjectiveMechanisms are typically used
-closely with (and often created automatically by) `AdaptiveMechanisms <AdaptiveMechanism>`.
+closely with (and often created automatically by) `ModulatoryMechanisms <ModulatoryMechanism>`.
 
 .. _ObjectiveMechanism_Creation:
 
@@ -25,7 +25,7 @@ Creating an ObjectiveMechanism
 ------------------------------
 
 ObjectiveMechanisms are often created automatically when other PsyNeuLink components are created (in particular,
-AdaptiveMechanisms, such as `LearningMechanisms <LearningMechanism_Creation>` and
+ModulatoryMechanisms, such as `LearningMechanisms <LearningMechanism_Creation>` and
 `ControlMechanisms <ControlMechanism_Creation>`).  An ObjectiveMechanism can also be created directly by calling its
 constructor.  The primary attribute used to define an ObjectiveMechanism is its `monitor <ObjectiveMechanism.monitor>`
 attribute, that is specified using the corresponding argument of its constructor as described below.

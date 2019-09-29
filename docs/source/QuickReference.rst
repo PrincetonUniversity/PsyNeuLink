@@ -129,25 +129,24 @@ The four types of Components in PsyNeuLink, Mechanisms, Projections, States and 
      A Mechanism takes one or more inputs received from its afferent `Projections <Projection>`,
      uses its `function <Mechanism_Base.function>` to combine and/or transform these in some way, and makes the output
      available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
-     ProcessingMechanisms and AdaptiveMechanisms:
+     ProcessingMechanisms and ModulatoryMechanisms:
 
      + `ProcessingMechanism`
          Aggregates the inputs it receives from its afferent Projections, transforms them in some way,
          and provides the result as output to its efferent Projections.
 
-     + `AdaptiveMechanism`
+     + `ModulatoryMechanism`
          Uses the input it receives from other Mechanisms to modify the parameters of one or more other
          PsyNeuLink Components.  There are three primary types:
 
-         + `LearningMechanism`
-             Modifies the matrix of a `MappingProjection`.
-
          + `ControlMechanism`
-             Modifies one or more parameters of other Mechanisms.
+             Modifies the parameters, inputs and/or outputs of other Mechanisms.
 
          + `GatingMechanism`
-             Modifies the value of one or more `InputStates <InputState>` and/or `OutputStates <OutputStates>`
-             of other Mechanisms.
+             Modifies the inputs and/or outputs of other Mechanisms.
+
+         + `LearningMechanism`
+             Modifies the matrix of a `MappingProjection`.
 
 * `Projections <Projection>`
    A Projection takes the output of a Mechanism, and transforms it as necessary to provide it
@@ -163,22 +162,22 @@ The four types of Components in PsyNeuLink, Mechanisms, Projections, States and 
          the variable for the `InputState` of another Mechanism.
 
    + `ModulatoryProjection`
-       Used in conjunction with AdaptiveMechanisms to regulate the function of other Components.
-       Takes the output of an `AdaptiveMechanism` and uses it to modify the input, output or parameter of
+       Used in conjunction with ModulatoryMechanisms to regulate the functioning of one or more other Components.
+       Takes the output of a `ModulatoryMechanism` and uses it to modify the input, parameters, and/or output of
        another Component.  There are three types of ModulatoryProjections, corresponding to the three
-       types of AdaptiveMechanisms (see `figure <ModulatorySignal_Anatomy_Figure>`):
-
-       + `LearningProjection`
-            Takes a LearningSignal from a `LearningMechanism` and uses it to modify the matrix of a
-            MappingProjection.
+       types of ModulatoryMechanisms (see `figure <ModulatorySignal_Anatomy_Figure>`):
 
        + `ControlProjection`
-            Takes a ControlSignal from a `ControlMechanism` and uses it to modify the parameter of a
-            ProcessingMechanism.
+            Takes a ControlSignal from a `ControlMechanism` and uses it to modify the input, parameter and/or output
+            of a ProcessingMechanism.
 
        + `GatingProjection`
             Takes a GatingSignal from a `GatingMechanism` and uses it to modulate the input or output of a
             ProcessingMechanism
+
+       + `LearningProjection`
+            Takes a LearningSignal from a `LearningMechanism` and uses it to modify the matrix of a
+            MappingProjection.
 
 * `States <State>`
    A State is a Component that belongs to a `Mechanism` and is used to represent it input(s), the parameter(s)

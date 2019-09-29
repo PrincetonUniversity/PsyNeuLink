@@ -42,8 +42,8 @@ used to send ModulatoryProjections), as summarized in the table below:
    |                   |                    |                        |                 |constructor or its             |
    |                   |                    |                        |                 |`add_states` method            |
    +-------------------+--------------------+------------------------+-----------------+-------------------------------+
-   |`ModulatorySignal  |`AdaptiveMechanism  |provides value for      |                 |`AdaptiveMechanism             |
-   |<ModulatorySignal>`|<AdaptiveMechanism>`|`ModulatoryProjection   |                 |<AdaptiveMechanism>`           |
+   |`ModulatorySignal  |`ModulatoryMechanism  |provides value for      |                 |`ModulatoryMechanism             |
+   |<ModulatorySignal>`|<ModulatoryMechanism>`|`ModulatoryProjection   |                 |<ModulatoryMechanism>`           |
    |                   |                    |<ModulatoryProjection>` |                 |constructor; tuple in State    |
    |                   |                    |                        |                 |or parameter specification     |
    +-------------------+--------------------+------------------------+-----------------+-------------------------------+
@@ -68,7 +68,7 @@ COMMENT:
     OutputState can be modulated by a `ControlSignal` or a `GatingSignal`.
 
 * `ModulatorySignal <ModulatorySignal>`:
-    a subclass of `OutputState` used by `AdaptiveMechanisms <AdaptiveMechanism>` to modulate the value of the primary
+    a subclass of `OutputState` used by `ModulatoryMechanisms <ModulatoryMechanism>` to modulate the value of the primary
     types of States listed above.  There are three types of ModulatorySignals:
 
     * `LearningSignal`, used by a `LearningMechanism` to modulate the *MATRIX* ParameterState of a `MappingProjection`;
@@ -279,8 +279,8 @@ Structure
 
 Every State has an `owner <State_Base.owner>`.  For `InputStates <InputState>` and `OutputStates <OutputState>`, the
 owner must be a `Mechanism <Mechanism>`.  For `ParameterStates <ParameterState>` it can be a Mechanism or a
-`PathwayProjection <PathwayProjection>`. For `ModulatorySignals <ModulatorySignal>`, it must be an `AdaptiveMechanism
-<AdaptiveMechanism>`. When a State is created as part of another Component, its `owner <State_Base.owner>` is
+`PathwayProjection <PathwayProjection>`. For `ModulatorySignals <ModulatorySignal>`, it must be a `ModulatoryMechanism
+<ModulatoryMechanism>`. When a State is created as part of another Component, its `owner <State_Base.owner>` is
 assigned automatically to that Component.  It is also assigned automatically when the State is assigned to a
 `Mechanism <Mechanism>` using that Mechanism's `add_states <Mechanism_Base.add_states>` method.  Otherwise, it must be
 specified explicitly in the **owner** argument of the constructor for the State (in which case it is immediately
@@ -326,7 +326,7 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
       influence of a `ControlSignal` (for a `Mechanism <Mechanism>`) or a `LearningSignal` (for a `MappingProjection`);
       for an OutputState, it conveys the result  of the Mechanism's function to its `output_values
       <Mechanism_Base.output_values>` attribute, under the potential influence of a `GatingSignal`.  See
-      `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated with
+      `ModulatorySignals <ModulatorySignal_Structure>` and the `ModulatoryMechanism <ModulatoryMechanism>` associated with
       each type for a description of how they can be used to modulate the `function <State_Base.function>` of a State.
     ..
     * `value <State_Base.value>`:  for an `InputState` this is the combined value of the `PathwayProjections` it
@@ -2773,7 +2773,7 @@ def _parse_state_spec(state_type=None,
     from psyneulink.core.components.projections.projection \
         import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
     from psyneulink.core.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
-    from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+    from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
     from psyneulink.core.components.projections.projection import _get_projection_value_shape
 
 
@@ -2846,9 +2846,9 @@ def _parse_state_spec(state_type=None,
 
     # ModulatorySpecification of some kind
     if _is_modulatory_spec(state_specification):
-        # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
+        # If it is an ModulatoryMechanism specification, get its ModulatorySignal class
         # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
-        if isinstance(state_specification, type) and issubclass(state_specification, AdaptiveMechanism_Base):
+        if isinstance(state_specification, type) and issubclass(state_specification, ModulatoryMechanism_Base):
             state_specification = state_specification.outputStateTypes
             # IMPLEMENTATION NOTE:  The following is to accomodate GatingSignals on ControlMechanism
             # FIX: TRY ELIMINATING SIMILAR HANDLING IN Projection (and OutputState?)

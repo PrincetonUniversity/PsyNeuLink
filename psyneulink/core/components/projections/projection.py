@@ -42,16 +42,16 @@ each of which has subtypes that differ in the type of information they transmit,
       converts it by convolving it with the MappingProjection's `matrix <MappingProjection.MappingProjection.matrix>`
       parameter, and transmits the result to the `InputState` of another ProcessingMechanism.  Typically,
       MappingProjections are used to connect Mechanisms in the `pathway` of a `Process`, though they can be use for
-      other purposes as well (for example, to convey the output of an `ObjectiveMechanism` to an `AdaptiveMechanism
-      <AdaptiveMechanism>`).
+      other purposes as well (for example, to convey the output of an `ObjectiveMechanism` to a `ModulatoryMechanism
+      <ModulatoryMechanism>`).
 
 * `ModulatoryProjection <ModulatoryProjection>`
-    takes the `value <OutputState.value>` of a `ModulatorySignal <ModulatorySignal>` of an `AdaptiveMechanism
+    takes the `value <OutputState.value>` of a `ModulatorySignal <ModulatorySignal>` of a `ModulatoryMechanism
     <ProcessingMechanism>`, uses it to regulate modify the `value <State_Base.value>` of an `InputState`,
     `ParameterState` or `OutputState` of another Component.  ModulatorySignals are specialized types of `OutputState`,
     that are used to specify how to modify the `value <State_Base.value>` of the `State <State>` to which a
     ModulatoryProjection projects. There are three types of ModulatoryProjections, corresponding to the three types
-    of AdaptiveMechanisms (and corresponding ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`),
+    of ModulatoryMechanisms (and corresponding ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`),
     that project to different types of `States <State>`:
 
   * `LearningProjection`
@@ -285,7 +285,7 @@ of a State are listed in its `projections <State_Base.projections>` attribute.
 This must be an `OutputState` or a `ModulatorySignal <ModulatorySignal>` (a subclass of OutputState specialized for
 `ModulatoryProjections <ModulatoryProjection>`).  The Projection is assigned to the OutputState or ModulatorySignal's
 `efferents <State_Base.efferents>` list and, for ModulatoryProjections, to the list of ModulatorySignals specific to
-the `AdaptiveMechanism <AdaptiveMechanism>` from which it projects.  The OutputState or ModulatorySignal's `value
+the `ModulatoryMechanism <ModulatoryMechanism>` from which it projects.  The OutputState or ModulatorySignal's `value
 <OutputState.value>` is used as the `variable <Function.variable>` for Projection's `function
 <Projection_Base.function>`.
 
@@ -1325,9 +1325,9 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.core.components.states.inputstate import InputState
     from psyneulink.core.components.states.outputstate import OutputState
     from psyneulink.core.components.states.parameterstate import ParameterState
-    from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-    from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
-    from psyneulink.core.components.mechanisms.adaptive.control.gating.gatingmechanism import _is_gating_spec
+    from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
+    from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
+    from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import _is_gating_spec
 
     if not inspect.isclass(connectee_state_type):
         raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
@@ -1368,16 +1368,16 @@ def _parse_connection_specs(connectee_state_type,
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ProjectionTuple THAT HAS BOTH SENDER AND RECEIVER
             # FIX: 11/28/17 - HACKS TO HANDLE PROJECTION FROM GatingSignal TO InputState or OutputState
             # FIX:            AND PROJECTION FROM ControlSignal to ParameterState
-            # # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
+            # # If it is an ModulatoryMechanism specification, get its ModulatorySignal class
             # # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
-            # if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
+            # if isinstance(connection, type) and issubclass(connection, ModulatoryMechanism_Base):
             #     connection = connection.outputStateTypes
             if ((isinstance(connectee_state_type, (InputState, OutputState, ParameterState))
                  or isinstance(connectee_state_type, type)
                 and issubclass(connectee_state_type, (InputState, OutputState, ParameterState)))
                 and _is_modulatory_spec(connection)):
-                # Convert AdaptiveMechanism spec to corresponding ModulatorySignal spec
-                if isinstance(connection, type) and issubclass(connection, AdaptiveMechanism_Base):
+                # Convert ModulatoryMechanism spec to corresponding ModulatorySignal spec
+                if isinstance(connection, type) and issubclass(connection, ModulatoryMechanism_Base):
                     # If the connection supports multiple outputStateTypes,
                     #    get the one compatible with the current connectee:
                     output_state_types = connection.outputStateTypes
@@ -1390,7 +1390,7 @@ def _parse_connection_specs(connectee_state_type,
                             f"({output_state_types}) that can be assigned a modulatory {Projection.__name__} " \
                             f"to {connectee_state_type.__name__} of {owner.name}"
                     connection = output_state_type[0]
-                elif isinstance(connection, AdaptiveMechanism_Base):
+                elif isinstance(connection, ModulatoryMechanism_Base):
                     connection = connection.output_state
 
                 projection_spec = connection

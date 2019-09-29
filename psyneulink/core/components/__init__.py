@@ -72,14 +72,14 @@ from psyneulink.core.components.mechanisms.mechanism import MechanismRegistry
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.defaultprocessingmechanism \
     import DefaultProcessingMechanism_Base
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism \
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism \
     import ControlMechanism
 register_category(entry=ControlMechanism,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
                   context=kwInitPy)
 
-from psyneulink.core.components.mechanisms.adaptive.control.defaultcontrolmechanism \
+from psyneulink.core.components.mechanisms.modulatory.control.defaultcontrolmechanism \
     import DefaultControlMechanism
 register_category(entry=DefaultControlMechanism,
                   base_class=Mechanism_Base,
