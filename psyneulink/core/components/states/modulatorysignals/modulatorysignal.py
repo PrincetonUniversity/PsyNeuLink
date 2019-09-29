@@ -397,20 +397,6 @@ ControlMechanism, or its ControlSignals.  For example, in the following, ``ctl_m
 
 FIX: EXAMPLE HERE
      THEN, AFTER EXAMPLE: MODULATORYSIGNAL'S VALUE IS ASSIGNED TO THE SPECIFIED PARAMETER.
-
-FIX: PUT THIS IN ModulatoryMechanism AND CROSS REFERENCE HERE? OR VICE VERSA?
-EXAMPLE OF MIXED MODULATORY SIGNALS IN MODULATORY MECHANISM
-
-        m = ProcessingMechanism(function=Logistic)
-        c = ModulatoryMechanism(
-                modulatory_signals=[
-                    ControlSignal(name="CS1", modulates=(GAIN, m)),
-                    GatingSignal(name="GS", modulates=m),
-                    ControlSignal(name="CS2", modulates=(BIAS, m)),
-                ]
-        )
-
-
 COMMENT
 
 Class Reference

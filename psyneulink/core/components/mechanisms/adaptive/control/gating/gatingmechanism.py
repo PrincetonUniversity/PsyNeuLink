@@ -99,8 +99,8 @@ Structure
 *Input*
 ~~~~~~~
 
-The input to a GatingMechanism is determined in the same manner as the `input <ModulatoryMechanism_Input>` to
-any `ModulatoryMechanism`.
+The input to a GatingMechanism is determined in the same manner as the `input <ControlMechanism_Input>` to
+any `ControlMechanism`.
 
 .. _GatingMechanism_Function:
 
@@ -108,7 +108,7 @@ any `ModulatoryMechanism`.
 ~~~~~~~~~~
 
 A GatingMechanism's `function <GatingMechanism.function>` is determined and operates in the same manner as the
-`function <ModulatoryMechanism_Function>` of any `ModulatoryMechanism`.
+`function <ControlMechanism_Function>` of any `ControlMechanism`.
 
 .. _GatingMechanism_Output:
 

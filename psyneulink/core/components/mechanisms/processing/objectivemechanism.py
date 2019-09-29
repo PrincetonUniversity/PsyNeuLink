@@ -104,7 +104,7 @@ COMMENT
 
 COMMENT:
 FIX 8/27/19 [JDC]:
-GENERALIZE TO ModulatoryMechanism
+GENERALIZE TO ControlMechanism
 COMMENT
 
 The OutputStates monitored by the ObjectiveMechanism are listed in its `monitor <ObjectiveMechanism.monitor>` attribute.

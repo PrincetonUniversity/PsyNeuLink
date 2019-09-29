@@ -553,7 +553,7 @@ COMMENT
 Controlling a Composition
 -------------------------
 
-A Composition can be assigned a `controller <Composition.controller>`.  This is a `ModulatoryMechanism`, or a subclass
+A Composition can be assigned a `controller <Composition.controller>`.  This is a `ControlMechanism`, or a subclass
 of one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
 It typically does this based on the output of an `ObjectiveMechanism` that evaluates the value of other Mechanisms in
 the Composition, and provides the result to the `controller <Composition.controller>`.
@@ -958,7 +958,7 @@ learning <Composition_Learning_Supervised>`, although it can be used for some fo
 <https://github.com/giannisnik/som>`_).  Second, all of the Components in the Composition are be subject to and must
 be with compatible with learning.   This means that it cannot be used with a Composition that contains any
 `modulatory components <ModulatorySignal_Anatomy_Figure>` or that are subject to modulation, whether by
-ModulatoryMechanisms within or outside the Composition;  this includes a `controller <Composition_Controller>`
+ControlMechanisms within or outside the Composition;  this includes a `controller <Composition_Controller>`
 or any LearningMechanisms.  An AutodiffComposition can be `nested in a Composition <Composition_Nested>`
 that has such other Components.  During learning, none of the internal Components of the AutodiffComposition (e.g.,
 intermediate layers of a neural network model) are accessible to the other Components of the outer Composition,
@@ -3136,9 +3136,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Tuples (Mechanism, `NodeRoles <NodeRole>`) can be used to assign `required_roles
         <Composition.add_node.required_roles>` to Mechanisms.
 
-        Note that any specifications of a ModulatoryMechanism's **monitor_for_control** `argument
-        <ModulatoryMechanism_Monitor_for_control_Argument>` or the **monitor** argument specified in the constructor
-        for an ObjectiveMechanism in the **objective_mechanism** `argument <ModulatoryMechanism_ObjectiveMechanism>`
+        Note that any specifications of a ControlMechanism's **monitor_for_control** `argument
+        <ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument specified in the constructor
+        for an ObjectiveMechanism in the **objective_mechanism** `argument <ControlMechanism_ObjectiveMechanism>`
         supercede any MappingProjections that would otherwise be created for them when specified in the **pathway**
         argument.
         """
@@ -3185,7 +3185,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.add_nodes([pathway[c]])
                 nodes.append(pathway[c])
 
-        # FIX 8/27/19 [JDC]:  GENERALIZE TO ModulatoryMechanism
+        # FIX 8/27/19 [JDC]:  GENERALIZE TO ControlMechanism
         # MODIFIED 8/12/19 NEW: [JDC] - AVOID DUPLCIATE CONTROL_RELATED PROJECTIONS
         # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
         #    and any ObjectiveMechanism that projects to a ControlMechanism,

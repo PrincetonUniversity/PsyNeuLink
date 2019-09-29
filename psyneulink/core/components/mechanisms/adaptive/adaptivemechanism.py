@@ -22,7 +22,8 @@ this need not be the case.
 .. _AdaptiveMechanism_Types:
 
 
-There are four types of AdaptiveMechanism:
+# FIX 9/27/19
+There are three types of AdaptiveMechanism:
 
 * `ModulatoryMechanism`
     takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates an

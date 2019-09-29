@@ -577,9 +577,9 @@ class ControlSignal(ModulatorySignal):
         .. note::
 
         A ControlSignal's `adjustment_cost`, and its `adjustment_cost_function` are distinct from the
-        `reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>` and `compute_reconfiguration_cost
-        <ModulatoryMechanism.compute_reconfiguration_cost` function of the `ModulatoryMechanism` to which the
-        ControlSignal belongs (see `ModulatoryMechanism Reconfiguration Cost <ModulatoryMechanism_Reconfiguration_Cost>`
+        `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` and `compute_reconfiguration_cost
+        <ControlMechanism.compute_reconfiguration_cost` function of the `ControlMechanism` to which the
+        ControlSignal belongs (see `ControlMechanism Reconfiguration Cost <ControlMechanism_Reconfiguration_Cost>`
         for additional details).
 
     duration_cost_function : IntegratorFunction : default Linear
