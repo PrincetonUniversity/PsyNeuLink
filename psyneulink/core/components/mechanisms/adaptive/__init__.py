@@ -1,13 +1,12 @@
 from . import adaptivemechanism
-from psyneulink.core.components.mechanisms.adaptive.control import controlmechanism
+from psyneulink.core.components.mechanisms.adaptive.control import controlmechanism, gating
 from . import control
-from . import gating
 from . import learning
 
 from .adaptivemechanism import *
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import *
 from .control import *
-from .gating import *
+from psyneulink.core.components.mechanisms.adaptive.control.gating import *
 from .learning import *
 
 __all__ = list(control.__all__)

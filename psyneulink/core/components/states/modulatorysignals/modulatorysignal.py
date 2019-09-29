@@ -433,7 +433,7 @@ __all__ = [
 def _is_modulatory_spec(spec, include_matrix_spec=True):
     from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import _is_learning_spec
     from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
-    from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
+    from psyneulink.core.components.mechanisms.adaptive.control.gating.gatingmechanism import _is_gating_spec
 
     if (_is_learning_spec(spec, include_matrix_spec=include_matrix_spec)
         or _is_control_spec(spec)

@@ -2,7 +2,7 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
+from psyneulink.core.components.mechanisms.adaptive.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.states.modulatorysignals.gatingsignal import GatingSignal
 

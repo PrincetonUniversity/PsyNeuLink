@@ -247,7 +247,6 @@ class TestProjectionSpecificationFormats:
             (0.3, pnl.GatingSignal()),
             (0.3, pnl.ControlSignal()),
             (0.3, pnl.GatingProjection),
-
             (0.3, pnl.ControlProjection),
             (0.3, "GP_OBJECT"),
             (0.3, pnl.GatingMechanism),
@@ -272,12 +271,12 @@ class TestProjectionSpecificationFormats:
                 IN_NAME = G_IN[1]
             else:
                 IN_NAME = G_IN
-            IN_CONTROL = pnl.CONTROL in repr(IN_NAME).upper()
+            IN_CONTROL = pnl.CONTROL in repr(IN_NAME).split(".")[-1].upper()
             if isinstance(G_OUT, tuple):
                 OUT_NAME = G_OUT[1]
             else:
                 OUT_NAME = G_OUT
-            OUT_CONTROL = pnl.CONTROL in repr(OUT_NAME).upper()
+            OUT_CONTROL = pnl.CONTROL in repr(OUT_NAME).split(".")[-1].upper()
 
             T = pnl.TransferMechanism(name='T-GATING-{}'.format(i),
                                       input_states=[G_IN],

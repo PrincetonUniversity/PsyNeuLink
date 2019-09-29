@@ -1327,7 +1327,7 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.core.components.states.parameterstate import ParameterState
     from psyneulink.core.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
     from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
-    from psyneulink.core.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
+    from psyneulink.core.components.mechanisms.adaptive.control.gating.gatingmechanism import _is_gating_spec
 
     if not inspect.isclass(connectee_state_type):
         raise ProjectionError("Called for {} with \'connectee_state_type\' arg ({}) that is not a class".
