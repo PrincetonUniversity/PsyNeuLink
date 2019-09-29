@@ -52,7 +52,7 @@ COMMENT:
 
 * `InputState`:
     used by a Mechanism to receive input from `MappingProjections <MappingProjection>`;
-    its value can be modulated by a `GatingSignal`.
+    its value can be modulated by a `ControlSignal` or a `GatingSignal`.
 
 * `ParameterState`:
     * used by a Mechanism to represent the value of one of its parameters, or a parameter of its
@@ -65,7 +65,7 @@ COMMENT:
     `ProcessingMechanisms <ProcessingMechanism>` these are `PathwayProjections <PathwayProjection>`, most commonly
     `MappingProjections <MappingProjection>`.  For `ModulatoryMechanisms <ModulatoryMechanism>`, these are
     `ModulatoryProjections <ModulatoryProjection>` as described below. The `value <OutputState.value>` of an
-    OutputState can be modulated by a `GatingSignal`.
+    OutputState can be modulated by a `ControlSignal` or a `GatingSignal`.
 
 * `ModulatorySignal <ModulatorySignal>`:
     a subclass of `OutputState` used by `AdaptiveMechanisms <AdaptiveMechanism>` to modulate the value of the primary
@@ -2855,9 +2855,9 @@ def _parse_state_spec(state_type=None,
             # FIX: AND ANY OTHER PLACES WHERE LISTS ARE DEALT WITH
             if isinstance(state_specification, list):
                 # If modulatory projection is specified as a Mechanism that allows more than one type of OutputState
-                #   (e.g., ModulatoryMechanism allows both ControlSignals or GatingSignals as its OutputStates)
-                #   make sure that only one of these is appropriate for state to be modulated (state_type.connectswith),
-                #   otherwise it is ambiguous which to assign as state_specification
+                #   (e.g., ModulatoryMechanism allows either ControlSignals or GatingSignals together with standard
+                #   OutputStates) make sure that only one of these is appropriate for state to be modulated
+                #   (state_type.connectswith), otherwise it is ambiguous which to assign as state_specification
                 specs = [s for s in state_specification if s.__name__ in state_type.connectsWith]
                 try:
                     state_specification, = specs

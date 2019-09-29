@@ -43,13 +43,14 @@ or *modulate* the transmission and transformation of information, by way of `Mod
 <ModulatoryProjecdtion>` to the Components they modulate.  PsyNeuLink provides a library of Components of
 each type.  For example, there is a variety of ProcessingMechanisms that can be used to transform, integrate, and
 evaluate information in various ways (e.g., to implement layers of a feedforward or recurrent neural network, or a
-drift diffusion decision process); and there are `ModulatoryMechanisms <ModulatoryMechanism>` and `LearningMechanisms
-<LearningMechanism>` that can be used to modulate the functioning of ProcessingMechanisms and modify Projections,
-respectively.  The `function <Mechanism_Base.function>` of a Mechanism defines the operation it carries out.
-PsyNeuLink provides a rich `library <Functions>` of mathematical, statistical and matrix manipulation functions.
-However, a Mechanism can also be assigned any Python function that is consistent with that Mechanism's type (see
-`BasicsAndSampler_Customization`).  Since Mechanisms can implement virtually any function, Projections ensure that
-they can "communicate" with each other seamlessly.
+drift diffusion decision process); and there are `ModulatoryMechanisms <ModulatoryMechanism>`, including
+`ControlMechanisms <ControlMechanism>`  that can be used modulate the functioning of ProcessingMechanisms, and
+`LearningMechanisms <LearningMechanism>` that can be used to modify Projections, respectively.  The `function
+<Mechanism_Base.function>` of a Mechanism defines the operation it carries out. PsyNeuLink provides a rich `library
+<Functions>` of mathematical, statistical and matrix manipulation functions. However, a Mechanism can also be
+assigned any Python function that is consistent with that Mechanism's type (see `BasicsAndSampler_Customization`).
+Since Mechanisms can implement virtually any function, Projections ensure that they can "communicate" with each other
+seamlessly.
 
 Together, these elements allow PsyNeuLink to implement and integrate processes of different types, levels of analysis,
 and/or time scales of operation, composing them into a coherent system.  This affords modelers the flexibility to
@@ -725,7 +726,7 @@ receive as input from any other Mechanisms that project to it.  When a Python fu
 `function <Mechanism_Base.function>` of Mechanism (or any other Component in PsyNeuLink), it is automatically
 "wrapped" as a `UserDefinedFunction`, a special class of PsyNeuLink `Function <Functions>` that integrates it with
 PsyNeuLink:  in addition to making its first argument available as the input to the Component to which it is assigned,
-it also makes its parameters available for modulation by `ModulatoryMechanisms <ModulatoryMechanism>`.  For example,
+it also makes its parameters available for modulation by `ControlMechanisms <ControlMechanism>`.  For example,
 notice that ``my_sinusoidal_fct`` has two other arguments, in addition to its ``input``: ``phase`` and ``amplitude``.
 As a result, the phase and amplitude of ``my_wave_mech`` can be modulated in by referencing them in the constructor of a
 `ControlMechanism`::

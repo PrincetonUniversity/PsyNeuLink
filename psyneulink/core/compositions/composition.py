@@ -1770,7 +1770,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                              GRAPH
     # ******************************************************************************************************************
 
-    def _analyze_graph(self, scheduler=None):
+    def _analyze_graph(self, scheduler=None, context=None):
         """
         Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
 
@@ -1786,13 +1786,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         for n in self.nodes:
             try:
-                n._analyze_graph()
+                n._analyze_graph(context=context)
             except AttributeError:
                 pass
 
         self._check_feedback(scheduler)
-        self._determine_node_roles()
-        self._create_CIM_states()
+        self._determine_node_roles(context=context)
+        self._create_CIM_states(context)
         self._update_shadow_projections()
         self._check_for_projection_assignments()
         self.needs_update_graph = False
@@ -2153,7 +2153,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               visited_compositions)
         return nested_compositions
 
-    def _determine_node_roles(self):
+    def _determine_node_roles(self, context=None):
 
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
@@ -2284,7 +2284,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes_to_roles[node].remove(role)
 
     tc.typecheck
-
     def _create_CIM_states(self, context=None):
         """
             - remove the default InputState and OutputState from the CIMs if this is the first time that real
@@ -4249,7 +4248,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_state
             #               CALLED FROM _instantiate_control_signal
             #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
-            # Don't add any that are already on the ModulatoryMechanism
+            # Don't add any that are already on the ControlMechanism
 
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
             controller._instantiate_control_signal(control_signal=ctl_sig_spec,
@@ -5452,7 +5451,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # get all Nodes
         # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
         if output_fmt != 'gv':
-            self._analyze_graph()
+            self._analyze_graph(context=context)
         processing_graph = self.graph_processing.dependency_dict
         rcvrs = list(processing_graph.keys())
 
@@ -6112,15 +6111,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #      THIS IS NEEDED HERE (AND NO LATER) TO WORK WITH test_3_mechanisms_2_origins_1_additive_control_1_terminal
         # If a scheduler was passed in, first call _analyze_graph with default scheduler
         if scheduler_processing is not self.scheduler_processing:
-            self._analyze_graph()
+            self._analyze_graph(context=context)
         # Then call _analyze graph with scheduler actually being used (passed in or default)
         try:
             if ContextFlags.SIMULATION not in context.execution_phase:
-                self._analyze_graph(scheduler_processing)
+                self._analyze_graph(scheduler=scheduler_processing, context=context)
         except AttributeError:
             # if context is None, it has not been created for this context yet,
             # so it is not in a simulation
-            self._analyze_graph(scheduler_processing)
+            self._analyze_graph(scheduler=scheduler_processing, context=context)
         # MODIFIED 8/27/19 END
 
         # set auto logging if it's not already set, and if log argument is True
