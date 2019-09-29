@@ -5,441 +5,556 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
-
-# **************************************  ModulatoryMechanism ************************************************
-
+# **************************************  ControlMechanism ************************************************
 
 """
 Sections
 --------
 
-  * `ModulatoryMechanism_Overview`
-  * `ModulatoryMechanism_Creation`
-      - `ModulatoryMechanism_Monitor_for_control`
-      - `ModulatoryMechanism_ObjectiveMechanism`
-      - `ModulatoryMechanism_Modulatory_Signals`
-  * `ModulatoryMechanism_Structure`
-      - `ModulatoryMechanism_Input`
-      - `ModulatoryMechanism_Function`
-      - `ModulatoryMechanism_Output`
-  * `ModulatoryMechanism_Execution`
-  * `ModulatoryMechanism_Examples`
-  * `ModulatoryMechanism_Class_Reference`
+  * `ControlMechanism_Overview`
+  * `ControlMechanism_Composition_Controller`
+  * `ControlMechanism_Creation`
+      - `ControlMechanism_Monitor_for_Control`
+      - `ControlMechanism_ObjectiveMechanism`
+      - `ControlMechanism_Control_Signals`
+  * `ControlMechanism_Structure`
+      - `ControlMechanism_Input`
+      - `ControlMechanism_Function`
+      - 'ControlMechanism_Output`
+      - `ControlMechanism_Costs_NetOutcome`
+  * `ControlMechanism_Execution`
+  * `ControlMechanism_Examples`
+  * `ControlMechanism_Class_Reference`
 
-.. _ModulatoryMechanism_Overview:
+.. _ControlMechanism_Overview:
 
 Overview
 --------
 
-A ModulatoryMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that `modulates the value(s)
-<ModulatorySignal_Modulation>` of one or more `States <State>` of other Mechanisms in the `Composition` to which it
-belongs.  It's `function <ModulatoryMechanism.function>` calculates a `modulatory_allocation
-<ModulatoryMechanism.modulatory_allocation>`: a list of values provided to each of its `modulatory_signals
-<ModulatoryMechanism.modulatory_signals>`.  These can be `ControlSignals <ControlSignal>` and/or `GatingSignals
-<GatingSignal>`.  In general, `ControlSignals <ControlSignal>` are used to modulate the value of a `ParameterState
-<ParameterState>` of another Mechanism, but can also be used to modulate the value of an `InputState` or
-`OutputState`.  `GatingSignals <GatingSignal>` are restricting to modulating only an `InputState` or `OutputState`.
-A ModulatoryMechanism can be configured to monitor the outputs of other Mechanisms in order to determine its
-`modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`, by specifying these in the
-**monitor_for_control** `argument <ModulatoryMechanism_Monitor_for_control_Argument>` of its constructor, or in
-the **monitor** `argument <ObjectiveMechanism_Monitor>` of an ObjectiveMechanism` assigned to its
-**objective_mechanism** `argument <ModulatoryMechanism_Objective_Mechanism_Argument>` (see
-`ModulatoryMechanism_Monitor_for_control` below).
+A ControlMechanism is a `ModulatoryMechanism` that `modulates the value(s) <ModulatorySignal_Modulation>` of one or
+more `States <State>` of other Mechanisms in the `Composition` to which it belongs. In general, a ControlMechanism is
+used to modulate the `ParameterState(s) <ParameterState>` of one or more Mechanisms, that determine the value(s) of
+the parameter(s) of the `function(s) <Mechanism_Base.function>` of those Mechanism(s). However, a ControlMechanism
+can also be used to modulate the function of `InputStates <InputState>` and/or `OutputState <OutputStates>`,
+much like a `GatingMechanism`.  A ControlMechanism's `function <ControlMechanism.function>` calculates a
+`control_allocation <ControlMechanism.control_allocation>`: a list of values provided to each of its `control_signals
+<ControlMechanism.control_signals>`.  Its control_signals are `ControlSignal` OutputStates that are used to modulate
+the parameters of other Mechanisms' `function <Mechanism_Base.function>` (see `ControlSignal_Modulation` for a more
+detailed description of how modulation operates).  A ControlMechanism can be configured to monitor the outputs of
+other Mechanisms in order to determine its `control_allocation <ControlMechanism.control_allocation>`, by specifying
+these in the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>` of its constructor,
+or in the **monitor** `argument <ObjectiveMechanism_Monitor>` of an ObjectiveMechanism` assigned to its
+**objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>` (see `ControlMechanism_Creation`
+below).  A ControlMechanism can also be assigned as the `controller <Composition.controller>` of a `Composition`,
+which has a special relation to that Composition: it generally executes either before or after all of the other
+Mechanisms in that Composition (see `Composition_Controller_Execution`).  The OutputStates monitored by the
+ControlMechanism or its `objective_mechanism <ControlMechanism.objective_mechanism>`, and the parameters it modulates
+can be listed using its `show <ControlMechanism.show>` method.
+
+Note that a ControlMechanism is a subclass of `ModulatoryMechanism` that is restricted to using only `ControlSignals
+<ControlSignal>`.  Accordingly, its constructor has a **control_signals** argument in place of a **modulatory_signals**
+argument, and it lacks any attributes related to gating.  In all other respects it is identical to its parent class,
+ModulatoryMechanism.
+
+.. _ControlMechanism_Composition_Controller:
+
+*ControlMechanisms and a Composition*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A ControlMechanism can be assigned to a `Composition` and executed just like any other Mechanism. It can also be
+assigned as the `controller <Composition.controller>` of a `Composition`, that has a special relation
+to the Composition: it is used to control all of the parameters that have been `specified for control
+<ControlMechanism_Control_Signals>` in that Composition.  A ControlMechanism can be the `controller
+<Composition.controller>` for only one Composition, and a Composition can have only one `controller
+<Composition.controller>`.  When a ControlMechanism is assigned as the `controller <Composition.controller>` of a
+Composition (either in the Composition's constructor, or using its `add_controller <Composition.add_controller>`
+method, the ControlMechanism assumes control over all of the parameters that have been `specified for control
+<ControlMechanism_Control_Signals>` for Components in the Composition.  The Composition's `controller
+<Composition.controller>` is executed either before or after all of the other Components in the Composition are
+executed, including any other ControlMechanisms that belong to it (see `Composition_Controller_Execution`).  A
+ControlMechanism can be assigned as the `controller <Composition.controller>` for a Composition by specifying it in
+the **controller** argument of the Composition's constructor, or by using the Composition's `add_controller
+<Composition.add_controller>` method.  A Composition's `controller <Composition.controller>` and its associated
+Components can be displayed using the Composition's `show_graph <Composition.show_graph>` method with its
+**show_control** argument assigned as `True`.
 
 
-.. _ModulatoryMechanism_Creation:
+.. _ControlMechanism_Creation:
 
-Creating a ModulatoryMechanism
-------------------------------
+Creating a ControlMechanism
+---------------------------
 
-A ModulatoryMechanism is created by calling its constructor.  When a ModulatoryMechanism is created, the OutputStates it
-monitors and the States it modulates can be specified can be specified in the **montior_for_modulation** and
-**objective_mechanism** arguments of its constructor, respectively.  Each can be specified in several ways,
-as described below. If neither of those arguments is specified, then only the ModulatoryMechanism is constructed,
-and its inputs and the parameters it modulates must be specified in some other way.
+A ControlMechanism is created by calling its constructor.  When a ControlMechanism is created, the OutputStates it
+monitors and the States it modulates can be specified in the **montior_for_control** and **objective_mechanism**
+arguments of its constructor, respectively.  Each can be specified in several ways, as described below. If neither of
+those arguments is specified, then only the ControlMechanism is constructed, and its inputs and the parameters it
+modulates must be specified in some other way.
 
-
-.. _ModulatoryMechanism_Monitor_for_control:
+.. _ControlMechanism_Monitor_for_Control:
 
 *Specifying OutputStates to be monitored*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ModulatoryMechanism can be configured to monitor the output of other Mechanisms directly (by receiving direct
+A ControlMechanism can be configured to monitor the output of other Mechanisms directly (by receiving direct
 Projections from their OutputStates), or by way of an `ObjectiveMechanism` that evaluates those outputs and passes the
-result to the ModulatoryMechanism (see `below <ModulatoryMechanism_ObjectiveMechanism>` for more detailed description).
+result to the ControlMechanism (see `below <ControlMechanism_ObjectiveMechanism>` for more detailed description).
+The following figures show an example of each:
 
-Which configuration is used is determined by how the following arguments of the ModulatoryMechanism's constructor are
-specified:
++-------------------------------------------------------------------------+----------------------------------------------------------------------+
+| .. figure:: _static/ControlMechanism_without_ObjectiveMechanism_fig.svg | .. figure:: _static/ControlMechanism_with_ObjectiveMechanism_fig.svg |
++-------------------------------------------------------------------------+----------------------------------------------------------------------+
 
-  .. _ModulatoryMechanism_Monitor_for_control_Argument:
+COMMENT:
+FIX: USE THIS IF MOVED TO SECTION AT END THAT CONSOLIDATES EXAMPLES
+**ControlMechanism with and without ObjectiveMechanism**
+
++-------------------------------------------------------------------------+-------------------------------------------------------------------------+
+| >>> mech_A = ProcessingMechanism(name='ProcessingMechanism A')          | .. figure:: _static/ControlMechanism_without_ObjectiveMechanism_fig.svg |
+| >>> mech_B = ProcessingMechanism(name='ProcessingMechanism B')          |                                                                         |
+| >>> ctl_mech = ControlMechanism(name='ControlMechanism',                |                                                                         |
+| ...                             monitor_for_control=[mech_A,            |                                                                         |
+| ...                                                  mech_B],           |                                                                         |
+| ...                             control_signals=[(SLOPE,mech_A),        |                                                                         |
+| ...                                              (SLOPE,mech_B)])       |                                                                         |
+| >>> comp = Composition()                                                |                                                                         |
+| >>> comp.add_linear_processing_pathway([mech_A,mech_B, ctl_mech])       |                                                                         |
+| >>> comp.show_graph()                                                   |                                                                         |
++-------------------------------------------------------------------------+-------------------------------------------------------------------------+
+| >>> mech_A = ProcessingMechanism(name='ProcessingMechanism A')          | .. figure:: _static/ControlMechanism_with_ObjectiveMechanism_fig.svg    |
+| >>> mech_B = ProcessingMechanism(name='ProcessingMechanism B')          |                                                                         |
+| >>> ctl_mech = ControlMechanism(name='ControlMechanism',                |                                                                         |
+| ...                             monitor_for_control=[mech_A,            |                                                                         |
+| ...                                                  mech_B],           |                                                                         |
+| ...                             objective_mechanism=True,               |                                                                         |
+| ...                             control_signals=[(SLOPE,mech_A),        |                                                                         |
+| ...                                              (SLOPE,mech_B)])       |                                                                         |
+| >>> comp = Composition()                                                |                                                                         |
+| >>> comp.add_linear_processing_pathway([mech_A,mech_B, ctl_mech])       |                                                                         |
+| >>> comp.show_graph()                                                   |                                                                         |
++-------------------------------------------------------------------------+-------------------------------------------------------------------------+
+COMMENT
+
+Note that, in the figures above, the `ControlProjections <ControlProjection>` are designated with square "arrowheads",
+and the ControlMechanisms are shown as septagons to indicate that their ControlProjections create a feedback loop
+(see `Composition_Initial_Values_and_Feedback`;  also, see `below <ControlMechanism_Add_Linear_Processing_Pathway>`
+regarding specification of a ControlMechanism and associated ObjectiveMechanism in a Composition's
+`add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method).
+
+Which configuration is used is determined by how the following arguments of the ControlMechanism's constructor are
+specified (also see `ControlMechanism_Examples`):
+
+  .. _ControlMechanism_Monitor_for_Control_Argument:
 
   * **monitor_for_control** -- a list of `OutputState specifications <OutputState_Specification>`.  If the
-    **objective_mechanism** argument is not specified (or is *False* or *None*) then, when the ModulatoryMechanism is
-    added to a `Composition`, a `MappingProjection` is created for each OutputState specified to the
-    ModulatoryMechanism's *OUTCOME* `input_state <ModulatoryMechanism_Input>`.  If the **objective_mechanism** `argument
-    <ModulatoryMechanism_Objective_Mechanism_Argument>` is specified, then the OutputStates specified in
-    **monitor_for_control** are assigned to the `ObjectiveMechanism` rather than the ModulatoryMechanism itself (see
-    `ModulatoryMechanism_ObjectiveMechanism` for details).
+    **objective_mechanism** argument is not specified (or is *False* or *None*) then, when the ControlMechanism is
+    added to a `Composition`, a `MappingProjection` is created for each OutputState specified to the ControlMechanism's
+    *OUTCOME* `input_state <ControlMechanism_Input>`.  If the **objective_mechanism** `argument
+    <ControlMechanism_Objective_Mechanism_Argument>` is specified, then the OutputStates specified in
+    **monitor_for_control** are assigned to the `ObjectiveMechanism` rather than the ControlMechanism itself (see
+    `ControlMechanism_ObjectiveMechanism` for details).
 
-  .. _ModulatoryMechanism_Objective_Mechanism_Argument:
+  .. _ControlMechanism_Objective_Mechanism_Argument:
 
   * **objective_mechanism** -- if this is specfied in any way other than **False** or **None** (the default),
-    then an ObjectiveMechanism is created that projects to the ModulatoryMechanism and, when added to a `Composition`,
+    then an ObjectiveMechanism is created that projects to the ControlMechanism and, when added to a `Composition`,
     is assigned Projections from all of the OutputStates specified either in the  **monitor_for_control** argument of
-    the ModulatoryMechanism's constructor, or the **monitor** `argument <ObjectiveMechanism_Monitor>` of the
-    ObjectiveMechanism's constructor (see `ModulatoryMechanism_ObjectiveMechanism` for details).  The
+    the ControlMechanism's constructor, or the **monitor** `argument <ObjectiveMechanism_Monitor>` of the
+    ObjectiveMechanism's constructor (see `ControlMechanism_ObjectiveMechanism` for details).  The
     **objective_mechanism** argument can be specified in any of the following ways:
 
-    - *False or None* -- no ObjectiveMechanism is created and, when the ModulatoryMechanism is added to a
-      `Composition`, Projections from the OutputStates specified in the ModulatoryMechanism's **monitor_for_control**
-      argument are sent directly to ModulatoryMechanism (see specification of **monitor_for_control** `argument
-      <ModulatoryMechanism_Monitor_for_control_Argument>`).
+    - *False or None* -- no ObjectiveMechanism is created and, when the ControlMechanism is added to a
+      `Composition`, Projections from the OutputStates specified in the ControlMechanism's **monitor_for_control**
+      argument are sent directly to ControlMechanism (see specification of **monitor_for_control** `argument
+      <ControlMechanism_Monitor_for_Control_Argument>`).
 
-    - *True* -- an `ObjectiveMechanism` is created that projects to the ModulatoryMechanism, and any OutputStates
-      specified in the ModulatoryMechanism's **monitor_for_control** argument are assigned to ObjectiveMechanism's
-      **monitor** `argument <ObjectiveMechanism_Monitor>` instead (see `ModulatoryMechanism_ObjectiveMechanism` for
+    - *True* -- an `ObjectiveMechanism` is created that projects to the ControlMechanism, and any OutputStates
+      specified in the ControlMechanism's **monitor_for_control** argument are assigned to ObjectiveMechanism's
+      **monitor** `argument <ObjectiveMechanism_Monitor>` instead (see `ControlMechanism_ObjectiveMechanism` for
       additional details).
 
     - *a list of* `OutputState specifications <ObjectiveMechanism_Monitor>`; an ObjectiveMechanism is created that
-      projects to the ModulatoryMechanism, and the list of OutputStates specified, together with any specified in the
-      ModulatoryMechanism's **monitor_for_control** `argument <ModulatoryMechanism_Monitor_for_control_Argument>`,
-      are assigned to the ObjectiveMechanism's **monitor** `argument <ObjectiveMechanism_Monitor>` (see
-      `ModulatoryMechanism_ObjectiveMechanism` for additional details).
+      projects to the ControlMechanism, and the list of OutputStates specified, together with any specified in the
+      ControlMechanism's **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`, are
+      assigned to the ObjectiveMechanism's **monitor** `argument <ObjectiveMechanism_Monitor>` (see
+      `ControlMechanism_ObjectiveMechanism` for additional details).
 
     - *a constructor for an* `ObjectiveMechanism` -- the specified ObjectiveMechanism is created, adding any
-      OutputStates specified in the ModulatoryMechanism's **monitor_for_control** `argument
-      <ModulatoryMechanism_Monitor_for_control_Argument>` to any specified in the ObjectiveMechanism's **monitor**
+      OutputStates specified in the ControlMechanism's **monitor_for_control** `argument
+      <ControlMechanism_Monitor_for_Control_Argument>` to any specified in the ObjectiveMechanism's **monitor**
       `argument <ObjectiveMechanism_Monitor>` .  This can be used to specify the `function
       <ObjectiveMechanism.function>` used by the ObjectiveMechanism to evaluate the OutputStates monitored as well as
       how it weights those OutputStates when they are evaluated  (see `below
-      <ModulatoryMechanism_ObjectiveMechanism_Function>` for additional details).
+      <ControlMechanism_ObjectiveMechanism_Function>` for additional details).
 
-    - *an existing* `ObjectiveMechanism` -- for any OutputStates specified in the ModulatoryMechanism's
-      **monitor_for_control** `argument <ModulatoryMechanism_Monitor_for_control_Argument>`, an InputState is
-      added to the ObjectiveMechanism, along with `MappingProjection` to it from the specified OutputState.    This
-      can be used to specify an ObjectiveMechanism with a custom `function <ObjectiveMechanism.function>` and
-      weighting of the OutputStates monitored (see `below <ModulatoryMechanism_ObjectiveMechanism_Function>` for
-      additional details).
+    - *an existing* `ObjectiveMechanism` -- for any OutputStates specified in the ControlMechanism's
+      **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`, an InputState is added to the
+      ObjectiveMechanism, along with `MappingProjection` to it from the specified OutputState.    This can be used to
+      specify an ObjectiveMechanism with a custom `function <ObjectiveMechanism.function>` and weighting of the
+      OutputStates monitored (see `below <ControlMechanism_ObjectiveMechanism_Function>` for additional details).
 
-The OutputStates monitored by a ModulatoryMechanism or its `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>` are listed in the ModulatoryMechanism's `monitor_for_control
-<ModulatoryMechanism.monitor_for_control>` attribute (and are the same as those listed in the `monitor
-<ObjectiveMechanism.monitor>` attribute of the `objective_mechanism <ModulatoryMechanism.objective_mechanism>`,
-if specified).
+The OutputStates monitored by a ControlMechanism or its `objective_mechanism <ControlMechanism.objective_mechanism>`
+are listed in the ControlMechanism's `monitor_for_control <ControlMechanism.monitor_for_control>` attribute
+(and are the same as those listed in the `monitor <ObjectiveMechanism.monitor>` attribute of the
+`objective_mechanism <ControlMechanism.objective_mechanism>`, if specified).
 
-.. _ModulatoryMechanism_Add_Linear_Processing_Pathway:
+.. _ControlMechanism_Add_Linear_Processing_Pathway:
 
-Note that the MappingProjections created by specification of a ModulatoryMechanism's **monitor_for_control**
-`argument <ModulatoryMechanism_Monitor_for_control_Argument>` or the **monitor** argument in the constructor for an
-ObjectiveMechanism in the ModulatoryMechanism's **objective_mechanism** `argument
-<ModulatoryMechanism_Objective_Mechanism_Argument>` supercede any MappingProjections that would otherwise be created for
+Note that the MappingProjections created by specification of a ControlMechanism's **monitor_for_control** `argument
+<ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument in the constructor for an
+ObjectiveMechanism in the ControlMechanism's **objective_mechanism** `argument
+<ControlMechanism_Objective_Mechanism_Argument>` supercede any MappingProjections that would otherwise be created for
 them when included in the **pathway** argument of a Composition's `add_linear_processing_pathway
 <Composition.add_linear_processing_pathway>` method.
 
+.. _ControlMechanism_ObjectiveMechanism:
 
-.. _ModulatoryMechanism_ObjectiveMechanism:
+Objective Mechanism
+^^^^^^^^^^^^^^^^^^^
 
+COMMENT:
+TBI FOR COMPOSITION
+If the ControlMechanism is created automatically by a System (as its `controller <System.controller>`), then the
+specification of OutputStates to be monitored and parameters to be controlled are made on the System and/or the
+Components themselves (see `System_Control_Specification`).  In either case, the Components needed to monitor the
+specified OutputStates (an `ObjectiveMechanism` and `Projections <Projection>` to it) and to control the specified
+parameters (`ControlSignals <ControlSignal>` and corresponding `ControlProjections <ControlProjection>`) are created
+automatically, as described below.
+COMMENT
 
-ObjectiveMechanism
-^^^^^^^^^^^^^^^^^^
-
-If an `ObjectiveMechanism` is specified for a ModulatoryMechanism (in the **objective_mechanism** `argument
-<ModulatoryMechanism_Objective_Mechanism_Argument>` of its constructor; also see `ModulatoryMechanism_Examples`),
-it is assigned to the ModulatoryMechanism's `objective_mechanism <ModulatoryMechanism.objective_mechanism>` attribute,
+If an `ObjectiveMechanism` is specified for a ControlMechanism (in the **objective_mechanism** `argument
+<ControlMechanism_Objective_Mechanism_Argument>` of its constructor; also see `ControlMechanism_Examples`),
+it is assigned to the ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` attribute,
 and a `MappingProjection` is created automatically that projects from the ObjectiveMechanism's *OUTCOME*
-`output_state <ObjectiveMechanism_Output>` to the *OUTCOME* `input_state <ModulatoryMechanism_Input>` of the
-ModulatoryMechanism.
+`output_state <ObjectiveMechanism_Output>` to the *OUTCOME* `input_state <ControlMechanism_Input>` of the
+ControlMechanism.
 
-The `objective_mechanism <ModulatoryMechanism.objective_mechanism>` is used to monitor the OutputStates specified in
-the **monitor_for_control** `argument <ModulatoryMechanism_Monitor_for_control_Argument>` of the
-ModulatoryMechanism's constructor, as well as any specified in the **monitor** `argument <ObjectiveMechanism_Monitor>`
-of the ObjectiveMechanism's constructor.  Specifically, for each OutputState specified in either place, an `input_state
+The `objective_mechanism <ControlMechanism.objective_mechanism>` is used to monitor the OutputStates
+specified in the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>` of the
+ControlMechanism's constructor, as well as any specified in the **monitor** `argument <ObjectiveMechanism_Monitor>` of
+the ObjectiveMechanism's constructor.  Specifically, for each OutputState specified in either place, an `input_state
 <ObjectiveMechanism.input_states>` is added to the ObjectiveMechanism.  OutputStates to be monitored (and
 corresponding `input_states <ObjectiveMechanism.input_states>`) can be added to the `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>` later, by using its `add_to_monitor <ObjectiveMechanism.add_to_monitor>`
-method. The set of OutputStates monitored by the `objective_mechanism <ModulatoryMechanism.objective_mechanism>` are
-listed in its `monitor <ObjectiveMechanism>` attribute, as well as in the ModulatoryMechanism's `monitor_for_control
-<ModulatoryMechanism.monitor_for_control>` attribute.
+<ControlMechanism.objective_mechanism>` later, by using its `add_to_monitor <ObjectiveMechanism.add_to_monitor>` method.
+The set of OutputStates monitored by the `objective_mechanism <ControlMechanism.objective_mechanism>` are listed in
+its `monitor <ObjectiveMechanism>` attribute, as well as in the ControlMechanism's `monitor_for_control
+<ControlMechanism.monitor_for_control>` attribute.
 
-When the ModulatoryMechanism is added to a `Composition`, the `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>` is also automatically added, and MappingProjectons are created from each
-of the OutputStates that it monitors to its corresponding `input_states <ObjectiveMechanism.input_states>`.  When the
-Composition is run, the `value <OutputState.value>`\\(s) of the OutputState(s) monitored are evaluated using the
-`objective_mechanism`\\'s `function <ObjectiveMechanism.function>`, and the result is assigned to its *OUTCOME*
-`output_state <ObjectiveMechanism_Output>`.  That `value <ObjectiveMechanism.value>` is then passed to the
-ModulatoryMechanism's *OUTCOME* `input_state <ModulatoryMechanism_Input>`, which is used by the ModulatoryMechanism's
-`function <ModulatoryMechanism.function>` to determine its `modulatory_allocation
-<ModulatoryMechanism.modulatory_allocation>`.
+When the ControlMechanism is added to a `Composition`, the `objective_mechanism <ControlMechanism.objective_mechanism>`
+is also automatically added, and MappingProjectons are created from each of the OutputStates that it monitors to
+its corresponding `input_states <ObjectiveMechanism.input_states>`.  When the Composition is run, the `value
+<OutputState.value>`\\(s) of the OutputState(s) monitored are evaluated using the `objective_mechanism`\\'s `function
+<ObjectiveMechanism.function>`, and the result is assigned to its *OUTCOME* `output_state
+<ObjectiveMechanism_Output>`.  That `value <ObjectiveMechanism.value>` is then passed to the ControlMechanism's
+*OUTCOME* `input_state <ControlMechanism_Input>`, which is used by the ControlMechanism's `function
+<ControlMechanism.function>` to determine its `control_allocation <ControlMechanism.control_allocation>`.
 
-.. _ModulatoryMechanism_ObjectiveMechanism_Function:
+.. _ControlMechanism_ObjectiveMechanism_Function:
 
-If a default ObjectiveMechanism is created by the ModulatoryMechanism (i.e., when *True* or a list of OutputStates is
-specified for the **objective_mechanism** `argument <ModulatoryMechanism_Objective_Mechanism_Argument>` of the
+If a default ObjectiveMechanism is created by the ControlMechanism (i.e., when *True* or a list of OutputStates is
+specified for the **objective_mechanism** `argument <ControlMechanism_Objective_Mechanism_Argument>` of the
 constructor), then the ObjectiveMechanism is created with its standard default `function <ObjectiveMechanism.function>`
 (`LinearCombination`), but using *PRODUCT* (rather than the default, *SUM*) as the value of the function's `operation
 <LinearCombination.operation>` parameter. The result is that the `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>` multiplies the `value <OutputState.value>`\\s of the OutputStates that it
-monitors, which it passes to the ModulatoryMechanism.  However, if the **objective_mechanism** is specified using either
+<ControlMechanism.objective_mechanism>` multiplies the `value <OutputState.value>`\\s of the OutputStates that it
+monitors, which it passes to the ControlMechanism.  However, if the **objective_mechanism** is specified using either
 a constructor for, or an existing ObjectiveMechanism, then the defaults for the `ObjectiveMechanism` class -- and any
 attributes explicitly specified in its construction -- are used.  In that case, if the `LinearCombination` with
 *PRODUCT* as its `operation <LinearCombination.operation>` parameter are still desired, this must be explicitly
 specified.  This is illustrated in the following examples.
 
-The following example specifies a `ModulatoryMechanism` that automatically constructs its `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>`::
+The following example specifies a `ControlMechanism` that automatically constructs its `objective_mechanism
+<ControlMechanism.objective_mechanism>`::
 
     >>> from psyneulink import *
-    >>> my_ctl_mech = ModulatoryMechanism(objective_mechanism=True)
+    >>> my_ctl_mech = ControlMechanism(objective_mechanism=True)
     >>> assert isinstance(my_ctl_mech.objective_mechanism.function, LinearCombination)
     >>> assert my_ctl_mech.objective_mechanism.function.operation == PRODUCT
 
 Notice that `LinearCombination` was assigned as the `function <ObjectiveMechanism.function>` of the `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>`, and *PRODUCT* as its `operation <LinearCombination.operation>` parameter.
+<ControlMechanism.objective_mechanism>`, and *PRODUCT* as its `operation <LinearCombination.operation>` parameter.
 
 By contrast, the following example explicitly specifies the **objective_mechanism** argument using a constructor for
 an ObjectiveMechanism::
 
-    >>> my_ctl_mech = ModulatoryMechanism(objective_mechanism=ObjectiveMechanism())
+    >>> my_ctl_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism())
     >>> assert isinstance(my_ctl_mech.objective_mechanism.function, LinearCombination)
     >>> assert my_ctl_mech.objective_mechanism.function.operation == SUM
 
 In this case, the defaults for the ObjectiveMechanism's class are used for its `function <ObjectiveMechanism.function>`,
 which is a `LinearCombination` function with *SUM* as its `operation <LinearCombination.operation>` parameter.
 
-Specifying the ModulatoryMechanism's `objective_mechanism <ModulatoryMechanism.objective_mechanism>` with a constructor
+Specifying the ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` with a constructor
 also provides greater control over how ObjectiveMechanism evaluates the OutputStates it monitors.  In addition to
 specifying its `function <ObjectiveMechanism.function>`, the **monitor_weights_and_exponents** `argument
 <ObjectiveMechanism_Monitor_Weights_and_Exponents>` can be used to parameterize the relative contribution made by the
 monitored OutputStates when they are evaluated by that `function <ObjectiveMechanism.function>` (see
-`ModulatoryMechanism_Examples`).
+`ControlMechanism_Examples`).
 
+COMMENT:
+TBI FOR COMPOSITION
+When a ControlMechanism is created for or assigned as the `controller <Composition.controller>` of a `Composition` (see
+`ControlMechanism_Composition_Controller`), any OutputStates specified to be monitored by the System are assigned as
+inputs to the ObjectiveMechanism.  This includes any specified in the **monitor_for_control** argument of the
+System's constructor, as well as any specified in a MONITOR_FOR_CONTROL entry of a Mechanism `parameter specification
+dictionary <ParameterState_Specification>` (see `Mechanism_Constructor_Arguments` and `System_Control_Specification`).
 
-.. _ModulatoryMechanism_Modulatory_Signals:
+FOR DEVELOPERS:
+    If the ObjectiveMechanism has not yet been created, these are added to the **monitored_output_states** of its
+    constructor called by ControlMechanism._instantiate_objective_mechanmism;  otherwise, they are created using the
+    ObjectiveMechanism.add_to_monitor method.
+COMMENT
 
-*Specifying States to Modulate*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _ControlMechanism_Control_Signals:
 
-A ModulatoryMechanism modulates the values of `States <State>` using the `ControlSignals <ControlSignal>` and/or
-`GatingSignals <GatingSignal>` assigned to its `modulatory_signals <ModulatoryMechanism.modulatory_signals>` attribute,
-each of which is assigned, respectively, a `ControlProjection` or `GatingProjection` to the State it modulates (see
-`Modulation <ModulatorySignal_Modulation>` for a description of how modulation operates). Modulation of a State can
-be specified either where the Component to which the State belongs is created (see specifying
-`ControlMechanism_Control_Signals` and `ControlSignal_Specification`, or `GatingMechanism_Specifying_Gating` and
-`GatingSignal_Specification` respectively), or in the **modulatory_signals** argument of the ModulatoryMechanism's
-constructor.  For the latter, the argument must be a specification for one or more `ControlSignals
-<ControlSignal_Specification>` and/or `GatingSignals <GatingSignal_Specification>`.  States to be modulated can also
-be added to an existing ModulatoryMechanism by using its `assign_params` method to add a `ControlSignal` and/or
-`GatingSignal` for each additional State. All of a ModulatoryMechanism's `ModulatorySignals <ModulatorySignal>` are
-listed in its `modulatory_signals <ModulatoryMechanism>` attribute.  Any ControlSignals are also listed in the
-`control_signals <ModulatoryMechanism.control_signals>` attribute, and GatingSignals in the `gating_signals
-<GatingMechanism.gating_signals>` attribute.  The projections from these to the States they modulate are listed in
-the `modulatory_projections <ModulatoryMechanism.modulatory_projections>`, `control_projections
-<ModulatoryMechanism.control_projections>`, and `gating_projections <ModulatoryMechanism.gating_projections>`
-attributes, respectively.
+*Specifying Parameters to Control*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+This can be specified in either of two ways:
 
-.. _ModulatoryMechanism_Structure:
+*On a ControlMechanism itself*
+
+The parameters controlled by a ControlMechanism can be specified in the **control_signals** argument of its constructor;
+the argument must be a `specification for one more ControlSignals <ControlSignal_Specification>`.  The parameter to
+be controlled must belong to a Component in the same `Composition` as the ControlMechanism when it is added to the
+Composition, or an error will occur.
+
+*On a Parameter to be controlled by the `controller <Composition.controller>` of a `Composition`*
+
+Control can also be specified for a parameter where the `parameter itself is specified <ParameterState_Specification>`,
+in the constructor for the Component to which it belongs, by including a `ControlProjection`, `ControlSignal` or
+the keyword `CONTROL` in a `tuple specification <ParameterState_Tuple_Specification>` for the parameter.  In this
+case, the specified parameter will be assigned for control by the `controller <controller.Composition>` of any
+`Composition` to which its Component belongs, when the Component is executed in that Composition (see
+`ControlMechanism_Composition_Controller`).  Conversely, when a ControlMechanism is assigned as the `controller
+<Composition.controller>` of a Composition, a `ControlSignal` is created and assigned to the ControlMechanism
+for every parameter of any `Component <Component>` in the Composition that has been `specified for control
+<ParameterState_Modulatory_Specification>`.
+
+In general, a `ControlSignal` is created for each parameter specified to be controlled by a ControlMechanism.  These
+are a type of `OutputState` that send a `ControlProjection` to the `ParameterState` of the parameter to be
+controlled. All of the ControlSignals for a ControlMechanism are listed in its `control_signals
+<ControlMechanism.control_signals>` attribute, and all of its ControlProjections are listed in
+its`control_projections <ControlMechanism.control_projections>` attribute. Additional parameters to be controlled can
+be added to a ControlMechanism by using its `assign_params` method to add a `ControlSignal` for each additional
+parameter.  See `ControlMechanism_Examples`.
+
+.. _ControlMechanism_Structure:
 
 Structure
 ---------
 
-.. _ModulatoryMechanism_Input:
+.. _ControlMechanism_Input:
 
 *Input*
 ~~~~~~~
 
-By default, a ModulatoryMechanism has a single (`primary <InputState_Primary>`) `input_state
-<ModulatoryMechanism.input_state>` that is named *OUTCOME*.  If the ModulatoryMechanism has an `objective_mechanism
-<ModulatoryMechanism.objective_mechanism>`, then the *OUTCOME* `input_state <ModulatoryMechanism.input_state>` receives
-a single `MappingProjection` from the `objective_mechanism <ModulatoryMechanism.objective_mechanism>`\\'s *OUTCOME*
-OutputState (see `ModulatoryMechanism_ObjectiveMechanism` for additional details). Otherwise, when the
-ModulatoryMechanism is added to a `Composition`, MappingProjections are created that project to the
-ModulatoryMechanism's *OUTCOME* `input_state <ModulatoryMechanism.input_state>` from each of the OutputStates specified
-in the **monitor_for_control** `argument <ModulatoryMechanism_Monitor_for_Modulatory_Argument>` of its constructor.
-The `value <InputState.value>` of the ModulatoryMechanism's *OUTCOME* InputState is assigned to its `outcome
-<ModulatoryMechanism.outcome>` attribute), and is used as the input to the ModulatoryMechanism's `function
-<ModulatoryMechanism.function>` to determine its `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`.
+By default, a ControlMechanism has a single (`primary <InputState_Primary>`) `input_state
+<ControlMechanism.input_state>` that is named *OUTCOME*.  If the ControlMechanism has an `objective_mechanism
+<ControlMechanism.objective_mechanism>`, then the *OUTCOME* `input_state <ControlMechanism.input_state>` receives a
+single `MappingProjection` from the `objective_mechanism <ControlMechanism.objective_mechanism>`\\'s *OUTCOME*
+OutputState (see `ControlMechanism_ObjectiveMechanism` for additional details). Otherwise, when the ControlMechanism is
+added to a `Composition`, MappingProjections are created that project to the ControlMechanism's *OUTCOME* `input_state
+<ControlMechanism.input_state>` from each of the OutputStates specified in the **monitor_for_control** `argument
+<ControlMechanism_Monitor_for_Control_Argument>` of its constructor.  The `value <InputState.value>` of the
+ControlMechanism's *OUTCOME* InputState is assigned to its `outcome <ControlMechanism.outcome>` attribute),
+and is used as the input to the ControlMechanism's `function <ControlMechanism.function>` to determine its
+`control_allocation <ControlMechanism.control_allocation>`.
 
-.. _ModulatoryMechanism_Function:
+.. _ControlMechanism_Function:
 
 *Function*
 ~~~~~~~~~~
 
-A ModulatoryMechanism's `function <ModulatoryMechanism.function>` uses its `outcome <ModulatoryMechanism.outcome>`
-attribute (the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `modulatory_allocation
-<ModulatoryMechanism.modulatory_allocation>`.  By default, its `function <ModulatoryMechanism.function>` is assigned
-the `DefaultAllocationFunction`, which takes a single value as its input, and assigns this as the value of
-each item of `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>`.  Each of these items is assigned as
-the allocation for the corresponding `ControlSignal` or `GatingSignal` in `modulatory_signals
-<ModulatoryMechanism.modulatory_signals>`. This distributes the ModulatoryMechanism's input as the allocation to each of
-`modulatory_signals  <ModulatoryMechanism.modulatory_signals>.  This same behavior also applies to any custom function
-assigned to a ModulatoryMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a
-function is assigned that returns a 2d array with more than one item, and it has the same number of `modulatory_signals
-<ModulatoryMechanism.modulatory_signals>`, then each ModulatorySignal is assigned to the corresponding item of the
-function's value.  However, these default behaviors can be modified by specifying that individual ModulatorySignals
-reference different items in `modulatory_allocation` as their `variable <ModulatorySignal.variable>`
+A ControlMechanism's `function <ControlMechanism.function>` uses its `outcome <ControlMechanism.outcome>`
+attribute (the `value <InputState.value>` of its *OUTCOME* `InputState`) to generate a `control_allocation
+<ControlMechanism.control_allocation>`.  By default, its `function <ControlMechanism.function>` is assigned
+the `DefaultAllocationFunction`, which takes a single value as its input, and assigns that as the value of
+each item of `control_allocation <ControlMechanism.control_allocation>`.  Each of these items is assigned as
+the allocation for the corresponding  `ControlSignal` in `control_signals <ControlMechanism.control_signals>`. This
+distributes the ControlMechanism's input as the allocation to each of its `control_signals
+<ControlMechanism.control_signals>`.  This same behavior also applies to any custom function assigned to a
+ControlMechanism that returns a 2d array with a single item in its outer dimension (axis 0).  If a function is
+assigned that returns a 2d array with more than one item, and it has the same number of `control_signals
+<ControlMechanism.control_signals>`, then each ControlSignal is assigned to the corresponding item of the function's
+value.  However, these default behaviors can be modified by specifying that individual ControlSignals reference
+different items in `control_allocation` as their `variable <ControlSignal.variable>`
 (see `OutputState_Variable`).
 
-.. _ModulatoryMechanism_Output:
+.. _ControlMechanism_Output:
 
 *Output*
 ~~~~~~~~
 
+The OutputStates of a ControlMechanism are `ControlSignals <ControlSignal>` (listed in its `control_signals
+<ControlMechanism.control_signals>` attribute). It has a `ControlSignal` for each parameter specified in the
+**control_signals** argument of its constructor, that sends a `ControlProjection` to the `ParameterState` for the
+corresponding parameter.  The ControlSignals are listed in the `control_signals <ControlMechanism.control_signals>`
+attribute;  since they are a type of `OutputState`, they are also listed in the ControlMechanism's `output_states
+<ControlMechanism.output_states>` attribute. The parameters modulated by a ControlMechanism's ControlSignals can be
+displayed using its `show <ControlMechanism.show>` method. By default, each `ControlSignal` is assigned as its
+`allocation <ControlSignal.allocation>` the value of the  corresponding item of the ControlMechanism's
+`control_allocation <ControlMechanism.control_allocation>`;  however, subtypes of ControlMechanism may assign
+allocations differently. The `default_allocation  <ControlMechanism.default_allocation>` attribute can be used to
+specify a  default allocation for ControlSignals that have not been assigned their own `default_allocation
+<ControlSignal.default_allocation>`. The `allocation <ControlSignal.allocation>` is used by each ControlSignal to
+determine its `intensity <ControlSignal.intensity>`, which is then assigned to the `value <ControlProjection.value>`
+of the ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used
+by the `ParameterState` to which it projects to modify the value of the parameter it controls (see
+`ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
 
-The OutputStates of a ModulatoryMechanism are `ControlSignals <ControlSignal>` and/or `GatingSignals <GatingSignal>`
-(listed in its `modulatory_signals <ModulatoryMechanism.modulatory_signals>` attribute). It has a `ControlSignal` or
-`GatingSignal` for each parameter specified in the **modulatory_signals** argument of its constructor, that sends a
-`ControlProjection <ControlProjections>` or `GatingProjection <GatingProjection>` to the corresponding State.
-The `States <State>` modulated by a ModulatoryMechanism's `modulatory_signals <ModulatoryMechanism.modulatory_signals>`
-can be displayed using its `show <ModulatoryMechanism.show>` method. By default, each item of the ModulatoryMechanism's
-`modulatory_allocation <ModulatoryMechanism.modulatory_allocation>` attribute is assigned to the `variable` of the
-corresponding `ControlSignal` or `GatingSignal` in its `modulatory_signals <ModulatoryMechanism.modulatory_signals>`
-attribute;  however, subclasses of ModulatoryMechanism may assign values differently;  the `default_allocation
-<ModulatoryMechanism.default_allocation>` attribute can be used to specify a default allocation for ModulatorySignals
-that have not been assigned their own `default_allocation <ModulatorySignal.default_allocation>`. The  current
-allocations to ControlSignals are also listed in the `control_allocation <ModulatoryMechanism.control_allocation>`
-attribute; and the  allocations to GatingSignals are listed in the  `gating_allocation
-<ModulatoryMechanism.gating_allocation>` attribute.
-
-.. _ModulatoryMechanism_Costs:
+.. _ControlMechanism_Costs_NetOutcome:
 
 *Costs and Net Outcome*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-If a ModulatoryMechanism has any `control_signals <ModulatoryMechanism.control_signals>`, then it also computes
-the combined `costs <ModulatoryMechanism.costs>` of those, and a `net_outcome <ModulatoryMechanism.net_outcome>`
-based on them (see `below <ModulatoryMechanism_Costs_Computation>`). This is used by some subclasses of
-ModulatoryMechanism (e.g., `OptimizationControlMechanism`) to compute the `modulatory_allocation
-<ModulatoryMechanism.modulatory_allocation>`. These are computed using the ModulatoryMechanism's default
-`compute_reconfiguration_cost <ModulatoryMechanism.compute_reconfiguration_cost>`, `combine_costs
-<ModulatoryMechanism.combine_costs>`, and `compute_net_outcome <ModulatoryMechanism.compute_net_outcome>` functions,
-but these can also be assigned custom functions (see links to attributes for details).
+A ControlMechanism's `control_signals <ControlMechanism.control_signals>` are each associated with a set of `costs
+<ControlSignal_Costs>`, that are computed individually by each `ControlSignal` when they are `executed
+<ControlSignal_Execution>` by the ControlMechanism.  The costs last computed by the `control_signals
+<ControlMechanism>` are assigned to the ControlMechanism's `costs <ControlSignal.costs>` attribute.  A ControlMechanism
+also has a set of methods -- `combine_costs <ControlMechanism.combine_costs>`, `compute_reconfiguration_cost
+<ControlMechanism.compute_reconfiguration_cost>`, and `compute_net_outcome <ControlMechanism.compute_net_outcome>` --
+that can be used to compute the `combined costs <ControlMechanism.combined_costs>` of its `control_signals
+<ControlMechanism.control_signals>`, a `reconfiguration_cost <ControlSignal.reconfiguration_cost>` based on their change
+in value, and a `net_outcome <ControlMechanism.net_outcome>` (the `value <InputState.value>` of the ControlMechanism's
+*OUTCOME* `input_state <ControlMechanism_Input>` minus its `combined costs <ControlMechanism.combined_costs>`),
+respectively (see `ControlMechanism_Costs_Computation` below for additional details). These methods are used by some
+subclasses of ControlMechanism (e.g., `OptimizationControlMechanism`) to compute their `control_allocation
+<ControlMechanism.control_allocation>`.  Each method is assigned a default function, but can be assigned a custom
+functions in a corrsponding argument of the ControlMechanism's constructor (see links to attributes for details).
 
-.. _ModulatoryMechanism_Reconfiguration_Cost:
+.. _ControlMechanism_Reconfiguration_Cost:
 
 *Reconfiguration Cost*
 
-A ModulatoryMechanism's ``reconfiguration_cost  <ModulatoryMechanism.reconfiguration_cost>` is distinct from the
-costs of the ModulatoryMechanism's ControlSignals (if it has any), and in particular it is not the same as their
+A ControlMechanism's `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` is distinct from the
+costs of the ControlMechanism's `ControlSignals <ControlSignal>`, and in particular it is not the same as their
 `adjustment_cost <ControlSignal.adjustment_cost>`.  The latter, if specified by a ControlSignal, is computed
-individually by that ControlSignal using its `adjustment_cost_function <ControlSignal.adjustment_cost_function>` based
-on the change in its `intensity <ControlSignal.intensity>` from its last execution. In contrast, a ModulatoryMechanism's
-`reconfiguration_cost  <ModulatoryMechanism.reconfiguration_cost>` is computed by its `compute_reconfiguration_cost
-<ModulatoryMechanism.compute_reconfiguration_cost>` function, based on the change in its `modulatory_allocation
-ModulatoryMechanism.modulatory_allocation>` from the last execution, that will be applied to *all* of its
-`modulatory_signals <ModulatoryMechanism.modulatory_signals>` (including any `gating_signals
-<ModulatoryMechanism.gating_signals>` it has). By default, it uses the `Distance` function with the `EUCLIDEAN` metric).
+individually by that ControlSignal using its `adjustment_cost_function <ControlSignal.adjustment_cost_function>`, based
+on the change in its `intensity <ControlSignal.intensity>` from its last execution. In contrast, a ControlMechanism's
+`reconfiguration_cost  <ControlMechanism.reconfiguration_cost>` is computed by its `compute_reconfiguration_cost
+<ControlMechanism.compute_reconfiguration_cost>` function, based on the change in its `control_allocation
+ControlMechanism.control_allocation>` from the last execution, that will be applied to *all* of its
+`control_signals <ControlMechanism.control_signals>`. By default, `compute_reconfiguration_cost
+<ControlMechanism.compute_reconfiguration_cost>` is assigned as the `Distance` function with the `EUCLIDEAN` metric).
 
-.. _ModulatoryMechanism_Execution:
+.. _ControlMechanism_Execution:
 
 Execution
 ---------
 
-The ModulatoryMechanism's `function <ModulatoryMechanism.function>` takes as its input the `value <InputState.value>`
-of its *OUTCOME* `input_state <Mechanism_Base.input_state>` (also contained in `outcome <ControlSignal.outcome>`). It
-uses that to determine its `modulatory_allocation <ModulatoryMechanism.modulatory_allocation>` that specifies the
-value assigned to its `modulatory_signals <ModulatoryMechanism.modulatory_signals>`.  Each of those uses the
-allocation it is assigned to calculate its `ControlSignal` `intensity <ControlSignal.intensity>` or `GatingSignal`
-`intensity <GatingSignal.intensity>`. These are used by their `ControlProjection(s) <ControlProjection>` or
-`GatingProjection(s) <GatingProjection>`, respectively, to modulate the value of the States to which they project.
-Those values are then used in the subsequent `TRIAL` of execution. If a ModulatoryMechanism is a Composition's
-`controller <Composition.controller>`, it is generally either the first or the last `Mechanism <Mechanism>` to be
-executed in a `TRIAL`, although this can be customized (see `Composition Controller <Composition_Controller_Execution>`).
+If a ControlMechanism is assigned as the `controller` of a `Composition`, then it is executed either before or after
+all of the other  `Mechanisms <Mechanism_Base>` executed in a `TRIAL` for that Composition, depending on the
+value assigned to the Composition's `controller_mode <Composition.controller_mode>` attribute (see
+`Composition_Controller_Execution`).  If a ControlMechanism is added to a Composition for which it is not a
+`controller <Composition.controller>`, then it executes in the same way as a `ProcessingMechanism
+<ProcessingMechanism>`, based on its place in the Composition's `graph <Composition.graph>`.  Because
+`ControlProjections <ControlProjection>` are likely to introduce cycles (recurrent connection loops) in the graph,
+the effects of a ControlMechanism and its projections will generally not be applied in the first `TRIAL` (see
+COMMENT:
+FIX 8/27/19 [JDC]:
+`Composition_Initial_Values_and_Feedback` and
+COMMENT
+**feedback** argument for the `add_projection <Composition.add_projection>` method of `Composition` for a
+description of how to configure the initialization of feedback loops in a Composition; also see `Scheduler` for a
+description of detailed ways in which a GatingMechanism and its dependents can be scheduled to execute).
+
+The ControlMechanism's `function <ControlMechanism.function>` takes as its input the `value <InputState.value>` of
+its *OUTCOME* `input_state <ControlMechanism.input_state>` (also contained in `outcome <ControlSignal.outcome>`).
+It uses that to determine the `control_allocation <ControlMechanism.control_allocation>`, which specifies the value
+assigned to the `allocation <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each
+ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, as well as its `cost
+<ControlSignal.cost>.  The `intensity <ControlSignal.intensity>`is used by its `ControlProjection(s)
+<ControlProjection>` to modulate the value of the ParameterState(s) for the parameter(s) it controls, which are then
+used in the subsequent `TRIAL` of execution.
 
 .. note::
-   `States <State>` that receive `ControlProjections <ControlProjection>` or `GatingProjections <GatingProjection>`
-   do not update their values until their owner Mechanisms execute (see `Lazy Evaluation <LINK>` for an explanation of
-   "lazy" updating).  This means that even if a ModulatoryMechanism has executed, the States that it modulates will
-   not assume their new values until the Mechanisms to which they belong have executed.
+   `States <State>` that receive a `ControlProjection` does not update its value until its owner Mechanism
+   executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
+   ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
+   to which it belongs has executed.
 
-.. _ModulatoryMechanism_Costs_Computation:
+.. _ControlMechanism_Costs_Computation:
 
 *Computation of Costs and Net_Outcome*
 
-Once the ModulatoryMechanism's `function <ModulatoryMechanism.function>` has executed,
-if `compute_reconfiguration_cost <ModulatoryMechanism.compute_reconfiguration_cost>` has been specified, then it is
-used to compute the `reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>` for its `modulatory_allocation
-<ModulatoryMechanism.modulatory_allocation>` (see `above <ModulatoryMechanism_Reconfiguration_Cost>`.  Then, if the
-ModulatoryMechanism has any `control_signals <ModulatoryMechanism.contro._signals>`, they calculate their costs
-which are combined with the ModulatoryMechanism's `reconfiguration_cost <ModulatoryMechanism.reconfiguration_cost>`
-using its `combine_costs <ModulatoryMechanism.combine_costs>` function, and the result is assigned to its `costs
-<ModulatoryMechanism.costs>` attribute.  The ModulatoryMechanism uses this, together with its `outcome
-<ModulatoryMechanism.outcome>` attribute, to compute a  `net_outcome <ModulatoryMechanism.net_outcome>` using its
-`compute_net_outcome <ModulatoryMechanism.compute_net_outcome>` function.  This is used by some subclasses of
-ModulatoryMechanism (e.g., `OptimizationControlMechanism`) to  compute its `modulatory_allocation
-<ModulatoryMechanism.modulatory_allocation>`.
+Once the ControlMechanism's `function <ControlMechanism.function>` has executed, if `compute_reconfiguration_cost
+<ControlMechanism.compute_reconfiguration_cost>` has been specified, then it is used to compute the
+`reconfiguration_cost <ControlMechanism.reconfiguration_cost>` for its `control_allocation
+<ControlMechanism.control_allocation>` (see `above <ControlMechanism_Reconfiguration_Cost>`. After that, each
+of the ControlMechanism's `control_signals <ControlMechanism.control_signals>` calculates its `cost
+<ControlSignal.cost>`, based on its `intensity  <ControlSignal/intensity>`.  The ControlMechanism then combines these
+with the `reconfiguration_cost <ControlMechanism.reconfiguration_cost>` using its `combine_costs
+<ControlMechanism.combine_costs>` function, and the result is assigned to the `costs <ControlMechanism.costs>`
+attribute.  Finally, the ControlMechanism uses this, together with its `outcome <ControlMechanism.outcome>` attribute,
+to compute a `net_outcome <ControlMechanism.net_outcome>` using its `compute_net_outcome
+<ControlMechanism.compute_net_outcome>` function.  This is used by some subclasses of ControlMechanism
+(e.g., `OptimizationControlMechanism`) to  compute its `control_allocation <ControlMechanism.control_allocation>`
+for the next `TRIAL` of execution.
 
-.. _ModulatoryMechanism_Examples:
+.. _ControlMechanism_Examples:
 
 Examples
 --------
 
-COMMENT:
-FIX: ADD EXAMPLES WITH GATING SIGNALS
-COMMENT
-
-The following example creates a ModulatoryMechanism by specifying its **objective_mechanism** using a constructor
-that specifies the OutputStates to be monitored by its `objective_mechanism <ModulatoryMechanism.objective_mechanism>`
+The following example creates a ControlMechanism by specifying its **objective_mechanism** using a constructor
+that specifies the OutputStates to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`
 and the function used to evaluated these::
 
-    >>> import psyneulink as pnl
-    >>> my_transfer_mech_A = pnl.TransferMechanism(name="Transfer Mech A")
-    >>> my_DDM = pnl.DDM(name="My DDM")
-    >>> my_transfer_mech_B = pnl.TransferMechanism(function=pnl.Logistic,
-    ...                                            name="Transfer Mech B")
+    >>> my_mech_A = ProcessingMechanism(name="Mech A")
+    >>> my_DDM = DDM(name="My DDM")
+    >>> my_mech_B = ProcessingMechanism(function=Logistic,
+    ...                                            name="Mech B")
 
-    >>> my_modulatory_mech = pnl.ModulatoryMechanism(
-    ...                          objective_mechanism=pnl.ObjectiveMechanism(monitor=[(my_transfer_mech_A, 2, 1),
-    ...                                                                                               my_DDM.output_states[pnl.RESPONSE_TIME]],
+    >>> my_control_mech = ControlMechanism(
+    ...                          objective_mechanism=ObjectiveMechanism(monitor=[(my_mech_A, 2, 1),
+    ...                                                                           my_DDM.output_states[RESPONSE_TIME]],
     ...                                                                     name="Objective Mechanism"),
-    ...                          function=pnl.LinearCombination(operation=pnl.PRODUCT),
-    ...                          modulatory_signals=[(pnl.THRESHOLD, my_DDM),
-    ...                                              (pnl.GAIN, my_transfer_mech_B)],
-    ...                          name="My Modulatory Mech")
+    ...                          function=LinearCombination(operation=PRODUCT),
+    ...                          control_signals=[(THRESHOLD, my_DDM),
+    ...                                           (GAIN, my_mech_B)],
+    ...                          name="My Control Mech")
 
-
-This creates an ObjectiveMechanism for the ModulatoryMechanism that monitors the `primary OutputState
-<OutputState_Primary>` of ``my_Transfer_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
+This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputState
+<OutputState_Primary>` of ``my_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
 first multiplies the former by 2 before, then takes product of their values and passes the result as the input to the
-ModulatoryMechanism.  The ModulatoryMechanism's `function <ModulatoryMechanism.function>` uses this value to determine
+ControlMechanism.  The ControlMechanism's `function <ControlMechanism.function>` uses this value to determine
 the allocation for its ControlSignals, that control the value of the `threshold <DDM.threshold>` parameter of
 ``my_DDM`` and the  `gain <Logistic.gain>` parameter of the `Logistic` Function for ``my_transfer_mech_B``.
 
 The following example specifies the same set of OutputStates for the ObjectiveMechanism, by assigning them directly
 to the **objective_mechanism** argument::
 
-    >>> my_modulatory_mech = pnl.ModulatoryMechanism(
-    ...                             objective_mechanism=[(my_transfer_mech_A, 2, 1),
-    ...                                                  my_DDM.output_states[pnl.RESPONSE_TIME]],
-    ...                             modulatory_signals=[(pnl.THRESHOLD, my_DDM),
-    ...                                                 (pnl.GAIN, my_transfer_mech_B)])
-    ...
+    >>> my_control_mech = ControlMechanism(
+    ...                             objective_mechanism=[(my_mech_A, 2, 1),
+    ...                                                  my_DDM.output_states[RESPONSE_TIME]],
+    ...                             control_signals=[(THRESHOLD, my_DDM),
+    ...                                              (GAIN, my_mech_B)])
 
 Note that, while this form is more succinct, it precludes specifying the ObjectiveMechanism's function.  Therefore,
 the values of the monitored OutputStates will be added (the default) rather than multiplied.
 
-The ObjectiveMechanism can also be created on its own, and then referenced in the constructor for the ModulatoryMechanism::
+The ObjectiveMechanism can also be created on its own, and then referenced in the constructor for the ControlMechanism::
 
-    >>> my_obj_mech = pnl.ObjectiveMechanism(monitor=[(my_transfer_mech_A, 2, 1),
-    ...                                                               my_DDM.output_states[pnl.RESPONSE_TIME]],
-    ...                                      function=pnl.LinearCombination(operation=pnl.PRODUCT))
+    >>> my_obj_mech = ObjectiveMechanism(monitored_output_states=[(my_mech_A, 2, 1),
+    ...                                                            my_DDM.output_states[RESPONSE_TIME]],
+    ...                                      function=LinearCombination(operation=PRODUCT))
 
-    >>> my_modulatory_mech = pnl.ModulatoryMechanism(
+    >>> my_control_mech = ControlMechanism(
     ...                        objective_mechanism=my_obj_mech,
-    ...                        modulatory_signals=[(pnl.THRESHOLD, my_DDM),
-    ...                                            (pnl.GAIN, my_transfer_mech_B)])
+    ...                        control_signals=[(THRESHOLD, my_DDM),
+    ...                                         (GAIN, my_mech_B)])
 
 Here, as in the first example, the constructor for the ObjectiveMechanism can be used to specify its function, as well
 as the OutputState that it monitors.
 
 COMMENT:
-TBI FOR COMPOSITION
-See `System_Control_Examples` for examples of how a ModulatoryMechanism, the OutputStates its
-`objective_mechanism <ControlSignal.objective_mechanism>`, and its `control_signals <ModulatoryMechanism.control_signals>`
+FIX 8/27/19 [JDC]:  ADD TO COMPOSITION
+See `System_Control_Examples` for examples of how a ControlMechanism, the OutputStates its
+`objective_mechanism <ControlSignal.objective_mechanism>`, and its `control_signals <ControlMechanism.control_signals>`
 can be specified for a System.
 COMMENT
 
-.. _ModulatoryMechanism_Class_Reference:
+.. _ControlMechanism_Class_Reference:
 
 Class Reference
 ---------------
