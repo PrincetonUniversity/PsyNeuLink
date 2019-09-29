@@ -4238,26 +4238,26 @@ class TestCompositionInterface:
         assert np.allclose(out.parameters.variable.get(comp), [[6.0]])
 
     def test_inner_composition_change_before_run(self):
-        comp = Composition()
-        inner_comp = Composition()
+        outer_comp = Composition(name="Outer Comp")
+        inner_comp = Composition(name="Inner Comp")
 
         A = pnl.TransferMechanism(name='A')
         B = pnl.TransferMechanism(name='B')
         C = pnl.TransferMechanism(name='C')
 
         inner_comp.add_nodes([B, C])
-        comp.add_nodes([A, inner_comp])
+        outer_comp.add_nodes([A, inner_comp])
 
-        comp.add_projection(pnl.MappingProjection(), A, inner_comp)
+        outer_comp.add_projection(pnl.MappingProjection(), A, inner_comp)
         inner_comp.add_projection(pnl.MappingProjection(), B, C)
 
-        comp.show_graph()
-        comp.run(inputs={A: 1})
+        # comp.show_graph()
+        outer_comp.run(inputs={A: 1})
 
         # inner_comp is updated to make B not an OUTPUT node
         # after being added to comp
-        assert len(comp.output_CIM.output_states) == 1
-        assert len(comp.results[0]) == 1
+        assert len(outer_comp.output_CIM.output_states) == 1
+        assert len(outer_comp.results[0]) == 1
 
 
 class TestInputStateSpecifications:

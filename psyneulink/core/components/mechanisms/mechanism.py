@@ -1123,7 +1123,8 @@ class Mechanism_Base(Mechanism):
 
     external_input_values : list
         same as `input_values <Mechanism_Base.input_values>`, but containing the `value <InputState.value>` only of
-        InputStates that are not designated as `internal_only <InputState.internal_only>`.
+        InputStates that are **not** designated as `internal_only <InputState.internal_only>` (that is, ones that
+        receive external inputs).
 
     COMMENT:
     target_labels_dict : dict
