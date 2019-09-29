@@ -1784,6 +1784,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
         nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
         """
+        for n in self.nodes:
+            try:
+                n._analyze_graph()
+            except AttributeError:
+                pass
 
         self._check_feedback(scheduler)
         self._determine_node_roles()
