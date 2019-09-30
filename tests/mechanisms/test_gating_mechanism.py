@@ -243,36 +243,6 @@ def test_gating_composition():
         matrix=Output_Weights_matrix
     )
 
-    # z = Process(
-    #     # default_variable=[0, 0],
-    #     size=2,
-    #     pathway=[
-    #         Input_Layer,
-    #         # The following reference to Input_Weights is needed to use it in the pathway
-    #         # since it's sender and receiver args are not specified in its
-    #         # declaration above
-    #         Input_Weights,
-    #         Hidden_Layer_1,
-    #         # No projection specification is needed here since the sender arg for Middle_Weights
-    #         #    is Hidden_Layer_1 and its receiver arg is Hidden_Layer_2
-    #         # Middle_Weights,
-    #         Hidden_Layer_2,
-    #         # Output_Weights does not need to be listed for the same reason as Middle_Weights
-    #         # If Middle_Weights and/or Output_Weights is not declared above, then the process
-    #         #    will assign a default for missing projection
-    #         # Output_Weights,
-    #         Output_Layer
-    #     ],
-    #     clamp_input=SOFT_CLAMP,
-    #     learning=LEARNING,
-    #     learning_rate=1.0,
-    #     target=[0, 0, 1],
-    #     prefs={
-    #         VERBOSE_PREF: False,
-    #         REPORT_OUTPUT_PREF: True
-    #     }
-    # )
-
     z = [Input_Layer, Input_Weights, Hidden_Layer_1, Hidden_Layer_2, Output_Layer]
     c = Composition()
 
@@ -294,41 +264,6 @@ def test_gating_composition():
             num_trials=10,
             inputs=stim_list
     )
-
-
-    # def print_header():
-    #     print("\n\n**** TRIAL: ", 'time_placeholder')
-
-    # def show_target():
-    #     i = s.input
-    #     t = s.target_input_states[0].value
-    #     print('\nOLD WEIGHTS: \n')
-    #     print('- Input Weights: \n', Input_Weights.matrix)
-    #     print('- Middle Weights: \n', Middle_Weights.matrix)
-    #     print('- Output Weights: \n', Output_Weights.matrix)
-    #     print('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
-    #     print('ACTIVITY FROM OLD WEIGHTS: \n')
-    #     print('- Middle 1: \n', Hidden_Layer_1.value)
-    #     print('- Middle 2: \n', Hidden_Layer_2.value)
-    #     print('- Output:\n', Output_Layer.value)
-
-    # s = System(
-    #     processes=[z, g],
-    #     targets=[0, 0, 1],
-    #     learning_rate=1.0
-    # )
-
-    # s.reportOutputPref = True
-    # # s.show_graph(show_learning=True)
-
-    # results = s.run(
-    #     num_trials=10,
-    #     inputs=stim_list,
-    #     targets=target_list,
-    #     call_before_trial=print_header,
-    #     call_after_trial=show_target,
-    # )
-
 
 def test_gating_with_UDF():
     def my_linear_fct(

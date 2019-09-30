@@ -2681,6 +2681,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
         # FIX 7/22/19 [JDC]: THIS COULD BE CLEANED UP MORE
 
+
+        # FIX: 9/30/19:  PROBLEM:
         # # MODIFIED 9/30/19 OLD:
         # try:
         #     # projection = self._parse_projection_spec(projection, sender, receiver, name)
@@ -2689,7 +2691,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     return projection
         # existing_projections = False
         # MODIFIED 9/30/19 NEW: [JDC]
-        # If a sender and receiver have been specified but not a projectionN
+        # If a sender and receiver have been specified but not a projection,
         #    check whether there is *any* projection like that
         #    (i.e., whether it/they are already in the Composition or not);  if so:
         #    - if there is only one, use that;
@@ -2700,6 +2702,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                in_composition=False)
             if existing_projections:
                 #  Need to do stuff at end, so can't just return
+                # FIX: 9/30/19 CONSIDER ISSUEING WARNING HERE IF IN VERBOSE
                 projection = existing_projections[-1]
         try:
             projection = self._parse_projection_spec(projection, name)
