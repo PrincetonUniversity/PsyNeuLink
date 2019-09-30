@@ -865,7 +865,7 @@ class ControlSignal(ModulatorySignal):
         # This is included in case ControlSignal was created by another Component (such as ControlProjection)
         #    that specified ALLOCATION_SAMPLES in params
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
-            allocation_samples =  params[ALLOCATION_SAMPLES]
+            allocation_samples = params[ALLOCATION_SAMPLES]
 
         # Note index and assign are not used by ControlSignal, but included here for consistency with OutputState
         # If index has not been specified, but the owner has, control_allocation has been determined, so use that

@@ -111,7 +111,7 @@ __all__ = [
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 projection_keywords.update({LEARNING_PROJECTION, LEARNING})
 
-input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT]
+input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT]
 output_state_names = [LEARNING_SIGNAL]
 
 # DefaultTrainingMechanism = ObjectiveMechanism

@@ -115,10 +115,15 @@ def test_prediction_mechanism_assignment():
     input_dict = {T1:[1,2,3,4]}
     results = S.run(inputs=input_dict)
     assert results == [[[1.]], [[2.]], [[15.]], [[20.]]]
-    assert S.simulation_results ==  [[[1.]], [[5.]], [[10.]],
-                                    [[1.]], [[2.]], [[5.]], [[10.]], [[10.]], [[20.]],
-                                    [[1.]], [[2.]], [[3.]], [[5.]], [[10.]], [[15.]], [[10.]], [[20.]], [[30.]],
-                                    [[2.]], [[3.]], [[4.]], [[10.]], [[15.]], [[20.]], [[20.]], [[30.]], [[40.]]]
+    assert S.simulation_results == [[[ 1.]], [[ 5.]], [[10.]],
+                                    [[ 1.]], [[ 2.]], [[ 5.]],
+                                    [[10.]], [[10.]], [[20.]],
+                                    [[ 1.]], [[ 2.]], [[ 3.]],
+                                    [[ 5.]], [[10.]], [[15.]],
+                                    [[10.]], [[20.]], [[30.]],
+                                    [[ 2.]], [[ 3.]], [[ 4.]],
+                                    [[10.]], [[15.]], [[20.]],
+                                    [[20.]], [[30.]], [[40.]]]
 
 def test_prediction_mechanism_filter_function():
     """Tests prediction mechanism assignment and more tests for ObjectiveMechanism and ControlSignal assignments"""

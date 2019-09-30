@@ -42,7 +42,7 @@ class TestModulatoryMechanism:
         Tx = TransferMechanism(name='Tx')
         Ty = TransferMechanism(name='Ty')
         Tz = TransferMechanism(name='Tz')
-        C =  ModulatoryMechanism(
+        C = ModulatoryMechanism(
                 default_variable=[1],
                 monitor_for_modulation=Ty,
                 modulatory_signals=ControlSignal(modulation=OVERRIDE,

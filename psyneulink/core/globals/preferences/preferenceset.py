@@ -202,7 +202,7 @@ class PreferenceSet(object):
                     raise PreferenceSetError("owner argument must be included in call to {1}() "
                                              "and must be an object in the {2} class hierarchy".
                                          format(owner, self.__class__.__name__, self.baseClass.__name__))
-                self.owner =  owner
+                self.owner = owner
 
         # Make sure subclass implements a defaultPreferencesDict class attribute
         try:
