@@ -9,7 +9,8 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.system import System
-from psyneulink.core.globals.keywords import DEFAULT_VARIABLE, FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
+from psyneulink.core.globals.keywords import \
+    DEFAULT_VARIABLE, FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, TARGET_MECHANISM, VALUE
 from psyneulink.core.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.core.compositions.composition import Composition
 
@@ -275,7 +276,7 @@ def test_gating_composition():
     z = [Input_Layer, Input_Weights, Hidden_Layer_1, Hidden_Layer_2, Output_Layer]
     c = Composition()
 
-    c.add_backpropagation_learning_pathway(pathway=z)
+    learning_components = c.add_backpropagation_learning_pathway(pathway=z)
     # c.add_linear_processing_pathway(pathway=z)
     c.add_node(Gating_Mechanism)
 
@@ -286,16 +287,12 @@ def test_gating_composition():
 
     stim_list = {
         Input_Layer: [[-1, 30]],
-        Gating_Mechanism: [1.0]
-    }
-    target_list = {
-        Output_Layer: [[0, 0, 1]]
-    }
+        Gating_Mechanism: [1.0],
+        learning_components[TARGET_MECHANISM]: [[0, 0, 1]]}
 
     results = c.run(
             num_trials=10,
-            inputs=stim_list,
-            targets=target_list
+            inputs=stim_list
     )
 
 

@@ -2680,12 +2680,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     """
         # FIX 7/22/19 [JDC]: THIS COULD BE CLEANED UP MORE
+
+        # # MODIFIED 9/30/19 OLD:
+        # try:
+        #     # projection = self._parse_projection_spec(projection, sender, receiver, name)
+        #     projection = self._parse_projection_spec(projection, name)
+        # except DuplicateProjectionError:
+        #     return projection
+        # existing_projections = False
+        # MODIFIED 9/30/19 NEW: [JDC]
+        # If a sender and receiver have been specified but not a projectionN
+        #    check whether there is *any* projection like that
+        #    (i.e., whether it/they are already in the Composition or not);  if so:
+        #    - if there is only one, use that;
+        #    - if there are several, use the last in the list (on the assumption in that it is the most recent).
+        if sender and receiver and not projection:
+            existing_projections = self._check_for_existing_projections(sender=sender,
+                                                               receiver=receiver,
+                                                               in_composition=False)
+            if existing_projections:
+                #  Need to do stuff at end, so can't just return
+                projection = existing_projections[-1]
         try:
-            # projection = self._parse_projection_spec(projection, sender, receiver, name)
             projection = self._parse_projection_spec(projection, name)
         except DuplicateProjectionError:
             return projection
-        duplicate = False
+        existing_projections = False
+        # MODIFIED 9/30/19 END
 
         # Parse sender and receiver specs
         sender, sender_mechanism, graph_sender, nested_compositions = self._parse_sender_spec(projection, sender)
@@ -2699,9 +2720,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sender = sender_mechanism
             if not isinstance(receiver, InputState):
                 receiver = receiver_mechanism
-            # Check if Projection to be initialized already exists;  if so, mark as duplicate and skip
-            duplicate = self._check_for_existing_projection(sender=sender, receiver=receiver)
-            if not duplicate:
+            # Check if Projection to be initialized already exists;  if so, mark as existing_projections and skip
+            existing_projections = self._check_for_existing_projections(sender=sender, receiver=receiver)
+            if not existing_projections:
                 # Initialize Projection
                 projection.init_args['sender'] = sender
                 projection.init_args['receiver'] = receiver
@@ -2710,11 +2731,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 except DuplicateProjectionError:
                     return projection
 
-        elif self._check_for_existing_projection(projection, sender=sender, receiver=receiver):
+        elif self._check_for_existing_projections(projection, sender=sender, receiver=receiver):
             # FIX: THE FOLLOWING IS REQUIRED SO AS NOT TO CRASH IN test_alias_equivalence_for_modulates_and_projections
             #      - BLOCK OF CODE BELOW (KAM HACK) IS REQUIRED
             # return projection
-            duplicate = True
+            existing_projections = True
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
@@ -2722,7 +2743,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and projection not in [vertex.component for vertex in self.graph.vertices] and not learning_projection:
 
             projection.is_processing = False
-            # KDM 5/24/19: removing below rename because it results in several duplicates
+            # KDM 5/24/19: removing below rename because it results in several existing_projections
             # projection.name = f'{sender} to {receiver}'
             self.graph.add_component(projection, feedback=feedback)
 
@@ -2734,7 +2755,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
-        if not duplicate:
+        if not existing_projections:
             self._validate_projection(projection,
                                       sender, receiver,
                                       sender_mechanism, receiver_mechanism,
@@ -2747,7 +2768,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for comp in nested_compositions:
                 projection._activate_for_compositions(comp)
 
-        # Note: do all of the following even if Projection is a duplicate,
+        # Note: do all of the following even if Projection is a existing_projections,
         #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
 
         # Create "shadow" projections to any input states that are meant to shadow this projection's receiver
@@ -3017,10 +3038,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not projection.receiver:
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
 
-    def _check_for_existing_projection(self,
-                                         projection=None,
-                                         sender=None,
-                                         receiver=None):
+    def _check_for_existing_projections(self,
+                                       projection=None,
+                                       sender=None,
+                                       receiver=None,
+                                       in_composition:bool=True):
+        """Check for Projection with same sender and receiver
+        If **in_composition** is True, only return Projection found in the current Composition
+        If **in_composition** is False, return any Projections that are found
+        
+        Return Projection or list of Projections that satisfies the conditions, else False
+        """
         assert projection or (sender and receiver), \
             f'_check_for_existing_projection must be passed a projection or a sender and receiver'
 
@@ -3036,10 +3064,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 receiver = receiver.input_state
             elif isinstance(receiver, Composition):
                 receiver = receiver.input_CIM.input_state
-
-        if [proj for proj in sender.efferents if proj.receiver is receiver and proj in self.projections]:
-            return True
+        # # MODIFIED 9/29/19 OLD:
+        # if [proj for proj in sender.efferents if proj.receiver is receiver and proj in self.projections]:
+        #     return True
+        # return False
+        # # MODIFIED 9/29/19 NEW: [JDC]
+        existing_projections = [proj for proj in sender.efferents if proj.receiver is receiver]
+        existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
+        assert len(existing_projections_in_composition) <= 1, \
+            f"PROGRAM ERROR: More than one identical projection found " \
+            f"in {self.name}: {existing_projections_in_composition}."
+        if in_composition:
+            if existing_projections_in_composition:
+                return existing_projections_in_composition[0]
+        else:
+            if existing_projections:
+                return existing_projections
         return False
+        # MODIFIED 9/29/19 END
 
     def _check_feedback(self, scheduler):
         """Check that feedback specification is required for projections to which it has been assigned
