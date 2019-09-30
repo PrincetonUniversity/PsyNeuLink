@@ -397,7 +397,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_iterable
-from psyneulink.library.components.mechanisms.adaptive.control.evc.evcauxiliary import ControlSignalGridSearch, PredictionMechanism, ValueFunction
+from psyneulink.library.components.mechanisms.modulatory.control.evc.evcauxiliary import ControlSignalGridSearch, PredictionMechanism, ValueFunction
 
 __all__ = [
     'EVCControlMechanism', 'EVCError',

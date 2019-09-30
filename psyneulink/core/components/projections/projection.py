@@ -1368,7 +1368,7 @@ def _parse_connection_specs(connectee_state_type,
             # FIX: 10/3/17 - REPLACE THIS (AND ELSEWHERE) WITH ProjectionTuple THAT HAS BOTH SENDER AND RECEIVER
             # FIX: 11/28/17 - HACKS TO HANDLE PROJECTION FROM GatingSignal TO InputState or OutputState
             # FIX:            AND PROJECTION FROM ControlSignal to ParameterState
-            # # If it is an ModulatoryMechanism specification, get its ModulatorySignal class
+            # # If it is a ModulatoryMechanism specification, get its ModulatorySignal class
             # # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
             # if isinstance(connection, type) and issubclass(connection, ModulatoryMechanism_Base):
             #     connection = connection.outputStateTypes

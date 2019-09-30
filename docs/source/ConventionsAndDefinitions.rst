@@ -71,13 +71,10 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
 
   + `ModulatoryMechanism`
       Uses the input it receives from other Mechanisms to modify the parameters of one or more other
-      PsyNeuLink Components.  There are three primary types:
+      PsyNeuLink Components.  There are two primary types:
 
       + `ControlMechanism`
           Modifies the input(s), parameter(s), and/or output(s) of other Mechanisms.
-
-      + `GatingMechanism`
-          Modifies the input(s) and/or output(s) of other Mechanisms.
 
       + `LearningMechanism`
           Modifies the matrix of a `MappingProjection`.
@@ -96,16 +93,12 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
    + `ModulatoryProjection`
        Used in conjunction with `ModulatoryMechanisms <ModulatoryMechanism>` to regulate the function of other
        Components. Takes the output of a ModulatoryMechanism and uses it to modify the input, output or parameter
-       of another Component.  There are three types of ModulatoryProjections, corresponding to the three
+       of another Component.  There are two types of ModulatoryProjections, corresponding to the two
        types of ModulatoryMechanisms:
 
        + `ControlProjection`
             Takes a ControlSignal from a `ControlMechanism` and uses it to modify the input, parameter or output
             of a ProcessingMechanism.
-
-       + `GatingProjection`
-            Takes a GatingSignal from a `GatingMechanism` and uses it to modulate the input or output of a
-            ProcessingMechanism
 
        + `LearningProjection`
             Takes a LearningSignal from a `LearningMechanism` and uses it to modify the matrix of a
@@ -122,9 +115,9 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
        Represents a set of inputs to the Mechanism.
        Receives one or more afferent PathwayProjections to a Mechanism, combines them using its
        `function <State.function>`, and assigns the result (its `value <State.value>`)as an item of the Mechanism's
-       `variable <Mechanism.variable>`.  It can also receive one or more modulatory
-       `GatingProjections <GatingProjection>`, that modify the parameter(s) of the State's function, and thereby the
-       State's `value <State.value>`.
+       `variable <Mechanism.variable>`.    It can also receive one or more `modulatory projections
+       <ModulatoryProjection>` (`ControlProjection` or `GatingProjection`), that modify the parameter(s) of the State's
+       function, and thereby the State's `value <State.value>`.
 
    + `ParameterState`
        Represents a parameter of the Mechanism's `function <Mechanism.function>`.  Takes the assigned value of the
@@ -138,9 +131,9 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
        Represents an output of the Mechanism.
        Takes an item of the Mechanism's `value <Mechanism.value>` as the `variable <State.variable>` for the State's
        `function <State.function>`, assigns the result as the State's `value <OutputState.value>`, and provides that
-       to one or more efferent PathwayProjections.  It can also receive one or more modulatory
-       `GatingProjections <GatingProjection>`, that modify the parameter(s) of the State's function, and thereby the
-       State's `value <State.value>`.
+       to one or more efferent PathwayProjections.  It can also receive one or more `modulatory projections
+       <ModulatoryProjection>` (`ControlProjection` or `GatingProjection`), that modify the parameter(s) of the State's
+       function, and thereby the State's `value <State.value>`.
 
 * `Functions <Function>` - the most fundamental unit of computation in PsyNeuLink.  Every `Component` has a Function
   object, that wraps an executable function together with a definition of its parameters, and modularizes it so that

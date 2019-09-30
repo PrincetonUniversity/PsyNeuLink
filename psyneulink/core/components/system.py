@@ -468,7 +468,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, call_with_pruned_args, convert_to_np_array, iscompatible
 from psyneulink.core.scheduling.condition import AtPass, AtTimeStep, Never
 from psyneulink.core.scheduling.scheduler import Always, Condition, Scheduler
-from psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
+from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [

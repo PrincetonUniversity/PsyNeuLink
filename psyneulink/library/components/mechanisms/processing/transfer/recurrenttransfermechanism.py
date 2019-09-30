@@ -208,7 +208,7 @@ from psyneulink.core.globals.registry import register_instance, remove_instance_
 from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.core.scheduling.condition import Condition, TimeScale, WhenFinished
-from psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
+from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
 
 __all__ = [

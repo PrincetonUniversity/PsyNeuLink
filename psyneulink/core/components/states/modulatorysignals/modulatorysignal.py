@@ -68,7 +68,7 @@ Modulatory Components and their attributes are named according to the category o
     - ModulatoryMechanism name: <*Category*>Mechanism (e.g., ControlMechanism)
     - ModulatorySignal name: <*Category*>Signal (e.g., ControlSignal)
     - ModulatoryProjection name: <*Category*>Projection (e.g., ControlProjection)
-    - List of an ModulatoryMechanism's ModulatorySignals: <*CategoryMechanism*>.<category>_signals
+    - List of a ModulatoryMechanism's ModulatorySignals: <*CategoryMechanism*>.<category>_signals
       (e.g., ControlMechanism.control_signals)
     - Value of a ModulatorySignal: <*CategorySignal*>.<category>_signal (e.g., ControlSignal.control_signal)
 
@@ -308,7 +308,7 @@ and the accompanying `table <ModulatorySignal_Table>` and `figure <ModulatorySig
 
 .. _ModulatorySignal_Multiple:
 
-Any `modulable <Parameter.modulable>` parameter of a State's `function <State_Base.function>` can modulated,
+Any `modulable <Parameter.modulable>` parameter of a State's `function <State_Base.function>` can be modulated,
 and different parameters of the same `function <State_Base.function>` of a State can be modulated by different
 ModulatorySignals. The same parameter can also be modulated by more than on ModulatorySignal. If more than one
 ModulatorySignal modulates the same parameter of a State's `function <State_Base.function>`, then that parameter's

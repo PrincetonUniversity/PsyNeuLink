@@ -12,7 +12,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.scheduling.condition import Never
-from psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism import EVCControlMechanism
+from psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism import EVCControlMechanism
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
 
 

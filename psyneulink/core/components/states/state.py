@@ -2846,7 +2846,7 @@ def _parse_state_spec(state_type=None,
 
     # ModulatorySpecification of some kind
     if _is_modulatory_spec(state_specification):
-        # If it is an ModulatoryMechanism specification, get its ModulatorySignal class
+        # If it is a ModulatoryMechanism specification, get its ModulatorySignal class
         # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
         if isinstance(state_specification, type) and issubclass(state_specification, ModulatoryMechanism_Base):
             state_specification = state_specification.outputStateTypes

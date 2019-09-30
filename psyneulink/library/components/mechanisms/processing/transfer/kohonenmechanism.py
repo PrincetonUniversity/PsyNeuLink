@@ -76,7 +76,7 @@ from psyneulink.core.globals.keywords import DEFAULT_MATRIX, FUNCTION, GAUSSIAN,
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
-from psyneulink.library.components.mechanisms.adaptive.learning.kohonenlearningmechanism import KohonenLearningMechanism
+from psyneulink.library.components.mechanisms.modulatory.learning.kohonenlearningmechanism import KohonenLearningMechanism
 
 __all__ = [
     'KohonenMechanism', 'KohonenError',

@@ -6,8 +6,9 @@ Control Mechanisms
 .. toctree::
    :maxdepth: 1
 
-   Optimzation Control Mechanisms <OptimizationControlMechanism>
+   GatingMechanism <GatingMechanism>
+   OptimzationControlMechanism <OptimizationControlMechanism>
 
-.. automodule:: psyneulink.core.components.mechanisms.adaptive.control.controlmechanism
+.. automodule:: psyneulink.core.components.mechanisms.modulatory.control.controlmechanism
    :members:
    :exclude-members: Linear, random, Parameters

@@ -12,7 +12,7 @@ from psyneulink.core.scheduling.condition import AfterNCalls, All, Any, AtNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
-from psyneulink.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism import EVCControlMechanism
+from psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism import EVCControlMechanism
 
 
 

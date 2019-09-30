@@ -15,8 +15,8 @@
 Overview
 --------
 
-An ModulatoryMechanism is a type of `Mechanism <Mechanism>` that modifies the operation of one or more other `Components
-<Component>`.  In general, an ModulatoryMechanism receives its input from an `ObjectiveMechanism`, however
+A ModulatoryMechanism is a type of `Mechanism <Mechanism>` that modifies the operation of one or more other `Components
+<Component>`.  In general, a ModulatoryMechanism receives its input from an `ObjectiveMechanism`, however
 this need not be the case.
 
 .. _ModulatoryMechanism_Types:
@@ -82,10 +82,10 @@ COMMENT
 
 .. _ModulatoryMechanism_Creation:
 
-Creating an ModulatoryMechanism
+Creating a ModulatoryMechanism
 ------------------------------
 
-An ModulatoryMechanism can be created by using the standard Python method of calling the constructor for the desired type.
+A ModulatoryMechanism can be created by using the standard Python method of calling the constructor for the desired type.
 ModulatoryMechanisms of the appropriate subtype are also created automatically when other Components are created that
 require them, or a form of modulation is specified for them. For example, a `ControlMechanism <ControlMechanism>` is
 automatically created as part of a `System <System_Creation>` (for use as its `controller
@@ -99,7 +99,7 @@ specified for a `Process <Process_Learning_Sequence>` or a `System <System_Learn
 Structure
 ---------
 
-An ModulatoryMechanism has the same basic structure as a `Mechanism <Mechanisms>`.  In addition, every ModulatoryMechanism
+A ModulatoryMechanism has the same basic structure as a `Mechanism <Mechanisms>`.  In addition, every ModulatoryMechanism
 has a `modulation <ModulatoryMechanism.modulation>` attribute, that determines the default method by which its
 `ModulatorySignals <ModulatorySignal>` modify the value of the Components that they modulate (see the `modulation
 <ModulatorySignal_Modulation>` for a description of how modulation operates, and the documentation for individual
@@ -149,7 +149,7 @@ class ModulatoryMechanism_Base(Mechanism_Base):
     COMMENT:
 
     Description:
-        An ModulatoryMechanism is a Type of the `Mechanism <Mechanism>` Category of Component
+        A ModulatoryMechanism is a Type of the `Mechanism <Mechanism>` Category of Component
 
     COMMENT
 

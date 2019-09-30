@@ -30,7 +30,7 @@ from psyneulink.core.scheduling.condition import AfterNCalls
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
-from psyneulink.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism import LCControlMechanism
+from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RECURRENT_OUTPUT, RecurrentTransferMechanism
 

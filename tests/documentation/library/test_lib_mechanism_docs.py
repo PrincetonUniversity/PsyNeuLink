@@ -32,7 +32,7 @@ def test_comparator_mechanism_docs():
 
 def test_lc_control_mechanism_docs():
     fail, test = doctest.testmod(
-        pnl.library.components.mechanisms.adaptive.control.agt.lccontrolmechanism,
+        pnl.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism,
         optionflags=doctest.REPORT_NDIFF
     )
 
@@ -43,7 +43,7 @@ def test_lc_control_mechanism_docs():
 
 def test_evc_control_mechanism_docs():
     fail, test = doctest.testmod(
-        pnl.library.components.mechanisms.adaptive.control.evc.evccontrolmechanism,
+        pnl.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism,
         optionflags=doctest.REPORT_NDIFF
     )
 
