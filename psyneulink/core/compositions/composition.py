@@ -2624,6 +2624,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           they must match the `sender <MappingProjection.sender>` and `receiver <MappingProjection.receiver>`
           of **projection**.
 
+        • if **sender** and **receiver** are specified and one or more Projections already exists between them:
+          - if it is in the Composition:
+            - if there is only one, the request is ignored and the existing Projection is returned
+            - if there is more than one, an exception is raised as this should never be the case
+          - it is NOT in the Composition:
+            - if there is only one, that Projection is used;
+            - if there is more than one, the last in the list (presumably the most recent) is used;
+            in either case, processing continues, to activate it for the Compostion,
+            construct any "shadow" projections that may be specified, and assign feedback if specified,
+
         • if the status of **projection** is `deferred_init`:
 
           - if its `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` attributes are not
@@ -2637,7 +2647,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             a`feedback` Projection are implemented (in case it has not already been done for the existing Projection).
 
         .. note::
-           If **projection** is an instantiated projection (i.e., not in `deferred_init`) and one already exists between
+           If **projection** is an instantiated Projection (i.e., not in `deferred_init`) and one already exists between
            its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` a warning is generated.
 
         COMMENT:
@@ -2679,10 +2689,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projection if added, else None
 
     """
-        # FIX 7/22/19 [JDC]: THIS COULD BE CLEANED UP MORE
+        # FIX 7/22/19 [JDC]: THIS COULD BE CLEANED UP MORE [SEE DOCSTRING FOR DESIGN SPECIFICATIONS]
 
-
-        # FIX: 9/30/19:  PROBLEM:
+        assert True
         # # MODIFIED 9/30/19 OLD:
         # try:
         #     # projection = self._parse_projection_spec(projection, sender, receiver, name)
@@ -2692,20 +2701,45 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # existing_projections = False
 
         # MODIFIED 9/30/19 NEW: [JDC]
+        # existing_projections = False
         # If a sender and receiver have been specified but not a projection,
         #    check whether there is *any* projection like that
         #    (i.e., whether it/they are already in the Composition or not);  if so:
         #    - if there is only one, use that;
         #    - if there are several, use the last in the list (on the assumption in that it is the most recent).
+        # Note:  Skip this if projection was specified, as it might include parameters that are different
+        #        than the existing ones, in which case should use that rather than any existing ones;
+        #        will handle any existing Projections that are in the Composition below.
         if sender and receiver and not projection:
             existing_projections = self._check_for_existing_projections(sender=sender,
                                                                receiver=receiver,
                                                                in_composition=False)
+            # MODIFIED 9/30/19 OLDER:
             if existing_projections:
                 #  Need to do stuff at end, so can't just return
-                # FIX: 9/30/19 CONSIDER ISSUEING WARNING HERE IF IN VERBOSE
+                # # FIX: 9/30/19 ADD TEST FOR THIS:
+                # if self.verbosePref:
+                #     warnings.warn(f"Several existing projections were identified between "
+                #                   f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
+                #                   f"the last of these will be used in {self.name}.")
                 projection = existing_projections[-1]
+            # # MODIFIED 9/30/19 NEWER: [JDC]
+            # if existing_projections:
+            #     existing_not_in_composition = [p for p in existing_projections if p in self.projections]
+            #     if existing_not_in_composition:
+            #         #  Need to do stuff at end, so can't just return
+            #         # # FIX: 9/30/19 ADD TEST FOR THIS:
+            #         # if self.verbosePref:
+            #         #     warnings.warn(f"Several existing projections were identified between "
+            #         #                   f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
+            #         #                   f"the last of these will be used in {self.name}.")
+            #         projection = existing_not_in_composition[-1]
 
+        # FIX: 9/30/19 - Why is this not an else?
+        #                Because above is only for existing Projections outside of Composition, which should be
+        #                used
+        #                But existing one could be within, in which case want to use that one
+        #                existing Projection might be deferred_init, and want t
         try:
             projection = self._parse_projection_spec(projection, name)
         except DuplicateProjectionError:
@@ -2738,12 +2772,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 except DuplicateProjectionError:
                     return projection
 
+        # FIX: 9/30/19 - REDUNDANT WITH INITIAL TEST ABOVE?
         elif self._check_for_existing_projections(projection, sender=sender, receiver=receiver):
             # FIX: THE FOLLOWING IS REQUIRED SO AS NOT TO CRASH IN test_alias_equivalence_for_modulates_and_projections
             #      - BLOCK OF CODE BELOW (KAM HACK) IS REQUIRED
             # return projection
             existing_projections = True
 
+        # FIX: 9/30/19 - THIS SEEMS TO BE DONE FOR ALL PROJECTIONS, NOT JUST AUTOASSOCIATIVE ONES
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         if sender_mechanism != self.input_CIM and receiver_mechanism != self.output_CIM \
@@ -2760,6 +2796,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except CompositionError as c:
                 raise CompositionError(f"{c.args[0]} to {self.name}.")
 
+        # FIX: 9/30/19 - THIS SEEMS TO BE NEEDED FOR ALL PROJECTIONS, NOT JUST AUTOASSOCIATIVE ONES
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         if not existing_projections:
@@ -2767,13 +2804,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       sender, receiver,
                                       sender_mechanism, receiver_mechanism,
                                       learning_projection)
-            self.needs_update_graph = True
-            self.needs_update_graph_processing = True
-            self.needs_update_scheduler_processing = True
+        self.needs_update_graph = True
+        self.needs_update_graph_processing = True
+        self.needs_update_scheduler_processing = True
 
-            projection._activate_for_compositions(self)
-            for comp in nested_compositions:
-                projection._activate_for_compositions(comp)
+        projection._activate_for_compositions(self)
+        for comp in nested_compositions:
+            projection._activate_for_compositions(comp)
 
         # Note: do all of the following even if Projection is a existing_projections,
         #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
@@ -3075,7 +3112,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # if [proj for proj in sender.efferents if proj.receiver is receiver and proj in self.projections]:
         #     return True
         # return False
-        # # MODIFIED 9/29/19 NEW: [JDC]
+        # MODIFIED 9/30/19 NEW: [JDC]
         existing_projections = [proj for proj in sender.efferents if proj.receiver is receiver]
         existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
         assert len(existing_projections_in_composition) <= 1, \
@@ -3085,7 +3122,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if existing_projections_in_composition:
                 return existing_projections_in_composition[0]
         else:
+            # MODIFIED 9/30/19 OLD:
             if existing_projections:
+            # # MODIFIED 9/30/19 NEW: [JDC]
+            # if existing_projections and not existing_projections_in_composition:
+            # MODIFIED 9/30/19 END
                 return existing_projections
         return False
         # MODIFIED 9/29/19 END
