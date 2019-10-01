@@ -2690,6 +2690,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # except DuplicateProjectionError:
         #     return projection
         # existing_projections = False
+
         # MODIFIED 9/30/19 NEW: [JDC]
         # If a sender and receiver have been specified but not a projection,
         #    check whether there is *any* projection like that
@@ -2704,10 +2705,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #  Need to do stuff at end, so can't just return
                 # FIX: 9/30/19 CONSIDER ISSUEING WARNING HERE IF IN VERBOSE
                 projection = existing_projections[-1]
+
         try:
             projection = self._parse_projection_spec(projection, name)
         except DuplicateProjectionError:
             return projection
+
+        # FIX: 9/30/19:  THIS SEEMS WEIRD, AS IT OVERRIDES ASSIGNMENT ABOVE, BUT MOVING IT BEFORE THAT CAUSES CRASH:
         existing_projections = False
         # MODIFIED 9/30/19 END
 

@@ -24,7 +24,7 @@ from psyneulink.core.compositions.composition import Composition, CompositionErr
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_STATE, NAME, PROJECTIONS, OVERRIDE
+    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_STATE, NAME, PROJECTIONS, OVERRIDE, TARGET_MECHANISM
 from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.condition import AfterNCalls
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -324,6 +324,50 @@ class TestAddProjection:
         assert np.allclose(B.get_input_values(comp), [[11.2,  14.8]])
         assert np.allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
         assert np.allclose(proj.matrix, weights)
+
+    def test_add_linear_processing_pathway_containing_nodes_with_existing_projections(self):
+        """ Test that add_linear_processing_pathway uses MappingProjections already specified for
+                Hidden_layer_2 and Output_Layer in the pathway it creates within the Composition"""
+        Input_Layer = TransferMechanism(name='Input Layer', size=2)
+        Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1', size=5)
+        Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2', size=4)
+        Output_Layer = TransferMechanism(name='Output Layer', size=3)
+        Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
+        Middle_Weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
+        Output_Weights_matrix = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
+        Input_Weights = MappingProjection(name='Input Weights', matrix=Input_Weights_matrix)
+        Middle_Weights = MappingProjection(name='Middle Weights',sender=Hidden_Layer_1, receiver=Hidden_Layer_2,
+                                           matrix=Middle_Weights_matrix),
+        Output_Weights = MappingProjection(name='Output Weights',sender=Hidden_Layer_2,receiver=Output_Layer,
+                                           matrix=Output_Weights_matrix)
+        pathway = [Input_Layer, Input_Weights, Hidden_Layer_1, Hidden_Layer_2, Output_Layer]
+        comp = Composition()
+        comp.add_linear_processing_pathway(pathway=pathway)
+        stim_list = {Input_Layer: [[-1, 30]]}
+        results = comp.run(num_trials=2, inputs=stim_list)
+
+    def test_add_backpropagation_learning_pathway_containing_nodes_with_existing_projections(self):
+        """ Test that add_backpropagation_learning_pathway uses MappingProjections already specified for
+                Hidden_layer_2 and Output_Layer in the pathway it creates within the Composition"""
+        Input_Layer = TransferMechanism(name='Input Layer', size=2)
+        Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1', size=5)
+        Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2', size=4)
+        Output_Layer = TransferMechanism(name='Output Layer', size=3)
+        Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
+        Middle_Weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
+        Output_Weights_matrix = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
+        Input_Weights = MappingProjection(name='Input Weights', matrix=Input_Weights_matrix)
+        Middle_Weights = MappingProjection(name='Middle Weights',sender=Hidden_Layer_1, receiver=Hidden_Layer_2,
+                                           matrix=Middle_Weights_matrix),
+        Output_Weights = MappingProjection(name='Output Weights',sender=Hidden_Layer_2,receiver=Output_Layer,
+                                           matrix=Output_Weights_matrix)
+        pathway = [Input_Layer, Input_Weights, Hidden_Layer_1, Hidden_Layer_2, Output_Layer]
+        comp = Composition()
+        learning_components = comp.add_backpropagation_learning_pathway(pathway=pathway)
+        stim_list = {
+            Input_Layer: [[-1, 30]],
+            learning_components[TARGET_MECHANISM]: [[0, 0, 1]]}
+        results = comp.run(num_trials=2, inputs=stim_list)
 
     def test_linear_processing_pathway_weights_only(self):
         comp = Composition()
